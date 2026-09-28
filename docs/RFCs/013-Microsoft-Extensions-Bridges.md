@@ -168,6 +168,31 @@ host owns its service provider, configuration, logging, OpenTelemetry providers,
 helper imports only the supported configuration snapshot and logging factory, starts the host before
 building MTP, returns MTP's exit code, and stops the host in a `finally` block.
 
+MTP's MSBuild package can generate this composition when `TestingPlatformHostFactory` names a
+parameterless static `Task<IHost>` factory. Generated code owns and disposes the fresh unstarted host,
+while the bridge remains responsible for start/stop ordering. The factory does not receive MTP
+arguments. C#, Visual Basic, and F# use the same contract, and the existing standalone generated
+source remains unchanged when the property is unset.
+
+Direct and response-file `--help`, `-?`, and `--info` options are parsed before invoking the factory.
+Configuration-only informational options are resolved later, after the factory-created host supplies
+its configuration snapshot; factories therefore must not start services or perform application work
+during construction.
+
+Because the same host factory is used for console, JSON listing, server, and `dotnet test` modes, the
+host contract requires stdout-silent logging, hosted services, and exporters. Stdout remains reserved
+for MTP protocol payloads; hosted applications should use OTLP, files, or another non-stdout sink.
+
+`TestingPlatformOpenTelemetryMode=HostOwned` causes the OpenTelemetry extension package to contribute
+one normal `TestingPlatformBuilderHook` that calls only `AddTestingPlatformDiagnostics()`. The host
+continues to own the only providers, exporters, resource identity, and dependency-injection container.
+The focused test/CI resource helpers remain the recommended composition.
+
+Host stopping is connected to MTP through a bounded internal, zero-Microsoft.Extensions lifetime
+bridge. `IHostApplicationLifetime.ApplicationStopping` requests MTP cooperative cancellation, while
+MTP cancellation requests host stopping. The bridge disconnects before its own final `StopAsync` to
+avoid reentrant cancellation.
+
 It intentionally does not expose MTP as an `IHostedService`, build a second Microsoft.Extensions
 container, dispose the caller's host, or imply that live services cross process boundaries. The API
 remains experimental while cancellation and out-of-process behavior are evaluated.
@@ -181,8 +206,6 @@ composition pattern with a generic host, ASP.NET Core, and Aspire ServiceDefault
 - **Dependency injection interop** — import only proven, externally owned service instances. Do not
   convert the MTP registry into `IServiceCollection`, implicitly build a second container, or transfer
   disposal ownership.
-- **Hosting cancellation** — consider a cancellable MTP run API before claiming that
-  `IHostApplicationLifetime.ApplicationStopping` can cancel an active test run.
 - **Command-line tooling** — the existing machine-readable `dotnet test` option message includes
   provider identity and minimum/maximum arity in addition to name, description, visibility, and
   built-in status. This provides tooling metadata without a runtime `System.CommandLine` bridge.

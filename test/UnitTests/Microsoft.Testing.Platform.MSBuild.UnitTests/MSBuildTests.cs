@@ -112,6 +112,50 @@ namespace SomeNamespace
         Assert.IsEmpty(_errors);
     }
 
+    [DataRow("C#", "obj/applicationHelperFile.cs", "using (global::Microsoft.Extensions.Hosting.IHost host = await global::Contoso.Tests.TestHost.CreateHost())")]
+    [DataRow("VB", "obj/applicationHelperFile.vb", "Using host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.Contoso.Tests.TestHost.CreateHost()")]
+    [DataRow("F#", "obj/applicationHelperFile.fs", "let! host = Contoso.Tests.TestHost.CreateHost()")]
+    [TestMethod]
+    public void EntryPointTask_Generates_Hosted_Application_For_All_Supported_Languages(string language, string sourcePath, string expectedFactoryCall)
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem(sourcePath),
+            Language = new CustomTaskItem(language),
+            RootNamespace = "SomeNamespace",
+            HostFactory = "Contoso.Tests.TestHost.CreateHost",
+        };
+
+        Assert.IsTrue(testingPlatformEntryPoint.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files[sourcePath]!;
+        Assert.Contains(expectedFactoryCall, generatedSource);
+        Assert.Contains("RunTestingPlatformAsync", generatedSource);
+        Assert.Contains("ShouldBypassApplicationHost", generatedSource);
+        Assert.AreEqual(1, CountOccurrences(generatedSource, "SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)"));
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void EntryPointTask_Rejects_Invalid_Host_Factory()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile.cs"),
+            Language = new CustomTaskItem("C#"),
+            HostFactory = "CreateHost",
+        };
+
+        Assert.IsFalse(testingPlatformEntryPoint.Execute());
+
+        Assert.IsFalse(inMemoryFileSystem.Files.ContainsKey("obj/applicationHelperFile.cs"));
+        Assert.Contains("fully qualified static method path", Assert.ContainsSingle(_errors).Message ?? string.Empty);
+    }
+
     [TestMethod]
     public void SelfRegisteredExtensions_Deduplicates_Exact_Duplicate_BuilderHooks()
     {
@@ -272,6 +316,9 @@ namespace SomeNamespace
             AssemblyName = new CustomTaskItem("Tests"),
             OutputPath = new CustomTaskItem("bin"),
         };
+
+    private static int CountOccurrences(string value, string fragment)
+        => (value.Length - value.Replace(fragment, string.Empty).Length) / fragment.Length;
 
     private sealed class InMemoryFileSystem : IFileSystem
     {

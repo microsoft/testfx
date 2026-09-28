@@ -404,7 +404,7 @@ An experimental MTP extension (`Microsoft.Testing.Extensions.Configuration`, `[T
 
 ### Microsoft.Testing.Extensions.Hosting
 
-An experimental MTP extension (`Microsoft.Testing.Extensions.Hosting`, `[TPEXP]`) that runs MTP inside an application-owned `IHost` through `RunTestingPlatformAsync()`. It borrows the host's configuration and logger factory, starts the host before MTP is built, returns the MTP exit code, and stops the host afterward without disposing it or creating a second Microsoft.Extensions dependency-injection container. See the [ASP.NET Core and Aspire samples](../samples/public/MTPHostIntegration).
+An experimental MTP extension (`Microsoft.Testing.Extensions.Hosting`, `[TPEXP]`) that runs MTP inside an application-owned `IHost` through `RunTestingPlatformAsync()`. It borrows the host's configuration and logger factory, starts the host before MTP is built, links host stopping to MTP cooperative cancellation, returns the MTP exit code, and stops the host afterward without disposing it or creating a second Microsoft.Extensions dependency-injection container. Set `<TestingPlatformHostFactory>Contoso.Tests.TestHost.CreateHost</TestingPlatformHostFactory>` to generate the C#, Visual Basic, or F# composition; the parameterless factory returns `Task<IHost>`, receives no MTP arguments, and transfers disposal ownership to generated code. See the [ASP.NET Core and Aspire samples](../samples/public/MTPHostIntegration).
 
 ### Microsoft.Testing.Extensions.Logging
 
@@ -428,7 +428,7 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 ### OpenTelemetry extension
 
-An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes test-session activities and metrics using the [OpenTelemetry](https://opentelemetry.io/) standard. `AddTestingPlatformDiagnostics()` activates the MTP diagnostics producer; application-owned providers configured through `HostApplicationBuilder`, Aspire ServiceDefaults, or another composition root subscribe with `AddTestingPlatformInstrumentation()`. The focused `AddTestingPlatformTestResource()` and `AddTestingPlatformCIResource()` helpers add test and CI metadata without replacing application-owned `service.*`, host, OS, or process identity. See the [`HostApplicationBuilder` sample](../samples/public/MTPOTel).
+An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes test-session activities and metrics using the [OpenTelemetry](https://opentelemetry.io/) standard. `AddTestingPlatformDiagnostics()` activates the MTP diagnostics producer; application-owned providers configured through `HostApplicationBuilder`, Aspire ServiceDefaults, or another composition root subscribe with `AddTestingPlatformInstrumentation()`. For generated hosting, `<TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>` contributes a builder hook that calls only `AddTestingPlatformDiagnostics()` and never creates a second provider, exporter, resource identity, or container. The focused `AddTestingPlatformTestResource()` and `AddTestingPlatformCIResource()` helpers add test and CI metadata without replacing application-owned `service.*`, host, OS, or process identity. See the [`HostApplicationBuilder` sample](../samples/public/MTPOTel).
 
 ### OSConditionAttribute
 

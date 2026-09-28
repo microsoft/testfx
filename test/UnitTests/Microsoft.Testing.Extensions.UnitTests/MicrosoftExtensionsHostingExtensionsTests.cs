@@ -64,6 +64,29 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         Assert.AreEqual("host", exception.ParamName);
     }
 
+    [DataRow("--help")]
+    [DataRow("-?")]
+    [DataRow("--info")]
+    [TestMethod]
+    public void ShouldBypassApplicationHost_RecognizesInformationalOptions(string option)
+        => Assert.IsTrue(MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost([option]));
+
+    [TestMethod]
+    public void ShouldBypassApplicationHost_ExpandsResponseFiles()
+    {
+        string responseFile = Path.Combine(Path.GetTempPath(), $"{nameof(ShouldBypassApplicationHost_ExpandsResponseFiles)}-{Guid.NewGuid():N}.rsp");
+        try
+        {
+            File.WriteAllText(responseFile, "--help");
+
+            Assert.IsTrue(MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost([$"@{responseFile}"]));
+        }
+        finally
+        {
+            File.Delete(responseFile);
+        }
+    }
+
     [TestMethod]
     public async Task RunTestingPlatformAsync_NullArgsThrows()
     {
@@ -88,6 +111,21 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
 #pragma warning restore MSTEST0049
 
         Assert.AreEqual("configure", exception.ParamName);
+    }
+
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WithoutHostApplicationLifetime_PreservesPreviousBehavior()
+    {
+        using IHost host = new HostWithoutApplicationLifetime(Host.CreateApplicationBuilder().Build());
+
+        int exitCode = await host.RunTestingPlatformAsync(
+            [],
+            testApplication => testApplication.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => new EmptyTestFramework()),
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(8, exitCode);
     }
 
     [TestMethod]
@@ -260,6 +298,45 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         AssertDiagnosticLogIsReleased(diagnosticDirectory);
     }
 
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenHostStops_CancelsMtp()
+    {
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        hostBuilder.Services.AddHostedService<StopApplicationHostedService>();
+        using IHost host = hostBuilder.Build();
+
+        int exitCode = await host.RunTestingPlatformAsync(
+            [],
+            testApplication => testApplication.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => new EmptyTestFramework()),
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(3, exitCode);
+    }
+
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenMtpStops_RequestsHostStop()
+    {
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        using IHost host = hostBuilder.Build();
+        bool hostStopRequested = false;
+        Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+            .GetRequiredService<IHostApplicationLifetime>(host.Services)
+            .ApplicationStopping.Register(() => hostStopRequested = true);
+
+        int exitCode = await host.RunTestingPlatformAsync(
+            [],
+            testApplication => testApplication.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, serviceProvider) => new CancellingTestFramework(
+                    (ITestApplicationCancellationTokenSource)serviceProvider.GetService(typeof(ITestApplicationCancellationTokenSource))!)),
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(3, exitCode);
+        Assert.IsTrue(hostStopRequested);
+    }
+
     private static string CreateDiagnosticDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), nameof(MicrosoftExtensionsHostingExtensionsTests), Guid.NewGuid().ToString("N"));
@@ -314,6 +391,46 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         }
     }
 
+    private sealed class StopApplicationHostedService(IHostApplicationLifetime hostApplicationLifetime) : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            hostApplicationLifetime.StopApplication();
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class HostWithoutApplicationLifetime(IHost innerHost) : IHost
+    {
+        public IServiceProvider Services { get; } = new ServiceProviderWithoutApplicationLifetime(innerHost.Services);
+
+        public void Dispose() => innerHost.Dispose();
+
+        public Task StartAsync(CancellationToken cancellationToken = default)
+            => innerHost.StartAsync(cancellationToken);
+
+        public Task StopAsync(CancellationToken cancellationToken = default)
+            => innerHost.StopAsync(cancellationToken);
+    }
+
+    private sealed class ServiceProviderWithoutApplicationLifetime(IServiceProvider innerServiceProvider) : IServiceProvider
+    {
+        public object? GetService(Type serviceType)
+            => serviceType == typeof(IHostApplicationLifetime) ? null : innerServiceProvider.GetService(serviceType);
+    }
+
+    private sealed class CancellingTestFramework(ITestApplicationCancellationTokenSource cancellationTokenSource) : EmptyTestFramework
+    {
+        public override Task ExecuteRequestAsync(ExecuteRequestContext context)
+        {
+            cancellationTokenSource.Cancel();
+            context.Complete();
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed class ThrowingHostedService(InvalidOperationException exception) : IHostedService
     {
         public Task StartAsync(CancellationToken cancellationToken) => throw exception;
@@ -333,7 +450,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         public override IDictionary Data => throw new NotSupportedException("Exception data is unavailable.");
     }
 
-    private sealed class EmptyTestFramework : ITestFramework
+    private class EmptyTestFramework : ITestFramework
     {
         public string Uid => nameof(EmptyTestFramework);
 
@@ -351,7 +468,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
             => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 
-        public Task ExecuteRequestAsync(ExecuteRequestContext context)
+        public virtual Task ExecuteRequestAsync(ExecuteRequestContext context)
         {
             context.Complete();
             return Task.CompletedTask;

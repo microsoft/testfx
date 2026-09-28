@@ -1,9 +1,13 @@
-<Project Sdk="MSTest.Sdk">
+<Project>
+
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
 
   <PropertyGroup>
     <EnableAspireTesting>true</EnableAspireTesting>
     <AspireHostingTestingVersion>$(AspireVersion)</AspireHostingTestingVersion>
-    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <TestingPlatformHostFactory>AspireTestHost.CreateHost</TestingPlatformHostFactory>
+    <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
+    <MicrosoftTestingPlatformMSBuildTaskFolder>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory), '..\..\..\..\artifacts\bin\Microsoft.Testing.Platform.MSBuild\$(Configuration)\netstandard2.0'))\</MicrosoftTestingPlatformMSBuildTaskFolder>
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
 
@@ -15,6 +19,18 @@
     <ProjectReference Include="..\AspireAppHost\AspireAppHost.csproj" />
     <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"
+                      SetTargetFramework="TargetFramework=netstandard2.0" />
   </ItemGroup>
+
+  <Import Project="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\buildMultiTargeting\Microsoft.Testing.Extensions.Hosting.props" />
+  <Import Project="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\buildMultiTargeting\Microsoft.Testing.Extensions.OpenTelemetry.props" />
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
+  <Import Project="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\buildMultiTargeting\Microsoft.Testing.Extensions.Hosting.targets" />
+  <Import Project="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\buildMultiTargeting\Microsoft.Testing.Extensions.OpenTelemetry.targets" />
+  <Import Project="..\..\..\..\src\Platform\Microsoft.Testing.Platform.MSBuild\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets" />
 
 </Project>

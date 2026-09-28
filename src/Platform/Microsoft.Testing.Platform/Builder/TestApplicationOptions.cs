@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Platform.Builder;
 /// </summary>
 public sealed class TestApplicationOptions
 {
+    internal ITestApplicationHostLifetimeBridge? HostLifetimeBridge { get; set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether telemetry is enabled.
     /// </summary>

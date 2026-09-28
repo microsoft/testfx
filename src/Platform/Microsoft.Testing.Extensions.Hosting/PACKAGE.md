@@ -12,7 +12,32 @@ dotnet add package Microsoft.Extensions.Hosting
 dotnet add package MSTest
 ```
 
-## Usage
+## Generated entry point
+
+MSTest.Sdk and other MTP projects can generate the hosting glue instead of maintaining a custom `Program.cs`:
+
+```xml
+<PropertyGroup>
+  <TestingPlatformHostFactory>Contoso.Tests.TestHost.CreateHost</TestingPlatformHostFactory>
+  <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
+</PropertyGroup>
+```
+
+The configured method has this V1 contract:
+
+```csharp
+public static Task<IHost> CreateHost();
+```
+
+It returns one fresh, unstarted host. It does not receive MTP command-line arguments. Generated code owns and disposes the host, invokes the existing `RunTestingPlatformAsync` bridge, and preserves the generated `AddSelfRegisteredExtensions(builder, args)` registration exactly once. Help and info options supplied on the process command line or through response files do not invoke the factory.
+
+`TestingPlatformOpenTelemetryMode=HostOwned` requires `Microsoft.Testing.Extensions.OpenTelemetry`. It activates only the MTP diagnostics producer; the host remains the sole owner of providers, exporters, resource identity, and disposal.
+
+The factory must configure a host that never writes startup, shutdown, logging, or exporter output to standard output. MTP reserves stdout for machine-readable modes such as `--list-tests json`, server JSON-RPC, and the `dotnet test` protocol. Remove default console logging providers and use OTLP, files, or another non-stdout sink.
+
+Help or info activated only through configuration is resolved while the MTP application is built, after the factory-created host supplies its configuration snapshot. In that uncommon case the factory is invoked, but the host contract still requires construction to be side-effect-free until `StartAsync`.
+
+## Manual usage
 
 ```csharp
 using System.Reflection;
@@ -49,7 +74,7 @@ to both parsers.
 - Imported configuration has snapshot semantics and does not propagate reloads after the MTP application is built.
 - Composition is process-local. Live services do not cross into separately launched test host or controller processes.
 - The cancellation token controls host startup. Shutdown uses an uncancelled token so graceful cleanup is still attempted.
-- `ITestApplication.RunAsync` has no cancellation-token overload, so the token does not cancel the MTP run.
+- When the host provides `IHostApplicationLifetime`, `ApplicationStopping` is linked to MTP's existing cooperative cancellation path and MTP cancellation requests host stopping. Custom `IHost` implementations without that optional service retain the previous start/run/stop behavior.
 - Exceptions from host startup, MTP construction/execution, and host shutdown are surfaced to the caller.
   When an operation and its cleanup both fail, the operation remains the primary exception and the cleanup
   exception is attached to its `Data` dictionary. If that dictionary cannot be updated, an
