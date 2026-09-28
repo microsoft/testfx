@@ -14,11 +14,9 @@ internal sealed class HostApplicationLifetimeBridge(IHostApplicationLifetime hos
     private readonly object _sync = new();
 #endif
     private CancellationTokenRegistration _hostStoppingRegistration;
-    private CancellationTokenRegistration _testApplicationStoppingRegistration;
-    private int _stopPropagationStarted;
     private bool _isConnected;
 
-    public void Connect(Action requestTestApplicationStop, CancellationToken testApplicationStopping)
+    public void Connect(Action requestTestApplicationStop)
     {
         lock (_sync)
         {
@@ -29,11 +27,8 @@ internal sealed class HostApplicationLifetimeBridge(IHostApplicationLifetime hos
 
             _isConnected = true;
             _hostStoppingRegistration = hostApplicationLifetime.ApplicationStopping.Register(
-                static state => ((HostApplicationLifetimeBridgeState)state!).RequestTestApplicationStop(),
-                new HostApplicationLifetimeBridgeState(this, requestTestApplicationStop));
-            _testApplicationStoppingRegistration = testApplicationStopping.Register(
-                static state => ((HostApplicationLifetimeBridge)state!).RequestHostStop(),
-                this);
+                static state => ((Action)state!).Invoke(),
+                requestTestApplicationStop);
         }
     }
 
@@ -48,26 +43,6 @@ internal sealed class HostApplicationLifetimeBridge(IHostApplicationLifetime hos
 
             _isConnected = false;
             _hostStoppingRegistration.Dispose();
-            _testApplicationStoppingRegistration.Dispose();
-        }
-    }
-
-    private void RequestHostStop()
-    {
-        if (Interlocked.Exchange(ref _stopPropagationStarted, 1) == 0)
-        {
-            hostApplicationLifetime.StopApplication();
-        }
-    }
-
-    private sealed class HostApplicationLifetimeBridgeState(HostApplicationLifetimeBridge owner, Action requestTestApplicationStop)
-    {
-        public void RequestTestApplicationStop()
-        {
-            if (Interlocked.Exchange(ref owner._stopPropagationStarted, 1) == 0)
-            {
-                requestTestApplicationStop();
-            }
         }
     }
 }

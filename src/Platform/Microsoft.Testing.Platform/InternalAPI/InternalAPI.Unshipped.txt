@@ -15,7 +15,7 @@ Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.TrustedProcess
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.ExpandedArguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestApplicationBuilder(Microsoft.Testing.Platform.Logging.ApplicationLoggingState! loggingState, System.DateTimeOffset createBuilderStart, Microsoft.Testing.Platform.Builder.TestApplicationOptions! testApplicationOptions, Microsoft.Testing.Platform.Helpers.IUnhandledExceptionsHandler! unhandledExceptionsHandler, string![]! args, string![]! expandedArgs) -> void
 Microsoft.Testing.Platform.Builder.ITestApplicationHostLifetimeBridge
-Microsoft.Testing.Platform.Builder.ITestApplicationHostLifetimeBridge.Connect(System.Action! requestTestApplicationStop, System.Threading.CancellationToken testApplicationStopping) -> void
+Microsoft.Testing.Platform.Builder.ITestApplicationHostLifetimeBridge.Connect(System.Action! requestTestApplicationStop) -> void
 Microsoft.Testing.Platform.Builder.ITestApplicationHostLifetimeBridge.Disconnect() -> void
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.HostLifetimeBridge.get -> Microsoft.Testing.Platform.Builder.ITestApplicationHostLifetimeBridge?
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.HostLifetimeBridge.set -> void

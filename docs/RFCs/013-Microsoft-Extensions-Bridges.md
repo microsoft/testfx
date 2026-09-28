@@ -169,7 +169,8 @@ helper imports only the supported configuration snapshot and logging factory, st
 building MTP, returns MTP's exit code, and stops the host in a `finally` block.
 
 MTP's MSBuild package can generate this composition when `TestingPlatformHostFactory` names a
-parameterless static `Task<IHost>` factory. Generated code owns and disposes the fresh unstarted host,
+parameterless static `Task<IHost>` factory. Generated code owns and disposes the fresh unstarted host
+(preferring `IAsyncDisposable`),
 while the bridge remains responsible for start/stop ordering. The factory does not receive MTP
 arguments. C#, Visual Basic, and F# use the same contract, and the existing standalone generated
 source remains unchanged when the property is unset.
@@ -183,15 +184,20 @@ Because the same host factory is used for console, JSON listing, server, and `do
 host contract requires stdout-silent logging, hosted services, and exporters. Stdout remains reserved
 for MTP protocol payloads; hosted applications should use OTLP, files, or another non-stdout sink.
 
+The current generated contract is process-local rather than process-role-aware. Extensions that
+restart the test process can invoke the factory in both the controller and child. Deferring factory
+creation until MTP selects the final process role requires a future pre-build lifecycle seam; until
+then, factories combined with restart extensions must avoid exclusive global resources.
+
 `TestingPlatformOpenTelemetryMode=HostOwned` causes the OpenTelemetry extension package to contribute
 one normal `TestingPlatformBuilderHook` that calls only `AddTestingPlatformDiagnostics()`. The host
 continues to own the only providers, exporters, resource identity, and dependency-injection container.
 The focused test/CI resource helpers remain the recommended composition.
 
 Host stopping is connected to MTP through a bounded internal, zero-Microsoft.Extensions lifetime
-bridge. `IHostApplicationLifetime.ApplicationStopping` requests MTP cooperative cancellation, while
-MTP cancellation requests host stopping. The bridge disconnects before its own final `StopAsync` to
-avoid reentrant cancellation.
+bridge. `IHostApplicationLifetime.ApplicationStopping` requests MTP cooperative cancellation. MTP
+finishes test cleanup, report generation, and artifact processing before the Hosting bridge stops the
+host in its final `StopAsync`.
 
 It intentionally does not expose MTP as an `IHostedService`, build a second Microsoft.Extensions
 container, dispose the caller's host, or imply that live services cross process boundaries. The API

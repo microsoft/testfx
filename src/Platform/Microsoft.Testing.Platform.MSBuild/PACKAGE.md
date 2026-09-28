@@ -45,7 +45,7 @@ Set `TestingPlatformHostFactory` to a fully qualified parameterless static metho
 </PropertyGroup>
 ```
 
-The generated C#, Visual Basic, or F# entry point awaits one fresh, unstarted host, invokes `IHost.RunTestingPlatformAsync`, and disposes the host after MTP stops it. MTP arguments are never passed to the factory or Generic Host configuration. The ordinary generated source remains unchanged when `TestingPlatformHostFactory` is unset.
+The generated C#, Visual Basic, or F# entry point awaits one fresh, unstarted host, invokes `IHost.RunTestingPlatformAsync`, and disposes the host after MTP stops it, using asynchronous disposal when the host implements `IAsyncDisposable`. MTP arguments are never passed to the factory or Generic Host configuration. The ordinary generated source remains unchanged when `TestingPlatformHostFactory` is unset.
 
 Hosted generation requires compatible `Microsoft.Testing.Extensions.Hosting` and generated self-registration. `HostOwned` additionally requires `Microsoft.Testing.Extensions.OpenTelemetry`; it auto-registers only `AddTestingPlatformDiagnostics()` and never creates a provider, exporter, resource identity, or dependency-injection container.
 

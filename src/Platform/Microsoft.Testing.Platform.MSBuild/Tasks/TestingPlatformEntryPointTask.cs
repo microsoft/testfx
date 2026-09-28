@@ -348,12 +348,24 @@ internal static class MicrosoftTestingPlatformApplication
             }
         }
 
-        using (global::Microsoft.Extensions.Hosting.IHost host = await global::{{hostFactory}}())
+        global::Microsoft.Extensions.Hosting.IHost host = await global::{{hostFactory}}();
+        try
         {
             return await global::Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                 host,
                 args,
                 builder => AddSelfRegisteredExtensions(builder, args));
+        }
+        finally
+        {
+            if (host is global::System.IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                host.Dispose();
+            }
         }
     }
 
@@ -395,12 +407,24 @@ namespace {{rootNamespace}}
                 }
             }
 
-            using (global::Microsoft.Extensions.Hosting.IHost host = await global::{{hostFactory}}())
+            global::Microsoft.Extensions.Hosting.IHost host = await global::{{hostFactory}}();
+            try
             {
                 return await global::Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                     host,
                     args,
                     builder => AddSelfRegisteredExtensions(builder, args));
+            }
+            finally
+            {
+                if (host is global::System.IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else
+                {
+                    host.Dispose();
+                }
             }
         }
 
@@ -440,17 +464,38 @@ Friend Module MicrosoftTestingPlatformApplication
             End Using
         End If
 
-        Using host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.{{hostFactory}}()
-            Return Await Global.Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
+        Dim host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.{{hostFactory}}()
+        Dim exitCode As Integer = 0
+        Dim runException As Global.System.Exception = Nothing
+        Try
+            exitCode = Await Global.Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                 host,
                 args,
                 Sub(builder) AddSelfRegisteredExtensions(builder, args))
-        End Using
+        Catch ex As Global.System.Exception
+            runException = ex
+        End Try
+
+        Await DisposeHostAsync(host)
+        If runException IsNot Nothing Then
+            Global.System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(runException).Throw()
+        End If
+
+        Return exitCode
     End Function
 
     Private Sub AddSelfRegisteredExtensions(builder As Global.Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args As String())
         SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
     End Sub
+
+    Private Async Function DisposeHostAsync(host As Global.Microsoft.Extensions.Hosting.IHost) As Global.System.Threading.Tasks.Task
+        Dim asyncDisposable = TryCast(host, Global.System.IAsyncDisposable)
+        If asyncDisposable IsNot Nothing Then
+            Await asyncDisposable.DisposeAsync()
+        Else
+            host.Dispose()
+        End If
+    End Function
 
 End Module
 {{(generateEntryPoint ? """
@@ -487,6 +532,15 @@ module internal MicrosoftTestingPlatformApplication =
     let private addSelfRegisteredExtensions builder args =
         Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
 
+    let private disposeHostAsync (host: Microsoft.Extensions.Hosting.IHost) =
+        task {
+            match box host with
+            | :? System.IAsyncDisposable as asyncDisposable ->
+                do! asyncDisposable.DisposeAsync().AsTask()
+            | _ ->
+                host.Dispose()
+        }
+
     let runAsync args =
         task {
             if Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost args then
@@ -496,12 +550,17 @@ module internal MicrosoftTestingPlatformApplication =
                 return! app.RunAsync()
             else
                 let! host = {{hostFactory}}()
-                use host = host
-                return!
-                    Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
-                        host,
-                        args,
-                        System.Action<_>(fun builder -> addSelfRegisteredExtensions builder args))
+                try
+                    let! result =
+                        Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
+                            host,
+                            args,
+                            System.Action<_>(fun builder -> addSelfRegisteredExtensions builder args))
+                    do! disposeHostAsync host
+                    return result
+                with ex ->
+                    do! disposeHostAsync host
+                    return raise ex
         }
 {{(generateEntryPoint ? """
 
@@ -531,6 +590,15 @@ module internal MicrosoftTestingPlatformApplication =
     let private addSelfRegisteredExtensions builder args =
         SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
 
+    let private disposeHostAsync (host: Microsoft.Extensions.Hosting.IHost) =
+        task {
+            match box host with
+            | :? System.IAsyncDisposable as asyncDisposable ->
+                do! asyncDisposable.DisposeAsync().AsTask()
+            | _ ->
+                host.Dispose()
+        }
+
     let runAsync args =
         task {
             if Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost args then
@@ -540,12 +608,17 @@ module internal MicrosoftTestingPlatformApplication =
                 return! app.RunAsync()
             else
                 let! host = {{hostFactory}}()
-                use host = host
-                return!
-                    Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
-                        host,
-                        args,
-                        System.Action<_>(fun builder -> addSelfRegisteredExtensions builder args))
+                try
+                    let! result =
+                        Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
+                            host,
+                            args,
+                            System.Action<_>(fun builder -> addSelfRegisteredExtensions builder args))
+                    do! disposeHostAsync host
+                    return result
+                with ex ->
+                    do! disposeHostAsync host
+                    return raise ex
         }
 {{(generateEntryPoint ? """
 

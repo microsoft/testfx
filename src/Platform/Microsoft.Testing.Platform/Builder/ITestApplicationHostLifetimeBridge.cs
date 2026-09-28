@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.Builder;
 
 internal interface ITestApplicationHostLifetimeBridge
 {
-    void Connect(Action requestTestApplicationStop, CancellationToken testApplicationStopping);
+    void Connect(Action requestTestApplicationStop);
 
     void Disconnect();
 }

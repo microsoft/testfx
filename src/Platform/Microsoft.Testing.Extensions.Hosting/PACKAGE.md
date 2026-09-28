@@ -29,7 +29,7 @@ The configured method has this V1 contract:
 public static Task<IHost> CreateHost();
 ```
 
-It returns one fresh, unstarted host. It does not receive MTP command-line arguments. Generated code owns and disposes the host, invokes the existing `RunTestingPlatformAsync` bridge, and preserves the generated `AddSelfRegisteredExtensions(builder, args)` registration exactly once. Help and info options supplied on the process command line or through response files do not invoke the factory.
+It returns one fresh, unstarted host. It does not receive MTP command-line arguments. Generated code owns and disposes the host (preferring `IAsyncDisposable` when implemented), invokes the existing `RunTestingPlatformAsync` bridge, and preserves the generated `AddSelfRegisteredExtensions(builder, args)` registration exactly once. Help and info options supplied on the process command line or through response files do not invoke the factory.
 
 `TestingPlatformOpenTelemetryMode=HostOwned` requires `Microsoft.Testing.Extensions.OpenTelemetry`. It activates only the MTP diagnostics producer; the host remains the sole owner of providers, exporters, resource identity, and disposal.
 
@@ -73,8 +73,9 @@ to both parsers.
 - The extension does not create a second Microsoft.Extensions dependency-injection container.
 - Imported configuration has snapshot semantics and does not propagate reloads after the MTP application is built.
 - Composition is process-local. Live services do not cross into separately launched test host or controller processes.
+- Process-restart extensions (for example retry, crash dump, or hang dump scenarios) execute the generated entry point in each process. Until MTP exposes a role-aware pre-build hook, the factory can therefore be invoked in both the controller and child process; factories used with those extensions must avoid exclusive global resources such as fixed ports.
 - The cancellation token controls host startup. Shutdown uses an uncancelled token so graceful cleanup is still attempted.
-- When the host provides `IHostApplicationLifetime`, `ApplicationStopping` is linked to MTP's existing cooperative cancellation path and MTP cancellation requests host stopping. Custom `IHost` implementations without that optional service retain the previous start/run/stop behavior.
+- When the host provides `IHostApplicationLifetime`, `ApplicationStopping` is linked to MTP's existing cooperative cancellation path. MTP completion or cancellation finishes its own cleanup before the bridge stops the host in `finally`. Custom `IHost` implementations without that optional service retain the previous start/run/stop behavior.
 - Exceptions from host startup, MTP construction/execution, and host shutdown are surfaced to the caller.
   When an operation and its cleanup both fail, the operation remains the primary exception and the cleanup
   exception is attached to its `Data` dictionary. If that dictionary cannot be updated, an

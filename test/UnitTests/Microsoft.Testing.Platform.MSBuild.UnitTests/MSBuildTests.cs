@@ -112,8 +112,8 @@ namespace SomeNamespace
         Assert.IsEmpty(_errors);
     }
 
-    [DataRow("C#", "obj/applicationHelperFile.cs", "using (global::Microsoft.Extensions.Hosting.IHost host = await global::Contoso.Tests.TestHost.CreateHost())")]
-    [DataRow("VB", "obj/applicationHelperFile.vb", "Using host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.Contoso.Tests.TestHost.CreateHost()")]
+    [DataRow("C#", "obj/applicationHelperFile.cs", "global::Microsoft.Extensions.Hosting.IHost host = await global::Contoso.Tests.TestHost.CreateHost();")]
+    [DataRow("VB", "obj/applicationHelperFile.vb", "Dim host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.Contoso.Tests.TestHost.CreateHost()")]
     [DataRow("F#", "obj/applicationHelperFile.fs", "let! host = Contoso.Tests.TestHost.CreateHost()")]
     [TestMethod]
     public void EntryPointTask_Generates_Hosted_Application_For_All_Supported_Languages(string language, string sourcePath, string expectedFactoryCall)
@@ -134,6 +134,7 @@ namespace SomeNamespace
         Assert.Contains(expectedFactoryCall, generatedSource);
         Assert.Contains("RunTestingPlatformAsync", generatedSource);
         Assert.Contains("ShouldBypassApplicationHost", generatedSource);
+        Assert.Contains("IAsyncDisposable", generatedSource);
         Assert.AreEqual(1, CountOccurrences(generatedSource, "SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)"));
         Assert.IsEmpty(_errors);
     }

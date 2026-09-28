@@ -30,6 +30,7 @@ public sealed class GeneratedMicrosoftExtensionsHostingTests : AcceptanceTestBas
         Assert.AreEqual(1, CountOccurrences(result.StandardError, "HOST_FACTORY"));
         Assert.AreEqual(1, CountOccurrences(result.StandardError, "HOST_STARTED"));
         Assert.AreEqual(1, CountOccurrences(result.StandardError, "HOST_STOPPED"));
+        Assert.AreEqual(1, CountOccurrences(result.StandardError, "HOST_ASYNC_DISPOSED"));
         Assert.AreEqual(1, CountOccurrences(result.StandardError, "OTEL_TRACE=TestHostBuilder"));
         Assert.AreEqual(1, CountOccurrences(result.StandardError, "OTEL_METRIC=test.run.duration"));
         Assert.AreEqual(1, CountOccurrences(result.StandardError, "OTEL_SERVICE=generated-host-tests"));
@@ -139,6 +140,7 @@ internal static class GeneratedTestHost
         var metricExporter = new CapturingMetricExporter();
         builder.Services.AddSingleton(activityExporter);
         builder.Services.AddSingleton(metricExporter);
+        builder.Services.AddSingleton<AsyncOnlyDisposableService>();
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
                 .AddService("generated-host-tests")
@@ -159,10 +161,12 @@ internal sealed class MarkerHostedService(
     TracerProvider tracerProvider,
     MeterProvider meterProvider,
     CapturingActivityExporter activityExporter,
-    CapturingMetricExporter metricExporter) : IHostedService
+    CapturingMetricExporter metricExporter,
+    AsyncOnlyDisposableService asyncOnlyDisposableService) : IHostedService
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        _ = asyncOnlyDisposableService;
         Console.Error.WriteLine("HOST_STARTED");
         return Task.CompletedTask;
     }
@@ -193,6 +197,15 @@ internal sealed class MarkerHostedService(
         Console.Error.WriteLine($"OTEL_SERVICE={serviceName}");
         Console.Error.WriteLine("HOST_STOPPED");
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class AsyncOnlyDisposableService : IAsyncDisposable
+{
+    public ValueTask DisposeAsync()
+    {
+        Console.Error.WriteLine("HOST_ASYNC_DISPOSED");
+        return default;
     }
 }
 
