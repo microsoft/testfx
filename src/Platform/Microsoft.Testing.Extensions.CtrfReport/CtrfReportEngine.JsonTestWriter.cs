@@ -14,9 +14,9 @@ internal sealed partial class CtrfReportEngine
         CapturedTestResult r = result.Final;
         writer.WriteStartObject();
 
-        // The MTP TestNode UID is the producer's stable logical-test identity. A
-        // fresh executionId distinguishes each physical execution, including rows
-        // that legitimately share the same UID.
+        // The MTP TestNode UID is the producer-supplied logical-test identity within
+        // the framework-defined scope. A fresh executionId identifies this complete
+        // reported execution lifecycle; earlier retry attempts get their own attemptId.
         writer.WriteString("testId", r.Uid);
         writer.WriteString("executionId", Guid.NewGuid().ToString("D"));
 

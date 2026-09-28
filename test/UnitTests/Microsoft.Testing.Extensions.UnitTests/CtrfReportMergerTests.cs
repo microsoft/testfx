@@ -799,8 +799,10 @@ public sealed class CtrfReportMergerTests
         // An attempt process can itself have retried the test in-process; those executions are already in its
         // retryAttempts[] and must keep their place in the merged history instead of being dropped.
         JsonObject firstAttempt = Attempt("t", "failed", uid: "u1", message: "second execution");
+        firstAttempt["executionId"] = "second-execution";
         firstAttempt["retryAttempts"] = new JsonArray(new JsonObject
         {
+            ["attemptId"] = "first-attempt",
             ["attempt"] = 1,
             ["status"] = "failed",
             ["message"] = "first execution",
@@ -819,6 +821,8 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual("second execution", (string?)retryAttempts[1]!["message"]);
         Assert.AreEqual(1, (long)retryAttempts[0]!["attempt"]!);
         Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
+        Assert.AreEqual("first-attempt", (string?)retryAttempts[0]!["attemptId"]);
+        Assert.AreEqual("second-execution", (string?)retryAttempts[1]!["attemptId"]);
     }
 
     [TestMethod]
