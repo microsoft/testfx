@@ -69,7 +69,7 @@ foreach ($solution in $solutions) {
     Write-Host "Building solution: $($solution.FullName)"
 
     # UWP projects require MSBuild instead of dotnet build
-    $isUwpSolution = $solution.Name -eq "UwpVSTestApp.sln"
+    $isUwpSolution = $solution.Name -in @("UwpVSTestApp.sln", "UwpMtpApp.sln", "ClassicUwpMtpApp.sln")
 
     if ($isUwpSolution) {
         # Restore NuGet packages first for UWP projects

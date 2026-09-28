@@ -1,0 +1,32 @@
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
+
+using Windows.ApplicationModel;
+using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
+
+namespace ClassicUwpMtpApp
+{
+    [TestClass]
+    public sealed class UnitTests
+    {
+        [TestMethod]
+        public void PackageIdentityMatchesManifest()
+        {
+            Assert.AreEqual("MSTestClassicUwpMtpSample", Package.Current.Id.Name);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(Package.Current.Id.FamilyName));
+        }
+
+        [UITestMethod]
+        public void UITestMethodRunsOnTheCoreWindowDispatcher()
+        {
+            CoreWindow coreWindow = CoreWindow.GetForCurrentThread();
+            Assert.IsNotNull(coreWindow);
+            Assert.IsTrue(coreWindow.Dispatcher.HasThreadAccess);
+
+            var grid = new Grid();
+            Assert.IsNotNull(grid.Dispatcher);
+            Assert.IsTrue(grid.Dispatcher.HasThreadAccess);
+        }
+    }
+}

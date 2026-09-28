@@ -30,6 +30,12 @@ MSTest.Sdk uses Microsoft.Testing.Platform for unpackaged WinUI, packaged full-t
 
 Unsigned build-output layouts require Windows Developer Mode or sideloading. UWP builds still require the Visual Studio UWP/MSBuild workload, but they do not require `Microsoft.NET.Test.Sdk`, `vstest.console`, or the Visual Studio UWP test-host runtime provider. See [Testing UWP and WinUI apps with MSTest](../../../docs/winui-testing.md).
 
+Copy-ready projects are available for [modern UWP](../../../samples/public/UwpMtpApp),
+[classic UWP](../../../samples/public/ClassicUwpMtpApp),
+[packaged WinUI](../../../samples/public/WinUIMtpPackagedApp),
+[unpackaged WinUI](../../../samples/public/WinUIMtpUnpackagedApp), and
+[AppContainer WinUI](../../../samples/public/WinUIMtpAppContainerApp).
+
 ## ClassicEngine extension profiles
 
 | `TestingExtensionsProfile` | Included extensions |
