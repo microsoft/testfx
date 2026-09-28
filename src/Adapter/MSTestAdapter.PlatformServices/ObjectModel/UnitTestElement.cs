@@ -112,6 +112,16 @@ internal sealed class UnitTestElement
     internal ITestExecutionActivityLease? ExecutionActivityLease { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the current execution path can carry the process-local activity
+    /// lease into the test runner. This is disabled when .NET Framework AppDomain isolation serializes the test
+    /// element across the boundary.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal bool SupportsExecutionActivityLease { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the host's test case for this test, used to report its lifecycle and results back to the
     /// host with full fidelity (preserving any host-injected data — such as test-case-management or
     /// data-collector properties — that the neutral model does not otherwise carry) and to describe it to the

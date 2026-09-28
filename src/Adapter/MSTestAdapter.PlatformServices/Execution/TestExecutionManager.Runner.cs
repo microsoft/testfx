@@ -111,6 +111,7 @@ internal partial class TestExecutionManager
 
             // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
             // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
+            currentTest.SupportsExecutionActivityLease = !usesAppDomains;
             await _testResultRecorder.RecordStartAsync(currentTest).ConfigureAwait(false);
             unitTestElement.ExecutionActivityLease = currentTest.ExecutionActivityLease;
 
@@ -206,6 +207,7 @@ internal partial class TestExecutionManager
         dependencyCoordinator.RecordNotRun(test);
 
         DateTimeOffset now = DateTimeOffset.Now;
+        test.SupportsExecutionActivityLease = !usesAppDomains;
         await _testResultRecorder.RecordStartAsync(test).ConfigureAwait(false);
 
         // The test was selected, so it is counted in the class-cleanup countdown even though it is not going

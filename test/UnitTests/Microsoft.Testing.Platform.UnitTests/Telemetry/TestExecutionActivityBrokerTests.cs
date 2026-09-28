@@ -159,6 +159,42 @@ public sealed class TestExecutionActivityBrokerTests
     }
 
     [TestMethod]
+    public void ExecutionEndBeforeActivation_IsClampedToActivityStart()
+    {
+        DateTimeOffset? activityStart = null;
+        _service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>(
+                (_, _, _, startTime) => activityStart = startTime)
+            .Returns(_activity.Object);
+        using TestExecutionActivityBroker broker = CreateBroker();
+        TestExecutionActivityReservation reservation = ReserveWithoutActivation(broker);
+        DateTimeOffset capturedEnd = DateTimeOffset.UtcNow;
+        reservation.Activate();
+        reservation.RecordExecutionEnd(capturedEnd);
+        DateTimeOffset? enrichedEnd = null;
+        TimeSpan? enrichedDuration = null;
+
+        Assert.IsTrue(reservation.ProcessResult(
+            TestingPlatformSemanticConventions.TestResultStatus.Skipped,
+            contributesToAggregate: true,
+            isFinalResult: true,
+            (_, _, endTime, duration) =>
+            {
+                enrichedEnd = endTime;
+                enrichedDuration = duration;
+            }));
+
+        Assert.IsNotNull(activityStart);
+        Assert.AreEqual(activityStart, enrichedEnd);
+        Assert.AreEqual(TimeSpan.Zero, enrichedDuration);
+        _activity.Verify(a => a.Stop(activityStart.Value), Times.Once);
+    }
+
+    [TestMethod]
     public void Dispose_StopsAbandonedActivityOnceAtRecordedExecutionEnd()
     {
         TestExecutionActivityBroker broker = CreateBroker();

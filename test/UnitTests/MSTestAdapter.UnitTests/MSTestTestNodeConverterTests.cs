@@ -844,6 +844,35 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             Times.Once);
     }
 
+    public async Task MtpTestResultRecorder_RecordStart_DoesNotReserveWhenExecutionLeaseIsUnsupported()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            messageBus,
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings(),
+            broker);
+        UnitTestElement element = CreateElement();
+        element.SupportsExecutionActivityLease = false;
+
+        await recorder.RecordStartAsync(element);
+
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>().Single();
+        message.TestNode.Properties.Any<TestExecutionActivityProperty>().Should().BeFalse();
+        element.ExecutionActivityLease.Should().BeNull();
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+    }
+
     private static TestNode ResultNode(UnitTestOutcome outcome)
         => MSTestTestNodeConverter.ToResultTestNode(CreateElement(), new FrameworkTestResult { Outcome = outcome }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
 

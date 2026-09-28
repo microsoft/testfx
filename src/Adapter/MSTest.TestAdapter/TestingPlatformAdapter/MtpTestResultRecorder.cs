@@ -83,7 +83,9 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         }
 
         TestExecutionActivityReservation? discardedReservation = null;
-        if (occurrence is null && _testExecutionActivityBroker?.Reserve(testNode) is { } reservation)
+        if (testElement.SupportsExecutionActivityLease
+            && occurrence is null
+            && _testExecutionActivityBroker?.Reserve(testNode) is { } reservation)
         {
             var candidate = new Occurrence(reservation);
             lock (_syncRoot)

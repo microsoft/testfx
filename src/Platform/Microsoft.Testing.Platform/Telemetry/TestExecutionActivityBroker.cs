@@ -260,6 +260,11 @@ internal sealed class TestExecutionActivityBroker(
         _entries.Remove(token);
         DateTimeOffset endTime = entry.ExecutionEnd ?? fallbackEndTime;
         DateTimeOffset startTime = entry.StartTime ?? endTime;
+        if (endTime < startTime)
+        {
+            endTime = startTime;
+        }
+
         return new FinalizationWork(
             entry.Activity,
             entry.AggregateResult,
