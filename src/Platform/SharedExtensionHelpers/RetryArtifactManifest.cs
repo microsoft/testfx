@@ -34,7 +34,7 @@ internal static class RetryArtifactManifest
             ? null
             : Encoding.UTF8.GetString(Convert.FromBase64String(encodedKind));
 
-    public static string WriteEntry(string path, string encodedKind)
+    public static string WriteEntryWithEncodedKind(string path, string encodedKind)
         => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{encodedKind}";
 }
 

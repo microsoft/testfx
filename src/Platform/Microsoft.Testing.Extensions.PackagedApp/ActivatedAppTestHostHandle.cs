@@ -174,7 +174,7 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
                     continue;
                 }
 
-                recoveredLines.Add(RetryArtifactManifest.WriteEntry(Path.GetFullPath(recoveredPath), encodedKind));
+                recoveredLines.Add(RetryArtifactManifest.WriteEntryWithEncodedKind(Path.GetFullPath(recoveredPath), encodedKind));
             }
 
             if (recoveredLines.Count == 0)
