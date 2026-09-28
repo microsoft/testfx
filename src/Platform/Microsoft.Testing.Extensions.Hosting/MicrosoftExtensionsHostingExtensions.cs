@@ -83,7 +83,7 @@ public static class MicrosoftExtensionsHostingExtensions
                 }
                 catch (Exception stopException) when (operationException is not null)
                 {
-                    AddSecondaryException(operationException, nameof(IHost.StopAsync), stopException);
+                    AddSecondaryExceptionOrThrow(operationException, nameof(IHost.StopAsync), stopException);
                 }
             }
         }
@@ -98,18 +98,31 @@ public static class MicrosoftExtensionsHostingExtensions
             }
             catch (Exception disposeException)
             {
-                AddSecondaryException(exception, nameof(IAsyncCleanableExtension.CleanupAsync), disposeException);
+                AddSecondaryExceptionOrThrow(exception, nameof(IAsyncCleanableExtension.CleanupAsync), disposeException);
             }
 
             throw;
         }
     }
 
-    private static void AddSecondaryException(Exception primaryException, string operation, Exception secondaryException)
+    private static void AddSecondaryExceptionOrThrow(Exception primaryException, string operation, Exception secondaryException)
     {
-        if (primaryException.Data is { IsReadOnly: false } data)
+        try
         {
-            data[operation] = secondaryException;
+            if (primaryException.Data is { IsReadOnly: false } data)
+            {
+                data[operation] = secondaryException;
+                return;
+            }
         }
+        catch (Exception)
+        {
+            // An exception can expose an IDictionary implementation that rejects reads or writes.
+        }
+
+        throw new AggregateException(
+            $"{operation} failed while handling another exception.",
+            primaryException,
+            secondaryException);
     }
 }

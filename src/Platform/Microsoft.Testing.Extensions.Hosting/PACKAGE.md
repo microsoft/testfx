@@ -52,7 +52,8 @@ to both parsers.
 - `ITestApplication.RunAsync` has no cancellation-token overload, so the token does not cancel the MTP run.
 - Exceptions from host startup, MTP construction/execution, and host shutdown are surfaced to the caller.
   When an operation and its cleanup both fail, the operation remains the primary exception and the cleanup
-  exception is attached to its `Data` dictionary.
+  exception is attached to its `Data` dictionary. If that dictionary cannot be updated, an
+  `AggregateException` exposes the operation exception first and the cleanup exception second.
 
 See the runnable ASP.NET Core and Aspire ServiceDefaults samples under `samples/public/MTPHostIntegration`.
 

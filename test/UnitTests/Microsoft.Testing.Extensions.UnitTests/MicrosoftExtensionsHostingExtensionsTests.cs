@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Platform.Builder;
@@ -180,6 +182,29 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     }
 
     [TestMethod]
+    public async Task RunTestingPlatformAsync_WhenMtpAndHostStopFailAndExceptionDataIsUnavailable_AggregatesFailures()
+    {
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        var stopException = new InvalidOperationException("host stop failure");
+        hostBuilder.Services.AddSingleton<IHostedService>(new ThrowingStopHostedService(stopException));
+        using IHost host = hostBuilder.Build();
+        var expectedException = new ThrowingDataException("framework failure");
+
+        AggregateException exception = await Assert.ThrowsExactlyAsync<AggregateException>(
+            () => host.RunTestingPlatformAsync(
+                [],
+                testApplication =>
+                    testApplication.RegisterTestFramework(
+                        _ => new TestFrameworkCapabilities(),
+                        (_, _) => throw expectedException),
+                TestContext.CancellationToken));
+
+        Assert.HasCount(2, exception.InnerExceptions);
+        Assert.AreSame(expectedException, exception.InnerExceptions[0]);
+        Assert.AreSame(stopException, exception.InnerExceptions[1]);
+    }
+
+    [TestMethod]
     public async Task RunTestingPlatformAsync_WhenConfigureFails_ReleasesDiagnosticLog()
     {
         using IHost host = Host.CreateApplicationBuilder().Build();
@@ -301,6 +326,11 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task StopAsync(CancellationToken cancellationToken) => throw exception;
+    }
+
+    private sealed class ThrowingDataException(string message) : Exception(message)
+    {
+        public override IDictionary Data => throw new NotSupportedException("Exception data is unavailable.");
     }
 
     private sealed class EmptyTestFramework : ITestFramework
