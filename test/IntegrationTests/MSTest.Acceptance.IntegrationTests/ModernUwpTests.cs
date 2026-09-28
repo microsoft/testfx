@@ -17,6 +17,9 @@ namespace MSTest.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class ModernUwpTests : AcceptanceTestBase
 {
+    private const string Net9TargetFramework = "net9.0-windows10.0.26100.0";
+    private const string Net10TargetFramework = "net10.0-windows10.0.26100.0";
+
     [DataRow("x86")]
     [DataRow("ARM64")]
     [TestMethod]
@@ -29,7 +32,8 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$AssetName$", assetName)
             .PatchCodeWithReplace("$PackageIdentityName$", $"MSTestModernUwp{uniqueSuffix}")
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", Net10TargetFramework);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
         WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
@@ -49,9 +53,11 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             WindowsApplicationModelAssetKind.ModernUwp);
     }
 
+    [DataRow(Net9TargetFramework)]
+    [DataRow(Net10TargetFramework)]
     [TestMethod]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Modern UWP execution is supported only on Windows.")]
-    public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp()
+    public async Task ModernUwp_ConsumesUwpAssets_AndRunsPlainAndUiTestsThroughMtp(string targetFramework)
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
         string assetName = $"ModernUwp{uniqueSuffix[..12]}";
@@ -60,10 +66,12 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$AssetName$", assetName)
             .PatchCodeWithReplace("$PackageIdentityName$", packageIdentityName)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", targetFramework);
 
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
         string executionDirectory = Path.Combine(Path.GetTempPath(), nameof(ModernUwpTests), uniqueSuffix);
+        bool cleanupSucceeded = false;
         try
         {
             await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
@@ -137,10 +145,11 @@ public sealed class ModernUwpTests : AcceptanceTestBase
 
                     AssertModernUwpTrx(run.TrxPath, build);
                 });
+            cleanupSucceeded = true;
         }
         finally
         {
-            if (Directory.Exists(executionDirectory))
+            if (cleanupSucceeded && Directory.Exists(executionDirectory))
             {
                 Directory.Delete(executionDirectory, recursive: true);
             }
@@ -214,7 +223,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>$TargetFramework$</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
