@@ -393,6 +393,50 @@ public class RetryTests
     }
 
     [TestMethod]
+    public void RetryArtifactManifest_WriteEntry_RoundTripsNonNullKind()
+    {
+        const string path = "report\t✓.xml";
+        const string kind = "microsoft.testing\tjunit✓";
+
+        string entry = InvokeWriteManifestEntry(path, kind);
+
+        Assert.HasCount(2, entry.Split('\t'));
+        (string encodedPath, string encodedKindOrNullSentinel) = SplitManifestEntry(entry);
+        Assert.AreEqual(path, DecodeManifestPath(encodedPath));
+        Assert.AreEqual(kind, DecodeManifestKind(encodedKindOrNullSentinel));
+    }
+
+    [TestMethod]
+    public void RetryArtifactManifest_WriteEntry_RoundTripsNullKind()
+    {
+        const string path = "report.xml";
+
+        string entry = InvokeWriteManifestEntry(path, kind: null);
+
+        Assert.HasCount(2, entry.Split('\t'));
+        (string encodedPath, string encodedKindOrNullSentinel) = SplitManifestEntry(entry);
+        Assert.AreEqual(path, DecodeManifestPath(encodedPath));
+        Assert.AreEqual("-", encodedKindOrNullSentinel);
+        Assert.IsNull(DecodeManifestKind(encodedKindOrNullSentinel));
+    }
+
+    [TestMethod]
+    public void RetryArtifactManifest_WriteEntryWithEncodedKind_RoundTripsEncodedKind()
+    {
+        const string path = "report.xml";
+        const string kind = "microsoft.testing.junit";
+        string encodedKind = Convert.ToBase64String(Encoding.UTF8.GetBytes(kind));
+
+        string entry = InvokeWriteManifestEntryWithEncodedKind(path, encodedKind);
+
+        Assert.HasCount(2, entry.Split('\t'));
+        (string encodedPath, string encodedKindOrNullSentinel) = SplitManifestEntry(entry);
+        Assert.AreEqual(encodedKind, encodedKindOrNullSentinel);
+        Assert.AreEqual(path, DecodeManifestPath(encodedPath));
+        Assert.AreEqual(kind, DecodeManifestKind(encodedKindOrNullSentinel));
+    }
+
+    [TestMethod]
     public void CollectRecoveredArtifacts_OversizedLine_IsRejectedAndManifestIsDeleted()
     {
         const string manifestPath = "recovered-artifacts.txt";
@@ -1303,7 +1347,42 @@ public class RetryTests
     }
 
     private static string CreateManifestLine(string path, string? kind)
-        => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{(kind is null ? "-" : Convert.ToBase64String(Encoding.UTF8.GetBytes(kind)))}";
+        => InvokeWriteManifestEntry(path, kind);
+
+    private static string InvokeWriteManifestEntry(string path, string? kind)
+        => (string)GetRetryArtifactManifestType()
+            .GetMethod("WriteEntry", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [path, kind])!;
+
+    private static string InvokeWriteManifestEntryWithEncodedKind(string path, string encodedKindOrNullSentinel)
+        => (string)GetRetryArtifactManifestType()
+            .GetMethod("WriteEntryWithEncodedKind", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [path, encodedKindOrNullSentinel])!;
+
+    private static (string EncodedPath, string EncodedKindOrNullSentinel) SplitManifestEntry(string entry)
+    {
+        object?[] arguments = [entry, null, null];
+        bool wasSplit = (bool)GetRetryArtifactManifestType()
+            .GetMethod("TrySplitEntry", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, arguments)!;
+
+        Assert.IsTrue(wasSplit);
+        return ((string)arguments[1]!, (string)arguments[2]!);
+    }
+
+    private static string DecodeManifestPath(string encodedPath)
+        => (string)GetRetryArtifactManifestType()
+            .GetMethod("DecodePath", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [encodedPath])!;
+
+    private static string? DecodeManifestKind(string encodedKindOrNullSentinel)
+        => (string?)GetRetryArtifactManifestType()
+            .GetMethod("DecodeKind", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [encodedKindOrNullSentinel]);
+
+    private static Type GetRetryArtifactManifestType()
+        => typeof(RetryOrchestrator).Assembly
+            .GetType("Microsoft.Testing.Extensions.RetryArtifactManifest")!;
 
     private static void InvokeCollectRecoveredArtifacts(
         IFileSystem fileSystem,
