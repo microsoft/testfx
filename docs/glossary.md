@@ -264,7 +264,7 @@ An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severi
 
 ### MSTEST0087 (duplicate DataRow display name)
 
-An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-empty `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit `DisplayName` values — rows without an explicit `DisplayName` are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
+An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-blank `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit non-blank `DisplayName` values — missing, null, empty, or whitespace-only names are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
 
 ### MSTest
 
