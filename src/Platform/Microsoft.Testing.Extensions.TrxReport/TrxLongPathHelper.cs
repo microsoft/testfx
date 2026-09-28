@@ -48,6 +48,9 @@ internal static class TrxLongPathHelper
     /// must not be persisted into the TRX because the extended-length form is not a display path.
     /// </summary>
     public static string GetPathForFileSystemAccess(string path)
+        => GetPathForFileSystemAccess(path, Path.GetFullPath);
+
+    internal static string GetPathForFileSystemAccess(string path, Func<string, string> getFullPath)
     {
 #if NETCOREAPP
         // .NET already switches to the extended-length form on Windows when the path exceeds MAX_PATH.
@@ -69,7 +72,7 @@ internal static class TrxLongPathHelper
         string fullPath;
         try
         {
-            fullPath = Path.GetFullPath(path);
+            fullPath = getFullPath(path);
         }
         catch (PathTooLongException) when (Path.IsPathRooted(path) && !ContainsRelativePathSegments(path))
         {

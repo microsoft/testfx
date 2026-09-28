@@ -127,6 +127,42 @@ public sealed class TrxReportTests : AcceptanceTestBase<TrxReportTests.TestAsset
         }
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task TrxReport_MissingResultFile_PreservesWarningAndSkipsResultFile(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        string testResultsPath = Path.Combine(Path.GetTempPath(), $"mstest-trx-{Guid.NewGuid():N}");
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.ProjectName, tfm);
+
+        try
+        {
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                $"--filter \"FullyQualifiedName~MissingResultFile\" --report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputContains("missing-result-file.txt");
+            testHostResult.AssertOutputContains("The attachment will be skipped.");
+
+            string trxFile = Assert.ContainsSingle(Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories));
+            var trxDocument = XDocument.Load(trxFile);
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            Assert.IsEmpty(trxDocument.Descendants(ns + "ResultFile"));
+
+            XElement warningRunInfo = trxDocument.Descendants(ns + "RunInfo").Single(runInfo => runInfo.Attribute("outcome")?.Value == "Warning");
+            Assert.Contains("missing-result-file.txt", warningRunInfo.Value);
+            Assert.IsEmpty(Directory.GetDirectories(testResultsPath, ".mstest-*", SearchOption.TopDirectoryOnly));
+        }
+        finally
+        {
+            if (Directory.Exists(testResultsPath))
+            {
+                Directory.Delete(testResultsPath, recursive: true);
+            }
+        }
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "MSTestTrxReport";
@@ -201,6 +237,13 @@ public class UnitTest1
         string sourcePathsRecord = Environment.GetEnvironmentVariable("MSTEST_RESULT_FILE_PATHS_RECORD")
             ?? throw new InvalidOperationException("MSTEST_RESULT_FILE_PATHS_RECORD is not set.");
         File.WriteAllLines(sourcePathsRecord, [firstAttachment, secondAttachment]);
+    }
+
+    [TestMethod]
+    public void MissingResultFile()
+    {
+        string missingAttachment = Path.Combine(TestContext.TestResultsDirectory!, "missing-result-file.txt");
+        TestContext.AddResultFile(missingAttachment);
     }
 }
 """;
