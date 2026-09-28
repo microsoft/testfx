@@ -467,7 +467,7 @@ public sealed class ProtocolTests
         var message = new CommandLineOptionMessages(
             "path/to/module.dll",
             [
-                new CommandLineOptionMessage("filter", "Filters the tests", false, true),
+                new CommandLineOptionMessage("filter", "Filters the tests", false, true, "FilterProvider", 1, int.MaxValue),
                 new CommandLineOptionMessage("hidden-option", null, true, false),
                 new CommandLineOptionMessage(null, "no name", null, null),
             ]);
@@ -489,6 +489,9 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.Description, actualOption.Description);
             Assert.AreEqual(expected.IsHidden, actualOption.IsHidden);
             Assert.AreEqual(expected.IsBuiltIn, actualOption.IsBuiltIn);
+            Assert.AreEqual(expected.ProviderUid, actualOption.ProviderUid);
+            Assert.AreEqual(expected.MinimumArity, actualOption.MinimumArity);
+            Assert.AreEqual(expected.MaximumArity, actualOption.MaximumArity);
         }
     }
 

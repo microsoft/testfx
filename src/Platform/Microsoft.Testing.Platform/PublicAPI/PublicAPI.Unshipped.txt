@@ -5,3 +5,5 @@
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandleExitCodePolicy.IsExitCodeAuthoritative.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ILocalTestHostHandle
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ILocalTestHostHandle.ProcessId.get -> int
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetPlatformService<TService>(this System.IServiceProvider! provider) -> TService?
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetRequiredPlatformService<TService>(this System.IServiceProvider! provider) -> TService

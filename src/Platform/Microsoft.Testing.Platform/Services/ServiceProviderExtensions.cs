@@ -35,6 +35,24 @@ public static class ServiceProviderExtensions
     /// <exception cref="InvalidOperationException">Thrown when the required service is not found.</exception>
     public static TService GetRequiredService<TService>(this IServiceProvider provider)
         where TService : notnull
+        => provider.GetRequiredPlatformService<TService>();
+
+    /// <summary>
+    /// Gets the required Microsoft Testing Platform service of type <typeparamref name="TService"/>
+    /// from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the platform service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The required platform service of type <typeparamref name="TService"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the required service is not found.</exception>
+    /// <remarks>
+    /// Prefer this method when the project also references Microsoft.Extensions.DependencyInjection.
+    /// Its platform-specific name avoids ambiguity with that package's <c>GetRequiredService</c>
+    /// extension method.
+    /// </remarks>
+    public static TService GetRequiredPlatformService<TService>(this IServiceProvider provider)
+        where TService : notnull
     {
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
@@ -53,6 +71,22 @@ public static class ServiceProviderExtensions
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
     public static TService? GetService<TService>(this IServiceProvider provider)
         where TService : class
+        => provider.GetPlatformService<TService>();
+
+    /// <summary>
+    /// Gets the Microsoft Testing Platform service of type <typeparamref name="TService"/>
+    /// from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the platform service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The platform service of type <typeparamref name="TService"/> or null if not found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
+    /// <remarks>
+    /// Prefer this method when the project also references Microsoft.Extensions.DependencyInjection.
+    /// Its platform-specific name avoids ambiguity with that package's <c>GetService</c> extension method.
+    /// </remarks>
+    public static TService? GetPlatformService<TService>(this IServiceProvider provider)
+        where TService : class
     {
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
@@ -65,7 +99,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The message bus.</returns>
     public static IMessageBus GetMessageBus(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<IMessageBus>();
+        => serviceProvider.GetRequiredPlatformService<IMessageBus>();
 
     /// <summary>
     /// Gets the configuration from the <see cref="IServiceProvider"/>.
@@ -73,7 +107,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The configuration.</returns>
     public static IConfiguration GetConfiguration(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<IConfiguration>();
+        => serviceProvider.GetRequiredPlatformService<IConfiguration>();
 
     /// <summary>
     /// Gets the hierarchical configuration root from the <see cref="IServiceProvider"/>.
@@ -81,7 +115,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The hierarchical configuration root.</returns>
     public static IConfigurationRoot GetConfigurationRoot(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<IConfigurationRoot>();
+        => serviceProvider.GetRequiredPlatformService<IConfigurationRoot>();
 
     /// <summary>
     /// Gets the artifact naming service from the <see cref="IServiceProvider"/>.
@@ -89,7 +123,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The artifact naming service.</returns>
     public static IArtifactNamingService GetArtifactNamingService(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<IArtifactNamingService>();
+        => serviceProvider.GetRequiredPlatformService<IArtifactNamingService>();
 
     /// <summary>
     /// Gets the command line options from the <see cref="IServiceProvider"/>.
@@ -97,7 +131,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The command line options.</returns>
     public static ICommandLineOptions GetCommandLineOptions(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<ICommandLineOptions>();
+        => serviceProvider.GetRequiredPlatformService<ICommandLineOptions>();
 
     /// <summary>
     /// Gets the logger factory from the <see cref="IServiceProvider"/>.
@@ -105,7 +139,7 @@ public static class ServiceProviderExtensions
     /// <param name="serviceProvider">The service provider.</param>
     /// <returns>The logger factory.</returns>
     public static ILoggerFactory GetLoggerFactory(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredService<ILoggerFactory>();
+        => serviceProvider.GetRequiredPlatformService<ILoggerFactory>();
 
     /// <summary>
     /// Gets the output device from the <see cref="IServiceProvider"/>.

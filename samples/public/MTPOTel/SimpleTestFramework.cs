@@ -4,8 +4,10 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace MTPOTel;
@@ -42,6 +44,8 @@ internal sealed class SimpleTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         var sessionUid = new SessionUid("SimpleTestSession");
+        IConfiguration configuration = _serviceProvider.GetConfiguration();
+        Console.WriteLine($"Configuration imported from: {configuration["MTPOTel:Composition"]}");
 
         // Create 5 tests to run sequentially
         for (int i = 1; i <= 5; i++)
