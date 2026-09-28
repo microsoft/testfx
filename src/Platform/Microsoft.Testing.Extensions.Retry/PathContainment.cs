@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Extensions.Policy;
 
 internal static class PathContainment
 {
-    public static bool IsUnderDirectory(string path, string directory)
+    internal static bool IsUnderDirectory(string path, string directory)
     {
         string directoryPrefix = Path.GetFullPath(directory)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
