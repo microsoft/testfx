@@ -120,13 +120,26 @@ try {
             if ($null -ne $packageSourceMapping) {
                 $localSourceMapping = $nuGetConfig.CreateElement("packageSource")
                 $localSourceMapping.SetAttribute("key", "local-testfx")
-                foreach ($patternValue in @("MSTest", "MSTest.*", "Microsoft.Testing.*")) {
+                $localPackagePatterns = @("MSTest", "MSTest.*", "Microsoft.Testing.*")
+                foreach ($patternValue in $localPackagePatterns) {
                     $pattern = $nuGetConfig.CreateElement("package")
                     $pattern.SetAttribute("pattern", $patternValue)
                     [void]$localSourceMapping.AppendChild($pattern)
                 }
 
                 [void]$packageSourceMapping.AppendChild($localSourceMapping)
+
+                # Package source mapping selects only the sources with the most specific matching
+                # pattern. Add the same specific patterns to dotnet-public so released package
+                # versions used by the other samples remain available alongside the local CI build.
+                $dotnetPublicMapping = $packageSourceMapping.SelectSingleNode("packageSource[@key='dotnet-public']")
+                if ($null -ne $dotnetPublicMapping) {
+                    foreach ($patternValue in $localPackagePatterns) {
+                        $pattern = $nuGetConfig.CreateElement("package")
+                        $pattern.SetAttribute("pattern", $patternValue)
+                        [void]$dotnetPublicMapping.AppendChild($pattern)
+                    }
+                }
             }
 
             $nuGetConfig.Save($nuGetConfigPath)
