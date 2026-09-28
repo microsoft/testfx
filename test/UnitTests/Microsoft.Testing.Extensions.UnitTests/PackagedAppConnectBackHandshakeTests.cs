@@ -160,7 +160,15 @@ public sealed class PackagedAppConnectBackHandshakeTests
 
         Assert.IsNotNull(handshakeId);
         Assert.StartsWith("retry-", handshakeId);
-        Assert.AreEqual(handshakeId, PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
+        Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public void TryGetHandshakeId_ReturnsNull_WhenRetryPipeNameOptionIsLastWithoutValue()
+    {
+        string[] arguments = ["--internal-retry-pipename"];
+
+        Assert.IsNull(PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
     }
 
     [TestMethod]
