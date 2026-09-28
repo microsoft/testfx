@@ -67,18 +67,19 @@ internal static class TestResultCapture
 
         using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         const int CharacterChunkLength = 1024;
-        byte[] buffer = new byte[Encoding.UTF8.GetMaxByteCount(CharacterChunkLength)];
+        byte[] buffer = new byte[CharacterChunkLength * sizeof(char)];
         int offset = 0;
         while (offset < uid.Length)
         {
             int characterCount = Math.Min(CharacterChunkLength, uid.Length - offset);
-            if (offset + characterCount < uid.Length && char.IsHighSurrogate(uid[offset + characterCount - 1]))
+            for (int i = 0; i < characterCount; i++)
             {
-                characterCount--;
+                char value = uid[offset + i];
+                buffer[i * 2] = (byte)value;
+                buffer[(i * 2) + 1] = (byte)(value >> 8);
             }
 
-            int byteCount = Encoding.UTF8.GetBytes(uid, offset, characterCount, buffer, 0);
-            sha256.AppendData(buffer, 0, byteCount);
+            sha256.AppendData(buffer, 0, characterCount * sizeof(char));
             offset += characterCount;
         }
 

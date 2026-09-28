@@ -170,11 +170,9 @@ public class CtrfReportEngineTests
     [TestMethod]
     public async Task TestResultCapture_LongUidsRemainDistinctThroughRetryCollapsing()
     {
-        string sharedPrefix = new string('u', 1023)
-            + "\U0001F642"
-            + new string('u', MaxIdentityFieldLength - 1025);
-        string firstUid = sharedPrefix + "A";
-        string secondUid = sharedPrefix + "B";
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "\uD800";
+        string secondUid = sharedPrefix + "\uD801";
         string hashShapedUid = ComputeTestId(firstUid);
         string escapePrefixedUid = "uid:" + hashShapedUid;
         TestNode firstNode = new()
@@ -273,8 +271,16 @@ public class CtrfReportEngineTests
     private static string ComputeTestId(string uid)
     {
         using var sha256 = SHA256.Create();
+        byte[] bytes = new byte[uid.Length * sizeof(char)];
+        for (int i = 0; i < uid.Length; i++)
+        {
+            char value = uid[i];
+            bytes[i * 2] = (byte)value;
+            bytes[(i * 2) + 1] = (byte)(value >> 8);
+        }
+
         return "sha256:" + string.Concat(
-            sha256.ComputeHash(Encoding.UTF8.GetBytes(uid))
+            sha256.ComputeHash(bytes)
                 .Select(value => value.ToString("x2", CultureInfo.InvariantCulture)));
     }
 
