@@ -19,6 +19,10 @@
     <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj" />
     <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"
+                      SetTargetFramework="TargetFramework=netstandard2.0" />
   </ItemGroup>
 
   <ItemGroup>
