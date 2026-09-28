@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Security;
+using System.Security.Cryptography;
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -31,6 +32,7 @@ internal static class TestResultCapture
 
         var result = new CapturedTestResult
         {
+            TestId = CreateTestId(node.Uid.Value),
             Status = status,
             RawStatus = rawStatus,
             Namespace = TestResultCaptureHelper.Truncate(ns, TestResultCaptureHelper.MaxIdentityFieldLength),
@@ -48,6 +50,24 @@ internal static class TestResultCapture
         // shared value).
         result.ClassName = TestResultCaptureHelper.Truncate(className, TestResultCaptureHelper.MaxIdentityFieldLength);
         return result;
+    }
+
+    private static string CreateTestId(string uid)
+    {
+        if (uid.Length <= TestResultCaptureHelper.MaxIdentityFieldLength)
+        {
+            return uid;
+        }
+
+        using var sha256 = SHA256.Create();
+        byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(uid));
+        var builder = new StringBuilder("sha256:", capacity: 7 + (hash.Length * 2));
+        foreach (byte value in hash)
+        {
+            _ = builder.Append(value.ToString("x2", CultureInfo.InvariantCulture));
+        }
+
+        return builder.ToString();
     }
 
     // CTRF status enum: passed, failed, skipped, pending, other.

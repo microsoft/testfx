@@ -167,6 +167,49 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public async Task TestResultCapture_LongUidsRemainDistinctThroughRetryCollapsing()
+    {
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "A";
+        string secondUid = sharedPrefix + "B";
+        TestNode firstNode = new()
+        {
+            Uid = firstUid,
+            DisplayName = "First",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode secondNode = new()
+        {
+            Uid = secondUid,
+            DisplayName = "Second",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+
+        CapturedTestResult first = TestResultCapture.TryCapture(firstNode)!;
+        CapturedTestResult second = TestResultCapture.TryCapture(secondNode)!;
+
+        Assert.AreEqual(first.Uid, second.Uid, "The capped compatibility UIDs intentionally collide in this scenario.");
+        Assert.AreNotEqual(first.TestId, second.TestId);
+        Assert.StartsWith("sha256:", first.TestId);
+        Assert.StartsWith("sha256:", second.TestId);
+        Assert.AreEqual(first.TestId, TestResultCapture.TryCapture(firstNode)!.TestId, "The derived testId must be deterministic.");
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync([first, second]);
+
+        string report = memoryStream.GetUtf8Content();
+        using var document = JsonDocument.Parse(report);
+        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.AreNotEqual(tests[0].GetProperty("testId").GetString(), tests[1].GetProperty("testId").GetString());
+        Assert.AreEqual(
+            tests[0].GetProperty("extra").GetProperty("uid").GetString(),
+            tests[1].GetProperty("extra").GetProperty("uid").GetString());
+
+        using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts));
+        Assert.AreEqual(2, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
+    }
+
+    [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
         string huge = new('a', MaxStandardStreamLength + 7);
