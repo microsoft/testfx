@@ -28,7 +28,7 @@ Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through t
 
 MSTest.Sdk uses Microsoft.Testing.Platform for unpackaged WinUI, packaged full-trust WinUI, AppContainer-configured WinUI, modern UWP (`UseUwpTools=true`), and classic `uap10.0` projects. Packaged applications run behind the SDK-shipped full-trust app-model controller, which registers the package and activates the exact manifest application by AUMID while retaining MTP-owned cancellation, reports, retries, and exit-code handling.
 
-`UseUwp=true` alone only adds UWP XAML references. Set `UseUwpTools=false` explicitly to use those references without selecting the UWP application model; MSTest.Sdk then uses the direct MTP runner (unless another packaged application model is selected).
+`UseUwp=true` adds UWP XAML references; Visual Studio also enables `UseUwpTools` by default during the build. MSTest.Sdk selects the UWP application model when `UseUwpTools` is true or has not yet been set, so set `UseUwpTools=false` explicitly to use the references without UWP package activation. This selects the direct MTP runner unless another packaged application model is configured.
 
 Unsigned build-output layouts require Windows Developer Mode or sideloading. UWP builds still require the Visual Studio UWP/MSBuild workload, but they do not require `Microsoft.NET.Test.Sdk`, `vstest.console`, or the Visual Studio UWP test-host runtime provider. See [Testing UWP and WinUI apps with MSTest](../../../docs/winui-testing.md).
 

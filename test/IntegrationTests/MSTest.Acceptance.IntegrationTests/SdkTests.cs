@@ -1004,7 +1004,6 @@ namespace MSTestWebTest
             "ModernUwpSdk",
             """
             <UseUwp>true</UseUwp>
-            <UseUwpTools>true</UseUwpTools>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             """);
 

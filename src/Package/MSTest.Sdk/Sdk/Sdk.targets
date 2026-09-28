@@ -7,6 +7,8 @@
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
 
     <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
+    <!-- Visual Studio can set UseUwpTools after package references have been evaluated. -->
+    <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') ">true</_MSTestUwpApplicationModel>
   </PropertyGroup>
 
   <!-- Import Runner.targets -->
@@ -16,7 +18,7 @@
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
   <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
-    <Error Condition=" '$(UseWinUI)' == 'true' AND '$(UseUwpTools)' == 'true' "
+    <Error Condition=" '$(UseWinUI)' == 'true' AND '$(_MSTestUwpApplicationModel)' == 'true' "
            Text="A test project cannot use both WinUI and UWP application models." />
     <Error Condition=" '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' == 'None' AND '$(UseVSTest)' == 'true' "
            Text="VSTest does not support unpackaged WinUI test applications. Remove UseVSTest or set &lt;UseVSTest&gt;false&lt;/UseVSTest&gt; to use Microsoft.Testing.Platform." />
