@@ -64,12 +64,13 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         Assert.AreEqual("host", exception.ParamName);
     }
 
-    [DataRow("--help")]
-    [DataRow("-?")]
-    [DataRow("--info")]
+    [DataRow("--help", true)]
+    [DataRow("-?", true)]
+    [DataRow("--info", true)]
+    [DataRow("--list-tests", false)]
     [TestMethod]
-    public void ShouldBypassApplicationHost_RecognizesInformationalOptions(string option)
-        => Assert.IsTrue(MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost([option]));
+    public void ShouldBypassApplicationHost_RecognizesInformationalOptions(string option, bool expected)
+        => Assert.AreEqual(expected, MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost([option]));
 
     [TestMethod]
     public void ShouldBypassApplicationHost_ExpandsResponseFiles()

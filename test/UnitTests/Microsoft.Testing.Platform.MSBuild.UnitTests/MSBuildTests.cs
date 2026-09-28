@@ -160,8 +160,11 @@ namespace SomeNamespace
         Assert.IsEmpty(_errors);
     }
 
+    [DataRow("CreateHost")]
+    [DataRow("Contoso.1Foo.CreateHost")]
+    [DataRow("Contoso..CreateHost")]
     [TestMethod]
-    public void EntryPointTask_Rejects_Invalid_Host_Factory()
+    public void EntryPointTask_Rejects_Invalid_Host_Factory(string hostFactory)
     {
         InMemoryFileSystem inMemoryFileSystem = new();
         TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
@@ -169,7 +172,7 @@ namespace SomeNamespace
             BuildEngine = _buildEngine.Object,
             TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile.cs"),
             Language = new CustomTaskItem("C#"),
-            HostFactory = "CreateHost",
+            HostFactory = hostFactory,
         };
 
         Assert.IsFalse(testingPlatformEntryPoint.Execute());
