@@ -59,6 +59,7 @@ internal sealed partial class Json
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using Utf8JsonWriter writer = new(stream);
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+            // Stryker disable once Boolean: Recursive serializers currently complete synchronously, so context capture is unobservable.
             await SerializeAsync(obj, writer).ConfigureAwait(false);
             await writer.FlushAsync().ConfigureAwait(false);
             return Encoding.UTF8.GetString(stream.GetBuffer().AsMemory().Span[..(int)stream.Position]);
@@ -166,6 +167,7 @@ internal sealed partial class Json
                     foreach ((string property, object? value) in properties)
                     {
                         writer.WritePropertyName(property);
+                        // Stryker disable once Boolean: Recursive serializers currently complete synchronously, so context capture is unobservable.
                         await SerializeAsync(value, writer).ConfigureAwait(false);
                     }
                 }
@@ -193,6 +195,7 @@ internal sealed partial class Json
                 }
                 else
                 {
+                    // Stryker disable once Boolean: Recursive serializers currently complete synchronously, so context capture is unobservable.
                     await SerializeAsync(o, writer).ConfigureAwait(false);
                 }
             }

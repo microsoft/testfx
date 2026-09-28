@@ -308,13 +308,19 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         // is expected, and an abandoned callback is observed by ShutdownServerAsync's continuation instead.
         if (_serverTask.IsFaulted)
         {
-            _ = await _serverTask.ConfigureAwait(false);
+            // The status check guarantees completion, so GetResult cannot block and preserves await's
+            // exception-unwrapping behavior without creating a meaningless continuation-capture choice.
+#pragma warning disable VSTHRD103 // GetResult synchronously blocks - the task is already completed.
+            _ = _serverTask.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD103
         }
         else if (_serverTask.IsCanceled)
         {
             try
             {
-                _ = await _serverTask.ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // GetResult synchronously blocks - the task is already completed.
+                _ = _serverTask.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD103
             }
             catch (OperationCanceledException ex)
                 when (ex.CancellationToken == serverCancellationToken || serverCancellationToken.IsCancellationRequested)

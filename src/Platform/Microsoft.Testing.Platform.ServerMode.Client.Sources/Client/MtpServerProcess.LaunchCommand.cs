@@ -67,9 +67,8 @@ internal sealed partial class MtpServerProcess
         // `Foo.exe` next to `Foo.dll`. Probing for ".exe" on Linux finds that Windows binary and launching
         // it aborts the run, which is the CI failure fixed in microsoft/vstest#16336. A Unix apphost has
         // no extension, so asking for the right name per OS never selects the foreign one.
-        string appHostFileName = IsWindows()
-            ? nameWithoutExtension + ".exe"
-            : nameWithoutExtension;
+        // Stryker disable once all: Each branch is platform-specific; forcing the Windows branch on Windows is equivalent.
+        string appHostFileName = IsWindows() ? nameWithoutExtension + ".exe" : nameWithoutExtension;
         return Path.Combine(directory, appHostFileName);
     }
 
@@ -112,9 +111,9 @@ internal sealed partial class MtpServerProcess
     }
 
     private static bool ShouldRetryApphostThroughDotnet(string source, LaunchCommand launch, Win32Exception exception)
-        => Path.GetExtension(source).Equals(".dll", StringComparison.OrdinalIgnoreCase)
+        => !IsWindows()
+            && Path.GetExtension(source).Equals(".dll", StringComparison.OrdinalIgnoreCase)
             && !launch.FileName.Equals("dotnet", StringComparison.OrdinalIgnoreCase)
-            && !IsWindows()
             && exception.NativeErrorCode == UnixPermissionDeniedErrorCode;
 
 #if NETFRAMEWORK

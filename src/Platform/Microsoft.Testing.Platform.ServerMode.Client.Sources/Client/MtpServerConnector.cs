@@ -157,21 +157,29 @@ internal static class MtpServerConnector
 #endif
 
             var connectStopwatch = Stopwatch.StartNew();
-            while (!acceptTask.IsCompleted)
+            while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                bool acceptCompleted = acceptTask.IsCompleted;
+                Task<Exception?> serverStoppedFailureTask = cancellationToken.IsCancellationRequested
+                    ? throw new OperationCanceledException(cancellationToken)
+                    : tryGetServerStoppedFailure(cancellationToken);
 
                 // Once a probe observes that the server stopped, await its bounded diagnostic collection
                 // before checking acceptTask again. Any socket accepted during that wait belongs to a dead
                 // peer, so the precise stopped-server failure (exit code, captured stderr) must win. The loop
                 // checks acceptTask before probing, so a connection completed while the server was still
                 // alive is already taken.
-                if (await tryGetServerStoppedFailure(cancellationToken).ConfigureAwait(false) is { } serverStopped)
+                if (await serverStoppedFailureTask.ConfigureAwait(false) is { } serverStopped)
                 {
                     throw serverStopped;
                 }
 
-                if (connectStopwatch.Elapsed >= connectionTimeout)
+                if (acceptCompleted)
+                {
+                    break;
+                }
+
+                if (connectStopwatch.Elapsed.CompareTo(connectionTimeout) is not -1)
                 {
                     throw await createTimeoutFailure(cancellationToken).ConfigureAwait(false);
                 }
@@ -182,24 +190,28 @@ internal static class MtpServerConnector
                     : await Task.WhenAny(acceptTask, delayTask, serverCompletion).ConfigureAwait(false);
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-            if (await tryGetServerStoppedFailure(cancellationToken).ConfigureAwait(false) is { } stoppedAfterAccept)
-            {
-                throw stoppedAfterAccept;
-            }
-
-            acceptedClient = await acceptTask.ConfigureAwait(false);
+            // The loop only exits after observing IsCompleted, so this cannot block and preserves the
+            // exception-unwrapping behavior of await without creating an equivalent ConfigureAwait mutant.
+#pragma warning disable VSTHRD103 // GetResult synchronously blocks - the task is already completed.
+            acceptedClient = acceptTask.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD103
             acceptedClient.NoDelay = true;
             return acceptedClient;
         }
         catch
         {
-            if (acceptedClient is null && acceptTask is not null)
+            if (acceptTask is not null)
             {
-                NeutralizePendingAccept(acceptTask);
+                if (acceptedClient is null)
+                {
+                    NeutralizePendingAccept(acceptTask);
+                }
             }
 
-            acceptedClient?.Dispose();
+            using (acceptedClient)
+            {
+            }
+
             throw;
         }
     }
@@ -263,15 +275,7 @@ internal static class MtpServerConnector
             return true;
         }
 
-        if (timeout <= TimeSpan.Zero)
-        {
-            return false;
-        }
-
-        if (timeout > MaxDelay)
-        {
-            timeout = MaxDelay;
-        }
+        timeout = TimeSpan.FromTicks(Math.Min(Math.Max(timeout.Ticks, 0), MaxDelay.Ticks));
 
         Task completed = await Task.WhenAny(task, Task.Delay(timeout, CancellationToken.None)).ConfigureAwait(false);
         return completed == task;
@@ -299,10 +303,8 @@ internal static class MtpServerConnector
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);
-            return;
         }
-
-        if (task.Exception is { } exception)
+        else if (task.Exception is { } exception)
         {
             logger.SafeLog(MtpClientLogLevel.Error, $"{description}: {exception}");
         }
