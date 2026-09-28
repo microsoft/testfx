@@ -112,6 +112,26 @@ namespace SomeNamespace
         Assert.IsEmpty(_errors);
     }
 
+    [TestMethod]
+    public void EntryPointTask_GloballyQualifies_FSharp_HostFactory_Without_RootNamespace()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile.fs"),
+            Language = new CustomTaskItem("F#"),
+            HostFactory = "Contoso.Tests.TestHost.CreateHost",
+        };
+
+        Assert.IsTrue(testingPlatformEntryPoint.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files["obj/applicationHelperFile.fs"]!;
+        Assert.Contains("let! host = global.Contoso.Tests.TestHost.CreateHost()", generatedSource);
+        Assert.DoesNotContain("namespace Microsoft.TestingPlatform", generatedSource);
+        Assert.IsEmpty(_errors);
+    }
+
     [DataRow("C#", "obj/applicationHelperFile.cs", "global::Microsoft.Extensions.Hosting.IHost host = await global::Contoso.Tests.TestHost.CreateHost();")]
     [DataRow("VB", "obj/applicationHelperFile.vb", "Dim host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.Contoso.Tests.TestHost.CreateHost()")]
     [DataRow("F#", "obj/applicationHelperFile.fs", "let! host = global.Contoso.Tests.TestHost.CreateHost()")]
