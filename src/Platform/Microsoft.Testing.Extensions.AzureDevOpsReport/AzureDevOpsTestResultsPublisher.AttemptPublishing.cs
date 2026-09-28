@@ -26,12 +26,14 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         for (int i = 0; i < seeds.Count; i++)
         {
             AzureDevOpsTestCaseResult[] attemptResults = [.. seeds[i].Attempts.Select(static attempt => attempt.Result)];
+            IReadOnlyList<AzureDevOpsTestSubResult> subResults = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1);
             (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(attemptResults);
             parents[i] = seeds[i].Parent.Result with
             {
                 Id = seeds[i].ResultId,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-                SubResults = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1),
+                CustomFields = CreateFlakyCustomFields(seeds[i].Parent.Result.Outcome, subResults),
+                SubResults = subResults,
                 DurationInMs = AzureDevOpsResultIdStore.SumResultDurations(attemptResults),
                 StartedDate = startedDate,
                 CompletedDate = completedDate,
