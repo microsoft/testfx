@@ -39,10 +39,13 @@ internal sealed class MSTestPlatformActivity(IPlatformActivity activity) : IMSTe
 
         MSTestInstrumentation.SetActivityFactory((name, tags)
             // A non-ambient span is required, not an optimization - see the remarks on MSTestInstrumentation.
-            // Because the span is not ambient it cannot pick a parent up from the ambient context either, so it
-            // is parented explicitly to the same test-framework span the platform's test-case spans use, which
-            // keeps everything in one trace.
-            => otelService.StartNonAmbientActivity(name, tags, otelService.TestFrameworkActivity?.Id) is { } platformActivity
+            // Inherit the current ambient activity when one exists: under canonical execution this makes the
+            // test initialize/cleanup spans children of the test activity, while assembly/class fixtures still
+            // inherit the test-framework activity.
+            => otelService.StartNonAmbientActivity(
+                name,
+                tags,
+                parentId: otelService.HasCurrentActivity ? null : otelService.TestFrameworkActivity?.Id) is { } platformActivity
                 ? new MSTestPlatformActivity(platformActivity)
                 : null);
     }
