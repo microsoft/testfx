@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 
 internal static class CommandLineOptionParser
 {
-    public static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
+    internal static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
     {
         for (int i = 0; i < arguments.Count; i++)
         {
@@ -23,7 +23,7 @@ internal static class CommandLineOptionParser
         return null;
     }
 
-    public static bool TryGetInlineOptionValue(string argument, string option, out string? value)
+    internal static bool TryGetInlineOptionValue(string argument, string option, out string? value)
     {
         if (argument.Length > option.Length
             && argument.StartsWith(option, StringComparison.Ordinal)
