@@ -127,6 +127,11 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">
+    <!-- Keep the classic UWP connect-back bootstrap in sync with the PackagedApp launcher option parsing. -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.PackagedApp\CommandLineOptionParser.cs" Link="Shared\CommandLineOptionParser.cs" />
+  </ItemGroup>
+
   <!--
     Static MSBuild assets (build/ and buildTransitive/ .props/.targets). These source files always exist so
     they are added at evaluation time. net462/uap10.0 assets are only relevant on Windows where those TFMs build.
