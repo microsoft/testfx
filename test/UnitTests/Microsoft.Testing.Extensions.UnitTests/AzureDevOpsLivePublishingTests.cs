@@ -2225,6 +2225,15 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
         Assert.AreEqual(3_000L, parent.DurationInMs);
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.IsTrue((bool)parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
+        Assert.IsNotNull(parent.SubResults);
+        Assert.IsNull(parent.SubResults[0].CustomFields);
+        Assert.IsNotNull(parent.SubResults[1].CustomFields);
+        AzureDevOpsTestCustomField retryAttemptId = Assert.ContainsSingle(parent.SubResults[1].CustomFields!);
+        Assert.AreEqual("AttemptId", retryAttemptId.FieldName);
+        Assert.AreEqual(1, retryAttemptId.Value);
         Assert.HasCount(2, service.SubResults);
         Assert.AreEqual("Attempt# 0 - MyTest", service.SubResults[0].DisplayName);
         Assert.AreEqual("Attempt# 1 - MyTest", service.SubResults[1].DisplayName);
