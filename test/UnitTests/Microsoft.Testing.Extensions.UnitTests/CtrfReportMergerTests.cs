@@ -851,6 +851,27 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    public void Merge_CollapseRetryAttempts_MapsExecutionIdentityToAttemptIdentity()
+    {
+        JsonObject failing = Attempt("t", "failed", uid: "u1");
+        failing["testId"] = "stable-test";
+        failing["executionId"] = "failed-execution";
+        JsonObject passing = Attempt("t", "passed", uid: "u1");
+        passing["testId"] = "stable-test";
+        passing["executionId"] = "passed-execution";
+
+        JsonNode test = ((JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge(
+                [BuildReport(testEntries: [failing]), BuildReport(testEntries: [passing])],
+                CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
+
+        Assert.AreEqual("stable-test", (string?)test["testId"]);
+        Assert.AreEqual("passed-execution", (string?)test["executionId"]);
+        Assert.AreEqual("failed-execution", (string?)test["retryAttempts"]![0]!["attemptId"]);
+        Assert.IsNull(test["retryAttempts"]![0]!["executionId"]);
+    }
+
+    [TestMethod]
     public void Merge_CollapseRetryAttempts_DropsStaleFlakyFlag_WhenFinalAttemptFails()
     {
         // An input's own flaky flag only describes the attempt that produced it; a later failure means the

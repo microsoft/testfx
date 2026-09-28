@@ -23,6 +23,13 @@ This package extends Microsoft.Testing.Platform with:
 
 Enable the report via the `--report-ctrf` command line option. The report file name can be overridden with `--report-ctrf-filename <name>.json`.
 
+## Identity and attachment semantics
+
+- `testId` is the producing framework's Microsoft.Testing.Platform `TestNode.Uid`. Its stability and uniqueness scope are therefore the scope documented by that framework; the CTRF extension does not rewrite it into a cross-module identifier.
+- `executionId` is a new UUID for each physical test execution. Earlier executions represented in `retryAttempts` receive their own `attemptId`.
+- `extra.uid` continues to carry the Microsoft.Testing.Platform UID for compatibility with reports produced before first-class CTRF identity fields were available.
+- `attachments[].path` is emitted unchanged as an opaque CTRF path value. It can be a local absolute file path and consumers must not assume that it is remotely accessible.
+
 ## Documentation
 
 For comprehensive documentation, see <https://aka.ms/testingplatform>.

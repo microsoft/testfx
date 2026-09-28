@@ -84,6 +84,11 @@ public class CtrfReportEngineTests
 
         JsonElement testArray = results.GetProperty("tests");
         Assert.AreEqual(3, testArray.GetArrayLength());
+        Assert.AreSequenceEqual(
+            ["p1", "f1", "s1"],
+            testArray.EnumerateArray().Select(test => test.GetProperty("testId").GetString()!).ToArray());
+        Assert.IsTrue(testArray.EnumerateArray().All(test => Guid.TryParse(test.GetProperty("executionId").GetString(), out _)));
+        Assert.HasCount(3, testArray.EnumerateArray().Select(test => test.GetProperty("executionId").GetString()).Distinct());
     }
 
     [TestMethod]
@@ -360,6 +365,12 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["Row A", "Row B", "Row C", "Solo"],
             testArray.EnumerateArray().Select(t => t.GetProperty("name").GetString()!).ToArray());
+        Assert.AreSequenceEqual(
+            ["dup", "dup", "dup", "unique"],
+            testArray.EnumerateArray().Select(t => t.GetProperty("testId").GetString()!).ToArray());
+        Assert.HasCount(
+            4,
+            testArray.EnumerateArray().Select(t => t.GetProperty("executionId").GetString()).Distinct());
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
@@ -409,6 +420,9 @@ public class CtrfReportEngineTests
         Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
 
         JsonElement retry = results.GetProperty("tests")[0];
+        Assert.AreEqual("retry", retry.GetProperty("testId").GetString());
+        string executionId = retry.GetProperty("executionId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(executionId, out _));
         Assert.AreEqual("passed", retry.GetProperty("status").GetString());
         Assert.AreEqual(2, retry.GetProperty("retries").GetInt32());
         Assert.IsTrue(retry.GetProperty("flaky").GetBoolean());
@@ -420,6 +434,10 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["first failure", "second failure"],
             priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
+        string[] attemptIds = [.. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
+        Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+        Assert.HasCount(2, attemptIds.Distinct());
+        Assert.DoesNotContain(executionId, attemptIds);
 
         JsonElement attachment = Assert.ContainsSingle(priorAttempts[0].GetProperty("attachments").EnumerateArray());
         Assert.AreEqual("first.log", attachment.GetProperty("name").GetString());
@@ -526,6 +544,9 @@ public class CtrfReportEngineTests
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        Assert.AreEqual("id-1", test.GetProperty("testId").GetString());
+        Assert.IsTrue(Guid.TryParse(test.GetProperty("executionId").GetString(), out _));
 
         // CTRF spec required fields per test: name, status, duration.
         Assert.AreEqual("MyTest", test.GetProperty("name").GetString());

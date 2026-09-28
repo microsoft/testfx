@@ -14,11 +14,10 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 internal static partial class CtrfReportMerger
 {
     // Fields a CTRF retry attempt object (section 11) shares with a test object and that carry over verbatim when
-    // a non-final attempt is folded into 'retryAttempts[]'. 'attempt' and 'status' are handled separately because
-    // they are required, and 'attemptId' is listed here because an input that assigned one keeps it.
+    // a non-final attempt is folded into 'retryAttempts[]'. 'attempt', 'status', and identity are handled
+    // separately because a promoted test's `executionId` becomes the prior attempt's `attemptId`.
     private static readonly string[] RetryAttemptFields =
     [
-        "attemptId",
         "duration",
         "message",
         "trace",
@@ -261,6 +260,12 @@ internal static partial class CtrfReportMerger
             ["attempt"] = 1,
             ["status"] = ReadStatus(test),
         };
+
+        string? attemptId = ReadString(test, "attemptId") ?? ReadString(test, "executionId");
+        if (attemptId is { Length: > 0 })
+        {
+            attempt["attemptId"] = attemptId;
+        }
 
         foreach (string field in RetryAttemptFields)
         {

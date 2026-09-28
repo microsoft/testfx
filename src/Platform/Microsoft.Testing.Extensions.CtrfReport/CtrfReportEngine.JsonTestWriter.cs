@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -13,6 +13,12 @@ internal sealed partial class CtrfReportEngine
     {
         CapturedTestResult r = result.Final;
         writer.WriteStartObject();
+
+        // The MTP TestNode UID is the producer's stable logical-test identity. A
+        // fresh executionId distinguishes each physical execution, including rows
+        // that legitimately share the same UID.
+        writer.WriteString("testId", r.Uid);
+        writer.WriteString("executionId", Guid.NewGuid().ToString("D"));
 
         // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID
         // (also non-empty) when the framework didn't supply a display name.
@@ -180,9 +186,8 @@ internal sealed partial class CtrfReportEngine
             writer.WriteEndObject();
         }
 
-        // CTRF `extra` (free-form object) — the CTRF spec doesn't define a
-        // dedicated stable identifier so we surface the MTP UID here for
-        // cross-tool correlation, alongside other framework metadata.
+        // Preserve the MTP UID under `extra` for compatibility with reports
+        // produced before CTRF added the first-class `testId` field.
         writer.WritePropertyName("extra");
         writer.WriteStartObject();
         writer.WriteString("uid", r.Uid);
@@ -204,6 +209,7 @@ internal sealed partial class CtrfReportEngine
     private static void WriteRetryAttempt(Utf8JsonWriter writer, CapturedTestResult attempt, int attemptNumber)
     {
         writer.WriteStartObject();
+        writer.WriteString("attemptId", Guid.NewGuid().ToString("D"));
         writer.WriteNumber("attempt", attemptNumber);
         writer.WriteString("status", attempt.Status);
         writer.WriteNumber("duration", (long)Math.Max(0, attempt.Duration.TotalMilliseconds));
@@ -284,6 +290,8 @@ internal sealed partial class CtrfReportEngine
             writer.WriteStartObject();
             writer.WriteString("name", attachment.Name);
             writer.WriteString("contentType", attachment.ContentType);
+            // CTRF treats path as an opaque URL-or-file-path value. Preserve the
+            // absolute local path supplied by MTP without URI rewriting.
             writer.WriteString("path", attachment.Path);
             if (attachment.Description is not null)
             {
