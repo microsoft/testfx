@@ -38,6 +38,13 @@ public sealed class PackagedAppCommandLineOptionParserTests
     [TestMethod]
     public void TryGetOptionValue_IgnoresOptionsSharingThePrefix()
         => Assert.IsNull(CommandLineOptionParser.TryGetOptionValue(["--internal-testhostcontroller-pidx", "9876"], "--internal-testhostcontroller-pid"));
+
+    [TestMethod]
+    public void TryGetInlineOptionValue_ReturnsFalse_WhenOptionOnlySharesThePrefix()
+    {
+        Assert.IsFalse(CommandLineOptionParser.TryGetInlineOptionValue("--internal-testhostcontroller-pidx=9876", "--internal-testhostcontroller-pid", out string? value));
+        Assert.IsNull(value);
+    }
 }
 
 #endif
