@@ -83,6 +83,10 @@ internal sealed record AzureDevOpsPipelineReference(
     string? JobName,
     int? JobAttempt);
 
+internal sealed record AzureDevOpsTestCustomField(
+    [property: JsonPropertyName("fieldName")] string FieldName,
+    [property: JsonPropertyName("value")] object Value);
+
 internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("automatedTestName")] string AutomatedTestName,
     [property: JsonPropertyName("automatedTestStorage")] string AutomatedTestStorage,
@@ -127,6 +131,12 @@ internal sealed record AzureDevOpsTestCaseResult(
     /// <summary>Gets the individual attempts of this test, oldest first.</summary>
     [JsonPropertyName("subResults")]
     public IReadOnlyList<AzureDevOpsTestSubResult>? SubResults { get; init; }
+
+    /// <summary>
+    /// Gets Azure DevOps metadata that classifies retries separately from ordinary passed results.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    public IReadOnlyList<AzureDevOpsTestCustomField>? CustomFields { get; init; }
 }
 
 /// <summary>
@@ -146,7 +156,12 @@ internal sealed record AzureDevOpsTestSubResult(
     [property: JsonPropertyName("errorMessage")] string? ErrorMessage,
     [property: JsonPropertyName("stackTrace")] string? StackTrace,
     [property: JsonPropertyName("startedDate")] DateTimeOffset? StartedDate,
-    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate);
+    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
+{
+    /// <summary>Gets the zero-based Azure DevOps retry attempt identifier, when this is a retry.</summary>
+    [JsonPropertyName("customFields")]
+    public IReadOnlyList<AzureDevOpsTestCustomField>? CustomFields { get; init; }
+}
 
 /// <summary>A test case result bundled with optional attachments to upload after the result is published.</summary>
 internal sealed record AzureDevOpsTestCaseResultWithAttachments(

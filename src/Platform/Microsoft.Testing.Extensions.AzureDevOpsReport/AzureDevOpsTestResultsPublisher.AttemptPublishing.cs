@@ -26,12 +26,14 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         for (int i = 0; i < seeds.Count; i++)
         {
             AzureDevOpsTestCaseResult[] attemptResults = [.. seeds[i].Attempts.Select(static attempt => attempt.Result)];
+            IReadOnlyList<AzureDevOpsTestSubResult> attempts = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1);
             (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(attemptResults);
             parents[i] = seeds[i].Parent.Result with
             {
                 Id = seeds[i].ResultId,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-                SubResults = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1),
+                SubResults = attempts,
+                CustomFields = CreateRerunCustomFields(attempts),
                 DurationInMs = AzureDevOpsResultIdStore.SumResultDurations(attemptResults),
                 StartedDate = startedDate,
                 CompletedDate = completedDate,
@@ -143,5 +145,25 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         return (earliest, latest);
+    }
+
+    private static IReadOnlyList<AzureDevOpsTestCustomField>? CreateRerunCustomFields(
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+    {
+        var customFields = new List<AzureDevOpsTestCustomField>(capacity: 2);
+        int attemptId = attempts[^1].SequenceId - 1;
+        if (attemptId > 0)
+        {
+            customFields.Add(new AzureDevOpsTestCustomField("AttemptId", attemptId));
+        }
+
+        bool hasPassedAttempt = attempts.Any(static attempt => attempt.Outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome);
+        bool hasFailedAttempt = attempts.Any(static attempt => attempt.Outcome == AzureDevOpsLivePublishingConstants.FailedTestOutcome);
+        if (hasPassedAttempt && hasFailedAttempt)
+        {
+            customFields.Add(new AzureDevOpsTestCustomField("IsTestResultFlaky", true));
+        }
+
+        return customFields.Count == 0 ? null : customFields;
     }
 }

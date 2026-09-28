@@ -110,7 +110,12 @@ internal sealed partial class AzureDevOpsResultIdStore
             result.ErrorMessage,
             result.StackTrace,
             result.StartedDate,
-            result.CompletedDate);
+            result.CompletedDate)
+        {
+            CustomFields = sequenceId <= 1
+                ? null
+                : [new AzureDevOpsTestCustomField("AttemptId", sequenceId - 1)],
+        };
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The map payload type is internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The map payload type is internal, fixed, and controlled by this extension.")]

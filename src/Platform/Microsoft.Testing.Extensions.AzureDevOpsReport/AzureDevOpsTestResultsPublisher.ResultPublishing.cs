@@ -146,6 +146,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
                 SubResults = appendedAttempts[i],
+                CustomFields = CreateRerunCustomFields(attemptHistories[i]),
                 DurationInMs = totalDurations[i],
                 StartedDate = startedDates[i],
                 CompletedDate = completedDates[i],
