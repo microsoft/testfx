@@ -39,6 +39,11 @@ internal static class RetryArtifactManifest
 
     public static string WriteEntryWithEncodedKind(string path, string encodedKindOrNullSentinel)
         => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{encodedKindOrNullSentinel}";
+
+    public static string WriteEntry(string path, string? kind)
+        => WriteEntryWithEncodedKind(
+            path,
+            kind is null ? "-" : Convert.ToBase64String(Encoding.UTF8.GetBytes(kind)));
 }
 
 #pragma warning restore RS0051
