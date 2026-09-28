@@ -21,4 +21,12 @@ public sealed class PathContainmentTests
         Assert.IsFalse(PathContainment.IsUnderDirectory(root, root));
         Assert.IsFalse(PathContainment.IsUnderDirectory(sibling, root));
     }
+
+    [TestMethod]
+    public void IsUnderDirectory_RootWithTrailingSeparator_IsUnderDirectory()
+    {
+        string root = Path.GetFullPath("root");
+
+        Assert.IsTrue(PathContainment.IsUnderDirectory(root + Path.DirectorySeparatorChar, root));
+    }
 }
