@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
 
+### Added
+
+* Introduce an experimental `ITestHostExecutionOrchestratorMiddleware` composed around exactly one existing `ITestHostExecutionOrchestrator` invocation, as a v1 single-invocation composition boundary. Register middleware via the new `AddTestHostExecutionOrchestratorMiddleware` extension method on `ITestHostOrchestratorManager`. This is not a typed multi-run retry/stress/shard engine: middleware cannot repeat, shard, or rewrite the wrapped orchestrator's result, must propagate downstream exceptions and cancellation unchanged, and the existing `--retry-failed-tests` orchestrator is unaffected.
+
 ### Changed
 
 * Reduce duplicate test-identity computation when merging HTML reports, by @Evangelink in [#11076](https://github.com/microsoft/testfx/pull/11076)

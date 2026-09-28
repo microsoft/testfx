@@ -43,6 +43,11 @@ static Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.WaitForTestH
 Microsoft.Testing.Platform.Hosts.TestHostControllersTestHost.TestHostCooperativeShutdownTimeout.get -> System.TimeSpan
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
 static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetCanceledConsumerCompletion(string? value) -> System.TimeSpan
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.TestHostOrchestratorConfiguration(Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator![]! testHostOrchestrators, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware![]! middleware) -> void
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorConfiguration.Middleware.get -> Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware![]!
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManager.AddTestHostExecutionOrchestratorMiddleware(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware!>! factory) -> void
+Microsoft.Testing.Platform.TestHostOrchestrator.TestHostExecutionOrchestratorMiddlewarePipeline
+static Microsoft.Testing.Platform.TestHostOrchestrator.TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware!>! middlewareOutermostFirst, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<int>!>! innermost, Microsoft.Testing.Platform.Logging.ILogger! logger, System.Threading.CancellationToken rootToken) -> System.Threading.Tasks.Task<int>!
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool

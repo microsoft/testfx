@@ -1050,6 +1050,30 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
     <comment>{Locked="WebAssembly"}</comment>
   </data>
+  <data name="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage" xml:space="preserve">
+    <value>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</value>
+    <comment>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage" xml:space="preserve">
+    <value>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</value>
+    <comment>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage" xml:space="preserve">
+    <value>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</value>
+    <comment>{0} is the middleware's Uid. {Locked="next"}</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage" xml:space="preserve">
+    <value>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</value>
+    <comment>{0} is the middleware's Uid. {Locked="next"}</comment>
+  </data>
+  <data name="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage" xml:space="preserve">
+    <value>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</value>
+    <comment>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</comment>
+  </data>
+  <data name="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage" xml:space="preserve">
+    <value>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</value>
+    <comment>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</comment>
+  </data>
   <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
     <value>Synchronous flush is not supported in browser environments.</value>
   </data>

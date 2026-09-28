@@ -126,10 +126,25 @@ internal sealed partial class TestHostBuilder
     private async Task<IHost?> TryBuildTestHostOrchestratorHostAsync(BuildContext context)
     {
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(context.ServiceProvider).ConfigureAwait(false);
-        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0
+
+        // Middleware only wraps an existing orchestrator invocation (see
+        // ITestHostExecutionOrchestratorMiddleware); it does not stand in for one. Registering middleware
+        // without also registering exactly one orchestrator is a misconfiguration, not silently ignored.
+        bool hasActiveMiddleware = testHostOrchestratorConfiguration.Middleware.Length > 0;
+
+        if ((testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0 && !hasActiveMiddleware)
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return null;
+        }
+
+        if (hasActiveMiddleware && testHostOrchestratorConfiguration.TestHostOrchestrators.Length != 1)
+        {
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage,
+                    testHostOrchestratorConfiguration.TestHostOrchestrators.Length));
         }
 
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(

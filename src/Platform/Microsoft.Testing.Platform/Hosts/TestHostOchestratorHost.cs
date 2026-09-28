@@ -31,7 +31,9 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         ITestHostExecutionOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
         ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
 
-        // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too
+        // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too.
+        // This identifies the participating orchestrator mode for the whole session; middleware that
+        // short-circuits still leaves the session in orchestrator mode and reports a non-success result.
         // (test hosts and test host controllers already do). This lets the SDK know that an orchestrator
         // (e.g. retry) is participating in the run, identified by the OrchestratorFeature property.
         IPushOnlyProtocol? pushOnlyProtocol = _serviceProvider.GetService<IPushOnlyProtocol>();
@@ -71,7 +73,13 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 await orchestratorLifetime.BeforeRunAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
             }
 
-            exitCode = await testHostOrchestrator.OrchestrateTestHostExecutionAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false);
+            exitCode = _testHostOrchestratorConfiguration.Middleware.Length == 0
+                ? await testHostOrchestrator.OrchestrateTestHostExecutionAsync(applicationCancellationToken.CancellationToken).ConfigureAwait(false)
+                : await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                    _testHostOrchestratorConfiguration.Middleware,
+                    testHostOrchestrator.OrchestrateTestHostExecutionAsync,
+                    logger,
+                    applicationCancellationToken.CancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {
