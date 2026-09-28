@@ -107,7 +107,7 @@ internal sealed partial class VideoRecorderSessionHandler :
         string outputDirectory = options.OutputDirectory
             ?? Path.Combine(configuration.GetTestResultDirectory(), "VideoRecordings");
 
-        _recorder = recorder ?? new FfmpegVideoRecorder(
+        _recorder = recorder ?? VideoRecorderFactory.Create(
             options,
             outputDirectory,
             clock,

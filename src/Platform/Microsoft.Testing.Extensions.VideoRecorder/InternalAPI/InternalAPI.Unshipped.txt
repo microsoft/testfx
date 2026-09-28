@@ -1,1 +1,4 @@
 #nullable enable
+Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory
+static Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory.Create(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options, string! outputDirectory, Microsoft.Testing.Platform.Helpers.IClock! clock, System.Action<string!>? log, System.Action<string!>? warn) -> Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder!
+static Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory.IsNativeConfigurationSupported(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options) -> bool
