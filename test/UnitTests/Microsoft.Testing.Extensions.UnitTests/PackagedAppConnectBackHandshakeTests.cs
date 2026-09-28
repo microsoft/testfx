@@ -111,6 +111,16 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual("9876", PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
     }
 
+    [DataRow("=")]
+    [DataRow(":")]
+    [TestMethod]
+    public void TryGetTestHostControllerPid_ReturnsValue_WhenOptionIsInline(string separator)
+    {
+        string[] arguments = [$"--internal-testhostcontroller-pid{separator}9876"];
+
+        Assert.AreEqual("9876", PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
+    }
+
     [TestMethod]
     public void TryGetTestHostControllerPid_ReturnsNull_WhenOptionAbsent()
     {
@@ -139,6 +149,18 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.StartsWith("retry-", handshakeId);
         Assert.AreEqual(handshakeId, PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
         Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public void TryGetHandshakeId_UsesInlineRetryPipeName_WhenControllerPidIsAbsent()
+    {
+        string[] arguments = [@"--internal-retry-pipename=LOCAL\testingplatform.pipe.retry"];
+
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments);
+
+        Assert.IsNotNull(handshakeId);
+        Assert.StartsWith("retry-", handshakeId);
+        Assert.AreEqual(handshakeId, PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
     }
 
     [TestMethod]
