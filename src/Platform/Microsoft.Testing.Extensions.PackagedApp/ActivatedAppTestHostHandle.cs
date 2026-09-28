@@ -155,7 +155,7 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
                     continue;
                 }
 
-                if (!RetryArtifactManifest.TrySplitEntry(line, out string encodedPath, out string encodedKind))
+                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKind))
                 {
                     continue;
                 }

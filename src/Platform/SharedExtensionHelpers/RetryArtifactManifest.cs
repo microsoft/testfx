@@ -11,13 +11,16 @@ internal static class RetryArtifactManifest
     public const int MaxLineLength = 64 * 1024;
     public const int MaxRecords = 10_000;
 
-    public static bool TrySplitEntry(string line, out string encodedPath, out string encodedKind)
+    public static bool TrySplitEntry(
+        string line,
+        [NotNullWhen(true)] out string? encodedPath,
+        [NotNullWhen(true)] out string? encodedKind)
     {
         int separatorIndex = line.IndexOf('\t');
         if (separatorIndex <= 0)
         {
-            encodedPath = string.Empty;
-            encodedKind = string.Empty;
+            encodedPath = null;
+            encodedKind = null;
             return false;
         }
 
