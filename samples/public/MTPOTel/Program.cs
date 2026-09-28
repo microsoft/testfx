@@ -26,7 +26,7 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         using var testActivitySource = new ActivitySource("MTPOTel.Tests");
-        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
         hostBuilder.Configuration["MTPOTel:Composition"] = "HostApplicationBuilder";
 
         // The host owns the OpenTelemetry providers, just like an Aspire ServiceDefaults project or any other
@@ -46,32 +46,15 @@ public class Program
                 .AddConsoleExporter());
 
         using IHost host = hostBuilder.Build();
-        await host.StartAsync();
+        return await host.RunTestingPlatformAsync(args, testApplicationBuilder =>
+        {
+            testApplicationBuilder.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, serviceProvider) => new SimpleTestFramework(serviceProvider, testActivitySource));
 
-        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-
-        // Register our simple test framework
-        testApplicationBuilder.RegisterTestFramework(
-            _ => new TestFrameworkCapabilities(),
-            (capabilities, serviceProvider) => new SimpleTestFramework(serviceProvider, testActivitySource));
-
-        // Activate only MTP's ActivitySource and Meter. The application host above remains responsible for creating,
-        // flushing, and disposing the providers that subscribe to those diagnostics.
-        testApplicationBuilder.AddTestingPlatformDiagnostics();
-
-        // Import an immutable snapshot of the host configuration. MTP command-line and environment values keep their
-        // normal higher precedence, and the host remains the owner of the configuration providers and reload pipeline.
-        testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(hostBuilder.Configuration);
-
-        // Forward MTP diagnostic messages into the host-owned logging pipeline without transferring ownership.
-        // The bridge is process-local; separately launched test hosts must configure their own external sinks.
-        testApplicationBuilder.AddMicrosoftExtensionsLogging(host.Services.GetRequiredService<ILoggerFactory>());
-
-        using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
-        int exitCode = await testApplication.RunAsync();
-
-        // Keep the host alive until after the test application has shut down so final spans and metrics can be exported.
-        await host.StopAsync();
-        return exitCode;
+            // Activate only MTP's ActivitySource and Meter. The host remains responsible for creating,
+            // flushing, and disposing the providers that subscribe to those diagnostics.
+            testApplicationBuilder.AddTestingPlatformDiagnostics();
+        });
     }
 }
