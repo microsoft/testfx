@@ -22,6 +22,7 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 internal sealed class WinAppCliVideoRecorder : IVideoRecorder
 {
     private const int ProcessPerMonitorDpiAware = 2;
+    private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(15);
 
     private readonly VideoRecorderOptions _options;
     private readonly string _outputDirectory;
@@ -38,6 +39,8 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
     private DateTimeOffset? _recordingEndUtc;
     private string? _recordingPath;
     private string? _lastError;
+    private bool _stopCompleted;
+    private int _serviceProviderDisposed;
 
     public WinAppCliVideoRecorder(
         VideoRecorderOptions options,
@@ -85,13 +88,15 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         }
     }
 
-    public void Start()
+    public async Task<bool> StartAsync(CancellationToken cancellationToken = default)
     {
+        Task recordingTask;
+        var recordingStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (_gate)
         {
             if (_recordingTask is not null)
             {
-                return;
+                return RecordingStartUtc is not null;
             }
 
             try
@@ -99,57 +104,97 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
                 string segmentDirectory = Path.Combine(_outputDirectory, "native_recording_" + Guid.NewGuid().ToString("N").Substring(0, 8));
                 Directory.CreateDirectory(segmentDirectory);
                 string recordingPath = Path.Combine(segmentDirectory, "session.mp4");
-                var cancellation = new CancellationTokenSource();
+                var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
                 SegmentDirectory = segmentDirectory;
                 _recordingPath = recordingPath;
                 _recordingCancellation = cancellation;
-                RecordingStartUtc = _clock.UtcNow;
                 _log?.Invoke($"Starting native Windows screen recording with WinAppCLI: \"{recordingPath}\"");
-                _recordingTask = RecordAsync(recordingPath, cancellation.Token);
+                recordingTask = RecordAsync(recordingPath, recordingStarted, cancellation.Token);
+                _recordingTask = recordingTask;
             }
             catch (Exception ex)
             {
                 _lastError = ex.Message;
                 _warn?.Invoke(string.Format(CultureInfo.CurrentCulture, Resources.VideoRecorderResources.FailedToStartRecording, ex.Message));
                 ResetFailedStart();
+                return false;
             }
         }
+
+        await Task.WhenAny(recordingStarted.Task, recordingTask).ConfigureAwait(false);
+        return await recordingStarted.Task.ConfigureAwait(false);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
     {
         Task? recordingTask;
         CancellationTokenSource? recordingCancellation;
+        string? segmentDirectory;
         lock (_gate)
         {
+            if (_stopCompleted)
+            {
+                return;
+            }
+
             recordingTask = _recordingTask;
             recordingCancellation = _recordingCancellation;
+            segmentDirectory = SegmentDirectory;
         }
 
         if (recordingTask is null)
         {
-            await _serviceProvider.DisposeAsync().ConfigureAwait(false);
+            lock (_gate)
+            {
+                _stopCompleted = true;
+            }
+
+            await DisposeServiceProviderQuietlyAsync().ConfigureAwait(false);
             return;
         }
 
         if (recordingCancellation is not null)
         {
-            await recordingCancellation.CancelAsync().ConfigureAwait(false);
+            try
+            {
+                await recordingCancellation.CancelAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _log?.Invoke($"Failed to signal native recording cancellation: {ex.Message}");
+            }
         }
 
-        try
+        Task completedTask = await Task.WhenAny(recordingTask, Task.Delay(StopTimeout, CancellationToken.None)).ConfigureAwait(false);
+        if (completedTask != recordingTask && !recordingTask.IsCompleted)
         {
-            // WinAppCLI treats cancellation as a graceful stop and finalizes already captured MP4
-            // evidence. Do not abandon that finalization when the outer test session is cancelled.
-            await recordingTask.ConfigureAwait(false);
+            _lastError = string.Format(CultureInfo.CurrentCulture, Resources.VideoRecorderResources.NativeStopTimeout, StopTimeout.TotalSeconds);
+            _warn?.Invoke(_lastError);
+            lock (_gate)
+            {
+                _stopCompleted = true;
+                _recordingTask = null;
+                _recordingCancellation = null;
+                SegmentDirectory = null;
+            }
+
+            _ = CompleteTimedOutStopAsync(recordingTask, recordingCancellation, segmentDirectory);
+            return;
         }
-        finally
+
+        // WinAppCLI treats cancellation as a graceful stop and finalizes already captured MP4
+        // evidence. Do not abandon that finalization when the outer test session is cancelled.
+        await recordingTask.ConfigureAwait(false);
+        _recordingEndUtc = _clock.UtcNow;
+        recordingCancellation?.Dispose();
+        lock (_gate)
         {
-            _recordingEndUtc = _clock.UtcNow;
-            recordingCancellation?.Dispose();
-            await _serviceProvider.DisposeAsync().ConfigureAwait(false);
+            _stopCompleted = true;
+            _recordingCancellation = null;
         }
+
+        await DisposeServiceProviderQuietlyAsync().ConfigureAwait(false);
     }
 
     public IReadOnlyList<VideoSegment> ReadSegments()
@@ -202,7 +247,10 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         }
     }
 
-    private async Task RecordAsync(string recordingPath, CancellationToken cancellationToken)
+    private async Task RecordAsync(
+        string recordingPath,
+        TaskCompletionSource<bool> recordingStarted,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -211,9 +259,18 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
                 {
                     OutputPath = recordingPath,
                     DurationSec = 0,
-                    Fps = Math.Max(1, _options.FrameRate),
+                    Fps = _options.FrameRate,
                 },
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                _ =>
+                {
+                    lock (_gate)
+                    {
+                        RecordingStartUtc ??= _clock.UtcNow;
+                    }
+
+                    recordingStarted.TrySetResult(true);
+                }).ConfigureAwait(false);
 
             _log?.Invoke(
                 $"Native Windows recording completed: {_captureResult.Frames} frames, "
@@ -223,6 +280,14 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
             if (_captureResult.Warnings is { Length: > 0 })
             {
                 _warn?.Invoke(string.Join(" ", _captureResult.Warnings));
+            }
+
+            if (_captureResult.StopReason is not ("cancelled" or "duration_elapsed"))
+            {
+                _warn?.Invoke(string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resources.VideoRecorderResources.NativeStoppedEarly,
+                    _captureResult.StopReason));
             }
         }
         catch (RecordPartialOutputException ex)
@@ -240,6 +305,10 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         {
             _lastError = ex.Message;
             _warn?.Invoke($"Native Windows recording failed: {ex.Message}");
+        }
+        finally
+        {
+            recordingStarted.TrySetResult(false);
         }
     }
 
@@ -270,6 +339,60 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
     {
         [DllImport("shcore.dll")]
         public static extern int GetProcessDpiAwareness(IntPtr processHandle, out int awareness);
+    }
+
+    private async Task CompleteTimedOutStopAsync(
+        Task recordingTask,
+        CancellationTokenSource? recordingCancellation,
+        string? segmentDirectory)
+    {
+        try
+        {
+            await recordingTask.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _log?.Invoke($"Native recording failed while completing timed-out cleanup: {ex.Message}");
+        }
+        finally
+        {
+            _recordingEndUtc = _clock.UtcNow;
+            recordingCancellation?.Dispose();
+            await DisposeServiceProviderQuietlyAsync().ConfigureAwait(false);
+            DeleteDirectoryQuietly(segmentDirectory);
+        }
+    }
+
+    private async ValueTask DisposeServiceProviderQuietlyAsync()
+    {
+        if (Interlocked.Exchange(ref _serviceProviderDisposed, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await _serviceProvider.DisposeAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _log?.Invoke($"Failed to dispose the native recorder service provider: {ex.Message}");
+        }
+    }
+
+    private void DeleteDirectoryQuietly(string? directory)
+    {
+        try
+        {
+            if (directory is not null && Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log?.Invoke($"Failed to delete native recording directory '{directory}': {ex.Message}");
+        }
     }
 }
 

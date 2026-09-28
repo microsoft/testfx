@@ -29,18 +29,39 @@ internal static class VideoRecorderFactory
                 return new FfmpegVideoRecorder(options, outputDirectory, clock, log, warn);
             }
 
-            try
+            IVideoRecorder? nativeRecorder = TryCreateNative(
+                options,
+                () => new WinAppCliVideoRecorder(options, outputDirectory, clock, log, warn),
+                warn);
+            if (nativeRecorder is not null)
             {
-                return new WinAppCliVideoRecorder(options, outputDirectory, clock, log, warn);
-            }
-            catch (Exception ex)
-            {
-                warn?.Invoke($"The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {ex.Message}");
+                return nativeRecorder;
             }
         }
 #endif
 
         return new FfmpegVideoRecorder(options, outputDirectory, clock, log, warn);
+    }
+
+    internal static IVideoRecorder? TryCreateNative(
+        VideoRecorderOptions options,
+        Func<IVideoRecorder> createNativeRecorder,
+        Action<string>? warn)
+    {
+        if (!IsNativeConfigurationSupported(options))
+        {
+            return null;
+        }
+
+        try
+        {
+            return createNativeRecorder();
+        }
+        catch (Exception ex)
+        {
+            warn?.Invoke($"The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {ex.Message}");
+            return null;
+        }
     }
 
     internal static bool IsNativeConfigurationSupported(VideoRecorderOptions options)

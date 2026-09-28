@@ -79,6 +79,16 @@ internal sealed partial class FfmpegVideoRecorder : IVideoRecorder
     /// <summary>
     /// Starts the continuous segmented recording. Best-effort: never throws.
     /// </summary>
+    public Task<bool> StartAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Start();
+        return Task.FromResult(RecordingStartUtc is not null);
+    }
+
+    /// <summary>
+    /// Starts the continuous segmented recording. Best-effort: never throws.
+    /// </summary>
     public void Start()
     {
         if (FfmpegPath is null)

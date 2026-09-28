@@ -86,6 +86,14 @@
     <value>Screen recording produced no usable video (backend status {0}). {1}</value>
     <comment>Warning when recording yielded nothing. {0} backend status, {1} last recorder error detail.</comment>
   </data>
+  <data name="NativeStopTimeout" xml:space="preserve">
+    <value>The native Windows video recorder did not stop within {0} seconds. Session shutdown will continue and the incomplete recording will be discarded.</value>
+    <comment>Warning when the in-process native recorder does not stop after cancellation. {0} timeout in seconds.</comment>
+  </data>
+  <data name="NativeStoppedEarly" xml:space="preserve">
+    <value>The native Windows recording stopped early ({0}); the finalized partial video will be kept.</value>
+    <comment>Warning when native capture ends before session shutdown. {0} is the backend stop reason.</comment>
+  </data>
   <data name="WindowCaptureFallback" xml:space="preserve">
     <value>Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</value>
     <comment>Informational message when window capture falls back to full screen.</comment>

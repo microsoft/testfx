@@ -78,6 +78,55 @@ public sealed class VideoRecorderFactoryTests
         Assert.IsInstanceOfType<FfmpegVideoRecorder>(recorder);
     }
 
+    [TestMethod]
+    public void TryCreateNative_CompatibleConfiguration_ReturnsNativeRecorder()
+    {
+        var nativeRecorder = new Mock<IVideoRecorder>();
+
+        IVideoRecorder? recorder = VideoRecorderFactory.TryCreateNative(
+            CreateCompatibleOptions(),
+            () => nativeRecorder.Object,
+            warn: null);
+
+        Assert.AreSame(nativeRecorder.Object, recorder);
+    }
+
+    [TestMethod]
+    public void TryCreateNative_UnsupportedConfiguration_DoesNotCreateRecorder()
+    {
+        VideoRecorderOptions options = CreateCompatibleOptions();
+        options.IncludeChapters = true;
+        bool factoryCalled = false;
+
+        IVideoRecorder? recorder = VideoRecorderFactory.TryCreateNative(
+            options,
+            () =>
+            {
+                factoryCalled = true;
+                return Mock.Of<IVideoRecorder>();
+            },
+            warn: null);
+
+        Assert.IsNull(recorder);
+        Assert.IsFalse(factoryCalled);
+    }
+
+    [TestMethod]
+    public void TryCreateNative_FactoryThrows_ReturnsNullAndWarns()
+    {
+        string? warning = null;
+
+        IVideoRecorder? recorder = VideoRecorderFactory.TryCreateNative(
+            CreateCompatibleOptions(),
+            () => throw new InvalidOperationException("native initialization failed"),
+            message => warning = message);
+
+        Assert.IsNull(recorder);
+        Assert.IsNotNull(warning);
+        Assert.Contains("native initialization failed", warning);
+        Assert.Contains("falling back to ffmpeg", warning);
+    }
+
     private static VideoRecorderOptions CreateCompatibleOptions()
         => new()
         {

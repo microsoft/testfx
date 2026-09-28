@@ -148,7 +148,10 @@ internal sealed partial class VideoRecorderSessionHandler :
 
         // Record continuously for the whole session regardless of granularity; both per-test clips
         // and the session video are cut from this single recording afterwards.
-        _recorder.Start();
+        if (!await _recorder.StartAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return;
+        }
 
         string hint = _granularity == VideoCaptureGranularity.PerSession
             ? VideoRecorderResources.HintPerSession
