@@ -1414,12 +1414,15 @@ public sealed class MtpServerClientTests
         var readCanceled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var handler = new ControlledMessageHandler
         {
-            ReadAsyncCallback = async cancellationToken =>
+            ReadAsyncCallback = cancellationToken =>
             {
-                using CancellationTokenRegistration registration = cancellationToken.Register(
-                    () => readCanceled.TrySetResult(true));
-                await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
-                return null;
+                var completion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _ = cancellationToken.Register(() =>
+                {
+                    readCanceled.TrySetResult(true);
+                    completion.TrySetCanceled(cancellationToken);
+                });
+                return completion.Task;
             },
         };
         var connection = new MtpJsonRpcConnection(handler);

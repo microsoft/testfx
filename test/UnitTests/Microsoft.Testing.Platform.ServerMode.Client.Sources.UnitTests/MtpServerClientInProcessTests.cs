@@ -314,7 +314,7 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
-    public async Task StartAsync_AcceptFailure_DisposesCreatedResourcesWithExactDiagnostics()
+    public async Task CleanupFailedStartAsync_DisposesCreatedResourcesWithExactDiagnostics()
     {
         var log = new List<(MtpClientLogLevel Level, string Message)>();
         var logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message)));
@@ -323,18 +323,14 @@ public sealed class MtpServerClientInProcessTests
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         var client = new ThrowingTcpClient();
         var cancellation = new ThrowingCancellationTokenSource();
-        var acceptFailure = new IOException("accept failure");
 
-        Task<MtpServerInProcessHost> start = ResumeStartAsyncFromFailedAccept(
+        await MtpServerInProcessHost.CleanupFailedStartAsync(
             listener,
             client,
             cancellation,
             serverTask: null,
-            logger,
-            acceptFailure);
+            logger);
 
-        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => start);
-        Assert.AreSame(acceptFailure, exception);
         Assert.AreEqual(1, client.DisposeCount);
         Assert.AreEqual(1, cancellation.DisposeCount);
         Assert.ContainsSingle(
@@ -353,13 +349,12 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
-    public async Task StartAsync_FailedAcceptCleanupAwait_DoesNotCaptureTheCallingSynchronizationContext()
+    public async Task CleanupFailedStartAsync_DoesNotCaptureTheCallingSynchronizationContext()
     {
         using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
         listener.Start();
         using var client = new TcpClient();
         using var cancellation = new CancellationTokenSource();
-        var acceptFailure = new IOException("accept failure");
         Task<int> serverTask = Task.Run(async () =>
         {
             try
@@ -373,21 +368,19 @@ public sealed class MtpServerClientInProcessTests
 
             return 0;
         });
-        Task<MtpServerInProcessHost> start = InvokeWithSynchronizationContext(
-            () => ResumeStartAsyncFromFailedAccept(
+        Task cleanup = InvokeWithSynchronizationContext(
+            () => MtpServerInProcessHost.CleanupFailedStartAsync(
                 listener,
                 client,
                 cancellation,
                 serverTask,
-                NullMtpClientLogger.Instance,
-                acceptFailure),
+                NullMtpClientLogger.Instance),
             out QueueingSynchronizationContext context);
 
-        bool completedWithoutPumping = await CompletesQuicklyAsync(start);
-        DrainContextUntilCompleted(context, start);
-        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() => start);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(cleanup);
+        DrainContextUntilCompleted(context, cleanup);
+        await cleanup;
 
-        Assert.AreSame(acceptFailure, exception);
         Assert.IsTrue(completedWithoutPumping, "Failed-launch cleanup must not capture the calling synchronization context.");
     }
 
@@ -1487,48 +1480,6 @@ public sealed class MtpServerClientInProcessTests
              typeof(CancellationTokenSource), typeof(TimeSpan), typeof(IMtpClientLogger)],
             modifiers: null)!.Invoke(
             [listener, client, connection, serverTask, cancellation, shutdownTimeout, logger]);
-
-    private static Task<MtpServerInProcessHost> ResumeStartAsyncFromFailedAccept(
-        TcpListener listener,
-        TcpClient acceptedClient,
-        CancellationTokenSource serverCancellation,
-        Task<int>? serverTask,
-        IMtpClientLogger logger,
-        Exception acceptFailure)
-    {
-        MethodInfo startMethod = typeof(MtpServerInProcessHost).GetMethod(
-            nameof(MtpServerInProcessHost.StartAsync),
-            BindingFlags.Static | BindingFlags.Public)!;
-        Type stateMachineType = startMethod.GetCustomAttribute<AsyncStateMachineAttribute>()!.StateMachineType;
-        object stateMachine = Activator.CreateInstance(stateMachineType)!;
-        FieldInfo[] fields = stateMachineType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-        fields.Single(field => field.Name == "<>1__state").SetValue(stateMachine, 0);
-        fields.Single(field => field.Name.Contains("listener", StringComparison.Ordinal)).SetValue(stateMachine, listener);
-        fields.Single(field => field.Name.Contains("acceptedClient", StringComparison.Ordinal)).SetValue(stateMachine, acceptedClient);
-        fields.Single(field => field.Name.Contains("serverCancellation", StringComparison.Ordinal)).SetValue(stateMachine, serverCancellation);
-        fields.Single(field => field.Name.Contains("logger", StringComparison.Ordinal)).SetValue(stateMachine, logger);
-
-        FieldInfo optionsClosureField = fields.Single(field => field.Name == "<>8__1");
-        object optionsClosure = Activator.CreateInstance(optionsClosureField.FieldType)!;
-        optionsClosureField.FieldType.GetField("options")!.SetValue(optionsClosure, CreateOptions());
-        optionsClosureField.SetValue(stateMachine, optionsClosure);
-
-        FieldInfo serverClosureField = fields.Single(field => field.Name == "<>8__2");
-        object serverClosure = Activator.CreateInstance(serverClosureField.FieldType)!;
-        serverClosureField.FieldType.GetField("serverTask")!.SetValue(serverClosure, serverTask);
-        serverClosureField.SetValue(stateMachine, serverClosure);
-
-        fields.Single(field => field.Name == "<>u__1").SetValue(
-            stateMachine,
-            Task.FromException<TcpClient>(acceptFailure).ConfigureAwait(false).GetAwaiter());
-
-        ((IAsyncStateMachine)stateMachine).MoveNext();
-
-        object builder = fields.Single(
-            field => field.FieldType == typeof(AsyncTaskMethodBuilder<MtpServerInProcessHost>)).GetValue(stateMachine)!;
-        return ((AsyncTaskMethodBuilder<MtpServerInProcessHost>)builder).Task;
-    }
 
     private static Task InvokeShutdownCoreAsync(MtpServerInProcessHost host)
         => (Task)typeof(MtpServerInProcessHost).GetMethod(

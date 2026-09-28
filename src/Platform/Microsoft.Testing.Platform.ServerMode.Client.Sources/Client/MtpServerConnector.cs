@@ -174,6 +174,8 @@ internal static class MtpServerConnector
                     throw serverStopped;
                 }
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (acceptCompleted)
                 {
                     break;

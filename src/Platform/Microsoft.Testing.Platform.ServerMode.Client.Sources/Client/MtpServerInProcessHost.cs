@@ -176,29 +176,38 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         }
         catch
         {
-            // Tear down whatever was already created. Every step is individually guarded and reported through
-            // the logger so a teardown failure can never replace the primary launch failure rethrown below.
-            SafeDispose(acceptedClient, logger, "Disposing the accepted client socket");
-
-            if (listener is not null)
-            {
-                MtpServerConnector.SafeStop(listener, logger);
-            }
-
-            if (serverTask is not null
-                && !await ShutdownServerAsync(serverTask, serverCancellation!, TimeSpan.Zero, logger).ConfigureAwait(false))
-            {
-                // The launch is being abandoned, so skip the graceful wait entirely: there is no connected
-                // transport whose closure could signal the callback, and the caller (often a canceling one) is
-                // waiting on this unwind. A zero graceful timeout goes straight to cancel-then-grace.
-                // The callback is still running and still holds the token; disposing its source now would
-                // turn a clean abandonment into an ObjectDisposedException inside the caller's own code.
-                throw;
-            }
-
-            SafeDispose(serverCancellation, logger, "Disposing the server cancellation source");
+            await CleanupFailedStartAsync(listener, acceptedClient, serverCancellation, serverTask, logger).ConfigureAwait(false);
             throw;
         }
+    }
+
+    internal static async Task CleanupFailedStartAsync(
+        TcpListener? listener,
+        TcpClient? acceptedClient,
+        CancellationTokenSource? serverCancellation,
+        Task<int>? serverTask,
+        IMtpClientLogger logger)
+    {
+        // Tear down whatever was already created. Every step is individually guarded and reported through
+        // the logger so a teardown failure can never replace the primary launch failure rethrown by the caller.
+        SafeDispose(acceptedClient, logger, "Disposing the accepted client socket");
+
+        if (listener is not null)
+        {
+            MtpServerConnector.SafeStop(listener, logger);
+        }
+
+        if (serverTask is not null
+            && !await ShutdownServerAsync(serverTask, serverCancellation!, TimeSpan.Zero, logger).ConfigureAwait(false))
+        {
+            // The launch is being abandoned, so skip the graceful wait entirely: there is no connected
+            // transport whose closure could signal the callback, and the caller (often a canceling one) is
+            // waiting on this unwind. The callback is still running and still holds the token; disposing its
+            // source now would turn a clean abandonment into an ObjectDisposedException inside caller code.
+            return;
+        }
+
+        SafeDispose(serverCancellation, logger, "Disposing the server cancellation source");
     }
 
     /// <summary>
