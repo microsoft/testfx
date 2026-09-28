@@ -175,6 +175,8 @@ public class CtrfReportEngineTests
             + new string('u', MaxIdentityFieldLength - 1025);
         string firstUid = sharedPrefix + "A";
         string secondUid = sharedPrefix + "B";
+        string hashShapedUid = ComputeTestId(firstUid);
+        string escapePrefixedUid = "uid:" + hashShapedUid;
         TestNode firstNode = new()
         {
             Uid = firstUid,
@@ -187,9 +189,23 @@ public class CtrfReportEngineTests
             DisplayName = "Second",
             Properties = new(PassedTestNodeStateProperty.CachedInstance),
         };
+        TestNode hashShapedNode = new()
+        {
+            Uid = hashShapedUid,
+            DisplayName = "Hash-shaped",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode escapePrefixedNode = new()
+        {
+            Uid = escapePrefixedUid,
+            DisplayName = "Escape-prefixed",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
 
         CapturedTestResult first = TestResultCapture.TryCapture(firstNode)!;
         CapturedTestResult second = TestResultCapture.TryCapture(secondNode)!;
+        CapturedTestResult hashShaped = TestResultCapture.TryCapture(hashShapedNode)!;
+        CapturedTestResult escapePrefixed = TestResultCapture.TryCapture(escapePrefixedNode)!;
 
         Assert.AreEqual(first.Uid, second.Uid, "The capped compatibility UIDs intentionally collide in this scenario.");
         Assert.AreNotEqual(first.TestId, second.TestId);
@@ -197,20 +213,22 @@ public class CtrfReportEngineTests
         Assert.StartsWith("sha256:", second.TestId);
         Assert.AreEqual(ComputeTestId(firstUid), first.TestId);
         Assert.AreEqual(first.TestId, TestResultCapture.TryCapture(firstNode)!.TestId, "The derived testId must be deterministic.");
+        Assert.AreEqual("uid:" + hashShapedUid, hashShaped.TestId);
+        Assert.AreEqual("uid:" + escapePrefixedUid, escapePrefixed.TestId);
 
         using var memoryStream = new MemoryFileStream();
-        await CreateEngine(memoryStream).GenerateReportAsync([first, second]);
+        await CreateEngine(memoryStream).GenerateReportAsync([first, second, hashShaped, escapePrefixed]);
 
         string report = memoryStream.GetUtf8Content();
         using var document = JsonDocument.Parse(report);
         JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
-        Assert.AreNotEqual(tests[0].GetProperty("testId").GetString(), tests[1].GetProperty("testId").GetString());
+        Assert.HasCount(4, tests.Select(test => test.GetProperty("testId").GetString()).Distinct());
         Assert.AreEqual(
             tests[0].GetProperty("extra").GetProperty("uid").GetString(),
             tests[1].GetProperty("extra").GetProperty("uid").GetString());
 
         using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts));
-        Assert.AreEqual(2, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
+        Assert.AreEqual(4, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
     }
 
     [TestMethod]

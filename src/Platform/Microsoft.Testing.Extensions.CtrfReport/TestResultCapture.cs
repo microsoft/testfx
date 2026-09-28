@@ -16,6 +16,8 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 internal static class TestResultCapture
 {
     private const string DefaultAttachmentContentType = "application/octet-stream";
+    private const string EscapedTestIdPrefix = "uid:";
+    private const string HashedTestIdPrefix = "sha256:";
 
     public static CapturedTestResult? TryCapture(TestNode node)
     {
@@ -54,9 +56,13 @@ internal static class TestResultCapture
 
     private static string CreateTestId(string uid)
     {
-        if (uid.Length <= TestResultCaptureHelper.MaxIdentityFieldLength)
+        bool usesReservedPrefix = uid.StartsWith(EscapedTestIdPrefix, StringComparison.Ordinal)
+            || uid.StartsWith(HashedTestIdPrefix, StringComparison.Ordinal);
+        if (uid.Length <= TestResultCaptureHelper.MaxIdentityFieldLength
+            && (!usesReservedPrefix
+                || uid.Length <= TestResultCaptureHelper.MaxIdentityFieldLength - EscapedTestIdPrefix.Length))
         {
-            return uid;
+            return usesReservedPrefix ? EscapedTestIdPrefix + uid : uid;
         }
 
         using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -77,7 +83,7 @@ internal static class TestResultCapture
         }
 
         byte[] hash = sha256.GetHashAndReset();
-        var builder = new StringBuilder("sha256:", capacity: 7 + (hash.Length * 2));
+        var builder = new StringBuilder(HashedTestIdPrefix, capacity: HashedTestIdPrefix.Length + (hash.Length * 2));
         foreach (byte value in hash)
         {
             _ = builder.Append(value.ToString("x2", CultureInfo.InvariantCulture));
