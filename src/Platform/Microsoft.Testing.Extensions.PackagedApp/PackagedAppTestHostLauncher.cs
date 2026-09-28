@@ -661,7 +661,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         Directory.CreateDirectory(layoutDirectory);
         string recipeDirectory = Path.GetDirectoryName(Path.GetFullPath(appxRecipePath))!;
         string requestedTargetPath = resolveFinalPath(Path.GetFullPath(targetFileName));
+        string requestedTargetFileName = Path.GetFileName(requestedTargetPath);
         string? targetPackagePath = null;
+        List<string> targetPackagePathCandidates = [];
         foreach (XElement item in recipe.Descendants().Where(element =>
             element.Name.LocalName is "AppXManifest" or "AppxPackagedFile"))
         {
@@ -681,17 +683,44 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             }
 
             sourcePath = resolveFinalPath(sourcePath);
-            if (item.Name.LocalName == "AppxPackagedFile"
-                && string.Equals(sourcePath, requestedTargetPath, StringComparison.OrdinalIgnoreCase))
+            string normalizedPackagePath = packagePath.Replace('\\', Path.DirectorySeparatorChar);
+            if (item.Name.LocalName == "AppxPackagedFile")
             {
-                targetPackagePath = packagePath;
+                if (string.Equals(sourcePath, requestedTargetPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetPackagePath = normalizedPackagePath;
+                }
+                else if (string.Equals(
+                    Path.GetFileName(normalizedPackagePath),
+                    requestedTargetFileName,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    targetPackagePathCandidates.Add(normalizedPackagePath);
+                }
             }
 
             string destinationPath = Path.Combine(
                 layoutDirectory,
-                packagePath.Replace('\\', Path.DirectorySeparatorChar));
+                normalizedPackagePath);
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             File.Copy(sourcePath, destinationPath, overwrite: true);
+        }
+
+        var manifestInfo = AppxManifestInfo.ReadFromManifest(
+            Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName));
+        if (targetPackagePath is null)
+        {
+            string[] manifestTargetPackagePaths = [.. manifestInfo.Applications
+                .Select(application => application.Executable?.Replace('\\', Path.DirectorySeparatorChar))
+                .Where(executable => executable is not null
+                    && targetPackagePathCandidates.Any(candidate =>
+                        string.Equals(candidate, executable, StringComparison.OrdinalIgnoreCase)))
+                .Cast<string>()
+                .Distinct(StringComparer.OrdinalIgnoreCase)];
+            if (manifestTargetPackagePaths.Length == 1)
+            {
+                targetPackagePath = manifestTargetPackagePaths[0];
+            }
         }
 
         if (targetPackagePath is null)
@@ -702,8 +731,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
         string normalizedTargetPackagePath = targetPackagePath.Replace('\\', Path.DirectorySeparatorChar);
         string materializedTargetPath = Path.Combine(layoutDirectory, normalizedTargetPackagePath);
-        var manifestInfo = AppxManifestInfo.ReadFromManifest(
-            Path.Combine(layoutDirectory, AppxManifestInfo.AppxManifestFileName));
         bool targetIsManifestExecutable = manifestInfo.Applications.Any(application =>
             application.Executable is not null
             && string.Equals(

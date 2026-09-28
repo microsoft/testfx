@@ -1009,6 +1009,7 @@ namespace MSTestWebTest
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
         result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("ControllerTfm=net9.0");
         result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx");
         result.AssertOutputContains("MSTest.TestAdapter");
         result.AssertOutputContains("MSTest.TestFramework");
@@ -1168,7 +1169,7 @@ namespace MSTestWebTest
               <Target Name="PrintWindowsTestContract"
                       DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_MSTestSDKConfigureAppModelController">
                 <Message Importance="high"
-                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerExtensions=$(_MSTestAppModelControllerExtensions)" />
+                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerTfm=$(_MSTestAppModelControllerTfm);ControllerExtensions=$(_MSTestAppModelControllerExtensions)" />
                 <Message Importance="high"
                          Text="PackageReferences=@(PackageReference->'%(Identity)')" />
                 <Message Importance="high"
