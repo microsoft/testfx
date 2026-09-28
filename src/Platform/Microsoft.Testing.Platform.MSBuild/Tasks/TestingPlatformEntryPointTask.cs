@@ -623,7 +623,7 @@ module internal MicrosoftTestingPlatformApplication =
                 use! app = builder.BuildAsync()
                 return! app.RunAsync()
             else
-                let! host = {{hostFactory}}()
+                let! host = global.{{hostFactory}}()
                 let mutable exitCode = 0
                 let mutable operationException: exn = null
                 try
@@ -701,7 +701,7 @@ module internal MicrosoftTestingPlatformApplication =
                 use! app = builder.BuildAsync()
                 return! app.RunAsync()
             else
-                let! host = {{hostFactory}}()
+                let! host = global.{{hostFactory}}()
                 let mutable exitCode = 0
                 let mutable operationException: exn = null
                 try

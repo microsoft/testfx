@@ -114,7 +114,7 @@ namespace SomeNamespace
 
     [DataRow("C#", "obj/applicationHelperFile.cs", "global::Microsoft.Extensions.Hosting.IHost host = await global::Contoso.Tests.TestHost.CreateHost();")]
     [DataRow("VB", "obj/applicationHelperFile.vb", "Dim host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.Contoso.Tests.TestHost.CreateHost()")]
-    [DataRow("F#", "obj/applicationHelperFile.fs", "let! host = Contoso.Tests.TestHost.CreateHost()")]
+    [DataRow("F#", "obj/applicationHelperFile.fs", "let! host = global.Contoso.Tests.TestHost.CreateHost()")]
     [TestMethod]
     public void EntryPointTask_Generates_Hosted_Application_For_All_Supported_Languages(string language, string sourcePath, string expectedFactoryCall)
     {

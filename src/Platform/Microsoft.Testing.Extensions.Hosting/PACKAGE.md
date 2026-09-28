@@ -42,9 +42,11 @@ Help or info activated only through configuration is resolved while the MTP appl
 ```csharp
 using System.Reflection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Testing.Extensions;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+builder.Logging.ClearProviders();
 
 using IHost host = builder.Build();
 return await host.RunTestingPlatformAsync(args, testApplication =>
