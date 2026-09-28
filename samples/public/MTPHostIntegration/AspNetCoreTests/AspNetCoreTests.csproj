@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
                       ReferenceOutputAssembly="false"
                       PrivateAssets="all"
+                      SetConfiguration="Configuration=$(Configuration)"
                       SetTargetFramework="TargetFramework=netstandard2.0" />
   </ItemGroup>
 
