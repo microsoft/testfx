@@ -155,12 +155,12 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
                     continue;
                 }
 
-                if (!RetryArtifactManifest.TryParseEntry(line, out string sourcePath, out string encodedKind))
+                if (!RetryArtifactManifest.TrySplitEntry(line, out string encodedPath, out string encodedKind))
                 {
                     continue;
                 }
 
-                sourcePath = Path.GetFullPath(sourcePath);
+                string sourcePath = Path.GetFullPath(RetryArtifactManifest.DecodePath(encodedPath));
                 string? recoveredPath = TryGetRecoveredArtifactPath(
                     sourcePath,
                     _resultsScratchDirectory,
