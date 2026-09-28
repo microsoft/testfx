@@ -239,20 +239,24 @@ public sealed class TestExecutionActivityBrokerTests
         using TestExecutionActivityBroker broker = CreateBroker();
         TestExecutionActivityReservation reservation = ReserveWithoutActivation(broker);
 
-        _service.Verify(s => s.StartTestExecutionActivity(
-            It.IsAny<string>(),
-            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
-            It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>()), Times.Never);
+        _service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
 
         reservation.Activate();
         reservation.Activate();
 
-        _service.Verify(s => s.StartTestExecutionActivity(
-            It.IsAny<string>(),
-            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
-            It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>()), Times.Once);
+        _service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
     }
 
     private TestExecutionActivityBroker CreateBroker()

@@ -824,20 +824,24 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         Task recordStartTask = recorder.RecordStartAsync(CreateElement());
         await publishStarted.Task;
-        service.Verify(s => s.StartTestExecutionActivity(
-            It.IsAny<string>(),
-            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
-            It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>()), Times.Never);
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
 
         allowPublishToComplete.SetResult(true);
         await recordStartTask;
 
-        service.Verify(s => s.StartTestExecutionActivity(
-            It.IsAny<string>(),
-            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
-            It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>()), Times.Once);
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
     }
 
     private static TestNode ResultNode(UnitTestOutcome outcome)
