@@ -17,7 +17,7 @@ internal sealed partial class CtrfReportEngine
         // testId is derived from the producer's full MTP TestNode UID, while r.Uid
         // remains the capped compatibility value. A fresh executionId identifies
         // this lifecycle; earlier retry attempts get their own attemptId.
-        writer.WriteString("testId", RoslynString.IsNullOrEmpty(r.TestId) ? r.Uid : r.TestId);
+        writer.WriteString("testId", GetTestId(r));
         writer.WriteString("executionId", Guid.NewGuid().ToString("D"));
 
         // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID

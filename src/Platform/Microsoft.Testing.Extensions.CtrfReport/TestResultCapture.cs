@@ -59,8 +59,24 @@ internal static class TestResultCapture
             return uid;
         }
 
-        using var sha256 = SHA256.Create();
-        byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(uid));
+        using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        const int CharacterChunkLength = 1024;
+        byte[] buffer = new byte[Encoding.UTF8.GetMaxByteCount(CharacterChunkLength)];
+        int offset = 0;
+        while (offset < uid.Length)
+        {
+            int characterCount = Math.Min(CharacterChunkLength, uid.Length - offset);
+            if (offset + characterCount < uid.Length && char.IsHighSurrogate(uid[offset + characterCount - 1]))
+            {
+                characterCount--;
+            }
+
+            int byteCount = Encoding.UTF8.GetBytes(uid, offset, characterCount, buffer, 0);
+            sha256.AppendData(buffer, 0, byteCount);
+            offset += characterCount;
+        }
+
+        byte[] hash = sha256.GetHashAndReset();
         var builder = new StringBuilder("sha256:", capacity: 7 + (hash.Length * 2));
         foreach (byte value in hash)
         {

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -169,7 +170,9 @@ public class CtrfReportEngineTests
     [TestMethod]
     public async Task TestResultCapture_LongUidsRemainDistinctThroughRetryCollapsing()
     {
-        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string sharedPrefix = new string('u', 1023)
+            + "\U0001F642"
+            + new string('u', MaxIdentityFieldLength - 1025);
         string firstUid = sharedPrefix + "A";
         string secondUid = sharedPrefix + "B";
         TestNode firstNode = new()
@@ -192,6 +195,7 @@ public class CtrfReportEngineTests
         Assert.AreNotEqual(first.TestId, second.TestId);
         Assert.StartsWith("sha256:", first.TestId);
         Assert.StartsWith("sha256:", second.TestId);
+        Assert.AreEqual(ComputeTestId(firstUid), first.TestId);
         Assert.AreEqual(first.TestId, TestResultCapture.TryCapture(firstNode)!.TestId, "The derived testId must be deterministic.");
 
         using var memoryStream = new MemoryFileStream();
@@ -207,6 +211,53 @@ public class CtrfReportEngineTests
 
         using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts));
         Assert.AreEqual(2, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesInterleavedLongUidRetrySequences()
+    {
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "A";
+        string secondUid = sharedPrefix + "B";
+
+        CapturedTestResult[] tests =
+        [
+            CaptureRetry(firstUid, "First", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 1, isSuperseded: true),
+            CaptureRetry(secondUid, "Second", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 1, isSuperseded: true),
+            CaptureRetry(secondUid, "Second", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+            CaptureRetry(firstUid, "First", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+        ];
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement[] reportedTests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(2, reportedTests);
+        Assert.AreSequenceEqual(["First", "Second"], reportedTests.Select(test => test.GetProperty("name").GetString()).ToArray());
+        Assert.IsTrue(reportedTests.All(test => test.GetProperty("retries").GetInt32() == 1));
+        Assert.AreNotEqual(reportedTests[0].GetProperty("testId").GetString(), reportedTests[1].GetProperty("testId").GetString());
+    }
+
+    private static CapturedTestResult CaptureRetry(
+        string uid,
+        string name,
+        TestNodeStateProperty state,
+        int attemptNumber,
+        bool isSuperseded)
+        => TestResultCapture.TryCapture(new TestNode
+        {
+            Uid = uid,
+            DisplayName = name,
+            Properties = new(state, new RetryAttemptProperty(attemptNumber, isSuperseded)),
+        })!;
+
+    private static string ComputeTestId(string uid)
+    {
+        using var sha256 = SHA256.Create();
+        return "sha256:" + string.Concat(
+            sha256.ComputeHash(Encoding.UTF8.GetBytes(uid))
+                .Select(value => value.ToString("x2", CultureInfo.InvariantCulture)));
     }
 
     [TestMethod]
