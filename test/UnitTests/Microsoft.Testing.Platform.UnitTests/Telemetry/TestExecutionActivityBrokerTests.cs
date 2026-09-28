@@ -233,10 +233,39 @@ public sealed class TestExecutionActivityBrokerTests
         _activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Never);
     }
 
+    [TestMethod]
+    public void Reserve_DoesNotStartActivityUntilActivated()
+    {
+        using TestExecutionActivityBroker broker = CreateBroker();
+        TestExecutionActivityReservation reservation = ReserveWithoutActivation(broker);
+
+        _service.Verify(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()), Times.Never);
+
+        reservation.Activate();
+        reservation.Activate();
+
+        _service.Verify(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()), Times.Once);
+    }
+
     private TestExecutionActivityBroker CreateBroker()
         => new(_service.Object, PlatformOpenTelemetryOptions.Default);
 
     private static TestExecutionActivityReservation Reserve(TestExecutionActivityBroker broker)
+    {
+        TestExecutionActivityReservation reservation = ReserveWithoutActivation(broker);
+        reservation.Activate();
+        return reservation;
+    }
+
+    private static TestExecutionActivityReservation ReserveWithoutActivation(TestExecutionActivityBroker broker)
         => broker.Reserve(new TestNode
         {
             Uid = new TestNodeUid(Guid.NewGuid().ToString()),

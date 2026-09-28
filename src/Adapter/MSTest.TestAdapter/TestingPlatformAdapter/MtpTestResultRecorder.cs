@@ -113,6 +113,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         }
 
         await PublishAsync(testNode).ConfigureAwait(false);
+        occurrence?.Reservation.Activate();
     }
 
     public async Task RecordEmptyResultAsync(UnitTestElement testElement)

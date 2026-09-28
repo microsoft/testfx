@@ -20,7 +20,12 @@ internal sealed class TestExecutionActivityBroker(
 
     public TestExecutionActivityReservation? Reserve(TestNode testNode, TestNodeUid? parentUid = null)
     {
-        DateTimeOffset startTime = DateTimeOffset.UtcNow;
+        string activityName = OpenTelemetryResultHandler.GetActivityName(testNode);
+        KeyValuePair<string, object?>[] initialInfo =
+        [
+            .. OpenTelemetryResultHandler.GetTestInitialInfo(testNode, parentUid, options),
+        ];
+        string? parentId = otelService.TestFrameworkActivity?.Id;
         long token;
         lock (_syncRoot)
         {
@@ -30,35 +35,93 @@ internal sealed class TestExecutionActivityBroker(
             }
 
             token = ++_nextToken;
+            _entries.Add(token, new Entry(activityName, initialInfo, parentId));
         }
 
-        IPlatformTestExecutionActivity? activity = otelService.StartTestExecutionActivity(
-            OpenTelemetryResultHandler.GetActivityName(testNode),
-            OpenTelemetryResultHandler.GetTestInitialInfo(testNode, parentUid, options),
-            otelService.TestFrameworkActivity?.Id,
-            startTime);
+        return new TestExecutionActivityReservation(this, token);
+    }
 
+    internal void Activate(long token)
+    {
+        Entry? entry;
+        DateTimeOffset startTime = DateTimeOffset.UtcNow;
+        lock (_syncRoot)
+        {
+            if (!_entries.TryGetValue(token, out entry)
+                || entry.Finalized
+                || entry.Activated
+                || entry.ActivationInProgress)
+            {
+                return;
+            }
+
+            entry.ActivationInProgress = true;
+        }
+
+        IPlatformTestExecutionActivity? activity;
+        try
+        {
+            activity = otelService.StartTestExecutionActivity(
+                entry.ActivityName,
+                entry.InitialInfo,
+                entry.ParentId,
+                startTime);
+        }
+        catch
+        {
+            FinalizationWork? failedActivationWork = null;
+            lock (_syncRoot)
+            {
+                if (_entries.TryGetValue(token, out Entry? currentEntry)
+                    && ReferenceEquals(currentEntry, entry)
+                    && !entry.Finalized)
+                {
+                    entry.ActivationInProgress = false;
+                    entry.Sealed = true;
+                    failedActivationWork = ClaimFinalization(token, entry, startTime);
+                }
+            }
+
+            if (failedActivationWork is not null)
+            {
+                FinalizeActivity(failedActivationWork.Value);
+            }
+
+            throw;
+        }
+
+        FinalizationWork? work = null;
         bool stopActivity;
         lock (_syncRoot)
         {
-            if (_disposed)
+            if (!_entries.TryGetValue(token, out Entry? currentEntry)
+                || !ReferenceEquals(currentEntry, entry)
+                || entry.Finalized)
             {
                 stopActivity = true;
             }
             else
             {
-                _entries.Add(token, new Entry(activity, startTime));
+                entry.Activity = activity;
+                entry.StartTime = startTime;
+                entry.ActivationInProgress = false;
+                entry.Activated = true;
                 stopActivity = false;
+                if (entry.Sealed)
+                {
+                    work = ClaimFinalization(token, entry, entry.ExecutionEnd ?? DateTimeOffset.UtcNow);
+                }
             }
         }
 
         if (stopActivity)
         {
             activity?.Stop(DateTimeOffset.UtcNow);
-            return null;
         }
-
-        return new TestExecutionActivityReservation(this, token);
+        else if (work is not null)
+        {
+            FinalizeActivity(work.Value);
+        }
     }
 
     public void Dispose()
@@ -75,7 +138,10 @@ internal sealed class TestExecutionActivityBroker(
             foreach ((long token, Entry entry) in _entries.ToArray())
             {
                 entry.Sealed = true;
-                work.Add(ClaimFinalization(token, entry, DateTimeOffset.UtcNow));
+                if (!entry.ActivationInProgress)
+                {
+                    work.Add(ClaimFinalization(token, entry, DateTimeOffset.UtcNow));
+                }
             }
         }
 
@@ -109,7 +175,7 @@ internal sealed class TestExecutionActivityBroker(
             }
 
             entry.ExecutionEnd ??= endTime;
-            if (entry.Sealed)
+            if (entry.Sealed && !entry.ActivationInProgress)
             {
                 work = ClaimFinalization(token, entry, endTime);
             }
@@ -151,7 +217,7 @@ internal sealed class TestExecutionActivityBroker(
                 entry.Sealed = true;
             }
 
-            if (entry.Sealed && entry.ExecutionEnd is not null)
+            if (entry.Sealed && entry.ExecutionEnd is not null && !entry.ActivationInProgress)
             {
                 work = ClaimFinalization(token, entry, entry.ExecutionEnd.Value);
             }
@@ -176,7 +242,7 @@ internal sealed class TestExecutionActivityBroker(
             }
 
             entry.Sealed = true;
-            if (entry.ExecutionEnd is not null)
+            if (entry.ExecutionEnd is not null && !entry.ActivationInProgress)
             {
                 work = ClaimFinalization(token, entry, entry.ExecutionEnd.Value);
             }
@@ -193,12 +259,13 @@ internal sealed class TestExecutionActivityBroker(
         entry.Finalized = true;
         _entries.Remove(token);
         DateTimeOffset endTime = entry.ExecutionEnd ?? fallbackEndTime;
+        DateTimeOffset startTime = entry.StartTime ?? endTime;
         return new FinalizationWork(
             entry.Activity,
             entry.AggregateResult,
             entry.Enrich,
             endTime,
-            endTime - entry.StartTime);
+            endTime - startTime);
     }
 
     private static void FinalizeActivities(List<FinalizationWork> work)
@@ -233,11 +300,20 @@ internal sealed class TestExecutionActivityBroker(
             _ => 0,
         };
 
-    private sealed class Entry(IPlatformTestExecutionActivity? activity, DateTimeOffset startTime)
+    private sealed class Entry(
+        string activityName,
+        KeyValuePair<string, object?>[] initialInfo,
+        string? parentId)
     {
-        public IPlatformTestExecutionActivity? Activity { get; } = activity;
+        public string ActivityName { get; } = activityName;
 
-        public DateTimeOffset StartTime { get; } = startTime;
+        public KeyValuePair<string, object?>[] InitialInfo { get; } = initialInfo;
+
+        public string? ParentId { get; } = parentId;
+
+        public IPlatformTestExecutionActivity? Activity { get; set; }
+
+        public DateTimeOffset? StartTime { get; set; }
 
         public DateTimeOffset? ExecutionEnd { get; set; }
 
@@ -248,6 +324,10 @@ internal sealed class TestExecutionActivityBroker(
         public bool Sealed { get; set; }
 
         public bool Finalized { get; set; }
+
+        public bool ActivationInProgress { get; set; }
+
+        public bool Activated { get; set; }
     }
 
     private readonly record struct FinalizationWork(
@@ -260,6 +340,9 @@ internal sealed class TestExecutionActivityBroker(
 
 internal sealed class TestExecutionActivityReservation(TestExecutionActivityBroker broker, long token)
 {
+    public void Activate()
+        => broker.Activate(token);
+
     public IDisposable? Enter()
         => broker.Enter(token);
 

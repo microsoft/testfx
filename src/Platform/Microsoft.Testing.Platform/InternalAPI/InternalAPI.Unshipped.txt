@@ -37,6 +37,7 @@ Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifySuperseded
 static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetActivityName(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
 static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetTestInitialInfo(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>!
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Activate(long token) -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.CompleteWithoutResult(long token) -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Dispose() -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Enter(long token) -> System.IDisposable?
@@ -49,6 +50,7 @@ Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty.IsFinalResult
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty.Reservation.get -> Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation!
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty.TestExecutionActivityProperty(Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation! reservation, bool isFinalResult) -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.Activate() -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.CompleteWithoutResult() -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.Enter() -> System.IDisposable?
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.ProcessResult(string! result, bool contributesToAggregate, bool isFinalResult, System.Action<Microsoft.Testing.Platform.Telemetry.IPlatformActivity?, string?, System.DateTimeOffset, System.TimeSpan>! enrich) -> bool
