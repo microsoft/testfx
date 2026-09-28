@@ -20,6 +20,12 @@
     <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj" />
     <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
+                      Condition=" '$(BuildingSolutionFile)' != 'true' "
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"
+                      SetConfiguration="Configuration=$(Configuration)"
+                      SetTargetFramework="TargetFramework=netstandard2.0" />
   </ItemGroup>
 
   <Import Project="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\buildMultiTargeting\Microsoft.Testing.Extensions.Hosting.props" />
