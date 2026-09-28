@@ -135,6 +135,7 @@ namespace SomeNamespace
         Assert.Contains("RunTestingPlatformAsync", generatedSource);
         Assert.Contains("ShouldBypassApplicationHost", generatedSource);
         Assert.Contains("IAsyncDisposable", generatedSource);
+        Assert.Contains("Host disposal failed while handling another exception.", generatedSource);
         Assert.AreEqual(1, CountOccurrences(generatedSource, "SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)"));
         Assert.IsEmpty(_errors);
     }

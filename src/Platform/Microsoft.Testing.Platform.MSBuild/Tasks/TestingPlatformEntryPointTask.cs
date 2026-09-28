@@ -349,28 +349,50 @@ internal static class MicrosoftTestingPlatformApplication
         }
 
         global::Microsoft.Extensions.Hosting.IHost host = await global::{{hostFactory}}();
+        int exitCode;
         try
         {
-            return await global::Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
+            exitCode = await global::Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                 host,
                 args,
                 builder => AddSelfRegisteredExtensions(builder, args));
         }
-        finally
+        catch (global::System.Exception operationException)
         {
-            if (host is global::System.IAsyncDisposable asyncDisposable)
+            try
             {
-                await asyncDisposable.DisposeAsync();
+                await DisposeHostAsync(host);
             }
-            else
+            catch (global::System.Exception disposeException)
             {
-                host.Dispose();
+                throw new global::System.AggregateException(
+                    "Host disposal failed while handling another exception.",
+                    operationException,
+                    disposeException);
             }
+
+            global::System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(operationException).Throw();
+            throw;
         }
+
+        await DisposeHostAsync(host);
+        return exitCode;
     }
 
     private static void AddSelfRegisteredExtensions(global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
         => global::SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+
+    private static async global::System.Threading.Tasks.Task DisposeHostAsync(global::Microsoft.Extensions.Hosting.IHost host)
+    {
+        if (host is global::System.IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync();
+        }
+        else
+        {
+            host.Dispose();
+        }
+    }
 
 }
 {{(generateEntryPoint ? """
@@ -408,28 +430,50 @@ namespace {{rootNamespace}}
             }
 
             global::Microsoft.Extensions.Hosting.IHost host = await global::{{hostFactory}}();
+            int exitCode;
             try
             {
-                return await global::Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
+                exitCode = await global::Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                     host,
                     args,
                     builder => AddSelfRegisteredExtensions(builder, args));
             }
-            finally
+            catch (global::System.Exception operationException)
             {
-                if (host is global::System.IAsyncDisposable asyncDisposable)
+                try
                 {
-                    await asyncDisposable.DisposeAsync();
+                    await DisposeHostAsync(host);
                 }
-                else
+                catch (global::System.Exception disposeException)
                 {
-                    host.Dispose();
+                    throw new global::System.AggregateException(
+                        "Host disposal failed while handling another exception.",
+                        operationException,
+                        disposeException);
                 }
+
+                global::System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(operationException).Throw();
+                throw;
             }
+
+            await DisposeHostAsync(host);
+            return exitCode;
         }
 
         private static void AddSelfRegisteredExtensions(global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
             => global::{{rootNamespace}}.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
+
+        private static async global::System.Threading.Tasks.Task DisposeHostAsync(global::Microsoft.Extensions.Hosting.IHost host)
+        {
+            if (host is global::System.IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+            else
+            {
+                host.Dispose();
+            }
+        }
 
     }
 {{(generateEntryPoint ? """
@@ -476,7 +520,7 @@ Friend Module MicrosoftTestingPlatformApplication
             runException = ex
         End Try
 
-        Await DisposeHostAsync(host)
+        Await DisposeHostAsync(host, runException)
         If runException IsNot Nothing Then
             Global.System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(runException).Throw()
         End If
@@ -488,12 +532,28 @@ Friend Module MicrosoftTestingPlatformApplication
         SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
     End Sub
 
-    Private Async Function DisposeHostAsync(host As Global.Microsoft.Extensions.Hosting.IHost) As Global.System.Threading.Tasks.Task
-        Dim asyncDisposable = TryCast(host, Global.System.IAsyncDisposable)
-        If asyncDisposable IsNot Nothing Then
-            Await asyncDisposable.DisposeAsync()
-        Else
-            host.Dispose()
+    Private Async Function DisposeHostAsync(host As Global.Microsoft.Extensions.Hosting.IHost, operationException As Global.System.Exception) As Global.System.Threading.Tasks.Task
+        Dim disposeException As Global.System.Exception = Nothing
+        Try
+            Dim asyncDisposable = TryCast(host, Global.System.IAsyncDisposable)
+            If asyncDisposable IsNot Nothing Then
+                Await asyncDisposable.DisposeAsync()
+            Else
+                host.Dispose()
+            End If
+        Catch ex As Global.System.Exception
+            disposeException = ex
+        End Try
+
+        If disposeException IsNot Nothing Then
+            If operationException IsNot Nothing Then
+                Throw New Global.System.AggregateException(
+                    "Host disposal failed while handling another exception.",
+                    operationException,
+                    disposeException)
+            End If
+
+            Global.System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(disposeException).Throw()
         End If
     End Function
 
@@ -532,13 +592,27 @@ module internal MicrosoftTestingPlatformApplication =
     let private addSelfRegisteredExtensions builder args =
         Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
 
-    let private disposeHostAsync (host: Microsoft.Extensions.Hosting.IHost) =
+    let private disposeHostAsync (host: Microsoft.Extensions.Hosting.IHost) (operationException: exn) =
         task {
-            match box host with
-            | :? System.IAsyncDisposable as asyncDisposable ->
-                do! asyncDisposable.DisposeAsync().AsTask()
-            | _ ->
-                host.Dispose()
+            let mutable disposeException: exn = null
+            try
+                match box host with
+                | :? System.IAsyncDisposable as asyncDisposable ->
+                    do! asyncDisposable.DisposeAsync().AsTask()
+                | _ ->
+                    host.Dispose()
+            with ex ->
+                disposeException <- ex
+
+            if not (isNull disposeException) then
+                if not (isNull operationException) then
+                    return raise (
+                        System.AggregateException(
+                            "Host disposal failed while handling another exception.",
+                            operationException,
+                            disposeException))
+
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(disposeException).Throw()
         }
 
     let runAsync args =
@@ -550,17 +624,23 @@ module internal MicrosoftTestingPlatformApplication =
                 return! app.RunAsync()
             else
                 let! host = {{hostFactory}}()
+                let mutable exitCode = 0
+                let mutable operationException: exn = null
                 try
                     let! result =
                         Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                             host,
                             args,
                             System.Action<_>(fun builder -> addSelfRegisteredExtensions builder args))
-                    do! disposeHostAsync host
-                    return result
+                    exitCode <- result
                 with ex ->
-                    do! disposeHostAsync host
-                    return raise ex
+                    operationException <- ex
+
+                do! disposeHostAsync host operationException
+                if not (isNull operationException) then
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(operationException).Throw()
+
+                return exitCode
         }
 {{(generateEntryPoint ? """
 
@@ -590,13 +670,27 @@ module internal MicrosoftTestingPlatformApplication =
     let private addSelfRegisteredExtensions builder args =
         SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
 
-    let private disposeHostAsync (host: Microsoft.Extensions.Hosting.IHost) =
+    let private disposeHostAsync (host: Microsoft.Extensions.Hosting.IHost) (operationException: exn) =
         task {
-            match box host with
-            | :? System.IAsyncDisposable as asyncDisposable ->
-                do! asyncDisposable.DisposeAsync().AsTask()
-            | _ ->
-                host.Dispose()
+            let mutable disposeException: exn = null
+            try
+                match box host with
+                | :? System.IAsyncDisposable as asyncDisposable ->
+                    do! asyncDisposable.DisposeAsync().AsTask()
+                | _ ->
+                    host.Dispose()
+            with ex ->
+                disposeException <- ex
+
+            if not (isNull disposeException) then
+                if not (isNull operationException) then
+                    return raise (
+                        System.AggregateException(
+                            "Host disposal failed while handling another exception.",
+                            operationException,
+                            disposeException))
+
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(disposeException).Throw()
         }
 
     let runAsync args =
@@ -608,17 +702,23 @@ module internal MicrosoftTestingPlatformApplication =
                 return! app.RunAsync()
             else
                 let! host = {{hostFactory}}()
+                let mutable exitCode = 0
+                let mutable operationException: exn = null
                 try
                     let! result =
                         Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(
                             host,
                             args,
                             System.Action<_>(fun builder -> addSelfRegisteredExtensions builder args))
-                    do! disposeHostAsync host
-                    return result
+                    exitCode <- result
                 with ex ->
-                    do! disposeHostAsync host
-                    return raise ex
+                    operationException <- ex
+
+                do! disposeHostAsync host operationException
+                if not (isNull operationException) then
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(operationException).Throw()
+
+                return exitCode
         }
 {{(generateEntryPoint ? """
 
