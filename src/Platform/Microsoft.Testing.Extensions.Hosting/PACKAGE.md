@@ -8,6 +8,8 @@ The host remains the composition root and owns its service provider, configurati
 
 ```dotnetcli
 dotnet add package Microsoft.Testing.Extensions.Hosting
+dotnet add package Microsoft.Extensions.Hosting
+dotnet add package MSTest
 ```
 
 ## Usage
@@ -18,13 +20,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
-builder.AddServiceDefaults();
 
 using IHost host = builder.Build();
 return await host.RunTestingPlatformAsync(args, testApplication =>
 {
     testApplication.AddMSTest(() => [Assembly.GetExecutingAssembly()]);
-    testApplication.AddTestingPlatformDiagnostics();
 });
 ```
 

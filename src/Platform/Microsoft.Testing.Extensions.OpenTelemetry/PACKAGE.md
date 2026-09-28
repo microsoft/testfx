@@ -38,6 +38,11 @@ This package extends Microsoft.Testing.Platform with:
 
 When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, use `Microsoft.Testing.Extensions.Hosting` to preserve that ownership while MTP runs:
 
+```dotnetcli
+dotnet add package Microsoft.Testing.Extensions.Hosting
+dotnet add package Microsoft.Extensions.Hosting
+```
+
 ```csharp
 HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
 
