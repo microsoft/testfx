@@ -46,7 +46,7 @@ internal sealed partial class RetryOrchestrator
                     return;
                 }
 
-                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKind))
+                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKindOrNullSentinel))
                 {
                     logger.LogWarning($"Ignoring malformed recovered retry artifact manifest entry in '{manifestPath}'.");
                     continue;
@@ -55,7 +55,7 @@ internal sealed partial class RetryOrchestrator
                 try
                 {
                     string path = RetryArtifactManifest.DecodePath(encodedPath);
-                    string? kind = RetryArtifactManifest.DecodeKind(encodedKind);
+                    string? kind = RetryArtifactManifest.DecodeKind(encodedKindOrNullSentinel);
                     if (path.Length > MaxRecoveredArtifactPathChars
                         || kind?.Length > MaxRecoveredArtifactKindChars)
                     {

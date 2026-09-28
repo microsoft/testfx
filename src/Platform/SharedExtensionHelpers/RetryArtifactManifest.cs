@@ -14,31 +14,31 @@ internal static class RetryArtifactManifest
     public static bool TrySplitEntry(
         string line,
         [NotNullWhen(true)] out string? encodedPath,
-        [NotNullWhen(true)] out string? encodedKind)
+        [NotNullWhen(true)] out string? encodedKindOrNullSentinel)
     {
         int separatorIndex = line.IndexOf('\t');
         if (separatorIndex <= 0)
         {
             encodedPath = null;
-            encodedKind = null;
+            encodedKindOrNullSentinel = null;
             return false;
         }
 
         encodedPath = line.Substring(0, separatorIndex);
-        encodedKind = line.Substring(separatorIndex + 1);
+        encodedKindOrNullSentinel = line.Substring(separatorIndex + 1);
         return true;
     }
 
     public static string DecodePath(string encodedPath)
         => Encoding.UTF8.GetString(Convert.FromBase64String(encodedPath));
 
-    public static string? DecodeKind(string encodedKind)
-        => encodedKind == "-"
+    public static string? DecodeKind(string encodedKindOrNullSentinel)
+        => encodedKindOrNullSentinel == "-"
             ? null
-            : Encoding.UTF8.GetString(Convert.FromBase64String(encodedKind));
+            : Encoding.UTF8.GetString(Convert.FromBase64String(encodedKindOrNullSentinel));
 
-    public static string WriteEntryWithEncodedKind(string path, string encodedKind)
-        => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{encodedKind}";
+    public static string WriteEntryWithEncodedKind(string path, string encodedKindOrNullSentinel)
+        => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{encodedKindOrNullSentinel}";
 }
 
 #pragma warning restore RS0051

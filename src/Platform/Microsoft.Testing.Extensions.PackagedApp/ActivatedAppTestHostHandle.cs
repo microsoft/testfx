@@ -155,7 +155,7 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
                     continue;
                 }
 
-                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKind))
+                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKindOrNullSentinel))
                 {
                     continue;
                 }
@@ -174,7 +174,9 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
                     continue;
                 }
 
-                recoveredLines.Add(RetryArtifactManifest.WriteEntryWithEncodedKind(Path.GetFullPath(recoveredPath), encodedKind));
+                recoveredLines.Add(RetryArtifactManifest.WriteEntryWithEncodedKind(
+                    Path.GetFullPath(recoveredPath),
+                    encodedKindOrNullSentinel));
             }
 
             if (recoveredLines.Count == 0)
