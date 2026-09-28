@@ -1,4 +1,7 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Windows.UI.Xaml.Controls;
 
 namespace UwpMtpApp;
 

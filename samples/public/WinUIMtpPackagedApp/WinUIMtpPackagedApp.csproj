@@ -20,7 +20,7 @@
     <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">win-x86.pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <WinUIDSKReferences>false</WinUIDSKReferences>
+    <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>

@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+using Microsoft.Win32.SafeHandles;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
@@ -37,34 +39,28 @@ public sealed class UnitTests
 
     private static bool IsCurrentProcessAppContainer()
     {
-        if (!OpenProcessToken(GetCurrentProcess(), 0x0008, out nint token))
+        using Process process = Process.GetCurrentProcess();
+        if (!OpenProcessToken(process.Handle, 0x0008, out SafeAccessTokenHandle token))
         {
             throw new InvalidOperationException($"OpenProcessToken failed: {Marshal.GetLastWin32Error()}.");
         }
 
-        try
+        using (token)
         {
             int isAppContainer = 0;
             int returnLength = 0;
-            if (!GetTokenInformation(token, 29, ref isAppContainer, sizeof(int), ref returnLength))
+            if (!GetTokenInformation(token.DangerousGetHandle(), 29, ref isAppContainer, sizeof(int), ref returnLength))
             {
                 throw new InvalidOperationException($"GetTokenInformation(TokenIsAppContainer) failed: {Marshal.GetLastWin32Error()}.");
             }
 
             return isAppContainer != 0;
         }
-        finally
-        {
-            CloseHandle(token);
-        }
     }
-
-    [DllImport("kernel32.dll")]
-    private static extern nint GetCurrentProcess();
 
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool OpenProcessToken(nint processHandle, uint desiredAccess, out nint tokenHandle);
+    private static extern bool OpenProcessToken(nint processHandle, uint desiredAccess, out SafeAccessTokenHandle tokenHandle);
 
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -74,8 +70,4 @@ public sealed class UnitTests
         ref int tokenInformation,
         int tokenInformationLength,
         ref int returnLength);
-
-    [DllImport("kernel32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool CloseHandle(nint handle);
 }
