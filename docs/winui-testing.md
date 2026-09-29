@@ -4,11 +4,11 @@
 
 | Application model | Recommended test configuration | Test host |
 | --- | --- | --- |
-| Legacy UWP (`uap10.0`) | Existing project importing `MSTest.Sdk` | MTP sidecar controller with native UAP adapter assets |
-| Modern UWP (.NET 9+, `UseUwp`) | `MSTest.Sdk` | MTP sidecar controller with AUMID activation |
-| Packaged full-trust WinUI 3 (`UseWinUI`) | `MSTest.Sdk` | MTP sidecar controller with automatic package registration and AUMID activation |
-| Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | `MSTest.Sdk` | MTP direct executable launch |
-| WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | `MSTest.Sdk` | MTP sidecar controller with exact package-SID pipe authorization |
+| Legacy UWP (`uap10.0`) | [`ClassicUwpMtpApp`](../samples/public/ClassicUwpMtpApp) | MTP sidecar controller with native UAP adapter assets |
+| Modern UWP (.NET 9, `UseUwp`) | [`UwpMtpApp`](../samples/public/UwpMtpApp) | MTP sidecar controller with AUMID activation |
+| Packaged full-trust WinUI 3 (`UseWinUI`) | [`WinUIMtpPackagedApp`](../samples/public/WinUIMtpPackagedApp) | MTP sidecar controller with automatic package registration and AUMID activation |
+| Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | [`WinUIMtpUnpackagedApp`](../samples/public/WinUIMtpUnpackagedApp) | MTP direct executable launch |
+| WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | [`WinUIMtpAppContainerApp`](../samples/public/WinUIMtpAppContainerApp) | MTP sidecar controller with exact package-SID pipe authorization |
 
 `MSTest.Sdk` uses Microsoft.Testing.Platform for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved.
 
@@ -45,6 +45,10 @@ For modern UWP, the test-related part of the project is reduced to the SDK decla
 ```
 
 The UWP XAML, MSIX, architecture, and Native AOT settings remain application concerns. Modern and classic UWP builds continue to require the Visual Studio MSBuild/UWP toolchain, but not its VSTest runtime provider.
+
+The repository includes copy-ready modern and classic UWP samples. The classic sample preserves the
+legacy `MSBuild.Sdk.Extras`/UAP project shape and its Visual Studio build-time prerequisites, while
+execution still uses the SDK-shipped MTP sidecar rather than the VSTest runtime provider.
 
 ## WinUI 3
 
@@ -143,6 +147,7 @@ Requirements and limitations:
 - `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
 - The controller named pipe additionally authorizes the exact package SID of an AppContainer host, which a restricted AppContainer token needs in order to connect at all; see [Controller pipe access for AppContainer hosts](#controller-pipe-access-for-appcontainer-hosts).
+- Native .NET SDK `dotnet test` execution-ID handoff is supported for packaged full-trust WinUI. Use the `InvokeTestingPlatform` MSBuild target for AppContainer-hosted WinUI and UWP projects so the sidecar can recover sandbox-owned result artifacts.
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
 
@@ -259,6 +264,9 @@ Note those conditions are evaluated per project, and a **class library** does no
 ## Related
 
 - [`Microsoft.Testing.Extensions.PackagedApp` package readme](../src/Platform/Microsoft.Testing.Extensions.PackagedApp/PACKAGE.md)
+- [`UwpMtpApp` sample](../samples/public/UwpMtpApp)
+- [`ClassicUwpMtpApp` sample](../samples/public/ClassicUwpMtpApp)
+- [`WinUIMtpPackagedApp` sample](../samples/public/WinUIMtpPackagedApp)
+- [`WinUIMtpUnpackagedApp` sample](../samples/public/WinUIMtpUnpackagedApp)
+- [`WinUIMtpAppContainerApp` sample](../samples/public/WinUIMtpAppContainerApp)
 - [RFC 017 — Test host launcher](RFCs/017-TestHost-Launcher.md)
-- [`MSTestRunnerWinUI` sample](../samples/public/mstest-runner/MSTestRunnerWinUI) (packaged, MTP)
-- [`MSTestRunnerWinUIUnpackaged` sample](../samples/public/mstest-runner/MSTestRunnerWinUIUnpackaged) (unpackaged, MTP)

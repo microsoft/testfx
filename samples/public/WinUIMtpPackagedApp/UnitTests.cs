@@ -1,9 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.IO;
+
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
+
+using Windows.ApplicationModel;
 
 namespace WinUIMtpPackagedApp;
 
@@ -11,16 +16,26 @@ namespace WinUIMtpPackagedApp;
 public partial class UnitTest1
 {
     [TestMethod]
-    public void TestMethod1()
-#pragma warning disable MSTEST0032 // Assertion condition is always true
-        => Assert.AreEqual(0, 0);
-#pragma warning restore MSTEST0032 // Assertion condition is always true
+    public void PackageIdentityAndAumidMatchManifest()
+    {
+        Package package = Package.Current;
+        string installLocation = Path.TrimEndingDirectorySeparator(package.InstalledLocation.Path);
+        string baseDirectory = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
 
-    // Use the UITestMethod attribute for tests that need to run on the UI thread.
+        Assert.AreEqual("27a818e1-af01-4177-9e34-ad49120c15ed", package.Id.Name);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(package.Id.FamilyName));
+        Assert.AreEqual($"{package.Id.FamilyName}!App", AppInfo.Current.AppUserModelId);
+        Assert.AreEqual(installLocation, baseDirectory, ignoreCase: true);
+        Assert.IsNotNull(Environment.ProcessPath);
+        Assert.StartsWith(installLocation, Environment.ProcessPath, StringComparison.OrdinalIgnoreCase);
+    }
+
     [UITestMethod]
-    public void TestMethod2()
+    public void UITestMethodRunsOnTheWinUIDispatcher()
     {
         var grid = new Grid();
-        Assert.AreEqual(0, grid.MinWidth);
+
+        Assert.IsNotNull(grid.DispatcherQueue);
+        Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess);
     }
 }
