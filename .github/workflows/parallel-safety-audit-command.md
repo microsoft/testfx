@@ -4,11 +4,10 @@ description: >-
   Re-audits the changed MSTest tests of a pull request for parallel-safety when
   a maintainer comments `/parallel-audit`, then submits one COMMENT review.
 
-# The automatic on-open / on-synchronize variant lives in
-# `parallel-safety-audit.md`. They must remain separate workflows because
-# mixing `slash_command` with other triggers makes gh-aw's activation gate
-# always require a command-position match, silently skipping the agent on every
-# non-comment event.
+# Automatic parallel-safety analysis is part of the consolidated
+# `test-reviewer-on-pr.agent.md` workflow. This focused command remains separate
+# so maintainers can rerun only the parallel-safety specialist without paying
+# for or republishing the per-test grading pass.
 on:
   slash_command:
     name: parallel-audit
