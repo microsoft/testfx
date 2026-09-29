@@ -997,6 +997,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
     public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController()
     {
@@ -1019,6 +1020,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
     public async Task MSTestSdk_ModernUwp_AllowsExplicitMtpSelection()
     {
@@ -1038,6 +1040,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
     public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_UsesDirectMtpRunner()
     {
@@ -1057,6 +1060,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
     public async Task MSTestSdk_UnpackagedWinUIWithUwpXamlReferences_DoesNotConflictWithUwpTools()
     {
