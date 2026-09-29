@@ -54,8 +54,8 @@
       </trans-unit>
       <trans-unit id="FailedToStartRecording">
         <source>Failed to start recording: {0}. Recording skipped.</source>
-        <target state="translated">No se pudo iniciar la grabación: {0}. Grabación omitida.</target>
-        <note>Warning when the ffmpeg process could not be started. {0} is the error message.</note>
+        <target state="needs-review-translation">No se pudo iniciar la grabación: {0}. Grabación omitida.</target>
+        <note>Warning when the selected recorder backend could not be started. {0} is the error message.</note>
       </trans-unit>
       <trans-unit id="FfmpegNotFound">
         <source>Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</source>
@@ -82,10 +82,40 @@
         <target state="translated">Valor no válido "{0}" para --{1}. Los valores válidos son {2}.</target>
         <note>Validation error for an invalid option value. {0} value, {1} option name, {2} the list of valid values.</note>
       </trans-unit>
+      <trans-unit id="NativeInitializationFallback">
+        <source>The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {0}</source>
+        <target state="new">The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {0}</target>
+        <note>Warning when native recorder initialization fails and recording falls back to ffmpeg. {0} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="NativePartialOutput">
+        <source>Native Windows recording completed with partial output: {0} {1}</source>
+        <target state="new">Native Windows recording completed with partial output: {0} {1}</target>
+        <note>Warning when the native recorder produces partial output. {0} is the error message and {1} is the recovery hint.</note>
+      </trans-unit>
+      <trans-unit id="NativePublishFailed">
+        <source>Failed to publish the native Windows recording: {0}</source>
+        <target state="new">Failed to publish the native Windows recording: {0}</target>
+        <note>Warning when the native recording cannot be moved to its final output path. {0} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="NativeRecordingFailed">
+        <source>Native Windows recording failed: {0}</source>
+        <target state="new">Native Windows recording failed: {0}</target>
+        <note>Warning when native recording fails. {0} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="NativeStopTimeout">
+        <source>The native Windows video recorder did not stop within {0} seconds. Session shutdown will continue and the incomplete recording will be discarded.</source>
+        <target state="new">The native Windows video recorder did not stop within {0} seconds. Session shutdown will continue and the incomplete recording will be discarded.</target>
+        <note>Warning when the in-process native recorder does not stop after cancellation. {0} timeout in seconds.</note>
+      </trans-unit>
+      <trans-unit id="NativeStoppedEarly">
+        <source>The native Windows recording stopped early ({0}); the finalized partial video remains subject to the configured persistence mode.</source>
+        <target state="new">The native Windows recording stopped early ({0}); the finalized partial video remains subject to the configured persistence mode.</target>
+        <note>Warning when native capture ends before session shutdown. {0} is the backend stop reason.</note>
+      </trans-unit>
       <trans-unit id="NoUsableVideoProduced">
-        <source>Screen recording produced no usable video (ffmpeg exit code {0}). {1}</source>
-        <target state="translated">La grabación de pantalla no produjo ningún vídeo utilizable (código de salida de ffmpeg {0}). {1}</target>
-        <note>Warning when recording yielded nothing. {0} exit code, {1} last ffmpeg error detail.</note>
+        <source>Screen recording produced no usable video (backend status {0}). {1}</source>
+        <target state="needs-review-translation">La grabación de pantalla no produjo ningún vídeo utilizable (código de salida de ffmpeg {0}). {1}</target>
+        <note>Warning when recording yielded nothing. {0} backend status, {1} last recorder error detail.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionArgs">
         <source>Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</source>
@@ -143,9 +173,9 @@
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="RecorderReady">
-        <source>Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</source>
-        <target state="translated">Grabadora de vídeo lista (ffmpeg: {0}, granularidad: {1}, persistencia: {2}). {3}</target>
-        <note>Informational message at session start. {0} ffmpeg path, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</note>
+        <source>Video recorder ready (backend: {0}, granularity: {1}, persist: {2}). {3}</source>
+        <target state="needs-review-translation">Grabadora de vídeo lista (ffmpeg: {0}, granularidad: {1}, persistencia: {2}). {3}</target>
+        <note>Informational message at session start. {0} backend description, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</note>
       </trans-unit>
       <trans-unit id="RecordingCapReached">
         <source>Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</source>

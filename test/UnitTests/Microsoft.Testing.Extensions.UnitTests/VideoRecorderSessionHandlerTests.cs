@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
@@ -19,6 +20,51 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class VideoRecorderSessionHandlerTests
 {
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_RecorderFailsToStart_DoesNotDisplayReadyMessage()
+    {
+        var recorder = new Mock<IVideoRecorder>();
+        recorder.SetupGet(instance => instance.IsAvailable).Returns(true);
+        recorder.Setup(instance => instance.StartAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var outputDevice = new Mock<IOutputDevice>();
+        VideoRecorderSessionHandler handler = CreateEnabledHandler(recorder.Object, outputDevice.Object);
+
+        await handler.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        outputDevice.Verify(
+            instance => instance.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<FormattedTextOutputDeviceData>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never());
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_RecorderStarts_DisplaysReadyMessage()
+    {
+        const string Backend = "native backend";
+        var recorder = new Mock<IVideoRecorder>();
+        recorder.SetupGet(instance => instance.IsAvailable).Returns(true);
+        recorder.SetupGet(instance => instance.FfmpegPath).Returns(Backend);
+        recorder.Setup(instance => instance.StartAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        FormattedTextOutputDeviceData? displayed = null;
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(instance => instance.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<FormattedTextOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>(
+                (_, data, _) => displayed = (FormattedTextOutputDeviceData)data)
+            .Returns(Task.CompletedTask);
+        VideoRecorderSessionHandler handler = CreateEnabledHandler(recorder.Object, outputDevice.Object);
+
+        await handler.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsNotNull(displayed);
+        Assert.Contains(Backend, displayed.Text);
+    }
+
     [TestMethod]
     public async Task ConsumeAsync_ExecutionCompleted_RemovesInFlightTestWithoutRecordingOutcome()
     {
@@ -115,5 +161,33 @@ public sealed class VideoRecorderSessionHandlerTests
             .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(handler)!;
         return (int)collection.GetType().GetProperty("Count")!.GetValue(collection)!;
+    }
+
+    private static VideoRecorderSessionHandler CreateEnabledHandler(IVideoRecorder recorder, IOutputDevice outputDevice)
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [],
+        });
+        return new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            outputDevice,
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            recorder);
+    }
+
+    private sealed class TestSessionContextStub : ITestSessionContext
+    {
+        public SessionUid SessionUid { get; } = new("session");
+
+        public CancellationToken CancellationToken => CancellationToken.None;
     }
 }

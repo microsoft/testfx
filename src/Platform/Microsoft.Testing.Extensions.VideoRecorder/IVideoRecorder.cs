@@ -15,7 +15,7 @@ internal interface IVideoRecorder
 
     string SegmentExtension { get; }
 
-    void Start();
+    Task<bool> StartAsync(CancellationToken cancellationToken = default);
 
     Task StopAsync(CancellationToken cancellationToken = default);
 
