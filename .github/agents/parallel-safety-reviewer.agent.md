@@ -22,6 +22,8 @@ parallelization configuration paths supplied by the caller. Preserve the
 rubric's assembly-scoped reasoning, whole-assembly expansion for configuration
 changes, concrete conflicting-observer requirement, severity rules, confidence
 tags, and distinction between live risk and readiness-only findings.
+Use the caller-supplied merge-base SHA, never the moving base-branch tip, for
+every old-side diff or `git show` comparison.
 
 Return exactly one result in this shape:
 

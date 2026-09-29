@@ -183,6 +183,7 @@ steps:
       # merge-base so changed files and HEAD-side ranges match GitHub's PR diff.
       MERGE_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
       echo "Base tip $BASE_SHA; merge-base $MERGE_BASE; head $HEAD_SHA"
+      echo "merge_base=$MERGE_BASE" >> "$GITHUB_OUTPUT"
 
       git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
         | grep -E '\.cs$' > "$TEST_OUT" || true
@@ -617,8 +618,9 @@ Then provide all of:
 
 - repository `${{ github.repository }}`;
 - pull request `${{ steps.resolve.outputs.pr_number }}`;
-- base tip `${{ steps.resolve.outputs.base_sha }}` and head
-  `${{ steps.resolve.outputs.head_sha }}`;
+- merge base `${{ steps.extract.outputs.merge_base }}` and head
+  `${{ steps.resolve.outputs.head_sha }}`; require the specialist to use this
+  merge base for every old-side comparison;
 - changed test files `${{ steps.extract.outputs.test_files_path }}`;
 - changed test ranges `${{ steps.extract.outputs.test_regions_path }}`;
 - changed source files `${{ steps.extract.outputs.src_files_path }}`;
@@ -706,10 +708,11 @@ Do not emit an empty table. Otherwise emit the table below. -->
   </tbody>
 </table>
 
-<sub>This advisory review is heuristic and non-blocking. Apply-ready
-suggestions are available in Files changed. Re-run the combined review with
-`/review-tests`, or only the parallel-safety specialist with
-`/parallel-audit`.</sub>
+<sub>This advisory review is heuristic and non-blocking.
+<!-- Only when Step 4 posted at least one inline suggestion, add:
+N apply-ready suggestion(s) are available in Files changed. -->
+Re-run the combined review with `/review-tests`, or only the parallel-safety
+specialist with `/parallel-audit`.</sub>
 ```
 
 Parallel-safety publication rules:
