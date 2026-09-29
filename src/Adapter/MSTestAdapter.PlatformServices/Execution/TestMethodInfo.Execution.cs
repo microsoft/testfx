@@ -80,6 +80,9 @@ internal partial class TestMethodInfo
         var result = new TestResult();
 
         Exception? testRunnerException = null;
+        _classInstance = null;
+        _classInstanceLease = null;
+        _isTestContextSet = false;
         _isTestCleanupInvoked = false;
 
         try
@@ -106,7 +109,8 @@ internal partial class TestMethodInfo
                 bool setTestContextSucessful = false;
                 if (_executionContext is null)
                 {
-                    _classInstance = CreateTestClassInstance();
+                    _classInstanceLease = CreateTestClassInstance();
+                    _classInstance = _classInstanceLease.Instance;
                     setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
                 }
                 else
@@ -120,7 +124,8 @@ internal partial class TestMethodInfo
                     {
                         try
                         {
-                            _classInstance = CreateTestClassInstance();
+                            _classInstanceLease = CreateTestClassInstance();
+                            _classInstance = _classInstanceLease.Instance;
                             setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
                         }
                         finally
@@ -276,16 +281,41 @@ internal partial class TestMethodInfo
     /// An instance of the TestClass.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private object? CreateTestClassInstance()
+    private ITestClassInstanceLease CreateTestClassInstance()
     {
+        if (TestClassInstanceFactoryProvider.Current is { } factory)
+        {
+            return factory.CreateInstance(Parent.ClassType, (TestContext)TestContext);
+        }
+
         object?[]? arguments = Parent.IsParameterlessConstructor ? null : [TestContext];
 
         // Reflection-free fast path: use the source-generated constructor invoker when available;
         // otherwise fall back to ConstructorInfo.Invoke (reflection mode).
         Func<object?[]?, object>? sourceGeneratedInvoker = PlatformServiceProvider.Instance.ReflectionOperations.GetConstructorInvoker(Parent.ClassType);
-        return sourceGeneratedInvoker is not null
+        object instance = sourceGeneratedInvoker is not null
             ? sourceGeneratedInvoker(arguments)
             : Parent.Constructor.Invoke(arguments);
+        return new DefaultTestClassInstanceLease(instance);
+    }
+
+    private sealed class DefaultTestClassInstanceLease(object instance) : ITestClassInstanceLease
+    {
+        public object Instance { get; } = instance;
+
+        public async Task DisposeAsync()
+        {
+#if NET6_0_OR_GREATER
+            if (Instance is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            }
+#endif
+            if (Instance is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 
     /// <summary>

@@ -515,6 +515,49 @@ public class TestMethodInfoTests : TestContainer
         ctorCallCount.Should().Be(2);
     }
 
+    public async Task TestMethodInfoInvokeShouldNotDisposePreviousLeaseWhenNextActivationFails()
+    {
+        var lease = new CountingTestClassInstanceLease(new DummyTestClass());
+        var factory = new SequencedTestClassInstanceFactory(
+            lease,
+            new InvalidOperationException("second activation failed"));
+
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+            TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+
+            firstResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+            secondResult.Outcome.Should().Be(UnitTestOutcome.Failed);
+        }
+
+        lease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task TestMethodInfoInvokeShouldPreserveTestContextFailureWhenLeaseDisposalFails()
+    {
+        DummyTestClass.TestContextSetterBody = _ => throw new InvalidOperationException("test context failure");
+        var lease = new CountingTestClassInstanceLease(
+            new DummyTestClass(),
+            new InvalidOperationException("lease disposal failure"));
+        var factory = new SequencedTestClassInstanceFactory(
+            lease,
+            new InvalidOperationException("unexpected second activation"));
+
+        TestResult result;
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            result = await _testMethodInfo.InvokeAsync(null);
+        }
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        AggregateException aggregateException = result.TestFailureException.Should().BeOfType<AggregateException>().Subject;
+        aggregateException.InnerExceptions.Should().HaveCount(2);
+        aggregateException.InnerExceptions[0].ToString().Should().Contain("test context failure");
+        aggregateException.InnerExceptions[1].Message.Should().Be("lease disposal failure");
+        lease.DisposeCount.Should().Be(1);
+    }
+
     public async Task TestMethodInfoInvokeShouldMarkOutcomeFailedIfTestClassConstructorThrows()
     {
         DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
@@ -2009,6 +2052,37 @@ public class TestMethodInfoTests : TestContainer
     #endregion
 
     #region Test data
+
+    private sealed class SequencedTestClassInstanceFactory(
+        ITestClassInstanceLease firstLease,
+        Exception secondException) : ITestClassInstanceFactory
+    {
+        private int _activationCount;
+
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return Interlocked.Increment(ref _activationCount) == 1
+                ? firstLease
+                : throw secondException;
+        }
+    }
+
+    private sealed class CountingTestClassInstanceLease(object instance, Exception? disposeException = null) : ITestClassInstanceLease
+    {
+        public object Instance { get; } = instance;
+
+        public int DisposeCount { get; private set; }
+
+        public Task DisposeAsync()
+        {
+            DisposeCount++;
+            return disposeException is null
+                ? Task.CompletedTask
+                : Task.FromException(disposeException);
+        }
+    }
 
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {

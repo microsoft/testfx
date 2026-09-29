@@ -598,6 +598,10 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</value>
     <comment>{0} is the test class name. {Locked="public"}{Locked="TestContext"}</comment>
   </data>
+  <data name="HostedTestClassInjectionRequiresNoAppDomain" xml:space="preserve">
+    <value>MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</value>
+    <comment>{Locked="MSTest"}{Locked=".NET Framework"}{Locked="AppDomain"}{Locked="DisableAppDomain"}</comment>
+  </data>
   <data name="UTA_TestContextLoadError" xml:space="preserve">
     <value>Unable to find property {0}.TestContext. Error:{1}.</value>
     <comment>{0} is the test class name. {1} is the error message. {Locked="TestContext"}</comment>

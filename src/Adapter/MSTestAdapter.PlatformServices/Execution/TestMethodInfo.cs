@@ -21,6 +21,7 @@ internal partial class TestMethodInfo : ITestMethod
     public const int TimeoutWhenNotSet = 0;
 
     private object? _classInstance;
+    private ITestClassInstanceLease? _classInstanceLease;
     private bool _isTestContextSet;
     private bool _isTestCleanupInvoked;
 

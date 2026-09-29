@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -436,5 +436,62 @@ public sealed class TestClassConstructorShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenHostTestClassInjectionIsEnabled_ServiceConstructorHasNoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class ApplicationService
+            {
+            }
+
+            [TestClass]
+            public sealed class MyTestClass(ApplicationService service)
+            {
+                private readonly ApplicationService _service = service;
+
+                [TestMethod]
+                public void TestMethod() => Assert.IsNotNull(_service);
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = code };
+        test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+            is_global = true
+            build_property.EnableMSTestHostTestClassInjection = true
+            """));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenHostTestClassInjectionIsEnabled_NonPublicConstructorHasDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class {|#0:MyTestClass|}
+            {
+                private MyTestClass()
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = code };
+        test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+            is_global = true
+            build_property.EnableMSTestHostTestClassInjection = true
+            """));
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.TestClassConstructorShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+
+        await test.RunAsync();
     }
 }

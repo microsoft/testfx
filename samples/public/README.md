@@ -10,8 +10,8 @@
 
 | Scenario | Sample |
 | --- | --- |
-| Generate an MTP entry point that starts a real ASP.NET Core application, runs MSTest against its endpoint, and reuses the web host's configuration, logging, DI, and OpenTelemetry pipeline | [`MTPHostIntegration/AspNetCoreTests`](MTPHostIntegration/AspNetCoreTests) |
-| Generate an MTP entry point for an Aspire AppHost test while the process uses the same ServiceDefaults pattern and owns a single host/provider pipeline | [`MTPHostIntegration/AspireTests`](MTPHostIntegration/AspireTests) |
+| Generate an MTP entry point that starts a real ASP.NET Core application, injects host services into MSTest test classes, runs against its endpoint, and reuses the web host's configuration, logging, DI, and OpenTelemetry pipeline | [`MTPHostIntegration/AspNetCoreTests`](MTPHostIntegration/AspNetCoreTests) |
+| Generate an MTP entry point for an Aspire AppHost test with host-service injection while the process uses the same ServiceDefaults pattern and owns a single host/provider pipeline | [`MTPHostIntegration/AspireTests`](MTPHostIntegration/AspireTests) |
 
 ## Windows application testing
 

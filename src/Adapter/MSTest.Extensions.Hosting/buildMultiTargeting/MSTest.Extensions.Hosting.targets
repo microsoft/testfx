@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="EnableMSTestHostTestClassInjection" />
+  </ItemGroup>
+
+  <Target Name="_ValidateMSTestHostTestClassInjection"
+          BeforeTargets="PrepareForBuild"
+          Condition=" '$(EnableMSTestHostTestClassInjection)' == 'true' ">
+    <Error Condition=" '$(PublishAot)' == 'true' "
+           Text="MSTest.Extensions.Hosting test-class injection does not support NativeAOT. Remove AddMSTestTestClassInjection/MSTest.Extensions.Hosting or disable PublishAot." />
+    <Error Condition=" '$(RunAOTCompilation)' == 'true' "
+           Text="MSTest.Extensions.Hosting test-class injection does not support AOT compilation. Remove AddMSTestTestClassInjection/MSTest.Extensions.Hosting or disable RunAOTCompilation." />
+    <Error Condition=" '$(EnableMSTestSourceGeneration)' == 'true' "
+           Text="MSTest.Extensions.Hosting test-class injection does not support MSTest source generation. Remove AddMSTestTestClassInjection/MSTest.Extensions.Hosting or disable EnableMSTestSourceGeneration." />
+  </Target>
+</Project>

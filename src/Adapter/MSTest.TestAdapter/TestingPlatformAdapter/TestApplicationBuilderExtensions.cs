@@ -16,6 +16,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestApplicationBuilderExtensions
 {
+    private static readonly ConditionalWeakTable<ITestApplicationBuilder, MSTestTestApplicationBuilderOptions> Options = CreateOptions();
+
     // NOTE: We intentionally do not use the bridge's VSTestBridgeExtensionBaseCapabilities because we don't want
     // MSTest to use the vstestProvider capability. This implements MSTest's native TRX capability, read by
     // MSTestTestFramework.
@@ -36,6 +38,7 @@ public static class TestApplicationBuilderExtensions
     /// <param name="getTestAssemblies">The function to get the test assemblies.</param>
     public static void AddMSTest(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
     {
+        MSTestTestApplicationBuilderOptions options = Options.GetOrCreateValue(testApplicationBuilder);
         MSTestExtension extension = new();
 
         // Register MSTest's own command-line options, runsettings configuration source and environment-variable
@@ -72,6 +75,29 @@ public static class TestApplicationBuilderExtensions
                 new MSTestCapabilities(),
                 new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
                 MSTestGracefulStopTestExecutionCapability.Create()),
-            (capabilities, serviceProvider) => new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
+            (capabilities, serviceProvider) => new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities)
+            {
+                TestClassInstanceFactory = options.TestClassInstanceFactory,
+            });
     }
+
+    internal static void SetTestClassInstanceFactory(
+        ITestApplicationBuilder testApplicationBuilder,
+        ITestClassInstanceFactory testClassInstanceFactory)
+    {
+        _ = testApplicationBuilder ?? throw new ArgumentNullException(nameof(testApplicationBuilder));
+        _ = testClassInstanceFactory ?? throw new ArgumentNullException(nameof(testClassInstanceFactory));
+
+        Options.GetOrCreateValue(testApplicationBuilder).TestClassInstanceFactory = testClassInstanceFactory;
+    }
+
+    private sealed class MSTestTestApplicationBuilderOptions
+    {
+        public ITestClassInstanceFactory? TestClassInstanceFactory { get; set; }
+    }
+
+#pragma warning disable IDE0028 // Collection expressions cannot construct ConditionalWeakTable on .NET Framework.
+    private static ConditionalWeakTable<ITestApplicationBuilder, MSTestTestApplicationBuilderOptions> CreateOptions()
+        => new();
+#pragma warning restore IDE0028
 }

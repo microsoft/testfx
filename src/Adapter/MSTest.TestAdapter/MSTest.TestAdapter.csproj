@@ -83,6 +83,10 @@ $(CommonProductDescription)]]></PackageDescription>
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="MSTest.Extensions.Hosting" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- For .NET Framework and UWP these assemblies must be declared as package dependencies (on modern TFMs
          they are part of the framework). They would normally flow transitively through PlatformServices, but
          that reference is suppressed above, so they are referenced explicitly here. -->

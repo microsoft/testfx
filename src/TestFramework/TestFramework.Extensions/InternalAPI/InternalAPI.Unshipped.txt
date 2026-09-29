@@ -1,1 +1,6 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory.CreateInstance(System.Type! testClassType, Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.DisposeAsync() -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.Instance.get -> object!

@@ -228,11 +228,25 @@ remains experimental while cancellation and out-of-process behavior are evaluate
 The `samples/public/MTPOTel` and `samples/public/MTPHostIntegration` examples demonstrate the same
 composition pattern with a generic host, ASP.NET Core, and Aspire ServiceDefaults.
 
+`RunTestingPlatformAsync` also applies caller-owned `ITestingPlatformBuilderConfigurator` services
+before its explicit configuration callback. This is a narrow Hosting-side composition seam rather
+than an MTP service-container conversion. `MSTest.Extensions.Hosting` uses it to opt MSTest into
+test-class activation from the host provider without introducing a Microsoft.Extensions dependency
+into MTP or the MSTest execution core.
+
+The MSTest adapter creates one `IServiceScope` per individual test invocation, including data rows and
+retry attempts. `TestInitialize`, the test method, and `TestCleanup` share the same instance and scope;
+static class lifecycle methods remain outside those scopes. After `TestCleanup`, the activation lease
+disposes the test instance and then the scope exactly once. The root provider and host remain
+caller-owned. .NET Framework runs must disable AppDomain isolation because live service scopes cannot
+cross an AppDomain boundary.
+
 ## Future work (not in this RFC's deliverable)
 
 - **Direction B** adapter (MTP `ILoggerFactory` exposed as `Microsoft.Extensions.Logging.ILoggerFactory`).
-- **Dependency injection interop** — import only proven, externally owned service instances. Do not
-  convert the MTP registry into `IServiceCollection`, implicitly build a second container, or transfer
+- **Additional framework adapters** — reuse the narrow Hosting configurator pattern only when a test
+  framework can define deterministic construction and cleanup ownership. Do not convert the MTP
+  registry into `IServiceCollection`, implicitly build a second container, or transfer root-provider
   disposal ownership.
 - **Command-line tooling** — the existing machine-readable `dotnet test` option message includes
   provider identity and minimum/maximum arity in addition to name, description, visibility, and

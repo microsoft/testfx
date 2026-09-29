@@ -77,6 +77,22 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
                 """,
                 HostingPackage,
                 "TestingPlatformOpenTelemetryMode=HostOwned requires a compatible Microsoft.Testing.Extensions.OpenTelemetry package reference."),
+            (
+                "MSTestHostingInjectionNativeAot",
+                """
+                <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
+                <PublishAot>true</PublishAot>
+                """,
+                MSTestHostingPackage,
+                "MSTest.Extensions.Hosting test-class injection does not support NativeAOT."),
+            (
+                "MSTestHostingInjectionSourceGeneration",
+                """
+                <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
+                <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
+                """,
+                MSTestHostingPackage,
+                "MSTest.Extensions.Hosting test-class injection does not support MSTest source generation."),
         ];
 
         foreach ((string name, string properties, string packages, string expectedError) in scenarios)
@@ -86,7 +102,8 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
                 .PatchCodeWithReplace("$Packages$", packages)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsHostingVersion$", MicrosoftTestingExtensionsHostingVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsOpenTelemetryVersion$", MicrosoftTestingExtensionsOpenTelemetryVersion);
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsOpenTelemetryVersion$", MicrosoftTestingExtensionsOpenTelemetryVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
             using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                 $"{nameof(InvalidHostedEntryPointSettingsFailWithActionableErrors)}_{name}",
                 source);
@@ -101,6 +118,30 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
         }
     }
 
+    [TestMethod]
+    public async Task MSTestHostingPackageReferenceWithoutOptInBuilds()
+    {
+        string source = Asset
+            .PatchCodeWithReplace("$Properties$", """
+                <OutputType>Library</OutputType>
+                <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+                """)
+            .PatchCodeWithReplace("$Packages$", MSTestHostingPackage)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingExtensionsHostingVersion$", MicrosoftTestingExtensionsHostingVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingExtensionsOpenTelemetryVersion$", MicrosoftTestingExtensionsOpenTelemetryVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(MSTestHostingPackageReferenceWithoutOptInBuilds),
+            source);
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath} -v:n",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     private const string HostingPackage = """
@@ -109,6 +150,10 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
 
     private const string OpenTelemetryPackage = """
         <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$MicrosoftTestingExtensionsOpenTelemetryVersion$" />
+    """;
+
+    private const string MSTestHostingPackage = """
+        <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
     """;
 
     private const string Asset = """

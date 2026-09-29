@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -27,7 +27,7 @@ internal partial class TestMethodInfo
     {
         DebugEx.Assert(result != null, "result != null");
 
-        if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked ||
+        if (_classInstance is null || _isTestCleanupInvoked ||
             // Fast check to see if we can return early.
             // This avoids the code below that allocates CancellationTokenSource
             !HasCleanupsToInvoke())
@@ -36,6 +36,21 @@ internal partial class TestMethodInfo
         }
 
         _isTestCleanupInvoked = true;
+        if (!_isTestContextSet)
+        {
+            try
+            {
+                await _classInstanceLease!.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+                result.TestFailureException = exception;
+            }
+
+            return;
+        }
+
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
         Exception? testCleanupException;
         TestFailedException? globalTestCleanupException = null;
@@ -74,16 +89,9 @@ internal partial class TestMethodInfo
             }
             finally
             {
-#if NET6_0_OR_GREATER
-                if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
+                if (_classInstanceLease is not null)
                 {
-                    // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    await classInstanceAsAsyncDisposable.DisposeAsync().ConfigureAwait(false);
-                }
-#endif
-                if (_classInstance is IDisposable classInstanceAsDisposable)
-                {
-                    classInstanceAsDisposable.Dispose();
+                    await _classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
@@ -160,10 +168,7 @@ internal partial class TestMethodInfo
     private bool HasCleanupsToInvoke() =>
         Parent.TestCleanupMethod is not null ||
         Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
-        _classInstance is IDisposable ||
-#if NET6_0_OR_GREATER
-        _classInstance is IAsyncDisposable ||
-#endif
+        _classInstanceLease is not null ||
         Parent.Parent.GlobalTestCleanups is { Count: > 0 };
 
     /// <summary>

@@ -13,26 +13,28 @@ internal static class AspNetCoreTestHost
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
         builder.Logging.ClearProviders();
         builder.AddTestServiceDefaults();
+        builder.Services.AddMSTestTestClassInjection();
+        builder.Services.AddSingleton<AspNetCoreApplication>();
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Configuration["Greeting"] = "Hello from ASP.NET Core";
 
         WebApplication app = builder.Build();
         app.MapDefaultEndpoints();
         app.MapGet("/greeting", (IConfiguration configuration) => configuration["Greeting"]);
-        AspNetCoreApplication.Initialize(app);
+        app.Services.GetRequiredService<AspNetCoreApplication>().Initialize(app);
         return Task.FromResult<IHost>(app);
     }
 }
 
-internal static class AspNetCoreApplication
+public sealed class AspNetCoreApplication
 {
-    private static WebApplication? s_application;
+    private WebApplication? _application;
 
-    public static void Initialize(WebApplication application) => s_application = application;
+    public void Initialize(WebApplication application) => _application = application;
 
-    public static HttpClient CreateClient()
+    public HttpClient CreateClient()
     {
-        WebApplication application = s_application
+        WebApplication application = _application
             ?? throw new InvalidOperationException("The ASP.NET Core application has not been initialized.");
         IServer server = application.Services.GetRequiredService<IServer>();
         string address = server.Features.Get<IServerAddressesFeature>()?.Addresses.Single()

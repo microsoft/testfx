@@ -64,12 +64,15 @@ $nuGetConfigPaths = @(
 )
 $localPackageSampleNames = @(
     "ClassicUwpMtpApp",
+    "MTPHostIntegration",
     "UwpMtpApp",
     "WinUIMtpAppContainerApp",
     "WinUIMtpPackagedApp",
     "WinUIMtpUnpackagedApp"
 )
 $localPackageProperties = @()
+$localHostingVersion = $null
+$localRestorePackagesPath = $null
 
 if ($BinaryLogDirectory) {
     New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
@@ -89,6 +92,17 @@ try {
 
     if ($configuredLocalPackageArguments.Count -ne 0) {
         $LocalPackageDirectory = (Resolve-Path $LocalPackageDirectory).Path
+        $localRestorePackagesPath = Join-Path $repoRoot "artifacts/tmp/sample-packages-local"
+        if (Test-Path $localRestorePackagesPath) {
+            Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
+        }
+
+        $hostingPackage = Get-ChildItem -Path $LocalPackageDirectory -Filter "Microsoft.Testing.Extensions.Hosting.*.nupkg" | Select-Object -First 1
+        if ($null -eq $hostingPackage) {
+            throw "Microsoft.Testing.Extensions.Hosting package was not found in LocalPackageDirectory."
+        }
+
+        $localHostingVersion = $hostingPackage.BaseName.Substring("Microsoft.Testing.Extensions.Hosting.".Length)
 
         foreach ($sampleName in $localPackageSampleNames) {
             $globalJsonPath = Get-Item (Join-Path $samplesFolder "$sampleName/global.json")
@@ -151,9 +165,13 @@ try {
 
         $localPackageProperties = @(
             "/p:MSTestVersion=$LocalMSTestVersion",
+            "/p:MSTestExtensionsHostingVersion=$LocalMSTestVersion",
             "/p:MSTestSdkAOTVersion=$LocalMSTestVersion",
             "/p:MicrosoftTestingPlatformVersion=$LocalTestingPlatformVersion",
+            "/p:TestingPlatformPreviewVersion=$LocalTestingPlatformVersion",
             "/p:MicrosoftTestingExtensionsCommonVersion=$LocalTestingPlatformVersion",
+            "/p:MicrosoftTestingExtensionsHostingVersion=$localHostingVersion",
+            "/p:RestorePackagesPath=$localRestorePackagesPath",
             "/p:MicrosoftTestingExtensionsPackagedAppVersion=$LocalTestingPlatformVersion",
             "/p:EnableMicrosoftTestingPlatform=true",
             "/p:EnableMicrosoftTestingExtensionsCodeCoverage=false"
@@ -273,6 +291,10 @@ finally {
 
     foreach ($nuGetConfigPath in $nuGetConfigBackups.Keys) {
         [System.IO.File]::WriteAllBytes($nuGetConfigPath, $nuGetConfigBackups[$nuGetConfigPath])
+    }
+
+    if ($null -ne $localRestorePackagesPath -and (Test-Path $localRestorePackagesPath)) {
+        Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
     }
 }
 

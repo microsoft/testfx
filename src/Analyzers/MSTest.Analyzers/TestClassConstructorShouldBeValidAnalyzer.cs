@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -44,17 +44,27 @@ public sealed class TestClassConstructorShouldBeValidAnalyzer : DiagnosticAnalyz
 
         context.RegisterCompilationStartAction(context =>
         {
+            bool hostInjectionEnabled = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue(
+                    "build_property.EnableMSTestHostTestClassInjection",
+                    out string? hostInjectionEnabledValue)
+                && bool.TryParse(hostInjectionEnabledValue, out bool isEnabled)
+                && isEnabled;
+
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
                 INamedTypeSymbol? testContextSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext);
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testClassAttributeSymbol, testContextSymbol),
+                    context => AnalyzeSymbol(context, testClassAttributeSymbol, testContextSymbol, hostInjectionEnabled),
                     SymbolKind.NamedType);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? testContextSymbol)
+    private static void AnalyzeSymbol(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol testClassAttributeSymbol,
+        INamedTypeSymbol? testContextSymbol,
+        bool hostInjectionEnabled)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
         if (namedTypeSymbol.TypeKind != TypeKind.Class
@@ -73,6 +83,12 @@ public sealed class TestClassConstructorShouldBeValidAnalyzer : DiagnosticAnalyz
             if (constructor.DeclaredAccessibility != Accessibility.Public)
             {
                 continue;
+            }
+
+            if (hostInjectionEnabled)
+            {
+                hasValidConstructor = true;
+                break;
             }
 
             // Check if parameterless
