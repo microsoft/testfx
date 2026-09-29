@@ -34,6 +34,18 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
        |---CommandLineOptionMessageList[0].IsBuiltIn Id---| (2 bytes)
        |---CommandLineOptionMessageList[0].IsBuiltIn Size---| (4 bytes)
        |---CommandLineOptionMessageList[0].IsBuiltIn Value---| (1 byte)
+
+       |---CommandLineOptionMessageList[0].ProviderUid Id---| (2 bytes)
+       |---CommandLineOptionMessageList[0].ProviderUid Size---| (4 bytes)
+       |---CommandLineOptionMessageList[0].ProviderUid Value---| (n bytes)
+
+       |---CommandLineOptionMessageList[0].MinimumArity Id---| (2 bytes)
+       |---CommandLineOptionMessageList[0].MinimumArity Size---| (4 bytes)
+       |---CommandLineOptionMessageList[0].MinimumArity Value---| (4 bytes)
+
+       |---CommandLineOptionMessageList[0].MaximumArity Id---| (2 bytes)
+       |---CommandLineOptionMessageList[0].MaximumArity Size---| (4 bytes)
+       |---CommandLineOptionMessageList[0].MaximumArity Value---| (4 bytes)
    */
 
 internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<CommandLineOptionMessages>, INamedPipeSerializer
@@ -72,8 +84,9 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
 
         for (int i = 0; i < length; i++)
         {
-            string? name = null, description = null;
+            string? name = null, description = null, providerUid = null;
             bool? isHidden = null, isBuiltIn = null;
+            int? minimumArity = null, maximumArity = null;
 
             ReadFields(stream, (fieldId, fieldSize) =>
             {
@@ -95,12 +108,31 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
                         isBuiltIn = ReadBool(stream);
                         return true;
 
+                    case CommandLineOptionMessageFieldsId.ProviderUid:
+                        providerUid = ReadStringValue(stream, fieldSize);
+                        return true;
+
+                    case CommandLineOptionMessageFieldsId.MinimumArity:
+                        minimumArity = ReadInt(stream);
+                        return true;
+
+                    case CommandLineOptionMessageFieldsId.MaximumArity:
+                        maximumArity = ReadInt(stream);
+                        return true;
+
                     default:
                         return false;
                 }
             });
 
-            commandLineOptionMessages[i] = new CommandLineOptionMessage(name, description, isHidden, isBuiltIn);
+            commandLineOptionMessages[i] = new CommandLineOptionMessage(
+                name,
+                description,
+                isHidden,
+                isBuiltIn,
+                providerUid,
+                minimumArity,
+                maximumArity);
         }
 
         return commandLineOptionMessages;
@@ -125,6 +157,9 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
             WriteField(s, CommandLineOptionMessageFieldsId.Description, commandLineOptionMessage.Description);
             WriteField(s, CommandLineOptionMessageFieldsId.IsHidden, commandLineOptionMessage.IsHidden);
             WriteField(s, CommandLineOptionMessageFieldsId.IsBuiltIn, commandLineOptionMessage.IsBuiltIn);
+            WriteField(s, CommandLineOptionMessageFieldsId.ProviderUid, commandLineOptionMessage.ProviderUid);
+            WriteField(s, CommandLineOptionMessageFieldsId.MinimumArity, commandLineOptionMessage.MinimumArity);
+            WriteField(s, CommandLineOptionMessageFieldsId.MaximumArity, commandLineOptionMessage.MaximumArity);
         });
 
     private static ushort GetFieldCount(CommandLineOptionMessages commandLineOptionMessages) =>
@@ -135,5 +170,8 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
         (ushort)((commandLineOptionMessage.Name is null ? 0 : 1) +
         (commandLineOptionMessage.Description is null ? 0 : 1) +
         (commandLineOptionMessage.IsHidden is null ? 0 : 1) +
-        (commandLineOptionMessage.IsBuiltIn is null ? 0 : 1));
+        (commandLineOptionMessage.IsBuiltIn is null ? 0 : 1) +
+        (commandLineOptionMessage.ProviderUid is null ? 0 : 1) +
+        (commandLineOptionMessage.MinimumArity is null ? 0 : 1) +
+        (commandLineOptionMessage.MaximumArity is null ? 0 : 1));
 }

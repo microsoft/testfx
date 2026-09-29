@@ -1,4 +1,14 @@
 #nullable enable
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MaximumArity = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumArity = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.CommandLineOptionMessage(string? name, string? description, bool? isHidden, bool? isBuiltIn, string? providerUid, int? minimumArity, int? maximumArity) -> void
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.MaximumArity.get -> int?
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.MaximumArity.init -> void
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.MinimumArity.get -> int?
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.MinimumArity.init -> void
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.ProviderUid.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage.ProviderUid.init -> void
 Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.IsExitCodeAuthoritative.get -> bool
 Microsoft.Testing.Platform.Helpers.TestHostHandleToProcessAdapter.TrustedProcessId.get -> int?
 [TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.CommandLineParseResult(string? toolName, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.CommandLine.CommandLineParseOption!>! options, System.Collections.Generic.IReadOnlyList<string!>! errors, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Collections.Generic.IReadOnlyList<string!>! expandedArguments) -> void

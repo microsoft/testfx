@@ -398,6 +398,14 @@ A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility
 
 A source-only NuGet package that provides a client implementation for launching and communicating with an MTP test host running in [Server Mode](#server-mode). Its C# sources are compiled as internal types directly into the consuming project, avoiding a runtime dependency or separate assembly while keeping the client wire-compatible with the MTP server protocol. Added in [PR #10085](https://github.com/microsoft/testfx/pull/10085).
 
+### Microsoft.Testing.Extensions.Configuration
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Configuration`, `[TPEXP]`) that imports an externally owned `Microsoft.Extensions.Configuration.IConfiguration` as a read-only snapshot while the MTP application is built. The default order is `2`, after MTP command-line and environment sources and before `testconfig.json`. Reload notifications and later mutations are intentionally not propagated, and MTP does not dispose the external configuration.
+
+### Microsoft.Testing.Extensions.Hosting
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Hosting`, `[TPEXP]`) that runs MTP inside an application-owned `IHost` through `RunTestingPlatformAsync()`. It borrows the host's configuration and logger factory, starts the host before MTP is built, returns the MTP exit code, and stops the host afterward without disposing it or creating a second Microsoft.Extensions dependency-injection container. See the [ASP.NET Core and Aspire samples](../samples/public/MTPHostIntegration).
+
 ### Microsoft.Testing.Extensions.Logging
 
 An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.

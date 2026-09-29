@@ -799,8 +799,10 @@ public sealed class CtrfReportMergerTests
         // An attempt process can itself have retried the test in-process; those executions are already in its
         // retryAttempts[] and must keep their place in the merged history instead of being dropped.
         JsonObject firstAttempt = Attempt("t", "failed", uid: "u1", message: "second execution");
+        firstAttempt["executionId"] = "second-execution";
         firstAttempt["retryAttempts"] = new JsonArray(new JsonObject
         {
+            ["attemptId"] = "first-attempt",
             ["attempt"] = 1,
             ["status"] = "failed",
             ["message"] = "first execution",
@@ -819,6 +821,8 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual("second execution", (string?)retryAttempts[1]!["message"]);
         Assert.AreEqual(1, (long)retryAttempts[0]!["attempt"]!);
         Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
+        Assert.AreEqual("first-attempt", (string?)retryAttempts[0]!["attemptId"]);
+        Assert.AreEqual("second-execution", (string?)retryAttempts[1]!["attemptId"]);
     }
 
     [TestMethod]
@@ -848,6 +852,27 @@ public sealed class CtrfReportMergerTests
         Assert.IsNull(retryAttempt["suite"]);
         Assert.IsNull(retryAttempt["tags"]);
         Assert.IsNull(retryAttempt["rawStatus"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_MapsExecutionIdentityToAttemptIdentity()
+    {
+        JsonObject failing = Attempt("t", "failed", uid: "u1");
+        failing["testId"] = "stable-test";
+        failing["executionId"] = "failed-execution";
+        JsonObject passing = Attempt("t", "passed", uid: "u1");
+        passing["testId"] = "stable-test";
+        passing["executionId"] = "passed-execution";
+
+        JsonNode test = ((JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge(
+                [BuildReport(testEntries: [failing]), BuildReport(testEntries: [passing])],
+                CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
+
+        Assert.AreEqual("stable-test", (string?)test["testId"]);
+        Assert.AreEqual("passed-execution", (string?)test["executionId"]);
+        Assert.AreEqual("failed-execution", (string?)test["retryAttempts"]![0]!["attemptId"]);
+        Assert.IsNull(test["retryAttempts"]![0]!["executionId"]);
     }
 
     [TestMethod]

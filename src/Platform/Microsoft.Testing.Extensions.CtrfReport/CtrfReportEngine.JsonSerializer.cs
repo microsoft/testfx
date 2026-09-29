@@ -58,9 +58,9 @@ internal sealed partial class CtrfReportEngine
             writer.WriteStartObject();
 
             writer.WriteString("reportFormat", CtrfReportFormat);
-            // CTRF is still in pre-1.0; the upstream spec is at "0.0.0" today
-            // (see https://github.com/ctrf-io/ctrf/blob/main/spec/ctrf.md).
-            // Bump this constant whenever we update against a newer schema revision.
+            // Upstream currently contradicts itself between 0.0.0 and 1.0.0
+            // (ctrf-io/ctrf#69). Preserve the established value until CTRF defines
+            // authoritative revision semantics.
             writer.WriteString("specVersion", CtrfSpecVersion);
             writer.WriteString("reportId", Guid.NewGuid().ToString("D"));
             // CTRF 5.4 (`runId`): identifies the logical run this document belongs to. A logical run can span

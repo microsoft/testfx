@@ -210,7 +210,7 @@
       </trans-unit>
       <trans-unit id="AreNotEqualStringsFailedSummary">
         <source>Expected strings to differ.</source>
-        <target state="translated">Oczekiwano, że ciągi będą równe.</target>
+        <target state="translated">Oczekiwano, że ciągi będą różne.</target>
         <note />
       </trans-unit>
       <trans-unit id="AreNotEquivalentComparisonFailedSummary">

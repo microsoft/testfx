@@ -748,9 +748,38 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         System.Text.Json.JsonElement flakyTest = results.GetProperty("tests")
             .EnumerateArray()
             .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+        var physicalExecutions = new List<(string Status, string TestId, string ExecutionId)>();
+        foreach (string attemptPath in Directory.GetFiles(
+            Path.Combine(resultDirectory, "Retries"),
+            "*.ctrf.json",
+            SearchOption.AllDirectories))
+        {
+            using var attemptDocument = System.Text.Json.JsonDocument.Parse(File.ReadAllText(attemptPath));
+            System.Text.Json.JsonElement attemptTest = attemptDocument.RootElement.GetProperty("results").GetProperty("tests")
+                .EnumerateArray()
+                .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+            physicalExecutions.Add((
+                attemptTest.GetProperty("status").GetString()!,
+                attemptTest.GetProperty("testId").GetString()!,
+                attemptTest.GetProperty("executionId").GetString()!));
+        }
+
+        Assert.HasCount(2, physicalExecutions);
+        Assert.HasCount(1, physicalExecutions.Select(execution => execution.TestId).Distinct(StringComparer.Ordinal));
+        Assert.HasCount(2, physicalExecutions.Select(execution => execution.ExecutionId).Distinct(StringComparer.Ordinal));
+        Assert.IsTrue(physicalExecutions.All(execution => Guid.TryParse(execution.ExecutionId, out _)));
+
         Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
+        Assert.AreEqual(physicalExecutions[0].TestId, flakyTest.GetProperty("testId").GetString());
+        Assert.AreEqual(
+            physicalExecutions.Single(execution => execution.Status == "passed").ExecutionId,
+            flakyTest.GetProperty("executionId").GetString());
         Assert.AreEqual(1, flakyTest.GetProperty("retries").GetInt32());
-        Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
+        System.Text.Json.JsonElement retryAttempt = flakyTest.GetProperty("retryAttempts")[0];
+        Assert.AreEqual("failed", retryAttempt.GetProperty("status").GetString());
+        Assert.AreEqual(
+            physicalExecutions.Single(execution => execution.Status == "failed").ExecutionId,
+            retryAttempt.GetProperty("attemptId").GetString());
 
         if (expectedRunId is not null)
         {

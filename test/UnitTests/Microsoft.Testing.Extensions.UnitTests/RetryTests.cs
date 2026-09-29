@@ -373,12 +373,78 @@ public class RetryTests
     }
 
     [TestMethod]
+    public void CollectRecoveredArtifacts_NullKind_AddsRecoveredArtifact()
+    {
+        const string manifestPath = "recovered-artifacts.txt";
+        string attemptDirectory = Path.GetFullPath("attempt");
+        string recoveredArtifactPath = Path.Combine(attemptDirectory, "recovered.xml");
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(fs => fs.ExistFile(It.IsAny<string>())).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            .Returns(new ReadOnlyMemoryFileStream(CreateManifestLine(recoveredArtifactPath, kind: null)));
+        List<ArtifactRequest> artifacts = [];
+
+        InvokeCollectRecoveredArtifacts(fileSystem.Object, manifestPath, attemptDirectory, artifacts);
+
+        ArtifactRequest artifact = Assert.ContainsSingle(artifacts);
+        Assert.AreEqual(recoveredArtifactPath, artifact.Path);
+        Assert.IsNull(artifact.Kind);
+        fileSystem.Verify(fs => fs.DeleteFile(manifestPath), Times.Once);
+    }
+
+    [TestMethod]
+    public void RetryArtifactManifest_WriteEntry_RoundTripsNonNullKind()
+    {
+        const string path = "report\t✓.xml";
+        const string kind = "microsoft.testing\tjunit✓";
+
+        string entry = InvokeWriteManifestEntry(path, kind);
+
+        Assert.HasCount(2, entry.Split('\t'));
+        (string encodedPath, string encodedKindOrNullSentinel) = SplitManifestEntry(entry);
+        Assert.AreEqual(path, DecodeManifestPath(encodedPath));
+        Assert.AreEqual(kind, DecodeManifestKind(encodedKindOrNullSentinel));
+    }
+
+    [TestMethod]
+    public void RetryArtifactManifest_WriteEntry_RoundTripsNullKind()
+    {
+        const string path = "report.xml";
+
+        string entry = InvokeWriteManifestEntry(path, kind: null);
+
+        Assert.HasCount(2, entry.Split('\t'));
+        (string encodedPath, string encodedKindOrNullSentinel) = SplitManifestEntry(entry);
+        Assert.AreEqual(path, DecodeManifestPath(encodedPath));
+        Assert.AreEqual("-", encodedKindOrNullSentinel);
+        Assert.IsNull(DecodeManifestKind(encodedKindOrNullSentinel));
+    }
+
+    [TestMethod]
+    public void RetryArtifactManifest_WriteEntryWithEncodedKind_RoundTripsEncodedKind()
+    {
+        const string path = "report.xml";
+        const string kind = "microsoft.testing.junit";
+        string encodedKind = Convert.ToBase64String(Encoding.UTF8.GetBytes(kind));
+
+        string entry = InvokeWriteManifestEntryWithEncodedKind(path, encodedKind);
+
+        Assert.HasCount(2, entry.Split('\t'));
+        (string encodedPath, string encodedKindOrNullSentinel) = SplitManifestEntry(entry);
+        Assert.AreEqual(encodedKind, encodedKindOrNullSentinel);
+        Assert.AreEqual(path, DecodeManifestPath(encodedPath));
+        Assert.AreEqual(kind, DecodeManifestKind(encodedKindOrNullSentinel));
+    }
+
+    [TestMethod]
     public void CollectRecoveredArtifacts_OversizedLine_IsRejectedAndManifestIsDeleted()
     {
         const string manifestPath = "recovered-artifacts.txt";
         string attemptDirectory = Path.GetFullPath("attempt");
-        int maxLineBytes = (int)typeof(RetryOrchestrator)
-            .GetField("MaxRecoveredArtifactManifestLineBytes", BindingFlags.Static | BindingFlags.NonPublic)!
+        Type manifestType = typeof(RetryOrchestrator).Assembly
+            .GetType("Microsoft.Testing.Extensions.RetryArtifactManifest")!;
+        int maxLineBytes = (int)manifestType
+            .GetField("MaxLineLength", BindingFlags.Static | BindingFlags.Public)!
             .GetRawConstantValue()!;
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(fs => fs.ExistFile(manifestPath)).Returns(true);
@@ -398,8 +464,10 @@ public class RetryTests
         const string manifestPath = "recovered-artifacts.txt";
         string attemptDirectory = Path.GetFullPath("attempt");
         string recoveredArtifactPath = Path.Combine(attemptDirectory, "recovered.xml");
-        int maxRecords = (int)typeof(RetryOrchestrator)
-            .GetField("MaxRecoveredArtifactManifestRecords", BindingFlags.Static | BindingFlags.NonPublic)!
+        Type manifestType = typeof(RetryOrchestrator).Assembly
+            .GetType("Microsoft.Testing.Extensions.RetryArtifactManifest")!;
+        int maxRecords = (int)manifestType
+            .GetField("MaxRecords", BindingFlags.Static | BindingFlags.Public)!
             .GetRawConstantValue()!;
         var manifest = new StringBuilder();
         for (int i = 0; i < maxRecords; i++)
@@ -1279,7 +1347,42 @@ public class RetryTests
     }
 
     private static string CreateManifestLine(string path, string? kind)
-        => $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(path))}\t{(kind is null ? "-" : Convert.ToBase64String(Encoding.UTF8.GetBytes(kind)))}";
+        => InvokeWriteManifestEntry(path, kind);
+
+    private static string InvokeWriteManifestEntry(string path, string? kind)
+        => (string)GetRetryArtifactManifestType()
+            .GetMethod("WriteEntry", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [path, kind])!;
+
+    private static string InvokeWriteManifestEntryWithEncodedKind(string path, string encodedKindOrNullSentinel)
+        => (string)GetRetryArtifactManifestType()
+            .GetMethod("WriteEntryWithEncodedKind", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [path, encodedKindOrNullSentinel])!;
+
+    private static (string EncodedPath, string EncodedKindOrNullSentinel) SplitManifestEntry(string entry)
+    {
+        object?[] arguments = [entry, null, null];
+        bool wasSplit = (bool)GetRetryArtifactManifestType()
+            .GetMethod("TrySplitEntry", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, arguments)!;
+
+        Assert.IsTrue(wasSplit);
+        return ((string)arguments[1]!, (string)arguments[2]!);
+    }
+
+    private static string DecodeManifestPath(string encodedPath)
+        => (string)GetRetryArtifactManifestType()
+            .GetMethod("DecodePath", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [encodedPath])!;
+
+    private static string? DecodeManifestKind(string encodedKindOrNullSentinel)
+        => (string?)GetRetryArtifactManifestType()
+            .GetMethod("DecodeKind", BindingFlags.Static | BindingFlags.Public)!
+            .Invoke(null, [encodedKindOrNullSentinel]);
+
+    private static Type GetRetryArtifactManifestType()
+        => typeof(RetryOrchestrator).Assembly
+            .GetType("Microsoft.Testing.Extensions.RetryArtifactManifest")!;
 
     private static void InvokeCollectRecoveredArtifacts(
         IFileSystem fileSystem,

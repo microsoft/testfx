@@ -1,4 +1,7 @@
 #nullable enable
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MaximumArity = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumArity = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
 Microsoft.Testing.Extensions.Policy.PathContainment
 static Microsoft.Testing.Extensions.Policy.PathContainment.IsUnderDirectory(string! path, string! directory) -> bool
 static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.BuildAttemptArgumentsAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string![]! executableArguments, string![]! originalExecutableArguments, System.Collections.Generic.List<int>! indexToCleanup, string! currentTryResultFolder, string! retryRootFolder, string! pipeName, string![]? lastListOfFailedId, int attemptCount) -> System.Threading.Tasks.Task<System.Collections.Generic.List<string!>!>!

@@ -36,7 +36,12 @@ This package extends Microsoft.Testing.Platform with:
 
 ### Use an application-owned OpenTelemetry provider
 
-When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, configure and start that host before building the test application:
+When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, use `Microsoft.Testing.Extensions.Hosting` to preserve that ownership while MTP runs:
+
+```dotnetcli
+dotnet add package Microsoft.Testing.Extensions.Hosting
+dotnet add package Microsoft.Extensions.Hosting
+```
 
 ```csharp
 HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
@@ -50,16 +55,11 @@ hostBuilder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation());
 
 using IHost host = hostBuilder.Build();
-await host.StartAsync();
-
-ITestApplicationBuilder testBuilder = await TestApplication.CreateBuilderAsync(args);
-testBuilder.AddTestingPlatformDiagnostics();
-
-using ITestApplication testApplication = await testBuilder.BuildAsync();
-int exitCode = await testApplication.RunAsync();
-
-await host.StopAsync();
-return exitCode;
+return await host.RunTestingPlatformAsync(args, testBuilder =>
+{
+    // Register the test framework here.
+    testBuilder.AddTestingPlatformDiagnostics();
+});
 ```
 
 `AddTestingPlatformDiagnostics()` does not build, configure, flush, or dispose a `TracerProvider` or `MeterProvider`. The application keeps full ownership of those providers and their exporters. The older `AddOpenTelemetryProvider()` and `AddOpenTelemetryProviderFromEnvironment()` helpers remain available as standalone convenience paths when the test application wants MTP to own the provider lifetime.

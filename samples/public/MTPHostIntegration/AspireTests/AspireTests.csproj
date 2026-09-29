@@ -1,0 +1,20 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <EnableAspireTesting>true</EnableAspireTesting>
+    <AspireHostingTestingVersion>$(AspireVersion)</AspireHostingTestingVersion>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AspireAppHost\AspireAppHost.csproj" />
+    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj" />
+  </ItemGroup>
+
+</Project>

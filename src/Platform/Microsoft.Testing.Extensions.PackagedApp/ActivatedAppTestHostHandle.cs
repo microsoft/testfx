@@ -132,10 +132,6 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
 
     private void RecoverRetryArtifactManifest()
     {
-        const long MaxManifestBytes = 16L * 1024 * 1024;
-        const int MaxManifestLineChars = 64 * 1024;
-        const int MaxManifestRecords = 10_000;
-
         if (_retryArtifactManifestPath is null
             || _retryArtifactManifestDestinationPath is null
             || _scratchDirectory is null)
@@ -146,27 +142,25 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
         try
         {
             if (!File.Exists(_retryArtifactManifestPath)
-                || new FileInfo(_retryArtifactManifestPath).Length > MaxManifestBytes)
+                || new FileInfo(_retryArtifactManifestPath).Length > RetryArtifactManifest.MaxBytes)
             {
                 return;
             }
 
             var recoveredLines = new List<string>();
-            foreach (string line in File.ReadLines(_retryArtifactManifestPath).Take(MaxManifestRecords))
+            foreach (string line in File.ReadLines(_retryArtifactManifestPath).Take(RetryArtifactManifest.MaxRecords))
             {
-                if (line.Length > MaxManifestLineChars)
+                if (line.Length > RetryArtifactManifest.MaxLineLength)
                 {
                     continue;
                 }
 
-                int separatorIndex = line.IndexOf('\t');
-                if (separatorIndex <= 0)
+                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKindOrNullSentinel))
                 {
                     continue;
                 }
 
-                string sourcePath = Path.GetFullPath(
-                    Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(0, separatorIndex))));
+                string sourcePath = Path.GetFullPath(RetryArtifactManifest.DecodePath(encodedPath));
                 string? recoveredPath = TryGetRecoveredArtifactPath(
                     sourcePath,
                     _resultsScratchDirectory,
@@ -180,8 +174,9 @@ internal sealed class ActivatedAppTestHostHandle : ILocalTestHostHandle, ITestHo
                     continue;
                 }
 
-                recoveredLines.Add(
-                    $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(Path.GetFullPath(recoveredPath)))}{line[separatorIndex..]}");
+                recoveredLines.Add(RetryArtifactManifest.WriteEntryWithEncodedKind(
+                    Path.GetFullPath(recoveredPath),
+                    encodedKindOrNullSentinel));
             }
 
             if (recoveredLines.Count == 0)

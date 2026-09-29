@@ -20,13 +20,19 @@ public sealed class PathContainmentTests
         Assert.IsTrue(PathContainment.IsUnderDirectory(child, root));
         Assert.IsFalse(PathContainment.IsUnderDirectory(root, root));
         Assert.IsFalse(PathContainment.IsUnderDirectory(sibling, root));
+
+        string differentCaseChild = Path.Combine(root.ToUpperInvariant(), "child", "artifact.txt");
+        bool expected = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        Assert.AreEqual(expected, PathContainment.IsUnderDirectory(differentCaseChild, root));
     }
 
     [TestMethod]
-    public void IsUnderDirectory_RootWithTrailingSeparator_IsUnderDirectory()
+    public void IsUnderDirectory_TrailingSeparator_IsHandledOnEitherArgument()
     {
         string root = Path.GetFullPath("root");
+        string child = Path.Combine(root, "child", "artifact.txt");
 
         Assert.IsTrue(PathContainment.IsUnderDirectory(root + Path.DirectorySeparatorChar, root));
+        Assert.IsTrue(PathContainment.IsUnderDirectory(child, root + Path.DirectorySeparatorChar));
     }
 }
