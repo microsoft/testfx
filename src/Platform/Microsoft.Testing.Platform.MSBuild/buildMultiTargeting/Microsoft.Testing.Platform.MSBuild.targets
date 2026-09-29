@@ -141,6 +141,10 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
+  <PropertyGroup>
+    <MicrosoftTestingPlatformHostedEntryPointProtocolVersion>1</MicrosoftTestingPlatformHostedEntryPointProtocolVersion>
+  </PropertyGroup>
+
   <Target Name="_GetTestingPlatformMSBuildTaskFileHashForEntryPoint"
           DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
     <GetFileHash Files="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"
@@ -167,7 +171,36 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GetTestingPlatformMSBuildTaskFileHashForEntryPoint">
+  <Target Name="_ValidateTestingPlatformHostedEntryPoint"
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_CalculateGenerateSelfRegisteredExtensions">
+    <PropertyGroup>
+      <_TestingPlatformOpenTelemetryModeNormalized Condition=" '$(TestingPlatformOpenTelemetryMode)' != '' ">$(TestingPlatformOpenTelemetryMode.Trim().ToLowerInvariant())</_TestingPlatformOpenTelemetryModeNormalized>
+    </PropertyGroup>
+
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(GenerateTestingPlatformEntryPoint)' != 'true' "
+           Text="TestingPlatformHostFactory requires GenerateTestingPlatformEntryPoint to be true." />
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(GenerateTestingPlatformApplicationHelper)' != 'true' "
+           Text="TestingPlatformHostFactory requires GenerateTestingPlatformApplicationHelper to be true." />
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(GenerateSelfRegisteredExtensions)' != 'true' "
+           Text="TestingPlatformHostFactory requires GenerateSelfRegisteredExtensions to be true so the test framework and extensions are registered exactly once." />
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(IsTestingPlatformApplication)' != 'true' "
+           Text="TestingPlatformHostFactory is supported only for Microsoft.Testing.Platform applications. Enable the MTP runner and do not use the VSTest configuration." />
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(UseVSTest)' == 'true' "
+           Text="TestingPlatformHostFactory is not supported when UseVSTest is true." />
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)' == '' "
+           Text="TestingPlatformHostFactory requires a compatible Microsoft.Testing.Extensions.Hosting package reference." />
+    <Error Condition=" '$(TestingPlatformHostFactory)' != '' And '$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)' != '' And '$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)' != '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)' "
+           Text="Microsoft.Testing.Extensions.Hosting hosted-entrypoint protocol version '$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)' is incompatible with Microsoft.Testing.Platform.MSBuild protocol version '$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)'." />
+
+    <Error Condition=" '$(_TestingPlatformOpenTelemetryModeNormalized)' != '' And '$(_TestingPlatformOpenTelemetryModeNormalized)' != 'disabled' And '$(_TestingPlatformOpenTelemetryModeNormalized)' != 'hostowned' "
+           Text="TestingPlatformOpenTelemetryMode '$(TestingPlatformOpenTelemetryMode)' is invalid. Supported values are Disabled and HostOwned." />
+    <Error Condition=" '$(_TestingPlatformOpenTelemetryModeNormalized)' == 'hostowned' And '$(TestingPlatformHostFactory)' == '' "
+           Text="TestingPlatformOpenTelemetryMode=HostOwned requires TestingPlatformHostFactory." />
+    <Error Condition=" '$(_TestingPlatformOpenTelemetryModeNormalized)' == 'hostowned' And '$(MicrosoftTestingExtensionsOpenTelemetryHostOwnedCapability)' != 'true' "
+           Text="TestingPlatformOpenTelemetryMode=HostOwned requires a compatible Microsoft.Testing.Extensions.OpenTelemetry package reference." />
+  </Target>
+
+  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_ValidateTestingPlatformHostedEntryPoint;_GetTestingPlatformMSBuildTaskFileHashForEntryPoint">
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateTestingPlatformEntryPointInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformentrypointinputcache.cache</_GenerateTestingPlatformEntryPointInputsCachFilePath>
@@ -175,10 +208,16 @@
     </PropertyGroup>
     <ItemGroup>
       <!-- Items to hash-->
-      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(TestingPlatformBuilderHook->'%(Identity)|%(DisplayName)|%(TypeFullName)')"/>
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(Language)"/>
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(RootNamespace)"/>
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(GenerateTestingPlatformEntryPoint)" />
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(GenerateTestingPlatformApplicationHelper)" />
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(TestingPlatformHostFactory)" />
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(TestingPlatformOpenTelemetryMode)" />
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(MicrosoftTestingPlatformHostedEntryPointProtocolVersion)" />
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(MicrosoftTestingExtensionsHostingEntryPointProtocolVersion)" />
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(MicrosoftTestingExtensionsOpenTelemetryHostOwnedCapability)" />
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(_TestingPlatformMSBuildTaskFileWithHash->'%(FileHash)')" />
 
       <!-- Export the items name for the _GenerateTestingPlatformInjectEntryPoint task-->
@@ -212,6 +251,7 @@
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
                                    RootNamespace="$(RootNamespace)"
                                    GenerateEntryPoint="$(GenerateTestingPlatformEntryPoint)"
+                                   HostFactory="$(TestingPlatformHostFactory)"
                                    Language="$(Language)" >
       <Output TaskParameter="TestingPlatformEntryPointGeneratedFilePath" PropertyName ="TestingPlatformEntryPointGeneratedFilePath" />
     </TestingPlatformEntryPointTask>

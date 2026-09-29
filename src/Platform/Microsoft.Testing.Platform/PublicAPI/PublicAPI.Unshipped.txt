@@ -7,6 +7,8 @@
 [TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddlewareManager.AddTestHostExecutionOrchestratorMiddleware(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware!>! factory) -> void
 [TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManagerExtensions
 [TPEXP]static Microsoft.Testing.Platform.TestHostOrchestrator.TestHostOrchestratorManagerExtensions.AddTestHostExecutionOrchestratorMiddleware(this Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager! manager, System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware!>! factory) -> void
+Microsoft.Testing.Platform.Builder.TestApplicationOptions.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.Testing.Platform.Builder.TestApplicationOptions.CancellationToken.set -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandleExitCodePolicy
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandleExitCodePolicy.IsExitCodeAuthoritative.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ILocalTestHostHandle

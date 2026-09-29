@@ -171,6 +171,7 @@ internal sealed partial class TestHostBuilder
             systemConsole,
             loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
         serviceProvider.AddService(context.TestApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
+        testApplicationOptions.HostLifetimeBridge?.Connect(context.TestApplicationCancellationTokenSource.Cancel);
 
         CommandLineOptionsProxy commandLineOptionsProxy = new();
         serviceProvider.TryAddService(commandLineOptionsProxy);

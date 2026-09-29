@@ -4,7 +4,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Helpers;
 
 using MelIConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 using MelILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
@@ -21,12 +23,31 @@ namespace Microsoft.Testing.Extensions;
 public static class MicrosoftExtensionsHostingExtensions
 {
     /// <summary>
+    /// Determines whether a generated entry point should run an informational MTP command without creating the application host.
+    /// </summary>
+    /// <param name="args">The MTP command-line arguments.</param>
+    /// <returns><see langword="true"/> for help and info options, including options expanded from response files.</returns>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    public static bool ShouldBypassApplicationHost(string[] args)
+    {
+        _ = args ?? throw new ArgumentNullException(nameof(args));
+
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+        return parseResult.Options.Any(
+            static option => option.Name.Equals(PlatformCommandLineProvider.HelpOptionKey, StringComparison.OrdinalIgnoreCase)
+                || option.Name.Equals(PlatformCommandLineProvider.HelpOptionQuestionMark, StringComparison.OrdinalIgnoreCase)
+                || option.Name.Equals(PlatformCommandLineProvider.InfoOptionKey, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
     /// Starts the host, runs a Microsoft Testing Platform application, and stops the host.
     /// </summary>
     /// <param name="host">The application-owned host.</param>
     /// <param name="args">The test application command-line arguments.</param>
     /// <param name="configure">Registers the test framework and optional MTP extensions.</param>
-    /// <param name="cancellationToken">A token used while starting the host.</param>
+    /// <param name="cancellationToken">A token used while starting the host and running the test application.</param>
     /// <returns>The Microsoft Testing Platform exit code.</returns>
     /// <remarks>
     /// <para>
@@ -55,8 +76,17 @@ public static class MicrosoftExtensionsHostingExtensions
 
         MelIConfiguration configuration = host.Services.GetRequiredService<MelIConfiguration>();
         MelILoggerFactory loggerFactory = host.Services.GetRequiredService<MelILoggerFactory>();
+        IHostApplicationLifetime? hostApplicationLifetime = host.Services.GetService<IHostApplicationLifetime>();
+        HostApplicationLifetimeBridge? hostApplicationLifetimeBridge = hostApplicationLifetime is null
+            ? null
+            : new(hostApplicationLifetime);
+        var testApplicationOptions = new TestApplicationOptions
+        {
+            CancellationToken = cancellationToken,
+            HostLifetimeBridge = hostApplicationLifetimeBridge,
+        };
 
-        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args).ConfigureAwait(false);
+        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args, testApplicationOptions).ConfigureAwait(false);
         try
         {
             testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(configuration);
@@ -77,6 +107,7 @@ public static class MicrosoftExtensionsHostingExtensions
             }
             finally
             {
+                hostApplicationLifetimeBridge?.Disconnect();
                 try
                 {
                     await host.StopAsync(CancellationToken.None).ConfigureAwait(false);

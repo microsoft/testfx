@@ -100,7 +100,56 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
             context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
         }
 
-        return host;
+        return testApplicationOptions.CancellationToken.CanBeCanceled
+            ? new ExternallyCancellableHost(
+                host,
+                context.TestApplicationCancellationTokenSource,
+                testApplicationOptions.CancellationToken)
+            : host;
+    }
+
+    private sealed class ExternallyCancellableHost : IHost, IDisposable
+    {
+        private readonly IHost _innerHost;
+        private readonly CancellationTokenRegistration _cancellationRegistration;
+        private int _registrationDisposed;
+
+        public ExternallyCancellableHost(
+            IHost innerHost,
+            ITestApplicationCancellationTokenSource cancellationTokenSource,
+            CancellationToken cancellationToken)
+        {
+            _innerHost = innerHost;
+            _cancellationRegistration = cancellationToken.Register(
+                static state => ((ITestApplicationCancellationTokenSource)state!).Cancel(),
+                cancellationTokenSource);
+        }
+
+        public async Task<int> RunAsync()
+        {
+            try
+            {
+                return await _innerHost.RunAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                DisposeCancellationRegistration();
+            }
+        }
+
+        public void Dispose()
+        {
+            DisposeCancellationRegistration();
+            (_innerHost as IDisposable)?.Dispose();
+        }
+
+        private void DisposeCancellationRegistration()
+        {
+            if (Interlocked.Exchange(ref _registrationDisposed, 1) == 0)
+            {
+                _cancellationRegistration.Dispose();
+            }
+        }
     }
 
     private sealed class BuildContext(

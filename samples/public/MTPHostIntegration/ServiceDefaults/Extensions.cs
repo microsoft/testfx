@@ -42,8 +42,8 @@ public static class Extensions
             .ConfigureResource(resource => resource
                 .AddTestingPlatformTestResource()
                 .AddTestingPlatformCIResource())
-            .WithTracing(tracing => tracing.AddTestingPlatformInstrumentation().AddConsoleExporter())
-            .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation().AddConsoleExporter());
+            .WithTracing(tracing => tracing.AddTestingPlatformInstrumentation())
+            .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation());
 
         return builder;
     }

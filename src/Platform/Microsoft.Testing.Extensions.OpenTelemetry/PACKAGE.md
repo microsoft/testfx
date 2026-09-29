@@ -64,6 +64,17 @@ return await host.RunTestingPlatformAsync(args, testBuilder =>
 
 `AddTestingPlatformDiagnostics()` does not build, configure, flush, or dispose a `TracerProvider` or `MeterProvider`. The application keeps full ownership of those providers and their exporters. The older `AddOpenTelemetryProvider()` and `AddOpenTelemetryProviderFromEnvironment()` helpers remain available as standalone convenience paths when the test application wants MTP to own the provider lifetime.
 
+For an MSBuild-generated hosted entry point, set:
+
+```xml
+<PropertyGroup>
+  <TestingPlatformHostFactory>Contoso.Tests.TestHost.CreateHost</TestingPlatformHostFactory>
+  <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
+</PropertyGroup>
+```
+
+`HostOwned` contributes one generated builder hook that calls only `AddTestingPlatformDiagnostics()`. It does not create providers or exporters and does not replace the host's `service.name`, host, OS, or process resource identity.
+
 The focused resource helpers are recommended when Aspire ServiceDefaults, `HostApplicationBuilder`, or another application-level composition root already owns `service.*`, `host.*`, `os.*`, and `process.*`. Use `AddTestingPlatformResource()` only when the test application wants the extension to configure that complete standalone resource identity.
 
 See the complete [`HostApplicationBuilder` sample](../../../samples/public/MTPOTel).

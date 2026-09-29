@@ -38,6 +38,7 @@ public abstract class AcceptanceTestBase
         MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
         MicrosoftTestingExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Hosting.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
+        MicrosoftTestingExtensionsOpenTelemetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.OpenTelemetry.");
         MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
         MicrosoftTestingExtensionsGitHubActionsReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
@@ -123,6 +124,8 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftTestingExtensionsHostingVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsOpenTelemetryVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsCtrfReportVersion { get; private set; }
 

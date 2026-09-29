@@ -74,14 +74,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             // First user Ctrl+C: cooperative cancellation. If the token was already cancelled
             // by an external source this is effectively a no-op, but we still transitioned the
             // state so the next press goes to force-exit.
-            try
-            {
-                _cancellationTokenSource.Cancel();
-            }
-            catch (AggregateException ex)
-            {
-                _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
-            }
+            Cancel();
 
             return;
         }
@@ -125,7 +118,16 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     }
 
     public void Cancel()
-        => _cancellationTokenSource.Cancel();
+    {
+        try
+        {
+            _cancellationTokenSource.Cancel();
+        }
+        catch (AggregateException ex)
+        {
+            _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
+        }
+    }
 
     private sealed class ForceExitRegistration(CTRLPlusCCancellationTokenSource owner, Action forceExitAction) : IDisposable
     {

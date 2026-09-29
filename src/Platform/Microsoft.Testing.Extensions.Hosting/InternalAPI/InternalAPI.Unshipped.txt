@@ -1,1 +1,5 @@
 #nullable enable
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge.Connect(System.Action! requestTestApplicationStop) -> void
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge.Disconnect() -> void
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge.HostApplicationLifetimeBridge(Microsoft.Extensions.Hosting.IHostApplicationLifetime! hostApplicationLifetime) -> void
