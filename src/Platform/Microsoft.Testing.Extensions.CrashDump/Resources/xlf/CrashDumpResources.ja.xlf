@@ -155,7 +155,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
-        <target state="translated">Windows では、.NET ランタイムがこのプラットフォーム上の基盤となrる 'DOTNET_EnableCrashReport' および 'DOTNET_EnableCrashReportOnly' 環境変数を無視するため、'--crash-report' はサポートされていません。https://github.com/dotnet/runtime/issues/80191 を参照してください。Windows ではオプションをサイレントにスキップするには '--crash-report-if-supported' を、代わりにクラッシュ ダンプ ファイルを生成するには '--crashdump' を使用します。</target>
+        <target state="translated">Windows では、.NET ランタイムがこのプラットフォーム上の基盤となる 'DOTNET_EnableCrashReport' および 'DOTNET_EnableCrashReportOnly' 環境変数を無視するため、'--crash-report' はサポートされていません。https://github.com/dotnet/runtime/issues/80191 を参照してください。Windows ではオプションをサイレントにスキップするには '--crash-report-if-supported' を、代わりにクラッシュ ダンプ ファイルを生成するには '--crashdump' を使用します。</target>
         <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
