@@ -4,3 +4,4 @@ const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumAri
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxLongPathHelper.GetPathForFileSystemAccess(string! path, System.Func<string!, string!>! getFullPath) -> string!

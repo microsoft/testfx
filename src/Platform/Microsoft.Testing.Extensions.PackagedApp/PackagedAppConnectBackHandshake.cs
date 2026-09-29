@@ -34,8 +34,8 @@ internal static class PackagedAppConnectBackHandshake
     // (naming the file) and the activated host (locating it) agree on this value. Kept as a literal
     // because PlatformCommandLineProvider.TestHostControllerPIDOptionKey is internal to the platform
     // assembly; the two ship and version together in this repo.
-    private const string TestHostControllerPidOptionKey = "internal-testhostcontroller-pid";
-    private const string RetryPipeNameOptionKey = "internal-retry-pipename";
+    private const string TestHostControllerPidOption = "--internal-testhostcontroller-pid";
+    private const string RetryPipeNameOption = "--internal-retry-pipename";
 
     // Marker prefixes distinguishing a null value from a (possibly empty) string value on each line,
     // so an empty string round-trips as an empty string rather than as null.
@@ -79,7 +79,7 @@ internal static class PackagedAppConnectBackHandshake
     /// test host waiting on a controller connect-back).
     /// </summary>
     public static string? TryGetTestHostControllerPid(IReadOnlyList<string> arguments)
-        => TryGetOptionValue(arguments, TestHostControllerPidOptionKey);
+        => CommandLineOptionParser.TryGetOptionValue(arguments, TestHostControllerPidOption);
 
     /// <summary>
     /// Returns the stable identifier used to exchange environment variables for an activated host.
@@ -92,26 +92,13 @@ internal static class PackagedAppConnectBackHandshake
             return testHostControllerPid;
         }
 
-        if (TryGetOptionValue(arguments, RetryPipeNameOptionKey) is not { } retryPipeName)
+        if (CommandLineOptionParser.TryGetOptionValue(arguments, RetryPipeNameOption) is not { } retryPipeName)
         {
             return null;
         }
 
         byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(retryPipeName));
         return $"retry-{Convert.ToHexString(hash)}";
-    }
-
-    private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string optionKey)
-    {
-        for (int i = 0; i < arguments.Count - 1; i++)
-        {
-            if (string.Equals(arguments[i], $"--{optionKey}", StringComparison.Ordinal))
-            {
-                return arguments[i + 1];
-            }
-        }
-
-        return null;
     }
 
     /// <summary>

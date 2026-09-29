@@ -5,6 +5,7 @@
 
 using System.Security.Cryptography;
 
+using Microsoft.Testing.Extensions.PackagedApp;
 using Microsoft.Testing.Platform.Builder;
 
 using Windows.Security.Cryptography;
@@ -223,10 +224,10 @@ public static class PackagedAppExtensions
 
     private static void ApplyConnectBackEnvironment(string[] arguments)
     {
-        string? handshakeId = GetOptionValue(arguments, TestHostControllerPidOption);
+        string? handshakeId = CommandLineOptionParser.TryGetOptionValue(arguments, TestHostControllerPidOption);
         if (handshakeId is null)
         {
-            string? retryPipeName = GetOptionValue(arguments, RetryPipeNameOption);
+            string? retryPipeName = CommandLineOptionParser.TryGetOptionValue(arguments, RetryPipeNameOption);
             if (retryPipeName is null)
             {
                 return;
@@ -327,19 +328,6 @@ public static class PackagedAppExtensions
         return offset == payload.Length
             ? arguments
             : throw new FormatException("The activation argument payload contains trailing data.");
-    }
-
-    private static string? GetOptionValue(string[] arguments, string option)
-    {
-        for (int i = 0; i < arguments.Length - 1; i++)
-        {
-            if (string.Equals(arguments[i], option, StringComparison.Ordinal))
-            {
-                return arguments[i + 1];
-            }
-        }
-
-        return null;
     }
 
     private static int ReadInt32(byte[] source, int offset)

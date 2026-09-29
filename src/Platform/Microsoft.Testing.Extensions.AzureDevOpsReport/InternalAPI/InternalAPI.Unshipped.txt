@@ -1,23 +1,13 @@
 #nullable enable
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter.AzureDevOpsSummaryReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Services.ITestCoverageResult! testCoverageResult, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, System.Func<bool>! shouldDeferToArtifactPostProcessing, Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsHistoryService? historyService) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CustomFields.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField!>?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField.AzureDevOpsCustomTestField(string! fieldName, string! value) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField.FieldName.get -> string!
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField.Value.get -> string!
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CustomFields.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField!>?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CustomFields.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter.AzureDevOpsSummaryReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Services.ITestCoverageResult! testCoverageResult, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, System.Func<bool>! shouldDeferToArtifactPostProcessing, Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsHistoryService? historyService) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.State.get -> string!
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField!
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.AzureDevOpsTestCustomField(string! FieldName, object! Value) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.Deconstruct(out string! FieldName, out object! Value) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.Equals(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField? other) -> bool
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.FieldName.get -> string!
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.FieldName.init -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.Value.get -> object!
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.Value.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(System.Net.Http.HttpClient! httpClient, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CustomFields.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField!>?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CustomFields.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField!>?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CustomFields.init -> void
-override Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.Equals(object? obj) -> bool
-override Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.GetHashCode() -> int
-override Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.ToString() -> string!
-static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.operator !=(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField? right) -> bool
-static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField.operator ==(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCustomField? right) -> bool

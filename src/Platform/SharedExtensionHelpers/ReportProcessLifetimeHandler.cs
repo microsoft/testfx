@@ -183,10 +183,7 @@ internal sealed partial class ReportProcessLifetimeHandler<TGenerator, TCaptured
                 _fileSystem.CreateDirectory(directory);
             }
 
-            string encodedPath = Convert.ToBase64String(Encoding.UTF8.GetBytes(artifactPath));
-            string encodedKind = artifactKind is null
-                ? "-"
-                : Convert.ToBase64String(Encoding.UTF8.GetBytes(artifactKind));
+            string entry = RetryArtifactManifest.WriteEntry(artifactPath, artifactKind);
             using IFileStream stream = _fileSystem.NewFileStream(
                 manifestPath,
                 FileMode.Append,
@@ -194,10 +191,10 @@ internal sealed partial class ReportProcessLifetimeHandler<TGenerator, TCaptured
                 FileShare.Read);
             using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 #if NETCOREAPP
-            await writer.WriteLineAsync($"{encodedPath}\t{encodedKind}".AsMemory(), cancellationToken).ConfigureAwait(false);
+            await writer.WriteLineAsync(entry.AsMemory(), cancellationToken).ConfigureAwait(false);
 #else
             cancellationToken.ThrowIfCancellationRequested();
-            await writer.WriteLineAsync($"{encodedPath}\t{encodedKind}").ConfigureAwait(false);
+            await writer.WriteLineAsync(entry).ConfigureAwait(false);
 #endif
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

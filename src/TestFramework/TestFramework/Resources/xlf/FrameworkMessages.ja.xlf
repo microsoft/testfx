@@ -694,7 +694,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailedSummary">
         <source>Expected values to be equal, but they are of different types.</source>
-        <target state="translated">値は等しいが、型が異なる必要があります。</target>
+        <target state="translated">等しい値が必要ですが、型が異なります。</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailedSummary">

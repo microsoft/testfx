@@ -262,6 +262,10 @@ An MSTest attribute (`[MemberConditionAttribute]`) in `Microsoft.VisualStudio.Te
 
 An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severity, enabled by default) that flags a method-level attribute as redundant when the containing `[TestClass]` already establishes equivalent or more restrictive behavior, so the method-level copy has no effect. Covered attribute pairs include `[OSCondition]`, `[ArchitectureCondition]`, `[CICondition]`, `[DoNotParallelize]`, `[ResourceLock]`, `[Retry]`, `[Ignore]`, `[TestCategory]`, `[TestProperty]`, `[DeploymentItem]`, and `[DependsOn]`. A companion C# code fix (`RedundantTestMethodAttributeFixer`) removes the flagged attribute. Introduced in [PR #11267](https://github.com/microsoft/testfx/pull/11267). See also [ResourceLockAttribute](#resourcelockattribute).
 
+### MSTEST0087 (duplicate DataRow display name)
+
+An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-blank `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit non-blank `DisplayName` values — missing, null, empty, or whitespace-only names are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
+
 ### MSTest
 
 Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
@@ -361,6 +365,10 @@ For assembly-level parallelization properties, see [MSTestParallelizeScope / MST
 ### MSTest.SourceGeneration
 
 A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. MSTest.Sdk includes the package automatically for NativeAOT projects; set `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>` to opt in for other configurations. Without MSTest.Sdk, add a `<PackageReference>` to `MSTest.SourceGeneration`. Existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
+
+### MSTest.Windows.UIAutomation
+
+A [MSTest.Sdk](#mstestsdk)-integrated package (`MSTest.Windows.UIAutomation`) that provides desktop UI Automation helpers for tests targeting a Windows target framework (e.g., `net8.0-windows`); the SDK errors at build time if the project's `TargetFramework` does not resolve to the `windows` target platform identifier. Opt in with `<EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>`, which adds the package reference and (when `ImplicitUsings` is enabled) an implicit `using Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;`. `MSTestWindowsUIAutomationVersion` overrides the package version, defaulting to the MSTest.Sdk version. Introduced in [PR #10862](https://github.com/microsoft/testfx/pull/10862).
 
 ### MSTestParallelizeScope / MSTestParallelizeWorkers
 

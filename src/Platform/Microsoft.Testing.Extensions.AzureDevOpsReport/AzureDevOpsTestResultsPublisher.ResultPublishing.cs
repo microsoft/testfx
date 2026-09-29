@@ -7,6 +7,9 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
+    private const string AttemptIdFieldName = "AttemptId";
+    private const string IsTestResultFlakyFieldName = "IsTestResultFlaky";
+
     /// <summary>
     /// Publishes results Azure DevOps has not seen in this build yet, recording the ids it assigns them so
     /// that a later attempt can update them.
@@ -145,8 +148,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             {
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+                CustomFields = CreateRerunCustomFields(updates[i].Attempt.Result.Outcome, attemptHistories[i]),
                 SubResults = appendedAttempts[i],
-                CustomFields = CreateRerunCustomFields(attemptHistories[i]),
                 DurationInMs = totalDurations[i],
                 StartedDate = startedDates[i],
                 CompletedDate = completedDates[i],
@@ -229,6 +232,24 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
     private static IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> GetAttempts(AzureDevOpsTestCaseResultWithAttachments result)
         => result.PreviousAttempts.Count == 0 ? [result] : [.. result.PreviousAttempts, result];
+
+    private static IReadOnlyList<AzureDevOpsCustomTestField> CreateRerunCustomFields(
+        string outcome,
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+    {
+        bool isFlaky = outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome
+            && attempts.Any(static attempt => attempt.Outcome is
+                AzureDevOpsLivePublishingConstants.FailedTestOutcome
+                or AzureDevOpsLivePublishingConstants.AbortedTestOutcome);
+
+        return
+        [
+            new AzureDevOpsCustomTestField(
+                AttemptIdFieldName,
+                (attempts[^1].SequenceId - 1).ToString(CultureInfo.InvariantCulture)),
+            new AzureDevOpsCustomTestField(IsTestResultFlakyFieldName, isFlaky ? "true" : "false"),
+        ];
+    }
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
         : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);

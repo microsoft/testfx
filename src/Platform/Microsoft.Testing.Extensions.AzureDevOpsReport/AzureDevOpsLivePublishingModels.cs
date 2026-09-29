@@ -83,10 +83,6 @@ internal sealed record AzureDevOpsPipelineReference(
     string? JobName,
     int? JobAttempt);
 
-internal sealed record AzureDevOpsTestCustomField(
-    [property: JsonPropertyName("fieldName")] string FieldName,
-    [property: JsonPropertyName("value")] object Value);
-
 internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("automatedTestName")] string AutomatedTestName,
     [property: JsonPropertyName("automatedTestStorage")] string AutomatedTestStorage,
@@ -128,15 +124,31 @@ internal sealed record AzureDevOpsTestCaseResult(
     [JsonPropertyName("resultGroupType")]
     public string? ResultGroupType { get; init; }
 
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this result.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
+
     /// <summary>Gets the individual attempts of this test, oldest first.</summary>
     [JsonPropertyName("subResults")]
     public IReadOnlyList<AzureDevOpsTestSubResult>? SubResults { get; init; }
+}
 
-    /// <summary>
-    /// Gets Azure DevOps metadata that classifies retries separately from ordinary passed results.
-    /// </summary>
-    [JsonPropertyName("customFields")]
-    public IReadOnlyList<AzureDevOpsTestCustomField>? CustomFields { get; init; }
+internal sealed class AzureDevOpsCustomTestField
+{
+    public AzureDevOpsCustomTestField(string fieldName, string value)
+    {
+        FieldName = fieldName;
+        Value = value;
+    }
+
+    [JsonPropertyName("fieldName")]
+    public string FieldName { get; }
+
+    [JsonPropertyName("value")]
+    public string Value { get; }
 }
 
 /// <summary>
@@ -160,7 +172,8 @@ internal sealed record AzureDevOpsTestSubResult(
 {
     /// <summary>Gets the zero-based Azure DevOps retry attempt identifier, when this is a retry.</summary>
     [JsonPropertyName("customFields")]
-    public IReadOnlyList<AzureDevOpsTestCustomField>? CustomFields { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
 }
 
 /// <summary>A test case result bundled with optional attachments to upload after the result is published.</summary>
