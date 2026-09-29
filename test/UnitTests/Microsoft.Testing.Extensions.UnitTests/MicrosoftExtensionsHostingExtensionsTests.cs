@@ -16,8 +16,11 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [ResourceLock(WellKnownResources.EnvironmentVariables)]
 public sealed class MicrosoftExtensionsHostingExtensionsTests
 {
-    private static readonly string[] DiagnosticEnvironmentVariables =
+    private static readonly string[] EnvironmentVariablesToClear =
     [
+        // Affected-test selection sets this on the outer test process, but these tests verify
+        // the exit code produced by their own in-process test application.
+        "TESTINGPLATFORM_EXITCODE_IGNORE",
         "TESTINGPLATFORM_DIAGNOSTIC",
         "TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY",
         "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY",
@@ -27,18 +30,18 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE",
     ];
 
-    private Dictionary<string, string?> _originalDiagnosticEnvironmentVariables = null!;
+    private Dictionary<string, string?> _originalEnvironmentVariables = null!;
 
     public TestContext TestContext { get; set; } = null!;
 
     [TestInitialize]
     public void TestInitialize()
     {
-        _originalDiagnosticEnvironmentVariables = DiagnosticEnvironmentVariables.ToDictionary(
+        _originalEnvironmentVariables = EnvironmentVariablesToClear.ToDictionary(
             static name => name,
             Environment.GetEnvironmentVariable);
 
-        foreach (string name in DiagnosticEnvironmentVariables)
+        foreach (string name in EnvironmentVariablesToClear)
         {
             Environment.SetEnvironmentVariable(name, null);
         }
@@ -47,7 +50,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     [TestCleanup]
     public void TestCleanup()
     {
-        foreach (KeyValuePair<string, string?> variable in _originalDiagnosticEnvironmentVariables)
+        foreach (KeyValuePair<string, string?> variable in _originalEnvironmentVariables)
         {
             Environment.SetEnvironmentVariable(variable.Key, variable.Value);
         }
