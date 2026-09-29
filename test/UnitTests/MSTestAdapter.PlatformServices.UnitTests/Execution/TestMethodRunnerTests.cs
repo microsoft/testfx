@@ -168,7 +168,7 @@ public class TestMethodRunnerTests : TestContainer
         results[1].Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
-    public async Task Execute_EntersLeaseAfterRestoringFixtureExecutionContext()
+    public async Task Execute_RunsInsideLeaseAfterRestoringFixtureExecutionContext()
     {
         var fixtureState = new AsyncLocal<string?> { Value = "fixture" };
         _testClassInfo.ExecutionContext = ExecutionContext.Capture();
@@ -682,25 +682,19 @@ public class TestMethodRunnerTests : TestContainer
 
         public int ExitCount { get; private set; }
 
-        public IDisposable Enter()
+        public async Task<T> RunAsync<T>(Func<Task<T>> callback)
         {
             EnterCount++;
             _isEntered.Value = true;
-            return new CallbackDisposable(() =>
+            try
+            {
+                return await callback();
+            }
+            finally
             {
                 ExitCount++;
                 _isEntered.Value = false;
-            });
-        }
-
-        public void RecordExecutionEnd(DateTimeOffset endTime)
-        {
-        }
-
-        private sealed class CallbackDisposable(Action callback) : IDisposable
-        {
-            public void Dispose()
-                => callback();
+            }
         }
     }
 

@@ -12,7 +12,9 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
     public async Task HostApplicationBuilderProviders_ConsumeMtpDiagnosticsAndPreserveApplicationResource()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
-        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new() { ["MTP_OTEL_EXECUTION_MODE"] = "fallback" },
+            cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
         result.AssertOutputContains("[APP-OWNED-TRACE] TestHostBuilder");
@@ -23,6 +25,24 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
         result.AssertOutputContains("[APP-OWNED-TOPOLOGY] sibling-under-TestFramework");
         result.AssertOutputContains("[APP-OWNED-CORRELATION] activity-links");
         result.AssertOutputContains("[APP-OWNED-PARALLEL-CORRELATION] isolated");
+    }
+
+    [TestMethod]
+    public async Task ExternalFramework_PublicCanonicalExecutionApi_ProducesOneIsolatedSpanPerExecution()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new() { ["MTP_OTEL_EXECUTION_MODE"] = "canonical" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        result.AssertOutputContains("[APP-OWNED-CANONICAL] one-span-per-execution");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-PARALLEL] isolated");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-CUSTOM] children");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-HTTP] children");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-MULTI-RESULT] one-span");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-LINKS] none");
+        result.AssertOutputContains("[APP-OWNED-CANONICAL-API] all-run-overloads");
     }
 
     public TestContext TestContext { get; set; } = null!;
@@ -39,6 +59,7 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
     <OutputType>Exe</OutputType>
     <UseAppHost>true</UseAppHost>
     <LangVersion>preview</LangVersion>
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="$MicrosoftExtensionsHostingVersion$" />
@@ -46,11 +67,15 @@ public sealed class OpenTelemetryTests : AcceptanceTestBase<OpenTelemetryTests.T
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="OpenTelemetry" Version="$OpenTelemetryVersion$" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$OpenTelemetryVersion$" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
   </ItemGroup>
 </Project>
 
 #file Program.cs
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
@@ -85,6 +110,7 @@ internal static class Program
             .WithTracing(tracing => tracing
                 .AddSource(ApplicationActivitySourceName)
                 .AddTestingPlatformInstrumentation()
+                .AddHttpClientInstrumentation()
                 .AddProcessor(new SimpleActivityExportProcessor(activityExporter)))
             .WithMetrics(metrics => metrics
                 .AddTestingPlatformInstrumentation()
@@ -104,9 +130,10 @@ internal static class Program
         ActivitySpanId applicationSpanId = applicationActivity.SpanId;
 
         ITestApplicationBuilder testBuilder = await TestApplication.CreateBuilderAsync(args);
+        string executionMode = Environment.GetEnvironmentVariable("MTP_OTEL_EXECUTION_MODE") ?? "fallback";
         testBuilder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
-            (_, _) => new SingleTestFramework(applicationActivitySource));
+            (_, _) => new SingleTestFramework(applicationActivitySource, executionMode));
         testBuilder.AddTestingPlatformDiagnostics();
 
         int exitCode;
@@ -122,24 +149,9 @@ internal static class Program
         Activity applicationRootActivity = activityExporter.Single(
             activity => activity.Source.Name == ApplicationActivitySourceName
                 && activity.OperationName == "application-test-run");
-        Activity firstCustomTestActivity = activityExporter.Single(
-            activity => activity.Source.Name == ApplicationActivitySourceName
-                && activity.OperationName == "application-test-activity-one");
-        Activity secondCustomTestActivity = activityExporter.Single(
-            activity => activity.Source.Name == ApplicationActivitySourceName
-                && activity.OperationName == "application-test-activity-two");
         Activity builderActivity = activityExporter.Single(
             activity => activity.Source.Name == "Microsoft.Testing.Platform"
                 && activity.OperationName == "TestHostBuilder");
-        Activity testFrameworkActivity = activityExporter.Single(
-            activity => activity.Source.Name == "Microsoft.Testing.Platform"
-                && activity.OperationName == "TestFramework");
-        Activity firstTestResultActivity = activityExporter.Single(
-            activity => activity.Source.Name == "Microsoft.Testing.Platform"
-                && activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-one");
-        Activity secondTestResultActivity = activityExporter.Single(
-            activity => activity.Source.Name == "Microsoft.Testing.Platform"
-                && activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-two");
 
         if (applicationRootActivity.TraceId != applicationTraceId
             || applicationRootActivity.SpanId != applicationSpanId)
@@ -153,6 +165,53 @@ internal static class Program
                 $"MTP did not inherit the application trace context. Expected {applicationTraceId}/{applicationSpanId}, " +
                 $"actual {builderActivity.TraceId}/{builderActivity.ParentSpanId}.");
         }
+
+        switch (executionMode)
+        {
+            case "fallback":
+                VerifyFallback(activityExporter, applicationTraceId);
+                break;
+            case "canonical":
+                VerifyCanonical(activityExporter, applicationTraceId);
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown MTP_OTEL_EXECUTION_MODE value '{executionMode}'.");
+        }
+
+        if (!metricExporter.Contains("test.run.duration"))
+        {
+            throw new InvalidOperationException("The application-owned meter provider did not export test.run.duration.");
+        }
+
+        string traceServiceName = GetServiceName(activityExporter.GetCapturedResource(), "trace");
+        _ = GetServiceName(metricExporter.GetCapturedResource(), "metric");
+
+        Console.WriteLine($"[APP-OWNED-TRACE] {builderActivity.OperationName}");
+        Console.WriteLine("[APP-OWNED-METRIC] test.run.duration");
+        Console.WriteLine($"[APP-OWNED-RESOURCE] service.name={traceServiceName}");
+        Console.WriteLine("[APP-OWNED-PARENT] inherited");
+
+        await host.StopAsync();
+        return exitCode;
+    }
+
+    private static void VerifyFallback(CapturingActivityExporter activityExporter, ActivityTraceId applicationTraceId)
+    {
+        Activity firstCustomTestActivity = activityExporter.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-activity-one");
+        Activity secondCustomTestActivity = activityExporter.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-activity-two");
+        Activity testFrameworkActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.OperationName == "TestFramework");
+        Activity firstTestResultActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-one");
+        Activity secondTestResultActivity = activityExporter.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-two");
 
         if (testFrameworkActivity.TraceId != applicationTraceId
             || firstCustomTestActivity.TraceId != testFrameworkActivity.TraceId
@@ -184,25 +243,87 @@ internal static class Program
             throw new InvalidOperationException("Parallel test execution activity links were crossed.");
         }
 
-        if (!metricExporter.Contains("test.run.duration"))
-        {
-            throw new InvalidOperationException("The application-owned meter provider did not export test.run.duration.");
-        }
-
-        string traceServiceName = GetServiceName(activityExporter.GetCapturedResource(), "trace");
-        _ = GetServiceName(metricExporter.GetCapturedResource(), "metric");
-
-        Console.WriteLine($"[APP-OWNED-TRACE] {builderActivity.OperationName}");
         Console.WriteLine($"[APP-OWNED-TEST-TRACE] {firstCustomTestActivity.OperationName}");
-        Console.WriteLine("[APP-OWNED-METRIC] test.run.duration");
-        Console.WriteLine($"[APP-OWNED-RESOURCE] service.name={traceServiceName}");
-        Console.WriteLine("[APP-OWNED-PARENT] inherited");
         Console.WriteLine("[APP-OWNED-TOPOLOGY] sibling-under-TestFramework");
         Console.WriteLine("[APP-OWNED-CORRELATION] activity-links");
         Console.WriteLine("[APP-OWNED-PARALLEL-CORRELATION] isolated");
+    }
 
-        await host.StopAsync();
-        return exitCode;
+    private static void VerifyCanonical(CapturingActivityExporter activityExporter, ActivityTraceId applicationTraceId)
+    {
+        Activity[] activities = activityExporter.Snapshot();
+        Activity testFrameworkActivity = activities.Single(
+            activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.OperationName == "TestFramework");
+        Activity[] canonicalActivities = activities
+            .Where(activity => activity.Source.Name == "Microsoft.Testing.Platform"
+                && activity.GetTagItem("test.case.id")?.ToString() is
+                    "application-owned-test-one" or "application-owned-test-two")
+            .ToArray();
+        if (canonicalActivities.Length != 2)
+        {
+            throw new InvalidOperationException(
+                $"Expected exactly two canonical MTP spans, but found {canonicalActivities.Length}.");
+        }
+
+        Activity firstCanonicalActivity = canonicalActivities.Single(
+            activity => activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-one");
+        Activity secondCanonicalActivity = canonicalActivities.Single(
+            activity => activity.GetTagItem("test.case.id")?.ToString() == "application-owned-test-two");
+        Activity firstCustomTestActivity = activities.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-activity-one");
+        Activity secondCustomTestActivity = activities.Single(
+            activity => activity.Source.Name == ApplicationActivitySourceName
+                && activity.OperationName == "application-test-activity-two");
+        Activity firstHttpActivity = activities.Single(
+            activity => activity.Source.Name == "System.Net.Http"
+                && activity.ParentSpanId == firstCanonicalActivity.SpanId);
+        Activity secondHttpActivity = activities.Single(
+            activity => activity.Source.Name == "System.Net.Http"
+                && activity.ParentSpanId == secondCanonicalActivity.SpanId);
+
+        if (testFrameworkActivity.TraceId != applicationTraceId
+            || firstCanonicalActivity.TraceId != testFrameworkActivity.TraceId
+            || secondCanonicalActivity.TraceId != testFrameworkActivity.TraceId
+            || firstCanonicalActivity.ParentSpanId != testFrameworkActivity.SpanId
+            || secondCanonicalActivity.ParentSpanId != testFrameworkActivity.SpanId)
+        {
+            throw new InvalidOperationException("Canonical MTP spans were not isolated children of TestFramework.");
+        }
+
+        if (firstCanonicalActivity.SpanId == secondCanonicalActivity.SpanId
+            || firstCustomTestActivity.TraceId != firstCanonicalActivity.TraceId
+            || secondCustomTestActivity.TraceId != secondCanonicalActivity.TraceId
+            || firstCustomTestActivity.ParentSpanId != firstCanonicalActivity.SpanId
+            || secondCustomTestActivity.ParentSpanId != secondCanonicalActivity.SpanId
+            || firstCustomTestActivity.ParentSpanId == secondCanonicalActivity.SpanId
+            || secondCustomTestActivity.ParentSpanId == firstCanonicalActivity.SpanId
+            || firstHttpActivity.TraceId != firstCanonicalActivity.TraceId
+            || secondHttpActivity.TraceId != secondCanonicalActivity.TraceId
+            || firstHttpActivity.ParentSpanId != firstCanonicalActivity.SpanId
+            || secondHttpActivity.ParentSpanId != secondCanonicalActivity.SpanId)
+        {
+            throw new InvalidOperationException("Parallel canonical test execution contexts were crossed.");
+        }
+
+        if (firstCanonicalActivity.Links.Any() || secondCanonicalActivity.Links.Any())
+        {
+            throw new InvalidOperationException("Canonical MTP spans must not contain ActivityLink correlation.");
+        }
+
+        if (firstCanonicalActivity.GetTagItem("test.case.result.status")?.ToString() != "pass")
+        {
+            throw new InvalidOperationException("The canonical span did not aggregate multiple result messages to the final pass.");
+        }
+
+        Console.WriteLine("[APP-OWNED-CANONICAL] one-span-per-execution");
+        Console.WriteLine("[APP-OWNED-CANONICAL-PARALLEL] isolated");
+        Console.WriteLine("[APP-OWNED-CANONICAL-CUSTOM] children");
+        Console.WriteLine("[APP-OWNED-CANONICAL-HTTP] children");
+        Console.WriteLine("[APP-OWNED-CANONICAL-MULTI-RESULT] one-span");
+        Console.WriteLine("[APP-OWNED-CANONICAL-LINKS] none");
+        Console.WriteLine("[APP-OWNED-CANONICAL-API] all-run-overloads");
     }
 
     private static string GetServiceName(Resource? resource, string signal)
@@ -247,6 +368,14 @@ internal sealed class CapturingActivityExporter : BaseExporter<Activity>
         lock (_syncRoot)
         {
             return _activities.Single(predicate);
+        }
+    }
+
+    public Activity[] Snapshot()
+    {
+        lock (_syncRoot)
+        {
+            return [.. _activities];
         }
     }
 
@@ -296,7 +425,7 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
     }
 }
 
-internal sealed class SingleTestFramework(ActivitySource activitySource) : ITestFramework, IDataProducer
+internal sealed class SingleTestFramework(ActivitySource activitySource, string executionMode) : ITestFramework, IDataProducer
 {
     public string Uid => nameof(SingleTestFramework);
     public string Version => "1.0.0";
@@ -317,25 +446,140 @@ internal sealed class SingleTestFramework(ActivitySource activitySource) : ITest
         TaskCompletionSource firstStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource secondStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        await Task.WhenAll(
-            ExecuteTestAsync(
-                context,
-                uid: "application-owned-test-one",
-                displayName: "Application-owned telemetry test one",
-                activityName: "application-test-activity-one",
-                started: firstStarted,
-                otherStarted: secondStarted.Task),
-            ExecuteTestAsync(
-                context,
-                uid: "application-owned-test-two",
-                displayName: "Application-owned telemetry test two",
-                activityName: "application-test-activity-two",
-                started: secondStarted,
-                otherStarted: firstStarted.Task));
+        if (executionMode == "canonical")
+        {
+            await Task.WhenAll(
+                ExecuteCanonicalTestAsync(
+                    context,
+                    uid: "application-owned-test-one",
+                    displayName: "Application-owned telemetry test one",
+                    activityName: "application-test-activity-one",
+                    started: firstStarted,
+                    otherStarted: secondStarted.Task,
+                    publishMultipleResults: true),
+                ExecuteCanonicalTestAsync(
+                    context,
+                    uid: "application-owned-test-two",
+                    displayName: "Application-owned telemetry test two",
+                    activityName: "application-test-activity-two",
+                    started: secondStarted,
+                    otherStarted: firstStarted.Task,
+                    publishMultipleResults: false));
+        }
+        else if (executionMode == "fallback")
+        {
+            await Task.WhenAll(
+                ExecuteFallbackTestAsync(
+                    context,
+                    uid: "application-owned-test-one",
+                    displayName: "Application-owned telemetry test one",
+                    activityName: "application-test-activity-one",
+                    started: firstStarted,
+                    otherStarted: secondStarted.Task),
+                ExecuteFallbackTestAsync(
+                    context,
+                    uid: "application-owned-test-two",
+                    displayName: "Application-owned telemetry test two",
+                    activityName: "application-test-activity-two",
+                    started: secondStarted,
+                    otherStarted: firstStarted.Task));
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unknown MTP_OTEL_EXECUTION_MODE value '{executionMode}'.");
+        }
+
         context.Complete();
     }
 
-    private async Task ExecuteTestAsync(
+    private async Task ExecuteCanonicalTestAsync(
+        ExecuteRequestContext context,
+        string uid,
+        string displayName,
+        string activityName,
+        TaskCompletionSource started,
+        Task otherStarted,
+        bool publishMultipleResults)
+    {
+        var sessionUid = new SessionUid("application-owned-session");
+        using TestExecution execution = await context.StartTestExecutionAsync(
+            this,
+            new TestNodeUpdateMessage(
+                sessionUid,
+                new TestNode
+                {
+                    Uid = uid,
+                    DisplayName = displayName,
+                    Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+                }));
+
+        ActivitySpanId canonicalSpanId = execution.Run(
+            () => RequireCurrent($"{uid} Run<T>").SpanId);
+        execution.Run(() =>
+        {
+            if (RequireCurrent($"{uid} Run").SpanId != canonicalSpanId)
+            {
+                throw new InvalidOperationException("Run did not enter the canonical test execution context.");
+            }
+        });
+
+        await execution.RunAsync(async () =>
+        {
+            Activity canonicalActivity = RequireCurrent($"{uid} RunAsync");
+            if (canonicalActivity.SpanId != canonicalSpanId)
+            {
+                throw new InvalidOperationException("RunAsync did not enter the canonical test execution context.");
+            }
+
+            using Activity? testActivity = activitySource.StartActivity(activityName);
+            if (testActivity is null)
+            {
+                throw new InvalidOperationException("The application-owned provider did not subscribe to the test activity source.");
+            }
+
+            testActivity.SetTag("test.id", uid);
+            started.SetResult();
+            await otherStarted.WaitAsync(TimeSpan.FromSeconds(30));
+        });
+
+        HttpStatusCode statusCode = await execution.RunAsync(async () =>
+        {
+            if (RequireCurrent($"{uid} RunAsync<T>").SpanId != canonicalSpanId)
+            {
+                throw new InvalidOperationException("RunAsync<T> did not enter the canonical test execution context.");
+            }
+
+            return await HttpProbe.GetAsync();
+        });
+        if (statusCode != HttpStatusCode.OK)
+        {
+            throw new InvalidOperationException($"The HTTP probe returned {statusCode}.");
+        }
+
+        TestNodeUpdateMessage CreateResult(PropertyBag properties)
+            => new(
+                sessionUid,
+                new TestNode
+                {
+                    Uid = uid,
+                    DisplayName = displayName,
+                    Properties = properties,
+                });
+
+        TestNodeUpdateMessage[] results = publishMultipleResults
+            ? [
+                CreateResult(new PropertyBag(
+                    new FailedTestNodeStateProperty("Superseded retry attempt."),
+                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true))),
+                CreateResult(new PropertyBag(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false))),
+            ]
+            : [CreateResult(new PropertyBag(PassedTestNodeStateProperty.CachedInstance))];
+        await execution.CompleteAsync(results, DateTimeOffset.UtcNow);
+    }
+
+    private async Task ExecuteFallbackTestAsync(
         ExecuteRequestContext context,
         string uid,
         string displayName,
@@ -373,6 +617,74 @@ internal sealed class SingleTestFramework(ActivitySource activitySource) : ITest
                     DisplayName = displayName,
                     Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
                 }));
+    }
+
+    private static Activity RequireCurrent(string location)
+        => Activity.Current
+            ?? throw new InvalidOperationException($"{location} did not have an ambient activity.");
+}
+
+internal static class HttpProbe
+{
+    public static async Task<HttpStatusCode> GetAsync()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        Task serverTask = ServeOnceAsync(listener);
+
+        using var client = new HttpClient();
+        using HttpResponseMessage response = await client.GetAsync(new Uri($"http://127.0.0.1:{port}/"));
+        response.EnsureSuccessStatusCode();
+        await serverTask;
+        return response.StatusCode;
+    }
+
+    private static async Task ServeOnceAsync(TcpListener listener)
+    {
+        try
+        {
+            using TcpClient client = await listener.AcceptTcpClientAsync();
+            using NetworkStream stream = client.GetStream();
+            var buffer = new byte[1];
+            const string HeaderTerminator = "\r\n\r\n";
+            int matchedTerminatorBytes = 0;
+            int totalRequestBytes = 0;
+            int count;
+            while ((count = await stream.ReadAsync(buffer)) > 0)
+            {
+                totalRequestBytes += count;
+                if (totalRequestBytes > 16 * 1024)
+                {
+                    throw new InvalidOperationException("The HTTP request headers exceeded 16 KB.");
+                }
+
+                for (int i = 0; i < count; i++)
+                {
+                    char current = (char)buffer[i];
+                    matchedTerminatorBytes = current == HeaderTerminator[matchedTerminatorBytes]
+                        ? matchedTerminatorBytes + 1
+                        : current == HeaderTerminator[0] ? 1 : 0;
+                    if (matchedTerminatorBytes == HeaderTerminator.Length)
+                    {
+                        break;
+                    }
+                }
+
+                if (matchedTerminatorBytes == HeaderTerminator.Length)
+                {
+                    break;
+                }
+            }
+
+            byte[] response = Encoding.ASCII.GetBytes(
+                "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK");
+            await stream.WriteAsync(response);
+        }
+        finally
+        {
+            listener.Stop();
+        }
     }
 }
 """;

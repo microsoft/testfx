@@ -5,7 +5,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 
 internal interface ITestExecutionActivityLease
 {
-    IDisposable? Enter();
-
-    void RecordExecutionEnd(DateTimeOffset endTime);
+    Task<T> RunAsync<T>(Func<Task<T>> callback);
 }

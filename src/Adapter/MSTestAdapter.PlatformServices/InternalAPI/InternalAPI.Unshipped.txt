@@ -7,8 +7,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestEleme
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.SupportsExecutionActivityLease.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.SupportsExecutionActivityLease.set -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestExecutionActivityLease
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestExecutionActivityLease.Enter() -> System.IDisposable?
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestExecutionActivityLease.RecordExecutionEnd(System.DateTimeOffset endTime) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestExecutionActivityLease.RunAsync<T>(System.Func<System.Threading.Tasks.Task<T>!>! callback) -> System.Threading.Tasks.Task<T>!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FinalizeAssertionFailureDiagnostics(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome outcome) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FinalizeAssertionFailureDiagnosticsExecution(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results, bool resetCaptureBudget) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StartAssertionFailureDiagnosticsScope() -> System.IDisposable?

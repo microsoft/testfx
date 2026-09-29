@@ -74,8 +74,35 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
             {
                 using SemaphoreSlim requestSemaphore = new(1);
                 otelService?.TestFrameworkActivity = testFrameworkActivity;
-                await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
-                await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                TestExecutionActivityBroker? testExecutionActivityBroker =
+                    otelService is IPlatformOpenTelemetryServiceWithTestExecutionActivities testExecutionActivityService
+                        ? new TestExecutionActivityBroker(
+                            testExecutionActivityService,
+                            PlatformOpenTelemetryOptions.FromEnvironment(ServiceProvider.GetEnvironment()))
+                        : null;
+                Exception? executionException = null;
+                try
+                {
+                    await testFramework.ExecuteRequestAsync(new(
+                        request,
+                        messageBus,
+                        new SemaphoreSlimRequestCompleteNotifier(requestSemaphore),
+                        cancellationToken,
+                        testExecutionActivityBroker)).ConfigureAwait(false);
+                    await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    executionException = ex;
+                    throw;
+                }
+                finally
+                {
+                    await CompleteTestExecutionScopeAsync(
+                        testExecutionActivityBroker,
+                        executionException,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
 
             await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
