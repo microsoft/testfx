@@ -114,7 +114,7 @@ internal sealed partial class AzureDevOpsResultIdStore
         {
             CustomFields = sequenceId <= 1
                 ? null
-                : [new AzureDevOpsCustomTestField("AttemptId", (sequenceId - 1).ToString(CultureInfo.InvariantCulture))],
+                : [new AzureDevOpsCustomTestField("AttemptId", sequenceId - 1)],
         };
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The map payload type is internal, fixed, and controlled by this extension.")]

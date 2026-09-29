@@ -138,7 +138,7 @@ internal sealed record AzureDevOpsTestCaseResult(
 
 internal sealed class AzureDevOpsCustomTestField
 {
-    public AzureDevOpsCustomTestField(string fieldName, string value)
+    public AzureDevOpsCustomTestField(string fieldName, object value)
     {
         FieldName = fieldName;
         Value = value;
@@ -148,7 +148,7 @@ internal sealed class AzureDevOpsCustomTestField
     public string FieldName { get; }
 
     [JsonPropertyName("value")]
-    public string Value { get; }
+    public object Value { get; }
 }
 
 /// <summary>
@@ -170,7 +170,10 @@ internal sealed record AzureDevOpsTestSubResult(
     [property: JsonPropertyName("startedDate")] DateTimeOffset? StartedDate,
     [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
 {
-    /// <summary>Gets the zero-based Azure DevOps retry attempt identifier, when this is a retry.</summary>
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this attempt. Retry entries include the zero-based
+    /// <c>AttemptId</c> field.
+    /// </summary>
     [JsonPropertyName("customFields")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }

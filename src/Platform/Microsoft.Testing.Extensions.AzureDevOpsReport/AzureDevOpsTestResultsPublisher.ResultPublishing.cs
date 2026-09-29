@@ -237,18 +237,19 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         string outcome,
         IReadOnlyList<AzureDevOpsTestSubResult> attempts)
     {
+        var customFields = new List<AzureDevOpsCustomTestField>(capacity: 2);
+        if (attempts.Count > 1)
+        {
+            customFields.Add(new AzureDevOpsCustomTestField(AttemptIdFieldName, attempts[^1].SequenceId - 1));
+        }
+
         bool isFlaky = outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome
             && attempts.Any(static attempt => attempt.Outcome is
                 AzureDevOpsLivePublishingConstants.FailedTestOutcome
                 or AzureDevOpsLivePublishingConstants.AbortedTestOutcome);
 
-        return
-        [
-            new AzureDevOpsCustomTestField(
-                AttemptIdFieldName,
-                (attempts[^1].SequenceId - 1).ToString(CultureInfo.InvariantCulture)),
-            new AzureDevOpsCustomTestField(IsTestResultFlakyFieldName, isFlaky ? "true" : "false"),
-        ];
+        customFields.Add(new AzureDevOpsCustomTestField(IsTestResultFlakyFieldName, isFlaky ? "true" : "false"));
+        return customFields;
     }
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
