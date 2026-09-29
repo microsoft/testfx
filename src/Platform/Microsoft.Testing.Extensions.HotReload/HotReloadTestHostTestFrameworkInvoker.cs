@@ -98,7 +98,10 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
                 }
                 finally
                 {
-                    await CompleteTestExecutionScopeAsync(testExecutionActivityBroker, executionException).ConfigureAwait(false);
+                    await CompleteTestExecutionScopeAsync(
+                        testExecutionActivityBroker,
+                        executionException,
+                        cancellationToken).ConfigureAwait(false);
                 }
             }
 

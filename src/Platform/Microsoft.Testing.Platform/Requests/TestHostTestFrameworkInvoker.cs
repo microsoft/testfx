@@ -147,13 +147,17 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         }
         finally
         {
-            await CompleteTestExecutionScopeAsync(testExecutionActivityBroker, executionException).ConfigureAwait(false);
+            await CompleteTestExecutionScopeAsync(
+                testExecutionActivityBroker,
+                executionException,
+                cancellationToken).ConfigureAwait(false);
         }
     }
 
     protected async Task CompleteTestExecutionScopeAsync(
         TestExecutionActivityBroker? testExecutionActivityBroker,
-        Exception? executionException)
+        Exception? executionException,
+        CancellationToken requestCancellationToken)
     {
         if (testExecutionActivityBroker is null)
         {
@@ -163,7 +167,10 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         Exception? cleanupException = null;
         try
         {
-            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
+            if (!requestCancellationToken.IsCancellationRequested)
+            {
+                await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
+            }
         }
         catch (Exception ex)
         {
