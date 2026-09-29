@@ -451,10 +451,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             if (application.RunsInAppContainer)
             {
                 resultsRecoveryDirectory = GetControllerPath(
-                    TryGetOptionValue(context.Arguments, ResultsDirectoryOption) ?? "TestResults",
+                    CommandLineOptionParser.TryGetOptionValue(context.Arguments, ResultsDirectoryOption) ?? "TestResults",
                     context);
                 string diagnosticOutputDirectory = GetControllerPath(
-                    TryGetOptionValue(context.Arguments, DiagnosticOutputDirectoryOption)
+                    CommandLineOptionParser.TryGetOptionValue(context.Arguments, DiagnosticOutputDirectoryOption)
                         ?? resultsRecoveryDirectory,
                     context);
                 diagnosticRecoveryDirectory = Path.Combine(diagnosticOutputDirectory, "AppContainer");
@@ -728,24 +728,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     }
 
 #if PACKAGEDAPP_WINRT
-    private static string? TryGetOptionValue(IReadOnlyList<string> arguments, string option)
-    {
-        for (int i = 0; i < arguments.Count; i++)
-        {
-            if (string.Equals(arguments[i], option, StringComparison.Ordinal))
-            {
-                return i + 1 < arguments.Count ? arguments[i + 1] : null;
-            }
-
-            if (TryGetInlineOptionValue(arguments[i], option, out string? value))
-            {
-                return value;
-            }
-        }
-
-        return null;
-    }
-
     private static void TryDeleteScratchDirectory(string? scratchDirectory)
     {
         if (scratchDirectory is null)
@@ -766,20 +748,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         }
     }
 #endif
-
-    private static bool TryGetInlineOptionValue(string argument, string option, out string? value)
-    {
-        if (argument.Length > option.Length
-            && argument.StartsWith(option, StringComparison.Ordinal)
-            && argument[option.Length] is '=' or ':')
-        {
-            value = argument.Substring(option.Length + 1);
-            return true;
-        }
-
-        value = null;
-        return false;
-    }
 
     private static bool IsAppxRecipeAlreadyMaterialized(XDocument recipe, string sourceDirectory)
     {
@@ -830,7 +798,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 hasResultsDirectory = true;
                 i++;
             }
-            else if (TryGetInlineOptionValue(argument, ResultsDirectoryOption, out _))
+            else if (CommandLineOptionParser.TryGetInlineOptionValue(argument, ResultsDirectoryOption, out _))
             {
                 redirectedArguments[i] = $"{ResultsDirectoryOption}{argument[ResultsDirectoryOption.Length]}{resultsScratchDirectory}";
                 hasResultsDirectory = true;
@@ -842,7 +810,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
                 hasDiagnosticOutputDirectory = true;
                 i++;
             }
-            else if (TryGetInlineOptionValue(argument, DiagnosticOutputDirectoryOption, out _))
+            else if (CommandLineOptionParser.TryGetInlineOptionValue(argument, DiagnosticOutputDirectoryOption, out _))
             {
                 redirectedArguments[i] = $"{DiagnosticOutputDirectoryOption}{argument[DiagnosticOutputDirectoryOption.Length]}{diagnosticScratchDirectory}";
                 hasDiagnosticOutputDirectory = true;
