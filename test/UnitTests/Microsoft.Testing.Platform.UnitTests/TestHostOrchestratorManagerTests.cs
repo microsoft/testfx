@@ -184,7 +184,8 @@ public sealed class TestHostOrchestratorManagerTests
 
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(_serviceProvider));
 
-        Assert.IsTrue(exception.Message.Contains("duplicatedId") && exception.Message.Contains(typeof(FakeMiddleware).ToString()));
+        Assert.Contains("duplicatedId", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(typeof(FakeMiddleware).ToString(), exception.Message, StringComparison.Ordinal);
     }
 
     [TestMethod]
@@ -219,14 +220,17 @@ public sealed class TestHostOrchestratorManagerTests
     }
 
     [TestMethod]
-    public void AddTestHostExecutionOrchestratorMiddleware_ExtensionMethod_SupportedManager_Registers()
+    public async Task AddTestHostExecutionOrchestratorMiddleware_ExtensionMethod_SupportedManager_Registers()
     {
         PublicApi.TestHostOrchestratorManager manager = new();
 
         PublicApi.ITestHostOrchestratorManager publicManager = manager;
         publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("via-extension"));
 
-        // No exception: the concrete manager implements the optional middleware capability.
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.HasCount(1, config.Middleware);
+        Assert.AreEqual("via-extension", config.Middleware[0].Uid);
     }
 
     [TestMethod]
