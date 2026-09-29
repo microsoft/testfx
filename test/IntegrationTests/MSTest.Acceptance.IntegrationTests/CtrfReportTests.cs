@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Text.Json;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
@@ -44,6 +46,14 @@ public sealed class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAss
         // The failed test exposes the assertion message in CTRF's `message` field.
         Assert.Contains(@"""message"":", ctrfContent, ctrfContent);
         Assert.Contains("Assert.AreEqual", ctrfContent, ctrfContent);
+
+        using var document = JsonDocument.Parse(ctrfContent);
+        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(2, tests);
+        Assert.IsTrue(tests.All(test => !string.IsNullOrEmpty(test.GetProperty("testId").GetString())));
+        string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
+        Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
+        Assert.HasCount(2, executionIds.Distinct());
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -133,6 +143,16 @@ public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfRepor
         Assert.Contains(@"""retryAttempts""", ctrfContent, ctrfContent);
         Assert.Contains(@"""flaky"": true", ctrfContent, ctrfContent);
         Assert.Contains("Failing on the first attempt", ctrfContent, ctrfContent);
+
+        using var document = JsonDocument.Parse(ctrfContent);
+        JsonElement test = Assert.ContainsSingle(
+            document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray());
+        Assert.IsFalse(string.IsNullOrEmpty(test.GetProperty("testId").GetString()));
+        string executionId = test.GetProperty("executionId").GetString()!;
+        string attemptId = test.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(executionId, out _));
+        Assert.IsTrue(Guid.TryParse(attemptId, out _));
+        Assert.AreNotEqual(executionId, attemptId);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
