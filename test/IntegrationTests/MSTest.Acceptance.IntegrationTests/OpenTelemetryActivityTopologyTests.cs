@@ -23,7 +23,7 @@ public sealed class OpenTelemetryActivityTopologyTests : AcceptanceTestBase<Open
         result.AssertOutputContains("[MSTEST-OTEL-CHARACTERIZATION] exact-current-behavior");
         result.AssertOutputContains($"[MSTEST-OTEL-TFM] {tfm}");
         result.AssertOutputContains("[MSTEST-OTEL-AMBIENT] TestFramework");
-        result.AssertOutputContains("[MSTEST-OTEL-LINKS] empty-before-TestMethod");
+        result.AssertOutputContains("[MSTEST-OTEL-LINKS] empty");
         result.AssertOutputContains("[MSTEST-OTEL-PARALLEL] isolated");
         result.AssertOutputContains("[MSTEST-OTEL-METRIC] test.run.duration");
         result.AssertOutputContains("[MSTEST-OTEL-RESOURCE] service.name=mstest-otel-characterization");
@@ -143,7 +143,7 @@ internal static class Program
         Console.WriteLine("[MSTEST-OTEL-CHARACTERIZATION] exact-current-behavior");
         Console.WriteLine($"[MSTEST-OTEL-TFM] {GetTargetFrameworkMoniker()}");
         Console.WriteLine("[MSTEST-OTEL-AMBIENT] TestFramework");
-        Console.WriteLine("[MSTEST-OTEL-LINKS] empty-before-TestMethod");
+        Console.WriteLine("[MSTEST-OTEL-LINKS] empty");
         Console.WriteLine("[MSTEST-OTEL-PARALLEL] isolated");
         Console.WriteLine("[MSTEST-OTEL-METRIC] test.run.duration");
         Console.WriteLine($"[MSTEST-OTEL-RESOURCE] service.name={ApplicationServiceName}");
@@ -207,12 +207,12 @@ internal static class ActivityTopologyVerifier
             Require(firstMethod.ParentSpanId == testFramework.SpanId, "The first MSTest.TestMethod was not parented to TestFramework.");
             Require(secondMethod.ParentSpanId == testFramework.SpanId, "The second MSTest.TestMethod was not parented to TestFramework.");
 
+            // Result messages are consumed asynchronously, so their spans can start on either side of the
+            // non-ambient MSTest.TestMethod spans. The stable contract is their shared parent and empty links.
             Require(firstResult.ParentSpanId == testFramework.SpanId, "The first result activity was not parented to TestFramework.");
             Require(secondResult.ParentSpanId == testFramework.SpanId, "The second result activity was not parented to TestFramework.");
             Require(!firstResult.Links.Any(), "The first result activity unexpectedly had an execution link.");
             Require(!secondResult.Links.Any(), "The second result activity unexpectedly had an execution link.");
-            Require(firstResult.StartTimeUtc <= firstMethod.StartTimeUtc, "The first result activity did not start before MSTest.TestMethod.");
-            Require(secondResult.StartTimeUtc <= secondMethod.StartTimeUtc, "The second result activity did not start before MSTest.TestMethod.");
             Require(firstResult.GetTagItem("test.case.duration_ms") is not null, "The first result activity did not carry the reported duration.");
             Require(secondResult.GetTagItem("test.case.duration_ms") is not null, "The second result activity did not carry the reported duration.");
             Require(firstResult.GetTagItem("test.case.result.status")?.ToString() == "pass", "The first result activity did not carry the pass result.");
