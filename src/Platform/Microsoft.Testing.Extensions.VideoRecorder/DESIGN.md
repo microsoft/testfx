@@ -15,9 +15,8 @@ runs (WinForms/WPF/Avalonia/console/browser).
 
 ## Decision (ADR-style)
 
-> **We use `ffmpeg` as the complete cross-platform backend and have a constrained native Windows
-> proof of concept for session recording.**
-> The native path is selected only when it can preserve every requested behavior.
+> **We drive an external `ffmpeg` process, require it on `PATH`, and default to H.264/MP4.**
+> Start simple; add native backends and/or bundling only if a concrete need appears.
 
 - **Engine: `ffmpeg` as a child process**, behind an internal recorder abstraction.
   - It is the only option that is **cross-platform** *and* covers **OS screen capture**
@@ -35,14 +34,8 @@ runs (WinForms/WPF/Avalonia/console/browser).
   from those segments afterwards. This keeps the public surface minimal (CLI options + a
   registration callback) — like `--crashdump`/`--hangdump`.
 - **Extensibility:** the internal recorder is swappable, so a native backend
-  or a UI-tool pass-through (Playwright) can be added without changing the option model.
-- **Native Windows proof of concept:** a `net10.0-windows10.0.19041.0` asset consumes
-  `Microsoft.Windows.SDK.BuildTools.WinApp.UIAutomation.Recording` 0.7.0. WinAppCLI produces one
-  cancellable H.264 MP4 through Windows desktop capture and Media Foundation. TestFx selects it
-  only for a per-monitor DPI-aware process requesting full-desktop, unbounded, chapterless
-  per-session MP4 recording. Per-test clips, chaptered sessions, rolling retention, window capture,
-  VP9, custom arguments, explicit ffmpeg selection, older TFMs, and unsupported Windows versions
-  continue to use ffmpeg.
+  (Windows.Graphics.Capture) or a UI-tool pass-through (Playwright) can be added later without
+  changing the option model.
 
 ## Alternatives considered (and why deferred)
 
@@ -106,10 +99,6 @@ The licensing risk is **not "ffmpeg"** — it is the **GPL/patented codecs**:
   in-progress timestamp), prunes the rolling buffer during the run, and at session end cuts the
   per-test clips or stitches the chaptered session video and attaches the kept ones.
 - `VideoRecorderCommandLineProvider` / `AddVideoRecorderProvider` — opt-in CLI + registration.
-- `VideoRecorderFactory` — capability-based backend selection. It refuses the native backend for
-  any option that needs segmentation or post-processing, preventing a silent behavior downgrade.
-- `WinAppCliVideoRecorder` — the constrained native backend. It records one continuous desktop MP4,
-  finalizes it through cancellation at session end, and publishes that single file without ffmpeg.
 
 ### Why continuous segmented recording (the key design decision)
 
@@ -157,18 +146,11 @@ dimensions (`crop=trunc(iw/2)*2:trunc(ih/2)*2`) because `gdigrab` can grab an od
   so a per-session video can start mid-run and an early test's clip may be unavailable. Leave it
   unset to retain the full run.
 - macOS `avfoundation` device index may need overriding via `InputArgumentsOverride`.
-- The WinAppCLI 0.7.0 package targets only `net10.0-windows10.0.19041.0` and exposes a single-output
-  recording API. It cannot currently supply independently decodable rolling segments, trim clips,
-  concatenate segments, or write chapter metadata. Native capture is therefore limited to
-  chapterless per-session recordings without a rolling-duration cap, and WinAppCLI's desktop
-  capture additionally requires the host process to be per-monitor DPI aware. ffmpeg remains the
-  fallback for all other modes and environments.
 
 ## Future work ("complexify later")
 
-1. **Complete the native Windows backend** when WinAppCLI exposes a segment/frame-stream or
-   trim/concatenate API that can preserve per-test slicing, chapters, and rolling retention without
-   ffmpeg.
+1. **Native Windows backend** via Windows.Graphics.Capture + Media Foundation (no binary, no GPL,
+   DPI-correct, GPU-accelerated) selected automatically on Windows, ffmpeg elsewhere.
 2. **Optional bundled minimal LGPL/VP8 ffmpeg** for a zero-prerequisite experience — pending legal.
 3. **Frame-source mode** (Playwright-style) for callers that can emit frames/screenshots.
 4. **Audio** capture/mux (currently video-only).

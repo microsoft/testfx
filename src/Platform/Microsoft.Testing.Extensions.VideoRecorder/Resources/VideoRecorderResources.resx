@@ -63,8 +63,8 @@
     <comment>Warning shown when ffmpeg cannot be located.</comment>
   </data>
   <data name="RecorderReady" xml:space="preserve">
-    <value>Video recorder ready (backend: {0}, granularity: {1}, persist: {2}). {3}</value>
-    <comment>Informational message at session start. {0} backend description, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</comment>
+    <value>Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</value>
+    <comment>Informational message at session start. {0} ffmpeg path, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</comment>
   </data>
   <data name="HintPerTest" xml:space="preserve">
     <value>Recording each test into its own video.</value>
@@ -76,39 +76,15 @@
   </data>
   <data name="FailedToStartRecording" xml:space="preserve">
     <value>Failed to start recording: {0}. Recording skipped.</value>
-    <comment>Warning when the selected recorder backend could not be started. {0} is the error message.</comment>
+    <comment>Warning when the ffmpeg process could not be started. {0} is the error message.</comment>
   </data>
   <data name="StopTimeoutKilled" xml:space="preserve">
     <value>ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</value>
     <comment>Warning when ffmpeg has to be killed because it did not stop gracefully.</comment>
   </data>
   <data name="NoUsableVideoProduced" xml:space="preserve">
-    <value>Screen recording produced no usable video (backend status {0}). {1}</value>
-    <comment>Warning when recording yielded nothing. {0} backend status, {1} last recorder error detail.</comment>
-  </data>
-  <data name="NativeStopTimeout" xml:space="preserve">
-    <value>The native Windows video recorder did not stop within {0} seconds. Session shutdown will continue and the incomplete recording will be discarded.</value>
-    <comment>Warning when the in-process native recorder does not stop after cancellation. {0} timeout in seconds.</comment>
-  </data>
-  <data name="NativeStoppedEarly" xml:space="preserve">
-    <value>The native Windows recording stopped early ({0}); the finalized partial video remains subject to the configured persistence mode.</value>
-    <comment>Warning when native capture ends before session shutdown. {0} is the backend stop reason.</comment>
-  </data>
-  <data name="NativeInitializationFallback" xml:space="preserve">
-    <value>The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {0}</value>
-    <comment>Warning when native recorder initialization fails and recording falls back to ffmpeg. {0} is the error message.</comment>
-  </data>
-  <data name="NativePublishFailed" xml:space="preserve">
-    <value>Failed to publish the native Windows recording: {0}</value>
-    <comment>Warning when the native recording cannot be moved to its final output path. {0} is the error message.</comment>
-  </data>
-  <data name="NativePartialOutput" xml:space="preserve">
-    <value>Native Windows recording completed with partial output: {0} {1}</value>
-    <comment>Warning when the native recorder produces partial output. {0} is the error message and {1} is the recovery hint.</comment>
-  </data>
-  <data name="NativeRecordingFailed" xml:space="preserve">
-    <value>Native Windows recording failed: {0}</value>
-    <comment>Warning when native recording fails. {0} is the error message.</comment>
+    <value>Screen recording produced no usable video (ffmpeg exit code {0}). {1}</value>
+    <comment>Warning when recording yielded nothing. {0} exit code, {1} last ffmpeg error detail.</comment>
   </data>
   <data name="WindowCaptureFallback" xml:space="preserve">
     <value>Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</value>

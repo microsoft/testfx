@@ -107,7 +107,7 @@ internal sealed partial class VideoRecorderSessionHandler :
         string outputDirectory = options.OutputDirectory
             ?? Path.Combine(configuration.GetTestResultDirectory(), "VideoRecordings");
 
-        _recorder = recorder ?? VideoRecorderFactory.Create(
+        _recorder = recorder ?? new FfmpegVideoRecorder(
             options,
             outputDirectory,
             clock,
@@ -148,10 +148,7 @@ internal sealed partial class VideoRecorderSessionHandler :
 
         // Record continuously for the whole session regardless of granularity; both per-test clips
         // and the session video are cut from this single recording afterwards.
-        if (!await _recorder.StartAsync(cancellationToken).ConfigureAwait(false))
-        {
-            return;
-        }
+        _recorder.Start();
 
         string hint = _granularity == VideoCaptureGranularity.PerSession
             ? VideoRecorderResources.HintPerSession

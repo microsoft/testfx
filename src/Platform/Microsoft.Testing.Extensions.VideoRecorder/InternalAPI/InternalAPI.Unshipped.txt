@@ -1,9 +1,1 @@
 #nullable enable
-Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory
-static Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory.Create(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options, string! outputDirectory, Microsoft.Testing.Platform.Helpers.IClock! clock, System.Action<string!>? log, System.Action<string!>? warn) -> Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder!
-static Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory.CreateWithStartupFallback(Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder! primary, Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder! fallback, System.Action<string!>? log) -> Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder!
-static Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory.IsNativeConfigurationSupported(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options) -> bool
-static Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFactory.TryCreateNative(Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions! options, System.Func<Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder!>! createNativeRecorder, System.Action<string!>? warn) -> Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder?
-Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.StartAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.StartAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
-*REMOVED*Microsoft.Testing.Extensions.VideoRecorder.IVideoRecorder.Start() -> void

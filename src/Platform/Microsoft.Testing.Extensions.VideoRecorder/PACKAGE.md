@@ -14,13 +14,11 @@ dotnet add package Microsoft.Testing.Extensions.VideoRecorder
 
 > **⚠️ Experimental:** This extension is currently experimental. The API, CLI options and on-disk format may change in future releases without notice.
 
-This package extends Microsoft.Testing.Platform with continuous screen recording. The default and cross-platform backend drives an external **ffmpeg** process, records a rolling sequence of short segments, and cuts per-test clips (or a chaptered session video) from those segments afterwards using each test's timing — so recorded tests can run in parallel and there is no per-test start/stop race.
-
-On Windows 10 build 19041 or later, a per-monitor DPI-aware `net10.0-windows10.0.19041.0` test application can use the published WinAppCLI recording package for a native Media Foundation H.264 session recording. The proof-of-concept native backend is selected only for full-desktop, MP4, unbounded, chapterless per-session recording. Every other configuration keeps the ffmpeg backend so per-test slicing, chapters, rolling-buffer pruning, window capture, custom recorder arguments, and VP9/WebM retain their existing behavior.
+This package extends Microsoft.Testing.Platform with screen recording driven by an external **ffmpeg** process (the only engine that is cross-platform *and* covers OS screen capture). The screen is recorded **continuously** for the whole run as a rolling sequence of short segments, and the per-test clips (or a single chaptered session video) are cut from those segments afterwards using each test's timing — so recorded tests can run in parallel and there is no per-test start/stop race.
 
 ## Prerequisites
 
-`ffmpeg` must be available — either on the `PATH` or via an explicit path (`VideoRecorderOptions.FfmpegPath`) — unless the test application and options meet the native Windows constraints above. On Windows the ffmpeg recorder uses `gdigrab`, on macOS `avfoundation`, on Linux `x11grab`.
+`ffmpeg` must be available — either on the `PATH` or via an explicit path (`VideoRecorderOptions.FfmpegPath`). On Windows the recorder uses `gdigrab`, on macOS `avfoundation`, on Linux `x11grab`.
 
 ## Usage
 
@@ -32,9 +30,6 @@ yourtests --capture-video
 
 # Record the whole run into a single chaptered video instead of one per test
 yourtests --capture-video always --capture-video-granularity session
-
-# Native Windows POC on a compatible net10.0-windows test application
-yourtests --capture-video always --capture-video-granularity session --capture-video-chapters off
 
 # Long run: keep only the last 10 minutes of footage to bound disk usage
 yourtests --capture-video always --capture-video-max-duration 600
@@ -67,4 +62,4 @@ testApplicationBuilder.AddVideoRecorderProvider(options =>
 
 ## Licensing note
 
-The native Windows backend uses the operating system's Media Foundation H.264 encoder through the MIT-licensed WinAppCLI recording package. The ffmpeg backend's default `Mp4H264` format uses `libx264`, which is GPL in most ffmpeg builds and H.264 carries patent fees — fine when you bring your own ffmpeg on `PATH`. A royalty-free `WebMVp9` format is provided for any scenario where an ffmpeg binary is bundled/redistributed.
+The default `Mp4H264` format uses `libx264`, which is GPL in most ffmpeg builds and H.264 carries patent fees — fine when you bring your own ffmpeg on `PATH`. A royalty-free `WebMVp9` format is provided for any scenario where an ffmpeg binary is bundled/redistributed.

@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
-    <EnableWindowsTargeting Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">true</EnableWindowsTargeting>
+    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
     <VersionPrefix>$(MicrosoftTestingExtensionsVideoRecorderVersionPrefix)</VersionPrefix>
     <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel)</PreReleaseVersionLabel>
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
@@ -12,7 +11,7 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to record the screen while tests run and attach the captured videos to the test session as artifacts. It uses a native WinAppCLI/Media Foundation backend for compatible Windows session recordings and ffmpeg for cross-platform capture and advanced recording modes.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to record the screen while tests run (via an external ffmpeg process) and attach the captured videos to the test session as artifacts.
 
 $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
@@ -44,11 +43,6 @@ $(CommonProductDescription)]]></PackageDescription>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp.UIAutomation.Recording" />
-  </ItemGroup>
-
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
@@ -60,13 +54,10 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Remove="$(RepoRoot)src/Polyfills/CompilerLoweringPreserveAttribute.cs"
-             Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VideoRecorder.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
   </ItemGroup>
 

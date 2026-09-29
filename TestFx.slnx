@@ -120,7 +120,6 @@
   </Folder>
   <Folder Name="/test/UnitTests/">
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj" />
-    <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VideoRecorder.UnitTests/Microsoft.Testing.Extensions.VideoRecorder.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests.csproj" />
