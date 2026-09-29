@@ -1118,11 +1118,11 @@ public sealed class MtpServerClientTests
                 [JsonRpcStrings.Level] = "Information",
                 [JsonRpcStrings.Message] = "late notification",
             }));
+        secondRead.TrySetResult(null);
         await WithTimeoutAsync(dispose).ConfigureAwait(false);
 
         Assert.AreEqual(0, notifications);
         Assert.IsNull(connection.ServerRequestHandler);
-        secondRead.TrySetResult(null);
     }
 
     [TestMethod]
@@ -1152,11 +1152,11 @@ public sealed class MtpServerClientTests
                 [JsonRpcStrings.Level] = "Information",
                 [JsonRpcStrings.Message] = "late notification",
             }));
+        secondRead.TrySetResult(null);
         await WithTimeoutAsync(shutdown).ConfigureAwait(false);
 
         Assert.AreEqual(0, notifications);
         Assert.IsNull(connection.ServerRequestHandler);
-        secondRead.TrySetResult(null);
     }
 
     [TestMethod]
@@ -1228,6 +1228,7 @@ public sealed class MtpServerClientTests
         _ = await request.ConfigureAwait(false);
 
         Assert.IsTrue(completedWithoutPumping, "Request continuations must not be posted to the caller's synchronization context.");
+        laterRead.TrySetResult(null);
     }
 
     [TestMethod]
