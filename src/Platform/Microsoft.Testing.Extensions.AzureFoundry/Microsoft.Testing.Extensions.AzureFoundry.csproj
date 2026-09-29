@@ -39,6 +39,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <PackageReference Include="Azure.AI.OpenAI" />
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>

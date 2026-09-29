@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
     <ProjectCapability Include="TestingPlatformServer" />
     <ProjectCapability Include="TestContainer" />
   </ItemGroup>
