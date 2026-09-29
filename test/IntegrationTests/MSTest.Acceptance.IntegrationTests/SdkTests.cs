@@ -1052,7 +1052,7 @@ namespace MSTestWebTest
             """);
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
-        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
         result.AssertOutputContains("Capabilities=TestingPlatformServer");
         result.AssertOutputContains("MSTest.TestAdapter");
         result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
@@ -1075,7 +1075,7 @@ namespace MSTestWebTest
             """);
 
         result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
-        result.AssertOutputContains(";Controller=;ControllerExtensions=");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
         result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
     }
 
