@@ -28,10 +28,12 @@ internal sealed partial class TestMethodRunner
             if (capturedContext is null)
             {
                 using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
-                using (_executionActivityLease?.Enter())
                 {
                     testMethodInfo.TestContext = executionContext;
-                    results = await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false);
+                    results = _executionActivityLease is null
+                        ? await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false)
+                        : await _executionActivityLease.RunAsync(
+                            () => _testMethodInfo.Executor.ExecuteAsync(testMethodInfo)).ConfigureAwait(false);
                 }
             }
             else
@@ -45,10 +47,13 @@ internal sealed partial class TestMethodRunner
                         try
                         {
                             using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
-                            using (_executionActivityLease?.Enter())
                             {
                                 testMethodInfo.TestContext = executionContext;
-                                tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                                TestResult[] executionResults = _executionActivityLease is null
+                                    ? await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false)
+                                    : await _executionActivityLease.RunAsync(
+                                        () => _testMethodInfo.Executor.ExecuteAsync(testMethodInfo)).ConfigureAwait(false);
+                                tcs.SetResult(executionResults);
                             }
                         }
                         catch (Exception e)

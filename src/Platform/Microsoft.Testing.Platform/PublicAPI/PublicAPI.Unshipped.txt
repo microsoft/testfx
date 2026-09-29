@@ -1,4 +1,12 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext.StartTestExecutionAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! inProgressMessage) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution!>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.CompleteAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage!>! resultMessages, System.DateTimeOffset executionEndTime) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.Dispose() -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.Run(System.Action! callback) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.Run<T>(System.Func<T>! callback) -> T
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.RunAsync(System.Func<System.Threading.Tasks.Task!>! callback) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.RunAsync<T>(System.Func<System.Threading.Tasks.Task<T>!>! callback) -> System.Threading.Tasks.Task<T>!
 [TPEXP]Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions
 [TPEXP]static Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions.GetIsStateful(this Microsoft.Testing.Platform.Services.IClientCapabilities! capabilities) -> bool?
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.CancellationToken.get -> System.Threading.CancellationToken

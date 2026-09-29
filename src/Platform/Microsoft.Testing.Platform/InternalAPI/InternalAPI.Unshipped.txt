@@ -61,7 +61,6 @@ Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.Enter() ->
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.ProcessResult(string! result, bool contributesToAggregate, bool isFinalResult, System.Action<Microsoft.Testing.Platform.Telemetry.IPlatformActivity?, string?, System.DateTimeOffset, System.TimeSpan>! enrich) -> bool
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.RecordExecutionEnd(System.DateTimeOffset endTime) -> void
 Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.TestExecutionActivityReservation(Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker! broker, long token) -> void
-Microsoft.Testing.Platform.Services.TestApplicationResult.CreateTestExecutionActivityBroker() -> Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker?
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext.IsRecorded.get -> bool
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext.PlatformActivityContext(string! traceId, string! spanId, bool isRecorded, string? traceState) -> void

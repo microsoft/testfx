@@ -41,7 +41,6 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly PlatformServicesConfigurationAdapter _configuration;
     private readonly ILoggerFactory _loggerFactory;
     private readonly MSTestGracefulStopTestExecutionCapability _gracefulStopCapability;
-    private readonly TestExecutionActivityBroker? _testExecutionActivityBroker;
     private readonly string _resultFilesStagingDirectory;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private int _nextResultFileStagingDirectory;
@@ -60,9 +59,6 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _gracefulStopCapability = (MSTestGracefulStopTestExecutionCapability)capabilities.GetCapability<IGracefulStopTestExecutionCapability>()!;
-        _testExecutionActivityBroker =
-            (serviceProvider.GetService(typeof(ITestApplicationProcessExitCode)) as TestApplicationResult)?
-                .CreateTestExecutionActivityBroker();
         _resultFilesStagingDirectory = Path.Combine(
             serviceProvider.GetConfiguration().GetTestResultDirectory(),
             $".mstest-{Guid.NewGuid():N}"[..16]);
@@ -130,7 +126,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                     break;
 
                 case RunTestExecutionRequest runRequest:
-                    await RunTestsAsync(runRequest, context.MessageBus, context.CancellationToken).ConfigureAwait(false);
+                    await RunTestsAsync(runRequest, context).ConfigureAwait(false);
                     break;
 
                 default:
@@ -174,8 +170,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
             .ConfigureAwait(false);
     }
 
-    private async Task RunTestsAsync(RunTestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
+    private async Task RunTestsAsync(RunTestExecutionRequest request, ExecuteRequestContext context)
     {
+        CancellationToken cancellationToken = context.CancellationToken;
         if (Environment.GetEnvironmentVariable("MSTEST_DEBUG_RUNTESTS") == "1" && !Debugger.IsAttached)
         {
             Debugger.Launch();
@@ -201,13 +198,12 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                     runContext.TestRunDirectory,
                     handle.ToAdapterMessageLogger(),
                     settings => new MtpTestResultRecorder(
-                        messageBus,
+                        context,
                         this,
                         sessionUid,
                         IsTrxEnabled,
                         settings,
-                        StageResultFiles,
-                        _testExecutionActivityBroker),
+                        StageResultFiles),
                     new MtpTestElementFilterProvider(runContext),
                     _configuration,
                     new TestSourceHandler(),

@@ -249,8 +249,6 @@ internal sealed partial class UnitTestRunner
 
                             result = CombineRetryAttempts(result, retryResult);
                         }
-
-                        unitTestElement.ExecutionActivityLease?.RecordExecutionEnd(DateTimeOffset.Now);
                     }
                 }
             }

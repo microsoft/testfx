@@ -19,13 +19,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly IStopPoliciesService _policiesService;
     private readonly ITestCoverageResult? _testCoverageResult;
     private readonly OpenTelemetryResultHandler? _openTelemetryResultHandler;
-    private readonly IPlatformOpenTelemetryServiceWithTestExecutionActivities? _testExecutionActivityService;
-    private readonly List<TestExecutionActivityBroker> _testExecutionActivityBrokers = [];
-#if NET9_0_OR_GREATER
-    private readonly Lock _testExecutionActivityBrokersLock = new();
-#else
-    private readonly object _testExecutionActivityBrokersLock = new();
-#endif
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
     private int _totalRanTests;
@@ -58,7 +51,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         if (otelService is not null)
         {
             _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, PlatformOpenTelemetryOptions.FromEnvironment(environment));
-            _testExecutionActivityService = otelService as IPlatformOpenTelemetryServiceWithTestExecutionActivities;
         }
 
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
@@ -264,38 +256,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     internal void ReportRunTelemetry(IPlatformActivity? runActivity, int exitCode)
         => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, exitCode, runActivity);
 
-    internal TestExecutionActivityBroker? CreateTestExecutionActivityBroker()
-    {
-        if (_testExecutionActivityService is null)
-        {
-            return null;
-        }
-
-        var broker = new TestExecutionActivityBroker(
-            _testExecutionActivityService,
-            PlatformOpenTelemetryOptions.FromEnvironment(_environment));
-        lock (_testExecutionActivityBrokersLock)
-        {
-            _testExecutionActivityBrokers.Add(broker);
-        }
-
-        return broker;
-    }
-
     public void Dispose()
-    {
-        _openTelemetryResultHandler?.Dispose();
-
-        TestExecutionActivityBroker[] brokers;
-        lock (_testExecutionActivityBrokersLock)
-        {
-            brokers = [.. _testExecutionActivityBrokers];
-            _testExecutionActivityBrokers.Clear();
-        }
-
-        foreach (TestExecutionActivityBroker broker in brokers)
-        {
-            broker.Dispose();
-        }
-    }
+        => _openTelemetryResultHandler?.Dispose();
 }

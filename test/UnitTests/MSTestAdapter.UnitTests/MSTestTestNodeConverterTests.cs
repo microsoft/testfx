@@ -4,7 +4,9 @@
 using AwesomeAssertions;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -724,6 +726,38 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         message.TestNode.Properties.Any<TestNodeStateProperty>().Should().BeFalse();
     }
 
+    public async Task MtpTestResultRecorder_RecordEmptyResult_CompletesPublicExecution()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            CreateExecuteRequestContext(messageBus, broker),
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings());
+        UnitTestElement element = CreateElement();
+
+        await recorder.RecordStartAsync(element);
+        await recorder.RecordEmptyResultAsync(element);
+
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        messages.Should().HaveCount(2);
+        TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty completionProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        completionProperty.Reservation.Should().BeSameAs(startProperty.Reservation);
+        completionProperty.IsFinalResult.Should().BeTrue();
+        messages[1].TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
+        element.ExecutionActivityLease.Should().BeNull();
+    }
+
     public async Task MtpTestResultRecorder_RecordResult_PublishesResultNodeAndReturnsFailedFlag()
     {
         var messageBus = new CapturingMessageBus();
@@ -759,12 +793,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(
-            messageBus,
+            CreateExecuteRequestContext(messageBus, broker),
             new StubDataProducer(),
             new SessionUid("s"),
             isTrxEnabled: false,
-            new MSTestSettings(),
-            broker);
+            new MSTestSettings());
         UnitTestElement element = CreateElement();
         FrameworkTestResult[] results =
         [
@@ -776,6 +809,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         ((Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder)recorder)
             .PrepareResults(element, results);
         await recorder.RecordResultAsync(element, results[0], DateTimeOffset.Now, DateTimeOffset.Now);
+        messageBus.Published.Should().ContainSingle();
         await recorder.RecordResultAsync(element, results[1], DateTimeOffset.Now, DateTimeOffset.Now);
 
         TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
@@ -815,12 +849,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             });
         using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
         var recorder = new MtpTestResultRecorder(
-            messageBus,
+            CreateExecuteRequestContext(messageBus, broker),
             new StubDataProducer(),
             new SessionUid("s"),
             isTrxEnabled: false,
-            new MSTestSettings(),
-            broker);
+            new MSTestSettings());
 
         Task recordStartTask = recorder.RecordStartAsync(CreateElement());
         await publishStarted.Task;
@@ -850,12 +883,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(
-            messageBus,
+            CreateExecuteRequestContext(messageBus, broker),
             new StubDataProducer(),
             new SessionUid("s"),
             isTrxEnabled: false,
-            new MSTestSettings(),
-            broker);
+            new MSTestSettings());
         UnitTestElement element = CreateElement();
         element.SupportsExecutionActivityLease = false;
 
@@ -875,6 +907,16 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
     private static TestNode ResultNode(UnitTestOutcome outcome)
         => MSTestTestNodeConverter.ToResultTestNode(CreateElement(), new FrameworkTestResult { Outcome = outcome }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+    private static ExecuteRequestContext CreateExecuteRequestContext(
+        IMessageBus messageBus,
+        TestExecutionActivityBroker broker)
+        => new(
+            Mock.Of<IRequest>(),
+            messageBus,
+            Mock.Of<IExecuteRequestCompletionNotifier>(),
+            CancellationToken.None,
+            broker);
 
     private sealed class CapturingMessageBus(Func<Task>? onPublish = null) : IMessageBus
     {
