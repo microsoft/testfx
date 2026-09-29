@@ -66,6 +66,7 @@ $(CommonProductDescription)]]></PackageDescription>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VideoRecorder.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
   </ItemGroup>
 

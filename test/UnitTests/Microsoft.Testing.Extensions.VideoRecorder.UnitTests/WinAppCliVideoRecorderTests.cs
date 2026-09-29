@@ -11,7 +11,7 @@ using Microsoft.Windows.SDK.BuildTools.WinApp.UIAutomation.Recording;
 
 using Moq;
 
-namespace Microsoft.Testing.Extensions.UnitTests;
+namespace Microsoft.Testing.Extensions.VideoRecorder.UnitTests;
 
 [TestClass]
 [OSCondition(OperatingSystems.Windows)]
@@ -178,7 +178,7 @@ public sealed class WinAppCliVideoRecorderTests
             await recorder.StopAsync(TestContext.CancellationToken);
 
             Assert.IsNull(recorder.SegmentDirectory);
-            Assert.IsNotNull(warning);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(warning));
             recordingCompletion.SetResult(CreateResult("cancelled"));
             await ownerDisposed.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
             await WaitForAsync(() => !Directory.Exists(segmentDirectory), TestContext.CancellationToken);
