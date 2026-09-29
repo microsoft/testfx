@@ -85,7 +85,7 @@
 
 ## Last Run
 
-2026-09-27 UTC (run 36356926698)
+2026-09-29 UTC (run 36642347630)
 
 ## Completed Work (recent, summarized)
 
@@ -179,6 +179,16 @@ Key lasting gotchas from this window:
 - `RpcIdParser` lives in namespace `Microsoft.Testing.Platform.ServerMode`, not the top-level namespace.
 - Jsonite/`Json.*` family (JsonReader/JsonWriter/JsonReflector/JsonCollectionDeserializer) deprioritized as low-value — either trivial generic wrappers or large ported third-party reflection code already covered indirectly via `JsoniteTests.cs`/`JsonTests.cs`.
 - `ServerControlMessage`/`WaitForServerControlRequest` serializers and `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs` noted but not yet swept.
+
+## Run 2026-09-29 (run 36642347630) — ServerControlMessage/WaitForServerControlRequest serializer tests
+
+- Task reconciliation: confirmed `ServerModeManagerTests.cs` (from 2026-09-27 run) and `DotnetTestHelper` PR #11545 both merged to `main`. No open `[test-improver]`-prefixed PRs need maintenance (search returned none).
+- Task 2/3: `ServerControlMessageSerializer`/`WaitForServerControlRequestSerializer` (`src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/Serializers/`) had zero direct tests — protocol-v1.4.0 reverse "server control" pipe messages used for CancelSession signaling, listed as a standing backlog candidate.
+- Added `ServerControlSerializersTests.cs` (5 tests): Kind round-trip (DataRow 0/1/255), unrecognized-field-is-skipped forward-compat case, zero-fields defaults Kind to 0, WaitForServerControlRequest round-trips the cached singleton instance, and confirms its serialize writes zero bytes (payload-less request). Followed `ProtocolTests.cs`/`ProtocolSerializerTestHelper` reflection-based round-trip pattern; for the "unrecognized field" test, wrote a small local raw-byte helper (not the internal `BaseSerializer` helpers) since the test intentionally builds a wire frame with an unknown field id from the outside.
+- Build succeeded (0 warnings/errors after removing 2 redundant-cast IDE0004 warnings). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2705 total (was 2648 pre-this-run baseline, difference includes unrelated `main` changes since 09-27), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for ServerControlMessage/WaitForServerControlRequest serializers" on branch `test-assist/server-control-serializer-tests`.
+- Task 7: issue #10920 updated — new Run History entry, Suggested Actions refreshed, backlog item for these serializers removed (now covered).
+- Remaining candidates for future runs: `PassiveNode` edge cases beyond existing `PassiveNodeTests.cs`; `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs`; HangDump/Retry IPC serializers (low priority, thin plumbing); MSTest.Engine internal classes (architecturally blocked).
 
 ## Run 2026-09-27 (run 36356926698) — ServerModeManager.Build tests + reconciliation
 
