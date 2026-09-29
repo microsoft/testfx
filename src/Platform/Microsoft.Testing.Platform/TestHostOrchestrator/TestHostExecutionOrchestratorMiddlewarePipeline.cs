@@ -31,6 +31,9 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         // can be drained (awaited to completion, exceptions logged rather than thrown) before this method
         // returns, even when the middleware that started it returned or threw without awaiting it itself.
         List<Task> inFlightDownstreamTasks = [];
+        // Linked token sources are disposed only after all accepted downstream tasks have drained. A frame's
+        // own task can fault before a child it started has completed, so disposal cannot be tied to that frame.
+        List<CancellationTokenSource> linkedTokenSources = [];
         object inFlightLock = new();
 
         Func<CancellationToken, Task<int>> chain = innermost;
@@ -44,7 +47,7 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             // rootToken for the outermost frame) rather than a fixed rootToken. Substituting rootToken here
             // would silently drop an outer middleware's own child token (for example, one derived from a
             // timeout) before it ever reaches this frame or anything below it.
-            chain = ambientToken => InvokeFrameAsync(middleware, next, ambientToken, rootToken, inFlightDownstreamTasks, inFlightLock);
+            chain = ambientToken => InvokeFrameAsync(middleware, next, ambientToken, rootToken, inFlightDownstreamTasks, linkedTokenSources, inFlightLock);
         }
 
         try
@@ -53,7 +56,17 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         }
         finally
         {
-            await DrainAsync(inFlightDownstreamTasks, inFlightLock, logger).ConfigureAwait(false);
+            try
+            {
+                await DrainAsync(inFlightDownstreamTasks, inFlightLock, logger).ConfigureAwait(false);
+            }
+            finally
+            {
+                foreach (CancellationTokenSource linkedTokenSource in linkedTokenSources)
+                {
+                    linkedTokenSource.Dispose();
+                }
+            }
         }
     }
 
@@ -63,9 +76,10 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         CancellationToken ambientToken,
         CancellationToken rootToken,
         List<Task> inFlightDownstreamTasks,
+        List<CancellationTokenSource> linkedTokenSources,
         object inFlightLock)
     {
-        SingleInvocationNext guard = new(next, ambientToken, rootToken, inFlightDownstreamTasks, inFlightLock);
+        SingleInvocationNext guard = new(next, ambientToken, rootToken, inFlightDownstreamTasks, linkedTokenSources, inFlightLock);
         int result;
         try
         {
@@ -229,6 +243,7 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         private readonly CancellationToken _ambientToken;
         private readonly CancellationToken _rootToken;
         private readonly List<Task> _inFlightDownstreamTasks;
+        private readonly List<CancellationTokenSource> _linkedTokenSources;
         private readonly object _inFlightLock;
 
         // See the type-level remarks: preallocated before this guard is ever exposed to a middleware, so
@@ -246,12 +261,14 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             CancellationToken ambientToken,
             CancellationToken rootToken,
             List<Task> inFlightDownstreamTasks,
+            List<CancellationTokenSource> linkedTokenSources,
             object inFlightLock)
         {
             _inner = inner;
             _ambientToken = ambientToken;
             _rootToken = rootToken;
             _inFlightDownstreamTasks = inFlightDownstreamTasks;
+            _linkedTokenSources = linkedTokenSources;
             _inFlightLock = inFlightLock;
 
             // Unwrap() produces a Task<int> that mirrors whatever Task<int> is eventually placed into
@@ -341,9 +358,6 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             // part of ambientToken by induction - keeps root cancellation mandatory even if that chain were
             // ever broken. Either way, passing CancellationToken.None here can never detach the downstream
             // execution from its ancestors or from root.
-            var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_ambientToken, _rootToken, middlewareToken);
-            EffectiveToken = linkedCts.Token;
-
             // inner(...) is documented to return a Task<int>, but a misbehaving implementation - or the
             // leaf orchestrator itself - can still throw synchronously before ever producing one. Once
             // this method has set the state to Invoked, DownstreamTask must never be left unresolved
@@ -355,7 +369,14 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             Task<int> downstream;
             try
             {
-                downstream = _inner(linkedCts.Token);
+                var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_ambientToken, _rootToken, middlewareToken);
+                lock (_inFlightLock)
+                {
+                    _linkedTokenSources.Add(linkedCts);
+                }
+
+                EffectiveToken = linkedCts.Token;
+                downstream = _inner(EffectiveToken);
                 downstream ??= Task.FromException<int>(
                     new InvalidOperationException(PlatformResources.TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage));
             }
@@ -363,16 +384,6 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             {
                 downstream = Task.FromException<int>(ex);
             }
-
-            // The linked CTS must outlive the downstream execution it was handed to, even if this frame
-            // returns (or throws) before that execution completes, so ownership of its disposal is tied to
-            // downstream completion rather than to this call returning.
-            _ = downstream.ContinueWith(
-                static (_, state) => ((CancellationTokenSource)state!).Dispose(),
-                linkedCts,
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
 
             // Publishes the real downstream outcome into the placeholder that any other thread may already
             // be holding a reference to (via DownstreamTask) and awaiting. TrySetResult (rather than

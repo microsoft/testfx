@@ -127,24 +127,54 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     [TestMethod]
     public async Task RunAsync_MiddlewareInvokesNextTwiceConcurrently_SecondInvocationThrowsButActualResultStillWins()
     {
+        int leafInvocationCount = 0;
         FakeMiddleware doubleInvoker = new("double-invoker", async (next, ct) =>
         {
-            Task<int> first = next(ct);
-            InvalidOperationException secondCallException = Assert.ThrowsExactly<InvalidOperationException>(() => next(ct));
-            Assert.Contains("next", secondCallException.Message, StringComparison.Ordinal);
+            using Barrier invocationBarrier = new(participantCount: 3);
+
+            Task<(Task<int>? Downstream, InvalidOperationException? Exception)> firstWorker = Task.Run(InvokeNext);
+            Task<(Task<int>? Downstream, InvalidOperationException? Exception)> secondWorker = Task.Run(InvokeNext);
+            invocationBarrier.SignalAndWait();
+
+            (Task<int>? Downstream, InvalidOperationException? Exception)[] attempts =
+                await Task.WhenAll(firstWorker, secondWorker);
+            var acceptedAttempts = attempts.Where(attempt => attempt.Downstream is not null).ToArray();
+            var rejectedAttempts = attempts.Where(attempt => attempt.Exception is not null).ToArray();
+
+            Assert.HasCount(1, acceptedAttempts);
+            Assert.HasCount(1, rejectedAttempts);
+            Assert.Contains("next", rejectedAttempts[0].Exception!.Message, StringComparison.Ordinal);
 
             // Correlating the return value with the one legitimate invocation's actual result is what makes
             // a swallowed double-call violation surface instead of silently looking like success.
-            return await first;
+            return await acceptedAttempts[0].Downstream!;
+
+            (Task<int>? Downstream, InvalidOperationException? Exception) InvokeNext()
+            {
+                invocationBarrier.SignalAndWait();
+                try
+                {
+                    return (next(ct), null);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return (null, ex);
+                }
+            }
         });
 
         int exitCode = await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
             [doubleInvoker],
-            _ => Task.FromResult((int)ExitCode.AtLeastOneTestFailed),
+            _ =>
+            {
+                Interlocked.Increment(ref leafInvocationCount);
+                return Task.FromResult((int)ExitCode.AtLeastOneTestFailed);
+            },
             new NopLogger(),
             CancellationToken.None);
 
         Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, exitCode);
+        Assert.AreEqual(1, leafInvocationCount);
     }
 
     [TestMethod]
@@ -533,6 +563,78 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
 
         // Must surface as cancellation, not as a wrapped "swallowed downstream failure" InvalidOperationException.
         await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => pipelineTask);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_AcceptedNext_WhenLinkedTokenCreationRejectsDisposedToken_CompletesWithoutLeavingPlaceholderPending()
+    {
+        CancellationTokenSource disposedSource = new();
+        CancellationToken disposedToken = disposedSource.Token;
+        disposedSource.Dispose();
+
+        FakeMiddleware passThrough = new("pass-through", (next, ct) => next(ct));
+        Task<int> pipelineTask = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+            [passThrough],
+            _ => Task.FromResult(7),
+            new NopLogger(),
+            disposedToken);
+
+        Task completed = await Task.WhenAny(
+            pipelineTask,
+            Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken));
+
+        Assert.AreSame(pipelineTask, completed);
+
+        // Current runtimes accept a token obtained from a disposed source, while runtimes that reject it
+        // report ObjectDisposedException from CreateLinkedTokenSource. Either behavior must complete the
+        // already-accepted downstream task rather than leaving the pipeline hung on its placeholder.
+        if (pipelineTask.IsFaulted)
+        {
+            Assert.IsInstanceOfType<ObjectDisposedException>(pipelineTask.Exception!.GetBaseException());
+        }
+        else
+        {
+            Assert.AreEqual(7, await pipelineTask);
+        }
+    }
+
+    [TestMethod]
+    public async Task RunAsync_NestedMiddlewareFault_DelayedAncestorCancellationStillReachesLeafBeforeLinkedSourcesAreDisposed()
+    {
+        using CancellationTokenSource rootCts = new();
+        TaskCompletionSource<int> leafSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task<int>? outerDownstream = null;
+
+        FakeMiddleware outer = new("outer", (next, ct) => outerDownstream = next(ct));
+        FakeMiddleware inner = new("inner", (next, ct) =>
+        {
+            _ = next(ct);
+            return Task.FromException<int>(new InvalidOperationException("inner middleware failed"));
+        });
+
+        Task<int> pipelineTask = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+            [outer, inner],
+            ct =>
+            {
+                ct.Register(() => leafSource.TrySetCanceled(ct));
+                return leafSource.Task;
+            },
+            new NopLogger(),
+            rootCts.Token);
+
+        Assert.IsNotNull(outerDownstream);
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => outerDownstream!);
+
+        // The inner frame has faulted, but its accepted leaf is still part of the downstream subtree.
+        // Ancestor cancellation must remain connected until that subtree has been drained.
+        rootCts.Cancel();
+        Task leafCompleted = await Task.WhenAny(
+            leafSource.Task,
+            Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken));
+
+        Assert.AreSame(leafSource.Task, leafCompleted);
+        await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => leafSource.Task);
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => pipelineTask);
     }
 
     private sealed class NopLogger : ILogger
