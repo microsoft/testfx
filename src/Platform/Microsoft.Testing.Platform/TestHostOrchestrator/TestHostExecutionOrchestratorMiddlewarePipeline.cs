@@ -85,6 +85,19 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         {
             result = await middleware.OrchestrateTestHostExecutionAsync(guard.InvokeAsync, ambientToken).ConfigureAwait(false);
         }
+        catch
+        {
+            guard.Close();
+            if (guard.WasInvoked)
+            {
+                // A middleware failure cannot replace a downstream failure or cancellation. Await the
+                // accepted child even when this frame faulted, then preserve the middleware failure only
+                // when the child completed successfully.
+                await guard.DownstreamTask.ConfigureAwait(false);
+            }
+
+            throw;
+        }
         finally
         {
             // Close the gate unconditionally: a next() call attempted after this method has returned or

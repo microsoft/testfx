@@ -316,6 +316,60 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     }
 
     [TestMethod]
+    public async Task RunAsync_MiddlewareReplacesDownstreamFailure_PreservesDownstreamException()
+    {
+        InvalidOperationException downstreamFailure = new("downstream failed");
+        FakeMiddleware replacement = new("replacement", async (next, ct) =>
+        {
+            try
+            {
+                return await next(ct);
+            }
+            catch (InvalidOperationException)
+            {
+                throw new ArgumentException("replacement");
+            }
+        });
+
+        InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [replacement],
+                _ => Task.FromException<int>(downstreamFailure),
+                new NopLogger(),
+                CancellationToken.None));
+
+        Assert.AreSame(downstreamFailure, observed);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_MiddlewareReplacesDownstreamCancellation_PreservesCancellation()
+    {
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        TaskCanceledException downstreamCancellation = new("downstream canceled");
+        FakeMiddleware replacement = new("replacement", async (next, ct) =>
+        {
+            try
+            {
+                return await next(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new InvalidOperationException("replacement");
+            }
+        });
+
+        TaskCanceledException observed = await Assert.ThrowsExactlyAsync<TaskCanceledException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [replacement],
+                _ => Task.FromException<int>(downstreamCancellation),
+                new NopLogger(),
+                cancellation.Token));
+
+        Assert.AreSame(downstreamCancellation, observed);
+    }
+
+    [TestMethod]
     public async Task RunAsync_MiddlewareSwallowsDownstreamFailure_ThrowsInsteadOfReportingSuccess()
     {
         FakeMiddleware swallower = new("swallower", (next, ct) =>
@@ -641,7 +695,6 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
         // The top-level pipeline is already draining the outer frame. Accept the leaf only now, after the
         // drain has started, so a one-time snapshot cannot see it.
         allowInnerNext.SetResult(true);
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => outerDownstream!);
 
         // The inner frame has faulted, but its later-added leaf is still part of the downstream subtree.
         // The drain must discover it and keep ancestor cancellation connected until it completes.
@@ -660,7 +713,8 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
 
         Assert.AreSame(leafSource.Task, leafCompleted);
         await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => leafSource.Task);
-        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => pipelineTask);
+        await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => outerDownstream!);
+        await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => pipelineTask);
     }
 
     private sealed class NopLogger : ILogger
