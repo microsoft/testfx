@@ -50,6 +50,7 @@ safe-outputs:
     title-prefix: '[dependabot-bundler] '
     max: 10
   update-issue:
+    target: "*"
     max: 10
 
 ---
