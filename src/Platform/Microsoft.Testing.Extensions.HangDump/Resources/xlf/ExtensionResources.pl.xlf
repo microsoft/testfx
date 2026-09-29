@@ -130,7 +130,7 @@ Wartość limitu czasu jest określana w jednym z następujących formatów:
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
-        <target state="translated">Element „--hangdump-type-if-supported {0}„ nie jest obsługiwany w bieżącym środowisku uruchomieniowym. Powrót do „{1}”.</target>
+        <target state="translated">Element „--hangdump-type-if-supported {0}” nie jest obsługiwany w bieżącym środowisku uruchomieniowym. Powrót do „{1}”.</target>
         <note>0 is the requested dump type. 1 is the fallback dump type. Do not localize option name {Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
