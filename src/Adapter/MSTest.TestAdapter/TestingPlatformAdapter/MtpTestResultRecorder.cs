@@ -29,6 +29,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
     private readonly bool _isTrxEnabled;
     private readonly MSTestSettings _settings;
     private readonly TestExecutionActivityBroker? _testExecutionActivityBroker;
+    private readonly Action<FrameworkTestResult> _stageResultFiles;
     private readonly Dictionary<UnitTestElement, Occurrence> _occurrences = [];
 #if NET9_0_OR_GREATER
     private readonly Lock _syncRoot = new();
@@ -42,7 +43,18 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         SessionUid sessionUid,
         bool isTrxEnabled,
         MSTestSettings settings)
-        : this(messageBus, dataProducer, sessionUid, isTrxEnabled, settings, testExecutionActivityBroker: null)
+        : this(messageBus, dataProducer, sessionUid, isTrxEnabled, settings, static _ => { }, testExecutionActivityBroker: null)
+    {
+    }
+
+    public MtpTestResultRecorder(
+        IMessageBus messageBus,
+        IDataProducer dataProducer,
+        SessionUid sessionUid,
+        bool isTrxEnabled,
+        MSTestSettings settings,
+        Action<FrameworkTestResult> stageResultFiles)
+        : this(messageBus, dataProducer, sessionUid, isTrxEnabled, settings, stageResultFiles, testExecutionActivityBroker: null)
     {
     }
 
@@ -53,6 +65,18 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         bool isTrxEnabled,
         MSTestSettings settings,
         TestExecutionActivityBroker? testExecutionActivityBroker)
+        : this(messageBus, dataProducer, sessionUid, isTrxEnabled, settings, static _ => { }, testExecutionActivityBroker)
+    {
+    }
+
+    internal MtpTestResultRecorder(
+        IMessageBus messageBus,
+        IDataProducer dataProducer,
+        SessionUid sessionUid,
+        bool isTrxEnabled,
+        MSTestSettings settings,
+        Action<FrameworkTestResult> stageResultFiles,
+        TestExecutionActivityBroker? testExecutionActivityBroker)
     {
         _messageBus = messageBus;
         _dataProducer = dataProducer;
@@ -60,6 +84,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         _isTrxEnabled = isTrxEnabled;
         _settings = settings;
         _testExecutionActivityBroker = testExecutionActivityBroker;
+        _stageResultFiles = stageResultFiles;
     }
 
     void ITestResultRecorder.PrepareResults(UnitTestElement testElement, FrameworkTestResult[] results)
@@ -140,6 +165,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         // Mirror TestResultRecorderExtensions: a NotFound result is not reported while hot reload is enabled.
         if (outcome != TestOutcome.NotFound || !RuntimeContext.IsHotReloadEnabled)
         {
+            _stageResultFiles(unitTestResult);
             TestNode testNode = MSTestTestNodeConverter.ToResultTestNode(testElement, unitTestResult, startTime, endTime, _isTrxEnabled, _settings);
             if (occurrence is not null)
             {

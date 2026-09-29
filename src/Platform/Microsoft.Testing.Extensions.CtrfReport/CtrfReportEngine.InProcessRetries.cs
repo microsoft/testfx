@@ -9,12 +9,13 @@ internal sealed partial class CtrfReportEngine
 {
     private static List<ReportTestResult> PrepareResults(CapturedTestResult[] results)
     {
-        var openSequencesByUid = new Dictionary<string, List<RetrySequence>>(StringComparer.Ordinal);
+        var openSequencesByTestId = new Dictionary<string, List<RetrySequence>>(StringComparer.Ordinal);
         var sequences = new List<RetrySequence>();
 
         for (int resultIndex = 0; resultIndex < results.Length; resultIndex++)
         {
             CapturedTestResult result = results[resultIndex];
+            string testId = GetTestId(result);
             if (result.RetryAttemptNumber is not int attemptNumber)
             {
                 continue;
@@ -29,17 +30,17 @@ internal sealed partial class CtrfReportEngine
 
                 var sequence = new RetrySequence(resultIndex);
                 sequences.Add(sequence);
-                if (!openSequencesByUid.TryGetValue(result.Uid, out List<RetrySequence>? openSequences))
+                if (!openSequencesByTestId.TryGetValue(testId, out List<RetrySequence>? openSequences))
                 {
                     openSequences = [];
-                    openSequencesByUid.Add(result.Uid, openSequences);
+                    openSequencesByTestId.Add(testId, openSequences);
                 }
 
                 openSequences.Add(sequence);
                 continue;
             }
 
-            if (!openSequencesByUid.TryGetValue(result.Uid, out List<RetrySequence>? candidates))
+            if (!openSequencesByTestId.TryGetValue(testId, out List<RetrySequence>? candidates))
             {
                 continue;
             }
@@ -59,13 +60,13 @@ internal sealed partial class CtrfReportEngine
             {
                 if (matchingSequenceCount > 1)
                 {
-                    // RetryAttemptProperty has no execution identity beyond UID and attempt
-                    // number. If several overlapping executions can accept this attempt,
+                    // RetryAttemptProperty has no execution identity beyond testId and
+                    // attempt number. If several overlapping executions can accept this attempt,
                     // collapsing would cross-wire their diagnostics, so preserve every row.
                     _ = candidates.RemoveAll(sequence => sequence.NextAttemptNumber == attemptNumber);
                     if (candidates.Count == 0)
                     {
-                        openSequencesByUid.Remove(result.Uid);
+                        openSequencesByTestId.Remove(testId);
                     }
                 }
 
@@ -85,7 +86,7 @@ internal sealed partial class CtrfReportEngine
                 candidates.Remove(matchingSequence);
                 if (candidates.Count == 0)
                 {
-                    openSequencesByUid.Remove(result.Uid);
+                    openSequencesByTestId.Remove(testId);
                 }
             }
         }
@@ -127,6 +128,9 @@ internal sealed partial class CtrfReportEngine
 
         return prepared;
     }
+
+    private static string GetTestId(CapturedTestResult result)
+        => result.TestId is { Length: > 0 } ? result.TestId : result.Uid;
 
     private sealed class RetrySequence(int firstResultIndex)
     {

@@ -65,6 +65,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportJournalConfiguration.cs" Link="Helpers\ReportJournalConfiguration.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportJournalRecord.cs" Link="Helpers\ReportJournalRecord.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProcessLifetimeHandler.cs" Link="Helpers\ReportProcessLifetimeHandler.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RetryArtifactManifest.cs" Link="Helpers\RetryArtifactManifest.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProcessLifetimeHandler.Journal.cs" Link="Helpers\ReportProcessLifetimeHandler.Journal.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
