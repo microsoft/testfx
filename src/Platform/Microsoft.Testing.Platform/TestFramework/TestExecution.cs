@@ -219,7 +219,7 @@ public sealed class TestExecution : IDisposable
             reservation.RecordExecutionEnd(endTime);
             reservation.CompleteWithoutResult();
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException and not AccessViolationException)
         {
             // Dispose and start-failure cleanup must never mask the caller's exception.
         }
