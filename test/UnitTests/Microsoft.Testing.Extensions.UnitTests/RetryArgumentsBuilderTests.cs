@@ -45,6 +45,23 @@ public sealed class RetryArgumentsBuilderTests
     }
 
     [TestMethod]
+    public void ComputeIndicesToCleanup_WithMSBuildNode_PreservesOptionAndValue()
+    {
+        string[] executableArguments =
+        [
+            "test.dll",
+            $"--{RetryCommandLineOptionsProvider.RetryFailedTestsOptionName}",
+            "3",
+            "--internal-msbuild-node",
+            "testingplatform.pipe.msbuild",
+        ];
+
+        List<int> actual = RetryArgumentsBuilder.ComputeIndicesToCleanup(executableArguments);
+
+        Assert.AreSequenceEqual([1, 2], actual, SequenceOrder.InAnyOrder);
+    }
+
+    [TestMethod]
     public void ComputeIndicesToCleanup_WithoutOptionalOptions_ReturnsOnlyRetryOptionIndices()
     {
         string[] executableArguments =

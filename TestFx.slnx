@@ -45,8 +45,10 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.CtrfReport/Microsoft.Testing.Extensions.CtrfReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HotReload/Microsoft.Testing.Extensions.HotReload.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.Hosting/Microsoft.Testing.Extensions.Hosting.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HtmlReport/Microsoft.Testing.Extensions.HtmlReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.JUnitReport/Microsoft.Testing.Extensions.JUnitReport.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.Configuration/Microsoft.Testing.Extensions.Configuration.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Logging/Microsoft.Testing.Extensions.Logging.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
@@ -62,12 +64,16 @@
     <Project Path="src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources/Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
   </Folder>
+  <Folder Name="/src/1 - Packages/">
+    <Project Path="src/Package/MSTest.Sdk.AppModelController/MSTest.Sdk.AppModelController.csproj" />
+  </Folder>
   <Folder Name="/src/2 - Adapter/">
     <Project Path="src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj" />
     <Project Path="src/Adapter/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
   </Folder>
   <Folder Name="/src/3 - TestFramework/">
     <Project Path="src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj" />
+    <Project Path="src/TestFramework/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj" />
     <Project Path="src/TestFramework/TestFramework/TestFramework.csproj" />
     <Project Path="src/TestFramework/TestFramework.SourceGeneration/TestFramework.SourceGeneration.csproj" />
   </Folder>

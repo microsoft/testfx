@@ -22,7 +22,11 @@ Supported platforms:
 - .NET 8.0+
 - .NET 8.0 Windows.18362+ (WinUI)
 - UWP 10.0.16299
-- UWP 10.0.17763 with .NET 9+
+- UWP 10.0.17763 with .NET 9
+
+For package identity, AUMID activation, unpackaged WinUI, UWP launch activation, UI dispatchers, and
+AppContainer security guidance, see
+[Testing UWP and WinUI apps with MSTest](https://github.com/microsoft/testfx/blob/main/docs/winui-testing.md).
 
 ## Documentation
 

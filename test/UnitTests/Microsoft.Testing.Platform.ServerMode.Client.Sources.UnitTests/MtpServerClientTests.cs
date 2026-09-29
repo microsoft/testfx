@@ -284,13 +284,17 @@ public sealed class MtpServerClientTests
         server.InitializeResponse = server.InitializeResponse with { ProtocolVersion = null };
         using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions
         {
-            SupportedProtocolVersions = ["2.0.0"],
+            SupportedProtocolVersions = ["2.0.0", "3.0.0"],
         });
 
         MtpServerClientException exception = await AssertThrowsAsync<MtpServerClientException>(
             () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
 
         Assert.Contains(JsonRpcProtocolVersions.V1, exception.Message);
+
+        // Multiple supported versions must be rendered comma-and-space separated (not concatenated) so the
+        // exception message stays readable when the client advertises more than one protocol version.
+        Assert.Contains("Supported versions: 2.0.0, 3.0.0.", exception.Message);
         Assert.IsNull(client.Capabilities);
     }
 
@@ -305,6 +309,10 @@ public sealed class MtpServerClientTests
             () => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
 
         Assert.Contains("2.0.0", exception.Message);
+
+        // The default client only advertises the legacy version, so the trailing "Supported versions: ..."
+        // segment must render it verbatim rather than being silently dropped/emptied.
+        Assert.Contains($"Supported versions: {JsonRpcProtocolVersions.V1}.", exception.Message);
         Assert.IsNull(client.Capabilities);
     }
 

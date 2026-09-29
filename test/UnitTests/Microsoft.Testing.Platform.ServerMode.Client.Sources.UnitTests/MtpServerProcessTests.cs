@@ -42,7 +42,11 @@ public sealed class MtpServerProcessTests
     {
         using var temp = TempDirectory.Create();
         string source = Path.Combine(temp.Path, "Missing.dll");
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(20) };
+        var connectionTimeout = TimeSpan.FromSeconds(30);
+        // Allow process startup and stderr-drain delays on loaded agents while retaining a ten-second gap that
+        // distinguishes early-exit detection from waiting for the full connection timeout.
+        var maximumExpectedDuration = TimeSpan.FromSeconds(20);
+        var options = new MtpServerClientOptions { ConnectionTimeout = connectionTimeout };
         var stopwatch = Stopwatch.StartNew();
 
         MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
@@ -53,7 +57,7 @@ public sealed class MtpServerProcessTests
         Assert.Contains("before connecting back", exception.Message);
         Assert.Contains("Standard error:", exception.Message);
         Assert.IsLessThan(
-            TimeSpan.FromSeconds(10),
+            maximumExpectedDuration,
             stopwatch.Elapsed,
             "A process that exits during startup must be reported immediately instead of waiting for the connection timeout.");
     }

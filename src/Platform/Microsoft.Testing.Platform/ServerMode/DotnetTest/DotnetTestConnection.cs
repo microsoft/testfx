@@ -119,7 +119,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     commandLineOption.Name,
                     commandLineOption.Description,
                     commandLineOption.IsHidden,
-                    commandLineOption.IsBuiltIn));
+                    commandLineOption.IsBuiltIn,
+                    commandLineOptionProvider.Uid,
+                    commandLineOption.Arity.Min,
+                    commandLineOption.Arity.Max));
             }
         }
 

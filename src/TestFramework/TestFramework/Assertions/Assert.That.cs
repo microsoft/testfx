@@ -77,7 +77,16 @@ public static partial class AssertExtensions
             else
             {
                 // For side-effect-free expressions, keep the fast path and only compute details on failures.
+                // Prefer the expression-tree interpreter over IL-emitting compilation: the compiled delegate
+                // is invoked exactly once per Assert.That call, so paying for JIT/IL generation here is pure
+                // overhead compared to interpreting the (typically small) expression tree directly.
+                // The preferInterpretation overload isn't available on the .NET Framework reference assemblies
+                // this project builds against, so fall back to the default Compile() there.
+#if NETFRAMEWORK
                 result = condition.Compile().Invoke();
+#else
+                result = condition.Compile(preferInterpretation: true).Invoke();
+#endif
                 if (result)
                 {
                     return;

@@ -51,6 +51,11 @@ public static class PackagedAppExtensions
     /// </remarks>
     /// <param name="builder">The test application builder.</param>
     public static void AddPackagedAppDeployment(this ITestApplicationBuilder builder)
+        => AddPackagedAppDeployment(builder, Environment.GetCommandLineArgs());
+
+    internal static void AddPackagedAppDeployment(
+        ITestApplicationBuilder builder,
+        IReadOnlyList<string> processArguments)
     {
         _ = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
@@ -61,7 +66,15 @@ public static class PackagedAppExtensions
         // the controller, for non-packaged layouts, and when there is no handshake to consume. Note that
         // environment consumed strictly earlier during CreateBuilderAsync (culture, config discovery) is
         // not reproduced for the packaged path; only the platform connect-back variables are.
-        PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(Environment.GetCommandLineArgs());
+        PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(processArguments);
+
+        // A host activated by this launcher is already the target test process. Registering the launcher
+        // again would make controller-host and retry children recursively activate another copy of
+        // themselves instead of connecting to the controller or retry pipe that launched them.
+        if (PackagedAppConnectBackHandshake.TryGetHandshakeId(processArguments) is not null)
+        {
+            return;
+        }
 
         builder.TestHostControllers.AddTestHostLauncher(_ => new PackagedAppTestHostLauncher());
     }

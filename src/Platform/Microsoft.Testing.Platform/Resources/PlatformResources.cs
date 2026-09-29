@@ -43,6 +43,8 @@ internal static partial class PlatformResources
 
     internal static string @CommandLineParserRecursiveResponseFile => GetResourceString("CommandLineParserRecursiveResponseFile");
 
+    internal static string @MissingClientPortFoJsonRpc => GetResourceString("MissingClientPortFoJsonRpc");
+
     internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
 
     internal static string @ActiveTestsRunning_MoreTestsCount => GetResourceString("ActiveTestsRunning_MoreTestsCount");

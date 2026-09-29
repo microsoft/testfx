@@ -47,10 +47,13 @@ The bridge maps `Microsoft.Testing.Platform.Logging.LogLevel` to `Microsoft.Exte
 ### Notes and limitations
 
 - **`EventId` is not propagated.** Microsoft.Testing.Platform's `ILogger` has no notion of `EventId`; every forwarded log entry is written with `EventId.None`. Consumers that rely on `EventId`-based filtering downstream of the bridge will not see distinct IDs.
+- **MTP does not create logging scopes.** The bridge does not synthesize or translate `BeginScope` operations because Microsoft.Testing.Platform's logging contract has no scope API. Ambient scopes created by the caller may still be observed by its providers, but they are not controlled by MTP.
+- **Structured state is forwarded, not reconstructed.** The original state and formatter are passed unchanged to the Microsoft.Extensions logger. Providers can retain structure that was present in the original MTP log entry, but the bridge cannot recover message-template properties from an entry that was already produced as a formatted string.
 - **Per-category filters can only narrow, never widen.** The bridge initializes the `ILoggingBuilder` with the platform's effective diagnostic level, and the platform itself filters messages before they reach any provider. Setting a more verbose minimum level inside `configure` has no effect.
 - **No-op when `--diagnostic` is off.** When the platform's effective `LogLevel` is `None` (the default), the `configure` delegate is not invoked and no `Microsoft.Extensions.Logging.LoggerFactory` is created, so expensive sinks (network, file, gRPC) are not initialized for runs that will never emit a log.
-- **`LogAsync` is forwarded synchronously.** `Microsoft.Extensions.Logging` has no async logging API; `ILogger.LogAsync` is forwarded to `ILogger.Log` and returns `Task.CompletedTask`.
+- **`LogAsync` is forwarded synchronously.** `Microsoft.Extensions.Logging` has no async logging API; `ILogger.LogAsync` calls `ILogger.Log` directly and returns `Task.CompletedTask`. The bridge does not block on asynchronous work, but a provider that performs blocking I/O still blocks the calling thread.
 - **Owned vs. caller-owned factories.** The `Action<ILoggingBuilder>` overload creates and disposes its own `ILoggerFactory`. The `ILoggerFactory` overload never disposes the caller-supplied instance.
+- **Registration is process-local.** A supplied logger factory cannot cross a process boundary. Separately launched test host or controller processes must register their own bridge if their diagnostic logs need to reach the same external system.
 
 ## Documentation
 

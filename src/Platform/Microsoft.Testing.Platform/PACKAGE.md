@@ -4,6 +4,8 @@ Microsoft.Testing.Platform is a lightweight and portable alternative to [VSTest]
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platform` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
+To keep test applications lightweight and portable, the core package has no compile-time or runtime dependencies outside the .NET Base Class Library (BCL).
+
 ## Install the package
 
 ```dotnetcli

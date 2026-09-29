@@ -16,6 +16,35 @@ public sealed class ServiceProviderTests
     private readonly ServiceProvider _serviceProvider = new();
 
     [TestMethod]
+    public void GetRequiredPlatformService_ReturnsServiceFromAnyServiceProvider()
+    {
+        object expected = new();
+        IServiceProvider provider = new SingleServiceProvider(expected);
+
+        object actual = provider.GetRequiredPlatformService<object>();
+
+        Assert.AreSame(expected, actual);
+    }
+
+    [TestMethod]
+    public void GetRequiredPlatformService_MissingServiceThrows()
+    {
+        IServiceProvider provider = new SingleServiceProvider(null);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => provider.GetRequiredPlatformService<object>());
+    }
+
+    [TestMethod]
+    public void GetPlatformService_ReturnsServiceOrNullFromAnyServiceProvider()
+    {
+        object expected = new();
+        IServiceProvider provider = new SingleServiceProvider(expected);
+
+        Assert.AreSame(expected, provider.GetPlatformService<object>());
+        Assert.IsNull(new SingleServiceProvider(null).GetPlatformService<object>());
+    }
+
+    [TestMethod]
     public void GetService_InternalExtension_ShouldNotReturn()
     {
         _serviceProvider.AddService(new TestHostProcessLifetimeHandler());
@@ -183,6 +212,16 @@ public sealed class ServiceProviderTests
         Assert.HasCount(2, _serviceProvider.Services);
         Assert.AreSame(other, _serviceProvider.Services.First());
         Assert.AreSame(second, _serviceProvider.Services.Last());
+    }
+
+    private sealed class SingleServiceProvider(object? service) : IServiceProvider
+    {
+        private readonly object? _service = service;
+
+        public object? GetService(Type serviceType)
+            => _service is not null && serviceType.IsInstanceOfType(_service)
+                ? _service
+                : null;
     }
 
     [TestMethod]

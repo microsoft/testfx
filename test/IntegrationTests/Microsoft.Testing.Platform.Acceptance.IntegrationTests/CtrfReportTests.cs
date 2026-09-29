@@ -221,6 +221,17 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         //  - DuplicateUidFailure     -> status: "failed"
         //  - DuplicateUidPass        -> status: "passed" with the same UID as the prior row
         string actual = File.ReadAllText(filePath);
+        using (var document = JsonDocument.Parse(actual))
+        {
+            JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+            Assert.AreSequenceEqual(
+                ["test-1", "test-2", "test-3", "test-3"],
+                tests.Select(test => test.GetProperty("testId").GetString()!).ToArray());
+            string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
+            Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
+            Assert.HasCount(4, executionIds.Distinct());
+        }
+
         string normalized = NormalizeCtrfReport(actual);
 
         const string expected = """
@@ -263,6 +274,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
     },
     "tests": [
       {
+        "testId": "test-1",
+        "executionId": "<EXECUTION_ID>",
         "name": "PassingTest",
         "status": "passed",
         "duration": <DURATION_MS>,
@@ -271,6 +284,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         }
       },
       {
+        "testId": "test-2",
+        "executionId": "<EXECUTION_ID>",
         "name": "FailingTest",
         "status": "failed",
         "duration": <DURATION_MS>,
@@ -290,6 +305,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         }
       },
       {
+        "testId": "test-3",
+        "executionId": "<EXECUTION_ID>",
         "name": "DuplicateUidFailure",
         "status": "failed",
         "duration": <DURATION_MS>,
@@ -299,6 +316,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         }
       },
       {
+        "testId": "test-3",
+        "executionId": "<EXECUTION_ID>",
         "name": "DuplicateUidPass",
         "status": "passed",
         "duration": <DURATION_MS>,
@@ -324,6 +343,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         string normalized = actual;
         normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
         normalized = Regex.Replace(normalized, @"""runId"": ""[^""]+""", @"""runId"": ""<RUN_ID>""");
+        normalized = Regex.Replace(normalized, @"""executionId"": ""[^""]+""", @"""executionId"": ""<EXECUTION_ID>""");
         normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
         normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
         normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");

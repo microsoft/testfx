@@ -18,9 +18,15 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <remarks>
 /// <see cref="Activity.Current"/> and the listener registries are process-global, so listeners only collect
 /// activities and instruments created by this test instance (identified by a unique name prefix), and ambient
-/// activity assertions are relative to the activity that was current when the test started.
+/// activity assertions are relative to the activity that was current when the test started. The constructor
+/// registers an <see cref="ActivityListener"/> against the process-wide listener registry for
+/// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> for every test in this class, so the class carries
+/// a matching read-mode <see cref="ResourceLockAttribute"/> on that source name: tests in this class remain
+/// mutually parallel while serializing against the two raw-listener tests in
+/// <c>OpenTelemetryProviderExtensionsTests</c> that register unfiltered listeners on the same source.
 /// </remarks>
 [TestClass]
+[ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
 public sealed class OpenTelemetryPlatformServiceTests : IDisposable
 {
     private static readonly FieldInfo ObservableInstrumentsField = typeof(OpenTelemetryPlatformService)
@@ -72,6 +78,83 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void StartActivity_WithoutExplicitParent_InheritsTheAmbientActivity()
+    {
+        using IPlatformActivity? parent = _service.StartActivity(Name("parent"));
+        Assert.IsNotNull(parent);
+
+        using (IPlatformActivity? child = _service.StartActivity(Name("child")))
+        {
+            Assert.IsNotNull(child);
+            Assert.AreEqual(parent.TraceId, child.TraceId);
+        }
+
+        Assert.AreEqual(parent.SpanId, Single().ParentSpanId.ToHexString());
+    }
+
+    [TestMethod]
+    public void CaptureCurrentActivityContext_WithDistinctW3CActivity_CapturesLinkData()
+    {
+        using IPlatformActivity? frameworkActivity = _service.StartActivity(Name("framework"));
+        Assert.IsNotNull(frameworkActivity);
+        _service.TestFrameworkActivity = frameworkActivity;
+        using Activity executionActivity = new Activity("application-test")
+            .SetIdFormat(ActivityIdFormat.W3C)
+            .Start();
+        executionActivity.ActivityTraceFlags = ActivityTraceFlags.Recorded;
+        executionActivity.TraceStateString = "vendor=value";
+
+        PlatformActivityContext? context = _service.CaptureCurrentActivityContext();
+
+        Assert.IsNotNull(context);
+        Assert.AreEqual(executionActivity.TraceId.ToHexString(), context.TraceId);
+        Assert.AreEqual(executionActivity.SpanId.ToHexString(), context.SpanId);
+        Assert.IsTrue(context.IsRecorded);
+        Assert.AreEqual("vendor=value", context.TraceState);
+    }
+
+    [TestMethod]
+    public void CaptureCurrentActivityContext_WhenFrameworkActivityIsCurrent_ReturnsNull()
+    {
+        using IPlatformActivity? frameworkActivity = _service.StartActivity(Name("framework"));
+        Assert.IsNotNull(frameworkActivity);
+        _service.TestFrameworkActivity = frameworkActivity;
+
+        Assert.IsNull(_service.CaptureCurrentActivityContext());
+    }
+
+    [TestMethod]
+    public void StartActivityWithLink_PreservesExplicitParentAndAddsLink()
+    {
+        var parentTraceId = ActivityTraceId.CreateRandom();
+        var parentSpanId = ActivitySpanId.CreateRandom();
+        string parentId = $"00-{parentTraceId}-{parentSpanId}-01";
+        var linkContext = new PlatformActivityContext(
+            ActivityTraceId.CreateRandom().ToHexString(),
+            ActivitySpanId.CreateRandom().ToHexString(),
+            isRecorded: true,
+            traceState: "vendor=value");
+
+        using (IPlatformActivity? activity = _service.StartActivityWithLink(
+            Name("linked"),
+            tags: null,
+            parentId,
+            linkContext))
+        {
+            Assert.IsNotNull(activity);
+        }
+
+        Activity stopped = Single();
+        Assert.AreEqual(parentTraceId, stopped.TraceId);
+        Assert.AreEqual(parentSpanId, stopped.ParentSpanId);
+        ActivityLink link = stopped.Links.Single();
+        Assert.AreEqual(linkContext.TraceId, link.Context.TraceId.ToHexString());
+        Assert.AreEqual(linkContext.SpanId, link.Context.SpanId.ToHexString());
+        Assert.AreEqual(ActivityTraceFlags.Recorded, link.Context.TraceFlags);
+        Assert.AreEqual(linkContext.TraceState, link.Context.TraceState);
+    }
+
+    [TestMethod]
     public void StartNonAmbientActivity_NeverBecomesCurrent()
     {
         // This is what keeps MSTest fixture spans out of the ExecutionContext that MSTest captures inside a
@@ -95,10 +178,14 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
             Activity? ambient = Activity.Current;
             Assert.IsNotNull(ambient);
 
-            using (_service.StartNonAmbientActivity(Name("inner")))
+            using (IPlatformActivity? inner = _service.StartNonAmbientActivity(Name("inner")))
             {
+                Assert.IsNotNull(inner);
+                Assert.AreEqual(ambient.TraceId.ToHexString(), inner.TraceId);
                 Assert.AreSame(ambient, Activity.Current);
             }
+
+            Assert.AreEqual(ambient.SpanId, Single().ParentSpanId);
 
             // Stopping a non-ambient activity must not pop the ambient one.
             Assert.AreSame(ambient, Activity.Current);

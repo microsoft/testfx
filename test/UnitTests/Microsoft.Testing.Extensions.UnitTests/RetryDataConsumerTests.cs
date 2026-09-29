@@ -173,6 +173,75 @@ public sealed class RetryDataConsumerTests
         Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
+    [DataRow(
+        "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT",
+        "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT",
+        "test.trx")]
+    [DataRow(
+        "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT",
+        "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT",
+        "test.diag")]
+    [TestMethod]
+    public void GetControllerArtifactPath_AppContainerArtifact_MapsToControllerRecoveryDirectory(
+        string sourceRootEnvironmentVariable,
+        string destinationRootEnvironmentVariable,
+        string fileName)
+    {
+        string sourceRoot = Path.GetFullPath("package-local-state");
+        string destinationRoot = Path.GetFullPath("controller-recovery");
+        string artifactPath = Path.Combine(sourceRoot, "nested", fileName);
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(sourceRootEnvironmentVariable))
+            .Returns(sourceRoot);
+        environment
+            .Setup(x => x.GetEnvironmentVariable(destinationRootEnvironmentVariable))
+            .Returns(destinationRoot);
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        string? actual = GetControllerArtifactPath(consumer, artifactPath);
+
+        Assert.IsNotNull(actual);
+        Assert.AreEqual(Path.Combine(destinationRoot, "nested", fileName), actual);
+    }
+
+    [TestMethod]
+    public void GetControllerArtifactPath_ArtifactOutsideAppContainerRoots_IsRejected()
+    {
+        string sourceRoot = Path.GetFullPath("package-local-state");
+        string destinationRoot = Path.GetFullPath("controller-results");
+        string artifactPath = Path.GetFullPath(Path.Combine("other", "test.diag"));
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT"))
+            .Returns(sourceRoot);
+        environment
+            .Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT"))
+            .Returns(destinationRoot);
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        string? actual = GetControllerArtifactPath(consumer, artifactPath);
+
+        Assert.IsNull(actual);
+    }
+
+    [TestMethod]
+    public void GetControllerArtifactPath_ArtifactWithoutAppContainerMappings_IsUnchanged()
+    {
+        string artifactPath = Path.GetFullPath(Path.Combine("other", "test.diag"));
+        ServiceProvider serviceProvider = CreateServiceProvider();
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        string? actual = GetControllerArtifactPath(consumer, artifactPath);
+
+        Assert.AreEqual(artifactPath, actual);
+    }
+
     private static TestNodeUpdateMessage CreateUpdate(string uid, params IProperty[] properties)
         => new(
             new SessionUid("session"),
@@ -198,10 +267,10 @@ public sealed class RetryDataConsumerTests
     private static ITestSessionContext CreateSessionContext(CancellationToken cancellationToken)
         => Mock.Of<ITestSessionContext>(context => context.CancellationToken == cancellationToken);
 
-    private static ServiceProvider CreateServiceProvider()
+    private static ServiceProvider CreateServiceProvider(IEnvironment? environment = null)
     {
         ServiceProvider serviceProvider = new();
-        serviceProvider.AddService(new SystemEnvironment());
+        serviceProvider.AddService(environment ?? new SystemEnvironment());
         serviceProvider.AddService(new SystemTask());
         serviceProvider.AddService(Mock.Of<ITestApplicationCancellationTokenSource>(
             source => source.CancellationToken == CancellationToken.None));
@@ -210,6 +279,13 @@ public sealed class RetryDataConsumerTests
         serviceProvider.AddService(loggerFactory.Object);
         return serviceProvider;
     }
+
+    private static string? GetControllerArtifactPath(RetryDataConsumer consumer, string artifactPath)
+        => (string?)typeof(RetryDataConsumer)
+            .GetMethod(
+                "GetControllerArtifactPath",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(consumer, [artifactPath]);
 
     private sealed class ConnectedConsumer : IDisposable
     {

@@ -58,7 +58,10 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             throw new ArgumentNullException(nameof(name));
         }
 
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut, AsyncCurrentUserPipeOptions);
+        PipeOptions options = name.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
+            ? PipeOptions.Asynchronous
+            : AsyncCurrentUserPipeOptions;
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, options);
         PipeName = name;
         _environment = environment;
         _exitProcessOnConnectionLoss = exitProcessOnConnectionLoss;

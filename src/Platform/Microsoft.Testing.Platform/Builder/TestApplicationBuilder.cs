@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.DynamicExtensions;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -25,7 +26,7 @@ namespace Microsoft.Testing.Platform.Builder;
 /// <summary>
 /// A builder for test applications and services.
 /// </summary>
-internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder, IDynamicExtensionRegistrationGuard
+internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder, IAsyncCleanableExtension, IDynamicExtensionRegistrationGuard
 {
     private readonly DateTimeOffset _createBuilderStart;
     private readonly ApplicationLoggingState _loggingState;
@@ -168,6 +169,14 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
         _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
 
         return new TestApplication(_host);
+    }
+
+    async Task IAsyncCleanableExtension.CleanupAsync()
+    {
+        if (_host is null && _loggingState.FileLoggerProvider is { } fileLoggerProvider)
+        {
+            await DisposeHelper.DisposeAsync(fileLoggerProvider).ConfigureAwait(false);
+        }
     }
 
     // The scope covers the synchronous execution of the hook, which is the whole window in which a hook is

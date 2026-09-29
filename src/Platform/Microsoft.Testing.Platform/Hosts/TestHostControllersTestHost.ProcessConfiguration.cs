@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -66,6 +67,7 @@ internal sealed partial class TestHostControllersTestHost
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME}_{currentPid}", testHostControllerCancellationServer.PipeName },
             },
             UseShellExecute = false,
+            WorkingDirectory = ServiceProvider.GetConfiguration().GetCurrentWorkingDirectory(),
         };
 
         List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
@@ -116,7 +118,8 @@ internal sealed partial class TestHostControllersTestHost
             ServiceProvider.GetTask(),
             ServiceProvider.GetLoggerFactory(),
             ServiceProvider.GetEnvironment(),
-            ServiceProvider.GetService<IShutdownProgressReporter>());
+            ServiceProvider.GetService<IShutdownProgressReporter>(),
+            ServiceProvider.GetPlatformOTelService());
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 

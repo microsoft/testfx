@@ -19,13 +19,16 @@ function Unzip {
 function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
-        "MSTest.Sdk"                                  = 15
+        "MSTest.Sdk"                                  = if ($configuration -eq "Debug") { 307 } else { 305 }
         "MSTest.TestFramework"                        = 105
-        "MSTest.TestAdapter"                          = 68
+        "MSTest.TestAdapter"                          = 76
         "MSTest"                                      = 10
         "MSTest.Analyzers"                            = 56
         "MSTest.SourceGeneration"                     = 8
+        "MSTest.Windows.UIAutomation"                 = 36
     }
+    # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
+    $packagesWithOptionalPdbFiles = @("MSTest.Sdk", "MSTest.Windows.UIAutomation")
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
     $tmpDirectory = Resolve-Path "$PSScriptRoot/../artifacts/tmp/$configuration"
@@ -54,6 +57,7 @@ function Confirm-NugetPackages {
 
     Write-Verbose "Verifying NuGet packages files."
     $errors = @()
+    $verifiedPackageKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
@@ -93,8 +97,14 @@ function Confirm-NugetPackages {
 
             $packageKey = $packageName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
+            $null = $verifiedPackageKeys.Add($packageKey)
 
-            $actualNumOfFiles = (Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir).Count
+            $packageFiles = @(Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir)
+            if ($packagesWithOptionalPdbFiles -contains $packageKey) {
+                $packageFiles = @($packageFiles | Where-Object Extension -ne ".pdb")
+            }
+
+            $actualNumOfFiles = $packageFiles.Count
             if ($expectedNumOfFiles[$packageKey] -ne $actualNumOfFiles) {
                 $errors += "Number of files are not equal for '$packageKey', expected: $($expectedNumOfFiles[$packageKey]) actual: $actualNumOfFiles"
             }
@@ -102,6 +112,22 @@ function Confirm-NugetPackages {
         finally {
             if (Test-Path $unzipNugetPackageDir) {
                 Remove-Item -Force -Recurse $unzipNugetPackageDir | Out-Null
+            }
+        }
+    }
+
+    $isMSTestProductBuild = $false
+    foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+        if ($verifiedPackageKeys.Contains($expectedPackageKey)) {
+            $isMSTestProductBuild = $true
+            break
+        }
+    }
+
+    if ($isMSTestProductBuild) {
+        foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+            if (!$verifiedPackageKeys.Contains($expectedPackageKey)) {
+                $errors += "Expected package '$expectedPackageKey' was not found"
             }
         }
     }

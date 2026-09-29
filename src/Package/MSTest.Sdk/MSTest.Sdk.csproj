@@ -19,6 +19,7 @@ $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Sdk\Runner\ClassicUwpMtpBootstrap.cs" />
     <!--
       Pack the MSBuild SDK props/targets into the 'Sdk' folder of the package.
       These are listed explicitly (rather than via a glob) because Sdk.props and
@@ -31,8 +32,10 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="Sdk\Sdk.targets" Pack="true" PackagePath="Sdk\Sdk.targets" />
     <None Include="Sdk\Features\Aspire.targets" Pack="true" PackagePath="Sdk\Features\Aspire.targets" />
     <None Include="Sdk\Features\Playwright.targets" Pack="true" PackagePath="Sdk\Features\Playwright.targets" />
+    <None Include="Sdk\Features\WindowsUIAutomation.targets" Pack="true" PackagePath="Sdk\Features\WindowsUIAutomation.targets" />
     <None Include="Sdk\Runner\Runner.targets" Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
     <None Include="Sdk\Runner\Common.targets" Pack="true" PackagePath="Sdk\Runner\Common.targets" />
+    <None Include="Sdk\Runner\ClassicUwpMtpBootstrap.cs" Pack="true" PackagePath="Sdk\Runner\ClassicUwpMtpBootstrap.cs" />
     <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
     <None Include="Sdk\Runner\NativeAOT.targets" Pack="true" PackagePath="Sdk\Runner\NativeAOT.targets" />
     <None Include="Sdk\VSTest\VSTest.targets" Pack="true" PackagePath="Sdk\VSTest\VSTest.targets" />
@@ -41,6 +44,36 @@ $(CommonProductDescription)]]></PackageDescription>
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAppModelControllerToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddAppModelControllerToPackage">
+    <MSBuild Projects="$(RepoRoot)src\Package\MSTest.Sdk.AppModelController\MSTest.Sdk.AppModelController.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);TargetFramework=net8.0-windows10.0.19041.0" />
+    <MSBuild Projects="$(RepoRoot)src\Package\MSTest.Sdk.AppModelController\MSTest.Sdk.AppModelController.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);TargetFramework=net9.0-windows10.0.19041.0" />
+
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
+        <PackagePath>tools/AppModelController/net8.0/mstest-appmodel-controller.exe</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
+        <PackagePath>tools/AppModelController/net9.0/mstest-appmodel-controller.exe</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/**/*"
+                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/**/.*;$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
+        <PackagePath>tools/AppModelController/net8.0/</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/**/*"
+                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/**/.*;$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
+        <PackagePath>tools/AppModelController/net9.0/</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
@@ -57,7 +90,7 @@ $(CommonProductDescription)]]></PackageDescription>
       <_MicrosoftTestingExtensionsJUnitReportVersion>$(MicrosoftTestingExtensionsJUnitReportVersionPrefix)</_MicrosoftTestingExtensionsJUnitReportVersion>
       <_MicrosoftTestingExtensionsJUnitReportVersion Condition="'$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsJUnitReportVersion)-$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)</_MicrosoftTestingExtensionsJUnitReportVersion>
 
-      <_TemplateProperties>MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestVersion=$(Version);MSTestWindowsUIAutomationVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

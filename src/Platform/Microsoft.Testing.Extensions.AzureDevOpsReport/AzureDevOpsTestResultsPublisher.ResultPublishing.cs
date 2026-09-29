@@ -7,6 +7,10 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
+    private const string IsTestResultFlakyFieldName = "IsTestResultFlaky";
+    private static readonly IReadOnlyList<AzureDevOpsCustomTestField> FlakyCustomFields = [new(IsTestResultFlakyFieldName, "true")];
+    private static readonly IReadOnlyList<AzureDevOpsCustomTestField> NonFlakyCustomFields = [new(IsTestResultFlakyFieldName, "false")];
+
     /// <summary>
     /// Publishes results Azure DevOps has not seen in this build yet, recording the ids it assigns them so
     /// that a later attempt can update them.
@@ -145,6 +149,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             {
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+                CustomFields = CreateFlakyCustomFields(updates[i].Attempt.Result.Outcome, attemptHistories[i]),
                 SubResults = appendedAttempts[i],
                 DurationInMs = totalDurations[i],
                 StartedDate = startedDates[i],
@@ -228,6 +233,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
     private static IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> GetAttempts(AzureDevOpsTestCaseResultWithAttachments result)
         => result.PreviousAttempts.Count == 0 ? [result] : [.. result.PreviousAttempts, result];
+
+    private static IReadOnlyList<AzureDevOpsCustomTestField> CreateFlakyCustomFields(
+        string outcome,
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+        => outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome
+            && attempts.Any(static attempt => attempt.Outcome is
+                AzureDevOpsLivePublishingConstants.FailedTestOutcome
+                or AzureDevOpsLivePublishingConstants.AbortedTestOutcome)
+            ? FlakyCustomFields
+            : NonFlakyCustomFields;
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
         : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);

@@ -1,8 +1,38 @@
 [CmdletBinding()]
 param()
 
+function Assert-Containment {
+    [CmdletBinding(DefaultParameterSetName = "LiteralMessage")]
+    param(
+        [string]$Text,
+        [string[]]$Substrings,
+        [Parameter(Mandatory, ParameterSetName = "LiteralMessage")]
+        [string]$Message,
+        [Parameter(Mandatory, ParameterSetName = "FormattedMessage")]
+        [scriptblock]$ItemMessageFormatter,
+        [scriptblock]$SubstringFormatter = { param($substring) $substring },
+        [switch]$Absent
+    )
+
+    foreach ($substring in $Substrings) {
+        $expectedSubstring = & $SubstringFormatter $substring
+        $containsSubstring = $Text.Contains($expectedSubstring)
+        $validationFailed = if ($Absent) { $containsSubstring } else { -not $containsSubstring }
+        if ($validationFailed) {
+            $formattedMessage = if ($PSCmdlet.ParameterSetName -eq "FormattedMessage") {
+                & $ItemMessageFormatter $substring
+            } else {
+                $Message
+            }
+
+            throw $formattedMessage
+        }
+    }
+}
+
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
+$versionsPropsPath = Join-Path $repoRoot "eng/Versions.props"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
 $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
 $accessDatabaseInstallerPath = Join-Path $repoRoot "eng/install-access-database-engine.ps1"
@@ -54,10 +84,34 @@ if (-not $affectedTestsCall.Success) {
 
 $affectedTestsEnabled = $affectedTestsCall.Groups["enabled"].Value -eq "true"
 
+$versionsProps = Get-Content -LiteralPath $versionsPropsPath -Raw
+$affectedTestsPackageVersionMatch = [regex]::Match(
+    $versionsProps,
+    '<MicrosoftTestingExtensionsCodeCoverageVersion>(?<version>[^<]+)</MicrosoftTestingExtensionsCodeCoverageVersion>')
+if (-not $affectedTestsPackageVersionMatch.Success) {
+    throw "eng/Versions.props must define MicrosoftTestingExtensionsCodeCoverageVersion."
+}
+
+$affectedTestsPackageVersion = $affectedTestsPackageVersionMatch.Groups["version"].Value
+$azureDevOpsStorageVersionsMissingContentRange = @(
+    "18.12.0-preview.26473.3",
+    "18.12.0-preview.26474.2"
+)
+if ($affectedTestsEnabled -and $affectedTestsPackageVersion -in $azureDevOpsStorageVersionsMissingContentRange) {
+    throw "Affected-test execution must remain disabled with Azure DevOps storage package version '$affectedTestsPackageVersion', which omits the required Content-Range upload header."
+}
+
 $bootstrappedSdk = [System.Management.Automation.SemanticVersion]$configuration.tools.dotnet
 $selectedSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version
 if ($bootstrappedSdk -ne $selectedSdk) {
     throw "global.json tools.dotnet and sdk.version must match."
+}
+
+$affectedTestsSdkVersionsWithCollectionHandshakeFailure = @(
+    [System.Management.Automation.SemanticVersion]"11.0.100-rc.2.26471.109"
+)
+if ($affectedTestsEnabled -and $selectedSdk -in $affectedTestsSdkVersionsWithCollectionHandshakeFailure) {
+    throw "Affected-test execution must remain disabled with SDK '$selectedSdk', which reports successful collection children as handshake failures."
 }
 
 $lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
@@ -78,45 +132,44 @@ if ($affectedTests.storage.type -ne "azureDevOpsArtifact" -or
 
 $directoryPackagesPath = Join-Path $repoRoot "Directory.Packages.props"
 $directoryPackages = Get-Content -LiteralPath $directoryPackagesPath -Raw
-if (-not $directoryPackages.Contains(
-    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
-    throw "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
-}
-if (-not $directoryPackages.Contains(
-    '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />')) {
-    throw "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency."
-}
+Assert-Containment `
+    -Text $directoryPackages `
+    -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
+    -Message "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
+Assert-Containment `
+    -Text $directoryPackages `
+    -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
+    -Message "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency."
 
 $directoryBuildTargetsPath = Join-Path $repoRoot "Directory.Build.targets"
 $directoryBuildTargets = Get-Content -LiteralPath $directoryBuildTargetsPath -Raw
-if (-not $directoryBuildTargets.Contains(
-    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"')) {
-    throw "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests."
-}
-if (-not $directoryBuildTargets.Contains(
-    '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"')) {
-    throw "MTP test applications must reference the Azure DevOps affected-tests storage provider."
-}
-foreach ($requiredRuntimeLayoutText in @(
+Assert-Containment `
+    -Text $directoryBuildTargets `
+    -Substrings '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests"' `
+    -Message "MTP test applications must reference Microsoft.Testing.Extensions.AffectedTests."
+Assert-Containment `
+    -Text $directoryBuildTargets `
+    -Substrings '<PackageReference Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps"' `
+    -Message "MTP test applications must reference the Azure DevOps affected-tests storage provider."
+Assert-Containment `
+    -Text $directoryBuildTargets `
+    -Substrings @(
     'GeneratePathProperty="true"',
     "_CopyAffectedTestsNetFrameworkRuntimeAssets",
     "MicrosoftInstrumentationEngine_x64.dll",
     "ctsrun64.dll",
     "Cts_x64.config"
-)) {
-    if (-not $directoryBuildTargets.Contains($requiredRuntimeLayoutText)) {
-        throw ".NET Framework affected-test applications must preserve '$requiredRuntimeLayoutText'."
-    }
-}
-foreach ($testApplicationProperty in @(
+) `
+    -ItemMessageFormatter { param($substring) ".NET Framework affected-test applications must preserve '$substring'." }
+Assert-Containment `
+    -Text $directoryBuildTargets `
+    -Substrings @(
     "IsTestingPlatformApplication",
     "EnableMSTestRunner",
     "UseInternalTestFramework"
-)) {
-    if (-not $directoryBuildTargets.Contains("'`$($testApplicationProperty)' == 'true'")) {
-        throw "Affected-test package references must include projects enabled through $testApplicationProperty."
-    }
-}
+) `
+    -ItemMessageFormatter { param($substring) "Affected-test package references must include projects enabled through $substring." } `
+    -SubstringFormatter { param($substring) "'`$($substring)' == 'true'" }
 
 $manualEntryPoints = @(
     Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File
@@ -140,7 +193,9 @@ if (-not $accessDatabaseInstaller.Contains("[System.IO.Path]::GetTempPath()") -o
 }
 
 $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
-foreach ($requiredText in @(
+Assert-Containment `
+    -Text $testTemplate `
+    -Substrings @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1",
     'CTS_ACCESSTOKEN: $(System.AccessToken)',
     'CTS_COLLECTIONURI: $(System.CollectionUri)',
@@ -151,11 +206,8 @@ foreach ($requiredText in @(
     "--affected-tests",
     "enableAffectedTests",
     "affectedTestsMode"
-)) {
-    if (-not $testTemplate.Contains($requiredText)) {
-        throw "The affected-test template is missing '$requiredText'."
-    }
-}
+) `
+    -ItemMessageFormatter { param($substring) "The affected-test template is missing '$substring'." }
 
 $disabledBranch = [regex]::Match(
     $testTemplate,
@@ -170,15 +222,15 @@ if ($disabledBranch.Value -match 'DOTNET_CLI_ENABLE_AFFECTED_TESTS|--collect-tes
 
 $pipelineVariables = Get-Content -LiteralPath (Join-Path $repoRoot "eng/pipelines/variables/test-env-vars.yml") -Raw
 $outerPipelineConfiguration = $pipeline, $pipelineVariables -join "`n"
-foreach ($variableName in @(
+Assert-Containment `
+    -Text $outerPipelineConfiguration `
+    -Substrings @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
-)) {
-    if ($outerPipelineConfiguration.Contains($variableName)) {
-        throw "$variableName must be scoped to the affected-test template."
-    }
-}
+) `
+    -ItemMessageFormatter { param($substring) "$substring must be scoped to the affected-test template." } `
+    -Absent
 
 $templateWithoutComments = $testTemplate -split '\r?\n' |
     Where-Object { -not $_.TrimStart().StartsWith("#") } |
@@ -195,15 +247,15 @@ if ($affectedTestsGateCount -ne 2) {
 }
 
 $wellKnownEnvironmentVariables = Get-Content -LiteralPath $wellKnownEnvironmentVariablesPath -Raw
-foreach ($variableName in @(
+Assert-Containment `
+    -Text $wellKnownEnvironmentVariables `
+    -Substrings @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
     "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
     "TESTINGPLATFORM_EXITCODE_IGNORE"
-)) {
-    if (-not $wellKnownEnvironmentVariables.Contains("""$variableName""")) {
-        throw "Child test processes must not inherit $variableName from the outer pipeline invocation."
-    }
-}
+) `
+    -ItemMessageFormatter { param($substring) "Child test processes must not inherit $substring from the outer pipeline invocation." } `
+    -SubstringFormatter { param($substring) """$substring""" }
 
 if ($templateWithoutComments.Contains("Cache@2") -or
     $templateWithoutComments.Contains("AffectedTestsMapCacheRestored")) {

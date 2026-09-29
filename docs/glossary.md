@@ -262,6 +262,10 @@ An MSTest attribute (`[MemberConditionAttribute]`) in `Microsoft.VisualStudio.Te
 
 An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severity, enabled by default) that flags a method-level attribute as redundant when the containing `[TestClass]` already establishes equivalent or more restrictive behavior, so the method-level copy has no effect. Covered attribute pairs include `[OSCondition]`, `[ArchitectureCondition]`, `[CICondition]`, `[DoNotParallelize]`, `[ResourceLock]`, `[Retry]`, `[Ignore]`, `[TestCategory]`, `[TestProperty]`, `[DeploymentItem]`, and `[DependsOn]`. A companion C# code fix (`RedundantTestMethodAttributeFixer`) removes the flagged attribute. Introduced in [PR #11267](https://github.com/microsoft/testfx/pull/11267). See also [ResourceLockAttribute](#resourcelockattribute).
 
+### MSTEST0087 (duplicate DataRow display name)
+
+An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-blank `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit non-blank `DisplayName` values — missing, null, empty, or whitespace-only names are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
+
 ### MSTest
 
 Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
@@ -294,7 +298,7 @@ Runner selection uses the following precedence:
 | `false` (default) | `true` | NativeAOT | Builds a self-contained MTP test application using `MSTest.SourceGeneration`; only the NativeAOT-compatible extension subset is available |
 | `false` (default) | Unset or `false` | ClassicEngine (MSTest runner) | Builds an executable MTP test application and supports the full extension configuration |
 
-When `UseUwp=true`, `UseVSTest` defaults to `true` because true UWP/AppContainer test hosts do not support MTP. WinUI keeps the MTP default; set `UseVSTest=true` only for a packaged WinUI test application.
+UWP and WinUI use the MTP default. For a packaged application, MSTest.Sdk starts its full-trust app-model sidecar controller and activates the selected package application as the test host; `UseVSTest=true` remains an explicit legacy opt-in.
 
 `IsTestApplication` controls whether the project is an executable test application or a reusable test library. It defaults to `true`, except for .NET Standard targets where it defaults to `false`. Set it to `false` for a project that contains shared test helpers or inherited tests and is referenced by an executable test project:
 
@@ -319,7 +323,7 @@ In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework`
 | `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, GitHubActionsReport, HtmlReport, and Fakes |
 | `None` | No extensions |
 
-Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for a packaged WinUI test application because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
+Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for packaged WinUI and UWP test applications because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
 
 | Property | `Default` | `AllMicrosoft` | `None` | NativeAOT | VSTest |
 | --- | --- | --- | --- | --- | --- |
@@ -336,9 +340,10 @@ Set an individual `Enable*` property to `false` to remove an extension supplied 
 | `EnableMicrosoftTestingExtensionsCtrfReport` | Off | Off | Off | Not available | Build error |
 | `EnableMicrosoftTestingExtensionsJUnitReport` | Off | Off | Off | Not added; emits unsupported warning | Build error |
 | `EnableMicrosoftTestingExtensionsOpenTelemetry` | Off | Off | Off | Not available | Build error |
-| `EnableMicrosoftTestingExtensionsPackagedApp` | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Packaged WinUI only | Build error |
+| `EnableMicrosoftTestingExtensionsPackagedApp` | Packaged WinUI/UWP | Packaged WinUI/UWP | Packaged WinUI/UWP | Packaged WinUI/UWP | Build error |
 | `EnableAspireTesting` | Off | Off | Off | Build error | Supported |
 | `EnablePlaywright` | Off | Off | Off | Build error | Supported |
+| `EnableWindowsUIAutomation` | Off | Off | Off | Build error | Supported |
 
 Individual extension toggles remain unset and disabled when a profile does not enable them. This differs from explicitly setting a toggle to `false`: VSTest rejects any non-empty MTP extension toggle. NativeAOT warnings and errors are reported during the build. Properties marked "Not available" or "Not added" do not add their package in NativeAOT mode.
 
@@ -350,7 +355,8 @@ Individual extension toggles remain unset and disabled when a profile does not e
 | `EnableMicrosoftTestingPlatform` | Advanced version-alignment escape hatch. When `true` for an `IsTestApplication=true` ClassicEngine or NativeAOT project, adds an explicit `Microsoft.Testing.Platform` package reference using `MicrosoftTestingPlatformVersion`. It is ignored for test libraries and VSTest. It is normally unnecessary and does not select the runner or change `IsTestingPlatformApplication`. |
 | `EnableMSTestSourceGeneration` | Adds `MSTest.SourceGeneration` to non-NativeAOT projects. For reusable test libraries, it also adds `MSTest.TestAdapter`, which provides the runtime hooks referenced by generated code. .NET Standard is not supported because the adapter does not ship compatible runtime hooks. NativeAOT projects always include source generation. |
 | `MSTestVersion` | Overrides the versions of the MSTest framework, adapter, and source generator supplied by the SDK. |
-| `MicrosoftTestingExtensionsPackagedAppVersion` | Overrides the packaged-app launcher version supplied to packaged WinUI MTP projects. |
+| `MSTestWindowsUIAutomationVersion` | Overrides the `MSTest.Windows.UIAutomation` package version added when `EnableWindowsUIAutomation=true`. The package version defaults to the MSTest.Sdk version. |
+| `MicrosoftTestingExtensionsPackagedAppVersion` | Overrides the packaged-app launcher version supplied to packaged WinUI and UWP MTP projects. |
 
 `EnableMSTestRunner` is set by MSTest.Sdk and should not normally be set by projects. Component-specific properties such as `MicrosoftTestingPlatformVersion`, `MicrosoftTestingExtensionsCommonVersion`, and the individual `MicrosoftTestingExtensions*Version` properties are advanced version-alignment controls.
 
@@ -359,6 +365,10 @@ For assembly-level parallelization properties, see [MSTestParallelizeScope / MST
 ### MSTest.SourceGeneration
 
 A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. MSTest.Sdk includes the package automatically for NativeAOT projects; set `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>` to opt in for other configurations. Without MSTest.Sdk, add a `<PackageReference>` to `MSTest.SourceGeneration`. Existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
+
+### MSTest.Windows.UIAutomation
+
+A [MSTest.Sdk](#mstestsdk)-integrated package (`MSTest.Windows.UIAutomation`) that provides desktop UI Automation helpers for tests targeting a Windows target framework (e.g., `net8.0-windows`); the SDK errors at build time if the project's `TargetFramework` does not resolve to the `windows` target platform identifier. Opt in with `<EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>`, which adds the package reference and (when `ImplicitUsings` is enabled) an implicit `using Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;`. `MSTestWindowsUIAutomationVersion` overrides the package version, defaulting to the MSTest.Sdk version. Introduced in [PR #10862](https://github.com/microsoft/testfx/pull/10862).
 
 ### MSTestParallelizeScope / MSTestParallelizeWorkers
 
@@ -396,13 +406,21 @@ A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility
 
 A source-only NuGet package that provides a client implementation for launching and communicating with an MTP test host running in [Server Mode](#server-mode). Its C# sources are compiled as internal types directly into the consuming project, avoiding a runtime dependency or separate assembly while keeping the client wire-compatible with the MTP server protocol. Added in [PR #10085](https://github.com/microsoft/testfx/pull/10085).
 
+### Microsoft.Testing.Extensions.Configuration
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Configuration`, `[TPEXP]`) that imports an externally owned `Microsoft.Extensions.Configuration.IConfiguration` as a read-only snapshot while the MTP application is built. The default order is `2`, after MTP command-line and environment sources and before `testconfig.json`. Reload notifications and later mutations are intentionally not propagated, and MTP does not dispose the external configuration.
+
+### Microsoft.Testing.Extensions.Hosting
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Hosting`, `[TPEXP]`) that runs MTP inside an application-owned `IHost` through `RunTestingPlatformAsync()`. It borrows the host's configuration and logger factory, starts the host before MTP is built, returns the MTP exit code, and stops the host afterward without disposing it or creating a second Microsoft.Extensions dependency-injection container. See the [ASP.NET Core and Aspire samples](../samples/public/MTPHostIntegration).
+
 ### Microsoft.Testing.Extensions.Logging
 
 An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.
 
 ### Microsoft.Testing.Extensions.PackagedApp
 
-An MTP extension (`Microsoft.Testing.Extensions.PackagedApp`) that enables testing packaged Windows apps by registering the layout with the `PackageManager` and activating it by AUMID through the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. `packagedClassicApp`/`win32App` hosts receive normal `argv` (including classic AppContainer hosts); `windowsApp`/UWP hosts call `PackagedAppExtensions.GetTestApplicationArguments(LaunchActivatedEventArgs.Arguments)` before creating the MTP builder to restore the same logical arguments. For a selected AppContainer application, the launcher also contributes its exact package SID through `ITestHostControllerConnectionAuthorizer`, and the platform grants only the minimum controller-pipe client rights. Register via `builder.AddPackagedAppDeployment()`, or simply by referencing the package (its MSBuild props register the hook). The launcher only enables itself when the test application is a packaged layout — a manifest in the app's own directory, or an ancestor `AppxManifest.xml` whose `Application/@Executable` resolves back to the app directory — so referencing it from an **unpackaged** app does not force the test host controller process model or copy the build output; `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` (`auto`/`always`/`never`) overrides that decision. These communication primitives do not change the current SDK/platform routing limitation: true UWP/AppContainer projects are still selected for VSTest rather than started as MTP test hosts. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454); AUMID activation added in [PR #9970](https://github.com/microsoft/testfx/pull/9970). See also [ITestHostLauncher](#itesthostlauncher) and [docs/winui-testing.md](winui-testing.md).
+An MTP extension (`Microsoft.Testing.Extensions.PackagedApp`) that enables testing packaged Windows apps by registering the layout with the `PackageManager` and activating it by AUMID through the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. `packagedClassicApp`/`win32App` hosts receive normal `argv` (including classic AppContainer hosts); `windowsApp`/UWP hosts call `PackagedAppExtensions.GetTestApplicationArguments(LaunchActivatedEventArgs.Arguments)` before creating the MTP builder to restore the same logical arguments. For a selected AppContainer application, the launcher also contributes its exact package SID through `ITestHostControllerConnectionAuthorizer`, and the platform grants only the minimum controller-pipe client rights. Register via `builder.AddPackagedAppDeployment()`, or simply by referencing the package (its MSBuild props register the hook). The launcher only enables itself when the test application is a packaged layout — a manifest in the app's own directory, or an ancestor `AppxManifest.xml` whose `Application/@Executable` resolves back to the app directory — so referencing it from an **unpackaged** app does not force the test host controller process model or copy the build output; `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` (`auto`/`always`/`never`) overrides that decision. MSTest.Sdk uses a full-trust sidecar controller to apply this path to classic UWP, modern UWP, packaged WinUI, and AppContainer-configured WinUI without VSTest. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454); AUMID activation added in [PR #9970](https://github.com/microsoft/testfx/pull/9970). See also [ITestHostLauncher](#itesthostlauncher) and [docs/winui-testing.md](winui-testing.md).
 
 ## N
 
@@ -418,7 +436,7 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 ### OpenTelemetry extension
 
-An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
+An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exposes test-session activities and metrics using the [OpenTelemetry](https://opentelemetry.io/) standard. `AddTestingPlatformDiagnostics()` activates the MTP diagnostics producer; application-owned providers configured through `HostApplicationBuilder`, Aspire ServiceDefaults, or another composition root subscribe with `AddTestingPlatformInstrumentation()`. The focused `AddTestingPlatformTestResource()` and `AddTestingPlatformCIResource()` helpers add test and CI metadata without replacing application-owned `service.*`, host, OS, or process identity. See the [`HostApplicationBuilder` sample](../samples/public/MTPOTel).
 
 ### OSConditionAttribute
 

@@ -5,7 +5,10 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -108,6 +111,16 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual("9876", PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
     }
 
+    [DataRow("=")]
+    [DataRow(":")]
+    [TestMethod]
+    public void TryGetTestHostControllerPid_ReturnsValue_WhenOptionIsInline(string separator)
+    {
+        string[] arguments = [$"--internal-testhostcontroller-pid{separator}9876"];
+
+        Assert.AreEqual("9876", PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(arguments));
+    }
+
     [TestMethod]
     public void TryGetTestHostControllerPid_ReturnsNull_WhenOptionAbsent()
     {
@@ -136,6 +149,56 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.StartsWith("retry-", handshakeId);
         Assert.AreEqual(handshakeId, PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
         Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public void TryGetHandshakeId_UsesInlineRetryPipeName_WhenControllerPidIsAbsent()
+    {
+        string[] arguments = [@"--internal-retry-pipename=LOCAL\testingplatform.pipe.retry"];
+
+        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments);
+
+        Assert.IsNotNull(handshakeId);
+        Assert.StartsWith("retry-", handshakeId);
+        Assert.DoesNotContain(@"\", handshakeId);
+    }
+
+    [TestMethod]
+    public void TryGetHandshakeId_ReturnsNull_WhenRetryPipeNameOptionIsLastWithoutValue()
+    {
+        string[] arguments = ["--internal-retry-pipename"];
+
+        Assert.IsNull(PackagedAppConnectBackHandshake.TryGetHandshakeId(arguments));
+    }
+
+    [TestMethod]
+    public async Task AddPackagedAppDeployment_RetryChild_DoesNotRegisterLauncher()
+    {
+        string[] arguments = ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(arguments);
+
+        PackagedAppExtensions.AddPackagedAppDeployment(builder, arguments);
+
+        ITestHostLauncher? launcher =
+            await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        Assert.IsNull(launcher);
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_RetryChild_AddsControllerSkipMarker()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            ["--internal-retry-pipename", @"LOCAL\testingplatform.pipe.retry"],
+            new Dictionary<string, string?>(),
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher.GetConnectBackEnvironment(context).ToDictionary();
+
+        Assert.HasCount(1, environment);
+        Assert.AreEqual(
+            "1",
+            environment["TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION"]);
     }
 
     [TestMethod]
@@ -175,6 +238,28 @@ public sealed class PackagedAppConnectBackHandshakeTests
         Assert.AreEqual("trx-run", environment["TESTINGPLATFORM_TRX_TESTRUN_ID"]);
         Assert.AreEqual("logical-run", environment["testingplatform_logical_run_id"]);
         Assert.IsFalse(environment.ContainsKey("TESTINGPLATFORM_TESTCONFIGURATION"));
+    }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_ForAppContainer_RedirectsRetryArtifactManifest()
+    {
+        const string RedirectedManifestPath = @"C:\PackageLocalState\MtpTestHost\retry-recovered-artifacts.manifest";
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            [],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] = @"C:\ControllerTemp\retry.txt",
+            },
+            workingDirectory: null);
+
+        var environment = PackagedAppTestHostLauncher
+            .GetConnectBackEnvironment(context, RedirectedManifestPath)
+            .ToDictionary();
+
+        Assert.AreEqual(
+            RedirectedManifestPath,
+            environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
     }
 }
 

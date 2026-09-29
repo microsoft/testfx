@@ -326,7 +326,18 @@ internal sealed class AggregatedConfiguration(
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
-        _resultsDirectory = _fileSystem.CreateDirectory(this[PlatformConfigurationConstants.PlatformResultDirectory]!);
+        string resultsDirectory = this[PlatformConfigurationConstants.PlatformResultDirectory]!;
+        if (_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey))
+        {
+            // The controller owns the user-selected results directory. A sandboxed or remote test host
+            // may not be able to access that path, and controller-side report/lifetime extensions publish
+            // the final artifacts there. Preserve the logical value for option consumers without touching
+            // the filesystem from the child process.
+            _resultsDirectory = resultsDirectory;
+            return;
+        }
+
+        _resultsDirectory = _fileSystem.CreateDirectory(resultsDirectory);
 
         // In case of the result directory is overridden by the config file we move logs to it.
         // This can happen in case of VSTest mode where the result directory is set to a different location.

@@ -1,0 +1,13 @@
+<Project>
+  <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AspireVersion>13.5.3</AspireVersion>
+    <OpenTelemetryVersion>1.19.1</OpenTelemetryVersion>
+    <OpenTelemetryInstrumentationVersion>1.19.0</OpenTelemetryInstrumentationVersion>
+    <OpenTelemetryConsoleExporterVersion>1.19.0</OpenTelemetryConsoleExporterVersion>
+  </PropertyGroup>
+</Project>

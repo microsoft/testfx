@@ -22,6 +22,8 @@ public abstract class AcceptanceTestBase
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
+        MicrosoftExtensionsHostingVersion = GetPackageVersion(cpmPropFileDoc, "Microsoft.Extensions.Logging");
+        OpenTelemetryVersion = GetPackageVersion(cpmPropFileDoc, "OpenTelemetry");
 
         using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
         MSBuildSdkExtrasVersion = globalJson.RootElement
@@ -33,6 +35,8 @@ public abstract class AcceptanceTestBase
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
+        MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
+        MicrosoftTestingExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Hosting.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
         MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
@@ -86,6 +90,10 @@ public abstract class AcceptanceTestBase
 
     public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
 
+    public static string MicrosoftExtensionsHostingVersion { get; private set; }
+
+    public static string OpenTelemetryVersion { get; private set; }
+
     public static string MSBuildSdkExtrasVersion { get; private set; }
 
     // Keep this known-working Windows App SDK/BuildTools pair together. Generated WinUI assets use
@@ -109,6 +117,10 @@ public abstract class AcceptanceTestBase
             StringComparison.Ordinal);
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsConfigurationVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsHostingVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
 
@@ -154,6 +166,13 @@ public abstract class AcceptanceTestBase
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
+
+    private static string GetPackageVersion(XDocument centralPackageManagementDocument, string packageName)
+        => centralPackageManagementDocument
+            .Descendants("PackageVersion")
+            .Single(element => string.Equals(element.Attribute("Include")?.Value, packageName, StringComparison.Ordinal))
+            .Attribute("Version")?.Value
+            ?? throw new InvalidOperationException($"Directory.Packages.props does not define a version for '{packageName}'.");
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {
