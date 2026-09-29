@@ -1,3 +1,4 @@
 #nullable enable
 [TPEXP]Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions
 [TPEXP]static Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.RunTestingPlatformAsync(this Microsoft.Extensions.Hosting.IHost! host, string![]! args, System.Action<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>! configure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+[TPEXP]static Microsoft.Testing.Extensions.MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost(string![]! args) -> bool

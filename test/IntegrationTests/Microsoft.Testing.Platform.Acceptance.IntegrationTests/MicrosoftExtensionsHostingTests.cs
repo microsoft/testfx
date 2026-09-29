@@ -29,6 +29,51 @@ public sealed class MicrosoftExtensionsHostingTests : AcceptanceTestBase<Microso
         result.AssertOutputContains("HOST_STOPPED");
     }
 
+    [DynamicData(nameof(HostingCompatibilityFrameworksForDynamicData))]
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_CallerCancellation_CancelsActiveRun(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new() { ["HOSTING_CANCELLATION_MODE"] = "caller-token" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.TestSessionAborted);
+        result.AssertOutputContains("TEST_STARTED");
+        result.AssertOutputContains("TEST_CANCELLED");
+        result.AssertOutputContains("HOST_STOPPED");
+    }
+
+    [DynamicData(nameof(HostingCompatibilityFrameworksForDynamicData))]
+    [TestMethod]
+    public async Task RunTestingPlatformAsync_ApplicationStopping_CancelsControllerAndActiveTestHost(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string markerPath = Path.Combine(Path.GetTempPath(), $"{nameof(MicrosoftExtensionsHostingTests)}-{Guid.NewGuid():N}.started");
+
+        try
+        {
+            TestHostResult result = await testHost.ExecuteAsync(
+                environmentVariables: new()
+                {
+                    ["HOSTING_CANCELLATION_MODE"] = "controller-host",
+                    ["HOSTING_CANCELLATION_MARKER"] = markerPath,
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            result.AssertExitCodeIs(ExitCode.TestSessionAborted);
+            result.AssertOutputContains("TEST_STARTED");
+            result.AssertOutputContains("CONTROLLER_REQUESTED_STOP");
+            result.AssertOutputContains("TEST_CANCELLED");
+            result.AssertOutputContains("HOST_STOPPED");
+        }
+        finally
+        {
+            File.Delete(markerPath);
+        }
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -63,21 +108,55 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Services;
+
+string? cancellationMode = Environment.GetEnvironmentVariable("HOSTING_CANCELLATION_MODE");
+string? cancellationMarker = Environment.GetEnvironmentVariable("HOSTING_CANCELLATION_MARKER");
+bool isControlledTestHost = args.Any(static arg =>
+    arg.TrimStart('-').Equals("internal-testhostcontroller-pid", StringComparison.OrdinalIgnoreCase));
+using var callerCancellationTokenSource = new CancellationTokenSource();
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(configuration => configuration.AddInMemoryCollection(
         new Dictionary<string, string?> { ["bridge:value"] = "from-host" }))
-    .ConfigureServices(services => services.AddHostedService<MarkerHostedService>())
+    .ConfigureServices(services =>
+    {
+        services.AddSingleton(new HostedCancellationOptions(cancellationMode, cancellationMarker, isControlledTestHost));
+        services.AddHostedService<MarkerHostedService>();
+        services.AddHostedService<ControllerCancellationHostedService>();
+    })
     .Build();
 
 using (host)
 {
-    return await host.RunTestingPlatformAsync(args, tests =>
-        tests.RegisterTestFramework(
+    return await host.RunTestingPlatformAsync(
+        args,
+        tests =>
+        {
+            tests.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
-            (_, serviceProvider) => new DummyTestFramework(serviceProvider)));
+                (_, serviceProvider) => new DummyTestFramework(
+                    serviceProvider,
+                    cancellationMode,
+                    cancellationMarker,
+                    callerCancellationTokenSource));
+
+            if (cancellationMode == "controller-host")
+            {
+                tests.TestHostControllers.AddEnvironmentVariableProvider(_ => new ForceControllerEnvironmentVariableProvider());
+            }
+        },
+        cancellationMode == "caller-token" ? callerCancellationTokenSource.Token : CancellationToken.None);
+}
+
+public sealed class HostedCancellationOptions(string? mode, string? markerPath, bool isControlledTestHost)
+{
+    public string? Mode { get; } = mode;
+    public string? MarkerPath { get; } = markerPath;
+    public bool IsControlledTestHost { get; } = isControlledTestHost;
 }
 
 public sealed class MarkerHostedService : IHostedService
@@ -95,7 +174,66 @@ public sealed class MarkerHostedService : IHostedService
     }
 }
 
-public sealed class DummyTestFramework(IServiceProvider serviceProvider) : ITestFramework
+public sealed class ControllerCancellationHostedService(
+    HostedCancellationOptions options,
+    IHostApplicationLifetime hostApplicationLifetime) : IHostedService
+{
+    private Task _monitorTask = Task.CompletedTask;
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        if (options is { Mode: "controller-host", IsControlledTestHost: false, MarkerPath: not null })
+        {
+            _monitorTask = MonitorTestStartAsync(options.MarkerPath, hostApplicationLifetime);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => _monitorTask;
+
+    private static async Task MonitorTestStartAsync(string markerPath, IHostApplicationLifetime hostApplicationLifetime)
+    {
+        try
+        {
+            while (!File.Exists(markerPath))
+            {
+                await Task.Delay(20, hostApplicationLifetime.ApplicationStopping);
+            }
+
+            Console.WriteLine("CONTROLLER_REQUESTED_STOP");
+            hostApplicationLifetime.StopApplication();
+        }
+        catch (OperationCanceledException) when (hostApplicationLifetime.ApplicationStopping.IsCancellationRequested)
+        {
+        }
+    }
+}
+
+public sealed class ForceControllerEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
+{
+    public string Uid => nameof(ForceControllerEnvironmentVariableProvider);
+    public string Version => "1.0.0";
+    public string DisplayName => nameof(ForceControllerEnvironmentVariableProvider);
+    public string Description => nameof(ForceControllerEnvironmentVariableProvider);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public Task UpdateAsync(IEnvironmentVariables environmentVariables)
+    {
+        environmentVariables.SetVariable(new("HOSTING_CONTROLLER_ACTIVE", "1", isSecret: false, isLocked: false));
+        return Task.CompletedTask;
+    }
+
+    public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
+        => ValidationResult.ValidTask;
+}
+
+public sealed class DummyTestFramework(
+    IServiceProvider serviceProvider,
+    string? cancellationMode,
+    string? cancellationMarker,
+    CancellationTokenSource callerCancellationTokenSource) : ITestFramework
 {
     public string Uid => nameof(DummyTestFramework);
     public string Version => "1.0.0";
@@ -110,11 +248,37 @@ public sealed class DummyTestFramework(IServiceProvider serviceProvider) : ITest
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
 
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         Console.WriteLine($"CONFIGURATION_VALUE={serviceProvider.GetConfiguration()["bridge:value"]}");
-        context.Complete();
-        return Task.CompletedTask;
+        if (cancellationMode is null)
+        {
+            context.Complete();
+            return;
+        }
+
+        Console.WriteLine("TEST_STARTED");
+        if (cancellationMode == "caller-token")
+        {
+            callerCancellationTokenSource.Cancel();
+        }
+        else if (cancellationMode == "controller-host")
+        {
+            File.WriteAllText(cancellationMarker!, "started");
+        }
+
+        try
+        {
+            await Task.Delay(Timeout.Infinite, context.CancellationToken);
+        }
+        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        {
+            Console.WriteLine("TEST_CANCELLED");
+        }
+        finally
+        {
+            context.Complete();
+        }
     }
 }
 """;

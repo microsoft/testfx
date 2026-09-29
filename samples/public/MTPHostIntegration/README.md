@@ -6,20 +6,16 @@ These samples show the same MTP test application running inside application-owne
 - [`AspireTests`](AspireTests) uses `Aspire.Hosting.Testing` to start [`AspireAppHost`](AspireAppHost) and verify [`AspireApi`](AspireApi).
 - [`ServiceDefaults`](ServiceDefaults) follows the Aspire ServiceDefaults pattern and adds a test-specific variant that subscribes its application-owned OpenTelemetry providers to MTP diagnostics.
 
-Both test executables use the same concise shape:
+Both test executables use the generated hosted entry point:
 
-```csharp
-builder.AddTestServiceDefaults();
-using IHost host = builder.Build();
-
-return await host.RunTestingPlatformAsync(args, tests =>
-{
-    tests.AddMSTest(() => [Assembly.GetExecutingAssembly()]);
-    tests.AddTestingPlatformDiagnostics();
-});
+```xml
+<PropertyGroup>
+  <TestingPlatformHostFactory>MyTestHost.CreateHost</TestingPlatformHostFactory>
+  <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
+</PropertyGroup>
 ```
 
-The host owns configuration, logging, dependency injection, OpenTelemetry providers, startup, shutdown, and disposal. MTP keeps its dependency-free core and imports only the supported configuration and logging bridges.
+The factory returns a fresh, unstarted `Task<IHost>` and does not receive MTP arguments. Generated self-registration supplies MSTest and the HostOwned diagnostics hook exactly once; no manual `AddMSTest` or `AddTestingPlatformDiagnostics` call is needed. The host owns configuration, logging, dependency injection, OpenTelemetry providers, startup, shutdown, and disposal. The sample clears default console logging and uses OTLP only when configured so JSON listing, server, and `dotnet test` protocol output remains uncorrupted.
 
 ## Run
 

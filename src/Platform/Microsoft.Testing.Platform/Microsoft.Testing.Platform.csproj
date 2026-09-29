@@ -46,6 +46,7 @@ $(CommonProductDescription)]]></PackageDescription>
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.OpenTelemetry" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Hosting" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.GitHubActionsReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />

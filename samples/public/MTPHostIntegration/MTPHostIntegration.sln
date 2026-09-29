@@ -10,6 +10,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Platform", "..\..\..\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj", "{A459FBC1-513F-4D09-A953-767BBD37182A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetCoreTests", "AspNetCoreTests\AspNetCoreTests.csproj", "{5E2F220B-0F80-4489-AFA5-C6BFAD4E7F76}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923} = {2875FF6C-8C91-4FAE-B451-AFFDCE695923}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.Hosting", "..\..\..\src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj", "{32C9A59D-D2B5-41D2-AA2A-5C905583291E}"
 EndProject
@@ -22,6 +25,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireAppHost", "AspireAppHost\AspireAppHost.csproj", "{EB3B1F08-E1B2-4FD8-9588-E63C97B58420}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspireTests", "AspireTests\AspireTests.csproj", "{CEE24582-BF43-441E-8217-691AA903DDAE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923} = {2875FF6C-8C91-4FAE-B451-AFFDCE695923}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Platform.MSBuild", "..\..\..\src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj", "{2875FF6C-8C91-4FAE-B451-AFFDCE695923}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Testing.Extensions.MSBuild", "..\..\..\src\Platform\Microsoft.Testing.Extensions.MSBuild\Microsoft.Testing.Extensions.MSBuild.csproj", "{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -153,6 +163,30 @@ Global
 		{CEE24582-BF43-441E-8217-691AA903DDAE}.Release|x64.Build.0 = Release|Any CPU
 		{CEE24582-BF43-441E-8217-691AA903DDAE}.Release|x86.ActiveCfg = Release|Any CPU
 		{CEE24582-BF43-441E-8217-691AA903DDAE}.Release|x86.Build.0 = Release|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Debug|x64.Build.0 = Debug|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Debug|x86.Build.0 = Debug|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Release|x64.ActiveCfg = Release|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Release|x64.Build.0 = Release|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Release|x86.ActiveCfg = Release|Any CPU
+		{2875FF6C-8C91-4FAE-B451-AFFDCE695923}.Release|x86.Build.0 = Release|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Debug|x64.Build.0 = Debug|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Debug|x86.Build.0 = Debug|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Release|x64.ActiveCfg = Release|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Release|x64.Build.0 = Release|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Release|x86.ActiveCfg = Release|Any CPU
+		{C2C8A66D-E69A-406B-9EC1-F8E0E0FE2C48}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

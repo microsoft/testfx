@@ -113,6 +113,75 @@ namespace SomeNamespace
     }
 
     [TestMethod]
+    public void EntryPointTask_GloballyQualifies_FSharp_HostFactory_Without_RootNamespace()
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile.fs"),
+            Language = new CustomTaskItem("F#"),
+            HostFactory = "Contoso.Tests.TestHost.CreateHost",
+        };
+
+        Assert.IsTrue(testingPlatformEntryPoint.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files["obj/applicationHelperFile.fs"]!;
+        Assert.Contains("let! host = global.Contoso.Tests.TestHost.CreateHost()", generatedSource);
+        Assert.DoesNotContain("namespace Microsoft.TestingPlatform", generatedSource);
+        Assert.IsEmpty(_errors);
+    }
+
+    [DataRow("C#", "obj/applicationHelperFile.cs", "global::Microsoft.Extensions.Hosting.IHost host = await global::Contoso.Tests.TestHost.CreateHost();")]
+    [DataRow("VB", "obj/applicationHelperFile.vb", "Dim host As Global.Microsoft.Extensions.Hosting.IHost = Await Global.Contoso.Tests.TestHost.CreateHost()")]
+    [DataRow("F#", "obj/applicationHelperFile.fs", "let! host = global.Contoso.Tests.TestHost.CreateHost()")]
+    [TestMethod]
+    public void EntryPointTask_Generates_Hosted_Application_For_All_Supported_Languages(string language, string sourcePath, string expectedFactoryCall)
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem(sourcePath),
+            Language = new CustomTaskItem(language),
+            RootNamespace = "SomeNamespace",
+            HostFactory = "Contoso.Tests.TestHost.CreateHost",
+        };
+
+        Assert.IsTrue(testingPlatformEntryPoint.Execute());
+
+        string generatedSource = inMemoryFileSystem.Files[sourcePath]!;
+        Assert.Contains(expectedFactoryCall, generatedSource);
+        Assert.Contains("RunTestingPlatformAsync", generatedSource);
+        Assert.Contains("ShouldBypassApplicationHost", generatedSource);
+        Assert.Contains("IAsyncDisposable", generatedSource);
+        Assert.Contains("Host disposal failed while handling another exception.", generatedSource);
+        Assert.AreEqual(1, CountOccurrences(generatedSource, "SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)"));
+        Assert.IsEmpty(_errors);
+    }
+
+    [DataRow("CreateHost")]
+    [DataRow("Contoso.1Foo.CreateHost")]
+    [DataRow("Contoso..CreateHost")]
+    [TestMethod]
+    public void EntryPointTask_Rejects_Invalid_Host_Factory(string hostFactory)
+    {
+        InMemoryFileSystem inMemoryFileSystem = new();
+        TestingPlatformEntryPointTask testingPlatformEntryPoint = new(inMemoryFileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/applicationHelperFile.cs"),
+            Language = new CustomTaskItem("C#"),
+            HostFactory = hostFactory,
+        };
+
+        Assert.IsFalse(testingPlatformEntryPoint.Execute());
+
+        Assert.IsFalse(inMemoryFileSystem.Files.ContainsKey("obj/applicationHelperFile.cs"));
+        Assert.Contains("fully qualified static method path", Assert.ContainsSingle(_errors).Message ?? string.Empty);
+    }
+
+    [TestMethod]
     public void SelfRegisteredExtensions_Deduplicates_Exact_Duplicate_BuilderHooks()
     {
         InMemoryFileSystem inMemoryFileSystem = new();
@@ -272,6 +341,9 @@ namespace SomeNamespace
             AssemblyName = new CustomTaskItem("Tests"),
             OutputPath = new CustomTaskItem("bin"),
         };
+
+    private static int CountOccurrences(string value, string fragment)
+        => (value.Length - value.Replace(fragment, string.Empty).Length) / fragment.Length;
 
     private sealed class InMemoryFileSystem : IFileSystem
     {

@@ -1,28 +1,28 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Reflection;
-
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Testing.Extensions;
+using Microsoft.Extensions.Logging;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder();
-builder.AddTestServiceDefaults();
-builder.WebHost.UseUrls("http://127.0.0.1:0");
-builder.Configuration["Greeting"] = "Hello from ASP.NET Core";
-
-await using WebApplication app = builder.Build();
-app.MapDefaultEndpoints();
-app.MapGet("/greeting", (IConfiguration configuration) => configuration["Greeting"]);
-AspNetCoreApplication.Initialize(app);
-
-return await app.RunTestingPlatformAsync(args, tests =>
+internal static class AspNetCoreTestHost
 {
-    tests.AddMSTest(() => [Assembly.GetExecutingAssembly()]);
-    tests.AddTestingPlatformDiagnostics();
-});
+    public static Task<IHost> CreateHost()
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        builder.Logging.ClearProviders();
+        builder.AddTestServiceDefaults();
+        builder.WebHost.UseUrls("http://127.0.0.1:0");
+        builder.Configuration["Greeting"] = "Hello from ASP.NET Core";
+
+        WebApplication app = builder.Build();
+        app.MapDefaultEndpoints();
+        app.MapGet("/greeting", (IConfiguration configuration) => configuration["Greeting"]);
+        AspNetCoreApplication.Initialize(app);
+        return Task.FromResult<IHost>(app);
+    }
+}
 
 internal static class AspNetCoreApplication
 {
