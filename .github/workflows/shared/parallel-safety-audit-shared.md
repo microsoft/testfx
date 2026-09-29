@@ -1,22 +1,18 @@
 ---
 # Shared frontmatter and prompt body for the parallel-safety audit workflows.
 #
-# Two consumers import this file:
-#   - parallel-safety-audit.md          → runs automatically on PRs that touch
-#                                          test/**
-#   - parallel-safety-audit-command.md  → runs on the /parallel-audit slash command
+# The focused `/parallel-audit` workflow imports this file directly.
+# Automatic test PR analysis is coordinated by test-reviewer-on-pr.agent.md,
+# whose parallel-safety specialist applies the same rubric without publishing a
+# second review.
 #
-# Both consumers contribute their own trigger configuration (`on:`) and their
-# own `safe-outputs.noop` block (kept in each consumer until the gh-aw import
-# merge fully preserves `report-as-issue: false`). Everything else — tools,
-# permissions, network, the deterministic pre-extraction steps, and the agent
-# prompt — lives here so the two variants cannot drift.
+# The consumer contributes its trigger configuration (`on:`) and
+# `safe-outputs.noop` block. Everything else — tools, permissions, network, the
+# deterministic pre-extraction steps, and the agent prompt — lives here.
 #
-# Splitting the workflow was necessary because mixing `slash_command` with any
-# other trigger in a single gh-aw workflow makes the activation gate require a
-# command-position match on *every* event, which silently skips the agent on
-# every `pull_request` invocation (see test-reviewer-on-pr.agent.md for the same
-# constraint).
+# Keeping this command separate from the consolidated automatic workflow avoids
+# mixing `slash_command` with other triggers, which makes gh-aw's activation
+# gate require a command-position match on every event.
 #
 # UPSTREAM NOTE: the prompt body below (everything after the frontmatter) is
 # written to be lifted verbatim into a future `parallel-safety-audit` SKILL.md
