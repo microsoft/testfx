@@ -60,7 +60,6 @@ $(CommonProductDescription)]]></PackageDescription>
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Telemetry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.TrxReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VideoRecorder.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VideoRecorder" Key="$(VsPublicKey)" />
