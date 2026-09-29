@@ -335,8 +335,7 @@ tools:
     - "git commit:*"
 
 safe-outputs:
-  # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
-  # false positives and malformed result markers (#10821).
+  # Threat detection inherits the workflow model; retain its prompt safeguards.
   threat-detection:
     # Avoid gh-aw v0.88.7's false agent_failure when no output or patch exists (#11263).
     enabled: ${{ needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true' }}
@@ -351,7 +350,6 @@ safe-outputs:
       by invoking the pre-provisioned `threat_detection_result` command exactly
       once. Do not print, echo, or manually format a `THREAT_DETECTION_RESULT`
       line.
-    model: detection
     engine:
       id: copilot
   messages:
