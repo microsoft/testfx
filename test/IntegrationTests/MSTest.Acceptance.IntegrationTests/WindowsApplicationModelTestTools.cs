@@ -175,7 +175,8 @@ internal static class WindowsApplicationModelTestTools
         string projectPath,
         string resultsDirectory,
         CancellationToken cancellationToken,
-        string? additionalArguments = null)
+        string? additionalArguments = null,
+        string? testingPlatformPackagedAppTargetPath = null)
     {
         Assert.IsTrue(File.Exists(projectPath), $"The UWP project '{projectPath}' does not exist.");
         Directory.CreateDirectory(resultsDirectory);
@@ -186,9 +187,12 @@ internal static class WindowsApplicationModelTestTools
             $"--report-trx --report-trx-filename {trxFileName} --results-directory {resultsDirectory} " +
             $"--diagnostic --diagnostic-verbosity Trace --diagnostic-output-directory {resultsDirectory}" +
             (additionalArguments is null ? string.Empty : $" {additionalArguments}");
+        string packagedAppTargetProperty = testingPlatformPackagedAppTargetPath is null
+            ? string.Empty
+            : $" /p:TestingPlatformPackagedAppTargetPath=\"{testingPlatformPackagedAppTargetPath}\"";
         BoundedCommandLineResult result = await AcceptanceTestBase.RunWindowsApplicationModelCommandAsync(
             $"\"{tools.MSBuildPath}\" \"{projectPath}\" /t:InvokeTestingPlatform /p:Configuration=Release /p:Platform=x64 " +
-            $"/p:TestingPlatformCommandLineArguments=\"{arguments}\" /bl:\"{binlogPath}\"",
+            $"/p:TestingPlatformCommandLineArguments=\"{arguments}\"{packagedAppTargetProperty} /bl:\"{binlogPath}\"",
             Path.GetDirectoryName(projectPath),
             cancellationToken);
 
