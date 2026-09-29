@@ -30,10 +30,38 @@ Microsoft.Testing.Platform.Messages.IAsyncConsumerDataProcessorWithActivityConte
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithActivityLinks
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithActivityLinks.CaptureCurrentActivityContext() -> Microsoft.Testing.Platform.Telemetry.PlatformActivityContext?
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithActivityLinks.StartActivityWithLink(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags, string? parentId, Microsoft.Testing.Platform.Telemetry.PlatformActivityContext! linkContext) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithTestExecutionActivities
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithTestExecutionActivities.StartTestExecutionActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags, string? parentId, System.DateTimeOffset startTime) -> Microsoft.Testing.Platform.Telemetry.IPlatformTestExecutionActivity?
+Microsoft.Testing.Platform.Telemetry.IPlatformTestExecutionActivity
+Microsoft.Testing.Platform.Telemetry.IPlatformTestExecutionActivity.Enter() -> System.IDisposable!
+Microsoft.Testing.Platform.Telemetry.IPlatformTestExecutionActivity.Stop(System.DateTimeOffset endTime) -> void
 Microsoft.Testing.Platform.Telemetry.ITestExecutionActivityContextConsumer
 Microsoft.Testing.Platform.Telemetry.ITestExecutionActivityContextConsumer.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! data, Microsoft.Testing.Platform.Telemetry.PlatformActivityContext? executionActivityContext, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyInProgress(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid, Microsoft.Testing.Platform.Telemetry.PlatformActivityContext? executionActivityContext) -> void
 Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifySupersededRetryAttempt(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty! stateProperty) -> void
+static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetActivityName(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
+static Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.GetTestInitialInfo(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>!
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Activate(long token) -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.CompleteWithoutResult(long token) -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Dispose() -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Enter(long token) -> System.IDisposable?
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.ProcessResult(long token, string! result, bool contributesToAggregate, bool isFinalResult, System.Action<Microsoft.Testing.Platform.Telemetry.IPlatformActivity?, string?, System.DateTimeOffset, System.TimeSpan>! enrich) -> bool
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.RecordExecutionEnd(long token, System.DateTimeOffset endTime) -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.Reserve(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid? parentUid = null) -> Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation?
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker.TestExecutionActivityBroker(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryServiceWithTestExecutionActivities! otelService, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty.IsFinalResult.get -> bool
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty.Reservation.get -> Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation!
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityProperty.TestExecutionActivityProperty(Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation! reservation, bool isFinalResult) -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.Activate() -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.CompleteWithoutResult() -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.Enter() -> System.IDisposable?
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.ProcessResult(string! result, bool contributesToAggregate, bool isFinalResult, System.Action<Microsoft.Testing.Platform.Telemetry.IPlatformActivity?, string?, System.DateTimeOffset, System.TimeSpan>! enrich) -> bool
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.RecordExecutionEnd(System.DateTimeOffset endTime) -> void
+Microsoft.Testing.Platform.Telemetry.TestExecutionActivityReservation.TestExecutionActivityReservation(Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker! broker, long token) -> void
+Microsoft.Testing.Platform.Services.TestApplicationResult.CreateTestExecutionActivityBroker() -> Microsoft.Testing.Platform.Telemetry.TestExecutionActivityBroker?
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext.IsRecorded.get -> bool
 Microsoft.Testing.Platform.Telemetry.PlatformActivityContext.PlatformActivityContext(string! traceId, string! spanId, bool isRecorded, string? traceState) -> void

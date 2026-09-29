@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
-internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) : IPlatformActivity
+internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) : IPlatformTestExecutionActivity
 {
     private const string ExceptionEventName = "exception";
     private const string ExceptionTypeTag = "exception.type";
@@ -79,6 +79,23 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
         return this;
     }
 
+    public IDisposable Enter()
+        => new ActivityScope(activity);
+
+    public void Stop(DateTimeOffset endTime)
+    {
+        DateTime endUtc = endTime.UtcDateTime;
+        if (endUtc <= activity.StartTimeUtc)
+        {
+            endUtc = activity.StartTimeUtc.AddTicks(1);
+        }
+
+        Activity? current = Activity.Current;
+        activity.SetEndTime(endUtc);
+        activity.Stop();
+        Activity.Current = current;
+    }
+
     public void Dispose()
     {
         if (isAmbient)
@@ -92,5 +109,25 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
         Activity? current = Activity.Current;
         activity.Dispose();
         Activity.Current = current;
+    }
+
+    private sealed class ActivityScope : IDisposable
+    {
+        private readonly Activity? _previous = Activity.Current;
+        private bool _disposed;
+
+        public ActivityScope(Activity activity)
+            => Activity.Current = activity;
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            Activity.Current = _previous;
+        }
     }
 }

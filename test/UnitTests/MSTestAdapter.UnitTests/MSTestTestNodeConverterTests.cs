@@ -5,11 +5,14 @@ using AwesomeAssertions;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -744,17 +747,146 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         isFailed.Should().BeFalse();
     }
 
+    public async Task MtpTestResultRecorder_CarriesOneOpaqueOccurrenceAcrossMultipleResults()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            messageBus,
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings(),
+            broker);
+        UnitTestElement element = CreateElement();
+        FrameworkTestResult[] results =
+        [
+            new() { Outcome = UnitTestOutcome.Passed },
+            new() { Outcome = UnitTestOutcome.Passed },
+        ];
+
+        await recorder.RecordStartAsync(element);
+        ((Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder)recorder)
+            .PrepareResults(element, results);
+        await recorder.RecordResultAsync(element, results[0], DateTimeOffset.Now, DateTimeOffset.Now);
+        await recorder.RecordResultAsync(element, results[1], DateTimeOffset.Now, DateTimeOffset.Now);
+
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty firstResultProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty finalResultProperty = messages[2].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        startProperty.Reservation.Should().BeSameAs(firstResultProperty.Reservation);
+        startProperty.Reservation.Should().BeSameAs(finalResultProperty.Reservation);
+        startProperty.IsFinalResult.Should().BeFalse();
+        firstResultProperty.IsFinalResult.Should().BeFalse();
+        finalResultProperty.IsFinalResult.Should().BeTrue();
+        element.ExecutionActivityLease.Should().BeNull();
+    }
+
+    public async Task MtpTestResultRecorder_RecordStart_ActivatesAfterPublishingInProgressNode()
+    {
+        var publishStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowPublishToComplete = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool publishCompleted = false;
+        var messageBus = new CapturingMessageBus(async () =>
+        {
+            publishStarted.SetResult(true);
+            await allowPublishToComplete.Task;
+            publishCompleted = true;
+        });
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Returns(() =>
+            {
+                publishCompleted.Should().BeTrue();
+                return activity.Object;
+            });
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var recorder = new MtpTestResultRecorder(
+            messageBus,
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings(),
+            broker);
+
+        Task recordStartTask = recorder.RecordStartAsync(CreateElement());
+        await publishStarted.Task;
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+
+        allowPublishToComplete.SetResult(true);
+        await recordStartTask;
+
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
+    }
+
+    public async Task MtpTestResultRecorder_RecordStart_DoesNotReserveWhenExecutionLeaseIsUnsupported()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            messageBus,
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings(),
+            broker);
+        UnitTestElement element = CreateElement();
+        element.SupportsExecutionActivityLease = false;
+
+        await recorder.RecordStartAsync(element);
+
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>().Single();
+        message.TestNode.Properties.Any<TestExecutionActivityProperty>().Should().BeFalse();
+        element.ExecutionActivityLease.Should().BeNull();
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+    }
+
     private static TestNode ResultNode(UnitTestOutcome outcome)
         => MSTestTestNodeConverter.ToResultTestNode(CreateElement(), new FrameworkTestResult { Outcome = outcome }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
 
-    private sealed class CapturingMessageBus : IMessageBus
+    private sealed class CapturingMessageBus(Func<Task>? onPublish = null) : IMessageBus
     {
         public List<IData> Published { get; } = [];
 
-        public Task PublishAsync(IDataProducer dataProducer, IData data)
+        public async Task PublishAsync(IDataProducer dataProducer, IData data)
         {
             Published.Add(data);
-            return Task.CompletedTask;
+            if (onPublish is not null)
+            {
+                await onPublish();
+            }
         }
     }
 

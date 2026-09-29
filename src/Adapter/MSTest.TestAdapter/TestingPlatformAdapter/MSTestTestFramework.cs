@@ -41,6 +41,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly PlatformServicesConfigurationAdapter _configuration;
     private readonly ILoggerFactory _loggerFactory;
     private readonly MSTestGracefulStopTestExecutionCapability _gracefulStopCapability;
+    private readonly TestExecutionActivityBroker? _testExecutionActivityBroker;
     private readonly string _resultFilesStagingDirectory;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private int _nextResultFileStagingDirectory;
@@ -59,6 +60,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _gracefulStopCapability = (MSTestGracefulStopTestExecutionCapability)capabilities.GetCapability<IGracefulStopTestExecutionCapability>()!;
+        _testExecutionActivityBroker =
+            (serviceProvider.GetService(typeof(ITestApplicationProcessExitCode)) as TestApplicationResult)?
+                .CreateTestExecutionActivityBroker();
         _resultFilesStagingDirectory = Path.Combine(
             serviceProvider.GetConfiguration().GetTestResultDirectory(),
             $".mstest-{Guid.NewGuid():N}"[..16]);
@@ -196,7 +200,14 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                     runSettings.SettingsXml,
                     runContext.TestRunDirectory,
                     handle.ToAdapterMessageLogger(),
-                    settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings, StageResultFiles),
+                    settings => new MtpTestResultRecorder(
+                        messageBus,
+                        this,
+                        sessionUid,
+                        IsTrxEnabled,
+                        settings,
+                        StageResultFiles,
+                        _testExecutionActivityBroker),
                     new MtpTestElementFilterProvider(runContext),
                     _configuration,
                     new TestSourceHandler(),

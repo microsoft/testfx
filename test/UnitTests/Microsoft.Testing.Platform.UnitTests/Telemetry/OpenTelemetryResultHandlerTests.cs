@@ -231,6 +231,96 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void CanonicalActivity_IsEnrichedAndStoppedWithoutCreatingResultSpan()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> canonicalService = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        activity.Setup(a => a.SetStatus(It.IsAny<PlatformActivityStatusCode>(), It.IsAny<string?>())).Returns(activity.Object);
+        canonicalService.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using TestExecutionActivityBroker broker = new(canonicalService.Object, PlatformOpenTelemetryOptions.Default);
+
+        TestNode startNode = CreateTestNode("canonical");
+        TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
+        startNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
+        _handler.NotifyInProgress(startNode, null);
+        reservation.Activate();
+        DateTimeOffset executionEnd = DateTimeOffset.UtcNow;
+        reservation.RecordExecutionEnd(executionEnd);
+
+        TestNode resultNode = CreateTestNode("canonical");
+        resultNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        resultNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: true));
+        _handler.NotifyPassed(resultNode, PassedTestNodeStateProperty.CachedInstance);
+
+        _otelService.Verify(
+            s => s.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Ok, It.IsAny<string?>()), Times.Once);
+        activity.Verify(a => a.Stop(executionEnd), Times.Once);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void CanonicalActivity_MultipleResultsAggregateBeforeStopping()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> canonicalService = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        DateTimeOffset? exceptionEventTimestamp = null;
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        activity.Setup(a => a.SetStatus(It.IsAny<PlatformActivityStatusCode>(), It.IsAny<string?>())).Returns(activity.Object);
+        activity.Setup(a => a.AddEvent(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, DateTimeOffset>((_, _, timestamp) => exceptionEventTimestamp = timestamp)
+            .Returns(activity.Object);
+        canonicalService.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using TestExecutionActivityBroker broker = new(canonicalService.Object, PlatformOpenTelemetryOptions.Default);
+
+        TestNode startNode = CreateTestNode("canonical-multiple");
+        TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
+        startNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
+        _handler.NotifyInProgress(startNode, null);
+        reservation.Activate();
+        DateTimeOffset executionEnd = DateTimeOffset.UtcNow;
+        reservation.RecordExecutionEnd(executionEnd);
+
+        TestNode failedNode = CreateTestNode("canonical-multiple");
+        var failedState = new FailedTestNodeStateProperty(new InvalidOperationException("row failed"));
+        failedNode.Properties.Add(failedState);
+        failedNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
+        _handler.NotifyFailed(failedNode, failedState);
+        activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Never);
+        Assert.AreEqual(1, _activeTestCases.Value);
+
+        TestNode passedNode = CreateTestNode("canonical-multiple");
+        passedNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        passedNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: true));
+        _handler.NotifyPassed(passedNode, PassedTestNodeStateProperty.CachedInstance);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Never);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, It.IsAny<string?>()), Times.Once);
+        activity.Verify(a => a.Stop(executionEnd), Times.Once);
+        Assert.AreEqual(executionEnd, exceptionEventTimestamp);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
     public void NotifyExecutionCompleted_DisposesActivityWithoutRecordingOutcome()
     {
         Mock<IPlatformActivity> activity = SetupActivityForTestNode("dropped-test");
