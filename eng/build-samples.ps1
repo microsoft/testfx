@@ -130,14 +130,18 @@ try {
                 [void]$packageSourceMapping.AppendChild($localSourceMapping)
 
                 # Package source mapping selects only the sources with the most specific matching
-                # pattern. Add the same specific patterns to dotnet-public so released package
-                # versions used by the other samples remain available alongside the local CI build.
-                $dotnetPublicMapping = $packageSourceMapping.SelectSingleNode("packageSource[@key='dotnet-public']")
-                if ($null -ne $dotnetPublicMapping) {
+                # pattern. Add the same specific patterns to public feeds so released and preview
+                # package versions remain available alongside the local CI build.
+                foreach ($publicSource in @("dotnet-public", "test-tools")) {
+                    $publicSourceMapping = $packageSourceMapping.SelectSingleNode("packageSource[@key='$publicSource']")
+                    if ($null -eq $publicSourceMapping) {
+                        continue
+                    }
+
                     foreach ($patternValue in $localPackagePatterns) {
                         $pattern = $nuGetConfig.CreateElement("package")
                         $pattern.SetAttribute("pattern", $patternValue)
-                        [void]$dotnetPublicMapping.AppendChild($pattern)
+                        [void]$publicSourceMapping.AppendChild($pattern)
                     }
                 }
             }
