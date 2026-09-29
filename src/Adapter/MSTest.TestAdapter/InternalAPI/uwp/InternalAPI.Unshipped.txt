@@ -10,6 +10,7 @@ const Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBa
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsCommandLineOptionsProvider.RunSettingsOptionName = "settings" -> string!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName = "filter" -> string!
 const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestTestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName = "test-parameter" -> string!
+Microsoft.Testing.Extensions.PackagedApp.CommandLineOptionParser
 Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase
 Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.RunSettingsCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! optionDescription, string! fileDoesNotExistErrorFormat, string! fileCannotBeReadErrorFormat) -> void
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase
@@ -174,6 +175,8 @@ override Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeException.St
 override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 override sealed Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Extensions.PackagedApp.CommandLineOptionParser.TryGetInlineOptionValue(string! argument, string! option, out string? value) -> bool
+static Microsoft.Testing.Extensions.PackagedApp.CommandLineOptionParser.TryGetOptionValue(System.Collections.Generic.IReadOnlyList<string!>! arguments, string! option) -> string?
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.ApplyEnvironmentVariables(System.Xml.Linq.XDocument! runSettings, Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.CanReadFile(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! filePath) -> bool
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.FindInvalidTestParameter(string![]! arguments) -> string?
