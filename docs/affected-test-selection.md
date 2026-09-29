@@ -17,11 +17,12 @@ assets for the base extension, collector, CodeCoverage extension, and Azure DevO
 Affected-test execution is temporarily disabled in the pipeline. Azure DevOps rejects map uploads from provider
 versions `18.12.0-preview.26473.3` and `18.12.0-preview.26474.2` because their file-container PUT requests omit the
 required `Content-Range` header. The package owns that HTTP request, so repository configuration cannot repair it.
-The pinned `11.0.100-rc.2.26471.109` SDK also reports a successful collection application that suppresses SDK
-reporting as a handshake failure: local storage writes the complete map and the application exits `0`, but the parent
-`dotnet test` command exits `1`. Keep the packages and storage configuration dormant until the provider upload and
-collection protocol are both corrected, then update the affected package/SDK versions and re-enable the shared
-Windows test call.
+The previously pinned `11.0.100-rc.2.26471.109` SDK also reports a successful collection application that suppresses
+SDK reporting as a handshake failure: local storage writes the complete map and the application exits `0`, but the
+parent `dotnet test` command exits `1`. The repository now pins `11.0.100-rtm.26476.107`, but affected-test execution
+remains disabled until the provider upload is corrected and the collection protocol is verified with the new SDK.
+Keep the packages and storage configuration dormant until both conditions are satisfied, then update the affected
+package/SDK gates and re-enable the shared Windows test call.
 
 ## CI layout
 
