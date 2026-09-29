@@ -997,6 +997,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
     public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController()
     {
@@ -1019,6 +1020,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
     public async Task MSTestSdk_ModernUwp_AllowsExplicitMtpSelection()
     {
@@ -1026,6 +1028,7 @@ namespace MSTestWebTest
             "ModernUwpMtpSdk",
             """
             <UseUwp>true</UseUwp>
+            <UseUwpTools>true</UseUwpTools>
             <UseVSTest>false</UseVSTest>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             """);
@@ -1034,6 +1037,46 @@ namespace MSTestWebTest
         result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
         result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_UsesDirectMtpRunner()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UwpXamlReferencesSdk",
+            """
+            <UseUwp>true</UseUwp>
+            <UseUwpTools>false</UseUwpTools>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputContains("Capabilities=TestingPlatformServer");
+        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UnpackagedWinUIWithUwpXamlReferences_DoesNotConflictWithUwpTools()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIUwpXamlSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <UseUwp>true</UseUwp>
+            <UseUwpTools>false</UseUwpTools>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
     }
 
     [TestMethod]
@@ -1167,7 +1210,7 @@ namespace MSTestWebTest
               </ItemGroup>
 
               <Target Name="PrintWindowsTestContract"
-                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_MSTestSDKConfigureAppModelController">
+                      DependsOnTargets="_MSTestSDKValidateWindowsApplicationModel;_CalculateGenerateTestingPlatformEntryPoint;_MSTestSDKConfigureAppModelController">
                 <Message Importance="high"
                          Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerTfm=$(_MSTestAppModelControllerTfm);ControllerExtensions=$(_MSTestAppModelControllerExtensions)" />
                 <Message Importance="high"
