@@ -7,9 +7,8 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
+    private const string AttemptIdFieldName = "AttemptId";
     private const string IsTestResultFlakyFieldName = "IsTestResultFlaky";
-    private static readonly IReadOnlyList<AzureDevOpsCustomTestField> FlakyCustomFields = [new(IsTestResultFlakyFieldName, "true")];
-    private static readonly IReadOnlyList<AzureDevOpsCustomTestField> NonFlakyCustomFields = [new(IsTestResultFlakyFieldName, "false")];
 
     /// <summary>
     /// Publishes results Azure DevOps has not seen in this build yet, recording the ids it assigns them so
@@ -149,7 +148,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             {
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-                CustomFields = CreateFlakyCustomFields(updates[i].Attempt.Result.Outcome, attemptHistories[i]),
+                CustomFields = CreateRerunCustomFields(updates[i].Attempt.Result.Outcome, attemptHistories[i]),
                 SubResults = appendedAttempts[i],
                 DurationInMs = totalDurations[i],
                 StartedDate = startedDates[i],
@@ -234,15 +233,24 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     private static IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> GetAttempts(AzureDevOpsTestCaseResultWithAttachments result)
         => result.PreviousAttempts.Count == 0 ? [result] : [.. result.PreviousAttempts, result];
 
-    private static IReadOnlyList<AzureDevOpsCustomTestField> CreateFlakyCustomFields(
+    private static IReadOnlyList<AzureDevOpsCustomTestField> CreateRerunCustomFields(
         string outcome,
         IReadOnlyList<AzureDevOpsTestSubResult> attempts)
-        => outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome
+    {
+        var customFields = new List<AzureDevOpsCustomTestField>(capacity: 2);
+        if (attempts.Count > 1)
+        {
+            customFields.Add(new AzureDevOpsCustomTestField(AttemptIdFieldName, attempts[^1].SequenceId - 1));
+        }
+
+        bool isFlaky = outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome
             && attempts.Any(static attempt => attempt.Outcome is
                 AzureDevOpsLivePublishingConstants.FailedTestOutcome
-                or AzureDevOpsLivePublishingConstants.AbortedTestOutcome)
-            ? FlakyCustomFields
-            : NonFlakyCustomFields;
+                or AzureDevOpsLivePublishingConstants.AbortedTestOutcome);
+
+        customFields.Add(new AzureDevOpsCustomTestField(IsTestResultFlakyFieldName, isFlaky ? "true" : "false"));
+        return customFields;
+    }
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
         : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);
