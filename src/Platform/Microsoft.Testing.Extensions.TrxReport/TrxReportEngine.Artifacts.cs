@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Resources;
@@ -100,22 +100,24 @@ internal sealed partial class TrxReportEngine
     {
         string artifactDirectory = CreateOrGetTrxArtifactDirectory(runDeploymentRoot, relativeResultsDirectory);
         string fileName = artifact.Name;
+        string destinationFileName = fileName;
 
-        string destination = Path.Combine(artifactDirectory, fileName);
+        string destination = Path.Combine(artifactDirectory, destinationFileName);
         int nameCounter = 0;
 
         // If the file already exists, append a number to the end of the file name
         while (_fileSystem.ExistFile(TrxLongPathHelper.GetPathForFileSystemAccess(destination)))
         {
             nameCounter++;
-            destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
+            destinationFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}";
+            destination = Path.Combine(artifactDirectory, destinationFileName);
         }
 
         _fileSystem.CopyFile(
             TrxLongPathHelper.GetPathForFileSystemAccess(artifact.FullName),
             TrxLongPathHelper.GetPathForFileSystemAccess(destination));
 
-        return Path.Combine(_environment.MachineName, Path.GetFileName(destination));
+        return Path.Combine(_environment.MachineName, destinationFileName);
     }
 
     private string CreateOrGetTrxArtifactDirectory(string runDeploymentRoot, string? relativeResultsDirectory = null)
