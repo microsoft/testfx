@@ -54,6 +54,7 @@ public sealed class MtpServerProcessTests
         Assert.Contains(temp.Path, launch.Message);
     }
 
+#if NET
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file and PowerShell child process.")]
     public async Task StartAsyncTimeoutKillsProcessAndReleasesListener()
@@ -88,6 +89,7 @@ public sealed class MtpServerProcessTests
 
         await AssertPortCanBeReboundAsync(port);
     }
+#endif
 
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file to fill redirected stdout.")]
@@ -1029,6 +1031,7 @@ public sealed class MtpServerProcessTests
         => (T)(instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(instance)
             ?? throw new InvalidOperationException($"Field '{fieldName}' is null."));
 
+#if NET
     private async Task AssertPortCanBeReboundAsync(int port)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -1054,6 +1057,7 @@ public sealed class MtpServerProcessTests
 
         Assert.Fail($"Port {port} could not be rebound after server shutdown: {lastException}");
     }
+#endif
 
     private async Task AssertDoesNotCaptureSynchronizationContextAsync(Func<Task> startOperation, Action releaseOperation)
     {
