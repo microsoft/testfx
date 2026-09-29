@@ -199,7 +199,31 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             return;
         }
 
-        executionException.Data["TestExecutionScopeCleanupException"] = cleanupException;
+        AddSecondaryExceptionOrThrow(
+            executionException,
+            "TestExecutionScopeCleanupException",
+            cleanupException);
+    }
+
+    private static void AddSecondaryExceptionOrThrow(Exception primaryException, string operation, Exception secondaryException)
+    {
+        try
+        {
+            if (primaryException.Data is { IsReadOnly: false } data)
+            {
+                data[operation] = secondaryException;
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            // An exception can expose an IDictionary implementation that rejects reads or writes.
+        }
+
+        throw new AggregateException(
+            $"{operation} failed while handling another exception.",
+            primaryException,
+            secondaryException);
     }
 
     private KeyValuePair<string, object?>[] GetSessionTags(SessionUid sessionId)
