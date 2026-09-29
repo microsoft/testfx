@@ -211,7 +211,7 @@ public sealed class TestHostBuilderTests
             Mock.Of<IUnhandledExceptionsHandler>(),
             ["--no-banner"]);
         builder.RegisterTestFramework(
-            _ => Mock.Of<ITestFrameworkCapabilities>(),
+            _ => new TestFrameworkCapabilities(),
             (_, _) => Mock.Of<ITestFramework>());
         var orchestratorManager = (PublicApi.TestHostOrchestratorManager)builder.TestHostOrchestrator;
         for (int i = 0; i < orchestratorCount; i++)
