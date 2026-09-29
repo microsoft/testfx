@@ -66,15 +66,8 @@ internal partial class TestMethodInfo
             }
             catch (Exception exception)
             {
-                if (result is not null)
-                {
-                    result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
-                    result.TestFailureException = exception;
-                }
-                else
-                {
-                    throw;
-                }
+                result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+                result.TestFailureException = exception;
             }
 
             return;

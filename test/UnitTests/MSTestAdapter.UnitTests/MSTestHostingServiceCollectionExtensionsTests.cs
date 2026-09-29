@@ -183,6 +183,28 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         tracker.ScopeDisposeCount.Should().Be(1);
     }
 
+    public void CreateInstanceFailureDisposesAsyncScopeOutsideCallerSynchronizationContext()
+    {
+        var scope = new AsyncOnlyStubScope(new StubServiceProvider(new ScopedService()));
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(new AsyncOnlyStubScopeFactory(scope));
+        SynchronizationContext? originalSynchronizationContext = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+        try
+        {
+            Action action = () => factory.CreateInstance(typeof(ThrowingServiceConstructorTestClass), CreateTestContext());
+
+            action.Should().Throw<InvalidOperationException>();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(originalSynchronizationContext);
+        }
+
+        scope.Disposed.Should().BeTrue();
+        scope.DisposalSynchronizationContext.Should().BeNull();
+    }
+
     public async Task DisposeAsyncDisposesTestInstanceThenScopeExactlyOnce()
     {
         var tracker = new DisposalTracker();
@@ -382,6 +404,15 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         }
     }
 
+    private sealed class ThrowingServiceConstructorTestClass
+    {
+        public ThrowingServiceConstructorTestClass(ScopedService service)
+        {
+            _ = service;
+            throw new InvalidOperationException("activation failure");
+        }
+    }
+
     private sealed class DualDisposableTestClass : IAsyncDisposable, IDisposable
     {
         private readonly TrackedScopedService _service;
@@ -465,6 +496,11 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         public IServiceScope CreateScope() => new StubScope(serviceProvider);
     }
 
+    private sealed class AsyncOnlyStubScopeFactory(AsyncOnlyStubScope scope) : IServiceScopeFactory
+    {
+        public IServiceScope CreateScope() => scope;
+    }
+
     private sealed class StubScope(IServiceProvider serviceProvider) : IServiceScope
     {
         public IServiceProvider ServiceProvider => serviceProvider;
@@ -478,5 +514,23 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
     {
         public object? GetService(Type serviceType)
             => serviceType == typeof(ScopedService) ? service : null;
+    }
+
+    private sealed class AsyncOnlyStubScope(IServiceProvider serviceProvider) : IServiceScope, IAsyncDisposable
+    {
+        public IServiceProvider ServiceProvider => serviceProvider;
+
+        public bool Disposed { get; private set; }
+
+        public SynchronizationContext? DisposalSynchronizationContext { get; private set; }
+
+        public void Dispose() => throw new InvalidOperationException("Synchronous disposal should not be used.");
+
+        public async ValueTask DisposeAsync()
+        {
+            DisposalSynchronizationContext = SynchronizationContext.Current;
+            await Task.Yield();
+            Disposed = true;
+        }
     }
 }

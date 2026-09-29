@@ -163,7 +163,7 @@ internal sealed class MicrosoftExtensionsTestClassInstanceFactory(IServiceScopeF
     {
         if (scope is IAsyncDisposable asyncDisposable)
         {
-            asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            Task.Run(async () => await asyncDisposable.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
             return;
         }
 
