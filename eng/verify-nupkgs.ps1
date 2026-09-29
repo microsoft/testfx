@@ -25,8 +25,10 @@ function Confirm-NugetPackages {
         "MSTest"                                      = 10
         "MSTest.Analyzers"                            = 56
         "MSTest.SourceGeneration"                     = 8
-        "MSTest.Windows.UIAutomation"                = 36
+        "MSTest.Windows.UIAutomation"                 = 36
     }
+    # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
+    $packagesWithOptionalPdbFiles = @("MSTest.Sdk", "MSTest.Windows.UIAutomation")
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
     $tmpDirectory = Resolve-Path "$PSScriptRoot/../artifacts/tmp/$configuration"
@@ -97,7 +99,12 @@ function Confirm-NugetPackages {
             Write-Verbose "Verifying package '$packageKey'."
             $null = $verifiedPackageKeys.Add($packageKey)
 
-            $actualNumOfFiles = (Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir).Count
+            $packageFiles = @(Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir)
+            if ($packagesWithOptionalPdbFiles -contains $packageKey) {
+                $packageFiles = @($packageFiles | Where-Object Extension -ne ".pdb")
+            }
+
+            $actualNumOfFiles = $packageFiles.Count
             if ($expectedNumOfFiles[$packageKey] -ne $actualNumOfFiles) {
                 $errors += "Number of files are not equal for '$packageKey', expected: $($expectedNumOfFiles[$packageKey]) actual: $actualNumOfFiles"
             }
