@@ -66,6 +66,7 @@ public sealed class OpenTelemetryActivityTopologyTests : AcceptanceTestBase<Open
     <LangVersion>preview</LangVersion>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="$MicrosoftExtensionsHostingVersion$" />
@@ -88,6 +89,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -128,6 +132,7 @@ internal static class Program
             ?? throw new InvalidOperationException("The application-owned provider did not subscribe to its activity source.");
 
         ITestApplicationBuilder testBuilder = await TestApplication.CreateBuilderAsync(args);
+        testBuilder.TestHost.AddDataConsumer(_ => new DelayedResultConsumer());
         testBuilder.AddMSTest(() => [Assembly.GetExecutingAssembly()]);
         testBuilder.AddTestingPlatformDiagnostics();
 
@@ -198,6 +203,7 @@ internal static class ActivityTopologyVerifier
             ActivitySnapshot folded = SingleResult(activities, nameof(OccurrenceIdentityTests.FoldedDataRows));
             ActivitySnapshot[] unfolded = ResultsForMethod(activities, nameof(OccurrenceIdentityTests.UnfoldedDataRows), expectedCount: 2);
             ActivitySnapshot skipped = SingleResult(activities, nameof(OccurrenceIdentityTests.SkippedTest));
+            ActivitySnapshot delayedResult = SingleResult(activities, nameof(ProducerTimestampTests.DelayedResultPublication));
 
             foreach (ActivitySnapshot activity in activities)
             {
@@ -231,6 +237,7 @@ internal static class ActivityTopologyVerifier
             Require(secondTest.GetTagItem("test.case.result.status")?.ToString() == "pass", "The second canonical test activity did not carry the pass result.");
             RequireDurationMatchesReportedTiming(firstTest);
             RequireDurationMatchesReportedTiming(secondTest);
+            RequireProducerTimestamp(delayedResult);
 
             Require(firstCustom.ParentSpanId == firstTest.SpanId, "The first custom activity was not parented to the first canonical test activity.");
             Require(secondCustom.ParentSpanId == secondTest.SpanId, "The second custom activity was not parented to the second canonical test activity.");
@@ -348,6 +355,25 @@ internal static class ActivityTopologyVerifier
         Require(
             difference < 500,
             $"{activity.OperationName} duration differed from the reported execution timing by {difference}ms.");
+    }
+
+    private static void RequireProducerTimestamp(ActivitySnapshot activity)
+    {
+        DateTimeOffset consumptionStarted = DelayedResultConsumer.ConsumptionStarted
+            ?? throw new InvalidOperationException("The delayed result consumer did not observe the producer timestamp test.");
+        DateTimeOffset consumptionCompleted = DelayedResultConsumer.ConsumptionCompleted
+            ?? throw new InvalidOperationException("The delayed result consumer did not complete its delay.");
+        DateTimeOffset exportedEnd = activity.StartTimeUtc + activity.Duration;
+        TimeSpan markerDifference = (exportedEnd - TelemetryProbe.ProducerExecutionEnd).Duration();
+
+        Require(
+            consumptionCompleted - consumptionStarted >= DelayedResultConsumer.PublicationDelay - TimeSpan.FromMilliseconds(250),
+            "The controlled result-consumption delay was shorter than expected.");
+        // The allowance is deliberately smaller than PublicationDelay, while leaving ample room for normal
+        // test-host scheduling between the test-body marker and MSTest's producer timestamp.
+        Require(
+            markerDifference < TimeSpan.FromSeconds(2),
+            $"{activity.OperationName} ended {markerDifference.TotalMilliseconds}ms from the independently captured execution-end marker.");
     }
 
     private static void PrintTopology(string name, ActivitySnapshot activity)
@@ -475,6 +501,39 @@ internal sealed class CapturingMetricExporter : BaseExporter<Metric>
     }
 }
 
+internal sealed class DelayedResultConsumer : IBlockingDataConsumer
+{
+    public static readonly TimeSpan PublicationDelay = TimeSpan.FromSeconds(3);
+
+    public static DateTimeOffset? ConsumptionStarted { get; private set; }
+
+    public static DateTimeOffset? ConsumptionCompleted { get; private set; }
+
+    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
+
+    public string Uid => nameof(DelayedResultConsumer);
+
+    public string Version => "1.0.0";
+
+    public string DisplayName => nameof(DelayedResultConsumer);
+
+    public string Description => nameof(DelayedResultConsumer);
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    {
+        if (value is TestNodeUpdateMessage message
+            && string.Equals(message.TestNode.DisplayName, nameof(ProducerTimestampTests.DelayedResultPublication), StringComparison.Ordinal)
+            && message.TestNode.Properties.SingleOrDefault<PassedTestNodeStateProperty>() is not null)
+        {
+            ConsumptionStarted = DateTimeOffset.UtcNow;
+            await Task.Delay(PublicationDelay, cancellationToken);
+            ConsumptionCompleted = DateTimeOffset.UtcNow;
+        }
+    }
+}
+
 internal static class ResourceVerifier
 {
     public static void Verify(Resource? resource, string signal, string expectedServiceName)
@@ -518,6 +577,8 @@ internal static class TelemetryProbe
 
     public static ActivitySpanId ClassCleanupAmbientSpanId { get; private set; }
 
+    public static DateTimeOffset ProducerExecutionEnd { get; private set; }
+
     public static IReadOnlyDictionary<string, ActivitySpanId> TestInitializeAmbientSpanIds => TestInitializeAmbient;
 
     public static IReadOnlyDictionary<string, ActivitySpanId> TestCleanupAmbientSpanIds => TestCleanupAmbient;
@@ -542,6 +603,9 @@ internal static class TelemetryProbe
 
     public static void CaptureTestCleanup(string testName)
         => TestCleanupAmbient[testName] = RequireCurrent($"{testName} TestCleanup").SpanId;
+
+    public static void CaptureProducerExecutionEnd()
+        => ProducerExecutionEnd = DateTimeOffset.UtcNow;
 
     public static async Task CaptureTestAsync(string name, TaskCompletionSource started, Task otherStarted)
     {
@@ -729,6 +793,14 @@ public sealed class OccurrenceIdentityTests
     public void SkippedTest()
     {
     }
+}
+
+[TestClass]
+public sealed class ProducerTimestampTests
+{
+    [TestMethod]
+    public void DelayedResultPublication()
+        => TelemetryProbe.CaptureProducerExecutionEnd();
 }
 """;
 
