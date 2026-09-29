@@ -35,7 +35,10 @@ internal static class VideoRecorderFactory
                 warn);
             if (nativeRecorder is not null)
             {
-                return nativeRecorder;
+                return CreateWithStartupFallback(
+                    nativeRecorder,
+                    new FfmpegVideoRecorder(options, outputDirectory, clock, log, warn),
+                    log);
             }
         }
 #endif
@@ -59,7 +62,10 @@ internal static class VideoRecorderFactory
         }
         catch (Exception ex)
         {
-            warn?.Invoke($"The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {ex.Message}");
+            warn?.Invoke(string.Format(
+                CultureInfo.CurrentCulture,
+                Resources.VideoRecorderResources.NativeInitializationFallback,
+                ex.Message));
             return null;
         }
     }
@@ -73,4 +79,95 @@ internal static class VideoRecorderFactory
             && !options.IncludeChapters
             && RoslynString.IsNullOrWhiteSpace(options.ExtraRecorderArguments)
             && RoslynString.IsNullOrWhiteSpace(options.InputArgumentsOverride);
+
+    internal static IVideoRecorder CreateWithStartupFallback(
+        IVideoRecorder primary,
+        IVideoRecorder fallback,
+        Action<string>? log)
+        => new StartupFallbackVideoRecorder(primary, fallback, log);
+
+    private sealed class StartupFallbackVideoRecorder : IVideoRecorder
+    {
+        private readonly IVideoRecorder _primary;
+        private readonly IVideoRecorder _fallback;
+        private readonly Action<string>? _log;
+        private IVideoRecorder _active;
+        private bool _startAttempted;
+
+        public StartupFallbackVideoRecorder(IVideoRecorder primary, IVideoRecorder fallback, Action<string>? log)
+        {
+            _primary = primary;
+            _fallback = fallback;
+            _log = log;
+            _active = primary;
+        }
+
+        public bool IsAvailable => _primary.IsAvailable || _fallback.IsAvailable;
+
+        public string? FfmpegPath => _active.FfmpegPath;
+
+        public DateTimeOffset? RecordingStartUtc => _active.RecordingStartUtc;
+
+        public string? SegmentDirectory => _active.SegmentDirectory;
+
+        public string SegmentExtension => _active.SegmentExtension;
+
+        public async Task<bool> StartAsync(CancellationToken cancellationToken = default)
+        {
+            if (_startAttempted)
+            {
+                return _active.RecordingStartUtc is not null;
+            }
+
+            _startAttempted = true;
+            if (_primary.IsAvailable)
+            {
+                try
+                {
+                    if (await _primary.StartAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        return true;
+                    }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _log?.Invoke($"The primary video recorder failed to start: {ex.Message}");
+                }
+
+                try
+                {
+                    await _primary.StopAsync(CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _log?.Invoke($"The primary video recorder failed during startup cleanup: {ex.Message}");
+                }
+            }
+
+            _active = _fallback;
+            _log?.Invoke("The native Windows video recorder was unavailable at startup; falling back to ffmpeg.");
+            return _fallback.IsAvailable
+                && await _fallback.StartAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken = default)
+            => _active.StopAsync(cancellationToken);
+
+        public IReadOnlyList<VideoSegment> ReadSegments()
+            => _active.ReadSegments();
+
+        public string DescribeLastFfmpegError()
+            => _active.DescribeLastFfmpegError();
+
+        public Task<string?> ConcatAsync(
+            IReadOnlyList<VideoSegment> segments,
+            string outputFileName,
+            string? ffmetadataPath,
+            CancellationToken cancellationToken)
+            => _active.ConcatAsync(segments, outputFileName, ffmetadataPath, cancellationToken);
+    }
 }

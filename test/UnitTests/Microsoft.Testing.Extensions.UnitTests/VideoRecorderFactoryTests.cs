@@ -9,8 +9,13 @@ using Moq;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
+#if NET10_0_OR_GREATER && WINDOWS
+[OSCondition(OperatingSystems.Windows)]
+#endif
 public sealed class VideoRecorderFactoryTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void IsNativeConfigurationSupported_CompatibleSessionConfiguration_ReturnsTrue()
     {
@@ -125,6 +130,44 @@ public sealed class VideoRecorderFactoryTests
         Assert.IsNotNull(warning);
         Assert.Contains("native initialization failed", warning);
         Assert.Contains("falling back to ffmpeg", warning);
+    }
+
+    [TestMethod]
+    public async Task StartupFallbackVideoRecorder_PrimaryStartupFails_StartsFallback()
+    {
+        var primary = new Mock<IVideoRecorder>();
+        primary.SetupGet(instance => instance.IsAvailable).Returns(true);
+        primary.Setup(instance => instance.StartAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        primary.Setup(instance => instance.StopAsync(CancellationToken.None)).Returns(Task.CompletedTask);
+        var fallback = new Mock<IVideoRecorder>();
+        fallback.SetupGet(instance => instance.IsAvailable).Returns(true);
+        fallback.SetupGet(instance => instance.FfmpegPath).Returns("ffmpeg");
+        fallback.Setup(instance => instance.StartAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        IVideoRecorder recorder = VideoRecorderFactory.CreateWithStartupFallback(primary.Object, fallback.Object, log: null);
+
+        bool started = await recorder.StartAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(started);
+        Assert.AreEqual("ffmpeg", recorder.FfmpegPath);
+        primary.Verify(instance => instance.StopAsync(CancellationToken.None), Times.Once());
+        fallback.Verify(instance => instance.StartAsync(TestContext.CancellationToken), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task StartupFallbackVideoRecorder_PrimaryStartupSucceeds_DoesNotStartFallback()
+    {
+        var primary = new Mock<IVideoRecorder>();
+        primary.SetupGet(instance => instance.IsAvailable).Returns(true);
+        primary.SetupGet(instance => instance.FfmpegPath).Returns("native");
+        primary.Setup(instance => instance.StartAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var fallback = new Mock<IVideoRecorder>();
+        IVideoRecorder recorder = VideoRecorderFactory.CreateWithStartupFallback(primary.Object, fallback.Object, log: null);
+
+        bool started = await recorder.StartAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(started);
+        Assert.AreEqual("native", recorder.FfmpegPath);
+        fallback.Verify(instance => instance.StartAsync(It.IsAny<CancellationToken>()), Times.Never());
     }
 
     private static VideoRecorderOptions CreateCompatibleOptions()

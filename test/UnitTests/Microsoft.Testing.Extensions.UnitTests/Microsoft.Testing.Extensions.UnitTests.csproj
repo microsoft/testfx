@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <EnableWindowsTargeting Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">true</EnableWindowsTargeting>
     <!--
       .NET Framework 4.7.1 and earlier does not fully support portable PDBs, which breaks tests for Azure DevOps extension.
       See: https://learn.microsoft.com/en-us/dotnet/core/diagnostics/symbols#support-for-portable-pdbs
@@ -74,6 +76,8 @@
 
   <ItemGroup>
     <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp.UIAutomation.Recording"
+                      Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'" />
   </ItemGroup>
 
   <ItemGroup>

@@ -22,15 +22,16 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 internal sealed class WinAppCliVideoRecorder : IVideoRecorder
 {
     private const int ProcessPerMonitorDpiAware = 2;
-    private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan DefaultStopTimeout = TimeSpan.FromSeconds(15);
 
     private readonly VideoRecorderOptions _options;
     private readonly string _outputDirectory;
     private readonly IClock _clock;
     private readonly Action<string>? _log;
     private readonly Action<string>? _warn;
-    private readonly ServiceProvider _serviceProvider;
+    private readonly IAsyncDisposable? _recordingServiceOwner;
     private readonly IUiRecordingService _recordingService;
+    private readonly TimeSpan _stopTimeout;
     private readonly Lock _gate = new();
 
     private CancellationTokenSource? _recordingCancellation;
@@ -40,7 +41,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
     private string? _recordingPath;
     private string? _lastError;
     private bool _stopCompleted;
-    private int _serviceProviderDisposed;
+    private int _recordingServiceOwnerDisposed;
 
     public WinAppCliVideoRecorder(
         VideoRecorderOptions options,
@@ -48,19 +49,48 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         IClock clock,
         Action<string>? log,
         Action<string>? warn)
+        : this(options, outputDirectory, clock, log, warn, CreateRecordingServiceProvider(), DefaultStopTimeout)
+    {
+    }
+
+    private WinAppCliVideoRecorder(
+        VideoRecorderOptions options,
+        string outputDirectory,
+        IClock clock,
+        Action<string>? log,
+        Action<string>? warn,
+        ServiceProvider serviceProvider,
+        TimeSpan stopTimeout)
+        : this(
+            options,
+            outputDirectory,
+            clock,
+            log,
+            warn,
+            serviceProvider.GetRequiredService<IUiRecordingService>(),
+            serviceProvider,
+            stopTimeout)
+    {
+    }
+
+    internal WinAppCliVideoRecorder(
+        VideoRecorderOptions options,
+        string outputDirectory,
+        IClock clock,
+        Action<string>? log,
+        Action<string>? warn,
+        IUiRecordingService recordingService,
+        IAsyncDisposable? recordingServiceOwner = null,
+        TimeSpan? stopTimeout = null)
     {
         _options = options;
         _outputDirectory = outputDirectory;
         _clock = clock;
         _log = log;
         _warn = warn;
-
-        var services = new ServiceCollection();
-        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        services.AddWinAppUiAutomation();
-        services.AddWinAppUiRecording();
-        _serviceProvider = services.BuildServiceProvider();
-        _recordingService = _serviceProvider.GetRequiredService<IUiRecordingService>();
+        _recordingService = recordingService;
+        _recordingServiceOwner = recordingServiceOwner;
+        _stopTimeout = stopTimeout ?? DefaultStopTimeout;
     }
 
     public bool IsAvailable => true;
@@ -123,7 +153,14 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         }
 
         await Task.WhenAny(recordingStarted.Task, recordingTask).ConfigureAwait(false);
-        return await recordingStarted.Task.ConfigureAwait(false);
+        bool started = await recordingStarted.Task.ConfigureAwait(false);
+        if (!started)
+        {
+            ResetFailedStart();
+            await DisposeRecordingServiceOwnerQuietlyAsync().ConfigureAwait(false);
+        }
+
+        return started;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
@@ -150,7 +187,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
                 _stopCompleted = true;
             }
 
-            await DisposeServiceProviderQuietlyAsync().ConfigureAwait(false);
+            await DisposeRecordingServiceOwnerQuietlyAsync().ConfigureAwait(false);
             return;
         }
 
@@ -166,10 +203,10 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
             }
         }
 
-        Task completedTask = await Task.WhenAny(recordingTask, Task.Delay(StopTimeout, CancellationToken.None)).ConfigureAwait(false);
+        Task completedTask = await Task.WhenAny(recordingTask, Task.Delay(_stopTimeout, CancellationToken.None)).ConfigureAwait(false);
         if (completedTask != recordingTask && !recordingTask.IsCompleted)
         {
-            _lastError = string.Format(CultureInfo.CurrentCulture, Resources.VideoRecorderResources.NativeStopTimeout, StopTimeout.TotalSeconds);
+            _lastError = string.Format(CultureInfo.CurrentCulture, Resources.VideoRecorderResources.NativeStopTimeout, _stopTimeout.TotalSeconds);
             _warn?.Invoke(_lastError);
             lock (_gate)
             {
@@ -194,7 +231,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
             _recordingCancellation = null;
         }
 
-        await DisposeServiceProviderQuietlyAsync().ConfigureAwait(false);
+        await DisposeRecordingServiceOwnerQuietlyAsync().ConfigureAwait(false);
     }
 
     public IReadOnlyList<VideoSegment> ReadSegments()
@@ -231,7 +268,6 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
             return Task.FromResult<string?>(null);
         }
 
-        cancellationToken.ThrowIfCancellationRequested();
         string sourcePath = segments[0].Path;
         string outputPath = Path.Combine(_outputDirectory, outputFileName);
         try
@@ -242,7 +278,10 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         catch (Exception ex)
         {
             _lastError = ex.Message;
-            _warn?.Invoke($"Failed to publish the native Windows recording: {ex.Message}");
+            _warn?.Invoke(string.Format(
+                CultureInfo.CurrentCulture,
+                Resources.VideoRecorderResources.NativePublishFailed,
+                ex.Message));
             return Task.FromResult<string?>(null);
         }
     }
@@ -293,7 +332,11 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         catch (RecordPartialOutputException ex)
         {
             _lastError = ex.Message;
-            _warn?.Invoke($"Native Windows recording completed with partial output: {ex.Message} {ex.RecoveryHint}");
+            _warn?.Invoke(string.Format(
+                CultureInfo.CurrentCulture,
+                Resources.VideoRecorderResources.NativePartialOutput,
+                ex.Message,
+                ex.RecoveryHint));
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -304,7 +347,10 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         catch (Exception ex)
         {
             _lastError = ex.Message;
-            _warn?.Invoke($"Native Windows recording failed: {ex.Message}");
+            _warn?.Invoke(string.Format(
+                CultureInfo.CurrentCulture,
+                Resources.VideoRecorderResources.NativeRecordingFailed,
+                ex.Message));
         }
         finally
         {
@@ -335,6 +381,15 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         }
     }
 
+    private static ServiceProvider CreateRecordingServiceProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+        services.AddWinAppUiAutomation();
+        services.AddWinAppUiRecording();
+        return services.BuildServiceProvider();
+    }
+
     private static class NativeMethods
     {
         [DllImport("shcore.dll")]
@@ -358,21 +413,24 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         {
             _recordingEndUtc = _clock.UtcNow;
             recordingCancellation?.Dispose();
-            await DisposeServiceProviderQuietlyAsync().ConfigureAwait(false);
+            await DisposeRecordingServiceOwnerQuietlyAsync().ConfigureAwait(false);
             DeleteDirectoryQuietly(segmentDirectory);
         }
     }
 
-    private async ValueTask DisposeServiceProviderQuietlyAsync()
+    private async ValueTask DisposeRecordingServiceOwnerQuietlyAsync()
     {
-        if (Interlocked.Exchange(ref _serviceProviderDisposed, 1) != 0)
+        if (Interlocked.Exchange(ref _recordingServiceOwnerDisposed, 1) != 0)
         {
             return;
         }
 
         try
         {
-            await _serviceProvider.DisposeAsync().ConfigureAwait(false);
+            if (_recordingServiceOwner is not null)
+            {
+                await _recordingServiceOwner.DisposeAsync().ConfigureAwait(false);
+            }
         }
         catch (Exception ex)
         {

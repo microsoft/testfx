@@ -82,14 +82,34 @@
         <target state="translated">--{1} 的值“{0}”无效。有效值是 {2}。</target>
         <note>Validation error for an invalid option value. {0} value, {1} option name, {2} the list of valid values.</note>
       </trans-unit>
+      <trans-unit id="NativeInitializationFallback">
+        <source>The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {0}</source>
+        <target state="new">The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {0}</target>
+        <note>Warning when native recorder initialization fails and recording falls back to ffmpeg. {0} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="NativePartialOutput">
+        <source>Native Windows recording completed with partial output: {0} {1}</source>
+        <target state="new">Native Windows recording completed with partial output: {0} {1}</target>
+        <note>Warning when the native recorder produces partial output. {0} is the error message and {1} is the recovery hint.</note>
+      </trans-unit>
+      <trans-unit id="NativePublishFailed">
+        <source>Failed to publish the native Windows recording: {0}</source>
+        <target state="new">Failed to publish the native Windows recording: {0}</target>
+        <note>Warning when the native recording cannot be moved to its final output path. {0} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="NativeRecordingFailed">
+        <source>Native Windows recording failed: {0}</source>
+        <target state="new">Native Windows recording failed: {0}</target>
+        <note>Warning when native recording fails. {0} is the error message.</note>
+      </trans-unit>
       <trans-unit id="NativeStopTimeout">
         <source>The native Windows video recorder did not stop within {0} seconds. Session shutdown will continue and the incomplete recording will be discarded.</source>
         <target state="new">The native Windows video recorder did not stop within {0} seconds. Session shutdown will continue and the incomplete recording will be discarded.</target>
         <note>Warning when the in-process native recorder does not stop after cancellation. {0} timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="NativeStoppedEarly">
-        <source>The native Windows recording stopped early ({0}); the finalized partial video will be kept.</source>
-        <target state="new">The native Windows recording stopped early ({0}); the finalized partial video will be kept.</target>
+        <source>The native Windows recording stopped early ({0}); the finalized partial video remains subject to the configured persistence mode.</source>
+        <target state="new">The native Windows recording stopped early ({0}); the finalized partial video remains subject to the configured persistence mode.</target>
         <note>Warning when native capture ends before session shutdown. {0} is the backend stop reason.</note>
       </trans-unit>
       <trans-unit id="NoUsableVideoProduced">

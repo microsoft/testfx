@@ -91,8 +91,24 @@
     <comment>Warning when the in-process native recorder does not stop after cancellation. {0} timeout in seconds.</comment>
   </data>
   <data name="NativeStoppedEarly" xml:space="preserve">
-    <value>The native Windows recording stopped early ({0}); the finalized partial video will be kept.</value>
+    <value>The native Windows recording stopped early ({0}); the finalized partial video remains subject to the configured persistence mode.</value>
     <comment>Warning when native capture ends before session shutdown. {0} is the backend stop reason.</comment>
+  </data>
+  <data name="NativeInitializationFallback" xml:space="preserve">
+    <value>The WinAppCLI native video recorder could not be initialized; falling back to ffmpeg. {0}</value>
+    <comment>Warning when native recorder initialization fails and recording falls back to ffmpeg. {0} is the error message.</comment>
+  </data>
+  <data name="NativePublishFailed" xml:space="preserve">
+    <value>Failed to publish the native Windows recording: {0}</value>
+    <comment>Warning when the native recording cannot be moved to its final output path. {0} is the error message.</comment>
+  </data>
+  <data name="NativePartialOutput" xml:space="preserve">
+    <value>Native Windows recording completed with partial output: {0} {1}</value>
+    <comment>Warning when the native recorder produces partial output. {0} is the error message and {1} is the recovery hint.</comment>
+  </data>
+  <data name="NativeRecordingFailed" xml:space="preserve">
+    <value>Native Windows recording failed: {0}</value>
+    <comment>Warning when native recording fails. {0} is the error message.</comment>
   </data>
   <data name="WindowCaptureFallback" xml:space="preserve">
     <value>Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</value>
