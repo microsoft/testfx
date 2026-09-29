@@ -812,7 +812,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="translated">async 呼び出しをブロックする代わりに、'Assert.{0}' ではなく 'Assert.{1}' を使用します</target>
+        <target state="translated">'Assert.{1}' で async 呼び出しをブロックする代わりに、'Assert.{0}' を使用します</target>
         <note>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
