@@ -17,6 +17,9 @@
     <MSTestSdkAOTVersion>2.0.0-alpha.26358.12</MSTestSdkAOTVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
     <TestingPlatformVersion>2.4.1</TestingPlatformVersion>
+    <!-- Hosted entry point generation is currently available only in preview packages. -->
+    <TestingPlatformPreviewVersion>2.5.0-preview.26479.5</TestingPlatformPreviewVersion>
+    <MicrosoftTestingExtensionsHostingVersion>1.0.0-alpha.26479.5</MicrosoftTestingExtensionsHostingVersion>
     <!--
       Microsoft.Testing.Extensions.PackagedApp deploys and launches a packaged Windows (UWP/WinUI)
       test host. The latest published package predates its alignment with the testing platform version,
