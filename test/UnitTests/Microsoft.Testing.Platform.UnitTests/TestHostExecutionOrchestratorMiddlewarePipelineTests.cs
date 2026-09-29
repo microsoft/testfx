@@ -125,6 +125,7 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     }
 
     [TestMethod]
+    [UnsupportedOSPlatform("browser")]
     public async Task RunAsync_MiddlewareInvokesNextTwiceConcurrently_SecondInvocationThrowsButActualResultStillWins()
     {
         int leafInvocationCount = 0;
@@ -134,12 +135,14 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
 
             Task<(Task<int>? Downstream, InvalidOperationException? Exception)> firstWorker = Task.Run(InvokeNext);
             Task<(Task<int>? Downstream, InvalidOperationException? Exception)> secondWorker = Task.Run(InvokeNext);
-            invocationBarrier.SignalAndWait();
+            invocationBarrier.SignalAndWait(TestContext.CancellationToken);
 
             (Task<int>? Downstream, InvalidOperationException? Exception)[] attempts =
                 await Task.WhenAll(firstWorker, secondWorker);
-            var acceptedAttempts = attempts.Where(attempt => attempt.Downstream is not null).ToArray();
-            var rejectedAttempts = attempts.Where(attempt => attempt.Exception is not null).ToArray();
+            (Task<int>? Downstream, InvalidOperationException? Exception)[] acceptedAttempts =
+                attempts.Where(attempt => attempt.Downstream is not null).ToArray();
+            (Task<int>? Downstream, InvalidOperationException? Exception)[] rejectedAttempts =
+                attempts.Where(attempt => attempt.Exception is not null).ToArray();
 
             Assert.HasCount(1, acceptedAttempts);
             Assert.HasCount(1, rejectedAttempts);
@@ -151,7 +154,9 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
 
             (Task<int>? Downstream, InvalidOperationException? Exception) InvokeNext()
             {
-                invocationBarrier.SignalAndWait();
+#pragma warning disable CA2016 // The barrier follows the test lifetime, not the orchestrator token under test.
+                invocationBarrier.SignalAndWait(TestContext.CancellationToken);
+#pragma warning restore CA2016
                 try
                 {
                     return (next(ct), null);
@@ -602,14 +607,22 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     public async Task RunAsync_NestedMiddlewareFault_DelayedAncestorCancellationStillReachesLeafBeforeLinkedSourcesAreDisposed()
     {
         using CancellationTokenSource rootCts = new();
+        TaskCompletionSource<bool> allowInnerNext = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> innerStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<int> leafSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Task<int>? outerDownstream = null;
 
-        FakeMiddleware outer = new("outer", (next, ct) => outerDownstream = next(ct));
-        FakeMiddleware inner = new("inner", (next, ct) =>
+        FakeMiddleware outer = new("outer", (next, ct) =>
         {
+            outerDownstream = next(ct);
+            return Task.FromException<int>(new InvalidOperationException("outer middleware failed"));
+        });
+        FakeMiddleware inner = new("inner", async (next, ct) =>
+        {
+            innerStarted.SetResult(true);
+            await allowInnerNext.Task;
             _ = next(ct);
-            return Task.FromException<int>(new InvalidOperationException("inner middleware failed"));
+            throw new InvalidOperationException("inner middleware failed");
         });
 
         Task<int> pipelineTask = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
@@ -622,11 +635,24 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
             new NopLogger(),
             rootCts.Token);
 
+        await innerStarted.Task;
         Assert.IsNotNull(outerDownstream);
+
+        // The top-level pipeline is already draining the outer frame. Accept the leaf only now, after the
+        // drain has started, so a one-time snapshot cannot see it.
+        allowInnerNext.SetResult(true);
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => outerDownstream!);
 
-        // The inner frame has faulted, but its accepted leaf is still part of the downstream subtree.
-        // Ancestor cancellation must remain connected until that subtree has been drained.
+        // The inner frame has faulted, but its later-added leaf is still part of the downstream subtree.
+        // The drain must discover it and keep ancestor cancellation connected until it completes.
+        Task completedBeforeCancellation = await Task.WhenAny(
+            pipelineTask,
+            Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken));
+        Assert.AreNotSame(
+            pipelineTask,
+            completedBeforeCancellation,
+            "The pipeline must keep draining the later-added leaf instead of disposing its linked token source and completing early.");
+
         rootCts.Cancel();
         Task leafCompleted = await Task.WhenAny(
             leafSource.Task,

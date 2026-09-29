@@ -151,14 +151,19 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
 
     private static async Task DrainAsync(List<Task> inFlightDownstreamTasks, object inFlightLock, ILogger logger)
     {
-        Task[] tasks;
-        lock (inFlightLock)
+        for (int taskIndex = 0; ; taskIndex++)
         {
-            tasks = [.. inFlightDownstreamTasks];
-        }
+            Task task;
+            lock (inFlightLock)
+            {
+                if (taskIndex == inFlightDownstreamTasks.Count)
+                {
+                    return;
+                }
 
-        foreach (Task task in tasks)
-        {
+                task = inFlightDownstreamTasks[taskIndex];
+            }
+
             try
             {
                 await task.ConfigureAwait(false);
@@ -206,19 +211,18 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
     /// <see cref="Close"/> (the transition from open to closed once a frame stops accepting new invocations)
     /// are all performed while holding the exact same <c>inFlightLock</c> object that
     /// <see cref="TestHostExecutionOrchestratorMiddlewarePipeline.DrainAsync(List{Task}, object, ILogger)"/>
-    /// holds when it snapshots that list. This closes an otherwise-real gap: accepting an invocation
+    /// holds when it reads that list. This closes an otherwise-real gap: accepting an invocation
     /// (deciding it should run) and registering it for draining used to be two separate steps - a lock-free
     /// <see cref="Interlocked"/> state transition immediately followed by a separately-locked list append -
     /// so an invocation that had already begun while its middleware was returning or throwing could race the
-    /// drain snapshot: the state transition could have already succeeded (so the invocation is "accepted"
+    /// drain: the state transition could have already succeeded (so the invocation is "accepted"
     /// and cannot be rejected later) while the corresponding list append had not yet happened, letting a
-    /// concurrently-running top-level drain snapshot miss it entirely and let the whole pipeline report
+    /// concurrently-running top-level drain miss it entirely and let the whole pipeline report
     /// completion while that still-accepted invocation (and whatever it eventually starts, up to and
     /// including the wrapped orchestrator) keeps running unmanaged underneath. Folding accept-and-register
-    /// into one critical section - guarded by the very same lock the drain snapshot uses - makes that
-    /// outcome impossible: by construction, any invocation the drain snapshot could ever discover as
-    /// "accepted" is, at that same moment, already present in the list it is about to copy, because both
-    /// facts are established atomically before the lock is ever released. Symmetrically, once
+    /// into one critical section - guarded by the very same lock the drain uses - makes that outcome
+    /// impossible: by construction, any accepted invocation is present before the lock is released, and
+    /// the drain keeps consuming newly appended descendants until the list is exhausted. Symmetrically, once
     /// <see cref="Close"/> has run (always synchronously, in the owning frame's own <c>finally</c>, before
     /// that frame's own exception or return value can propagate any further), any <em>later</em> call to
     /// <see cref="InvokeAsync"/> observes the frame already closed under that same lock and is rejected
@@ -336,7 +340,7 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             // been added to the shared drain list, and nothing can add to that list without also having
             // won this frame's single-invocation guard - the two facts can never be split apart, in either
             // direction, by any interleaving with a concurrent Close() or with
-            // TestHostExecutionOrchestratorMiddlewarePipeline.DrainAsync's own snapshot of the same list
+            // TestHostExecutionOrchestratorMiddlewarePipeline.DrainAsync's own reads of the same list
             // under the same lock. Only the state check/transition and the list mutation happen here,
             // under the lock; everything below - linked-token-source creation, the call into inner()
             // (arbitrary extension or leaf code, which may itself block synchronously for an arbitrary
