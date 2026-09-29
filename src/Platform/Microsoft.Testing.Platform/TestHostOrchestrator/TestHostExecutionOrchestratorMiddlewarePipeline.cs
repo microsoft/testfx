@@ -356,6 +356,8 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             try
             {
                 downstream = _inner(linkedCts.Token);
+                downstream ??= Task.FromException<int>(
+                    new InvalidOperationException(PlatformResources.TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage));
             }
             catch (Exception ex)
             {

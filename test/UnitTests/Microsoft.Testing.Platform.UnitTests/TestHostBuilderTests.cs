@@ -175,6 +175,24 @@ public sealed class TestHostBuilderTests
             Mock.Of<IEnvironment>()));
     }
 
+    [TestMethod]
+    public void ValidateTestHostOrchestratorMiddlewareConfiguration_WithNoOrchestrator_ThrowsWithCount()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => TestHostBuilder.ValidateTestHostOrchestratorMiddlewareConfiguration(orchestratorCount: 0, middlewareCount: 1));
+
+        Assert.Contains("0", exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public void ValidateTestHostOrchestratorMiddlewareConfiguration_WithMultipleOrchestrators_ThrowsWithCount()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => TestHostBuilder.ValidateTestHostOrchestratorMiddlewareConfiguration(orchestratorCount: 2, middlewareCount: 1));
+
+        Assert.Contains("2", exception.Message, StringComparison.Ordinal);
+    }
+
     private static TestHostControllerInfo CreateTestHostControllerInfo(int? testHostControllerPid)
         => new(new CommandLineParseResult(
             null,

@@ -1317,6 +1317,11 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
         <target state="new">The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</target>
         <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
+        <source>The test host execution orchestrator middleware continuation returned a null task.</source>
+        <target state="new">The test host execution orchestrator middleware continuation returned a null task.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
         <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
         <target state="new">One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</target>

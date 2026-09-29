@@ -138,14 +138,9 @@ internal sealed partial class TestHostBuilder
             return null;
         }
 
-        if (hasActiveMiddleware && testHostOrchestratorConfiguration.TestHostOrchestrators.Length != 1)
-        {
-            throw new InvalidOperationException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage,
-                    testHostOrchestratorConfiguration.TestHostOrchestrators.Length));
-        }
+        ValidateTestHostOrchestratorMiddlewareConfiguration(
+            testHostOrchestratorConfiguration.TestHostOrchestrators.Length,
+            testHostOrchestratorConfiguration.Middleware.Length);
 
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
             static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
@@ -169,6 +164,18 @@ internal sealed partial class TestHostBuilder
 
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostOrchestratorHost));
         return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, context.ServiceProvider);
+    }
+
+    internal static void ValidateTestHostOrchestratorMiddlewareConfiguration(int orchestratorCount, int middlewareCount)
+    {
+        if (middlewareCount > 0 && orchestratorCount != 1)
+        {
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage,
+                    orchestratorCount));
+        }
     }
 
     private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context)

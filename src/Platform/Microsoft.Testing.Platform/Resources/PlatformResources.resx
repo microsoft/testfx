@@ -221,6 +221,9 @@
     <value>The factory for composite extension '{0}' returned a null instance.</value>
     <comment>{0} is the extension type name.</comment>
   </data>
+  <data name="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage" xml:space="preserve">
+    <value>The test host execution orchestrator middleware continuation returned a null task.</value>
+  </data>
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
   </data>

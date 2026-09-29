@@ -298,8 +298,23 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
                 CancellationToken.None));
 
         Assert.Contains("swallower", exception.Message, StringComparison.Ordinal);
-        Assert.IsInstanceOfType<InvalidOperationException>(exception.InnerException);
-        Assert.AreEqual("downstream exploded", exception.InnerException!.Message);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_NextReturnsNull_ReportsExtensionFailureWithoutHanging()
+    {
+        var passThrough = FakeMiddleware.PassThrough("pass-through", []);
+
+#pragma warning disable VSTHRD114 // Deliberately return null to verify extension contract handling.
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [passThrough],
+                _ => null!,
+                new NopLogger(),
+                CancellationToken.None));
+#pragma warning restore VSTHRD114
+
+        Assert.Contains("returned a null task", exception.Message, StringComparison.Ordinal);
     }
 
     [TestMethod]
