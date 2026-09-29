@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
-using System.Net.Sockets;
 
 namespace Microsoft.Testing.Platform.ServerMode.Client;
 
@@ -26,7 +25,12 @@ internal sealed partial class MtpServerProcess
 
                 // Block (bounded) for the OS to finish tearing the process down so a caller can immediately
                 // delete the application directory without racing a file lock on the still-exiting executable.
-                process.WaitForExit(ProcessKillTimeoutMs);
+                if (!process.WaitForExit(ProcessKillTimeoutMs))
+                {
+                    logger.SafeLog(
+                        MtpClientLogLevel.Debug,
+                        $"The MTP server process did not exit within {ProcessKillTimeoutMs}ms after it was killed.");
+                }
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)
@@ -47,31 +51,15 @@ internal sealed partial class MtpServerProcess
             // Dispose the connection first (cancels the read loop, disposes the handler -> socket/streams).
             Connection.Dispose();
 
-            try
-            {
-                _client.Dispose();
-            }
-            catch (SocketException ex)
-            {
-                _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
-            }
-
             MtpServerConnector.SafeStop(_listener, _logger);
 
-            // Capture before killing, so an application that already exited on its own reports its real exit
-            // code rather than the kill's, and before Dispose(), after which the Process cannot be read.
-            int? exitCode = TryReadExitCode();
-            Volatile.Write(ref _capturedExitCode, exitCode is int captured ? captured : NoExitCode);
             bool killed = SafeKill(_process, _logger);
 
-            // Preserve the race where the process exits naturally between the first read and SafeKill's
-            // HasExited check, but never publish the operating system's forced-termination status as though
-            // it were an application-returned exit code.
-            if (exitCode is null && !killed && TryReadExitCode() is int racedExitCode)
-            {
-                Volatile.Write(ref _capturedExitCode, racedExitCode);
-            }
-
+            // SafeKill reports whether it initiated forced termination. Only read the exit code when the
+            // application had already exited naturally (including the race immediately before its HasExited
+            // check), so an operating-system kill status is never exposed as an application result.
+            int? exitCode = killed ? null : TryReadExitCode();
+            Volatile.Write(ref _capturedExitCode, exitCode is int captured ? captured : NoExitCode);
             _process.Dispose();
         }
         catch (Exception ex)

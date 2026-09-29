@@ -44,7 +44,6 @@ internal sealed partial class MtpServerProcess : IMtpServerHost
     private readonly Process _process;
     private readonly IMtpClientLogger _logger;
     private readonly StringBuilder _standardError;
-    private readonly TcpClient _client;
     private readonly SingleFlightTask _shutdown = new();
 
     /// <summary>
@@ -54,11 +53,10 @@ internal sealed partial class MtpServerProcess : IMtpServerHost
     /// </summary>
     private object? _capturedExitCode;
 
-    private MtpServerProcess(TcpListener listener, Process process, TcpClient client, MtpJsonRpcConnection connection, StringBuilder standardError, IMtpClientLogger logger)
+    private MtpServerProcess(TcpListener listener, Process process, MtpJsonRpcConnection connection, StringBuilder standardError, IMtpClientLogger logger)
     {
         _listener = listener;
         _process = process;
-        _client = client;
         Connection = connection;
         _standardError = standardError;
         _logger = logger;
@@ -77,6 +75,12 @@ internal sealed partial class MtpServerProcess : IMtpServerHost
     {
         get
         {
+            // Stryker disable once Block: The post-disposal catch also returns 0; this fast path avoids exceptions.
+            if (Volatile.Read(ref _capturedExitCode) is not null)
+            {
+                return 0;
+            }
+
             try
             {
                 return _process.HasExited ? 0 : _process.Id;
@@ -114,6 +118,7 @@ internal sealed partial class MtpServerProcess : IMtpServerHost
     {
         try
         {
+            // Stryker disable once Conditional: ExitCode throws while running and the catch returns the same null result.
             return _process.HasExited ? _process.ExitCode : null;
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)

@@ -29,7 +29,7 @@ internal static class RpcIdParser
         }
 
         int exponent = 0;
-        if (exponentIndex >= 0
+        if (exponentIndex is not -1
             && !int.TryParse(
                 value.Substring(exponentIndex + 1),
                 NumberStyles.AllowLeadingSign,
@@ -41,37 +41,38 @@ internal static class RpcIdParser
         }
 
         long scale = (long)fractionalDigits - exponent;
-        if (scale > 0)
+        long trailingZeroCount = 0;
+        switch (Math.Sign(scale))
         {
-            if (scale > digits.Length)
-            {
-                result = default;
-                return false;
-            }
-
-            int firstFractionalIndex = digits.Length - (int)scale;
-            for (int i = firstFractionalIndex; i < digits.Length; i++)
-            {
-                if (digits[i] != '0')
+            case 1:
                 {
-                    result = default;
-                    return false;
+                    // A scale equal to the digit count also cannot produce an integer: because the all-zero case
+                    // returned above, removing every digit necessarily removes at least one non-zero digit.
+                    if (scale > digits.Length - 1L)
+                    {
+                        result = default;
+                        return false;
+                    }
+
+                    int firstFractionalIndex = digits.Length - (int)scale;
+                    for (int i = firstFractionalIndex; i < digits.Length; i++)
+                    {
+                        if (digits[i] != '0')
+                        {
+                            result = default;
+                            return false;
+                        }
+                    }
+
+                    digits = digits.Substring(0, firstFractionalIndex);
+                    break;
                 }
-            }
 
-            digits = digits.Substring(0, firstFractionalIndex);
-        }
-        else if (scale < 0)
-        {
-            long trailingZeroCount = -scale;
-            int significantDigitCount = digits.TrimStart('0').Length;
-            if (trailingZeroCount > 10 || significantDigitCount + trailingZeroCount > 10)
-            {
-                result = default;
-                return false;
-            }
-
-            digits += new string('0', (int)trailingZeroCount);
+            case -1:
+                {
+                    trailingZeroCount = -scale;
+                    break;
+                }
         }
 
         digits = digits.TrimStart('0');
@@ -79,6 +80,19 @@ internal static class RpcIdParser
         {
             result = default;
             return false;
+        }
+
+        for (long i = 0; i < trailingZeroCount; i++)
+        {
+            // A scaled value always ends in zero, so it can never be the one Int32 magnitude that differs
+            // between signs (2,147,483,648 for Int32.MinValue). The positive limit therefore applies here.
+            if (magnitude > 214_748_364)
+            {
+                result = default;
+                return false;
+            }
+
+            magnitude *= 10;
         }
 
         long signedValue = isNegative ? -magnitude : magnitude;
