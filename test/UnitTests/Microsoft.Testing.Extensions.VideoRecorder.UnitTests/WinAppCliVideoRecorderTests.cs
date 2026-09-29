@@ -137,6 +137,38 @@ public sealed class WinAppCliVideoRecorderTests
     }
 
     [TestMethod]
+    public async Task StartAsync_FinalizationFailureAfterStartupCallback_DoesNotExposeUnusableRecording()
+    {
+        string outputDirectory = CreateTemporaryDirectory();
+        try
+        {
+            var recordingService = new Mock<IUiRecordingService>();
+            recordingService
+                .Setup(instance => instance.RecordDesktopAsync(
+                    It.IsAny<RecordOptions>(),
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<Action<bool>>()))
+                .Returns((RecordOptions options, CancellationToken _, Action<bool> callback) =>
+                {
+                    File.WriteAllText(options.OutputPath, "unfinalized video");
+                    callback(true);
+                    return Task.FromException<RecordCaptureResult>(new IOException("MP4 finalization failed"));
+                });
+            IVideoRecorder recorder = CreateRecorder(outputDirectory, recordingService.Object);
+
+            Assert.IsTrue(await recorder.StartAsync(TestContext.CancellationToken));
+            await recorder.StopAsync(TestContext.CancellationToken);
+
+            Assert.IsEmpty(recorder.ReadSegments());
+            Assert.Contains("MP4 finalization failed", recorder.DescribeLastFfmpegError());
+        }
+        finally
+        {
+            Directory.Delete(outputDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task StopAsync_RecordingDoesNotStopBeforeTimeout_ReturnsAndCleansUpWhenRecordingCompletes()
     {
         string outputDirectory = CreateTemporaryDirectory();

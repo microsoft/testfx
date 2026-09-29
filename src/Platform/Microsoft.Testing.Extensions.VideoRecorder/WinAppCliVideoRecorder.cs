@@ -40,6 +40,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
     private DateTimeOffset? _recordingEndUtc;
     private string? _recordingPath;
     private string? _lastError;
+    private bool _hasUsableOutput;
     private bool _stopCompleted;
     private int _recordingServiceOwnerDisposed;
 
@@ -239,6 +240,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         string? recordingPath = _recordingPath;
         DateTimeOffset? recordingStart = RecordingStartUtc;
         if (_recordingTask?.IsCompleted != true
+            || !_hasUsableOutput
             || recordingPath is null
             || recordingStart is null
             || !File.Exists(recordingPath)
@@ -311,6 +313,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
                     recordingStarted.TrySetResult(true);
                 }).ConfigureAwait(false);
 
+            _hasUsableOutput = IsUsableRecording(recordingPath, recordingPath);
             _log?.Invoke(
                 $"Native Windows recording completed: {_captureResult.Frames} frames, "
                 + $"{_captureResult.Width}x{_captureResult.Height}, mode {_captureResult.Mode}, "
@@ -332,6 +335,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         catch (RecordPartialOutputException ex)
         {
             _lastError = ex.Message;
+            _hasUsableOutput = IsUsableRecording(ex.VideoPath, recordingPath);
             _warn?.Invoke(string.Format(
                 CultureInfo.CurrentCulture,
                 Resources.VideoRecorderResources.NativePartialOutput,
@@ -367,6 +371,7 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
         _recordingPath = null;
         SegmentDirectory = null;
         RecordingStartUtc = null;
+        _hasUsableOutput = false;
 
         try
         {
@@ -394,6 +399,21 @@ internal sealed class WinAppCliVideoRecorder : IVideoRecorder
     {
         [DllImport("shcore.dll")]
         public static extern int GetProcessDpiAwareness(IntPtr processHandle, out int awareness);
+    }
+
+    private static bool IsUsableRecording(string? candidatePath, string expectedPath)
+    {
+        try
+        {
+            return candidatePath is not null
+                && string.Equals(Path.GetFullPath(candidatePath), Path.GetFullPath(expectedPath), StringComparison.OrdinalIgnoreCase)
+                && File.Exists(expectedPath)
+                && new FileInfo(expectedPath).Length > 0;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     private async Task CompleteTimedOutStopAsync(
