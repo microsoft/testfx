@@ -124,9 +124,31 @@ internal sealed record AzureDevOpsTestCaseResult(
     [JsonPropertyName("resultGroupType")]
     public string? ResultGroupType { get; init; }
 
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this result.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
+
     /// <summary>Gets the individual attempts of this test, oldest first.</summary>
     [JsonPropertyName("subResults")]
     public IReadOnlyList<AzureDevOpsTestSubResult>? SubResults { get; init; }
+}
+
+internal sealed class AzureDevOpsCustomTestField
+{
+    public AzureDevOpsCustomTestField(string fieldName, string value)
+    {
+        FieldName = fieldName;
+        Value = value;
+    }
+
+    [JsonPropertyName("fieldName")]
+    public string FieldName { get; }
+
+    [JsonPropertyName("value")]
+    public string Value { get; }
 }
 
 /// <summary>

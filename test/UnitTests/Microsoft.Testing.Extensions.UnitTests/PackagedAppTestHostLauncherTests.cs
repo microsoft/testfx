@@ -455,6 +455,53 @@ public sealed class PackagedAppTestHostLauncherTests
     }
 
     [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithStagedAppHostSource_ReturnsManifestExecutable()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "Source");
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, "AppxManifest.xml");
+            File.WriteAllText(
+                manifestPath,
+                BuildManifestXml(
+                    "Contoso.MyTestApp",
+                    MicrosoftStorePublisher,
+                    applicationId: "App",
+                    executable: "Contoso.MyTestApp.exe"));
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "Contoso.MyTestApp.exe");
+            string stagedAppHostPath = Path.Combine(root, "obj", "apphost.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(stagedAppHostPath)!);
+            File.WriteAllText(requestedExecutablePath, "published apphost");
+            File.WriteAllText(stagedAppHostPath, "staged apphost");
+
+            File.WriteAllText(
+                Path.Combine(sourceDirectory, "App.build.appxrecipe"),
+                $"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                  <AppxPackagedFile Include="{stagedAppHostPath}">
+                    <PackagePath>Contoso.MyTestApp.exe</PackagePath>
+                  </AppxPackagedFile>
+                </Project>
+                """);
+
+            string materializedExecutablePath = MaterializeAppxRecipeLayout(requestedExecutablePath, out _);
+
+            string layoutDirectory = Path.Combine(sourceDirectory, "_MtpPackageLayout");
+            Assert.AreEqual(Path.Combine(layoutDirectory, "Contoso.MyTestApp.exe"), materializedExecutablePath);
+            Assert.AreEqual("staged apphost", File.ReadAllText(materializedExecutablePath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void MaterializeAppxRecipeLayout_WithClassicUwpEntrypoint_ReturnsManifestBootstrapExecutable()
     {
         string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));

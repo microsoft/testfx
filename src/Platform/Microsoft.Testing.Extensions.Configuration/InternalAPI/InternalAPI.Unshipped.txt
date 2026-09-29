@@ -1,0 +1,16 @@
+#nullable enable
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotProvider
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotProvider.LoadAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotProvider.MicrosoftExtensionsConfigurationSnapshotProvider(Microsoft.Extensions.Configuration.IConfiguration! configuration) -> void
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotProvider.TryGet(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotProvider.TryGetScalar(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Configurations.IConfigurationProvider!>!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.Description.get -> string!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.DisplayName.get -> string!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.MicrosoftExtensionsConfigurationSnapshotSource(Microsoft.Extensions.Configuration.IConfiguration! configuration, int order) -> void
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.Order.get -> int
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.Uid.get -> string!
+Microsoft.Testing.Extensions.Configuration.MicrosoftExtensionsConfigurationSnapshotSource.Version.get -> string!

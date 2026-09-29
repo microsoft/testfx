@@ -32,6 +32,7 @@ public partial class UnitTestApp : Application
     /// </summary>
     /// <param name="args">Details about the launch request and process.</param>
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>")]
+    [SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "The continuation must resume on the WinUI dispatcher.")]
     protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         _window = new UnitTestAppWindow();

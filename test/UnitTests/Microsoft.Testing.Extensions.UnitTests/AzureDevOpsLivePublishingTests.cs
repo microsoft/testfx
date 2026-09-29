@@ -2225,6 +2225,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
         Assert.AreEqual(3_000L, parent.DurationInMs);
+        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(parent.CustomFields!);
+        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
+        Assert.AreEqual("true", customField.Value);
         Assert.HasCount(2, service.SubResults);
         Assert.AreEqual("Attempt# 0 - MyTest", service.SubResults[0].DisplayName);
         Assert.AreEqual("Attempt# 1 - MyTest", service.SubResults[1].DisplayName);
@@ -2563,6 +2566,9 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(2, parent.SubResults[1].SequenceId);
         Assert.AreEqual("Attempt# 1 - MyTest", parent.SubResults[1].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.SubResults[1].Outcome);
+        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(parent.CustomFields!);
+        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
+        Assert.AreEqual("true", customField.Value);
     }
 
     [TestMethod]
@@ -2595,6 +2601,9 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(2, subResults[1].SequenceId);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[1].Outcome);
         Assert.AreEqual("second", subResults[1].ErrorMessage);
+        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(parent.CustomFields!);
+        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
+        Assert.AreEqual("false", customField.Value);
     }
 
     [TestMethod]
@@ -4141,6 +4150,7 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             Id = 777,
             ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+            CustomFields = [new AzureDevOpsCustomTestField("IsTestResultFlaky", "true")],
             SubResults =
             [
                 new AzureDevOpsTestSubResult(1, "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 3, "boom", "at Foo()", null, null),
@@ -4163,6 +4173,10 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
+        JsonElement customFields = result.GetProperty("customFields");
+        Assert.AreEqual(1, customFields.GetArrayLength());
+        Assert.AreEqual("IsTestResultFlaky", customFields[0].GetProperty("fieldName").GetString());
+        Assert.AreEqual("true", customFields[0].GetProperty("value").GetString());
 
         JsonElement subResults = result.GetProperty("subResults");
         Assert.AreEqual(2, subResults.GetArrayLength());
@@ -4578,6 +4592,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, created.GetProperty("state").GetString());
         Assert.IsFalse(created.TryGetProperty("id", out _));
         Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
+        Assert.IsFalse(created.TryGetProperty("customFields", out _));
         Assert.IsFalse(created.TryGetProperty("subResults", out _));
         Assert.IsFalse(created.TryGetProperty("errorMessage", out _));
         Assert.IsFalse(created.TryGetProperty("stackTrace", out _));

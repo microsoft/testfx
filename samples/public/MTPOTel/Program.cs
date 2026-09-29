@@ -6,13 +6,13 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 using OpenTelemetry.Metrics;
@@ -26,7 +26,8 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         using var testActivitySource = new ActivitySource("MTPOTel.Tests");
-        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        hostBuilder.Configuration["MTPOTel:Composition"] = "HostApplicationBuilder";
 
         // The host owns the OpenTelemetry providers, just like an Aspire ServiceDefaults project or any other
         // application composition root. The focused MTP resource helpers add test/CI identity without replacing
@@ -45,24 +46,15 @@ public class Program
                 .AddConsoleExporter());
 
         using IHost host = hostBuilder.Build();
-        await host.StartAsync();
+        return await host.RunTestingPlatformAsync(args, testApplicationBuilder =>
+        {
+            testApplicationBuilder.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, serviceProvider) => new SimpleTestFramework(serviceProvider, testActivitySource));
 
-        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-
-        // Register our simple test framework
-        testApplicationBuilder.RegisterTestFramework(
-            _ => new TestFrameworkCapabilities(),
-            (capabilities, serviceProvider) => new SimpleTestFramework(serviceProvider, testActivitySource));
-
-        // Activate only MTP's ActivitySource and Meter. The application host above remains responsible for creating,
-        // flushing, and disposing the providers that subscribe to those diagnostics.
-        testApplicationBuilder.AddTestingPlatformDiagnostics();
-
-        using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
-        int exitCode = await testApplication.RunAsync();
-
-        // Keep the host alive until after the test application has shut down so final spans and metrics can be exported.
-        await host.StopAsync();
-        return exitCode;
+            // Activate only MTP's ActivitySource and Meter. The host remains responsible for creating,
+            // flushing, and disposing the providers that subscribe to those diagnostics.
+            testApplicationBuilder.AddTestingPlatformDiagnostics();
+        });
     }
 }

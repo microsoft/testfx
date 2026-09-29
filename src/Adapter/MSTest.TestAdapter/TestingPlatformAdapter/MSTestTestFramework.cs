@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -40,7 +41,10 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly PlatformServicesConfigurationAdapter _configuration;
     private readonly ILoggerFactory _loggerFactory;
     private readonly MSTestGracefulStopTestExecutionCapability _gracefulStopCapability;
+    private readonly string _resultFilesStagingDirectory;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
+    private int _nextResultFileStagingDirectory;
+    private int _resultFilesStagingDirectoryCreated;
     private bool? _isTrxEnabled;
     private bool _isDisposed;
     private SessionUid? _sessionUid;
@@ -55,6 +59,11 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         _gracefulStopCapability = (MSTestGracefulStopTestExecutionCapability)capabilities.GetCapability<IGracefulStopTestExecutionCapability>()!;
+        _resultFilesStagingDirectory = Path.Combine(
+            serviceProvider.GetConfiguration().GetTestResultDirectory(),
+            $".mstest-{Guid.NewGuid():N}"[..16]);
+        ((Microsoft.Testing.Platform.Services.ServiceProvider)serviceProvider)
+            .AddService(new ResultFilesStagingDirectoryCleanup(CleanupResultFilesStagingDirectory));
         PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
         _gracefulStopCapability.NotifyTestExecutionPending();
 
@@ -187,7 +196,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                     runSettings.SettingsXml,
                     runContext.TestRunDirectory,
                     handle.ToAdapterMessageLogger(),
-                    settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
+                    settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings, StageResultFiles),
                     new MtpTestElementFilterProvider(runContext),
                     _configuration,
                     new TestSourceHandler(),
@@ -238,13 +247,137 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         return (eventName, metrics) => telemetryCollector.LogEventAsync(eventName, metrics, CancellationToken.None);
     }
 
+    private void StageResultFiles(TestResult result)
+    {
+        if (result.ResultFiles is not { Count: > 0 } resultFiles)
+        {
+            return;
+        }
+
+        var durableResultFiles = new List<string>(resultFiles.Count);
+        foreach (string resultFile in resultFiles)
+        {
+            string sourcePath = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(resultFile);
+            try
+            {
+                int directoryId = Interlocked.Increment(ref _nextResultFileStagingDirectory);
+                string stagingDirectory = Path.Combine(_resultFilesStagingDirectory, directoryId.ToString(CultureInfo.InvariantCulture));
+                string stagedPath = Path.Combine(stagingDirectory, GetFileName(sourcePath));
+
+                Directory.CreateDirectory(GetPathForFileSystemAccess(stagingDirectory));
+                Volatile.Write(ref _resultFilesStagingDirectoryCreated, 1);
+                File.Copy(
+                    GetPathForFileSystemAccess(sourcePath),
+                    GetPathForFileSystemAccess(stagedPath));
+
+                durableResultFiles.Add(stagedPath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Preserve the existing reporter behavior: leave the original path in place so each
+                // consumer can surface its normal attachment-copy warning or failure.
+                durableResultFiles.Add(resultFile);
+            }
+        }
+
+        result.ResultFiles = durableResultFiles;
+    }
+
+    private static string GetPathForFileSystemAccess(string path)
+    {
+#if NETCOREAPP
+        return path;
+#else
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            || path.StartsWith(@"\\?\", StringComparison.Ordinal)
+            || path.StartsWith(@"\\.\", StringComparison.Ordinal))
+        {
+            return path;
+        }
+
+        string fullPath;
+        try
+        {
+            fullPath = Path.GetFullPath(path);
+        }
+        catch (PathTooLongException) when (Path.IsPathRooted(path) && !ContainsRelativePathSegments(path))
+        {
+            fullPath = path;
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return path;
+        }
+
+        return fullPath.Length < 260
+            ? path
+            : fullPath.StartsWith(@"\\", StringComparison.Ordinal)
+                ? @"\\?\UNC\" + fullPath.Substring(2)
+                : @"\\?\" + fullPath;
+#endif
+    }
+
+    private static string GetFileName(string path)
+    {
+        int separatorIndex = path.LastIndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
+        return separatorIndex < 0 ? path : path.Substring(separatorIndex + 1);
+    }
+
+#if !NETCOREAPP
+    private static bool ContainsRelativePathSegments(string path)
+    {
+        foreach (string segment in path.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment is "." or "..")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+#endif
+
+    private void CleanupResultFilesStagingDirectory()
+    {
+        if (Volatile.Read(ref _resultFilesStagingDirectoryCreated) == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(GetPathForFileSystemAccess(_resultFilesStagingDirectory), recursive: true);
+        }
+        catch (DirectoryNotFoundException)
+        {
+            // The desired cleanup state has already been reached.
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                "Failed to delete result-file staging directory '{0}': {1}",
+                _resultFilesStagingDirectory,
+                ex);
+        }
+    }
+
     public void Dispose()
     {
         if (!_isDisposed)
         {
             _gracefulStopCapability.NotifyTestExecutionCompleted();
+            CleanupResultFilesStagingDirectory();
             _incomingRequestCounter.Dispose();
             _isDisposed = true;
         }
+    }
+
+    private sealed class ResultFilesStagingDirectoryCleanup(Action cleanup) : IDisposable
+    {
+        private Action? _cleanup = cleanup;
+
+        public void Dispose()
+            => Interlocked.Exchange(ref _cleanup, null)?.Invoke();
     }
 }

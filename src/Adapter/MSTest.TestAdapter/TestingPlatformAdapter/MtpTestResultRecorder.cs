@@ -27,14 +27,21 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
     private readonly SessionUid _sessionUid;
     private readonly bool _isTrxEnabled;
     private readonly MSTestSettings _settings;
+    private readonly Action<FrameworkTestResult> _stageResultFiles;
 
     public MtpTestResultRecorder(IMessageBus messageBus, IDataProducer dataProducer, SessionUid sessionUid, bool isTrxEnabled, MSTestSettings settings)
+        : this(messageBus, dataProducer, sessionUid, isTrxEnabled, settings, static _ => { })
+    {
+    }
+
+    public MtpTestResultRecorder(IMessageBus messageBus, IDataProducer dataProducer, SessionUid sessionUid, bool isTrxEnabled, MSTestSettings settings, Action<FrameworkTestResult> stageResultFiles)
     {
         _messageBus = messageBus;
         _dataProducer = dataProducer;
         _sessionUid = sessionUid;
         _isTrxEnabled = isTrxEnabled;
         _settings = settings;
+        _stageResultFiles = stageResultFiles;
     }
 
     void ITestResultRecorder.PrepareResults(UnitTestElement testElement, FrameworkTestResult[] results)
@@ -58,6 +65,7 @@ internal sealed class MtpTestResultRecorder : ITestResultRecorder
         // Mirror TestResultRecorderExtensions: a NotFound result is not reported while hot reload is enabled.
         if (outcome != TestOutcome.NotFound || !RuntimeContext.IsHotReloadEnabled)
         {
+            _stageResultFiles(unitTestResult);
             TestNode testNode = MSTestTestNodeConverter.ToResultTestNode(testElement, unitTestResult, startTime, endTime, _isTrxEnabled, _settings);
             await PublishAsync(testNode).ConfigureAwait(false);
         }

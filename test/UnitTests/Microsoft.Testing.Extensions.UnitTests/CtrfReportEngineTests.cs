@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -84,6 +85,11 @@ public class CtrfReportEngineTests
 
         JsonElement testArray = results.GetProperty("tests");
         Assert.AreEqual(3, testArray.GetArrayLength());
+        Assert.AreSequenceEqual(
+            ["p1", "f1", "s1"],
+            testArray.EnumerateArray().Select(test => test.GetProperty("testId").GetString()!).ToArray());
+        Assert.IsTrue(testArray.EnumerateArray().All(test => Guid.TryParse(test.GetProperty("executionId").GetString(), out _)));
+        Assert.HasCount(3, testArray.EnumerateArray().Select(test => test.GetProperty("executionId").GetString()).Distinct());
     }
 
     [TestMethod]
@@ -159,6 +165,123 @@ public class CtrfReportEngineTests
 
         Assert.AreEqual(2, result.RetryAttemptNumber);
         Assert.IsFalse(result.IsSupersededRetryAttempt);
+    }
+
+    [TestMethod]
+    public async Task TestResultCapture_LongUidsRemainDistinctThroughRetryCollapsing()
+    {
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "\uD800";
+        string secondUid = sharedPrefix + "\uD801";
+        string hashShapedUid = ComputeTestId(firstUid);
+        string escapePrefixedUid = "uid:" + hashShapedUid;
+        TestNode firstNode = new()
+        {
+            Uid = firstUid,
+            DisplayName = "First",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode secondNode = new()
+        {
+            Uid = secondUid,
+            DisplayName = "Second",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode hashShapedNode = new()
+        {
+            Uid = hashShapedUid,
+            DisplayName = "Hash-shaped",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+        TestNode escapePrefixedNode = new()
+        {
+            Uid = escapePrefixedUid,
+            DisplayName = "Escape-prefixed",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        };
+
+        CapturedTestResult first = TestResultCapture.TryCapture(firstNode)!;
+        CapturedTestResult second = TestResultCapture.TryCapture(secondNode)!;
+        CapturedTestResult hashShaped = TestResultCapture.TryCapture(hashShapedNode)!;
+        CapturedTestResult escapePrefixed = TestResultCapture.TryCapture(escapePrefixedNode)!;
+
+        Assert.AreEqual(first.Uid, second.Uid, "The capped compatibility UIDs intentionally collide in this scenario.");
+        Assert.AreNotEqual(first.TestId, second.TestId);
+        Assert.StartsWith("sha256:", first.TestId);
+        Assert.StartsWith("sha256:", second.TestId);
+        Assert.AreEqual(ComputeTestId(firstUid), first.TestId);
+        Assert.AreEqual(first.TestId, TestResultCapture.TryCapture(firstNode)!.TestId, "The derived testId must be deterministic.");
+        Assert.AreEqual("uid:" + hashShapedUid, hashShaped.TestId);
+        Assert.AreEqual("uid:" + escapePrefixedUid, escapePrefixed.TestId);
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync([first, second, hashShaped, escapePrefixed]);
+
+        string report = memoryStream.GetUtf8Content();
+        using var document = JsonDocument.Parse(report);
+        JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(4, tests.Select(test => test.GetProperty("testId").GetString()).Distinct());
+        Assert.AreEqual(
+            tests[0].GetProperty("extra").GetProperty("uid").GetString(),
+            tests[1].GetProperty("extra").GetProperty("uid").GetString());
+
+        using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts));
+        Assert.AreEqual(4, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_CollapsesInterleavedLongUidRetrySequences()
+    {
+        string sharedPrefix = new('u', MaxIdentityFieldLength);
+        string firstUid = sharedPrefix + "A";
+        string secondUid = sharedPrefix + "B";
+
+        CapturedTestResult[] tests =
+        [
+            CaptureRetry(firstUid, "First", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 1, isSuperseded: true),
+            CaptureRetry(secondUid, "Second", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 1, isSuperseded: true),
+            CaptureRetry(secondUid, "Second", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+            CaptureRetry(firstUid, "First", PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+        ];
+
+        using var memoryStream = new MemoryFileStream();
+        await CreateEngine(memoryStream).GenerateReportAsync(tests);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        JsonElement[] reportedTests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(2, reportedTests);
+        Assert.AreSequenceEqual(["First", "Second"], reportedTests.Select(test => test.GetProperty("name").GetString()).ToArray());
+        Assert.IsTrue(reportedTests.All(test => test.GetProperty("retries").GetInt32() == 1));
+        Assert.AreNotEqual(reportedTests[0].GetProperty("testId").GetString(), reportedTests[1].GetProperty("testId").GetString());
+    }
+
+    private static CapturedTestResult CaptureRetry(
+        string uid,
+        string name,
+        TestNodeStateProperty state,
+        int attemptNumber,
+        bool isSuperseded)
+        => TestResultCapture.TryCapture(new TestNode
+        {
+            Uid = uid,
+            DisplayName = name,
+            Properties = new(state, new RetryAttemptProperty(attemptNumber, isSuperseded)),
+        })!;
+
+    private static string ComputeTestId(string uid)
+    {
+        using var sha256 = SHA256.Create();
+        byte[] bytes = new byte[uid.Length * sizeof(char)];
+        for (int i = 0; i < uid.Length; i++)
+        {
+            char value = uid[i];
+            bytes[i * 2] = (byte)value;
+            bytes[(i * 2) + 1] = (byte)(value >> 8);
+        }
+
+        return "sha256:" + string.Concat(
+            sha256.ComputeHash(bytes)
+                .Select(value => value.ToString("x2", CultureInfo.InvariantCulture)));
     }
 
     [TestMethod]
@@ -360,6 +483,12 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["Row A", "Row B", "Row C", "Solo"],
             testArray.EnumerateArray().Select(t => t.GetProperty("name").GetString()!).ToArray());
+        Assert.AreSequenceEqual(
+            ["dup", "dup", "dup", "unique"],
+            testArray.EnumerateArray().Select(t => t.GetProperty("testId").GetString()!).ToArray());
+        Assert.HasCount(
+            4,
+            testArray.EnumerateArray().Select(t => t.GetProperty("executionId").GetString()).Distinct());
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
@@ -409,6 +538,9 @@ public class CtrfReportEngineTests
         Assert.AreEqual(1, summary.GetProperty("flaky").GetInt32());
 
         JsonElement retry = results.GetProperty("tests")[0];
+        Assert.AreEqual("retry", retry.GetProperty("testId").GetString());
+        string executionId = retry.GetProperty("executionId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(executionId, out _));
         Assert.AreEqual("passed", retry.GetProperty("status").GetString());
         Assert.AreEqual(2, retry.GetProperty("retries").GetInt32());
         Assert.IsTrue(retry.GetProperty("flaky").GetBoolean());
@@ -420,6 +552,10 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["first failure", "second failure"],
             priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
+        string[] attemptIds = [.. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
+        Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+        Assert.HasCount(2, attemptIds.Distinct());
+        Assert.DoesNotContain(executionId, attemptIds);
 
         JsonElement attachment = Assert.ContainsSingle(priorAttempts[0].GetProperty("attachments").EnumerateArray());
         Assert.AreEqual("first.log", attachment.GetProperty("name").GetString());
@@ -526,6 +662,9 @@ public class CtrfReportEngineTests
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         JsonElement test = document.RootElement.GetProperty("results").GetProperty("tests")[0];
+
+        Assert.AreEqual("id-1", test.GetProperty("testId").GetString());
+        Assert.IsTrue(Guid.TryParse(test.GetProperty("executionId").GetString(), out _));
 
         // CTRF spec required fields per test: name, status, duration.
         Assert.AreEqual("MyTest", test.GetProperty("name").GetString());

@@ -262,6 +262,10 @@ An MSTest attribute (`[MemberConditionAttribute]`) in `Microsoft.VisualStudio.Te
 
 An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severity, enabled by default) that flags a method-level attribute as redundant when the containing `[TestClass]` already establishes equivalent or more restrictive behavior, so the method-level copy has no effect. Covered attribute pairs include `[OSCondition]`, `[ArchitectureCondition]`, `[CICondition]`, `[DoNotParallelize]`, `[ResourceLock]`, `[Retry]`, `[Ignore]`, `[TestCategory]`, `[TestProperty]`, `[DeploymentItem]`, and `[DependsOn]`. A companion C# code fix (`RedundantTestMethodAttributeFixer`) removes the flagged attribute. Introduced in [PR #11267](https://github.com/microsoft/testfx/pull/11267). See also [ResourceLockAttribute](#resourcelockattribute).
 
+### MSTEST0087 (duplicate DataRow display name)
+
+An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-blank `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit non-blank `DisplayName` values — missing, null, empty, or whitespace-only names are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
+
 ### MSTest
 
 Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
@@ -362,6 +366,10 @@ For assembly-level parallelization properties, see [MSTestParallelizeScope / MST
 
 A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. MSTest.Sdk includes the package automatically for NativeAOT projects; set `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>` to opt in for other configurations. Without MSTest.Sdk, add a `<PackageReference>` to `MSTest.SourceGeneration`. Existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
 
+### MSTest.Windows.UIAutomation
+
+A [MSTest.Sdk](#mstestsdk)-integrated package (`MSTest.Windows.UIAutomation`) that provides desktop UI Automation helpers for tests targeting a Windows target framework (e.g., `net8.0-windows`); the SDK errors at build time if the project's `TargetFramework` does not resolve to the `windows` target platform identifier. Opt in with `<EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>`, which adds the package reference and (when `ImplicitUsings` is enabled) an implicit `using Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation;`. `MSTestWindowsUIAutomationVersion` overrides the package version, defaulting to the MSTest.Sdk version. Introduced in [PR #10862](https://github.com/microsoft/testfx/pull/10862).
+
 ### MSTestParallelizeScope / MSTestParallelizeWorkers
 
 MSBuild properties that let users opt in to MSTest assembly-level parallelization without authoring a C# source file. Setting `<MSTestParallelizeScope>` emits `[assembly: Parallelize(Scope = ExecutionScope.X)]`; setting `<MSTestParallelizeWorkers>` emits `[assembly: Parallelize(Workers = N)]`; both together emit `[assembly: Parallelize(Scope = …, Workers = …)]`. Setting scope to `None` emits `[assembly: DoNotParallelize]` instead. Both properties require `GenerateAssemblyInfo` to be `true` and act via the standard `AssemblyAttribute` MSBuild item. Introduced in [PR #8233](https://github.com/microsoft/testfx/pull/8233).
@@ -397,6 +405,14 @@ A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility
 ### Microsoft.Testing.Platform.ServerMode.Client.Sources
 
 A source-only NuGet package that provides a client implementation for launching and communicating with an MTP test host running in [Server Mode](#server-mode). Its C# sources are compiled as internal types directly into the consuming project, avoiding a runtime dependency or separate assembly while keeping the client wire-compatible with the MTP server protocol. Added in [PR #10085](https://github.com/microsoft/testfx/pull/10085).
+
+### Microsoft.Testing.Extensions.Configuration
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Configuration`, `[TPEXP]`) that imports an externally owned `Microsoft.Extensions.Configuration.IConfiguration` as a read-only snapshot while the MTP application is built. The default order is `2`, after MTP command-line and environment sources and before `testconfig.json`. Reload notifications and later mutations are intentionally not propagated, and MTP does not dispose the external configuration.
+
+### Microsoft.Testing.Extensions.Hosting
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Hosting`, `[TPEXP]`) that runs MTP inside an application-owned `IHost` through `RunTestingPlatformAsync()`. It borrows the host's configuration and logger factory, starts the host before MTP is built, returns the MTP exit code, and stops the host afterward without disposing it or creating a second Microsoft.Extensions dependency-injection container. See the [ASP.NET Core and Aspire samples](../samples/public/MTPHostIntegration).
 
 ### Microsoft.Testing.Extensions.Logging
 
