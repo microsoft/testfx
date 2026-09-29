@@ -27,6 +27,15 @@ public sealed class PathContainmentTests
     }
 
     [TestMethod]
+    public void IsUnderDirectory_RelativeDirectory_IsNormalized()
+    {
+        string relativeRoot = "root";
+        string child = Path.Combine(Path.GetFullPath(relativeRoot), "child", "artifact.txt");
+
+        Assert.IsTrue(PathContainment.IsUnderDirectory(child, relativeRoot));
+    }
+
+    [TestMethod]
     public void IsUnderDirectory_TrailingSeparator_IsHandledOnEitherArgument()
     {
         string root = Path.GetFullPath("root");
