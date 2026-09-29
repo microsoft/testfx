@@ -102,8 +102,10 @@ public enum VideoCaptureSource
 public sealed class VideoRecorderOptions
 {
     /// <summary>
-    /// Gets or sets the full path to the ffmpeg executable. When <see langword="null"/> (the
-    /// default) the recorder looks ffmpeg up on the <c>PATH</c> environment variable.
+    /// Gets or sets the full path to the ffmpeg executable. Setting a path forces the ffmpeg
+    /// backend. When <see langword="null"/> (the default), compatible Windows configurations use
+    /// the native recorder automatically; other configurations look ffmpeg up on the <c>PATH</c>
+    /// environment variable.
     /// </summary>
     public string? FfmpegPath { get; set; }
 
