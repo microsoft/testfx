@@ -1,9 +1,8 @@
-<Project>
-
-  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
+<Project Sdk="MSTest.Sdk">
 
   <PropertyGroup>
     <EnableAspireTesting>true</EnableAspireTesting>
+    <EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>
     <AspireHostingTestingVersion>$(AspireVersion)</AspireHostingTestingVersion>
     <TestingPlatformHostFactory>AspireTestHost.CreateHost</TestingPlatformHostFactory>
     <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
@@ -13,15 +12,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(TestingPlatformPreviewVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformPreviewVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AspireAppHost\AspireAppHost.csproj" />
     <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
   </ItemGroup>
-
-  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
 
 </Project>

@@ -1,6 +1,4 @@
-<Project>
-
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -13,7 +11,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(TestingPlatformPreviewVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformPreviewVersion)" PrivateAssets="all" />
     <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
   </ItemGroup>
 
@@ -24,7 +21,5 @@
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
-
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
 
 </Project>

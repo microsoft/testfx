@@ -5,6 +5,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <MSTestVersion>$(MSTestPreviewVersion)</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>$(TestingPlatformPreviewVersion)</MicrosoftTestingPlatformVersion>
     <AspireVersion>13.5.3</AspireVersion>
     <OpenTelemetryVersion>1.19.1</OpenTelemetryVersion>
     <OpenTelemetryInstrumentationVersion>1.19.0</OpenTelemetryInstrumentationVersion>
