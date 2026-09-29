@@ -22,30 +22,59 @@ internal partial class TestMethodInfo
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
+    /// <param name="invocationState">The activation and cleanup state for this invocation.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(
+        TestResult result,
+        CancellationTokenSource? timeoutTokenSource,
+        TestInvocationState invocationState)
     {
-        DebugEx.Assert(result != null, "result != null");
+        _ = result ?? throw new ArgumentNullException(nameof(result));
 
-        if (_classInstance is null || _isTestCleanupInvoked ||
-            // Fast check to see if we can return early.
-            // This avoids the code below that allocates CancellationTokenSource
-            !HasCleanupsToInvoke())
+        if (invocationState.ClassInstance is not { } classInstance)
         {
             return;
         }
 
-        _isTestCleanupInvoked = true;
-        if (!_isTestContextSet)
+        bool hasCleanupsToInvoke = HasCleanupsToInvoke(invocationState.ClassInstanceLease);
+        bool shouldResetCancellationTokenSource = invocationState.IsTestContextSet
+            && TestContext.Context.CancellationTokenSource.IsCancellationRequested;
+        if ((!hasCleanupsToInvoke && !shouldResetCancellationTokenSource)
+            || !invocationState.TryBeginCleanup())
+        {
+            return;
+        }
+
+        if (shouldResetCancellationTokenSource)
+        {
+            TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
+        }
+
+        if (!hasCleanupsToInvoke)
+        {
+            return;
+        }
+
+        if (!invocationState.IsTestContextSet)
         {
             try
             {
-                await _classInstanceLease!.DisposeAsync().ConfigureAwait(false);
+                if (invocationState.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
+                {
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
+                }
             }
             catch (Exception exception)
             {
-                result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
-                result.TestFailureException = exception;
+                if (result is not null)
+                {
+                    result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+                    result.TestFailureException = exception;
+                }
+                else
+                {
+                    throw;
+                }
             }
 
             return;
@@ -60,9 +89,6 @@ internal partial class TestMethodInfo
         {
             try
             {
-                // Reset the cancellation token source to avoid cancellation of cleanup methods because of the init or test method cancellation.
-                TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
-
                 // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
                 if (timeoutTokenSource is { IsCancellationRequested: false })
                 {
@@ -72,14 +98,14 @@ internal partial class TestMethodInfo
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
-                    ? await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeCleanupMethodAsync(testCleanupMethod, classInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
                 if (testCleanupException is null)
                 {
                     foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
                     {
                         testCleanupMethod = baseCleanupMethod;
-                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
+                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, classInstance, timeoutTokenSource).ConfigureAwait(false);
                         if (testCleanupException is not null)
                         {
                             break;
@@ -89,9 +115,9 @@ internal partial class TestMethodInfo
             }
             finally
             {
-                if (_classInstanceLease is not null)
+                if (invocationState.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
                 {
-                    await _classInstanceLease.DisposeAsync().ConfigureAwait(false);
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
@@ -165,10 +191,10 @@ internal partial class TestMethodInfo
         result.TestFailureException = realException;
     }
 
-    private bool HasCleanupsToInvoke() =>
+    private bool HasCleanupsToInvoke(ITestClassInstanceLease? classInstanceLease) =>
         Parent.TestCleanupMethod is not null ||
         Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
-        _classInstanceLease is not null ||
+        classInstanceLease is { RequiresCleanup: true } ||
         Parent.Parent.GlobalTestCleanups is { Count: > 0 };
 
     /// <summary>

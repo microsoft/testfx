@@ -4,6 +4,7 @@
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting.Hosting</RootNamespace>
     <PackageId>MSTest.Extensions.Hosting</PackageId>
     <PackageTags>$(CommonPackageTags) Hosting DependencyInjection</PackageTags>
     <PackageDescription><![CDATA[This package creates MSTest test classes from an application-owned Microsoft.Extensions.Hosting service provider with one dependency-injection scope per test invocation.
@@ -25,6 +26,11 @@ $(CommonProductDescription)]]></PackageDescription>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
@@ -35,16 +41,26 @@ $(CommonProductDescription)]]></PackageDescription>
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="buildMultiTargeting/**">
+    <Content Include="buildMultiTargeting\MSTest.Extensions.Hosting.props">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+    </Content>
+    <Content Include="buildMultiTargeting\MSTest.Extensions.Hosting.targets">
+      <Pack>true</Pack>
+      <PackagePath>build</PackagePath>
+    </Content>
+    <Content Include="buildMultiTargeting\MSTest.Extensions.Hosting.props">
+      <Pack>true</Pack>
+      <PackagePath>buildTransitive</PackagePath>
+    </Content>
+    <Content Include="buildMultiTargeting\MSTest.Extensions.Hosting.targets">
+      <Pack>true</Pack>
+      <PackagePath>buildTransitive</PackagePath>
+    </Content>
+    <Content Include="buildMultiTargeting\**">
       <Pack>true</Pack>
       <PackagePath>buildMultiTargeting</PackagePath>
     </Content>
-    <TfmSpecificPackageFile Include="buildTransitive/**">
-      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
-    <TfmSpecificPackageFile Include="build/**">
-      <PackagePath>build/$(TargetFramework)</PackagePath>
-    </TfmSpecificPackageFile>
   </ItemGroup>
 
 </Project>

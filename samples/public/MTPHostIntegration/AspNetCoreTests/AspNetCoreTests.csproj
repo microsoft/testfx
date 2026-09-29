@@ -7,7 +7,6 @@
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <TestingPlatformHostFactory>AspNetCoreTestHost.CreateHost</TestingPlatformHostFactory>
     <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
-    <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
 

@@ -1,17 +1,57 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project>
-  <ItemGroup>
-    <CompilerVisibleProperty Include="EnableMSTestHostTestClassInjection" />
-  </ItemGroup>
+  <Target Name="_EnableMSTestHostTestClassInjectionBuildModeAnalyzer"
+          AfterTargets="_ComputeSkipAnalyzers"
+          BeforeTargets="CoreCompile"
+          Condition=" '$(PublishAot)' == 'true'
+                      OR '$(RunAOTCompilation)' == 'true'
+                      OR '$(EnableMSTestSourceGeneration)' == 'true'
+                      OR '$(TargetPlatformIdentifier)' == 'browser'
+                      OR $([System.String]::Copy('$(RuntimeIdentifier)').Contains('browser-wasm')) ">
+    <PropertyGroup>
+      <_SkipAnalyzers>false</_SkipAnalyzers>
+    </PropertyGroup>
+  </Target>
 
-  <Target Name="_ValidateMSTestHostTestClassInjection"
-          BeforeTargets="PrepareForBuild"
-          Condition=" '$(EnableMSTestHostTestClassInjection)' == 'true' ">
-    <Error Condition=" '$(PublishAot)' == 'true' "
-           Text="MSTest.Extensions.Hosting test-class injection does not support NativeAOT. Remove AddMSTestTestClassInjection/MSTest.Extensions.Hosting or disable PublishAot." />
-    <Error Condition=" '$(RunAOTCompilation)' == 'true' "
-           Text="MSTest.Extensions.Hosting test-class injection does not support AOT compilation. Remove AddMSTestTestClassInjection/MSTest.Extensions.Hosting or disable RunAOTCompilation." />
-    <Error Condition=" '$(EnableMSTestSourceGeneration)' == 'true' "
-           Text="MSTest.Extensions.Hosting test-class injection does not support MSTest source generation. Remove AddMSTestTestClassInjection/MSTest.Extensions.Hosting or disable EnableMSTestSourceGeneration." />
+  <Target Name="_GenerateMSTestHostTestClassInjectionBuildModeMetadata"
+          BeforeTargets="CoreCompile"
+          Condition=" '$(PublishAot)' == 'true'
+                      OR '$(RunAOTCompilation)' == 'true'
+                      OR '$(EnableMSTestSourceGeneration)' == 'true'
+                      OR '$(TargetPlatformIdentifier)' == 'browser'
+                      OR $([System.String]::Copy('$(RuntimeIdentifier)').Contains('browser-wasm')) ">
+    <PropertyGroup>
+      <_MSTestHostTestClassInjectionBuildModeFile>$(IntermediateOutputPath)MSTest.Extensions.Hosting.BuildMode$(DefaultLanguageSourceExtension)</_MSTestHostTestClassInjectionBuildModeFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_MSTestHostTestClassInjectionAssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"
+                                                       Condition=" '$(PublishAot)' == 'true' ">
+        <_Parameter1>MSTestHostTestClassInjectionUnsupportedMode</_Parameter1>
+        <_Parameter2>PublishAot</_Parameter2>
+      </_MSTestHostTestClassInjectionAssemblyAttribute>
+      <_MSTestHostTestClassInjectionAssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"
+                                                       Condition=" '$(RunAOTCompilation)' == 'true' ">
+        <_Parameter1>MSTestHostTestClassInjectionUnsupportedMode</_Parameter1>
+        <_Parameter2>RunAOTCompilation</_Parameter2>
+      </_MSTestHostTestClassInjectionAssemblyAttribute>
+      <_MSTestHostTestClassInjectionAssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"
+                                                       Condition=" '$(EnableMSTestSourceGeneration)' == 'true' ">
+        <_Parameter1>MSTestHostTestClassInjectionUnsupportedMode</_Parameter1>
+        <_Parameter2>EnableMSTestSourceGeneration</_Parameter2>
+      </_MSTestHostTestClassInjectionAssemblyAttribute>
+      <_MSTestHostTestClassInjectionAssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"
+                                                       Condition=" '$(TargetPlatformIdentifier)' == 'browser' OR $([System.String]::Copy('$(RuntimeIdentifier)').Contains('browser-wasm')) ">
+        <_Parameter1>MSTestHostTestClassInjectionUnsupportedMode</_Parameter1>
+        <_Parameter2>browser-wasm</_Parameter2>
+      </_MSTestHostTestClassInjectionAssemblyAttribute>
+    </ItemGroup>
+    <WriteCodeFragment AssemblyAttributes="@(_MSTestHostTestClassInjectionAssemblyAttribute)"
+                       Language="$(Language)"
+                       OutputFile="$(_MSTestHostTestClassInjectionBuildModeFile)">
+      <Output TaskParameter="OutputFile" ItemName="Compile" />
+    </WriteCodeFragment>
+    <ItemGroup>
+      <FileWrites Include="$(_MSTestHostTestClassInjectionBuildModeFile)" />
+    </ItemGroup>
   </Target>
 </Project>

@@ -8,6 +8,7 @@ Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLea
 Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.DisposeAsync() -> System.Threading.Tasks.Task!
 Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.Instance.get -> object!
 Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.MicrosoftExtensionsTestClassInstanceLease(object! instance, Microsoft.Extensions.DependencyInjection.IServiceScope! scope) -> void
+Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.RequiresCleanup.get -> bool
 Microsoft.Extensions.DependencyInjection.MSTestTestClassBuilderConfigurator
 Microsoft.Extensions.DependencyInjection.MSTestTestClassBuilderConfigurator.Configure(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder) -> void
 Microsoft.Extensions.DependencyInjection.MSTestTestClassBuilderConfigurator.MSTestTestClassBuilderConfigurator(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! serviceScopeFactory) -> void

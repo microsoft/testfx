@@ -416,7 +416,7 @@ An experimental MTP extension (`Microsoft.Testing.Extensions.Hosting`, `[TPEXP]`
 
 ### MSTest.Extensions.Hosting
 
-An experimental MSTest integration (`MSTest.Extensions.Hosting`, `[MSTESTEXP]`) that lets a hosted MTP application construct MSTest test classes from its caller-owned Microsoft.Extensions service provider. Opt in with `<EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>` and `builder.Services.AddMSTestTestClassInjection()`. Each test invocation, data row, and retry receives a new dependency-injection scope; MSTest owns the activation lease, disposes the test instance after `TestCleanup`, then disposes the scope, while the host and root provider remain caller-owned. NativeAOT/source-generated execution is explicitly blocked in this first reflection-based version.
+An experimental MSTest integration (`MSTest.Extensions.Hosting`, `[MSTESTEXP]`) that lets a hosted MTP application construct MSTest test classes from its caller-owned Microsoft.Extensions service provider. Opt in with `builder.Services.AddMSTestTestClassInjection()`. Each test invocation, data row, and retry receives a new dependency-injection scope; MSTest owns the activation lease, disposes the test instance after `TestCleanup`, then disposes the scope, while the host and root provider remain caller-owned. The package produces deterministic build errors for NativeAOT, browser WebAssembly, AOT compilation, and source-generated execution in this first reflection-based version.
 
 ### Microsoft.Testing.Extensions.Logging
 

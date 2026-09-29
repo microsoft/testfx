@@ -11,16 +11,20 @@ internal sealed class MicrosoftExtensionsTestClassInstanceLease(object instance,
 {
     public object Instance { get; } = instance;
 
+    public bool RequiresCleanup => true;
+
     public async Task DisposeAsync()
     {
         List<Exception>? exceptions = null;
 
         try
         {
+#if NET6_0_OR_GREATER
             if (Instance is IAsyncDisposable asyncDisposable)
             {
                 await asyncDisposable.DisposeAsync().ConfigureAwait(false);
             }
+#endif
         }
         catch (Exception exception)
         {

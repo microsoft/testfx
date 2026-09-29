@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Hosting.Resources;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -13,14 +14,33 @@ internal sealed class MicrosoftExtensionsTestClassInstanceFactory(IServiceScopeF
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
             throw new NotSupportedException(
-                "MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by NativeAOT.");
+                HostingResources.DynamicCodeNotSupported);
         }
 #endif
 
         IServiceScope scope = serviceScopeFactory.CreateScope();
+        bool shouldSupplyTestContext;
         try
         {
-            object instance = ShouldSupplyTestContext(testClassType)
+            shouldSupplyTestContext = ShouldSupplyTestContext(scope.ServiceProvider, testClassType);
+        }
+        catch (Exception selectionException)
+        {
+            try
+            {
+                DisposeScope(scope);
+            }
+            catch (Exception disposeException)
+            {
+                throw new AggregateException(selectionException, disposeException);
+            }
+
+            throw;
+        }
+
+        try
+        {
+            object instance = shouldSupplyTestContext
                 ? ActivatorUtilities.CreateInstance(scope.ServiceProvider, testClassType, testContext)
                 : ActivatorUtilities.CreateInstance(scope.ServiceProvider, testClassType);
             return new MicrosoftExtensionsTestClassInstanceLease(instance, scope);
@@ -44,19 +64,99 @@ internal sealed class MicrosoftExtensionsTestClassInstanceFactory(IServiceScopeF
 
     private static InvalidOperationException CreateActivationException(Type testClassType, Exception innerException)
         => new(
-            $"MSTest could not create test class '{testClassType.FullName}' from the application host service provider. "
-            + "Ensure that exactly one public constructor can be satisfied by registered services and TestContext.",
+            string.Format(CultureInfo.CurrentCulture, HostingResources.ActivationFailed, testClassType.FullName),
             innerException);
 
-    private static bool ShouldSupplyTestContext(Type testClassType)
+    private static bool ShouldSupplyTestContext(IServiceProvider serviceProvider, Type testClassType)
     {
         ConstructorInfo[] constructors = testClassType.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
-        ConstructorInfo? preferredConstructor = constructors.SingleOrDefault(
-            static constructor => constructor.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), inherit: false));
+        foreach (ConstructorInfo constructor in constructors)
+        {
+            foreach (ParameterInfo parameter in constructor.GetParameters())
+            {
+                if (parameter.ParameterType != typeof(TestContext)
+                    && parameter.ParameterType.IsSubclassOf(typeof(TestContext)))
+                {
+                    throw new InvalidOperationException(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            HostingResources.DerivedTestContextParameter,
+                            testClassType.FullName,
+                            parameter.ParameterType.FullName));
+                }
+            }
+        }
 
-        ConstructorInfo[] candidates = preferredConstructor is null ? constructors : [preferredConstructor];
-        return candidates.Any(static constructor =>
-            constructor.GetParameters().Any(static parameter => parameter.ParameterType == typeof(TestContext)));
+        ConstructorInfo[] preferredConstructors =
+            [.. constructors.Where(static constructor =>
+                constructor.IsDefined(typeof(ActivatorUtilitiesConstructorAttribute), inherit: false))];
+        if (preferredConstructors.Length > 1)
+        {
+            throw new InvalidOperationException(
+                string.Format(CultureInfo.CurrentCulture, HostingResources.MultiplePreferredConstructors, testClassType.FullName));
+        }
+
+        if (preferredConstructors is [ConstructorInfo preferredConstructor])
+        {
+            return HasTestContextParameter(preferredConstructor);
+        }
+
+        IServiceProviderIsService? serviceChecker = serviceProvider.GetService<IServiceProviderIsService>();
+        IServiceProviderIsKeyedService? keyedServiceChecker = serviceProvider.GetService<IServiceProviderIsKeyedService>();
+        ConstructorCandidate[] candidates =
+        [
+            .. constructors
+                .Select(constructor => new ConstructorCandidate(
+                    constructor,
+                    HasTestContextParameter(constructor),
+                    IsSatisfiable(constructor, serviceChecker, keyedServiceChecker)))
+                .Where(static candidate => candidate.IsSatisfiable),
+        ];
+        if (candidates.Length == 0)
+        {
+            return false;
+        }
+
+        int maximumParameterCount = candidates.Max(static candidate => candidate.Constructor.GetParameters().Length);
+        ConstructorCandidate[] longestCandidates =
+            [.. candidates.Where(candidate => candidate.Constructor.GetParameters().Length == maximumParameterCount)];
+        if (longestCandidates is [ConstructorCandidate selectedCandidate])
+        {
+            return selectedCandidate.HasTestContext;
+        }
+
+        ConstructorCandidate[] testContextCandidates =
+            [.. longestCandidates.Where(static candidate => candidate.HasTestContext)];
+        return testContextCandidates is [ConstructorCandidate testContextCandidate]
+            ? testContextCandidate.HasTestContext
+            : throw new InvalidOperationException(
+                string.Format(CultureInfo.CurrentCulture, HostingResources.AmbiguousConstructors, testClassType.FullName));
+    }
+
+    private static bool HasTestContextParameter(ConstructorInfo constructor)
+        => constructor.GetParameters().Any(static parameter => parameter.ParameterType == typeof(TestContext));
+
+    private static bool IsSatisfiable(
+        ConstructorInfo constructor,
+        IServiceProviderIsService? serviceChecker,
+        IServiceProviderIsKeyedService? keyedServiceChecker)
+    {
+        foreach (ParameterInfo parameter in constructor.GetParameters())
+        {
+            FromKeyedServicesAttribute? keyedServicesAttribute = parameter.GetCustomAttribute<FromKeyedServicesAttribute>();
+            if (parameter.ParameterType == typeof(TestContext)
+                || parameter.HasDefaultValue
+                || (keyedServicesAttribute is null
+                    ? serviceChecker?.IsService(parameter.ParameterType) != false
+                    : keyedServiceChecker?.IsKeyedService(parameter.ParameterType, keyedServicesAttribute.Key) != false))
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     private static void DisposeScope(IServiceScope scope)
@@ -64,10 +164,14 @@ internal sealed class MicrosoftExtensionsTestClassInstanceFactory(IServiceScopeF
         if (scope is IAsyncDisposable asyncDisposable)
         {
             asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            return;
         }
-        else
-        {
-            scope.Dispose();
-        }
+
+        scope.Dispose();
     }
+
+    private readonly record struct ConstructorCandidate(
+        ConstructorInfo Constructor,
+        bool HasTestContext,
+        bool IsSatisfiable);
 }

@@ -8,7 +8,6 @@
     <AspireHostingTestingVersion>$(AspireVersion)</AspireHostingTestingVersion>
     <TestingPlatformHostFactory>AspireTestHost.CreateHost</TestingPlatformHostFactory>
     <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
-    <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
 

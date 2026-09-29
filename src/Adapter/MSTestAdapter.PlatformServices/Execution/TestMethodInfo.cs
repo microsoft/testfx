@@ -20,11 +20,6 @@ internal partial class TestMethodInfo : ITestMethod
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
-    private object? _classInstance;
-    private ITestClassInstanceLease? _classInstanceLease;
-    private bool _isTestContextSet;
-    private bool _isTestCleanupInvoked;
-
     private ExecutionContext? _executionContext;
 
 #if NETFRAMEWORK

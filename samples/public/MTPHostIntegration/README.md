@@ -17,11 +17,7 @@ Both test executables use the generated hosted entry point:
 
 The factory returns a fresh, unstarted `Task<IHost>` and does not receive MTP arguments. Generated self-registration supplies MSTest and the HostOwned diagnostics hook exactly once; no manual `AddMSTest` or `AddTestingPlatformDiagnostics` call is needed. The host owns configuration, logging, dependency injection, OpenTelemetry providers, startup, shutdown, and disposal. The sample clears default console logging and uses OTLP only when configured so JSON listing, server, and `dotnet test` protocol output remains uncorrupted.
 
-Both test projects opt into host-owned MSTest test-class activation:
-
-```xml
-<EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
-```
+Both test projects opt into host-owned MSTest test-class activation in their host configuration:
 
 ```csharp
 builder.Services.AddMSTestTestClassInjection();

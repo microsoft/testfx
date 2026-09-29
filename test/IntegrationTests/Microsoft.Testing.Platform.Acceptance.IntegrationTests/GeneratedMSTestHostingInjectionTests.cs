@@ -92,6 +92,31 @@ public sealed class GeneratedMSTestHostingInjectionTests : AcceptanceTestBase<Ge
             result.StandardError);
     }
 
+    [OSCondition(OperatingSystems.Windows)]
+    [TestMethod]
+    public async Task GeneratedEntryPoint_NetFrameworkExplicitAppDomainExecutionFailsWithActionableDiagnostic()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, "net462");
+        using TempDirectory tempDirectory = new();
+        string runSettingsPath = Path.Combine(tempDirectory.Path, "appdomain.runsettings");
+        File.WriteAllText(runSettingsPath, """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>false</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--settings \"{runSettingsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIsNot(0);
+        Assert.Contains(
+            "MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary.",
+            result.StandardError);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string TestCode = """
@@ -107,7 +132,6 @@ public sealed class GeneratedMSTestHostingInjectionTests : AcceptanceTestBase<Ge
         <MicrosoftTestingPlatformVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingPlatformVersion>
         <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
         <TestingPlatformHostFactory>InjectedTestHost.CreateHost</TestingPlatformHostFactory>
-        <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
         <NoWarn>$(NoWarn);MSTESTEXP;TPEXP</NoWarn>
     </PropertyGroup>
     <ItemGroup>
@@ -177,7 +201,7 @@ public sealed class InvocationTracker
     public void RecordParallelScope(Guid id) => _parallelScopeIds.TryAdd(id, 0);
 }
 
-public sealed class InvocationScope(InvocationTracker tracker) : IAsyncDisposable
+public sealed class InvocationScope(InvocationTracker tracker) : IAsyncDisposable, IDisposable
 {
     public Guid Id { get; } = Guid.NewGuid();
 
@@ -192,6 +216,8 @@ public sealed class InvocationScope(InvocationTracker tracker) : IAsyncDisposabl
         Interlocked.Increment(ref tracker.DisposedScopes);
         return default;
     }
+
+    public void Dispose() => Interlocked.Increment(ref tracker.DisposedScopes);
 }
 
 public sealed class ParallelGate
@@ -225,10 +251,17 @@ internal sealed class ValidationHostedService(InvocationTracker tracker) : IHost
             return Task.CompletedTask;
         }
 
+        bool testDisposalIsValid =
+#if NET6_0_OR_GREATER
+            tracker.AsyncDisposedTests == tracker.DisposedTests;
+#else
+            tracker.AsyncDisposedTests == 0 && tracker.DisposedTests == tracker.InitializedTests;
+#endif
+
         if (tracker.CreatedScopes != tracker.ScopeCount
             || tracker.CreatedScopes != tracker.DisposedScopes
             || tracker.InitializedTests != tracker.CleanedTests
-            || tracker.AsyncDisposedTests != tracker.DisposedTests
+            || !testDisposalIsValid
             || tracker.ServiceOnlyTests != 1
             || tracker.RetryAttempts != 2
             || tracker.RetryScopeCount != 2

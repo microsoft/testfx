@@ -22,7 +22,7 @@ function Confirm-NugetPackages {
         "MSTest.Sdk"                                  = if ($configuration -eq "Debug") { 307 } else { 305 }
         "MSTest.TestFramework"                        = 105
         "MSTest.TestAdapter"                          = 76
-        "MSTest.Extensions.Hosting"                   = 26
+        "MSTest.Extensions.Hosting"                   = 57
         "MSTest"                                      = 10
         "MSTest.Analyzers"                            = 56
         "MSTest.SourceGeneration"                     = 8

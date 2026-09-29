@@ -57,6 +57,20 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         await lease.DisposeAsync();
     }
 
+    public async Task CreateInstanceChoosesResolvableServiceConstructorOverUnresolvableTestContextConstructor()
+    {
+        ServiceCollection services = [];
+        services.AddScoped<ScopedService>();
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(serviceProvider.GetRequiredService<IServiceScopeFactory>());
+
+        ITestClassInstanceLease lease = factory.CreateInstance(typeof(MixedResolvableTestClass), CreateTestContext());
+
+        lease.Instance.Should().BeOfType<MixedResolvableTestClass>()
+            .Which.SelectedConstructor.Should().Be("service-only");
+        await lease.DisposeAsync();
+    }
+
     public async Task CreateInstanceActivatorUtilitiesConstructorTakesPrecedenceOverTestContextConstructor()
     {
         ServiceCollection services = [];
@@ -68,6 +82,35 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
 
         lease.Instance.Should().BeOfType<PreferredConstructorTestClass>()
             .Which.SelectedConstructor.Should().Be("preferred");
+        await lease.DisposeAsync();
+    }
+
+    public async Task CreateInstanceResolvesKeyedServiceConstructor()
+    {
+        ServiceCollection services = [];
+        services.AddKeyedScoped<ScopedService>("hosted");
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(serviceProvider.GetRequiredService<IServiceScopeFactory>());
+
+        ITestClassInstanceLease lease = factory.CreateInstance(typeof(KeyedServiceTestClass), CreateTestContext());
+
+        lease.Instance.Should().BeOfType<KeyedServiceTestClass>()
+            .Which.Service.Should().NotBeNull();
+        await lease.DisposeAsync();
+    }
+
+    public async Task CreateInstanceWithoutServiceCheckerLetsActivatorUtilitiesResolveConstructor()
+    {
+        var service = new ScopedService();
+        var scopeFactory = new StubScopeFactory(new StubServiceProvider(service));
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(scopeFactory);
+        TestContext testContext = CreateTestContext();
+
+        ITestClassInstanceLease lease = factory.CreateInstance(typeof(TestContextAndServiceTestClass), testContext);
+
+        TestContextAndServiceTestClass instance = lease.Instance.Should().BeOfType<TestContextAndServiceTestClass>().Subject;
+        instance.TestContext.Should().BeSameAs(testContext);
+        instance.Service.Should().BeSameAs(service);
         await lease.DisposeAsync();
     }
 
@@ -83,7 +126,7 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
 
         action.Should().Throw<InvalidOperationException>()
             .Which.Message.Should().Contain(typeof(AmbiguousTestClass).FullName)
-            .And.Contain("exactly one public constructor");
+            .And.Contain("unique public constructor");
     }
 
     public void CreateInstanceMissingServiceReportsStableMSTestDiagnostic()
@@ -96,6 +139,33 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         action.Should().Throw<InvalidOperationException>()
             .Which.Message.Should().Contain(typeof(MissingServiceTestClass).FullName)
             .And.Contain("registered services");
+    }
+
+    public void CreateInstanceMultiplePreferredConstructorsReportsStableDiagnostic()
+    {
+        ServiceCollection services = [];
+        services.AddSingleton<ServiceA>();
+        services.AddSingleton<ServiceB>();
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(serviceProvider.GetRequiredService<IServiceScopeFactory>());
+
+        Action action = () => factory.CreateInstance(typeof(MultiplePreferredConstructorsTestClass), CreateTestContext());
+
+        action.Should().Throw<InvalidOperationException>()
+            .Which.Message.Should().Contain("multiple public constructors")
+            .And.Contain(nameof(ActivatorUtilitiesConstructorAttribute));
+    }
+
+    public void CreateInstanceDerivedTestContextParameterReportsStableDiagnostic()
+    {
+        using ServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(serviceProvider.GetRequiredService<IServiceScopeFactory>());
+
+        Action action = () => factory.CreateInstance(typeof(DerivedTestContextTestClass), CreateTestContext());
+
+        action.Should().Throw<InvalidOperationException>()
+            .Which.Message.Should().Contain("derives from TestContext")
+            .And.Contain(nameof(DerivedTestContext));
     }
 
     public void CreateInstanceWhenConstructorThrowsDisposesCreatedScope()
@@ -125,9 +195,30 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
 
         await lease.DisposeAsync();
 
+#if NET6_0_OR_GREATER
         tracker.Events.Should().Equal("test-async", "test-sync", "scope-async");
         tracker.TestAsyncDisposeCount.Should().Be(1);
+#else
+        tracker.Events.Should().Equal("test-sync", "scope-async");
+        tracker.TestAsyncDisposeCount.Should().Be(0);
+#endif
         tracker.TestDisposeCount.Should().Be(1);
+        tracker.ScopeDisposeCount.Should().Be(1);
+    }
+
+    public async Task DisposeAsyncSupportsAsyncOnlyScopedService()
+    {
+        var tracker = new DisposalTracker();
+        ServiceCollection services = [];
+        services.AddSingleton(tracker);
+        services.AddScoped<AsyncOnlyTrackedScopedService>();
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(serviceProvider.GetRequiredService<IServiceScopeFactory>());
+        ITestClassInstanceLease lease = factory.CreateInstance(typeof(AsyncOnlyScopedServiceTestClass), CreateTestContext());
+
+        await lease.DisposeAsync();
+
+        tracker.Events.Should().Equal("scope-async-only");
         tracker.ScopeDisposeCount.Should().Be(1);
     }
 
@@ -205,6 +296,24 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         public ScopedService Service { get; }
     }
 
+    private sealed class MixedResolvableTestClass
+    {
+        public MixedResolvableTestClass(ScopedService service)
+        {
+            _ = service;
+            SelectedConstructor = "service-only";
+        }
+
+        public MixedResolvableTestClass(TestContext testContext, ServiceA missingService)
+        {
+            _ = testContext;
+            _ = missingService;
+            SelectedConstructor = "test-context";
+        }
+
+        public string SelectedConstructor { get; }
+    }
+
     private sealed class PreferredConstructorTestClass
     {
         [ActivatorUtilitiesConstructor]
@@ -224,11 +333,36 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         public string SelectedConstructor { get; }
     }
 
+    private sealed class KeyedServiceTestClass
+    {
+        public KeyedServiceTestClass([FromKeyedServices("hosted")] ScopedService service) => Service = service;
+
+        public ScopedService Service { get; }
+    }
+
     private sealed class AmbiguousTestClass
     {
         public AmbiguousTestClass(ServiceA service) => _ = service;
 
         public AmbiguousTestClass(ServiceB service) => _ = service;
+    }
+
+    private sealed class MultiplePreferredConstructorsTestClass
+    {
+        [ActivatorUtilitiesConstructor]
+        public MultiplePreferredConstructorsTestClass(ServiceA service) => _ = service;
+
+        [ActivatorUtilitiesConstructor]
+        public MultiplePreferredConstructorsTestClass(ServiceB service) => _ = service;
+    }
+
+    private sealed class DerivedTestContextTestClass
+    {
+        public DerivedTestContextTestClass(DerivedTestContext testContext) => _ = testContext;
+    }
+
+    private abstract class DerivedTestContext : TestContext
+    {
     }
 
     private sealed class MissingServiceTestClass
@@ -274,7 +408,7 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         }
     }
 
-    private sealed class TrackedScopedService : IAsyncDisposable
+    private sealed class TrackedScopedService : IAsyncDisposable, IDisposable
     {
         private readonly DisposalTracker _tracker;
 
@@ -284,6 +418,27 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         {
             _tracker.Events.Add("scope-async");
             _tracker.ScopeDisposeCount++;
+            return default;
+        }
+
+        public void Dispose()
+        {
+            _tracker.Events.Add("scope-sync");
+            _tracker.ScopeDisposeCount++;
+        }
+    }
+
+    private sealed class AsyncOnlyScopedServiceTestClass
+    {
+        public AsyncOnlyScopedServiceTestClass(AsyncOnlyTrackedScopedService service) => _ = service;
+    }
+
+    private sealed class AsyncOnlyTrackedScopedService(DisposalTracker tracker) : IAsyncDisposable
+    {
+        public ValueTask DisposeAsync()
+        {
+            tracker.Events.Add("scope-async-only");
+            tracker.ScopeDisposeCount++;
             return default;
         }
     }
@@ -303,5 +458,25 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
     {
         public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
             => throw new NotSupportedException();
+    }
+
+    private sealed class StubScopeFactory(IServiceProvider serviceProvider) : IServiceScopeFactory
+    {
+        public IServiceScope CreateScope() => new StubScope(serviceProvider);
+    }
+
+    private sealed class StubScope(IServiceProvider serviceProvider) : IServiceScope
+    {
+        public IServiceProvider ServiceProvider => serviceProvider;
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class StubServiceProvider(ScopedService service) : IServiceProvider
+    {
+        public object? GetService(Type serviceType)
+            => serviceType == typeof(ScopedService) ? service : null;
     }
 }

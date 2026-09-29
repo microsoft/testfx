@@ -92,4 +92,5 @@ internal static class DiagnosticIds
     public const string TestClassAttributeShouldNotBeAppliedToAbstractClassRuleId = "MSTEST0085";
     public const string RedundantTestMethodAttributeRuleId = "MSTEST0086";
     public const string DuplicateDataRowDisplayNameRuleId = "MSTEST0087";
+    public const string MSTestHostTestClassInjectionNotSupportedRuleId = "MSTEST0088";
 }

@@ -77,22 +77,6 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
                 """,
                 HostingPackage,
                 "TestingPlatformOpenTelemetryMode=HostOwned requires a compatible Microsoft.Testing.Extensions.OpenTelemetry package reference."),
-            (
-                "MSTestHostingInjectionNativeAot",
-                """
-                <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
-                <PublishAot>true</PublishAot>
-                """,
-                MSTestHostingPackage,
-                "MSTest.Extensions.Hosting test-class injection does not support NativeAOT."),
-            (
-                "MSTestHostingInjectionSourceGeneration",
-                """
-                <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
-                <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
-                """,
-                MSTestHostingPackage,
-                "MSTest.Extensions.Hosting test-class injection does not support MSTest source generation."),
         ];
 
         foreach ((string name, string properties, string packages, string expectedError) in scenarios)
@@ -142,6 +126,73 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
         result.AssertExitCodeIs(0);
     }
 
+    [TestMethod]
+    public async Task MSTestHostingInjectionUnsupportedBuildModesFailAtTheOptInCall()
+    {
+        (string Name, string Properties, string ExpectedBuildMode)[] scenarios =
+        [
+            ("NativeAot", "<PublishAot>true</PublishAot>", "PublishAot"),
+            ("AotCompilation", "<RunAOTCompilation>true</RunAOTCompilation>", "RunAOTCompilation"),
+            ("SourceGeneration", "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>", "EnableMSTestSourceGeneration"),
+            ("Browser", "<TargetPlatformIdentifier>browser</TargetPlatformIdentifier>", "browser-wasm"),
+        ];
+
+        foreach ((string name, string properties, string expectedBuildMode) in scenarios)
+        {
+            string source = MSTestHostInjectionAsset
+                .PatchCodeWithReplace("$Properties$", properties)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+            using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+                $"{nameof(MSTestHostingInjectionUnsupportedBuildModesFailAtTheOptInCall)}_{name}",
+                source);
+
+            DotnetMuxerResult result = await DotnetCli.RunAsync(
+                $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath} -v:n",
+                failIfReturnValueIsNotZero: false,
+                cancellationToken: TestContext.CancellationToken);
+
+            result.AssertExitCodeIsNot(0);
+            result.AssertOutputContains(
+                $"AddMSTestTestClassInjection is not supported when '{expectedBuildMode}' is enabled");
+        }
+    }
+
+    [TestMethod]
+    public async Task MSTestHostingInjectionOptInFlowsAcrossProjectReferences()
+    {
+        string source = CrossProjectMSTestHostInjectionAsset
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$Properties$", string.Empty);
+        using TestAsset supportedAsset = await TestAsset.GenerateAssetAsync(
+            $"{nameof(MSTestHostingInjectionOptInFlowsAcrossProjectReferences)}_Supported",
+            source);
+
+        DotnetMuxerResult supportedResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {supportedAsset.TargetAssetPath} -v:n",
+            cancellationToken: TestContext.CancellationToken);
+
+        supportedResult.AssertExitCodeIs(0);
+
+        source = CrossProjectMSTestHostInjectionAsset
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$Properties$", """
+                <PublishAot>true</PublishAot>
+                <RunAnalyzers>false</RunAnalyzers>
+                """);
+        using TestAsset unsupportedAsset = await TestAsset.GenerateAssetAsync(
+            $"{nameof(MSTestHostingInjectionOptInFlowsAcrossProjectReferences)}_NativeAot",
+            source);
+
+        DotnetMuxerResult unsupportedResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {unsupportedAsset.TargetAssetPath} -v:n",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        unsupportedResult.AssertExitCodeIsNot(0);
+        unsupportedResult.AssertOutputContains(
+            "AddMSTestTestClassInjection is not supported when 'PublishAot' is enabled");
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     private const string HostingPackage = """
@@ -155,6 +206,99 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
     private const string MSTestHostingPackage = """
         <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
     """;
+
+    private const string MSTestHostInjectionAsset = """
+#file MSTestHostInjectionValidation.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RestorePackagesPath>$(MSBuildProjectDirectory)\.packages</RestorePackagesPath>
+    <NoWarn>$(NoWarn);MSTESTEXP</NoWarn>
+$Properties$
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file Program.cs
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+ServiceCollection services = [];
+services.AddMSTestTestClassInjection();
+
+public sealed class ApplicationService
+{
+}
+
+[TestClass]
+public sealed class InjectedOnlyTest(ApplicationService service)
+{
+    private readonly ApplicationService _service = service;
+}
+""";
+
+    private const string CrossProjectMSTestHostInjectionAsset = """
+#file MSTestHostInjectionValidation.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RestorePackagesPath>$(MSBuildProjectDirectory)\.packages</RestorePackagesPath>
+    <RunAnalyzers>true</RunAnalyzers>
+    <NoWarn>$(NoWarn);MSTESTEXP</NoWarn>
+$Properties$
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="HostSetup/HostSetup.csproj" />
+    <Compile Remove="HostSetup/**" />
+  </ItemGroup>
+</Project>
+
+#file Program.cs
+using HostSetup;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+ServiceCollection services = [];
+HostServices.Configure(services);
+
+[TestClass]
+public sealed class InjectedOnlyTest(ApplicationService service)
+{
+    private readonly ApplicationService _service = service;
+}
+
+#file HostSetup/HostSetup.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RestorePackagesPath>$(MSBuildProjectDirectory)\..\.packages</RestorePackagesPath>
+    <RunAnalyzers>true</RunAnalyzers>
+    <NoWarn>$(NoWarn);MSTESTEXP</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file HostSetup/HostServices.cs
+using Microsoft.Extensions.DependencyInjection;
+
+namespace HostSetup;
+
+public static class HostServices
+{
+    public static void Configure(IServiceCollection services)
+        => services.AddMSTestTestClassInjection();
+}
+
+public sealed class ApplicationService
+{
+}
+""";
 
     private const string Asset = """
 #file HostedValidation.csproj

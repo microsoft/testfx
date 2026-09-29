@@ -4,12 +4,6 @@
 
 Register the integration while building the same host that runs Microsoft Testing Platform:
 
-```xml
-<PropertyGroup>
-  <EnableMSTestHostTestClassInjection>true</EnableMSTestHostTestClassInjection>
-</PropertyGroup>
-```
-
 ```csharp
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Services.AddSingleton<MyApplicationService>();
@@ -32,4 +26,4 @@ The integration is explicit and affects only MSTest test-class construction. It 
 
 The application host remains caller-owned. MSTest never disposes the host or its root service provider. After `TestCleanup`, the integration disposes the test-class instance and then its invocation scope.
 
-NativeAOT and MSTest source generation are not supported by this first reflection-based integration and fail at build time when enabled.
+NativeAOT, browser WebAssembly, AOT compilation, and MSTest source generation are not supported by this first reflection-based integration. Calling `AddMSTestTestClassInjection` in one of those modes produces a deterministic build error, including when host registration is compiled into a referenced project.

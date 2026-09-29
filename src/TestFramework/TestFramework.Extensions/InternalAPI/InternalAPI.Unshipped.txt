@@ -4,3 +4,4 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory.CreateIns
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.DisposeAsync() -> System.Threading.Tasks.Task!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.Instance.get -> object!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.RequiresCleanup.get -> bool

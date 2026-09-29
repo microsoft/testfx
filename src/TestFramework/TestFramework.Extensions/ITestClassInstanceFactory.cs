@@ -24,6 +24,11 @@ internal interface ITestClassInstanceFactory
 internal interface ITestClassInstanceLease
 {
     /// <summary>
+    /// Gets a value indicating whether MSTest must invoke <see cref="DisposeAsync"/>.
+    /// </summary>
+    bool RequiresCleanup { get; }
+
+    /// <summary>
     /// Gets the test-class instance.
     /// </summary>
     object Instance { get; }

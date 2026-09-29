@@ -71,19 +71,20 @@ internal partial class TestMethodInfo
     /// </summary>
     /// <param name="arguments">Arguments to be passed to the method.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
+    /// <param name="invocationState">The activation and cleanup state for this invocation.</param>
     /// <returns>The result of the execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async Task<TestResult> ExecuteInternalAsync(object?[]? arguments, CancellationTokenSource? timeoutTokenSource)
+    private async Task<TestResult> ExecuteInternalAsync(
+        object?[]? arguments,
+        CancellationTokenSource? timeoutTokenSource,
+        TestInvocationState? invocationState = null)
     {
         DebugEx.Assert(MethodInfo != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
         var result = new TestResult();
+        invocationState ??= new();
 
         Exception? testRunnerException = null;
-        _classInstance = null;
-        _classInstanceLease = null;
-        _isTestContextSet = false;
-        _isTestCleanupInvoked = false;
 
         try
         {
@@ -109,9 +110,9 @@ internal partial class TestMethodInfo
                 bool setTestContextSucessful = false;
                 if (_executionContext is null)
                 {
-                    _classInstanceLease = CreateTestClassInstance();
-                    _classInstance = _classInstanceLease.Instance;
-                    setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
+                    invocationState.ClassInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
+                    invocationState.ClassInstanceLease = classInstanceLease;
+                    setTestContextSucessful = SetTestContext(invocationState.ClassInstance, result);
                 }
                 else
                 {
@@ -124,9 +125,9 @@ internal partial class TestMethodInfo
                     {
                         try
                         {
-                            _classInstanceLease = CreateTestClassInstance();
-                            _classInstance = _classInstanceLease.Instance;
-                            setTestContextSucessful = _classInstance != null && SetTestContext(_classInstance, result);
+                            invocationState.ClassInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
+                            invocationState.ClassInstanceLease = classInstanceLease;
+                            setTestContextSucessful = SetTestContext(invocationState.ClassInstance, result);
                         }
                         finally
                         {
@@ -141,15 +142,15 @@ internal partial class TestMethodInfo
                 if (setTestContextSucessful)
                 {
                     // For any failure after this point, we must run TestCleanup
-                    _isTestContextSet = true;
+                    invocationState.IsTestContextSet = true;
 
                     // Intentionally using ConfigureAwait(true) here to ensure the continuation is posted to the synchronization context.
                     // In case of WinUI's default synchronization context, this will ensure that the test method runs on the UI thread.
-                    if (await RunTestInitializeMethodAsync(_classInstance!, result, timeoutTokenSource).ConfigureAwait(true))
+                    if (await RunTestInitializeMethodAsync(invocationState.ClassInstance!, result, timeoutTokenSource).ConfigureAwait(true))
                     {
                         if (_executionContext is null)
                         {
-                            Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(_classInstance, ParameterTypes, arguments);
+                            Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(invocationState.ClassInstance, ParameterTypes, arguments);
                             if (invokeResult is not null)
                             {
                                 await invokeResult.ConfigureAwait(true);
@@ -166,7 +167,7 @@ internal partial class TestMethodInfo
 #if NETFRAMEWORK
                                     CallContext.HostContext = _hostContext;
 #endif
-                                    Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(_classInstance, ParameterTypes, arguments);
+                                    Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(invocationState.ClassInstance, ParameterTypes, arguments);
                                     if (invokeResult is not null)
                                     {
                                         await invokeResult.ConfigureAwait(false);
@@ -218,7 +219,12 @@ internal partial class TestMethodInfo
                 {
                     // This block should not throw. If it needs to throw, then handling of
                     // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                    result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
+                    result.TestFailureException ??= HandleMethodException(
+                        ex,
+                        realException,
+                        TestClassName,
+                        TestMethodName,
+                        invocationState.ClassInstance is not null);
                 }
 
                 if (result.TestFailureException is TestFailedException testFailedException)
@@ -253,7 +259,10 @@ internal partial class TestMethodInfo
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
         // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
-        await RunTestCleanupMethodAsync(result, timeoutTokenSource).ConfigureAwait(false);
+        await RunTestCleanupMethodAsync(
+            result,
+            timeoutTokenSource,
+            invocationState).ConfigureAwait(false);
 
         return testRunnerException != null ? throw testRunnerException : result;
     }
@@ -281,11 +290,12 @@ internal partial class TestMethodInfo
     /// An instance of the TestClass.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private ITestClassInstanceLease CreateTestClassInstance()
+    private object CreateTestClassInstance(out ITestClassInstanceLease? lease)
     {
         if (TestClassInstanceFactoryProvider.Current is { } factory)
         {
-            return factory.CreateInstance(Parent.ClassType, (TestContext)TestContext);
+            lease = factory.CreateInstance(Parent.ClassType, TestContext.Context);
+            return lease.Instance;
         }
 
         object?[]? arguments = Parent.IsParameterlessConstructor ? null : [TestContext];
@@ -296,12 +306,20 @@ internal partial class TestMethodInfo
         object instance = sourceGeneratedInvoker is not null
             ? sourceGeneratedInvoker(arguments)
             : Parent.Constructor.Invoke(arguments);
-        return new DefaultTestClassInstanceLease(instance);
+
+        bool requiresCleanup = instance is IDisposable;
+#if NET6_0_OR_GREATER
+        requiresCleanup |= instance is IAsyncDisposable;
+#endif
+        lease = requiresCleanup ? new DefaultTestClassInstanceLease(instance) : null;
+        return instance;
     }
 
     private sealed class DefaultTestClassInstanceLease(object instance) : ITestClassInstanceLease
     {
         public object Instance { get; } = instance;
+
+        public bool RequiresCleanup => true;
 
         public async Task DisposeAsync()
         {
@@ -350,6 +368,7 @@ internal partial class TestMethodInfo
 
         TestResult? result = null;
         Exception? failure = null;
+        var invocationState = new TestInvocationState();
 
         if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TimeoutInfo.Timeout, TestContext.Context.CancellationTokenSource.Token))
         {
@@ -384,7 +403,7 @@ internal partial class TestMethodInfo
 
         // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
         // The method already checks if the cleanup was already executed.
-        await RunTestCleanupMethodAsync(timeoutResult, null).ConfigureAwait(false);
+        await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
         return timeoutResult;
 
         // Local functions
@@ -399,12 +418,26 @@ internal partial class TestMethodInfo
                 // dispatched back to the SynchronizationContext which offloads the work to the UI thread.
                 // However, the GetAwaiter().GetResult() here will block the current thread which is also the UI thread.
                 // So, the continuations will not be able, thus this task never completes.
-                result = ExecuteInternalAsync(arguments, null).GetAwaiter().GetResult();
+                result = ExecuteInternalAsync(arguments, null, invocationState).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
                 failure = ex;
             }
         }
+    }
+
+    private sealed class TestInvocationState
+    {
+        private int _cleanupStarted;
+
+        public object? ClassInstance { get; set; }
+
+        public ITestClassInstanceLease? ClassInstanceLease { get; set; }
+
+        public bool IsTestContextSet { get; set; }
+
+        public bool TryBeginCleanup()
+            => Interlocked.Exchange(ref _cleanupStarted, 1) == 0;
     }
 }
