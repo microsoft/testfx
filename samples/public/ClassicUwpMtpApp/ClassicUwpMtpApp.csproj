@@ -10,6 +10,7 @@
     <Platforms>x64</Platforms>
     <PlatformTarget>x64</PlatformTarget>
     <DefaultLanguage>en-US</DefaultLanguage>
+    <MSTestVersion>$(MSTestSdkPreviewVersion)</MSTestVersion>
     <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
     <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>

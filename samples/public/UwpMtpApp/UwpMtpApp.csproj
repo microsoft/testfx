@@ -7,6 +7,7 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <DefaultLanguage>en-US</DefaultLanguage>
+    <MSTestVersion>$(MSTestSdkPreviewVersion)</MSTestVersion>
     <PublishAot>true</PublishAot>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     <UseUwp>true</UseUwp>

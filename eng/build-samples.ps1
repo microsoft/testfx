@@ -27,6 +27,10 @@
 .PARAMETER LocalTestingPlatformVersion
     Microsoft.Testing.Platform package version available in LocalPackageDirectory.
 
+.PARAMETER PublishedPackagesOnly
+    Build only samples whose checked-in MSTest.Sdk versions are expected to resolve from the
+    configured public package feeds.
+
 .EXAMPLE
     .\eng\build-samples.ps1
     Builds all samples in Release configuration.
@@ -47,7 +51,8 @@ param(
     [string]$BinaryLogDirectory,
     [string]$LocalPackageDirectory,
     [string]$LocalMSTestVersion,
-    [string]$LocalTestingPlatformVersion
+    [string]$LocalTestingPlatformVersion,
+    [switch]$PublishedPackagesOnly
 )
 
 Set-StrictMode -Version Latest
@@ -62,13 +67,16 @@ $nuGetConfigPaths = @(
     (Join-Path $repoRoot "NuGet.config"),
     (Join-Path $samplesFolder "NuGet.config")
 )
-$localPackageSampleNames = @(
+$publishedPackageSampleNames = @(
     "ClassicUwpMtpApp",
-    "MTPHostIntegration",
     "UwpMtpApp",
     "WinUIMtpAppContainerApp",
     "WinUIMtpPackagedApp",
     "WinUIMtpUnpackagedApp"
+)
+$localPackageSampleNames = @(
+    $publishedPackageSampleNames
+    "MTPHostIntegration"
 )
 $localPackageProperties = @()
 $localHostingVersion = $null
@@ -101,6 +109,10 @@ try {
     $configuredLocalPackageArguments = @($localPackageArguments | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     if ($configuredLocalPackageArguments.Count -ne 0 -and $configuredLocalPackageArguments.Count -ne $localPackageArguments.Count) {
         throw "LocalPackageDirectory, LocalMSTestVersion, and LocalTestingPlatformVersion must be provided together."
+    }
+
+    if ($PublishedPackagesOnly -and $configuredLocalPackageArguments.Count -ne 0) {
+        throw "PublishedPackagesOnly cannot be combined with local package arguments."
     }
 
     if ($configuredLocalPackageArguments.Count -ne 0) {
@@ -202,6 +214,9 @@ try {
 
     # Find all solution files in samples/public
     $solutions = Get-ChildItem -Path $samplesFolder -Include @("*.sln", "*.slnx") -Recurse
+    if ($PublishedPackagesOnly) {
+        $solutions = @($solutions | Where-Object { $publishedPackageSampleNames -contains $_.Directory.Name })
+    }
 
     foreach ($solution in $solutions) {
         Write-Host "Building solution: $($solution.FullName)"

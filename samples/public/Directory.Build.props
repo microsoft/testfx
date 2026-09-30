@@ -16,7 +16,8 @@
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
     <MSTestPreviewVersion>4.5.0-preview.26479.5</MSTestPreviewVersion>
     <MSTestExtensionsHostingVersion>$(MSTestPreviewVersion)</MSTestExtensionsHostingVersion>
-    <MSTestSdkAOTVersion>2.0.0-alpha.26358.12</MSTestSdkAOTVersion>
+    <MSTestSdkPreviewVersion>4.5.0-preview.26480.2</MSTestSdkPreviewVersion>
+    <MSTestSdkAOTVersion>$(MSTestSdkPreviewVersion)</MSTestSdkAOTVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
     <TestingPlatformVersion>2.4.1</TestingPlatformVersion>
     <!-- Hosted entry point generation is currently available only in preview packages. -->
@@ -24,10 +25,9 @@
     <MicrosoftTestingExtensionsHostingVersion>1.0.0-alpha.26479.5</MicrosoftTestingExtensionsHostingVersion>
     <!--
       Microsoft.Testing.Extensions.PackagedApp deploys and launches a packaged Windows (UWP/WinUI)
-      test host. The latest published package predates its alignment with the testing platform version,
-      so this sample pins that package separately.
+      test host. Keep it aligned with the testing platform version required by the MSTest.Sdk preview.
     -->
-    <MicrosoftTestingExtensionsPackagedAppVersion>1.0.0-alpha.26363.8</MicrosoftTestingExtensionsPackagedAppVersion>
+    <MicrosoftTestingExtensionsPackagedAppVersion>2.5.0-preview.26480.2</MicrosoftTestingExtensionsPackagedAppVersion>
     <VSTestVersion>18.9.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>

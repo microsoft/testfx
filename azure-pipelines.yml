@@ -481,6 +481,14 @@ stages:
             failOnStderr: true
             showWarnings: true
 
+        - task: PowerShell@2
+          displayName: 'Build Samples with published packages'
+          inputs:
+            targetType: filePath
+            filePath: './eng/build-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -PublishedPackagesOnly -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\PublishedPackages"'
+            failOnStderr: false
+
         - script: .\build.cmd -c $(_BuildConfig) -pack -ci -bl
           displayName: 'Pack local TestFX packages'
 
@@ -489,5 +497,5 @@ stages:
           inputs:
             targetType: filePath
             filePath: './eng/build-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)" -LocalPackageDirectory "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\Shipping" -LocalMSTestVersion "4.5.0-ci" -LocalTestingPlatformVersion "2.5.0-ci"'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\LocalPackages" -LocalPackageDirectory "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\Shipping" -LocalMSTestVersion "4.5.0-ci" -LocalTestingPlatformVersion "2.5.0-ci"'
             failOnStderr: false
