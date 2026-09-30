@@ -130,34 +130,15 @@ internal sealed class FileLoggerProvider(
         {
             FileLogger = replacementLogger;
             pendingLogs = _pendingAsyncLogs;
-            if (pendingLogs is null)
-            {
-                return;
-            }
-
-            _pendingAsyncLogs = new();
+            _pendingAsyncLogs = null;
         }
 
-        while (true)
+        // Replay only the finite snapshot captured when the replacement was published. New producers now write
+        // directly to the replacement logger, so sustained logging cannot keep relocation alive indefinitely.
+        while (pendingLogs?.Count > 0)
         {
-            while (pendingLogs.Count > 0)
-            {
-                Action<FileLogger> pendingLog = pendingLogs.Dequeue();
-                pendingLog(replacementLogger);
-            }
-
-            lock (_fileLoggerLock)
-            {
-                RoslynDebug.Assert(_pendingAsyncLogs is not null);
-                if (_pendingAsyncLogs.Count == 0)
-                {
-                    _pendingAsyncLogs = null;
-                    return;
-                }
-
-                pendingLogs = _pendingAsyncLogs;
-                _pendingAsyncLogs = new();
-            }
+            Action<FileLogger> pendingLog = pendingLogs.Dequeue();
+            pendingLog(replacementLogger);
         }
     }
 
