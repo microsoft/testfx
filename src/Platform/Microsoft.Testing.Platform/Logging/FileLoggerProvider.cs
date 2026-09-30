@@ -77,6 +77,7 @@ internal sealed class FileLoggerProvider(
                 }
             }
 
+            bool movedPreviousLog = false;
             try
             {
                 await DisposeHelper.DisposeAsync(previousLogger).ConfigureAwait(false);
@@ -88,6 +89,7 @@ internal sealed class FileLoggerProvider(
                 if (previousLogger.IsFileHandleReleased)
                 {
                     _fileSystem.MoveFile(previousFileName, Path.Combine(testResultDirectory, fileName));
+                    movedPreviousLog = true;
                 }
             }
             finally
@@ -95,7 +97,11 @@ internal sealed class FileLoggerProvider(
                 // Always install a fresh logger pointing at the test result directory so subsequent diagnostics keep
                 // working, even when disposing or moving the previous logger fails and the original exception propagates.
                 FileLogger replacementLogger = new(
-                    new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
+                    new FileLoggerOptions(
+                        testResultDirectory,
+                        _options.LogPrefixName,
+                        movedPreviousLog ? fileName : null,
+                        _options.SyncFlush),
                     LogLevel,
                     _clock,
                     _task,

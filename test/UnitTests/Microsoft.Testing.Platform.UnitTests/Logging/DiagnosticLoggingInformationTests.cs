@@ -167,8 +167,58 @@ public sealed class DiagnosticLoggingInformationTests
             () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory));
 
         Assert.AreEqual("Simulated disposal failure.", exception.Message);
-        Assert.AreEqual(Path.GetFullPath(Path.Combine(resultsDirectory, FileName)), information.LogFile.FullName);
+        Assert.AreEqual(Path.GetFullPath(resultsDirectory), information.LogFile.DirectoryName);
+        Assert.StartsWith("test_", information.LogFile.Name);
+        Assert.AreNotEqual(FileName, information.LogFile.Name);
         logger.LogDebug("Written after failed relocation.");
+
+#if NETCOREAPP
+        await provider.DisposeAsync();
+#else
+        provider.Dispose();
+#endif
+    }
+
+    [TestMethod]
+    public async Task RelocationUsesUniqueReplacementBeforeRethrowingMoveFailure()
+    {
+        string initialDirectory = Path.Combine("initial", "diagnostics");
+        string resultsDirectory = Path.Combine("final", "results");
+        const string FileName = "test.diag";
+        string initialPath = Path.Combine(initialDirectory, FileName);
+        string conflictingPath = Path.Combine(resultsDirectory, FileName);
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        fileSystem
+            .Setup(x => x.MoveFile(initialPath, conflictingPath, false))
+            .Throws(new IOException("Destination file already exists."));
+
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+
+        FileLoggerProvider provider = new(
+            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
+            LogLevel.Debug,
+            customDirectory: false,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        ILogger logger = provider.CreateLogger("test");
+        var information = new DiagnosticLoggingInformation(provider);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(
+            () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory));
+
+        Assert.AreEqual("Destination file already exists.", exception.Message);
+        Assert.AreEqual(Path.GetFullPath(resultsDirectory), information.LogFile.DirectoryName);
+        Assert.StartsWith("test_", information.LogFile.Name);
+        Assert.AreNotEqual(FileName, information.LogFile.Name);
+        logger.LogDebug("Written after failed move.");
 
 #if NETCOREAPP
         await provider.DisposeAsync();
