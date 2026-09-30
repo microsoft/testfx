@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
-    <MSTestVersion>$(MSTestSdkPreviewVersion)</MSTestVersion>
+    <MSTestVersion Condition="'$(MSTestVersion)' == '4.4.1'">$(MSTestSdkPreviewVersion)</MSTestVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platform>x64</Platform>
     <Platforms>x64;x86;ARM64</Platforms>
