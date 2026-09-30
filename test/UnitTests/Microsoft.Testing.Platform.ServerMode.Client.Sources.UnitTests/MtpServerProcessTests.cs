@@ -56,15 +56,20 @@ public sealed class MtpServerProcessTests
 
 #if NET
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file and PowerShell child process.")]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file.")]
     public async Task StartAsyncTimeoutKillsProcessAndReleasesListener()
     {
         using var temp = TempDirectory.Create();
+        string releaseFile = Path.Combine(temp.Path, "release.txt");
         string survivedFile = Path.Combine(temp.Path, "survived.txt");
         string source = temp.CreateFile(
             "NeverConnects.cmd",
             "@echo off\r\n"
-            + "ping 127.0.0.1 -n 3 > nul\r\n"
+            + ":wait\r\n"
+            + $"if not exist \"{releaseFile}\" (\r\n"
+            + "  ping 127.0.0.1 -n 2 > nul\r\n"
+            + "  goto wait\r\n"
+            + ")\r\n"
             + $"echo survived>\"{survivedFile}\"\r\n");
         var log = new List<string>();
         var options = new MtpServerClientOptions
@@ -84,6 +89,7 @@ public sealed class MtpServerProcessTests
         Assert.IsTrue(portMatch.Success, launchMessage);
         int port = int.Parse(portMatch.Groups["port"].Value, CultureInfo.InvariantCulture);
 
+        File.WriteAllText(releaseFile, string.Empty);
         await Task.Delay(TimeSpan.FromSeconds(3), TestContext.CancellationToken);
         Assert.IsFalse(File.Exists(survivedFile), "The timed-out launch must kill the process before it can continue.");
 
