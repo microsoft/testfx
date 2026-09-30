@@ -2,6 +2,7 @@
 
 import importlib.util
 import pathlib
+import subprocess
 import tempfile
 import unittest
 
@@ -15,6 +16,33 @@ SPEC.loader.exec_module(CHECK_SOURCE_BOM)
 
 
 class CheckSourceBomTests(unittest.TestCase):
+    def test_tracked_source_files_discovers_tracked_and_untracked_supported_extensions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            tracked = [
+                root / "tracked" / f"Tracked{extension}"
+                for extension in CHECK_SOURCE_BOM.SOURCE_EXTENSIONS
+            ]
+            untracked = [
+                root / "untracked" / "nested" / f"Untracked{extension}"
+                for extension in CHECK_SOURCE_BOM.SOURCE_EXTENSIONS
+            ]
+            for source in tracked + untracked:
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_bytes(b"")
+
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            subprocess.run(
+                ["git", "add", "--", *(path.relative_to(root).as_posix() for path in tracked)],
+                cwd=root,
+                check=True,
+            )
+
+            self.assertCountEqual(
+                tracked + untracked,
+                CHECK_SOURCE_BOM.tracked_source_files(root),
+            )
+
     def test_missing_bom_files_reports_code_files_without_bom(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             source = pathlib.Path(directory) / "Missing.cs"
