@@ -146,7 +146,7 @@ An MSTest attribute (`[ExecutableConditionAttribute]`) in `Microsoft.VisualStudi
 
 ### ExecuteRequestContext
 
-A sealed MTP class (`Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext`) passed to `ITestFramework.ExecuteRequestAsync(ExecuteRequestContext)`. Exposes the `Request`, `MessageBus`, and `CancellationToken` for the execution, a `Complete()` method that signals the request has finished, and the experimental `StartTestExecutionAsync(dataProducer, inProgressMessage)` method (`[Experimental("TPEXP")]`) that starts a canonical [TestExecution](#testexecution) and publishes its in-progress message. Introduced alongside `TestExecution` in [PR #11630](https://github.com/microsoft/testfx/pull/11630).
+A sealed MTP class (`Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext`) passed to `ITestFramework.ExecuteRequestAsync(ExecuteRequestContext)`. Exposes the `Request`, `MessageBus`, and `CancellationToken` for the execution, a `Complete()` method that signals the request has finished, and the experimental `StartTestExecutionAsync(dataProducer, inProgressMessage)` method (`[Experimental("TPEXP")]`) that starts a canonical [TestExecution](#testexecution) and publishes its in-progress message. The class predates [PR #11630](https://github.com/microsoft/testfx/pull/11630), which introduced `StartTestExecutionAsync` alongside `TestExecution`.
 
 ## F
 
