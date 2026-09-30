@@ -9,6 +9,17 @@ namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 internal sealed partial class Json
 {
+    private static bool? GetOptionalBoolean(JsonElement element, string propertyName)
+        => !element.TryGetProperty(propertyName, out JsonElement value)
+            ? null
+            : value.ValueKind switch
+            {
+                JsonValueKind.Null => null,
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                _ => throw new MessageFormatException($"'{propertyName}' field has wrong type (expected {nameof(Boolean)})"),
+            };
+
     private static void RegisterDefaultDeserializers(Dictionary<Type, JsonDeserializer> deserializers)
     {
         // Deserializers
@@ -201,7 +212,10 @@ internal sealed partial class Json
 
             return new ClientCapabilities(
                     DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider),
-                    IsStateful: isStateful);
+                    IsStateful: isStateful)
+            {
+                RpcOnlyOutput = GetOptionalBoolean(jsonElement, JsonRpcStrings.RpcOnlyOutput),
+            };
         });
 
         deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
@@ -233,7 +247,10 @@ internal sealed partial class Json
 
         deserializers[typeof(ServerCapabilities)] = new JsonElementDeserializer<ServerCapabilities>(
           (json, jsonElement) => new ServerCapabilities(
-                  TestingCapabilities: json.Bind<ServerTestingCapabilities>(jsonElement, JsonRpcStrings.Testing)));
+                  TestingCapabilities: json.Bind<ServerTestingCapabilities>(jsonElement, JsonRpcStrings.Testing))
+          {
+              RpcOnlyOutput = GetOptionalBoolean(jsonElement, JsonRpcStrings.RpcOnlyOutput),
+          });
 
         deserializers[typeof(ServerTestingCapabilities)] = new JsonElementDeserializer<ServerTestingCapabilities>(
           (json, jsonElement) => new ServerTestingCapabilities(

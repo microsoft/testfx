@@ -119,6 +119,10 @@
         "testing"
       ],
       "properties": {
+        "rpcOnlyOutput": {
+          "type": ["boolean", "null"],
+          "description": "Requests RPC-only IOutputDevice routing and diagnostic-level connection messages. Requires an applied true acknowledgement."
+        },
         "testing": {
           "type": "object",
           "required": [
@@ -143,6 +147,10 @@
         "testing"
       ],
       "properties": {
+        "rpcOnlyOutput": {
+          "type": ["boolean", "null"],
+          "description": "True only when RPC-only IOutputDevice routing was requested and applied on this connection. Absent/null means not acknowledged."
+        },
         "testing": {
           "type": "object",
           "required": [

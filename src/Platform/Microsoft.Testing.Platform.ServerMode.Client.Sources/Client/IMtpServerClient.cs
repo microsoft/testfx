@@ -220,6 +220,9 @@ internal sealed class MtpServerCapabilities
     /// <summary>Gets the independently negotiated server-mode protocol version.</summary>
     public string? ProtocolVersion { get; }
 
+    /// <summary>Gets whether RPC-only output routing was applied; null means no acknowledgement.</summary>
+    public bool? RpcOnlyOutput { get; init; }
+
     /// <summary>Gets a value indicating whether the server supports discovery.</summary>
     public bool SupportsDiscovery { get; }
 

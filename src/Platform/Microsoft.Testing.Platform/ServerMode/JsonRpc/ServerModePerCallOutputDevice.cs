@@ -19,6 +19,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     private readonly SemaphoreSlim _progressMessagesSemaphore = new(1, 1);
 
     private ServerTestHost? _serverTestHost;
+    private volatile bool _rpcOnlyOutput;
 
     private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
@@ -26,6 +27,12 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         _fileLoggerProvider = fileLoggerProvider;
         _policiesService = policiesService;
+    }
+
+    internal bool RpcOnlyOutput
+    {
+        get => _rpcOnlyOutput;
+        set => _rpcOnlyOutput = value;
     }
 
     internal async Task InitializeAsync(ServerTestHost serverTestHost)
@@ -73,6 +80,10 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         switch (data)
         {
+            case ConnectionMessageOutputDeviceData connectionMessage:
+                await LogAsync(new ServerLogMessage(LogLevel.Information, connectionMessage.Text) { IsConnectionMessage = true }, cancellationToken).ConfigureAwait(false);
+                break;
+
             case SessionMessageOutputDeviceData sessionMessageData:
                 await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
@@ -160,6 +171,11 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         }
         else
         {
+            if (RpcOnlyOutput && message.IsConnectionMessage)
+            {
+                message = new ServerLogMessage(LogLevel.Debug, message.Message);
+            }
+
             await _serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
         }
     }

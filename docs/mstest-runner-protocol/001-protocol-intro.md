@@ -246,6 +246,10 @@ interface InitializeParams {
     protocolVersions?: string[] | null,
 
     capabilities: {
+        // Opt in to RPC-only output-device routing and diagnostic connection messages.
+        // The server must acknowledge true before the client relies on this behavior.
+        rpcOnlyOutput?: boolean | null,
+
         // Note: Since the initialize message is compatible with the LSP protocol,
         // we should make sure that the capability paths for the testing features are unique.
         // As such, we put all of them under a single testing namespace.
@@ -289,6 +293,10 @@ interface InitializeResponse {
     protocolVersion?: string | null,
 
     capabilities: {
+        // Applied acknowledgement, not just an advertisement of support.
+        // Missing/null is not an acknowledgement; false means legacy routing remains.
+        rpcOnlyOutput?: boolean | null,
+
         testing: {
             // If true, the server supports test discovery.
             supportsDiscovery: boolean;
@@ -322,6 +330,48 @@ interface InitializeResponse {
     }
 }
 ```
+
+#### RPC-only output-device routing
+
+A client can request `capabilities.rpcOnlyOutput: true` in `initialize`. A server
+that applies this policy returns `capabilities.rpcOnlyOutput: true` in the
+successful response. Clients must check that acknowledgement rather than infer
+support from the product version. An absent, null, or false request retains legacy
+output behavior. An absent or null response field means the policy was not
+acknowledged; false means it was not applied.
+
+Once applied, messages sent through `IOutputDevice` are routed only to `client/log`,
+not also to the original output device. Plain text, formatted text (including
+padding), session messages, and progress updates remain Information; warnings and
+errors retain their levels. Progress updates retain their existing deduplication
+behavior. Built-in connection diagnostics are Debug, including connection messages
+queued before initialization. Banner messages are already Debug over RPC. Supported
+user messages are not classified by matching their text and are not discarded.
+Built-in max-failed-tests messages also follow the negotiated route, even though
+their callbacks are registered before initialization.
+
+Opting in deliberately bypasses the original output device, including a custom
+device, for output-device presentation. Only payload types understood by the RPC
+output device are forwarded: text, formatted text, session/progress messages,
+warnings, errors, and exceptions. Custom `IOutputDeviceData` types that the RPC
+device does not understand are not forwarded and no longer reach a custom original
+device. Clients relying on such custom rendering should not request this policy.
+
+The policy is scoped to the initialized JSON-RPC connection, not to a client name
+or process-wide console setting. Each peer must negotiate independently.
+Attachment-only additional connections currently acknowledge false when requested:
+they do not own an RPC output-device route. Normal CLI execution and the separate
+`dotnet test` pipe protocol are unchanged.
+
+Output already written before the handshake cannot be retracted. In particular,
+the initial connection text can still appear on stdout, and clients should use the
+existing `--no-banner` option to suppress the cosmetic startup banner. Startup
+failures before a successful handshake keep their original output route. Pending
+RPC output is drained when discovery or execution first initializes the output
+device, as before; legitimate user messages queued during startup remain included.
+Direct `Console.WriteLine`/stderr writes are not `IOutputDevice` messages and are
+neither intercepted nor silenced. Clients must continue handling such raw output;
+the acknowledgement does not mean that stdout/stderr can be ignored.
 
 #### Versioning capabilities
 

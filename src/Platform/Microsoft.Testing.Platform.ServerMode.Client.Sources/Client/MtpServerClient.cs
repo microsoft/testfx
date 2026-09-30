@@ -204,7 +204,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful))
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { RpcOnlyOutput = _options.RpcOnlyOutput })
         {
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };
@@ -312,6 +312,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
+        bool? rpcOnlyOutput = null;
         string? protocolVersion = null;
         if (result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj))
         {
@@ -334,6 +335,14 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport = AsBool(testing, JsonRpcStrings.VSTestProviderSupport);
             supportsAttachments = AsBool(testing, JsonRpcStrings.AttachmentsSupport);
             multiConnectionProvider = AsBool(testing, JsonRpcStrings.MultiConnectionProvider);
+            rpcOnlyOutput = capabilities.TryGetValue(JsonRpcStrings.RpcOnlyOutput, out object? rpcOnlyOutputValue)
+                ? rpcOnlyOutputValue switch
+                {
+                    null => null,
+                    bool value => value,
+                    _ => throw new MtpServerClientException($"Expected '{JsonRpcStrings.RpcOnlyOutput}' to be a boolean."),
+                }
+                : null;
         }
 
         return new MtpServerCapabilities(
@@ -345,7 +354,10 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport,
             supportsAttachments,
             multiConnectionProvider,
-            protocolVersion);
+            protocolVersion)
+        {
+            RpcOnlyOutput = rpcOnlyOutput,
+        };
     }
 
     private bool IsSupportedProtocolVersion(string negotiatedProtocolVersion)

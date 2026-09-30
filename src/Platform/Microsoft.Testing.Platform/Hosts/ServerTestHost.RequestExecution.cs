@@ -39,6 +39,7 @@ internal sealed partial class ServerTestHost
                     $"Connection established with '{_client.Id}' version '{_client.Version}', protocol version '{negotiatedProtocolVersion}'").ConfigureAwait(false);
 
                 INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
+                bool rpcOnlyOutput = ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureRpcOnlyOutput(args.Capabilities.RpcOnlyOutput);
                 return new InitializeResponseArgs(
                     ProcessId: ServiceProvider.GetEnvironment().ProcessId,
                     ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
@@ -49,7 +50,10 @@ internal sealed partial class ServerTestHost
                             MultiRequestSupport: false,
                             VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
                             SupportsAttachments: true,
-                            MultiConnectionProvider: false)))
+                            MultiConnectionProvider: false))
+                    {
+                        RpcOnlyOutput = args.Capabilities.RpcOnlyOutput.HasValue ? rpcOnlyOutput : null,
+                    })
                 {
                     ProtocolVersion = negotiatedProtocolVersion,
                 };

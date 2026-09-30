@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.UnitTests.Helpers;
@@ -24,6 +25,64 @@ public sealed class TerminalOutputDeviceTests
 {
     private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>(
         producer => producer.Uid == "producer");
+
+    [TestMethod]
+    [DataRow(true, null)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    [DataRow(false, null)]
+    [DataRow(false, true)]
+    public async Task MaxFailedTestsCallback_UsesPolicyNegotiatedAfterRoleSetup(bool hasServerDevice, bool? requested)
+    {
+        List<Func<int, CancellationToken, Task>> callbacks = [];
+        var policies = new Mock<IStopPoliciesService>();
+        policies.Setup(service => service.RegisterOnMaxFailedTestsCallbackAsync(It.IsAny<Func<int, CancellationToken, Task>>()))
+            .Callback<Func<int, CancellationToken, Task>>(callbacks.Add)
+            .Returns(Task.CompletedTask);
+        StringBuilder output = new();
+        var console = new Mock<IConsole>();
+        console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => output.Append(value));
+        console.Setup(value => value.Write(It.IsAny<StringBuilder>())).Callback<StringBuilder>(value => output.Append(value));
+        console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => output.AppendLine(value));
+        using TerminalOutputDevice originalDevice = CreateOutputDevice(
+            new Dictionary<string, string[]>
+            {
+                [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["off"],
+                [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
+            },
+            policiesService: policies.Object,
+            console: console.Object);
+        using var serverDevice = new ServerModePerCallOutputDevice(null, policies.Object);
+        using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null);
+        await originalDevice.InitializeAsync();
+        await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
+        Assert.HasCount(hasServerDevice ? 2 : 1, callbacks);
+        proxy.ConfigureRpcOnlyOutput(requested);
+
+        foreach (Func<int, CancellationToken, Task> callback in callbacks)
+        {
+            await callback(42, CancellationToken.None);
+        }
+
+        string firstOutput = output.ToString();
+        Assert.AreEqual(hasServerDevice && requested == true, string.IsNullOrEmpty(firstOutput));
+        var messages = (ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
+            .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(serverDevice)!;
+        Assert.HasCount(hasServerDevice ? 1 : 0, messages);
+        if (hasServerDevice)
+        {
+            Assert.AreEqual(LogLevel.Information, Assert.ContainsSingle(messages).Level);
+        }
+
+        proxy.ConfigureRpcOnlyOutput(false);
+        foreach (Func<int, CancellationToken, Task> callback in callbacks)
+        {
+            await callback(42, CancellationToken.None);
+        }
+
+        Assert.IsGreaterThan(firstOutput.Length, output.Length);
+        Assert.HasCount(hasServerDevice ? 2 : 0, messages);
+    }
 
     [TestMethod]
     public async Task DisplayAsync_ListTestsJsonInAzureDevOps_WritesPlainErrorOnlyToStandardError()
@@ -196,7 +255,11 @@ public sealed class TerminalOutputDeviceTests
             .GetField("s_noProgressDeprecationWarningEmitted", BindingFlags.NonPublic | BindingFlags.Static)!
             .SetValue(null, 0);
 
-    private static TerminalOutputDevice CreateOutputDevice(Dictionary<string, string[]> options, bool isCIEnvironment = false)
+    private static TerminalOutputDevice CreateOutputDevice(
+        Dictionary<string, string[]> options,
+        bool isCIEnvironment = false,
+        IStopPoliciesService? policiesService = null,
+        IConsole? console = null)
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
@@ -213,7 +276,7 @@ public sealed class TerminalOutputDeviceTests
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
 
         return new TerminalOutputDevice(
-            Mock.Of<IConsole>(),
+            console ?? Mock.Of<IConsole>(),
             testApplicationModuleInfo.Object,
             Mock.Of<ITestHostControllerInfo>(),
             Mock.Of<IAsyncMonitor>(),
@@ -224,7 +287,7 @@ public sealed class TerminalOutputDeviceTests
             fileLoggerInformation: null,
             Mock.Of<ILoggerFactory>(),
             Mock.Of<IClock>(),
-            stopPoliciesService.Object,
+            policiesService ?? stopPoliciesService.Object,
             testApplicationCancellationTokenSource.Object,
             new TestCoverageResult());
     }

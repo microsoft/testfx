@@ -26,6 +26,30 @@ public sealed class MtpServerClientTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow(null, null)]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    [DataRow(true, false)]
+    [DataRow(true, null)]
+    public async Task InitializeAsync_RpcOnlyOutput_PreservesRequestAndAppliedAcknowledgement(bool? requested, bool? applied)
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with
+        {
+            Capabilities = server.InitializeResponse.Capabilities with { RpcOnlyOutput = applied },
+        };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { RpcOnlyOutput = requested });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(applied, capabilities.RpcOnlyOutput);
+        InitializeRequestArgs request = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreEqual(requested, request.Capabilities.RpcOnlyOutput);
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(request.Capabilities);
+        Assert.AreEqual(requested.HasValue, properties.ContainsKey(JsonRpcStrings.RpcOnlyOutput));
+    }
+
+    [TestMethod]
     public void Options_DefaultValues_AreStable()
     {
         var options = new MtpServerClientOptions();

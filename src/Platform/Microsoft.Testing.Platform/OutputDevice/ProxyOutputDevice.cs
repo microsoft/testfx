@@ -19,9 +19,19 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 
     internal IPlatformOutputDevice OriginalOutputDevice { get; }
 
+    internal bool ConfigureRpcOnlyOutput(bool? requested)
+        => _serverModeOutputDevice is not null && (_serverModeOutputDevice.RpcOnlyOutput = requested == true);
+
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
+        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
+        {
+            IOutputDeviceData originalData = data is ConnectionMessageOutputDeviceData connectionMessage
+                ? new TextOutputDeviceData(connectionMessage.Text)
+                : data;
+            await OriginalOutputDevice.DisplayAsync(producer, originalData, cancellationToken).ConfigureAwait(false);
+        }
+
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
@@ -30,7 +40,11 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 
     internal async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
+        {
+            await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+        }
+
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
@@ -39,7 +53,11 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 
     internal async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
+        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
+        {
+            await OriginalOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
@@ -48,7 +66,11 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 
     internal async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
+        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
+        {
+            await OriginalOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
@@ -65,7 +87,17 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 
     internal async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
+        if (OriginalOutputDevice is IPlatformOutputDeviceWithRoleMessages roleMessagesDevice)
+        {
+            // Role callbacks are registered before initialize, so evaluate the negotiated route when they fire.
+            await roleMessagesDevice.HandleProcessRoleAsync(
+                processRole, () => _serverModeOutputDevice?.RpcOnlyOutput != true, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await OriginalOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
+        }
+
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);

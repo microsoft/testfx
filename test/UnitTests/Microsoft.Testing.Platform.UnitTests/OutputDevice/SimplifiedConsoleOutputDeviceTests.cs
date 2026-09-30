@@ -1,11 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -20,6 +24,52 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         producer => producer.Uid == "producer");
 
     public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    [DataRow(true, null)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    [DataRow(false, null)]
+    [DataRow(false, true)]
+    public async Task MaxFailedTestsCallback_UsesPolicyNegotiatedAfterRoleSetup(bool hasServerDevice, bool? requested)
+    {
+        List<Func<int, CancellationToken, Task>> callbacks = [];
+        var policies = new Mock<IStopPoliciesService>();
+        policies.Setup(service => service.RegisterOnMaxFailedTestsCallbackAsync(It.IsAny<Func<int, CancellationToken, Task>>()))
+            .Callback<Func<int, CancellationToken, Task>>(callbacks.Add)
+            .Returns(Task.CompletedTask);
+        using var monitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice originalDevice = CreateOutputDevice(monitor, policiesService: policies.Object);
+        using var serverDevice = new ServerModePerCallOutputDevice(null, policies.Object);
+        using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null);
+        await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
+        Assert.HasCount(hasServerDevice ? 2 : 1, callbacks);
+        proxy.ConfigureRpcOnlyOutput(requested);
+
+        foreach (Func<int, CancellationToken, Task> callback in callbacks)
+        {
+            await callback(42, CancellationToken.None);
+        }
+
+        int expectedOriginalMessages = hasServerDevice && requested == true ? 0 : 1;
+        Assert.HasCount(expectedOriginalMessages, originalDevice.Messages);
+        var messages = (ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
+            .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(serverDevice)!;
+        Assert.HasCount(hasServerDevice ? 1 : 0, messages);
+        if (hasServerDevice)
+        {
+            Assert.AreEqual(LogLevel.Information, Assert.ContainsSingle(messages).Level);
+        }
+
+        proxy.ConfigureRpcOnlyOutput(false);
+        foreach (Func<int, CancellationToken, Task> callback in callbacks)
+        {
+            await callback(42, CancellationToken.None);
+        }
+
+        Assert.HasCount(expectedOriginalMessages + 1, originalDevice.Messages);
+        Assert.HasCount(hasServerDevice ? 2 : 0, messages);
+    }
 
     [TestMethod]
     public async Task DisplayAsync_SessionMessage_WritesDurableOutput()
@@ -428,7 +478,8 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         IAsyncMonitor asyncMonitor,
         FakeClock? clock = null,
         TimeSpan? slowTestPollInterval = null,
-        bool displayActiveTestProgress = false)
+        bool displayActiveTestProgress = false,
+        IStopPoliciesService? policiesService = null)
     {
         var moduleInfo = new Mock<ITestApplicationModuleInfo>();
         moduleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
@@ -441,7 +492,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             Mock.Of<IRuntimeFeature>(),
             Mock.Of<IEnvironment>(),
             Mock.Of<IPlatformInformation>(),
-            Mock.Of<IStopPoliciesService>(),
+            policiesService ?? Mock.Of<IStopPoliciesService>(),
             TimeSpan.FromSeconds(60),
             clock.CreateStopwatch,
             slowTestPollInterval ?? TimeSpan.FromSeconds(1),

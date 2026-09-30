@@ -48,6 +48,12 @@ internal sealed class MtpServerClientOptions
     public bool? IsStateful { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to request RPC-only output-device routing and diagnostic connection messages.
+    /// A null value omits the request. The client must check the server's applied acknowledgement.
+    /// </summary>
+    public bool? RpcOnlyOutput { get; set; }
+
+    /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback
     /// listener. Overridable by callers per the <c>VSTEST_CONNECTION_TIMEOUT</c> convention (seconds).
     /// Defaults to 90 seconds.

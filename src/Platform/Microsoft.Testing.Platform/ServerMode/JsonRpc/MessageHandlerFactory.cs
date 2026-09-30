@@ -60,7 +60,7 @@ internal sealed partial class ServerModeManager
         [UnsupportedOSPlatform("browser")]
         public async Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
         {
-            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new ConnectionMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
 
             TcpClient client = new();
             bool shouldDisposeClient = true;

@@ -6,9 +6,11 @@ using System.Net.Sockets;
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -53,7 +55,10 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    public async Task ServerCanInitialize()
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ServerCanInitialize(bool? rpcOnlyOutput)
     {
         using var server = TcpServer.Create();
 
@@ -80,6 +85,9 @@ public sealed class ServerTests
             });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        ProxyOutputDevice outputDevice = testApplication.ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+        await outputDevice.DisplayAsync(testApplicationHooks, new TextOutputDeviceData("user startup output"), CancellationToken.None);
+        await outputDevice.DisplayAsync(testApplicationHooks, new ConnectionMessageOutputDeviceData("user startup output"), CancellationToken.None);
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
@@ -92,7 +100,7 @@ public sealed class ServerTests
                 serverToClientStream: client.GetStream(),
                 FormatterUtilities.CreateFormatter());
 
-        const string initializeMessage = """
+        string initializeMessage = $$"""
             {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -101,6 +109,7 @@ public sealed class ServerTests
                     "processId": 32,
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
+                        {{(rpcOnlyOutput.HasValue ? $"\"rpcOnlyOutput\":{rpcOnlyOutput.Value.ToString().ToLowerInvariant()}," : string.Empty)}}
                         "testing": {
                             "debuggerProvider": true,
                             "isStateful": true
@@ -134,7 +143,10 @@ public sealed class ServerTests
         InitializeResponseArgs expectedResponse = new(
                    1,
                    new ServerInfo("test-anywhere", "this is dynamic"),
-                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false)))
+                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false))
+                   {
+                       RpcOnlyOutput = rpcOnlyOutput,
+                   })
         {
             ProtocolVersion = JsonRpcProtocolVersions.Current,
         };
@@ -144,6 +156,8 @@ public sealed class ServerTests
         Assert.AreEqual(JsonRpcProtocolVersions.Current, resultJson.ProtocolVersion);
         Assert.IsNotEmpty(resultJson.ServerInfo.Version);
 
+        await outputDevice.DisplayAsync(testApplicationHooks, new TextOutputDeviceData("user after handshake"), cancellationToken);
+        List<IDictionary<string, object?>> logs = [];
         await WriteMessageAsync(
             writer,
             """
@@ -158,7 +172,15 @@ public sealed class ServerTests
             """);
         _ = await WaitForMessage(
             messageHandler,
-            rpcMessage => rpcMessage is ResponseMessage { Id: 2 },
+            rpcMessage =>
+            {
+                if (rpcMessage is NotificationMessage { Method: JsonRpcMethods.ClientLog } notification)
+                {
+                    logs.Add(Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params));
+                }
+
+                return rpcMessage is ResponseMessage { Id: 2 };
+            },
             "Wait discovery",
             cancellationToken);
 
@@ -166,6 +188,15 @@ public sealed class ServerTests
         Assert.AreEqual("testingplatform-unittests", clientInfo.Id);
         Assert.AreEqual("1.0.0", clientInfo.Version);
         Assert.IsTrue(clientInfo.Capabilities.IsStateful);
+
+        Assert.HasCount(rpcOnlyOutput == true ? 1 : 2, logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Information")));
+        Assert.HasCount(rpcOnlyOutput == true ? 1 : 0, logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Debug")));
+        Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user after handshake") && Equals(log[JsonRpcStrings.Level], "Information")));
+        IDictionary<string, object?> connectionLog = Assert.ContainsSingle(logs.Where(log =>
+            !Equals(log[JsonRpcStrings.Message], "user startup output")
+            && !Equals(log[JsonRpcStrings.Message], "user after handshake")
+            && log[JsonRpcStrings.Level] is "Debug" or "Information"));
+        Assert.AreEqual(rpcOnlyOutput == true ? "Debug" : "Information", connectionLog[JsonRpcStrings.Level]);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 
@@ -1309,7 +1340,7 @@ public sealed class ServerTests
         await writer.FlushAsync();
     }
 
-    private sealed class TestApplicationHooks : ITestHostApplicationLifetime, IDisposable
+    private sealed class TestApplicationHooks : ITestHostApplicationLifetime, IOutputDeviceDataProducer, IDisposable
     {
         private readonly SemaphoreSlim _waitForBeforeRunAsync = new(0, 1);
 

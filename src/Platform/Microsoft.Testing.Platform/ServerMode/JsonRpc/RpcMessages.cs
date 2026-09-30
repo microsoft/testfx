@@ -108,11 +108,17 @@ internal sealed record InvalidRequestParamsArgs(int ErrorCode, string ErrorMessa
 
 internal sealed record ClientInfo(string Name, string Version);
 
-internal sealed record ClientCapabilities(bool DebuggerProvider, bool? IsStateful);
+internal sealed record ClientCapabilities(bool DebuggerProvider, bool? IsStateful)
+{
+    public bool? RpcOnlyOutput { get; init; }
+}
 
 internal sealed record ServerInfo(string Name, string Version);
 
-internal sealed record ServerCapabilities(ServerTestingCapabilities TestingCapabilities);
+internal sealed record ServerCapabilities(ServerTestingCapabilities TestingCapabilities)
+{
+    public bool? RpcOnlyOutput { get; init; }
+}
 
 internal sealed record ServerTestingCapabilities(
     bool SupportsDiscovery,

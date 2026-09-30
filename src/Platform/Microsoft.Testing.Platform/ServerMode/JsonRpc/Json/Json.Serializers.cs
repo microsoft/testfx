@@ -74,9 +74,16 @@ internal sealed partial class Json
         ]);
 
         serializers[typeof(ServerCapabilities)] = new JsonObjectSerializer<ServerCapabilities>(capabilities =>
-        [
-            (JsonRpcStrings.Testing, capabilities.TestingCapabilities)
-        ]);
+            capabilities.RpcOnlyOutput is { } rpcOnlyOutput
+                ?
+                [
+                    (JsonRpcStrings.Testing, capabilities.TestingCapabilities),
+                    (JsonRpcStrings.RpcOnlyOutput, rpcOnlyOutput)
+                ]
+                :
+                [
+                    (JsonRpcStrings.Testing, capabilities.TestingCapabilities)
+                ]);
 
         serializers[typeof(ServerTestingCapabilities)] = new JsonObjectSerializer<ServerTestingCapabilities>(capabilities =>
         [
