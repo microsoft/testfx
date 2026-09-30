@@ -8,7 +8,9 @@ and WinUI dispatcher access.
 ## Prerequisites
 
 - Windows 10 version 2004 (10.0.19041) or later.
-- .NET SDK 10 or later.
+- .NET SDK 10 or later for the native Microsoft.Testing.Platform runner and `dotnet test` CLI.
+- .NET 8 Desktop Runtime for the selected architecture to run this framework-dependent
+  `net8.0-windows10.0.19041.0` application.
 - Visual Studio 2022 or later with the Windows application development tools.
 
 ## Run
@@ -21,8 +23,11 @@ dotnet run --no-build -p:Platform=x64
 dotnet test --project . --no-build -p:Platform=x64
 ```
 
-Both run commands must finish without manually closing the window. `dotnet test` requires .NET SDK
-10 or later because `global.json` selects the native Microsoft.Testing.Platform runner.
+Both run commands must finish without manually closing the window. The .NET 10 SDK runs the native
+Microsoft.Testing.Platform CLI, but it does not supply the .NET 8 Desktop Runtime required by this
+framework-dependent sample. This extra runtime prerequisite is specific to the unpackaged sample:
+the packaged samples are self-contained, and their app-model controllers roll forward to newer
+installed .NET major versions.
 
 No package registration or package `LocalState` cleanup is required. See
 [Testing UWP and WinUI apps with MSTest](../../../docs/winui-testing.md) for dispatcher, bootstrap,
