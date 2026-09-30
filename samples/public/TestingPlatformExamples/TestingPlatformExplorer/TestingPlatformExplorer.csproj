@@ -11,13 +11,13 @@
 
   <ItemGroup>
     <!-- Update to the last version if needed -->
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
 
     <!-- Needed to support the Trx capability -->
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport.Abstractions" Version="$(MTPVersion)" />
 
     <!-- Add the trx extension -->
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MTPVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,6 +4,6 @@
   },
   "msbuild-sdks": {
     "MSBuild.Sdk.Extras": "3.0.44",
-    "MSTest.Sdk": "4.5.0"
+    "MSTest.Sdk": "4.5.0-preview.26480.9"
   }
 }
