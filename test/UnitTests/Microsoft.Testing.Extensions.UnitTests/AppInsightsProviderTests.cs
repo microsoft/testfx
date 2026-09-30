@@ -67,11 +67,11 @@ public sealed class AppInsightsProviderTests
     [TestMethod]
     public async Task FirstPayload_InitializesTelemetryClientOnce()
     {
-        using ManualResetEventSlim eventTracked = new(initialState: false);
+        TaskCompletionSource<bool> eventTracked = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ITelemetryClient> telemetryClient = new();
         telemetryClient
             .Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
-            .Callback((string _, Dictionary<string, string> _, Dictionary<string, double> _) => eventTracked.Set());
+            .Callback((string _, Dictionary<string, string> _, Dictionary<string, double> _) => eventTracked.TrySetResult(true));
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(telemetryClient.Object);
 
@@ -79,7 +79,7 @@ public sealed class AppInsightsProviderTests
         telemetryClientFactory.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string>()), Times.Never);
 
         await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
-        Assert.IsTrue(eventTracked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+        await WaitForSignalAsync(eventTracked.Task, "Telemetry consumer did not invoke TrackEvent within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
@@ -97,18 +97,18 @@ public sealed class AppInsightsProviderTests
     public async Task ClientInitializationFailure_IsLogged()
     {
         InvalidOperationException exception = new("Initialization failed");
-        using ManualResetEventSlim initializationFailureLogged = new(initialState: false);
+        TaskCompletionSource<bool> initializationFailureLogged = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Throws(exception);
         Mock<ILogger> logger = new();
         logger
             .Setup(x => x.LogAsync(LogLevel.Error, It.IsAny<string>(), It.IsAny<Exception>(), LoggingExtensions.Formatter))
-            .Callback((LogLevel _, string _, Exception? _, Func<string, Exception?, string> _) => initializationFailureLogged.Set())
+            .Callback((LogLevel _, string _, Exception? _, Func<string, Exception?, string> _) => initializationFailureLogged.TrySetResult(true))
             .Returns(Task.CompletedTask);
 
         AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory, logger.Object);
         await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
-        Assert.IsTrue(initializationFailureLogged.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry client initialization failure was not logged within the timeout.");
+        await WaitForSignalAsync(initializationFailureLogged.Task, "Telemetry client initialization failure was not logged within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
@@ -126,12 +126,12 @@ public sealed class AppInsightsProviderTests
     public async Task FlushFailure_IsLogged()
     {
         InvalidOperationException exception = new("Flush failed");
-        using ManualResetEventSlim eventTracked = new(initialState: false);
-        using ManualResetEventSlim flushFailureLogged = new(initialState: false);
+        TaskCompletionSource<bool> eventTracked = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> flushFailureLogged = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ITelemetryClient> telemetryClient = new();
         telemetryClient
             .Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
-            .Callback((string _, Dictionary<string, string> _, Dictionary<string, double> _) => eventTracked.Set());
+            .Callback((string _, Dictionary<string, string> _, Dictionary<string, double> _) => eventTracked.TrySetResult(true));
         telemetryClient.Setup(x => x.Flush()).Throws(exception);
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(telemetryClient.Object);
@@ -139,12 +139,12 @@ public sealed class AppInsightsProviderTests
         logger.Setup(x => x.IsEnabled(LogLevel.Error)).Returns(true);
         logger
             .Setup(x => x.LogAsync(LogLevel.Error, It.IsAny<string>(), It.IsAny<Exception>(), LoggingExtensions.Formatter))
-            .Callback((LogLevel _, string _, Exception? _, Func<string, Exception?, string> _) => flushFailureLogged.Set())
+            .Callback((LogLevel _, string _, Exception? _, Func<string, Exception?, string> _) => flushFailureLogged.TrySetResult(true))
             .Returns(Task.CompletedTask);
 
         AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory, logger.Object);
         await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
-        Assert.IsTrue(eventTracked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+        await WaitForSignalAsync(eventTracked.Task, "Telemetry consumer did not invoke TrackEvent within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
@@ -152,7 +152,7 @@ public sealed class AppInsightsProviderTests
         appInsightsProvider.Dispose();
 #endif
 
-        Assert.IsTrue(flushFailureLogged.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry flush failure was not logged within the timeout.");
+        await WaitForSignalAsync(flushFailureLogged.Task, "Telemetry flush failure was not logged within the timeout.");
 
         logger.Verify(
             x => x.LogAsync(LogLevel.Error, "Error during telemetry flush.", exception, LoggingExtensions.Formatter),
@@ -313,7 +313,7 @@ public sealed class AppInsightsProviderTests
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         Dictionary<string, string> capturedProperties = [];
-        using ManualResetEventSlim trackEventCalled = new(initialState: false);
+        TaskCompletionSource<bool> trackEventCalled = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
             .Callback((string _, Dictionary<string, string> properties, Dictionary<string, double> _) =>
@@ -323,7 +323,7 @@ public sealed class AppInsightsProviderTests
                     capturedProperties[pair.Key] = pair.Value;
                 }
 
-                trackEventCalled.Set();
+                trackEventCalled.TrySetResult(true);
             });
 
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
@@ -352,7 +352,7 @@ public sealed class AppInsightsProviderTests
         // Wait for the consumer loop to actually invoke TrackEvent before disposing,
         // otherwise the dispose-time flush window can elapse on slower runners (notably net472)
         // before the payload is processed.
-        Assert.IsTrue(trackEventCalled.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+        await WaitForSignalAsync(trackEventCalled.Task, "Telemetry consumer did not invoke TrackEvent within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
@@ -379,7 +379,7 @@ public sealed class AppInsightsProviderTests
         loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
         Dictionary<string, string> capturedProperties = [];
-        using ManualResetEventSlim trackEventCalled = new(initialState: false);
+        TaskCompletionSource<bool> trackEventCalled = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
             .Callback((string _, Dictionary<string, string> properties, Dictionary<string, double> _) =>
@@ -389,7 +389,7 @@ public sealed class AppInsightsProviderTests
                     capturedProperties[pair.Key] = pair.Value;
                 }
 
-                trackEventCalled.Set();
+                trackEventCalled.TrySetResult(true);
             });
 
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
@@ -415,7 +415,7 @@ public sealed class AppInsightsProviderTests
             new Dictionary<string, object> { ["mstest.setting.output_capture_mode"] = mode },
             CancellationToken.None);
 
-        Assert.IsTrue(trackEventCalled.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+        await WaitForSignalAsync(trackEventCalled.Task, "Telemetry consumer did not invoke TrackEvent within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
@@ -446,8 +446,8 @@ public sealed class AppInsightsProviderTests
 
         List<string> trackedEvents = [];
         int flushCallCount = 0;
-        using ManualResetEventSlim secondEventTracked = new(initialState: false);
-        using ManualResetEventSlim flushInvoked = new(initialState: false);
+        TaskCompletionSource<bool> secondEventTracked = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> flushInvoked = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ITelemetryClient> testTelemetryClient = new();
         testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
             .Callback((string eventName, Dictionary<string, string> _, Dictionary<string, double> _) =>
@@ -457,7 +457,7 @@ public sealed class AppInsightsProviderTests
                     trackedEvents.Add(eventName);
                     if (trackedEvents.Count >= 2)
                     {
-                        secondEventTracked.Set();
+                        secondEventTracked.TrySetResult(true);
                     }
                 }
             });
@@ -465,7 +465,7 @@ public sealed class AppInsightsProviderTests
             .Callback(() =>
             {
                 Interlocked.Increment(ref flushCallCount);
-                flushInvoked.Set();
+                flushInvoked.TrySetResult(true);
             });
 
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
@@ -489,7 +489,7 @@ public sealed class AppInsightsProviderTests
         await appInsightsProvider.LogEventAsync("FirstEvent", new Dictionary<string, object>(), CancellationToken.None);
         await appInsightsProvider.LogEventAsync("SecondEvent", new Dictionary<string, object>(), CancellationToken.None);
 
-        Assert.IsTrue(secondEventTracked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent for both events within the timeout.");
+        await WaitForSignalAsync(secondEventTracked.Task, "Telemetry consumer did not invoke TrackEvent for both events within the timeout.");
 
         // Flush must not have happened per-event: it should only occur during shutdown drain.
         Assert.AreEqual(0, Volatile.Read(ref flushCallCount), "Flush should not be invoked per-event; only once during dispose drain.");
@@ -504,12 +504,27 @@ public sealed class AppInsightsProviderTests
         // before the task reaches its finally block (especially under thread-pool pressure on CI).
         // Wait explicitly for the Flush callback so the assertions below are not racing the
         // background continuation.
-        Assert.IsTrue(flushInvoked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Flush was not invoked within the timeout after dispose.");
+        await WaitForSignalAsync(flushInvoked.Task, "Flush was not invoked within the timeout after dispose.");
 
         Assert.HasCount(2, trackedEvents);
         Assert.AreEqual("FirstEvent", trackedEvents[0]);
         Assert.AreEqual("SecondEvent", trackedEvents[1]);
         Assert.AreEqual(1, Volatile.Read(ref flushCallCount), "Flush should be invoked exactly once after the ingest loop drains.");
+    }
+
+    private async Task WaitForSignalAsync(Task signal, string failureMessage)
+    {
+        using var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        var timeout = Task.Delay(TimeSpan.FromSeconds(30), timeoutCancellationTokenSource.Token);
+        Task completedTask = await Task.WhenAny(signal, timeout);
+        if (completedTask != signal)
+        {
+            TestContext.CancellationToken.ThrowIfCancellationRequested();
+        }
+
+        Assert.AreSame(signal, completedTask, failureMessage);
+        timeoutCancellationTokenSource.Cancel();
+        await signal;
     }
 
     private static AppInsightsProvider CreateProvider(Mock<ITelemetryClientFactory> telemetryClientFactory, ILogger? logger = null)
