@@ -25,6 +25,8 @@ internal partial class TestExecutionManager
         testResultRecorder.PrepareResults(test, unitTestResults);
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+
 #if !WINDOWS_UWP && !WIN_UI
             // A superseded in-process retry attempt is not the test's outcome, so it must not turn the run red:
             // the recorder still reports it (so tooling can show the retry), but the "any test failed" verdict
