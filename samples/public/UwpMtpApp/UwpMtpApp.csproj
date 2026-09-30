@@ -12,8 +12,5 @@
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <!-- The Default profile enables TRX and CodeCoverage. This sample needs only TRX. -->
-    <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
   </PropertyGroup>
 </Project>
