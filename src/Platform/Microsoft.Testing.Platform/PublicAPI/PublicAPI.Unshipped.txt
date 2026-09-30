@@ -7,6 +7,10 @@
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.Run<T>(System.Func<T>! callback) -> T
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.RunAsync(System.Func<System.Threading.Tasks.Task!>! callback) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution.RunAsync<T>(System.Func<System.Threading.Tasks.Task<T>!>! callback) -> System.Threading.Tasks.Task<T>!
+[TPEXP]Microsoft.Testing.Platform.Logging.IDiagnosticLoggingInformation
+[TPEXP]Microsoft.Testing.Platform.Logging.IDiagnosticLoggingInformation.LogFile.get -> System.IO.FileInfo!
+[TPEXP]Microsoft.Testing.Platform.Logging.IDiagnosticLoggingInformation.LogLevel.get -> Microsoft.Testing.Platform.Logging.LogLevel
+[TPEXP]Microsoft.Testing.Platform.Logging.IDiagnosticLoggingInformation.SynchronousWrite.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions
 [TPEXP]static Microsoft.Testing.Platform.Services.ClientCapabilitiesExtensions.GetIsStateful(this Microsoft.Testing.Platform.Services.IClientCapabilities! capabilities) -> bool?
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware
@@ -23,3 +27,4 @@ Microsoft.Testing.Platform.Builder.TestApplicationOptions.CancellationToken.set 
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ILocalTestHostHandle.ProcessId.get -> int
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetPlatformService<TService>(this System.IServiceProvider! provider) -> TService?
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetRequiredPlatformService<TService>(this System.IServiceProvider! provider) -> TService
+[TPEXP]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetDiagnosticLoggingInformation(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Logging.IDiagnosticLoggingInformation?

@@ -79,8 +79,7 @@ internal sealed partial class TestHostBuilder
         if (loggingState.FileLoggerProvider is not null)
         {
             logger = loggingState.FileLoggerProvider.CreateLogger(GetType().ToString());
-            FileLoggerInformation fileLoggerInformation = new(loggingState.FileLoggerProvider.SyncFlush, new(loggingState.FileLoggerProvider.FileLogger.FileName), loggingState.LogLevel);
-            serviceProvider.TryAddService(fileLoggerInformation);
+            serviceProvider.TryAddService(new DiagnosticLoggingInformation(loggingState.FileLoggerProvider));
         }
 
         if (logger is not null)
