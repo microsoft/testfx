@@ -80,10 +80,10 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         object inFlightLock)
     {
         SingleInvocationNext guard = new(next, ambientToken, rootToken, inFlightDownstreamTasks, linkedTokenSources, inFlightLock);
-        int result;
+        Task<int> middlewareTask;
         try
         {
-            result = await middleware.OrchestrateTestHostExecutionAsync(guard.InvokeAsync, ambientToken).ConfigureAwait(false);
+            middlewareTask = middleware.OrchestrateTestHostExecutionAsync(guard.InvokeAsync, ambientToken);
         }
         catch
         {
@@ -98,13 +98,28 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
 
             throw;
         }
-        finally
+
+        // Close immediately after the middleware method returns its Task, not after that Task completes.
+        // An async middleware can remain suspended before its first next() call; that call is deferred and
+        // must be rejected even though the returned Task has not completed yet.
+        guard.Close();
+
+        int result;
+        try
         {
-            // Close the gate unconditionally: a next() call attempted after this method has returned or
-            // thrown (for example, one stashed by the middleware to invoke out-of-band later) must still be
-            // rejected, even though it was never invoked while this method was executing. If next() was
-            // already invoked, this is a no-op: the guard is already past the "open" state.
-            guard.Close();
+            result = await middlewareTask.ConfigureAwait(false);
+        }
+        catch
+        {
+            if (guard.WasInvoked)
+            {
+                // A middleware failure cannot replace a downstream failure or cancellation. Await the
+                // accepted child even when this frame faulted, then preserve the middleware failure only
+                // when the child completed successfully.
+                await guard.DownstreamTask.ConfigureAwait(false);
+            }
+
+            throw;
         }
 
         if (!guard.WasInvoked)

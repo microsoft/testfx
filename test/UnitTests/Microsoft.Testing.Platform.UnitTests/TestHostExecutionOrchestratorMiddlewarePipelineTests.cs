@@ -242,6 +242,39 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     }
 
     [TestMethod]
+    public async Task RunAsync_MiddlewareDefersFirstNextUntilReturnedTaskContinues_RejectsInvocation()
+    {
+        TaskCompletionSource<bool> middlewareStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> allowDeferredNext = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int leafInvocationCount = 0;
+
+        FakeMiddleware deferredNext = new("deferred-next", async (next, ct) =>
+        {
+            middlewareStarted.SetResult(true);
+            await allowDeferredNext.Task;
+            return await next(ct);
+        });
+
+        Task<int> pipelineTask = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+            [deferredNext],
+            _ =>
+            {
+                Interlocked.Increment(ref leafInvocationCount);
+                return Task.FromResult((int)ExitCode.Success);
+            },
+            new NopLogger(),
+            CancellationToken.None);
+
+        await middlewareStarted.Task;
+        allowDeferredNext.SetResult(true);
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => pipelineTask);
+
+        Assert.Contains("next", exception.Message, StringComparison.Ordinal);
+        Assert.AreEqual(0, leafInvocationCount);
+    }
+
+    [TestMethod]
     public async Task RunAsync_MiddlewareNeverInvokesNext_UninvokedPlaceholderIsNeverAwaitedAndDoesNotHangThePipeline()
     {
         // The guard's downstream placeholder is preallocated for every middleware frame, whether or not
@@ -661,51 +694,33 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     public async Task RunAsync_NestedMiddlewareFault_DelayedAncestorCancellationStillReachesLeafBeforeLinkedSourcesAreDisposed()
     {
         using CancellationTokenSource rootCts = new();
-        TaskCompletionSource<bool> allowInnerNext = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        TaskCompletionSource<bool> innerStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> leafStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<int> leafSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Task<int>? outerDownstream = null;
 
-        FakeMiddleware outer = new("outer", (next, ct) =>
+        FakeMiddleware outer = new("outer", (next, ct) => outerDownstream = next(ct));
+        FakeMiddleware inner = new("inner", (next, ct) =>
         {
-            outerDownstream = next(ct);
-            return Task.FromException<int>(new InvalidOperationException("outer middleware failed"));
-        });
-        FakeMiddleware inner = new("inner", async (next, ct) =>
-        {
-            innerStarted.SetResult(true);
-            await allowInnerNext.Task;
             _ = next(ct);
-            throw new InvalidOperationException("inner middleware failed");
+            return Task.FromException<int>(new InvalidOperationException("inner middleware failed"));
         });
 
         Task<int> pipelineTask = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
             [outer, inner],
             ct =>
             {
+                leafStarted.SetResult(true);
                 ct.Register(() => leafSource.TrySetCanceled(ct));
                 return leafSource.Task;
             },
             new NopLogger(),
             rootCts.Token);
 
-        await innerStarted.Task;
+        await leafStarted.Task;
         Assert.IsNotNull(outerDownstream);
 
-        // The top-level pipeline is already draining the outer frame. Accept the leaf only now, after the
-        // drain has started, so a one-time snapshot cannot see it.
-        allowInnerNext.SetResult(true);
-
-        // The inner frame has faulted, but its later-added leaf is still part of the downstream subtree.
-        // The drain must discover it and keep ancestor cancellation connected until it completes.
-        Task completedBeforeCancellation = await Task.WhenAny(
-            pipelineTask,
-            Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken));
-        Assert.AreNotSame(
-            pipelineTask,
-            completedBeforeCancellation,
-            "The pipeline must keep draining the later-added leaf instead of disposing its linked token source and completing early.");
-
+        // The inner middleware has failed, but the leaf it started remains active and must still observe
+        // the ancestor's later cancellation before linked token sources are disposed.
         rootCts.Cancel();
         Task leafCompleted = await Task.WhenAny(
             leafSource.Task,
