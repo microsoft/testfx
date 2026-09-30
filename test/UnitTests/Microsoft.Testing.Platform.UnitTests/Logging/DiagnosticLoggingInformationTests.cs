@@ -89,7 +89,9 @@ public sealed class DiagnosticLoggingInformationTests
 
         var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var logAttemptStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var logThreadStarted = new ManualResetEventSlim();
+        using var logThreadCompleted = new ManualResetEventSlim();
+        Exception? logException = null;
 
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
@@ -117,26 +119,45 @@ public sealed class DiagnosticLoggingInformationTests
             TestContext.CancellationToken);
         await disposeStarted.Task;
 
-        var logTask = Task.Run(
+        var logThread = new Thread(
             () =>
             {
-                logAttemptStarted.SetResult(true);
-                logger.LogDebug("Written during relocation.");
-            },
-            TestContext.CancellationToken);
-        await logAttemptStarted.Task;
+                logThreadStarted.Set();
+                try
+                {
+                    logger.LogDebug("Written during relocation.");
+                }
+                catch (Exception ex)
+                {
+                    logException = ex;
+                }
+                finally
+                {
+                    logThreadCompleted.Set();
+                }
+            });
+#pragma warning disable CA1416 // Threading is unavailable on browser, but this unit test runs on desktop test hosts.
+        logThread.Start();
 
         try
         {
-            await Task.Delay(100, TestContext.CancellationToken);
-            Assert.IsFalse(logTask.IsCompleted, "Logging should wait until relocation installs the replacement logger.");
+            logThreadStarted.Wait(TestContext.CancellationToken);
+            bool reachedRelocationGate = SpinWait.SpinUntil(
+                () => (logThread.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0 || logThreadCompleted.IsSet,
+                TimeSpan.FromSeconds(5));
+#pragma warning restore CA1416
+
+            Assert.IsTrue(reachedRelocationGate, "The logging thread did not reach the relocation gate.");
+            Assert.IsFalse(logThreadCompleted.IsSet, $"Logging completed before relocation installed the replacement logger: {logException}");
         }
         finally
         {
             allowDispose.TrySetResult(true);
         }
-
-        await Task.WhenAll(relocationTask, logTask);
+        Assert.IsTrue(logThread.Join(TimeSpan.FromSeconds(5)), "The logging thread did not finish after relocation completed.");
+        Assert.IsTrue(logThread.Join(TimeSpan.FromSeconds(5)), "The logging thread did not finish after relocation completed.");
+        await relocationTask;
+        Assert.IsNull(logException);
 
         async Task BlockFirstStreamDisposalAsync()
         {
