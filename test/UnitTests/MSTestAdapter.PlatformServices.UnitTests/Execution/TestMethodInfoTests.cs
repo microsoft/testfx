@@ -539,7 +539,7 @@ public class TestMethodInfoTests : TestContainer
                 releaseFirstInvocation.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
             }
         };
-        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(100);
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
 
         TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
         firstInvocationStarted.IsSet.Should().BeTrue();
@@ -569,7 +569,7 @@ public class TestMethodInfoTests : TestContainer
                 releaseFirstInvocation.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
             }
         };
-        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(100);
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
 
         using (TestClassInstanceFactoryProvider.Push(factory))
         {
@@ -582,8 +582,39 @@ public class TestMethodInfoTests : TestContainer
         }
 
         releaseFirstInvocation.Set();
+        await WaitForCompletionAsync(Task.WhenAll(firstLease.DisposalCompleted, secondLease.DisposalCompleted));
         firstLease.DisposeCount.Should().Be(1);
         secondLease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task NonCooperativeTimeoutDefersCleanupWhileTestContextSetterIsRunning()
+    {
+        var lease = new CountingTestClassInstanceLease(new DummyTestClass());
+        using ManualResetEventSlim testContextSetterStarted = new();
+        using ManualResetEventSlim releaseTestContextSetter = new();
+        int cleanupCount = 0;
+        DummyTestClass.TestContextSetterBody = _ =>
+        {
+            testContextSetterStarted.Set();
+            releaseTestContextSetter.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+        };
+        DummyTestClass.TestCleanupMethodBody = _ => cleanupCount++;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        using (TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(lease)))
+        {
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+            testContextSetterStarted.IsSet.Should().BeTrue();
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            lease.DisposeCount.Should().Be(0);
+            releaseTestContextSetter.Set();
+            await WaitForCompletionAsync(lease.DisposalCompleted);
+        }
+
+        cleanupCount.Should().Be(1);
+        lease.DisposeCount.Should().Be(1);
     }
 
     public async Task TestMethodInfoInvokeShouldNotDisposePreviousLeaseWhenNextActivationFails()
@@ -2120,6 +2151,14 @@ public class TestMethodInfoTests : TestContainer
         return await tcs.Task;
     }
 
+    private static async Task WaitForCompletionAsync(Task task)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cts.Token));
+        completed.Should().BeSameAs(task, "Timed out waiting for background invocation cleanup.");
+        await task;
+    }
+
     #endregion
 
     #region Test data
@@ -2156,15 +2195,20 @@ public class TestMethodInfoTests : TestContainer
 
     private sealed class CountingTestClassInstanceLease(object instance, Exception? disposeException = null) : ITestClassInstanceLease
     {
+        private readonly TaskCompletionSource<object?> _disposalCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public object Instance { get; } = instance;
 
         public bool RequiresCleanup => true;
 
         public int DisposeCount { get; private set; }
 
+        public Task DisposalCompleted => _disposalCompleted.Task;
+
         public Task DisposeAsync()
         {
             DisposeCount++;
+            _disposalCompleted.TrySetResult(null);
             return disposeException is null
                 ? Task.CompletedTask
                 : Task.FromException(disposeException);

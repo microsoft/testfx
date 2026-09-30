@@ -147,8 +147,8 @@ internal sealed class MicrosoftExtensionsTestClassInstanceFactory(IServiceScopeF
             if (parameter.ParameterType == typeof(TestContext)
                 || parameter.HasDefaultValue
                 || (keyedServicesAttribute is null
-                    ? serviceChecker?.IsService(parameter.ParameterType) != false
-                    : keyedServiceChecker?.IsKeyedService(parameter.ParameterType, keyedServicesAttribute.Key) != false))
+                    ? serviceChecker?.IsService(parameter.ParameterType) is not false
+                    : keyedServiceChecker?.IsKeyedService(parameter.ParameterType, keyedServicesAttribute.Key) is not false))
             {
                 continue;
             }

@@ -73,6 +73,19 @@ $localPackageSampleNames = @(
 $localPackageProperties = @()
 $localHostingVersion = $null
 $localRestorePackagesPath = $null
+$dotnetPath = $null
+
+function Remove-LocalRestorePackages {
+    if ($null -eq $localRestorePackagesPath -or -not (Test-Path $localRestorePackagesPath)) {
+        return
+    }
+
+    if ($null -ne $dotnetPath) {
+        & $dotnetPath build-server shutdown
+    }
+
+    Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
+}
 
 if ($BinaryLogDirectory) {
     New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
@@ -93,9 +106,7 @@ try {
     if ($configuredLocalPackageArguments.Count -ne 0) {
         $LocalPackageDirectory = (Resolve-Path $LocalPackageDirectory).Path
         $localRestorePackagesPath = Join-Path $repoRoot "artifacts/tmp/sample-packages-local"
-        if (Test-Path $localRestorePackagesPath) {
-            Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
-        }
+        Remove-LocalRestorePackages
 
         $hostingPackage = Get-ChildItem -Path $LocalPackageDirectory -Filter "Microsoft.Testing.Extensions.Hosting.*.nupkg" | Select-Object -First 1
         if ($null -eq $hostingPackage) {
@@ -293,9 +304,7 @@ finally {
         [System.IO.File]::WriteAllBytes($nuGetConfigPath, $nuGetConfigBackups[$nuGetConfigPath])
     }
 
-    if ($null -ne $localRestorePackagesPath -and (Test-Path $localRestorePackagesPath)) {
-        Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
-    }
+    Remove-LocalRestorePackages
 }
 
 Write-Host "========================================"

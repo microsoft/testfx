@@ -85,6 +85,7 @@ internal partial class TestMethodInfo
         invocationState ??= new();
 
         Exception? testRunnerException = null;
+        object? classInstance = null;
 
         try
         {
@@ -110,9 +111,16 @@ internal partial class TestMethodInfo
                 bool setTestContextSucessful = false;
                 if (_executionContext is null)
                 {
-                    invocationState.ClassInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
-                    invocationState.ClassInstanceLease = classInstanceLease;
-                    setTestContextSucessful = SetTestContext(invocationState.ClassInstance, result);
+                    classInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
+                    invocationState.PublishActivation(classInstance, classInstanceLease);
+                    try
+                    {
+                        setTestContextSucessful = SetTestContext(classInstance, result);
+                    }
+                    finally
+                    {
+                        invocationState.CompleteTestContextSetup(setTestContextSucessful);
+                    }
                 }
                 else
                 {
@@ -125,9 +133,16 @@ internal partial class TestMethodInfo
                     {
                         try
                         {
-                            invocationState.ClassInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
-                            invocationState.ClassInstanceLease = classInstanceLease;
-                            setTestContextSucessful = SetTestContext(invocationState.ClassInstance, result);
+                            classInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
+                            invocationState.PublishActivation(classInstance, classInstanceLease);
+                            try
+                            {
+                                setTestContextSucessful = SetTestContext(classInstance, result);
+                            }
+                            finally
+                            {
+                                invocationState.CompleteTestContextSetup(setTestContextSucessful);
+                            }
                         }
                         finally
                         {
@@ -141,16 +156,13 @@ internal partial class TestMethodInfo
 
                 if (setTestContextSucessful)
                 {
-                    // For any failure after this point, we must run TestCleanup
-                    invocationState.IsTestContextSet = true;
-
                     // Intentionally using ConfigureAwait(true) here to ensure the continuation is posted to the synchronization context.
                     // In case of WinUI's default synchronization context, this will ensure that the test method runs on the UI thread.
-                    if (await RunTestInitializeMethodAsync(invocationState.ClassInstance!, result, timeoutTokenSource).ConfigureAwait(true))
+                    if (await RunTestInitializeMethodAsync(classInstance!, result, timeoutTokenSource).ConfigureAwait(true))
                     {
                         if (_executionContext is null)
                         {
-                            Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(invocationState.ClassInstance, ParameterTypes, arguments);
+                            Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(classInstance, ParameterTypes, arguments);
                             if (invokeResult is not null)
                             {
                                 await invokeResult.ConfigureAwait(true);
@@ -167,7 +179,7 @@ internal partial class TestMethodInfo
 #if NETFRAMEWORK
                                     CallContext.HostContext = _hostContext;
 #endif
-                                    Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(invocationState.ClassInstance, ParameterTypes, arguments);
+                                    Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(classInstance, ParameterTypes, arguments);
                                     if (invokeResult is not null)
                                     {
                                         await invokeResult.ConfigureAwait(false);
@@ -224,7 +236,7 @@ internal partial class TestMethodInfo
                         realException,
                         TestClassName,
                         TestMethodName,
-                        invocationState.ClassInstance is not null);
+                        classInstance is not null);
                 }
 
                 if (result.TestFailureException is TestFailedException testFailedException)
@@ -429,15 +441,48 @@ internal partial class TestMethodInfo
 
     private sealed class TestInvocationState
     {
+        private const int TestContextSetupIncomplete = 0;
+        private const int TestContextSetupFailed = 1;
+        private const int TestContextSetupSucceeded = 2;
+
+        private object? _classInstance;
+        private ITestClassInstanceLease? _classInstanceLease;
+        private int _testContextSetupState;
         private int _cleanupStarted;
 
-        public object? ClassInstance { get; set; }
+        public void PublishActivation(object classInstance, ITestClassInstanceLease? classInstanceLease)
+        {
+            _classInstance = classInstance;
+            _classInstanceLease = classInstanceLease;
+        }
 
-        public ITestClassInstanceLease? ClassInstanceLease { get; set; }
+        public void CompleteTestContextSetup(bool successful)
+            => Volatile.Write(
+                ref _testContextSetupState,
+                successful ? TestContextSetupSucceeded : TestContextSetupFailed);
 
-        public bool IsTestContextSet { get; set; }
+        public bool TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot)
+        {
+            int testContextSetupState = Volatile.Read(ref _testContextSetupState);
+            if (testContextSetupState == TestContextSetupIncomplete || _classInstance is null)
+            {
+                snapshot = default;
+                return false;
+            }
+
+            snapshot = new(
+                _classInstance,
+                _classInstanceLease,
+                testContextSetupState == TestContextSetupSucceeded);
+            return true;
+        }
 
         public bool TryBeginCleanup()
             => Interlocked.Exchange(ref _cleanupStarted, 1) == 0;
     }
+
+    private readonly record struct TestInvocationCleanupSnapshot(
+        object ClassInstance,
+        ITestClassInstanceLease? ClassInstanceLease,
+        bool IsTestContextSet);
 }

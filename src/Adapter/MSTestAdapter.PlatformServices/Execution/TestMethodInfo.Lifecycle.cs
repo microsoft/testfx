@@ -31,13 +31,13 @@ internal partial class TestMethodInfo
     {
         _ = result ?? throw new ArgumentNullException(nameof(result));
 
-        if (invocationState.ClassInstance is not { } classInstance)
+        if (!invocationState.TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot))
         {
             return;
         }
 
-        bool hasCleanupsToInvoke = HasCleanupsToInvoke(invocationState.ClassInstanceLease);
-        bool shouldResetCancellationTokenSource = invocationState.IsTestContextSet
+        bool hasCleanupsToInvoke = HasCleanupsToInvoke(snapshot.ClassInstanceLease);
+        bool shouldResetCancellationTokenSource = snapshot.IsTestContextSet
             && TestContext.Context.CancellationTokenSource.IsCancellationRequested;
         if ((!hasCleanupsToInvoke && !shouldResetCancellationTokenSource)
             || !invocationState.TryBeginCleanup())
@@ -55,11 +55,11 @@ internal partial class TestMethodInfo
             return;
         }
 
-        if (!invocationState.IsTestContextSet)
+        if (!snapshot.IsTestContextSet)
         {
             try
             {
-                if (invocationState.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
+                if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
                 {
                     await classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
@@ -91,14 +91,14 @@ internal partial class TestMethodInfo
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
-                    ? await InvokeCleanupMethodAsync(testCleanupMethod, classInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeCleanupMethodAsync(testCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
                 if (testCleanupException is null)
                 {
                     foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
                     {
                         testCleanupMethod = baseCleanupMethod;
-                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, classInstance, timeoutTokenSource).ConfigureAwait(false);
+                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false);
                         if (testCleanupException is not null)
                         {
                             break;
@@ -108,7 +108,7 @@ internal partial class TestMethodInfo
             }
             finally
             {
-                if (invocationState.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
+                if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
                 {
                     await classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
