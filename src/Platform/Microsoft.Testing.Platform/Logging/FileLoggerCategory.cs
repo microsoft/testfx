@@ -3,16 +3,33 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class FileLoggerCategory(FileLogger fileLogger, string category) : ILogger
+internal sealed class FileLoggerCategory : ILogger
 {
-    private readonly FileLogger _fileLogger = fileLogger;
-    private readonly string _category = category;
+    private FileLogger? FileLogger { get; }
 
-    public bool IsEnabled(LogLevel logLevel) => _fileLogger.IsEnabled(logLevel);
+    private FileLoggerProvider? FileLoggerProvider { get; }
+
+    private string Category { get; }
+
+    public FileLoggerCategory(FileLogger fileLogger, string category)
+    {
+        FileLogger = fileLogger;
+        Category = category;
+    }
+
+    public FileLoggerCategory(FileLoggerProvider fileLoggerProvider, string category)
+    {
+        FileLoggerProvider = fileLoggerProvider;
+        Category = category;
+    }
+
+    private FileLogger CurrentFileLogger => FileLoggerProvider?.FileLogger ?? FileLogger!;
+
+    public bool IsEnabled(LogLevel logLevel) => CurrentFileLogger.IsEnabled(logLevel);
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => _fileLogger.Log(logLevel, state, exception, formatter, _category);
+        => CurrentFileLogger.Log(logLevel, state, exception, formatter, Category);
 
     public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => await _fileLogger.LogAsync(logLevel, state, exception, formatter, _category).ConfigureAwait(false);
+        => await CurrentFileLogger.LogAsync(logLevel, state, exception, formatter, Category).ConfigureAwait(false);
 }

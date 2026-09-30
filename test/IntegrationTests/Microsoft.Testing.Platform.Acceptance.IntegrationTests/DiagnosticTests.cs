@@ -312,6 +312,52 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
         testHostResult.AssertOutputContains("Diagnostic file");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_WhenDisabled_ExtensionFactoryReceivesNoInformation(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+        testHostResult.AssertOutputContains("Diagnostic service: disabled");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Diag_WhenResultsDirectoryIsConfigured_ExtensionFactoryReceivesRelocatedInformation(string tfm)
+    {
+        string resultsDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
+        string configFile = Path.Combine(AssetFixture.TargetAssetPath, $"{Guid.NewGuid():N}.testconfig.json");
+        File.WriteAllText(
+            configFile,
+            $$"""
+            {
+              "platformOptions": {
+                "resultDirectory": {{System.Text.Json.JsonSerializer.Serialize(resultsDirectory)}}
+              }
+            }
+            """);
+
+        try
+        {
+            string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(resultsDirectory, AssetName, tfm);
+            var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                $"--diagnostic --config-file \"{configFile}\"",
+                cancellationToken: TestContext.CancellationToken);
+
+            string diagnosticPath = await AssertDiagnosticReportWasGeneratedAsync(testHostResult, diagPathPattern);
+            testHostResult.AssertOutputContains($"Diagnostic service: {diagnosticPath}|Trace|False");
+        }
+        finally
+        {
+            File.Delete(configFile);
+        }
+    }
+
     private static async Task<string> AssertDiagnosticReportWasGeneratedAsync(TestHostResult testHostResult, string diagPathPattern, string level = "Trace", string flushType = "async")
     {
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
@@ -362,9 +408,12 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file Program.cs
+#pragma warning disable TPEXP
+
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -373,15 +422,28 @@ public class Program
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
-            sp => new TestFrameworkCapabilities(),
-            (_,__) => new DummyTestFramework());
+            serviceProvider => new DiagnosticTestFrameworkCapabilities(serviceProvider.GetDiagnosticLoggingInformation()),
+            (capabilities, _) => new DummyTestFramework(((DiagnosticTestFrameworkCapabilities)capabilities).DiagnosticLoggingInformation));
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
 }
 
+public sealed class DiagnosticTestFrameworkCapabilities(
+    IDiagnosticLoggingInformation? diagnosticLoggingInformation) : ITestFrameworkCapabilities
+{
+    public IDiagnosticLoggingInformation? DiagnosticLoggingInformation { get; } = diagnosticLoggingInformation;
+
+    public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [];
+}
+
 public class DummyTestFramework : ITestFramework
 {
+    public DummyTestFramework(IDiagnosticLoggingInformation? diagnosticLoggingInformation)
+        => Console.WriteLine(diagnosticLoggingInformation is null
+            ? "Diagnostic service: disabled"
+            : $"Diagnostic service: {diagnosticLoggingInformation.LogFile.FullName}|{diagnosticLoggingInformation.LogLevel}|{diagnosticLoggingInformation.SynchronousWrite}");
+
     public string Uid => nameof(DummyTestFramework);
 
     public string Version => "2.0.0";

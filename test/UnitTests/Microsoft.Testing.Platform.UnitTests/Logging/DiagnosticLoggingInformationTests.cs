@@ -38,6 +38,7 @@ public sealed class DiagnosticLoggingInformationTests
             fileSystem.Object,
             fileStreamFactory.Object);
         var information = new DiagnosticLoggingInformation(provider);
+        ILogger logger = provider.CreateLogger("test");
 
         Assert.IsTrue(information.SynchronousWrite);
         Assert.AreEqual(LogLevel.Debug, information.LogLevel);
@@ -48,6 +49,8 @@ public sealed class DiagnosticLoggingInformationTests
         Assert.AreEqual(Path.GetFullPath(finalPath), information.LogFile.FullName);
         Assert.AreEqual(Path.GetFullPath(resultsDirectory), information.LogFile.DirectoryName);
         fileSystem.Verify(x => x.MoveFile(initialPath, finalPath, false), Times.Once);
+
+        logger.LogDebug("Written after relocation.");
     }
 
     private static IFileStream CreateFileStream(string path)

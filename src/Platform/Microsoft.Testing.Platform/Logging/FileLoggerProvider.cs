@@ -80,7 +80,7 @@ internal sealed class FileLoggerProvider(
     }
 
     public ILogger CreateLogger(string categoryName)
-        => new FileLoggerCategory(FileLogger, categoryName);
+        => new FileLoggerCategory(this, categoryName);
 
     public void Dispose()
         => FileLogger.Dispose();
