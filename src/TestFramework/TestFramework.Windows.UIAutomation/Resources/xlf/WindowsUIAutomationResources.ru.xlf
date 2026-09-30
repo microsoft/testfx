@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
         <source>Application '{0}' exited with code {1} before a window was discovered.</source>
-        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <target state="translated">Приложение '{0}' завершено с кодом {1} до обнаружения окна.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessFailedToStart">
         <source>Failed to start process '{0}'.</source>
-        <target state="new">Failed to start process '{0}'.</target>
+        <target state="translated">Не удалось запустить процесс: "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessNotAvailable">
         <source>The application process is available only after application setup and before disposal.</source>
-        <target state="new">The application process is available only after application setup and before disposal.</target>
+        <target state="translated">Процесс приложения доступен только после настройки приложения и до его удаления.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessTerminationTimedOut">
         <source>Application process {0} did not exit within {1} after termination was requested.</source>
-        <target state="new">Application process {0} did not exit within {1} after termination was requested.</target>
+        <target state="translated">Процесс приложения {0} не завершился в течение {1} после запроса на завершение.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidApplicationShutdownTimeout">
         <source>The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</source>
-        <target state="new">The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</target>
+        <target state="translated">Время ожидания завершения работы приложения должно быть неотрицательным, бесконечным или не превышающим Int32.MaxValue миллисекунд.</target>
         <note>{Locked="Int32.MaxValue"}</note>
       </trans-unit>
       <trans-unit id="InvalidWindowDiscoveryTimeout">
         <source>The window discovery timeout must be non-negative or infinite.</source>
-        <target state="new">The window discovery timeout must be non-negative or infinite.</target>
+        <target state="translated">Время ожидания обнаружения окна должно быть неотрицательным или бесконечным.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">
         <source>Application '{0}' did not expose a window within {1}.</source>
-        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <target state="translated">Приложение "{0}" не предоставляет окно в {1}.</target>
         <note />
       </trans-unit>
     </body>

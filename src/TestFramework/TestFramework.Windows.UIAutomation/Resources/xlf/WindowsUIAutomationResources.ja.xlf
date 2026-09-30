@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
         <source>Application '{0}' exited with code {1} before a window was discovered.</source>
-        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <target state="translated">ウィンドウが検出される前に、アプリケーション '{0}' がコード {1} で終了しました。</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessFailedToStart">

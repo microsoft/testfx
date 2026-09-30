@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
         <source>Application '{0}' exited with code {1} before a window was discovered.</source>
-        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <target state="translated">애플리케이션 '{0}'이(가) 창을 검색하기 전에 코드 {1}(으)로 종료되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessFailedToStart">
         <source>Failed to start process '{0}'.</source>
-        <target state="new">Failed to start process '{0}'.</target>
+        <target state="translated">프로세스 '{0}'을(를) 시작하지 못했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessNotAvailable">
         <source>The application process is available only after application setup and before disposal.</source>
-        <target state="new">The application process is available only after application setup and before disposal.</target>
+        <target state="translated">애플리케이션 프로세스는 애플리케이션을 설정한 후부터 삭제하기 전까지만 사용할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessTerminationTimedOut">
         <source>Application process {0} did not exit within {1} after termination was requested.</source>
-        <target state="new">Application process {0} did not exit within {1} after termination was requested.</target>
+        <target state="translated">애플리케이션 프로세스 {0}이(가) 종료 요청 후 {1} 이내에 종료되지 않았습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidApplicationShutdownTimeout">
         <source>The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</source>
-        <target state="new">The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</target>
+        <target state="translated">애플리케이션 종료 시간 제한은 음수가 아니거나 무한대이거나 Int32.MaxValue밀리초 이하여야 합니다.</target>
         <note>{Locked="Int32.MaxValue"}</note>
       </trans-unit>
       <trans-unit id="InvalidWindowDiscoveryTimeout">
         <source>The window discovery timeout must be non-negative or infinite.</source>
-        <target state="new">The window discovery timeout must be non-negative or infinite.</target>
+        <target state="translated">창 검색 시간 제한은 음수가 아니거나 무한대여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">
         <source>Application '{0}' did not expose a window within {1}.</source>
-        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <target state="translated">애플리케이션 '{0}'이(가) {1} 이내에 창을 표시하지 않았습니다.</target>
         <note />
       </trans-unit>
     </body>

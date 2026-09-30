@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="ApplicationProcessTerminationTimedOut">
         <source>Application process {0} did not exit within {1} after termination was requested.</source>
-        <target state="new">Application process {0} did not exit within {1} after termination was requested.</target>
+        <target state="translated">Der Anwendungsprozess {0} wurde nicht innerhalb {1} nach der Anforderung der Beendigung beendet.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidApplicationShutdownTimeout">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">
         <source>Application '{0}' did not expose a window within {1}.</source>
-        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <target state="translated">Die Anwendung '{0}' hat kein Fenster in {1} verfügbar gemacht.</target>
         <note />
       </trans-unit>
     </body>
