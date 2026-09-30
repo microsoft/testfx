@@ -64,7 +64,7 @@ public sealed class MtpServerProcessTests
         string source = temp.CreateFile(
             "NeverConnects.cmd",
             "@echo off\r\n"
-            + "ping 127.0.0.1 -n 3 > nul\r\n"
+            + "powershell.exe -NoProfile -Command \"Start-Sleep -Seconds 3\"\r\n"
             + $"echo survived>\"{survivedFile}\"\r\n");
         var log = new List<string>();
         var options = new MtpServerClientOptions
