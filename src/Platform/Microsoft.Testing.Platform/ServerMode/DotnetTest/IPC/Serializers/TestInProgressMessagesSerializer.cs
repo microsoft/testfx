@@ -38,27 +38,26 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override TestInProgressMessages DeserializeCore(Stream stream)
     {
-        string? executionId = null;
-        string? instanceId = null;
-        TestInProgressMessage[]? inProgressMessages = [];
-
-        ReadFields(stream, (fieldId, fieldSize) =>
-        {
-            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+        TestInProgressMessagesFields fields = ReadFields(
+            stream,
+            new TestInProgressMessagesFields { InProgressMessages = [] },
+            static (stream, fieldId, fieldSize, fields) =>
             {
-                return true;
-            }
+                if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref fields.ExecutionId, ref fields.InstanceId))
+                {
+                    return fields;
+                }
 
-            if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
-            {
-                inProgressMessages = ReadFieldPayload(stream, fieldSize, ReadInProgressMessagesPayload);
-                return true;
-            }
+                if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
+                {
+                    fields.InProgressMessages = ReadFieldPayload(stream, fieldSize, ReadInProgressMessagesPayload);
+                    return fields;
+                }
 
-            return false;
-        });
+                return null;
+            });
 
-        return new(executionId, instanceId, inProgressMessages);
+        return new(fields.ExecutionId, fields.InstanceId, fields.InProgressMessages);
     }
 
     private static TestInProgressMessage[] ReadInProgressMessagesPayload(Stream stream)
@@ -119,5 +118,14 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
         public string? Uid { get; set; }
 
         public string? DisplayName { get; set; }
+    }
+
+    private struct TestInProgressMessagesFields
+    {
+        public string? ExecutionId;
+
+        public string? InstanceId;
+
+        public TestInProgressMessage[] InProgressMessages { get; set; }
     }
 }

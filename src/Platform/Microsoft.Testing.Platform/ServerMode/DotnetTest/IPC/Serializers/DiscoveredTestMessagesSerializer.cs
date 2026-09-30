@@ -81,27 +81,26 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     protected override DiscoveredTestMessages DeserializeCore(Stream stream)
     {
-        string? executionId = null;
-        string? instanceId = null;
-        DiscoveredTestMessage[]? discoveredTestMessages = [];
-
-        ReadFields(stream, (fieldId, fieldSize) =>
-        {
-            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+        DiscoveredTestMessagesFields fields = ReadFields(
+            stream,
+            new DiscoveredTestMessagesFields { DiscoveredTestMessages = [] },
+            static (stream, fieldId, fieldSize, fields) =>
             {
-                return true;
-            }
+                if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref fields.ExecutionId, ref fields.InstanceId))
+                {
+                    return fields;
+                }
 
-            if (fieldId == DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList)
-            {
-                discoveredTestMessages = ReadFieldPayload(stream, fieldSize, ReadDiscoveredTestMessagesPayload);
-                return true;
-            }
+                if (fieldId == DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList)
+                {
+                    fields.DiscoveredTestMessages = ReadFieldPayload(stream, fieldSize, ReadDiscoveredTestMessagesPayload);
+                    return fields;
+                }
 
-            return false;
-        });
+                return null;
+            });
 
-        return new(executionId, instanceId, discoveredTestMessages);
+        return new(fields.ExecutionId, fields.InstanceId, fields.DiscoveredTestMessages);
     }
 
     private static DiscoveredTestMessage[] ReadDiscoveredTestMessagesPayload(Stream stream)
@@ -294,6 +293,15 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         public TraitMessage[] Traits { get; set; }
 
         public string[] ParameterTypeFullNames { get; set; }
+    }
+
+    private struct DiscoveredTestMessagesFields
+    {
+        public string? ExecutionId;
+
+        public string? InstanceId;
+
+        public DiscoveredTestMessage[] DiscoveredTestMessages { get; set; }
     }
 
     private struct TraitFields

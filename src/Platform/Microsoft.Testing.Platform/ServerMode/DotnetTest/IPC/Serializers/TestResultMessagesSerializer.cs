@@ -133,38 +133,40 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
     protected override TestResultMessages DeserializeCore(Stream stream)
     {
-        string? executionId = null;
-        string? instanceId = null;
-        SuccessfulTestResultMessage[]? successfulTestResultMessages = [];
-        FailedTestResultMessage[]? failedTestResultMessages = [];
-
-        ReadFields(stream, (fieldId, fieldSize) =>
-        {
-            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+        TestResultMessagesFields fields = ReadFields(
+            stream,
+            new TestResultMessagesFields
             {
-                return true;
-            }
-
-            switch (fieldId)
+                SuccessfulTestResultMessages = [],
+                FailedTestResultMessages = [],
+            },
+            static (stream, fieldId, fieldSize, fields) =>
             {
-                case TestResultMessagesFieldsId.SuccessfulTestMessageList:
-                    successfulTestResultMessages = ReadFieldPayload(stream, fieldSize, ReadSuccessfulTestMessagesPayload);
-                    return true;
+                if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref fields.ExecutionId, ref fields.InstanceId))
+                {
+                    return fields;
+                }
 
-                case TestResultMessagesFieldsId.FailedTestMessageList:
-                    failedTestResultMessages = ReadFieldPayload(stream, fieldSize, ReadFailedTestMessagesPayload);
-                    return true;
+                switch (fieldId)
+                {
+                    case TestResultMessagesFieldsId.SuccessfulTestMessageList:
+                        fields.SuccessfulTestResultMessages = ReadFieldPayload(stream, fieldSize, ReadSuccessfulTestMessagesPayload);
+                        return fields;
 
-                default:
-                    return false;
-            }
-        });
+                    case TestResultMessagesFieldsId.FailedTestMessageList:
+                        fields.FailedTestResultMessages = ReadFieldPayload(stream, fieldSize, ReadFailedTestMessagesPayload);
+                        return fields;
+
+                    default:
+                        return null;
+                }
+            });
 
         return new(
-            executionId,
-            instanceId,
-            successfulTestResultMessages,
-            failedTestResultMessages);
+            fields.ExecutionId,
+            fields.InstanceId,
+            fields.SuccessfulTestResultMessages,
+            fields.FailedTestResultMessages);
     }
 
     private static SuccessfulTestResultMessage[] ReadSuccessfulTestMessagesPayload(Stream stream)
@@ -478,6 +480,17 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         public string? Expected { get; set; }
 
         public string? Actual { get; set; }
+    }
+
+    private struct TestResultMessagesFields
+    {
+        public string? ExecutionId;
+
+        public string? InstanceId;
+
+        public SuccessfulTestResultMessage[] SuccessfulTestResultMessages { get; set; }
+
+        public FailedTestResultMessage[] FailedTestResultMessages { get; set; }
     }
 
     private struct ExceptionFields
