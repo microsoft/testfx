@@ -144,6 +144,10 @@ An MSTest attribute (`[DynamicData]`) for data-driven tests where test data is s
 
 An MSTest attribute (`[ExecutableConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on executable availability. The presence-only overload (`[ExecutableCondition("dotnet")]`) resolves a command through `PATH` and, on Windows, `PATHEXT`; the command overload (`[ExecutableCondition("dotnet", "--info")]`) runs the executable with the supplied arguments and requires exit code 0. `TimeoutSeconds` controls how long command execution may take and defaults to 30 seconds. Each distinct executable, arguments, and `ConditionMode` combination has its own `GroupName`, so different commands or opposite modes compose with logical AND while repeated attributes for the same command and mode compose with logical OR. Presence checks and command executions use distinct group and cache keys, and command cache keys also include the timeout. The attribute is not inherited, and executable availability is evaluated immediately before test execution rather than validated statically. Introduced in [PR #9369](https://github.com/microsoft/testfx/pull/9369). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
+### ExecuteRequestContext
+
+A sealed MTP class (`Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext`) passed to `ITestFramework.ExecuteRequestAsync(ExecuteRequestContext)`. Exposes the `Request`, `MessageBus`, and `CancellationToken` for the execution, a `Complete()` method that signals the request has finished, and the experimental `StartTestExecutionAsync(dataProducer, inProgressMessage)` method (`[Experimental("TPEXP")]`) that starts a canonical [TestExecution](#testexecution) and publishes its in-progress message. Introduced alongside `TestExecution` in [PR #11630](https://github.com/microsoft/testfx/pull/11630).
+
 ## F
 
 ### FQN (Fully Qualified Name)
@@ -545,6 +549,10 @@ A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (exten
 ### TestCoverageThresholdMessage
 
 A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to report the result of a coverage threshold evaluation. Carries the same metric identification as [TestCoverageMessage](#testcoveragemessage) plus: `Aggregation` ([CoverageAggregation](#coverageaggregation)), `AggregatedOver` (optional [CoverageScopeLevel](#coveragescopelevel)), `ActualPercentage`, `RequiredPercentage`, `HasCoverableData`, `TreatNoDataAsFailure`, and `Passed` (derived: a threshold with no coverable data passes unless `TreatNoDataAsFailure` is set). When any threshold message has `Passed == false`, `ITestCoverageResult.HasThresholdFailure` returns `true`; an otherwise-successful run then exits with `CoverageThresholdFailed`, while an existing non-success exit code retains precedence. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [ITestCoverageResult](#itestcoverageresult).
+
+### TestExecution
+
+An experimental MTP sealed class (`Microsoft.Testing.Platform.Extensions.TestFramework.TestExecution`, `[Experimental("TPEXP")]`) that represents one canonical test execution occurrence, obtained by calling `ExecuteRequestContext.StartTestExecutionAsync(dataProducer, inProgressMessage)` with an in-progress `TestNodeUpdateMessage`. It gives a test framework adapter a single object to run the test body through — via `Run`/`RunAsync` (optionally returning a value) — so any registered execution-activity tracking (for example, telemetry spans) wraps the callback consistently, and to publish the ordered result messages through `CompleteAsync(resultMessages, executionEndTime)`. Disposing an uncompleted `TestExecution` abandons it without inventing an outcome or publishing a result. Replaces ad hoc, adapter-owned `TestExecutionActivityBroker` plumbing that MSTest's own adapter previously wired up manually; MSTest's `MtpTestResultRecorder` was updated to use it in the same change. Introduced in [PR #11630](https://github.com/microsoft/testfx/pull/11630). See also [ExecuteRequestContext](#executerequestcontext), [OpenTelemetry extension](#opentelemetry-extension).
 
 ### TestFilterContext
 
