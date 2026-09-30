@@ -776,7 +776,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineAppModelActivationPayloadOptionDescription">
         <source>Specifies the app-model activation payload.</source>
-        <target state="new">Specifies the app-model activation payload.</target>
+        <target state="translated">Specifica il payload di attivazione del modello dell'app.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
         <source>Application '{0}' exited with code {1} before a window was discovered.</source>
-        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <target state="translated">Aplikace '{0}' ukončena s kódem {1} před zjištěním okna.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessFailedToStart">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">
         <source>Application '{0}' did not expose a window within {1}.</source>
-        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <target state="translated">Aplikace '{0}' nezpřístupnila okno během {1}.</target>
         <note />
       </trans-unit>
     </body>

@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">
         <source>Application '{0}' did not expose a window within {1}.</source>
-        <target state="new">Application '{0}' did not expose a window within {1}.</target>
+        <target state="translated">Uygulama '{0}' {1} içinde bir pencere göstermedi.</target>
         <note />
       </trans-unit>
     </body>
