@@ -77,42 +77,33 @@ internal sealed class FileLoggerProvider(
                 }
             }
 
-            await DisposeHelper.DisposeAsync(previousLogger).ConfigureAwait(false);
-
-            // If disposal completed cleanly, relocate the log file into the test result directory. If a flush timed out,
-            // the previous consumer loop may still own the file handle (the stream was opened with FileShare.Read, so a
-            // move would fail on Windows) — in that case we leave the old file in place and skip the move rather than
-            // turning a non-fatal flush timeout into a fatal IOException. See https://github.com/dotnet/sdk/issues/55215.
-            if (previousLogger.IsFileHandleReleased)
+            try
             {
-                _fileSystem.MoveFile(previousFileName, Path.Combine(testResultDirectory, fileName));
-            }
+                await DisposeHelper.DisposeAsync(previousLogger).ConfigureAwait(false);
 
-            // Always install a fresh logger pointing at the test result directory so subsequent diagnostics keep working.
-            // The previous instance's channel is completed, so writing to it would throw; replacing it here keeps logging
-            // alive even on the degenerate timeout path (the old loop/handle are reclaimed at process exit).
-            FileLogger replacementLogger = new(
-                new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
-                LogLevel,
-                _clock,
-                _task,
-                _console,
-                _fileSystem,
-                _fileStreamFactory);
-
-            lock (_fileLoggerLock)
-            {
-                FileLogger = replacementLogger;
-                if (_pendingAsyncLogs is not null)
+                // If disposal completed cleanly, relocate the log file into the test result directory. If a flush timed out,
+                // the previous consumer loop may still own the file handle (the stream was opened with FileShare.Read, so a
+                // move would fail on Windows) — in that case we leave the old file in place and skip the move rather than
+                // turning a non-fatal flush timeout into a fatal IOException. See https://github.com/dotnet/sdk/issues/55215.
+                if (previousLogger.IsFileHandleReleased)
                 {
-                    while (_pendingAsyncLogs.Count > 0)
-                    {
-                        Action<FileLogger> pendingLog = _pendingAsyncLogs.Dequeue();
-                        pendingLog(replacementLogger);
-                    }
-
-                    _pendingAsyncLogs = null;
+                    _fileSystem.MoveFile(previousFileName, Path.Combine(testResultDirectory, fileName));
                 }
+            }
+            finally
+            {
+                // Always install a fresh logger pointing at the test result directory so subsequent diagnostics keep
+                // working, even when disposing or moving the previous logger fails and the original exception propagates.
+                FileLogger replacementLogger = new(
+                    new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
+                    LogLevel,
+                    _clock,
+                    _task,
+                    _console,
+                    _fileSystem,
+                    _fileStreamFactory);
+
+                InstallReplacementAndReplayPendingLogs(replacementLogger);
             }
         }
         finally
@@ -123,6 +114,44 @@ internal sealed class FileLoggerProvider(
             }
 
             _relocationSemaphore.Release();
+        }
+    }
+
+    private void InstallReplacementAndReplayPendingLogs(FileLogger replacementLogger)
+    {
+        Queue<Action<FileLogger>>? pendingLogs;
+        lock (_fileLoggerLock)
+        {
+            FileLogger = replacementLogger;
+            pendingLogs = _pendingAsyncLogs;
+            if (pendingLogs is null)
+            {
+                return;
+            }
+
+            _pendingAsyncLogs = new();
+        }
+
+        while (true)
+        {
+            while (pendingLogs.Count > 0)
+            {
+                Action<FileLogger> pendingLog = pendingLogs.Dequeue();
+                pendingLog(replacementLogger);
+            }
+
+            lock (_fileLoggerLock)
+            {
+                RoslynDebug.Assert(_pendingAsyncLogs is not null);
+                if (_pendingAsyncLogs.Count == 0)
+                {
+                    _pendingAsyncLogs = null;
+                    return;
+                }
+
+                pendingLogs = _pendingAsyncLogs;
+                _pendingAsyncLogs = new();
+            }
         }
     }
 

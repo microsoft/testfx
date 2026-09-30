@@ -131,6 +131,53 @@ public sealed class DiagnosticLoggingInformationTests
     }
 
     [TestMethod]
+    public async Task RelocationInstallsReplacementBeforeRethrowingDisposalFailure()
+    {
+        string initialDirectory = Path.Combine("initial", "diagnostics");
+        string resultsDirectory = Path.Combine("final", "results");
+        const string FileName = "test.diag";
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        int streamIndex = 0;
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) =>
+                CreateFileStream(
+                    path,
+                    disposeException: Interlocked.Increment(ref streamIndex) == 1
+                        ? new IOException("Simulated disposal failure.")
+                        : null));
+
+        FileLoggerProvider provider = new(
+            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
+            LogLevel.Debug,
+            customDirectory: false,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        ILogger logger = provider.CreateLogger("test");
+        var information = new DiagnosticLoggingInformation(provider);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(
+            () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory));
+
+        Assert.AreEqual("Simulated disposal failure.", exception.Message);
+        Assert.AreEqual(Path.GetFullPath(Path.Combine(resultsDirectory, FileName)), information.LogFile.FullName);
+        logger.LogDebug("Written after failed relocation.");
+
+#if NETCOREAPP
+        await provider.DisposeAsync();
+#else
+        provider.Dispose();
+#endif
+    }
+
+    [TestMethod]
     public async Task SynchronousLoggerCreatedBeforeRelocationWaitsForReplacement()
     {
         string initialDirectory = Path.Combine("initial", "diagnostics");
@@ -258,7 +305,11 @@ public sealed class DiagnosticLoggingInformationTests
         logger.LogDebug("Written after relocation.");
     }
 
-    private static IFileStream CreateFileStream(string path, Func<Task>? disposeAsync = null, MemoryStream? memoryStream = null)
+    private static IFileStream CreateFileStream(
+        string path,
+        Func<Task>? disposeAsync = null,
+        MemoryStream? memoryStream = null,
+        Exception? disposeException = null)
     {
         memoryStream ??= new();
         var fileStream = new Mock<IFileStream>();
@@ -268,6 +319,10 @@ public sealed class DiagnosticLoggingInformationTests
         {
             disposeAsync?.Invoke().GetAwaiter().GetResult();
             memoryStream.Dispose();
+            if (disposeException is not null)
+            {
+                throw disposeException;
+            }
         });
 #if NETCOREAPP
         fileStream.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(DisposeAsync()));
@@ -283,6 +338,10 @@ public sealed class DiagnosticLoggingInformationTests
             }
 
             memoryStream.Dispose();
+            if (disposeException is not null)
+            {
+                throw disposeException;
+            }
         }
 #endif
     }
