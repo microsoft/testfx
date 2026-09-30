@@ -24,7 +24,7 @@
 .PARAMETER LocalMSTestVersion
     MSTest package version available in LocalPackageDirectory.
 
-.PARAMETER LocalTestingPlatformVersion
+.PARAMETER LocalMTPVersion
     Microsoft.Testing.Platform package version available in LocalPackageDirectory.
 
 .PARAMETER PublishedPackagesOnly
@@ -51,7 +51,7 @@ param(
     [string]$BinaryLogDirectory,
     [string]$LocalPackageDirectory,
     [string]$LocalMSTestVersion,
-    [string]$LocalTestingPlatformVersion,
+    [string]$LocalMTPVersion,
     [switch]$PublishedPackagesOnly
 )
 
@@ -69,15 +69,13 @@ $nuGetConfigPaths = @(
 )
 $publishedPackageSampleNames = @(
     "ClassicUwpMtpApp",
+    "MTPHostIntegration",
     "UwpMtpApp",
     "WinUIMtpAppContainerApp",
     "WinUIMtpPackagedApp",
     "WinUIMtpUnpackagedApp"
 )
-$localPackageSampleNames = @(
-    $publishedPackageSampleNames
-    "MTPHostIntegration"
-)
+$localPackageSampleNames = $publishedPackageSampleNames
 $localPackageProperties = @()
 $localHostingVersion = $null
 $localRestorePackagesPath = $null
@@ -105,10 +103,10 @@ $failureCount = 0
 $solutions = @()
 
 try {
-    $localPackageArguments = @($LocalPackageDirectory, $LocalMSTestVersion, $LocalTestingPlatformVersion)
+    $localPackageArguments = @($LocalPackageDirectory, $LocalMSTestVersion, $LocalMTPVersion)
     $configuredLocalPackageArguments = @($localPackageArguments | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     if ($configuredLocalPackageArguments.Count -ne 0 -and $configuredLocalPackageArguments.Count -ne $localPackageArguments.Count) {
-        throw "LocalPackageDirectory, LocalMSTestVersion, and LocalTestingPlatformVersion must be provided together."
+        throw "LocalPackageDirectory, LocalMSTestVersion, and LocalMTPVersion must be provided together."
     }
 
     if ($PublishedPackagesOnly -and $configuredLocalPackageArguments.Count -ne 0) {
@@ -188,14 +186,10 @@ try {
 
         $localPackageProperties = @(
             "/p:MSTestVersion=$LocalMSTestVersion",
-            "/p:MSTestExtensionsHostingVersion=$LocalMSTestVersion",
-            "/p:MSTestSdkAOTVersion=$LocalMSTestVersion",
-            "/p:MicrosoftTestingPlatformVersion=$LocalTestingPlatformVersion",
-            "/p:TestingPlatformPreviewVersion=$LocalTestingPlatformVersion",
-            "/p:MicrosoftTestingExtensionsCommonVersion=$LocalTestingPlatformVersion",
+            "/p:MTPVersion=$LocalMTPVersion",
+            "/p:MicrosoftTestingPlatformVersion=$LocalMTPVersion",
             "/p:MicrosoftTestingExtensionsHostingVersion=$localHostingVersion",
             "/p:RestorePackagesPath=$localRestorePackagesPath",
-            "/p:MicrosoftTestingExtensionsPackagedAppVersion=$LocalTestingPlatformVersion",
             "/p:EnableMicrosoftTestingPlatform=true",
             "/p:EnableMicrosoftTestingExtensionsCodeCoverage=false"
         )

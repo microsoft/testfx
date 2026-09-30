@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
   </ItemGroup>
 
 </Project>
