@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <EnableAspireTesting>true</EnableAspireTesting>
+    <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <MicrosoftTestingPlatformVersion>$(TestingPlatformPreviewVersion)</MicrosoftTestingPlatformVersion>
     <EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>
     <AspireHostingTestingVersion>$(AspireVersion)</AspireHostingTestingVersion>
     <TestingPlatformHostFactory>AspireTestHost.CreateHost</TestingPlatformHostFactory>
@@ -12,6 +14,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
+    <PackageReference Update="Microsoft.Testing.Platform" Version="$(TestingPlatformPreviewVersion)" />
+    <PackageReference Update="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformPreviewVersion)" />
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$(MSTestExtensionsHostingVersion)" />
   </ItemGroup>
 
   <ItemGroup>

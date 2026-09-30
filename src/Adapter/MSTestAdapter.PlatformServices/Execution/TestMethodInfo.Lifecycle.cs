@@ -22,20 +22,57 @@ internal partial class TestMethodInfo
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
+    /// <param name="invocationState">The activation and cleanup state for this invocation.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(
+        TestResult result,
+        CancellationTokenSource? timeoutTokenSource,
+        TestInvocationState invocationState)
     {
-        DebugEx.Assert(result != null, "result != null");
+        _ = result ?? throw new ArgumentNullException(nameof(result));
 
-        if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked ||
-            // Fast check to see if we can return early.
-            // This avoids the code below that allocates CancellationTokenSource
-            !HasCleanupsToInvoke())
+        if (!invocationState.TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot))
         {
             return;
         }
 
-        _isTestCleanupInvoked = true;
+        bool hasCleanupsToInvoke = HasCleanupsToInvoke(snapshot.ClassInstanceLease);
+        bool shouldResetCancellationTokenSource = snapshot.IsTestContextSet
+            && TestContext.Context.CancellationTokenSource.IsCancellationRequested;
+        if ((!hasCleanupsToInvoke && !shouldResetCancellationTokenSource)
+            || !invocationState.TryBeginCleanup())
+        {
+            return;
+        }
+
+        if (shouldResetCancellationTokenSource)
+        {
+            TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
+        }
+
+        if (!hasCleanupsToInvoke)
+        {
+            return;
+        }
+
+        if (!snapshot.IsTestContextSet)
+        {
+            try
+            {
+                if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
+                {
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+                result.TestFailureException = exception;
+            }
+
+            return;
+        }
+
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
         Exception? testCleanupException;
         TestFailedException? globalTestCleanupException = null;
@@ -45,9 +82,6 @@ internal partial class TestMethodInfo
         {
             try
             {
-                // Reset the cancellation token source to avoid cancellation of cleanup methods because of the init or test method cancellation.
-                TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
-
                 // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
                 if (timeoutTokenSource is { IsCancellationRequested: false })
                 {
@@ -57,14 +91,14 @@ internal partial class TestMethodInfo
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
-                    ? await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeCleanupMethodAsync(testCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
                 if (testCleanupException is null)
                 {
                     foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
                     {
                         testCleanupMethod = baseCleanupMethod;
-                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
+                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false);
                         if (testCleanupException is not null)
                         {
                             break;
@@ -74,16 +108,9 @@ internal partial class TestMethodInfo
             }
             finally
             {
-#if NET6_0_OR_GREATER
-                if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
+                if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
                 {
-                    // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    await classInstanceAsAsyncDisposable.DisposeAsync().ConfigureAwait(false);
-                }
-#endif
-                if (_classInstance is IDisposable classInstanceAsDisposable)
-                {
-                    classInstanceAsDisposable.Dispose();
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
@@ -157,13 +184,10 @@ internal partial class TestMethodInfo
         result.TestFailureException = realException;
     }
 
-    private bool HasCleanupsToInvoke() =>
+    private bool HasCleanupsToInvoke(ITestClassInstanceLease? classInstanceLease) =>
         Parent.TestCleanupMethod is not null ||
         Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
-        _classInstance is IDisposable ||
-#if NET6_0_OR_GREATER
-        _classInstance is IAsyncDisposable ||
-#endif
+        classInstanceLease is { RequiresCleanup: true } ||
         Parent.Parent.GlobalTestCleanups is { Count: > 0 };
 
     /// <summary>

@@ -1307,4 +1307,24 @@ The type declaring these methods should also respect the following rules:
   <data name="RedundantTestMethodAttributeDescription" xml:space="preserve">
     <value>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</value>
   </data>
+  <data name="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat" xml:space="preserve">
+    <value>Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</value>
+    <comment>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</comment>
+  </data>
+  <data name="TestClassConstructorHasDerivedTestContextMessageFormat" xml:space="preserve">
+    <value>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</value>
+    <comment>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</comment>
+  </data>
+  <data name="MSTestHostTestClassInjectionNotSupportedTitle" xml:space="preserve">
+    <value>MSTest host test-class injection is not supported by the selected build mode</value>
+    <comment>{Locked="MSTest"}</comment>
+  </data>
+  <data name="MSTestHostTestClassInjectionNotSupportedMessageFormat" xml:space="preserve">
+    <value>AddMSTestTestClassInjection is not supported when '{0}' is enabled</value>
+    <comment>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</comment>
+  </data>
+  <data name="MSTestHostTestClassInjectionNotSupportedDescription" xml:space="preserve">
+    <value>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</value>
+    <comment>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</comment>
+  </data>
 </root>

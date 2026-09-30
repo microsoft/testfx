@@ -40,6 +40,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.Extensions.Hosting\MSTest.Extensions.Hosting.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>

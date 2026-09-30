@@ -1,4 +1,7 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInstanceFactoryProvider
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInstanceFactoryProvider.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory?
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInstanceFactoryProvider.Push(Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory? factory) -> System.IDisposable!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.CaptureAssertionFailureDiagnostics.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder.PrepareResults(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! testElement, Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodRunner.TestMethodRunner(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo! testMethodInfo, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod! testMethod, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext! testContext, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestExecutionActivityLease? executionActivityLease) -> void

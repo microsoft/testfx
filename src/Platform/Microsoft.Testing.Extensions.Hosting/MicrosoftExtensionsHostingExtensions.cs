@@ -91,6 +91,11 @@ public static class MicrosoftExtensionsHostingExtensions
         {
             testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(configuration);
             testApplicationBuilder.AddMicrosoftExtensionsLogging(loggerFactory);
+            foreach (ITestingPlatformBuilderConfigurator configurator in host.Services.GetServices<ITestingPlatformBuilderConfigurator>())
+            {
+                configurator.Configure(testApplicationBuilder);
+            }
+
             configure(testApplicationBuilder);
 
             Exception? operationException = null;

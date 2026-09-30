@@ -68,6 +68,7 @@
     <Project Path="src/Package/MSTest.Sdk.AppModelController/MSTest.Sdk.AppModelController.csproj" />
   </Folder>
   <Folder Name="/src/2 - Adapter/">
+    <Project Path="src/Adapter/MSTest.Extensions.Hosting/MSTest.Extensions.Hosting.csproj" />
     <Project Path="src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj" />
     <Project Path="src/Adapter/MSTestAdapter.PlatformServices/MSTestAdapter.PlatformServices.csproj" />
   </Folder>

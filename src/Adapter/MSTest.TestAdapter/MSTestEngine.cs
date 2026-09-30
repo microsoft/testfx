@@ -39,7 +39,10 @@ internal sealed class MSTestEngine
     /// </summary>
     private TestRunCancellationToken? _testRunCancellationToken;
 
-    internal MSTestEngine(CancellationToken cancellationToken, Func<string, IDictionary<string, object>, Task>? telemetrySender = null, TestExecutionManager? testExecutionManager = null)
+    internal MSTestEngine(
+        CancellationToken cancellationToken,
+        Func<string, IDictionary<string, object>, Task>? telemetrySender = null,
+        TestExecutionManager? testExecutionManager = null)
     {
         _cancellationToken = cancellationToken;
         _testExecutionManager = testExecutionManager ?? new TestExecutionManager();
@@ -49,6 +52,8 @@ internal sealed class MSTestEngine
         _ = telemetrySender;
 #endif
     }
+
+    internal ITestClassInstanceFactory? TestClassInstanceFactory { get; set; }
 
     /// <summary>
     /// Cancels the in-flight run, if any. Mirrors the VSTest <c>ITestExecutor.Cancel</c> contract for the
@@ -72,6 +77,7 @@ internal sealed class MSTestEngine
         ITestSourceHandler testSourceHandler,
         bool isMTP)
     {
+        using IDisposable activationScope = TestClassInstanceFactoryProvider.Push(TestClassInstanceFactory);
         EnsureTelemetryInitialized();
 
         try
@@ -109,6 +115,7 @@ internal sealed class MSTestEngine
         ITestSourceHandler testSourceHandler,
         bool isMTP)
     {
+        using IDisposable activationScope = TestClassInstanceFactoryProvider.Push(TestClassInstanceFactory);
         Ensure.NotEmpty(sources);
 
         EnsureTelemetryInitialized();
@@ -155,6 +162,7 @@ internal sealed class MSTestEngine
         IConfiguration? configuration,
         ITestSourceHandler testSourceHandler)
     {
+        using IDisposable activationScope = TestClassInstanceFactoryProvider.Push(TestClassInstanceFactory);
         EnsureTelemetryInitialized();
 
         try

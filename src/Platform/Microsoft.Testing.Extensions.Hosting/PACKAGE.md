@@ -64,15 +64,17 @@ to both parsers.
 1. Creates an MTP application builder.
 2. Imports a read-only snapshot of the host's `IConfiguration`.
 3. Forwards MTP diagnostic logs to the host-owned `ILoggerFactory`.
-4. Invokes the caller's MTP registration callback.
-5. Starts the host before building MTP, so host-owned observability providers can subscribe first.
-6. Links the caller token and `IHostApplicationLifetime.ApplicationStopping` to MTP's cooperative cancellation path.
-7. Runs MTP and returns its exit code.
-8. Stops the host in a `finally` block.
+4. Applies each caller-owned `ITestingPlatformBuilderConfigurator` registered in the host service provider.
+5. Invokes the caller's MTP registration callback, which therefore has final configuration precedence.
+6. Starts the host before building MTP, so host-owned observability providers can subscribe first.
+7. Links the caller token and `IHostApplicationLifetime.ApplicationStopping` to MTP's cooperative cancellation path.
+8. Runs MTP and returns its exit code.
+9. Stops the host in a `finally` block.
 
 ### Ownership and limitations
 
 - The caller owns and disposes the `IHost`.
+- Builder configurators are borrowed from `host.Services`; the Hosting extension never disposes them separately.
 - The extension does not create a second Microsoft.Extensions dependency-injection container.
 - Imported configuration has snapshot semantics and does not propagate reloads after the MTP application is built.
 - Composition is process-local. Live services do not cross into separately launched test host or controller processes.
