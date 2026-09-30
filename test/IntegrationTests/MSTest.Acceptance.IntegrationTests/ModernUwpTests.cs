@@ -19,11 +19,6 @@ public sealed class ModernUwpTests : AcceptanceTestBase
 {
     private const string Net9TargetFramework = "net9.0-windows10.0.26100.0";
     private const string Net10TargetFramework = "net10.0-windows10.0.26100.0";
-    private static readonly string CodeCoverageVersion = XDocument
-        .Load(Path.Combine(RootFinder.Find(), "samples", "public", "Directory.Build.props"))
-        .Descendants("CodeCoverageVersion")
-        .Single()
-        .Value;
 
     [DataRow("x86")]
     [DataRow("ARM64")]
@@ -38,7 +33,6 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$PackageIdentityName$", $"MSTestModernUwp{uniqueSuffix}")
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$CodeCoverageVersion$", CodeCoverageVersion)
             .PatchCodeWithReplace("$TargetFramework$", Net10TargetFramework);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
@@ -73,7 +67,6 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$PackageIdentityName$", packageIdentityName)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$CodeCoverageVersion$", CodeCoverageVersion)
             .PatchCodeWithReplace("$TargetFramework$", targetFramework);
 
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
@@ -243,7 +236,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
     <EnableMsixTooling>true</EnableMsixTooling>
     <MicrosoftTestingPlatformVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingPlatformVersion>
     <MicrosoftTestingExtensionsCommonVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingExtensionsCommonVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>$CodeCoverageVersion$</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
   </PropertyGroup>
 
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
