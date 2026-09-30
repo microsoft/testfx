@@ -20,7 +20,7 @@ internal sealed class DiagnosticLoggingInformation(FileLoggerProvider fileLogger
 {
     public bool SynchronousWrite => fileLoggerProvider.SyncFlush;
 
-    public FileInfo LogFile => new(fileLoggerProvider.FileLogger.FileName);
+    public FileInfo LogFile => fileLoggerProvider.GetLogFile();
 
     public LogLevel LogLevel => fileLoggerProvider.LogLevel;
 }

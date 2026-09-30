@@ -11,6 +11,140 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class DiagnosticLoggingInformationTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task AsyncLoggerCreatedBeforeRelocationQueuesLogForReplacement()
+    {
+        string initialDirectory = Path.Combine("initial", "diagnostics");
+        string resultsDirectory = Path.Combine("final", "results");
+        const string FileName = "test.diag";
+
+        var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        int streamIndex = 0;
+        MemoryStream? replacementStream = null;
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) =>
+            {
+                var stream = new MemoryStream();
+                int currentStreamIndex = Interlocked.Increment(ref streamIndex);
+                if (currentStreamIndex == 2)
+                {
+                    replacementStream = stream;
+                }
+
+                return CreateFileStream(path, currentStreamIndex == 1 ? BlockFirstStreamDisposalAsync : null, stream);
+            });
+
+        FileLoggerProvider provider = new(
+            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: false),
+            LogLevel.Debug,
+            customDirectory: false,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        ILogger logger = provider.CreateLogger("test");
+
+        var relocationTask = Task.Run(
+            () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory),
+            TestContext.CancellationToken);
+        await disposeStarted.Task;
+
+        logger.LogDebug("Written during relocation.");
+        allowDispose.SetResult(true);
+        await relocationTask;
+
+#if NETCOREAPP
+        await provider.DisposeAsync();
+#else
+        provider.Dispose();
+#endif
+
+        Assert.IsNotNull(replacementStream);
+        string content = Encoding.UTF8.GetString(replacementStream.ToArray());
+        Assert.Contains("Written during relocation.", content);
+
+        async Task BlockFirstStreamDisposalAsync()
+        {
+            disposeStarted.TrySetResult(true);
+            await allowDispose.Task;
+        }
+    }
+
+    [TestMethod]
+    public async Task SynchronousLoggerCreatedBeforeRelocationWaitsForReplacement()
+    {
+        string initialDirectory = Path.Combine("initial", "diagnostics");
+        string resultsDirectory = Path.Combine("final", "results");
+        const string FileName = "test.diag";
+
+        var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var logAttemptStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        int streamIndex = 0;
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) =>
+                CreateFileStream(path, Interlocked.Increment(ref streamIndex) == 1 ? BlockFirstStreamDisposalAsync : null));
+
+        using FileLoggerProvider provider = new(
+            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
+            LogLevel.Debug,
+            customDirectory: false,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        ILogger logger = provider.CreateLogger("test");
+
+        var relocationTask = Task.Run(
+            () => provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory),
+            TestContext.CancellationToken);
+        await disposeStarted.Task;
+
+        var logTask = Task.Run(
+            () =>
+            {
+                logAttemptStarted.SetResult(true);
+                logger.LogDebug("Written during relocation.");
+            },
+            TestContext.CancellationToken);
+        await logAttemptStarted.Task;
+
+        try
+        {
+            await Task.Delay(100, TestContext.CancellationToken);
+            Assert.IsFalse(logTask.IsCompleted, "Logging should wait until relocation installs the replacement logger.");
+        }
+        finally
+        {
+            allowDispose.TrySetResult(true);
+        }
+
+        await Task.WhenAll(relocationTask, logTask);
+
+        async Task BlockFirstStreamDisposalAsync()
+        {
+            disposeStarted.TrySetResult(true);
+            await allowDispose.Task;
+        }
+    }
+
     [TestMethod]
     public async Task LogFileReflectsFileLoggerRelocation()
     {
@@ -53,20 +187,32 @@ public sealed class DiagnosticLoggingInformationTests
         logger.LogDebug("Written after relocation.");
     }
 
-    private static IFileStream CreateFileStream(string path)
+    private static IFileStream CreateFileStream(string path, Func<Task>? disposeAsync = null, MemoryStream? memoryStream = null)
     {
-        var memoryStream = new MemoryStream();
+        memoryStream ??= new();
         var fileStream = new Mock<IFileStream>();
         fileStream.SetupGet(x => x.Name).Returns(path);
         fileStream.SetupGet(x => x.Stream).Returns(memoryStream);
-        fileStream.Setup(x => x.Dispose()).Callback(memoryStream.Dispose);
-#if NETCOREAPP
-        fileStream.Setup(x => x.DisposeAsync()).Returns(() =>
+        fileStream.Setup(x => x.Dispose()).Callback(() =>
         {
+            disposeAsync?.Invoke().GetAwaiter().GetResult();
             memoryStream.Dispose();
-            return ValueTask.CompletedTask;
         });
+#if NETCOREAPP
+        fileStream.Setup(x => x.DisposeAsync()).Returns(() => new ValueTask(DisposeAsync()));
 #endif
         return fileStream.Object;
+
+#if NETCOREAPP
+        async Task DisposeAsync()
+        {
+            if (disposeAsync is not null)
+            {
+                await disposeAsync();
+            }
+
+            memoryStream.Dispose();
+        }
+#endif
     }
 }

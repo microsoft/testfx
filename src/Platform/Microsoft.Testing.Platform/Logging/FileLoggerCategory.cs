@@ -23,13 +23,30 @@ internal sealed class FileLoggerCategory : ILogger
         Category = category;
     }
 
-    private FileLogger CurrentFileLogger => FileLoggerProvider?.FileLogger ?? FileLogger!;
-
-    public bool IsEnabled(LogLevel logLevel) => CurrentFileLogger.IsEnabled(logLevel);
+    public bool IsEnabled(LogLevel logLevel)
+        => FileLoggerProvider?.IsEnabled(logLevel) ?? FileLogger!.IsEnabled(logLevel);
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => CurrentFileLogger.Log(logLevel, state, exception, formatter, Category);
+    {
+        if (FileLoggerProvider is not null)
+        {
+            FileLoggerProvider.Log(logLevel, state, exception, formatter, Category);
+        }
+        else
+        {
+            FileLogger!.Log(logLevel, state, exception, formatter, Category);
+        }
+    }
 
     public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => await CurrentFileLogger.LogAsync(logLevel, state, exception, formatter, Category).ConfigureAwait(false);
+    {
+        if (FileLoggerProvider is not null)
+        {
+            await FileLoggerProvider.LogAsync(logLevel, state, exception, formatter, Category).ConfigureAwait(false);
+        }
+        else
+        {
+            await FileLogger!.LogAsync(logLevel, state, exception, formatter, Category).ConfigureAwait(false);
+        }
+    }
 }
