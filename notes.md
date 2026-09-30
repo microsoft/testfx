@@ -180,6 +180,16 @@ Key lasting gotchas from this window:
 - Jsonite/`Json.*` family (JsonReader/JsonWriter/JsonReflector/JsonCollectionDeserializer) deprioritized as low-value — either trivial generic wrappers or large ported third-party reflection code already covered indirectly via `JsoniteTests.cs`/`JsonTests.cs`.
 - `ServerControlMessage`/`WaitForServerControlRequest` serializers and `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs` noted but not yet swept.
 
+## Run 2026-09-30 (run 36788317039) — PassiveNode invalid-params/attachments tests
+
+- Task reconciliation: confirmed `ServerModeManagerTests.cs` (2026-09-27) and `ServerControlSerializersTests.cs` (2026-09-29) are both already merged to `main`. No open `[test-improver]`-prefixed PRs found via search — nothing needed maintenance this run.
+- Task 2/3: picked up standing backlog item `PassiveNode` edge cases beyond existing `PassiveNodeTests.cs` — found `ConnectAsync`'s `ErrorCodes.InvalidParams` branch (bad `InitializeRequestArgs` payload) and all of `SendAttachmentsAsync` (both the `AssertInitialized()` guard throw and the happy-path notification write) had zero coverage.
+- Added 3 tests to `PassiveNodeTests.cs`, reusing existing `TestMessageHandler`/`CreatePassiveNode` doubles already in the file — no new test infra needed.
+- Build succeeded (0 warnings after fixing one MSTEST0037 `Assert.HasCount` suggestion). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2774 total (was 2771), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for PassiveNode invalid-params and attachment branches" on branch `test-assist/passive-node-tests`.
+- Task 7: issue #10920 updated — new Run History entry, Suggested Actions refreshed (added new PR, removed prior serializer PR now confirmed merged), backlog item for `PassiveNode` narrowed to remaining `Dispose`/logging-trace branches only (very low value, likely saturated).
+- Remaining candidates for future runs: `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs`; HangDump/Retry IPC serializers (low priority, thin plumbing); MSTest.Engine internal classes (architecturally blocked).
+
 ## Run 2026-09-29 (run 36642347630) — ServerControlMessage/WaitForServerControlRequest serializer tests
 
 - Task reconciliation: confirmed `ServerModeManagerTests.cs` (from 2026-09-27 run) and `DotnetTestHelper` PR #11545 both merged to `main`. No open `[test-improver]`-prefixed PRs need maintenance (search returned none).
