@@ -141,6 +141,12 @@ internal sealed class FileLoggerProvider(
 
     internal void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
+        if (!FileLogger.IsEnabled(logLevel))
+        {
+            return;
+        }
+
+        string message = formatter(state, exception);
         if (_options.SyncFlush)
         {
             if (OperatingSystem.IsBrowser())
@@ -151,7 +157,7 @@ internal sealed class FileLoggerProvider(
             _relocationSemaphore.Wait();
             try
             {
-                FileLogger.Log(logLevel, state, exception, formatter, category);
+                FileLogger.Log(logLevel, message, null, LoggingExtensions.Formatter, category);
             }
             finally
             {
@@ -165,11 +171,10 @@ internal sealed class FileLoggerProvider(
         {
             if (_pendingAsyncLogs is null)
             {
-                FileLogger.Log(logLevel, state, exception, formatter, category);
+                FileLogger.Log(logLevel, message, null, LoggingExtensions.Formatter, category);
             }
-            else if (FileLogger.IsEnabled(logLevel))
+            else
             {
-                string message = formatter(state, exception);
                 _pendingAsyncLogs.Enqueue(logger => logger.Log(logLevel, message, null, LoggingExtensions.Formatter, category));
             }
         }
@@ -183,15 +188,21 @@ internal sealed class FileLoggerProvider(
             return Task.CompletedTask;
         }
 
-        return LogSynchronouslyAsync(logLevel, state, exception, formatter, category);
+        if (!FileLogger.IsEnabled(logLevel))
+        {
+            return Task.CompletedTask;
+        }
+
+        string message = formatter(state, exception);
+        return LogSynchronouslyAsync(logLevel, message, category);
     }
 
-    private async Task LogSynchronouslyAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
+    private async Task LogSynchronouslyAsync(LogLevel logLevel, string message, string category)
     {
         await _relocationSemaphore.WaitAsync().ConfigureAwait(false);
         try
         {
-            await FileLogger.LogAsync(logLevel, state, exception, formatter, category).ConfigureAwait(false);
+            await FileLogger.LogAsync(logLevel, message, null, LoggingExtensions.Formatter, category).ConfigureAwait(false);
         }
         finally
         {

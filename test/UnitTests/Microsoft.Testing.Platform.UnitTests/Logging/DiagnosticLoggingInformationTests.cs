@@ -13,6 +13,56 @@ public sealed class DiagnosticLoggingInformationTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    [DataRow(false)]
+    [DataRow(true)]
+    [TestMethod]
+    public async Task SynchronousLoggerFormatterCanLogRecursively(bool useAsync)
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+
+        FileLoggerProvider provider = new(
+            new FileLoggerOptions("diagnostics", "test", "test.diag", syncFlush: true),
+            LogLevel.Debug,
+            customDirectory: false,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        ILogger logger = provider.CreateLogger("test");
+
+        var logTask = Task.Run(
+            async () =>
+            {
+                if (useAsync)
+                {
+                    await logger.LogAsync(LogLevel.Debug, "outer", null, FormatAndLogNested);
+                }
+                else
+                {
+                    logger.Log(LogLevel.Debug, "outer", null, FormatAndLogNested);
+                }
+            },
+            TestContext.CancellationToken);
+        Task completedTask = await Task.WhenAny(logTask, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+
+        Assert.AreSame(logTask, completedTask, "Recursive logging from a formatter deadlocked.");
+        await logTask;
+        provider.Dispose();
+
+        string FormatAndLogNested(string state, Exception? exception)
+        {
+            logger.LogDebug("nested");
+            return state;
+        }
+    }
+
     [TestMethod]
     public async Task AsyncLoggerCreatedBeforeRelocationQueuesLogForReplacement()
     {
@@ -154,7 +204,7 @@ public sealed class DiagnosticLoggingInformationTests
         {
             allowDispose.TrySetResult(true);
         }
-        Assert.IsTrue(logThread.Join(TimeSpan.FromSeconds(5)), "The logging thread did not finish after relocation completed.");
+
         Assert.IsTrue(logThread.Join(TimeSpan.FromSeconds(5)), "The logging thread did not finish after relocation completed.");
         await relocationTask;
         Assert.IsNull(logException);
