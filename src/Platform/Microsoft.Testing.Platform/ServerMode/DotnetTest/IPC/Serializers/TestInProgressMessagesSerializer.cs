@@ -42,62 +42,50 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
         string? instanceId = null;
         TestInProgressMessage[]? inProgressMessages = [];
 
-        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
-        ushort fieldCount = ReadUShort(stream);
-        for (int f = 0; f < fieldCount; f++)
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
-            ushort fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
             if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
             {
-                continue;
+                return true;
             }
 
             if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
             {
-                inProgressMessages = ReadInProgressMessagesPayload(stream);
+                inProgressMessages = ReadFieldPayload(stream, fieldSize, ReadInProgressMessagesPayload);
+                return true;
             }
-            else
-            {
-                SetPosition(stream, stream.Position + fieldSize);
-            }
-        }
+
+            return false;
+        });
 
         return new(executionId, instanceId, inProgressMessages);
     }
 
     private static TestInProgressMessage[] ReadInProgressMessagesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var inProgressMessages = new TestInProgressMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? uid = null;
             string? displayName = null;
 
-            // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
-            ushort fieldCount = ReadUShort(stream);
-            for (int f = 0; f < fieldCount; f++)
+            ReadFields(stream, (fieldId, fieldSize) =>
             {
-                ushort fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case TestInProgressMessageFieldsId.Uid:
                         uid = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case TestInProgressMessageFieldsId.DisplayName:
                         displayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return false;
                 }
-            }
+            });
 
             inProgressMessages[i] = new TestInProgressMessage(uid, displayName);
         }

@@ -85,34 +85,28 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         string? instanceId = null;
         DiscoveredTestMessage[]? discoveredTestMessages = [];
 
-        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
-        ushort fieldCount = ReadUShort(stream);
-        for (int f = 0; f < fieldCount; f++)
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
-            ushort fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
             if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
             {
-                continue;
+                return true;
             }
 
             if (fieldId == DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList)
             {
-                discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
+                discoveredTestMessages = ReadFieldPayload(stream, fieldSize, ReadDiscoveredTestMessagesPayload);
+                return true;
             }
-            else
-            {
-                SetPosition(stream, stream.Position + fieldSize);
-            }
-        }
+
+            return false;
+        });
 
         return new(executionId, instanceId, discoveredTestMessages);
     }
 
     private static DiscoveredTestMessage[] ReadDiscoveredTestMessagesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var discoveredTestMessages = new DiscoveredTestMessage[length];
         for (int i = 0; i < length; i++)
         {
@@ -126,56 +120,50 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
             TraitMessage[] traits = [];
             string[] parameterTypeFullNames = [];
 
-            // Inline ReadFields to avoid per-test closure allocation on the hot IPC deserialization path.
-            ushort msgFieldCount = ReadUShort(stream);
-            for (int f = 0; f < msgFieldCount; f++)
+            ReadFields(stream, (fieldId, fieldSize) =>
             {
-                ushort fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case DiscoveredTestMessageFieldsId.Uid:
                         uid = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.DisplayName:
                         displayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.FilePath:
                         filePath = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.LineNumber:
                         lineNumber = ReadInt(stream);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.Namespace:
                         @namespace = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.TypeName:
                         typeName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.MethodName:
                         methodName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.Traits:
-                        traits = ReadTraitsPayload(stream);
-                        break;
+                        traits = ReadFieldPayload(stream, fieldSize, ReadTraitsPayload);
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.ParameterTypeFullNames:
-                        parameterTypeFullNames = ReadParameterTypeFullNamesPayload(stream);
-                        break;
+                        parameterTypeFullNames = ReadFieldPayload(stream, fieldSize, ReadParameterTypeFullNamesPayload);
+                        return true;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return false;
                 }
-            }
+            });
 
             discoveredTestMessages[i] = new DiscoveredTestMessage(uid, displayName, filePath, lineNumber, @namespace, typeName, methodName, parameterTypeFullNames, traits);
         }
@@ -185,7 +173,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     private static string[] ReadParameterTypeFullNamesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(int));
         string[] parameterTypeFullNames = new string[length];
 
         for (int i = 0; i < length; i++)
@@ -198,35 +186,29 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     private static TraitMessage[] ReadTraitsPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var traits = new TraitMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? key = null;
             string? value = null;
 
-            // Inline ReadFields to avoid per-trait closure allocation.
-            ushort traitFieldCount = ReadUShort(stream);
-            for (int f = 0; f < traitFieldCount; f++)
+            ReadFields(stream, (fieldId, fieldSize) =>
             {
-                ushort fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case TraitMessageFieldsId.Key:
                         key = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case TraitMessageFieldsId.Value:
                         value = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return false;
                 }
-            }
+            });
 
             _ = key ?? throw new InvalidOperationException("Trait key is required.");
             _ = value ?? throw new InvalidOperationException("Trait value is required.");
