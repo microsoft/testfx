@@ -144,7 +144,6 @@ safe-outputs:
     max: 1
 
 tools:
-  web-fetch:
   bash: true
   github:
     toolsets: [all]
