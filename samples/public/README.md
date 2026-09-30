@@ -33,10 +33,10 @@ tests, see [Testing UWP and WinUI apps with MSTest](../../docs/winui-testing.md)
 
 Run commands from a sample directory and select a concrete architecture:
 
-The MTP `dotnet test --project` syntax used by the WinUI samples and the per-sample `global.json`
-runner selection require .NET SDK 10 or later. The WinUI projects target the supported .NET 8
-minimum and the modern UWP sample targets .NET 9; those target frameworks do not determine the SDK
-version used by `dotnet test`.
+The MTP `dotnet test --project` syntax used by the WinUI samples requires .NET SDK 10 or later even
+though those projects target the supported .NET 8 minimum. The modern UWP sample targets .NET 10
+and also requires .NET SDK 10 or later, but uses Visual Studio desktop MSBuild for UWP build and
+execution.
 
 ```powershell
 # Full-trust and unpackaged WinUI MTP samples

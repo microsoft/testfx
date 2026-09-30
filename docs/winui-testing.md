@@ -5,7 +5,7 @@
 | Application model | Recommended test configuration | Test host |
 | --- | --- | --- |
 | Legacy UWP (`uap10.0`) | [`ClassicUwpMtpApp`](../samples/public/ClassicUwpMtpApp) | MTP sidecar controller with native UAP adapter assets |
-| Modern UWP (.NET 9, `UseUwp` with UWP tooling) | [`UwpMtpApp`](../samples/public/UwpMtpApp) | MTP sidecar controller with AUMID activation |
+| Modern UWP (.NET 10, `UseUwp` with UWP tooling) | [`UwpMtpApp`](../samples/public/UwpMtpApp) | MTP sidecar controller with AUMID activation |
 | Packaged full-trust WinUI 3 (`UseWinUI`) | [`WinUIMtpPackagedApp`](../samples/public/WinUIMtpPackagedApp) | MTP sidecar controller with automatic package registration and AUMID activation |
 | Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | [`WinUIMtpUnpackagedApp`](../samples/public/WinUIMtpUnpackagedApp) | MTP direct executable launch |
 | WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | [`WinUIMtpAppContainerApp`](../samples/public/WinUIMtpAppContainerApp) | MTP sidecar controller with exact package-SID pipe authorization |
@@ -37,7 +37,7 @@ For modern UWP, the test-related part of the project is reduced to the SDK decla
 ```xml
 <Project Sdk="MSTest.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <UseUwp>true</UseUwp>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
