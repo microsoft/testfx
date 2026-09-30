@@ -82,15 +82,13 @@ $localRestorePackagesPath = $null
 $dotnetPath = $null
 
 function Remove-LocalRestorePackages {
-    if ($null -eq $localRestorePackagesPath -or -not (Test-Path $localRestorePackagesPath)) {
-        return
-    }
-
     if ($null -ne $dotnetPath) {
         & $dotnetPath build-server shutdown
     }
 
-    Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
+    if ($null -ne $localRestorePackagesPath -and (Test-Path $localRestorePackagesPath)) {
+        Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
+    }
 }
 
 if ($BinaryLogDirectory) {
@@ -112,6 +110,14 @@ try {
     if ($PublishedPackagesOnly -and $configuredLocalPackageArguments.Count -ne 0) {
         throw "PublishedPackagesOnly cannot be combined with local package arguments."
     }
+
+    # Source the arcade tools to get access to InitializeDotNetCli
+    . "$PSScriptRoot/common/tools.ps1"
+
+    # Initialize .NET CLI before configuring local packages so any server that cached the
+    # published-feed NuGet configuration can be shut down before resolving the local SDK.
+    $dotnetRoot = InitializeDotNetCli -install:$true
+    $dotnetPath = "$dotnetRoot/dotnet.exe"
 
     if ($configuredLocalPackageArguments.Count -ne 0) {
         $LocalPackageDirectory = (Resolve-Path $LocalPackageDirectory).Path
@@ -194,13 +200,6 @@ try {
             "/p:EnableMicrosoftTestingExtensionsCodeCoverage=false"
         )
     }
-
-    # Source the arcade tools to get access to InitializeDotNetCli
-    . "$PSScriptRoot/common/tools.ps1"
-
-    # Initialize .NET CLI to ensure correct SDK version is available
-    $dotnetRoot = InitializeDotNetCli -install:$true
-    $dotnetPath = "$dotnetRoot/dotnet.exe"
 
     Write-Host "Building samples in: $samplesFolder"
     Write-Host "Configuration: $Configuration"
