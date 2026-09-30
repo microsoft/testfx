@@ -33,10 +33,13 @@ tests, see [Testing UWP and WinUI apps with MSTest](../../docs/winui-testing.md)
 
 Run commands from a sample directory and select a concrete architecture:
 
-The MTP `dotnet test --project` syntax used by the WinUI samples requires .NET SDK 10 or later even
-though those projects target the supported .NET 8 minimum. The modern UWP sample targets .NET 10
-and also requires .NET SDK 10 or later, but uses Visual Studio desktop MSBuild for UWP build and
-execution.
+The MTP `dotnet test --project` syntax used by the WinUI samples requires .NET SDK 10 or later for
+the native runner and CLI. `WinUIMtpUnpackagedApp` is a framework-dependent
+`net8.0-windows10.0.19041.0` application and separately requires the .NET 8 Desktop Runtime for the
+selected architecture. This extra runtime prerequisite is specific to the unpackaged sample: the
+packaged MTP samples are self-contained, and their app-model controllers roll forward to newer
+installed .NET major versions. The modern UWP sample targets .NET 10 and also requires .NET SDK 10
+or later, but uses Visual Studio desktop MSBuild for UWP build and execution.
 
 ```powershell
 # Full-trust and unpackaged WinUI MTP samples
