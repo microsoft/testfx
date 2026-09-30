@@ -6,10 +6,12 @@ using Microsoft.Testing.Extensions.VideoRecorder;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
@@ -19,6 +21,45 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class VideoRecorderSessionHandlerTests
 {
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_WhenRecorderDoesNotStart_DoesNotDisplayReadyMessage()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [],
+        });
+        var recorder = new Mock<IVideoRecorder>();
+        recorder.SetupGet(instance => instance.IsAvailable).Returns(true);
+        recorder.SetupGet(instance => instance.RecordingStartUtc).Returns((DateTimeOffset?)null);
+        var outputDevice = new Mock<IOutputDevice>();
+        var handler = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            outputDevice.Object,
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            recorder.Object);
+        var testSessionContext = new Mock<ITestSessionContext>();
+        testSessionContext.SetupGet(instance => instance.CancellationToken).Returns(CancellationToken.None);
+        testSessionContext.SetupGet(instance => instance.SessionUid).Returns(new SessionUid("session"));
+
+        await handler.OnTestSessionStartingAsync(testSessionContext.Object);
+
+        recorder.Verify(instance => instance.Start(), Times.Once);
+        outputDevice.Verify(
+            instance => instance.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<FormattedTextOutputDeviceData>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     [TestMethod]
     public async Task ConsumeAsync_ExecutionCompleted_RemovesInFlightTestWithoutRecordingOutcome()
     {

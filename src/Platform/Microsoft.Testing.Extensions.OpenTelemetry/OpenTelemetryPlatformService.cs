@@ -7,7 +7,9 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
-internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServiceWithActivityLinks
+internal sealed class OpenTelemetryPlatformService :
+    IPlatformOpenTelemetryServiceWithActivityLinks,
+    IPlatformOpenTelemetryServiceWithTestExecutionActivities
 {
     internal const string ActivitySourceName = "Microsoft.Testing.Platform";
     internal const string MeterName = "Microsoft.Testing.Platform";
@@ -37,6 +39,22 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
         // StartActivity unconditionally publishes the new activity as Activity.Current. Undo that immediately so
         // the span is timed and exported without ever leaking into an ExecutionContext captured by the code we wrap.
+        Activity.Current = ambientBeforeStart;
+        return new ActivityWrapper(Stamp(activity), isAmbient: false);
+    }
+
+    public IPlatformTestExecutionActivity? StartTestExecutionActivity(
+        string name,
+        IEnumerable<KeyValuePair<string, object?>>? tags,
+        string? parentId,
+        DateTimeOffset startTime)
+    {
+        Activity? ambientBeforeStart = Activity.Current;
+        if (StartActivityCore(name, tags, parentId, links: null, startTime) is not Activity activity)
+        {
+            return null;
+        }
+
         Activity.Current = ambientBeforeStart;
         return new ActivityWrapper(Stamp(activity), isAmbient: false);
     }

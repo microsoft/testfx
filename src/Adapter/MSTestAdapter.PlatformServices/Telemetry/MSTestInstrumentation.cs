@@ -50,8 +50,9 @@ internal interface IMSTestActivity : IDisposable
 /// flow to every subsequent test (see <c>TestMethodRunner.ExecuteTestAsync</c>). The ambient activity is itself an
 /// async-local, so an ambient span would be captured into that context and restored for the rest of the run -
 /// parenting every later span, and any activity the user's own code starts, to a span that has long since ended.
-/// The factory therefore creates spans that are timed and exported but never published as the current activity, and
-/// parents them explicitly instead.
+/// The factory therefore creates spans that are timed and exported but never published as the current activity. They
+/// inherit the canonical test activity while user execution is active, and otherwise fall back to the test-framework
+/// activity supplied by the host.
 /// </para>
 /// </remarks>
 internal static class MSTestInstrumentation

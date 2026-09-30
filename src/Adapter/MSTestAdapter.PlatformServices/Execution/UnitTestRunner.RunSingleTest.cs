@@ -234,7 +234,11 @@ internal sealed partial class UnitTestRunner
                         testExecImpl.MergeProperties(testMethodInfo.Parent.PostClassInitProperties);
 
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
-                        var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
+                        var testMethodRunner = new TestMethodRunner(
+                            testMethodInfo,
+                            testMethod,
+                            testContextForTestExecution,
+                            unitTestElement.ExecutionActivityLease);
                         result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {

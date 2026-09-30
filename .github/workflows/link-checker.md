@@ -317,7 +317,6 @@ tools:
     mode: gh-proxy
     toolsets: [repos]
   cache-memory: true
-  web-fetch:
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
@@ -455,7 +454,7 @@ Based on your work:
 - **Preserve context:** When replacing links, make sure the new URL points to equivalent or better content
 - **Document everything:** Keep the cache memory up to date with unfixable links
 - **Be selective:** Only add links to the unfixable list if you've genuinely tried to find alternatives
-- **Use web-fetch wisely:** Fetch only candidate URLs and likely replacements
+- **Use the recorded link-check results:** Work only from confirmed candidates and the existing HTTP checks
 - **Ignore inconclusive checks:** Do not investigate or mention links excluded after transient responses
 - **Relative links:** Focus only on HTTP(S) links. Skip relative links and anchors (they're tested differently)
 

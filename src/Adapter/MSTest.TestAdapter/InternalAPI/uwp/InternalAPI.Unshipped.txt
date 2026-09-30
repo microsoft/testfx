@@ -1,4 +1,11 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.TestClassInstanceFactory.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestEngine.TestClassInstanceFactory.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.TestClassInstanceFactory.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory?
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.TestClassInstanceFactory.set -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.SetTestClassInstanceFactory(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory! testClassInstanceFactory) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MtpTestResultRecorder.MtpTestResultRecorder(Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext! executeRequestContext, Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, bool isTrxEnabled, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings! settings) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MtpTestResultRecorder.MtpTestResultRecorder(Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext! executeRequestContext, Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, bool isTrxEnabled, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings! settings, System.Action<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!>! stageResultFiles) -> void
 abstract Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> string?

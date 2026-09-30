@@ -298,6 +298,11 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Il metodo di inizializzazione dei test globale '{0}.{1}' è stato annullato</target>
         <note>{0} is the type name. {1} is the global test initialize method name.</note>
       </trans-unit>
+      <trans-unit id="HostedTestClassInjectionRequiresNoAppDomain">
+        <source>MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</source>
+        <target state="new">MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</target>
+        <note>{Locked="MSTest"}{Locked=".NET Framework"}{Locked="AppDomain"}{Locked="DisableAppDomain"}</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">Il valore '{0}', specificato per 'Scope', non è valido. I valori supportati per Scope sono {1}.</target>

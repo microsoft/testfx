@@ -38,7 +38,6 @@ internal sealed partial class Json
             if (property is TestMetadataProperty metadataProperty)
             {
                 (traits ??= []).Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
-                continue;
             }
 
             if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -52,7 +51,6 @@ internal sealed partial class Json
                 properties.Add(("location.file", fileLocationProperty.FilePath));
                 properties.Add(("location.line-start", fileLocationProperty.LineSpan.Start.Line));
                 properties.Add(("location.line-end", fileLocationProperty.LineSpan.End.Line));
-                continue;
             }
 
             if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
@@ -205,8 +203,6 @@ internal sealed partial class Json
                     default:
                         throw new NotSupportedException($"Unsupported TestNodeStateProperty '{testNodeStateProperty.GetType()}'");
                 }
-
-                continue;
             }
 
             if (property is TimingProperty timingProperty)
@@ -223,7 +219,6 @@ internal sealed partial class Json
             {
                 properties.Add(("retry.attempt", retryAttemptProperty.AttemptNumber));
                 properties.Add(("retry.is-superseded", retryAttemptProperty.IsSuperseded));
-                continue;
             }
 
             if (property is FileArtifactProperty artifact)

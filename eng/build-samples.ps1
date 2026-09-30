@@ -64,12 +64,28 @@ $nuGetConfigPaths = @(
 )
 $localPackageSampleNames = @(
     "ClassicUwpMtpApp",
+    "MTPHostIntegration",
     "UwpMtpApp",
     "WinUIMtpAppContainerApp",
     "WinUIMtpPackagedApp",
     "WinUIMtpUnpackagedApp"
 )
 $localPackageProperties = @()
+$localHostingVersion = $null
+$localRestorePackagesPath = $null
+$dotnetPath = $null
+
+function Remove-LocalRestorePackages {
+    if ($null -eq $localRestorePackagesPath -or -not (Test-Path $localRestorePackagesPath)) {
+        return
+    }
+
+    if ($null -ne $dotnetPath) {
+        & $dotnetPath build-server shutdown
+    }
+
+    Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
+}
 
 if ($BinaryLogDirectory) {
     New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
@@ -89,6 +105,15 @@ try {
 
     if ($configuredLocalPackageArguments.Count -ne 0) {
         $LocalPackageDirectory = (Resolve-Path $LocalPackageDirectory).Path
+        $localRestorePackagesPath = Join-Path $repoRoot "artifacts/tmp/sample-packages-local"
+        Remove-LocalRestorePackages
+
+        $hostingPackage = Get-ChildItem -Path $LocalPackageDirectory -Filter "Microsoft.Testing.Extensions.Hosting.*.nupkg" | Select-Object -First 1
+        if ($null -eq $hostingPackage) {
+            throw "Microsoft.Testing.Extensions.Hosting package was not found in LocalPackageDirectory."
+        }
+
+        $localHostingVersion = $hostingPackage.BaseName.Substring("Microsoft.Testing.Extensions.Hosting.".Length)
 
         foreach ($sampleName in $localPackageSampleNames) {
             $globalJsonPath = Get-Item (Join-Path $samplesFolder "$sampleName/global.json")
@@ -130,14 +155,18 @@ try {
                 [void]$packageSourceMapping.AppendChild($localSourceMapping)
 
                 # Package source mapping selects only the sources with the most specific matching
-                # pattern. Add the same specific patterns to dotnet-public so released package
-                # versions used by the other samples remain available alongside the local CI build.
-                $dotnetPublicMapping = $packageSourceMapping.SelectSingleNode("packageSource[@key='dotnet-public']")
-                if ($null -ne $dotnetPublicMapping) {
+                # pattern. Add the same specific patterns to public feeds so released and preview
+                # package versions remain available alongside the local CI build.
+                foreach ($publicSource in @("dotnet-public", "test-tools")) {
+                    $publicSourceMapping = $packageSourceMapping.SelectSingleNode("packageSource[@key='$publicSource']")
+                    if ($null -eq $publicSourceMapping) {
+                        continue
+                    }
+
                     foreach ($patternValue in $localPackagePatterns) {
                         $pattern = $nuGetConfig.CreateElement("package")
                         $pattern.SetAttribute("pattern", $patternValue)
-                        [void]$dotnetPublicMapping.AppendChild($pattern)
+                        [void]$publicSourceMapping.AppendChild($pattern)
                     }
                 }
             }
@@ -147,9 +176,13 @@ try {
 
         $localPackageProperties = @(
             "/p:MSTestVersion=$LocalMSTestVersion",
+            "/p:MSTestExtensionsHostingVersion=$LocalMSTestVersion",
             "/p:MSTestSdkAOTVersion=$LocalMSTestVersion",
             "/p:MicrosoftTestingPlatformVersion=$LocalTestingPlatformVersion",
+            "/p:TestingPlatformPreviewVersion=$LocalTestingPlatformVersion",
             "/p:MicrosoftTestingExtensionsCommonVersion=$LocalTestingPlatformVersion",
+            "/p:MicrosoftTestingExtensionsHostingVersion=$localHostingVersion",
+            "/p:RestorePackagesPath=$localRestorePackagesPath",
             "/p:MicrosoftTestingExtensionsPackagedAppVersion=$LocalTestingPlatformVersion",
             "/p:EnableMicrosoftTestingPlatform=true",
             "/p:EnableMicrosoftTestingExtensionsCodeCoverage=false"
@@ -270,6 +303,8 @@ finally {
     foreach ($nuGetConfigPath in $nuGetConfigBackups.Keys) {
         [System.IO.File]::WriteAllBytes($nuGetConfigPath, $nuGetConfigBackups[$nuGetConfigPath])
     }
+
+    Remove-LocalRestorePackages
 }
 
 Write-Host "========================================"

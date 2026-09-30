@@ -168,6 +168,34 @@ public class TestMethodRunnerTests : TestContainer
         results[1].Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
+    public async Task Execute_RunsInsideLeaseAfterRestoringFixtureExecutionContext()
+    {
+        var fixtureState = new AsyncLocal<string?> { Value = "fixture" };
+        _testClassInfo.ExecutionContext = ExecutionContext.Capture();
+        fixtureState.Value = null;
+
+        var lease = new FakeExecutionActivityLease();
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () =>
+            {
+                fixtureState.Value.Should().Be("fixture");
+                lease.IsEntered.Should().BeTrue();
+                return new TestResult { Outcome = UnitTestOutcome.Passed };
+            });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, lease);
+
+        TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        lease.EnterCount.Should().Be(1);
+        lease.ExitCount.Should().Be(1);
+        lease.IsEntered.Should().BeFalse();
+        fixtureState.Value.Should().BeNull();
+    }
+
     public async Task ExecuteForFailingTestShouldRecordReturnedFailureExceptionOnActivity()
     {
         var failureException = new InvalidOperationException("failed");
@@ -641,6 +669,32 @@ public class TestMethodRunnerTests : TestContainer
 
         public void Dispose()
         {
+        }
+    }
+
+    private sealed class FakeExecutionActivityLease : ITestExecutionActivityLease
+    {
+        private readonly AsyncLocal<bool> _isEntered = new();
+
+        public bool IsEntered => _isEntered.Value;
+
+        public int EnterCount { get; private set; }
+
+        public int ExitCount { get; private set; }
+
+        public async Task<T> RunAsync<T>(Func<Task<T>> callback)
+        {
+            EnterCount++;
+            _isEntered.Value = true;
+            try
+            {
+                return await callback();
+            }
+            finally
+            {
+                ExitCount++;
+                _isEntered.Value = false;
+            }
         }
     }
 

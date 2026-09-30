@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -88,6 +89,11 @@ internal sealed class AssemblyEnumeratorWrapper
     private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, string? settingsXml, bool isMTP)
     {
         using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, settingsXml);
+        if (isolationHost is TestSourceHost { UsesAppDomain: true }
+            && TestClassInstanceFactoryProvider.Current is not null)
+        {
+            throw new InvalidOperationException(Resource.HostedTestClassInjectionRequiresNoAppDomain);
+        }
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;

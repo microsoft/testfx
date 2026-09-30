@@ -44,6 +44,7 @@ internal sealed partial class TestMethodRunner
     /// TestMethod referred by the above test element.
     /// </summary>
     private readonly TestMethodInfo _testMethodInfo;
+    private readonly ITestExecutionActivityLease? _executionActivityLease;
 
     /// <summary>
     /// Cached <see cref="ReflectionTestMethodInfo"/> wrapper reused across all data rows of a
@@ -66,6 +67,15 @@ internal sealed partial class TestMethodRunner
     /// The test context.
     /// </param>
     public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext)
+        : this(testMethodInfo, testMethod, testContext, executionActivityLease: null)
+    {
+    }
+
+    internal TestMethodRunner(
+        TestMethodInfo testMethodInfo,
+        TestMethod testMethod,
+        ITestContext testContext,
+        ITestExecutionActivityLease? executionActivityLease)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo should not be null");
         DebugEx.Assert(testMethod != null, "testMethod should not be null");
@@ -74,6 +84,7 @@ internal sealed partial class TestMethodRunner
         _testMethodInfo = testMethodInfo;
         _test = testMethod;
         _testContext = testContext;
+        _executionActivityLease = executionActivityLease;
     }
 
     /// <summary>
@@ -92,7 +103,7 @@ internal sealed partial class TestMethodRunner
 
         // The engine-level span for the whole test method: it wraps test initialize, the body, test cleanup and any
         // data-row expansion, so the platform's test-case span gains an explanation of where the time went.
-        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+        using IMSTestActivity? activity = _executionActivityLease is null && MSTestInstrumentation.IsEnabled
             ? MSTestInstrumentation.StartActivity(
                 MSTestInstrumentation.ActivityNames.TestMethod,
                 [

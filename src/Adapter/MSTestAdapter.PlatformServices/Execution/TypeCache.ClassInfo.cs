@@ -128,6 +128,7 @@ internal sealed partial class TypeCache
     {
         ConstructorInfo[] constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
         (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
+        ConstructorInfo? firstPublicConstructor = null;
 
         foreach (ConstructorInfo ctor in constructors)
         {
@@ -136,6 +137,7 @@ internal sealed partial class TypeCache
                 continue;
             }
 
+            firstPublicConstructor ??= ctor;
             ParameterInfo[] parameters = ctor.GetParameters();
 
             // There are just 2 ctor shapes that we know, so the code is quite simple,
@@ -154,6 +156,13 @@ internal sealed partial class TypeCache
                 // Otherwise take the first parameterless constructor we can find.
                 selectedConstructor ??= (ctor, IsParameterless: true);
             }
+        }
+
+        if (selectedConstructor is null
+            && TestClassInstanceFactoryProvider.Current is not null
+            && firstPublicConstructor is not null)
+        {
+            selectedConstructor = (firstPublicConstructor, IsParameterless: firstPublicConstructor.GetParameters().Length == 0);
         }
 
         if (selectedConstructor is null)

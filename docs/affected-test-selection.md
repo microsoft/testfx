@@ -11,18 +11,16 @@ The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `t
 mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder hook is
 registered by the repository's hand-authored MTP entry points.
 
-Package `18.12.0-preview.26473.3` includes the fixed JSON discovery path and ships both `netstandard2.0` and `net8.0`
-assets for the base extension, collector, CodeCoverage extension, and Azure DevOps provider.
+Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
+both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
+provider.
 
-Affected-test execution is temporarily disabled in the pipeline. Azure DevOps rejects map uploads from provider
-versions `18.12.0-preview.26473.3` and `18.12.0-preview.26474.2` because their file-container PUT requests omit the
-required `Content-Range` header. The package owns that HTTP request, so repository configuration cannot repair it.
-The previously pinned `11.0.100-rc.2.26471.109` SDK also reports a successful collection application that suppresses
-SDK reporting as a handshake failure: local storage writes the complete map and the application exits `0`, but the
-parent `dotnet test` command exits `1`. The repository now pins `11.0.100-rtm.26476.107`, but affected-test execution
-remains disabled until the provider upload is corrected and the collection protocol is verified with the new SDK.
-Keep the packages and storage configuration dormant until both conditions are satisfied, then update the affected
-package/SDK gates and re-enable the shared Windows test call.
+Affected-test execution is temporarily disabled in the pipeline. SDK `11.0.100-rtm.26476.107` reports successful
+collection applications as handshake failures: the child applications can exit `0`, but the parent `dotnet test`
+command exits `1`. This affected all 45 test modules in
+[public build 1617452](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1617452). Keep the packages
+and storage configuration dormant until the collection protocol is corrected in the SDK and verified in this
+repository.
 
 ## CI layout
 

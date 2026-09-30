@@ -32,7 +32,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             {
                 Id = seeds[i].ResultId,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-                CustomFields = CreateFlakyCustomFields(seeds[i].Parent.Result.Outcome, subResults),
+                CustomFields = CreateRerunCustomFields(seeds[i].Parent.Result.Outcome, subResults),
                 SubResults = subResults,
                 DurationInMs = AzureDevOpsResultIdStore.SumResultDurations(attemptResults),
                 StartedDate = startedDate,

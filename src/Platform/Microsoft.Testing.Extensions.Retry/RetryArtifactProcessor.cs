@@ -32,7 +32,7 @@ internal static class RetryArtifactProcessor
         {
             ArtifactRequest artifact = artifacts[i];
             string artifactPath = Path.GetFullPath(artifact.Path);
-            if (IsUnderDirectory(artifactPath, attemptDirectory))
+            if (PathContainment.IsUnderDirectory(artifactPath, attemptDirectory))
             {
                 captured.Add(new RetryAttemptArtifact(artifactPath, artifact.Kind, attempt, destinationPath: null));
                 continue;
@@ -223,17 +223,6 @@ internal static class RetryArtifactProcessor
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
-
-    private static bool IsUnderDirectory(string path, string directory)
-    {
-        string directoryPrefix = Path.GetFullPath(directory)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            + Path.DirectorySeparatorChar;
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-        return path.StartsWith(directoryPrefix, comparison);
-    }
 }
 
 internal sealed class RetryAttemptArtifact(string path, string? kind, int attempt, string? destinationPath)

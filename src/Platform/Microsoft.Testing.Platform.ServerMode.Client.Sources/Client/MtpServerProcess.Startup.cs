@@ -133,17 +133,21 @@ internal sealed partial class MtpServerProcess
             // notification/server-request handlers first and then calls Connection.Start(), so no server ->
             // client message can slip past before the handlers are attached.
             MtpJsonRpcConnection connection = MtpServerConnector.CreateConnection(acceptedClient, formatter, logger);
-            return new MtpServerProcess(listener, process, acceptedClient, connection, standardError, logger);
+            return new MtpServerProcess(listener, process, connection, standardError, logger);
         }
         catch
         {
-            if (process is not null)
+            using (process)
             {
-                SafeKill(process, logger);
-                process.Dispose();
+                if (process is not null)
+                {
+                    SafeKill(process, logger);
+                }
             }
 
-            acceptedClient?.Dispose();
+            using (acceptedClient)
+            {
+            }
 
             if (listener is not null)
             {
@@ -244,10 +248,7 @@ internal sealed partial class MtpServerProcess
             lock (standardError)
             {
                 standardError.AppendLine(e.Data);
-                if (standardError.Length > MaxStandardErrorLength)
-                {
-                    standardError.Remove(0, standardError.Length - MaxStandardErrorLength);
-                }
+                standardError.Remove(0, Math.Max(0, standardError.Length - MaxStandardErrorLength));
             }
         };
 

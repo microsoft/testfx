@@ -2225,9 +2225,15 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
         Assert.AreEqual(3_000L, parent.DurationInMs);
-        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(parent.CustomFields!);
-        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
-        Assert.AreEqual("true", customField.Value);
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.AreEqual("true", parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
+        Assert.IsNotNull(parent.SubResults);
+        Assert.IsNull(parent.SubResults[0].CustomFields);
+        Assert.IsNotNull(parent.SubResults[1].CustomFields);
+        AzureDevOpsCustomTestField retryAttemptId = Assert.ContainsSingle(parent.SubResults[1].CustomFields!);
+        Assert.AreEqual("AttemptId", retryAttemptId.FieldName);
+        Assert.AreEqual(1, retryAttemptId.Value);
         Assert.HasCount(2, service.SubResults);
         Assert.AreEqual("Attempt# 0 - MyTest", service.SubResults[0].DisplayName);
         Assert.AreEqual("Attempt# 1 - MyTest", service.SubResults[1].DisplayName);
@@ -2552,6 +2558,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = secondClient.UpdateTestResultsCalls[0].Results.Single();
         Assert.AreEqual(777, parent.Id, "The update has to address the result the first attempt created.");
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.RerunResultGroupType, parent.ResultGroupType);
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.AreEqual("true", parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
 
         // Latest attempt wins: the test ultimately passed, which is what the pipeline's exit code says too.
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
@@ -2566,9 +2575,9 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(2, parent.SubResults[1].SequenceId);
         Assert.AreEqual("Attempt# 1 - MyTest", parent.SubResults[1].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.SubResults[1].Outcome);
-        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(parent.CustomFields!);
-        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
-        Assert.AreEqual("true", customField.Value);
+        Assert.IsNull(parent.SubResults[0].CustomFields);
+        Assert.IsNotNull(parent.SubResults[1].CustomFields);
+        Assert.AreEqual(1, parent.SubResults[1].CustomFields!.Single().Value);
     }
 
     [TestMethod]
@@ -2592,6 +2601,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.Outcome);
         Assert.AreEqual("second", parent.ErrorMessage, "The parent reports the attempt that decided the outcome.");
+        Assert.IsNotNull(parent.CustomFields);
+        Assert.AreEqual(1, parent.CustomFields.Single(field => field.FieldName == "AttemptId").Value);
+        Assert.AreEqual("false", parent.CustomFields.Single(field => field.FieldName == "IsTestResultFlaky").Value);
         Assert.IsNotNull(parent.SubResults);
         IReadOnlyList<AzureDevOpsTestSubResult> subResults = parent.SubResults;
         Assert.HasCount(2, subResults);
@@ -2601,9 +2613,6 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(2, subResults[1].SequenceId);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[1].Outcome);
         Assert.AreEqual("second", subResults[1].ErrorMessage);
-        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(parent.CustomFields!);
-        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
-        Assert.AreEqual("false", customField.Value);
     }
 
     [TestMethod]
@@ -2703,6 +2712,10 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsNull(createdResult.SubResults);
         Assert.IsNotNull(seededResult);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.RerunResultGroupType, seededResult.ResultGroupType);
+        Assert.IsNotNull(seededResult.CustomFields);
+        AzureDevOpsCustomTestField customField = Assert.ContainsSingle(seededResult.CustomFields);
+        Assert.AreEqual("IsTestResultFlaky", customField.FieldName);
+        Assert.AreEqual("false", customField.Value);
         Assert.IsNotNull(seededResult.SubResults);
         Assert.ContainsSingle(seededResult.SubResults);
         Assert.AreEqual(1, seededResult.SubResults[0].SequenceId);
@@ -4150,11 +4163,18 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             Id = 777,
             ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
-            CustomFields = [new AzureDevOpsCustomTestField("IsTestResultFlaky", "true")],
+            CustomFields =
+            [
+                new AzureDevOpsCustomTestField("AttemptId", 1),
+                new AzureDevOpsCustomTestField("IsTestResultFlaky", "true"),
+            ],
             SubResults =
             [
                 new AzureDevOpsTestSubResult(1, "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 3, "boom", "at Foo()", null, null),
-                new AzureDevOpsTestSubResult(2, "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null),
+                new AzureDevOpsTestSubResult(2, "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null)
+                {
+                    CustomFields = [new AzureDevOpsCustomTestField("AttemptId", 1)],
+                },
             ],
         };
 
@@ -4173,17 +4193,22 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
         Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
+
         JsonElement customFields = result.GetProperty("customFields");
-        Assert.AreEqual(1, customFields.GetArrayLength());
-        Assert.AreEqual("IsTestResultFlaky", customFields[0].GetProperty("fieldName").GetString());
-        Assert.AreEqual("true", customFields[0].GetProperty("value").GetString());
+        Assert.AreEqual(2, customFields.GetArrayLength());
+        Assert.AreEqual("AttemptId", customFields[0].GetProperty("fieldName").GetString());
+        Assert.AreEqual(1, customFields[0].GetProperty("value").GetInt32());
+        Assert.AreEqual("IsTestResultFlaky", customFields[1].GetProperty("fieldName").GetString());
+        Assert.AreEqual("true", customFields[1].GetProperty("value").GetString());
 
         JsonElement subResults = result.GetProperty("subResults");
         Assert.AreEqual(2, subResults.GetArrayLength());
         Assert.AreEqual(1, subResults[0].GetProperty("sequenceId").GetInt32());
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[0].GetProperty("outcome").GetString());
         Assert.AreEqual("boom", subResults[0].GetProperty("errorMessage").GetString());
+        Assert.IsFalse(subResults[0].TryGetProperty("customFields", out _));
         Assert.AreEqual(2, subResults[1].GetProperty("sequenceId").GetInt32());
+        Assert.AreEqual(1, subResults[1].GetProperty("customFields")[0].GetProperty("value").GetInt32());
         Assert.IsNotNull(publishedResults);
         Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 1, out int firstSubResultId));
         Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 2, out int secondSubResultId));

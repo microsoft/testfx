@@ -303,6 +303,14 @@ The test platform loads arbitrary user code — it must not crash regardless of 
 
 Tests that share state are the #1 cause of flaky test suites.
 
+The dedicated test-quality workflow owns the deep, assembly-scoped
+parallel-safety audit for changed tests: effective parallelization settings,
+cross-test resource conflicts, `[ResourceLock]` reconciliation, shared paths,
+and over-serialization. In this broad review, do not reproduce that specialist
+report or assign per-test grades. Still report a concrete isolation defect when
+it is necessary to explain a production/test contract issue or a risk spanning
+files outside the specialist workflow's scope.
+
 **Rules:**
 1. Static mutable fields written in one test and read in another are bugs under parallel execution.
 2. Instance fields set in `[TestInitialize]` must not be relied upon across methods without re-initialization.
@@ -687,7 +695,7 @@ same context across 22 independent agents.
 | **API & compatibility** | 4, 6 | Public/internal tracked API, target frameworks, overloads, package contracts, or externally observable behavior changed. |
 | **Performance** | 5 | Hot paths, discovery/execution loops, allocations, reflection, caching, collections, or large payload handling changed. |
 | **Localization** | 9 | User-facing strings, resources, localization comments, or CLI descriptions changed. |
-| **Tests** | 10, 11, 12, 13, 14 | Test code changed, or production behavior changed without directly relevant validation. |
+| **Tests** | 10, 11, 12, 13, 14 | Test code changed, or production behavior changed without directly relevant validation. For changed tests, focus on PR-level intent and coverage; the dedicated test-quality workflow owns per-test grades and deep parallel-safety reconciliation. |
 | **Analyzers** | 18 | Analyzer, code-fix, diagnostic, or analyzer-test code changed. |
 | **Build, dependencies & scripts** | 20, 22 | MSBuild, packaging, dependency, PowerShell, CI, or agentic workflow files changed. |
 
@@ -1026,5 +1034,7 @@ If the PR only changes `.md`, `.txt`, `.resx`, `.xlf`, or other non-code files, 
 
 ### PRs that only change tests
 
-- Apply Test Isolation, Assertion Quality, and Flakiness dimensions more thoroughly.
+- Focus on PR-level semantic correctness, coverage intent, and interactions the
+  changed tests reveal. Do not duplicate the dedicated test-quality workflow's
+  per-test grades, inline improvements, or parallel-safety findings.
 - Check if the test changes reflect production code changes.

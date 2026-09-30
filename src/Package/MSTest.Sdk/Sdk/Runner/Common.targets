@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
-    <OutputType Condition=" '$(UseWinUI)' != 'true' AND '$(UseUwp)' != 'true' AND '$(UseUwpTools)' != 'true' AND !$(TargetFramework.StartsWith('uap')) ">Exe</OutputType>
+    <OutputType Condition=" '$(UseWinUI)' != 'true' AND '$(_MSTestUwpApplicationModel)' != 'true' AND !$(TargetFramework.StartsWith('uap')) ">Exe</OutputType>
     <OutputType Condition=" '$(UseWinUI)' == 'true' AND '$(OutputType)' == 'Library' ">Exe</OutputType>
     <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
     <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>
@@ -44,7 +44,7 @@
     <EnableMicrosoftTestingExtensionsPackagedApp
       Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None' ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp
-      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">true</EnableMicrosoftTestingExtensionsPackagedApp>
+      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND ('$(_MSTestUwpApplicationModel)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' ">false</EnableMicrosoftTestingExtensionsPackagedApp>
 
     <!-- MS Code Coverage -->
@@ -70,7 +70,7 @@
              Link="MicrosoftTestingPlatformApplication.g.cs" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true' AND (('$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None') OR '$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">
+  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true' AND (('$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None') OR '$(_MSTestUwpApplicationModel)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">
     <_MSTestAppModelControllerTfm Condition="$(TargetFramework.StartsWith('net9.')) OR $(TargetFramework.StartsWith('net10.'))">net9.0</_MSTestAppModelControllerTfm>
     <_MSTestAppModelControllerTfm Condition="'$(_MSTestAppModelControllerTfm)' == ''">net8.0</_MSTestAppModelControllerTfm>
     <TestingPlatformExecutablePath>$([MSBuild]::NormalizePath($(MSBuildThisFileDirectory), '..', '..', 'tools', 'AppModelController', '$(_MSTestAppModelControllerTfm)', 'mstest-appmodel-controller.exe'))</TestingPlatformExecutablePath>

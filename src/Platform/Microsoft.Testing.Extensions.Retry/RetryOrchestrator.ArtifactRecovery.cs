@@ -64,7 +64,7 @@ internal sealed partial class RetryOrchestrator
                     }
 
                     string artifactPath = Path.GetFullPath(path);
-                    if (!IsUnderDirectory(artifactPath, attemptDirectory))
+                    if (!PathContainment.IsUnderDirectory(artifactPath, attemptDirectory))
                     {
                         logger.LogWarning(
                             $"Ignoring recovered retry artifact '{path}' because it is outside the retry attempt directory '{attemptDirectory}'.");
@@ -145,7 +145,7 @@ internal sealed partial class RetryOrchestrator
             try
             {
                 string artifactPath = Path.GetFullPath(artifact.Path);
-                if (allowedRoots.Any(root => IsUnderDirectory(artifactPath, root)))
+                if (allowedRoots.Any(root => PathContainment.IsUnderDirectory(artifactPath, root)))
                 {
                     continue;
                 }
@@ -161,19 +161,6 @@ internal sealed partial class RetryOrchestrator
                 $"Ignoring retry artifact '{artifact.Path}' because it is outside the configured AppContainer artifact roots.");
             artifacts.RemoveAt(i);
         }
-    }
-
-    private static bool IsUnderDirectory(string path, string directory)
-    {
-        string directoryPrefix = Path.GetFullPath(directory)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            + Path.DirectorySeparatorChar;
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-        return path.StartsWith(
-            directoryPrefix,
-            comparison);
     }
 
     private enum BoundedManifestLineReadResult

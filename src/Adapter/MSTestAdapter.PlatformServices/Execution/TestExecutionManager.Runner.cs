@@ -21,11 +21,10 @@ internal partial class TestExecutionManager
             return;
         }
 
+        _testRunCancellationToken?.ThrowIfCancellationRequested();
         testResultRecorder.PrepareResults(test, unitTestResults);
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
-            _testRunCancellationToken?.ThrowIfCancellationRequested();
-
 #if !WINDOWS_UWP && !WIN_UI
             // A superseded in-process retry attempt is not the test's outcome, so it must not turn the run red:
             // the recorder still reports it (so tooling can show the retry), but the "any test failed" verdict
@@ -111,7 +110,9 @@ internal partial class TestExecutionManager
 
             // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
             // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
+            currentTest.SupportsExecutionActivityLease = !usesAppDomains;
             await _testResultRecorder.RecordStartAsync(currentTest).ConfigureAwait(false);
+            unitTestElement.ExecutionActivityLease = currentTest.ExecutionActivityLease;
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -125,29 +126,24 @@ internal partial class TestExecutionManager
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters, unitTestElement);
 
             TestTools.UnitTesting.TestResult[] unitTestResult;
-            if (usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-            {
+            DateTimeOffset endTime;
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - We cannot do right now because we are crossing app domains.
-                // When app domains support is dropped, we can finally always be calling the async version.
-                // In addition to app domains, if we are STA thread (e.g, because runsettings setting ExecutionApartmentState to STA), we want to preserve that.
-                // If we await, we could end up in a thread pool thread, which is not what we want.
-                // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
-                // 1. A custom single threaded synchronization context that keeps us in STA.
-                // 2. Use ConfigureAwait(true).
-                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger);
+            // When app domains support is dropped, we can finally always be calling the async version.
+            // In addition to app domains, if we are STA thread (e.g, because runsettings setting ExecutionApartmentState to STA), we want to preserve that.
+            // If we await, we could end up in a thread pool thread, which is not what we want.
+            // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
+            // 1. A custom single threaded synchronization context that keeps us in STA.
+            // 2. Use ConfigureAwait(true).
+            unitTestResult = usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+                ? testRunner.RunSingleTest(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger)
+                : await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger).ConfigureAwait(false);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
-            }
-            else
-            {
-                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger).ConfigureAwait(false);
-            }
+            endTime = DateTimeOffset.Now;
 
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Executed test {0}", unitTestElement.TestMethod.Name);
             }
-
-            DateTimeOffset endTime = DateTimeOffset.Now;
 
             dependencyCoordinator?.RecordOutcome(currentTest, AllPassed(unitTestResult));
 
@@ -203,6 +199,7 @@ internal partial class TestExecutionManager
         dependencyCoordinator.RecordNotRun(test);
 
         DateTimeOffset now = DateTimeOffset.Now;
+        test.SupportsExecutionActivityLease = !usesAppDomains;
         await _testResultRecorder.RecordStartAsync(test).ConfigureAwait(false);
 
         // The test was selected, so it is counted in the class-cleanup countdown even though it is not going

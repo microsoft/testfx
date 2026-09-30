@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class TempDirectory : IDisposable
@@ -61,7 +63,14 @@ public class TempDirectory : IDisposable
         string finalFile = System.IO.Path.Combine(targetDirectory, fileName);
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(finalFile)!);
         using FileStream fs = new(finalFile, FileMode.CreateNew);
-        using StreamWriter stream = new(fs);
+        string extension = System.IO.Path.GetExtension(fileName);
+        Encoding encoding = extension.Equals(".cs", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".csx", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".vb", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".vbx", StringComparison.OrdinalIgnoreCase)
+                ? new UTF8Encoding(encoderShouldEmitUTF8Identifier: true)
+                : new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        using StreamWriter stream = new(fs, encoding);
         await stream.WriteLineAsync(fileContents);
     }
 

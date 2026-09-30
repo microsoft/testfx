@@ -365,6 +365,46 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void StartTestExecutionActivity_IsNonAmbientUntilEntered()
+    {
+        using Activity ambientActivity = new Activity(Name("ambient-parent")).Start();
+        IPlatformTestExecutionActivity? testActivity = _service.StartTestExecutionActivity(
+            Name("test-execution"),
+            tags: null,
+            parentId: ambientActivity.Id,
+            DateTimeOffset.UtcNow);
+        Assert.IsNotNull(testActivity);
+        Assert.AreSame(ambientActivity, Activity.Current);
+
+        using (testActivity.Enter())
+        {
+            Assert.AreEqual(testActivity.SpanId, Activity.Current?.SpanId.ToHexString());
+        }
+
+        Assert.AreSame(ambientActivity, Activity.Current);
+        testActivity.Stop(DateTimeOffset.UtcNow);
+    }
+
+    [TestMethod]
+    public void StopTestExecutionActivity_UsesProducerEndTime()
+    {
+        DateTimeOffset startTime = DateTimeOffset.UtcNow.AddSeconds(-1);
+        DateTimeOffset endTime = startTime.AddMilliseconds(125);
+        IPlatformTestExecutionActivity? testActivity = _service.StartTestExecutionActivity(
+            Name("explicit-end"),
+            tags: null,
+            parentId: null,
+            startTime);
+        Assert.IsNotNull(testActivity);
+
+        testActivity.Stop(endTime);
+
+        Activity stopped = Single();
+        Assert.AreEqual(startTime.UtcDateTime, stopped.StartTimeUtc);
+        Assert.AreEqual(TimeSpan.FromMilliseconds(125), stopped.Duration);
+    }
+
+    [TestMethod]
     public void CreateCounter_ForwardsMetadataAndEmitsMeasurements()
     {
         string instrumentName = Name("counter");

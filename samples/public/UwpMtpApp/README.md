@@ -5,10 +5,9 @@ Microsoft.Testing.Platform. `MSTest.Sdk` supplies the sidecar controller and pac
 the UWP launch activation string is restored with
 `PackagedAppExtensions.GetTestApplicationArguments`.
 
-The application targets .NET 9 because MSTest 4.5's modern-UWP package assets and native-AOT
-selection are validated for `net9.0`. The .NET 10 SDK supplies the release toolchain and MTP runner
-selection, while UWP execution uses desktop MSBuild. Targeting `net10.0` currently builds a package
-recipe whose executable selection is not supported by the MTP packaged-app launcher.
+The application targets .NET 10. The .NET 10 SDK supplies the target framework and resolves
+`MSTest.Sdk`; desktop MSBuild from Visual Studio loads the UWP XAML and MSIX toolchain and runs the
+`InvokeTestingPlatform` target.
 
 ## Prerequisites
 
