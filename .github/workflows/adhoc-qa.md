@@ -102,7 +102,6 @@ safe-outputs:
 tools:
   github:
     toolsets: [all]
-  web-fetch:
   bash: true
 
 source: githubnext/agentics/workflows/adhoc-qa.md@main
