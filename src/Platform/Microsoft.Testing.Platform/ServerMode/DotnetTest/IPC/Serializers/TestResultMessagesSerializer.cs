@@ -173,9 +173,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         var successfulTestResultMessages = new SuccessfulTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
-            CommonTestResultFields fields = default;
-
-            ReadFields(stream, (fieldId, fieldSize) =>
+            CommonTestResultFields fields = ReadFields(stream, default(CommonTestResultFields), static (stream, fieldId, fieldSize, fields) =>
                 TryReadCommonTestResultField(
                     stream,
                     fieldId,
@@ -185,7 +183,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                     SuccessfulTestResultMessageFieldsId.ErrorOutput,
                     SuccessfulTestResultMessageFieldsId.SessionUid,
                     SuccessfulTestResultMessageFieldsId.RetryAttemptNumber,
-                    SuccessfulTestResultMessageFieldsId.IsSuperseded));
+                    SuccessfulTestResultMessageFieldsId.IsSuperseded)
+                    ? fields
+                    : null);
 
             successfulTestResultMessages[i] = new SuccessfulTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, fields.RetryAttemptNumber, fields.IsSuperseded);
         }
@@ -199,44 +199,55 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         var failedTestResultMessages = new FailedTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
-            CommonTestResultFields fields = default;
-            ExceptionMessage[] exceptionMessages = [];
-
-            // Expected/Actual are specific to failed results (they carry the assertion diff) and are not part
-            // of the shared CommonTestResultFields, so they are read alongside the exception list.
-            string? expected = null, actual = null;
-
-            ReadFields(stream, (fieldId, fieldSize) =>
-            {
-                switch (fieldId)
+            FailedTestResultFields fields = ReadFields(
+                stream,
+                new FailedTestResultFields { ExceptionMessages = [] },
+                static (stream, fieldId, fieldSize, fields) =>
                 {
-                    case FailedTestResultMessageFieldsId.ExceptionMessageList:
-                        exceptionMessages = ReadFieldPayload(stream, fieldSize, ReadExceptionMessagesPayload);
-                        return true;
+                    switch (fieldId)
+                    {
+                        case FailedTestResultMessageFieldsId.ExceptionMessageList:
+                            fields.ExceptionMessages = ReadFieldPayload(stream, fieldSize, ReadExceptionMessagesPayload);
+                            return fields;
 
-                    case FailedTestResultMessageFieldsId.Expected:
-                        expected = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case FailedTestResultMessageFieldsId.Expected:
+                            fields.Expected = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case FailedTestResultMessageFieldsId.Actual:
-                        actual = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case FailedTestResultMessageFieldsId.Actual:
+                            fields.Actual = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    default:
-                        return TryReadCommonTestResultField(
-                            stream,
-                            fieldId,
-                            fieldSize,
-                            ref fields,
-                            FailedTestResultMessageFieldsId.StandardOutput,
-                            FailedTestResultMessageFieldsId.ErrorOutput,
-                            FailedTestResultMessageFieldsId.SessionUid,
-                            FailedTestResultMessageFieldsId.RetryAttemptNumber,
-                            FailedTestResultMessageFieldsId.IsSuperseded);
-                }
-            });
+                        default:
+                            return TryReadCommonTestResultField(
+                                stream,
+                                fieldId,
+                                fieldSize,
+                                ref fields.Common,
+                                FailedTestResultMessageFieldsId.StandardOutput,
+                                FailedTestResultMessageFieldsId.ErrorOutput,
+                                FailedTestResultMessageFieldsId.SessionUid,
+                                FailedTestResultMessageFieldsId.RetryAttemptNumber,
+                                FailedTestResultMessageFieldsId.IsSuperseded)
+                                ? fields
+                                : null;
+                    }
+                });
 
-            failedTestResultMessages[i] = new FailedTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, exceptionMessages, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, expected, actual, fields.RetryAttemptNumber, fields.IsSuperseded);
+            failedTestResultMessages[i] = new FailedTestResultMessage(
+                fields.Common.Uid,
+                fields.Common.DisplayName,
+                fields.Common.State,
+                fields.Common.Duration,
+                fields.Common.Reason,
+                fields.ExceptionMessages,
+                fields.Common.StandardOutput,
+                fields.Common.ErrorOutput,
+                fields.Common.SessionUid,
+                fields.Expected,
+                fields.Actual,
+                fields.Common.RetryAttemptNumber,
+                fields.Common.IsSuperseded);
         }
 
         return failedTestResultMessages;
@@ -311,32 +322,28 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
         for (int i = 0; i < length; i++)
         {
-            string? errorMessage = null;
-            string? errorType = null;
-            string? stackTrace = null;
-
-            ReadFields(stream, (fieldId, fieldSize) =>
+            ExceptionFields fields = ReadFields(stream, default(ExceptionFields), static (stream, fieldId, fieldSize, fields) =>
             {
                 switch (fieldId)
                 {
                     case ExceptionMessageFieldsId.ErrorMessage:
-                        errorMessage = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.ErrorMessage = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     case ExceptionMessageFieldsId.ErrorType:
-                        errorType = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.ErrorType = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     case ExceptionMessageFieldsId.StackTrace:
-                        stackTrace = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.StackTrace = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     default:
-                        return false;
+                        return null;
                 }
             });
 
-            exceptionMessages[i] = new ExceptionMessage(errorMessage, errorType, stackTrace);
+            exceptionMessages[i] = new ExceptionMessage(fields.ErrorMessage, fields.ErrorType, fields.StackTrace);
         }
 
         return exceptionMessages;
@@ -438,8 +445,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         (exceptionMessage.StackTrace is null ? 0 : 1));
 
     // Mutable holder for the fields shared by successful and failed test result messages, used while reading so
-    // the common field-parsing logic can be shared across both message types. It is a struct captured by the
-    // reading closure (and passed by ref to the helper) to avoid an extra heap allocation per test result.
+    // the common field-parsing logic can be shared across both message types.
     private struct CommonTestResultFields
     {
         public string? Uid { get; set; }
@@ -461,5 +467,25 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         public int? RetryAttemptNumber { get; set; }
 
         public bool? IsSuperseded { get; set; }
+    }
+
+    private struct FailedTestResultFields
+    {
+        public CommonTestResultFields Common;
+
+        public ExceptionMessage[] ExceptionMessages { get; set; }
+
+        public string? Expected { get; set; }
+
+        public string? Actual { get; set; }
+    }
+
+    private struct ExceptionFields
+    {
+        public string? ErrorMessage { get; set; }
+
+        public string? ErrorType { get; set; }
+
+        public string? StackTrace { get; set; }
     }
 }

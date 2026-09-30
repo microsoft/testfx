@@ -313,6 +313,49 @@ internal abstract class BaseSerializer
         }
     }
 
+    /// <summary>
+    /// Reads the standard field envelope while threading a value-type state through a non-capturing callback.
+    /// Returning <see langword="null"/> from the callback marks the field as unrecognized.
+    /// </summary>
+    /// <typeparam name="TState">The value-type state accumulated while fields are read.</typeparam>
+    protected static TState ReadFields<TState>(Stream stream, TState state, Func<Stream, ushort, int, TState, TState?> tryReadField)
+        where TState : struct
+    {
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            if (fieldSize < 0)
+            {
+                throw new InvalidDataException($"Field {fieldId} has a negative size.");
+            }
+
+            long fieldEnd = checked(stream.Position + fieldSize);
+            if (fieldEnd > stream.Length)
+            {
+                throw new EndOfStreamException($"Field {fieldId} extends beyond the end of the stream.");
+            }
+
+            TState? updatedState = tryReadField(stream, fieldId, fieldSize, state);
+            if (updatedState is null)
+            {
+                SetPosition(stream, fieldEnd);
+                continue;
+            }
+
+            state = updatedState.Value;
+            if (stream.Position > fieldEnd)
+            {
+                throw new InvalidDataException($"Field {fieldId} consumed more data than its declared size.");
+            }
+
+            SetPosition(stream, fieldEnd);
+        }
+
+        return state;
+    }
+
     protected static T ReadFieldPayload<T>(Stream stream, int fieldSize, Func<Stream, T> readPayload)
     {
         ValidatePayloadSize(stream, fieldSize);

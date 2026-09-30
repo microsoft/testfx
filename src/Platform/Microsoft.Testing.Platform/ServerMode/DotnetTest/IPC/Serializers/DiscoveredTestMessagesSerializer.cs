@@ -110,62 +110,68 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         var discoveredTestMessages = new DiscoveredTestMessage[length];
         for (int i = 0; i < length; i++)
         {
-            string? uid = null;
-            string? displayName = null;
-            string? filePath = null;
-            int? lineNumber = null;
-            string? @namespace = null;
-            string? typeName = null;
-            string? methodName = null;
-            TraitMessage[] traits = [];
-            string[] parameterTypeFullNames = [];
-
-            ReadFields(stream, (fieldId, fieldSize) =>
-            {
-                switch (fieldId)
+            DiscoveredTestMessageFields fields = ReadFields(
+                stream,
+                new DiscoveredTestMessageFields
                 {
-                    case DiscoveredTestMessageFieldsId.Uid:
-                        uid = ReadStringValue(stream, fieldSize);
-                        return true;
+                    Traits = [],
+                    ParameterTypeFullNames = [],
+                },
+                static (stream, fieldId, fieldSize, fields) =>
+                {
+                    switch (fieldId)
+                    {
+                        case DiscoveredTestMessageFieldsId.Uid:
+                            fields.Uid = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.DisplayName:
-                        displayName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.DisplayName:
+                            fields.DisplayName = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.FilePath:
-                        filePath = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.FilePath:
+                            fields.FilePath = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.LineNumber:
-                        lineNumber = ReadInt(stream);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.LineNumber:
+                            fields.LineNumber = ReadInt(stream);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.Namespace:
-                        @namespace = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.Namespace:
+                            fields.Namespace = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.TypeName:
-                        typeName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.TypeName:
+                            fields.TypeName = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.MethodName:
-                        methodName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.MethodName:
+                            fields.MethodName = ReadStringValue(stream, fieldSize);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.Traits:
-                        traits = ReadFieldPayload(stream, fieldSize, ReadTraitsPayload);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.Traits:
+                            fields.Traits = ReadFieldPayload(stream, fieldSize, ReadTraitsPayload);
+                            return fields;
 
-                    case DiscoveredTestMessageFieldsId.ParameterTypeFullNames:
-                        parameterTypeFullNames = ReadFieldPayload(stream, fieldSize, ReadParameterTypeFullNamesPayload);
-                        return true;
+                        case DiscoveredTestMessageFieldsId.ParameterTypeFullNames:
+                            fields.ParameterTypeFullNames = ReadFieldPayload(stream, fieldSize, ReadParameterTypeFullNamesPayload);
+                            return fields;
 
-                    default:
-                        return false;
-                }
-            });
+                        default:
+                            return null;
+                    }
+                });
 
-            discoveredTestMessages[i] = new DiscoveredTestMessage(uid, displayName, filePath, lineNumber, @namespace, typeName, methodName, parameterTypeFullNames, traits);
+            discoveredTestMessages[i] = new DiscoveredTestMessage(
+                fields.Uid,
+                fields.DisplayName,
+                fields.FilePath,
+                fields.LineNumber,
+                fields.Namespace,
+                fields.TypeName,
+                fields.MethodName,
+                fields.ParameterTypeFullNames,
+                fields.Traits);
         }
 
         return discoveredTestMessages;
@@ -190,29 +196,26 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         var traits = new TraitMessage[length];
         for (int i = 0; i < length; i++)
         {
-            string? key = null;
-            string? value = null;
-
-            ReadFields(stream, (fieldId, fieldSize) =>
+            TraitFields fields = ReadFields(stream, default(TraitFields), static (stream, fieldId, fieldSize, fields) =>
             {
                 switch (fieldId)
                 {
                     case TraitMessageFieldsId.Key:
-                        key = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.Key = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     case TraitMessageFieldsId.Value:
-                        value = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.Value = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     default:
-                        return false;
+                        return null;
                 }
             });
 
-            _ = key ?? throw new InvalidOperationException("Trait key is required.");
-            _ = value ?? throw new InvalidOperationException("Trait value is required.");
-            traits[i] = new TraitMessage(key, value);
+            _ = fields.Key ?? throw new InvalidOperationException("Trait key is required.");
+            _ = fields.Value ?? throw new InvalidOperationException("Trait value is required.");
+            traits[i] = new TraitMessage(fields.Key, fields.Value);
         }
 
         return traits;
@@ -271,4 +274,32 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
     private static ushort GetFieldCount(TraitMessage trait) =>
         (ushort)((trait.Key is null ? 0 : 1) +
         (trait.Value is null ? 0 : 1));
+
+    private struct DiscoveredTestMessageFields
+    {
+        public string? Uid { get; set; }
+
+        public string? DisplayName { get; set; }
+
+        public string? FilePath { get; set; }
+
+        public int? LineNumber { get; set; }
+
+        public string? Namespace { get; set; }
+
+        public string? TypeName { get; set; }
+
+        public string? MethodName { get; set; }
+
+        public TraitMessage[] Traits { get; set; }
+
+        public string[] ParameterTypeFullNames { get; set; }
+    }
+
+    private struct TraitFields
+    {
+        public string? Key { get; set; }
+
+        public string? Value { get; set; }
+    }
 }

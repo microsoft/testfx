@@ -1,3 +1,6 @@
 #nullable enable
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.DisposeAsync() -> System.Threading.Tasks.ValueTask

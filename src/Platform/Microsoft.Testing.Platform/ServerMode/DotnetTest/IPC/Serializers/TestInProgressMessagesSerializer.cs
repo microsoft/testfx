@@ -67,27 +67,24 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
         var inProgressMessages = new TestInProgressMessage[length];
         for (int i = 0; i < length; i++)
         {
-            string? uid = null;
-            string? displayName = null;
-
-            ReadFields(stream, (fieldId, fieldSize) =>
+            TestInProgressFields fields = ReadFields(stream, default(TestInProgressFields), static (stream, fieldId, fieldSize, fields) =>
             {
                 switch (fieldId)
                 {
                     case TestInProgressMessageFieldsId.Uid:
-                        uid = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.Uid = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     case TestInProgressMessageFieldsId.DisplayName:
-                        displayName = ReadStringValue(stream, fieldSize);
-                        return true;
+                        fields.DisplayName = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     default:
-                        return false;
+                        return null;
                 }
             });
 
-            inProgressMessages[i] = new TestInProgressMessage(uid, displayName);
+            inProgressMessages[i] = new TestInProgressMessage(fields.Uid, fields.DisplayName);
         }
 
         return inProgressMessages;
@@ -116,4 +113,11 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
     private static ushort GetFieldCount(TestInProgressMessage inProgressMessage) =>
         (ushort)((inProgressMessage.Uid is null ? 0 : 1) +
         (inProgressMessage.DisplayName is null ? 0 : 1));
+
+    private struct TestInProgressFields
+    {
+        public string? Uid { get; set; }
+
+        public string? DisplayName { get; set; }
+    }
 }
