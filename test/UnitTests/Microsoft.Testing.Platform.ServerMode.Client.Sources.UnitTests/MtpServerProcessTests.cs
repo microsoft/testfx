@@ -65,12 +65,13 @@ public sealed class MtpServerProcessTests
         string source = temp.CreateFile(
             "NeverConnects.cmd",
             "@echo off\r\n"
+            // Keep the launched batch process alive until the test releases it. This avoids racing a delayed
+            // timeout probe with natural process exit, while the marker verifies that teardown killed the process.
             + ":wait\r\n"
-            + $"if not exist \"{releaseFile}\" (\r\n"
-            + "  ping 127.0.0.1 -n 2 > nul\r\n"
-            + "  goto wait\r\n"
-            + ")\r\n"
-            + $"echo survived>\"{survivedFile}\"\r\n");
+            + $"if exist \"{releaseFile}\" echo survived>\"{survivedFile}\"\r\n"
+            + $"if exist \"{releaseFile}\" exit /b 0\r\n"
+            + "ping 127.0.0.1 -n 2 > nul\r\n"
+            + "goto wait\r\n");
         var log = new List<string>();
         var options = new MtpServerClientOptions
         {

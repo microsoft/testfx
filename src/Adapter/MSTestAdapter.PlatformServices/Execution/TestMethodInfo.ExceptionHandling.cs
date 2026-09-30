@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -19,8 +19,14 @@ internal partial class TestMethodInfo
     /// <param name="realException">Real exception thrown by the test method.</param>
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
+    /// <param name="classInstanceCreated">Whether the test-class instance was created before the exception.</param>
     /// <returns>Test framework exception with details.</returns>
-    private TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
+    private TestFailedException HandleMethodException(
+        Exception ex,
+        Exception realException,
+        string className,
+        string methodName,
+        bool classInstanceCreated)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 
@@ -57,7 +63,7 @@ internal partial class TestMethodInfo
             return new TestFailedException(outcome, exceptionMessage, exceptionStackTraceInfo, realException);
         }
 
-        errorMessage = _classInstance is null
+        errorMessage = !classInstanceCreated
             ? string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_InstanceCreationError,

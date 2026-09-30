@@ -22,7 +22,6 @@ tools:
       key: repo-history  # shared cache produced by the repo-historian workflow
   github:
     toolsets: [pull_requests, repos]
-  web-fetch:
 
 # Attribution is provided by the Copilot banner the expert-reviewer prepends to
 # the final review body (see .github/agents/expert-reviewer.agent.md). The gh-aw

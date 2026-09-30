@@ -66,7 +66,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
                     return true;
 
                 case CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList:
-                    commandLineOptionMessages = ReadCommandLineOptionMessagesPayload(stream);
+                    commandLineOptionMessages = ReadFieldPayload(stream, fieldSize, ReadCommandLineOptionMessagesPayload);
                     return true;
 
                 default:
@@ -79,7 +79,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
 
     private static CommandLineOptionMessage[] ReadCommandLineOptionMessagesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var commandLineOptionMessages = new CommandLineOptionMessage[length];
 
         for (int i = 0; i < length; i++)

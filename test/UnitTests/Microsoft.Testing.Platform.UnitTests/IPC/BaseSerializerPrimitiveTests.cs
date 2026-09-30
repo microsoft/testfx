@@ -51,6 +51,8 @@ public sealed class BaseSerializerPrimitiveTests
             () => SerializerProbe.ReadUShortValue(new MemoryStream(new byte[sizeof(ushort) - 1])));
         Assert.ThrowsExactly<EndOfStreamException>(
             () => SerializerProbe.ReadBoolValue(new MemoryStream()));
+        Assert.ThrowsExactly<EndOfStreamException>(
+            () => SerializerProbe.ReadByteValue(new MemoryStream()));
     }
 
     private sealed class SerializerProbe : BaseSerializer
@@ -70,6 +72,8 @@ public sealed class BaseSerializerPrimitiveTests
         public static void WriteBoolValue(Stream stream, bool value) => WriteBool(stream, value);
 
         public static bool ReadBoolValue(Stream stream) => ReadBool(stream);
+
+        public static byte ReadByteValue(Stream stream) => ReadByte(stream);
 
         public static void WriteStringValue(Stream stream, string value) => WriteString(stream, value);
 

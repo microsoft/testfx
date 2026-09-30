@@ -72,6 +72,8 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         MSTestPlatformActivity.TryEnable(serviceProvider);
     }
 
+    internal ITestClassInstanceFactory? TestClassInstanceFactory { get; set; }
+
     public string Uid => _extension.Uid;
 
     public string Version => _extension.Version;
@@ -157,8 +159,11 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         // Call the platform-agnostic engine directly with neutral inputs; the native MTP path no longer routes
         // through the VSTest MSTestDiscoverer class. The MTP-specific filter provider evaluates the filter from the
         // neutral UnitTestElement model so this path never materializes a vstest TestCase (see #9769).
-        await new MSTestEngine(cancellationToken, CreateTelemetrySender())
-            .DiscoverAsync(
+        var engine = new MSTestEngine(cancellationToken, CreateTelemetrySender())
+        {
+            TestClassInstanceFactory = TestClassInstanceFactory,
+        };
+        await engine.DiscoverAsync(
                 assemblyPaths,
                 runSettings.SettingsXml,
                 handle.ToAdapterMessageLogger(),
@@ -191,8 +196,11 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _gracefulStopCapability.NotifyTestExecutionStarting();
         try
         {
-            await new MSTestEngine(cancellationToken, CreateTelemetrySender())
-                .RunFromSourcesAsync(
+            var engine = new MSTestEngine(cancellationToken, CreateTelemetrySender())
+            {
+                TestClassInstanceFactory = TestClassInstanceFactory,
+            };
+            await engine.RunFromSourcesAsync(
                     assemblyPaths,
                     runSettings.SettingsXml,
                     runContext.TestRunDirectory,

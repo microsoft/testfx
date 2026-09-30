@@ -4,9 +4,13 @@
 using Microsoft.Testing.Extensions.Hosting;
 using Microsoft.Testing.Extensions.Hosting.Resources;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -79,6 +83,53 @@ public sealed class HotReloadTests
             service => service.RegisterDeadlineStopFallback(It.IsAny<Func<Task<bool>>>()),
             Times.Never);
     }
+
+#if NET6_0_OR_GREATER
+    [TestMethod]
+    public async Task ExecuteRequestAsync_HotReload_WaitsForRequestCompletionBeforeEndingCycle()
+    {
+        var stopPolicies = new Mock<IStopPoliciesService>();
+        bool deadlineTriggered = false;
+        stopPolicies.SetupGet(service => service.IsDeadlineTriggered).Returns(() => deadlineTriggered);
+        stopPolicies.Setup(service => service.RegisterOnDeadlineCallbackAsync(It.IsAny<Func<Task>>()))
+            .Returns(Task.CompletedTask);
+        ServiceProvider serviceProvider = CreateServiceProvider(
+            CreateEnvironment("1", null).Object,
+            new SystemRuntimeFeature(),
+            stopPolicies.Object);
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        serviceProvider.AddService(console.Object);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice.Setup(device => device.DisplayAsync(
+            It.IsAny<IOutputDeviceDataProducer>(),
+            It.IsAny<IOutputDeviceData>(),
+            It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        serviceProvider.AddService(outputDevice.Object);
+        serviceProvider.AddService(Mock.Of<IPlatformOutputDevice>());
+        var messageBus = new Mock<BaseMessageBus>();
+        messageBus.Setup(bus => bus.DrainDataAsync()).Returns(Task.CompletedTask);
+        serviceProvider.AddService(messageBus.Object);
+        serviceProvider.AddService(new TestCoverageResult());
+        var framework = new Mock<ITestFramework>();
+        var requestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        framework.Setup(instance => instance.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
+            .Callback<ExecuteRequestContext>(context => requestStarted.SetResult(context))
+            .Returns(Task.CompletedTask);
+        var invoker = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
+        var request = new RunTestExecutionRequest(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("session")));
+
+        Task execution = invoker.ExecuteRequestAsync(framework.Object, request, messageBus.Object, TestContext.CancellationToken);
+        ExecuteRequestContext context = await requestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+        bool completedBeforeNotification = execution.IsCompleted;
+        deadlineTriggered = true;
+        context.Complete();
+        await execution.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+        Assert.IsFalse(completedBeforeNotification);
+        messageBus.Verify(bus => bus.DrainDataAsync(), Times.Once);
+    }
+#endif
 
     [TestMethod]
     public void PlatformGuards_CurrentDesktopPlatform_IsSupported()

@@ -450,6 +450,21 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <target state="translated">Una clase de prueba hereda un ciclo de vida o un método de prueba de una versión de MSTest diferente</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedDescription">
+        <source>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</source>
+        <target state="new">Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</target>
+        <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedMessageFormat">
+        <source>AddMSTestTestClassInjection is not supported when '{0}' is enabled</source>
+        <target state="new">AddMSTestTestClassInjection is not supported when '{0}' is enabled</target>
+        <note>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedTitle">
+        <source>MSTest host test-class injection is not supported by the selected build mode</source>
+        <target state="new">MSTest host test-class injection is not supported by the selected build mode</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
         <target state="translated">Los miembros a los que hace referencia un atributo "[MemberCondition]" deben existir en el tipo al que se hace referencia, ser "public static", devolver "bool" y (para métodos) no tener parámetros. El atributo se produce en tiempo de ejecución cuando se infringen estas reglas; este analizador muestra los mismos problemas en tiempo de compilación, por lo que los errores tipográficos y las refactorizaciones no interrumpen silenciosamente el acceso a las pruebas.</target>
@@ -1029,6 +1044,16 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
         <source>'[TestClass]' should not be applied to abstract classes</source>
         <target state="translated">'[TestClass]' no debe aplicarse a clases abstractas</target>
         <note>{Locked="[TestClass]"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassConstructorHasDerivedTestContextMessageFormat">
+        <source>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</source>
+        <target state="new">Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</target>
+        <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">
+        <source>Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
+        <target state="new">Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <note>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>

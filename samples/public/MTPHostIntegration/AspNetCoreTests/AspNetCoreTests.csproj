@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <MicrosoftTestingPlatformVersion>$(TestingPlatformPreviewVersion)</MicrosoftTestingPlatformVersion>
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <TestingPlatformHostFactory>AspNetCoreTestHost.CreateHost</TestingPlatformHostFactory>
     <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
@@ -11,7 +13,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(TestingPlatformPreviewVersion)" />
-    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(TestingPlatformPreviewVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformPreviewVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$(MSTestExtensionsHostingVersion)" />
   </ItemGroup>
 
   <ItemGroup>

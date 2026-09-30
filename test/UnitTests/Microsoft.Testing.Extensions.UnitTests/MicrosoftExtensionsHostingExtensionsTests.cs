@@ -164,6 +164,30 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     }
 
     [TestMethod]
+    public async Task RunTestingPlatformAsync_AppliesHostConfiguratorsBeforeCallerConfiguration()
+    {
+        List<string> operations = [];
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        hostBuilder.Services.AddSingleton<ITestingPlatformBuilderConfigurator>(
+            new RecordingBuilderConfigurator(operations));
+        using IHost host = hostBuilder.Build();
+
+        int exitCode = await host.RunTestingPlatformAsync(
+            [],
+            testApplication =>
+            {
+                operations.Add("caller");
+                testApplication.RegisterTestFramework(
+                    _ => new TestFrameworkCapabilities(),
+                    (_, _) => new EmptyTestFramework());
+            },
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(8, exitCode);
+        Assert.AreSequenceEqual(new[] { "configurator", "caller" }, operations);
+    }
+
+    [TestMethod]
     public async Task RunTestingPlatformAsync_WhenMtpFails_StillStopsHost()
     {
         HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
@@ -438,6 +462,15 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         {
             Stopped = true;
             return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RecordingBuilderConfigurator(List<string> operations) : ITestingPlatformBuilderConfigurator
+    {
+        public void Configure(ITestApplicationBuilder testApplicationBuilder)
+        {
+            _ = testApplicationBuilder;
+            operations.Add("configurator");
         }
     }
 

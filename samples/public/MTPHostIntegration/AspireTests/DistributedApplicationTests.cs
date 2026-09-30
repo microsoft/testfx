@@ -6,7 +6,7 @@ using Aspire.Hosting.Testing;
 namespace MTPHostIntegration.AspireTests;
 
 [TestClass]
-public sealed class DistributedApplicationTests
+public sealed class DistributedApplicationTests(HostedTestMetadata metadata)
 {
     private const int StartupTimeoutMilliseconds = 120_000;
 
@@ -16,6 +16,7 @@ public sealed class DistributedApplicationTests
     [Timeout(StartupTimeoutMilliseconds, CooperativeCancellation = true)]
     public async Task ApiGreetingIsAvailable()
     {
+        Assert.AreEqual("Aspire", metadata.HostingModel);
         CancellationToken cancellationToken = TestContext.CancellationToken;
         IDistributedApplicationTestingBuilder builder =
             await DistributedApplicationTestingBuilder.CreateAsync<Projects.AspireAppHost>(cancellationToken: cancellationToken);
