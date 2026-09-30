@@ -359,7 +359,7 @@ Individual extension toggles remain unset and disabled when a profile does not e
 
 | Property | Behavior |
 | --- | --- |
-| `TestingPlatformDotnetTestSupport` | Enables the compatibility integration used by `dotnet test` before the .NET SDK introduced native MTP runner selection. For test applications it defaults to `true` with .NET SDK 9 and earlier, and remains unset/disabled with .NET SDK 10 and later. |
+| `TestingPlatformDotnetTestSupport` | Deprecated compatibility integration used by `dotnet test` before the .NET SDK introduced native MTP runner selection. Do not set it in new projects; select `Microsoft.Testing.Platform` through `global.json` instead. For test applications it defaults to `true` with .NET SDK 9 and earlier, and remains unset/disabled with .NET SDK 10 and later. |
 | `EnableMicrosoftTestingPlatform` | Advanced version-alignment escape hatch. When `true` for an `IsTestApplication=true` ClassicEngine or NativeAOT project, adds an explicit `Microsoft.Testing.Platform` package reference using `MicrosoftTestingPlatformVersion`. It is ignored for test libraries and VSTest. It is normally unnecessary and does not select the runner or change `IsTestingPlatformApplication`. |
 | `EnableMSTestSourceGeneration` | Adds `MSTest.SourceGeneration` to non-NativeAOT projects. For reusable test libraries, it also adds `MSTest.TestAdapter`, which provides the runtime hooks referenced by generated code. .NET Standard is not supported because the adapter does not ship compatible runtime hooks. NativeAOT projects always include source generation. |
 | `MSTestVersion` | Overrides the versions of the MSTest framework, adapter, and source generator supplied by the SDK. |
