@@ -142,6 +142,27 @@ public static class ServiceProviderExtensions
         => serviceProvider.GetRequiredPlatformService<ILoggerFactory>();
 
     /// <summary>
+    /// Gets information about the built-in diagnostic file logger from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>
+    /// The diagnostic logging information, or <see langword="null"/> when diagnostic logging is disabled.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The returned service is live. Extensions created while the test application is still being built
+    /// should retain the service and read <see cref="IDiagnosticLoggingInformation.LogFile"/> when needed,
+    /// because the platform can relocate the log before the build completes.
+    /// </para>
+    /// <para>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </para>
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public static IDiagnosticLoggingInformation? GetDiagnosticLoggingInformation(this IServiceProvider serviceProvider)
+        => serviceProvider.GetPlatformService<IDiagnosticLoggingInformation>();
+
+    /// <summary>
     /// Gets the output device from the <see cref="IServiceProvider"/>.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
