@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
 [Embedded]
 internal abstract class BaseSerializer
 {
+    private const int MaximumCollectionLength = 1_000_000;
+
     // Self-contained DEBUG assert so this shared-source type has no dependency on the rest of
     // Microsoft.Testing.Platform (e.g. RoslynDebug). Replaces RoslynDebug.Assert in the serializers.
     // No [DoesNotReturnIf(false)]: this is [Conditional("DEBUG")] and delegates to Debug.Assert, which can
@@ -31,6 +33,8 @@ internal abstract class BaseSerializer
 
     protected static string ReadStringValue(Stream stream, int size)
     {
+        ValidatePayloadSize(stream, size);
+
 #if NETCOREAPP
         byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(size);
         try
@@ -149,12 +153,7 @@ internal abstract class BaseSerializer
         => stream.WriteByte(value ? (byte)1 : (byte)0);
 
     protected static bool ReadBool(Stream stream)
-        => stream.ReadByte() switch
-        {
-            -1 => throw new EndOfStreamException(),
-            0 => false,
-            _ => true,
-        };
+        => ReadByte(stream) != 0;
 
     // Reads exactly 'count' bytes into 'buffer' starting at 'offset', looping until the request is
     // satisfied or the end of the stream is reached. This centralizes the previously duplicated
@@ -179,7 +178,10 @@ internal abstract class BaseSerializer
 #endif
     }
 
-    protected static byte ReadByte(Stream stream) => (byte)stream.ReadByte();
+    protected static byte ReadByte(Stream stream)
+        => stream.ReadByte() is int value and not -1
+            ? (byte)value
+            : throw new EndOfStreamException();
 
     protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
 
@@ -285,12 +287,167 @@ internal abstract class BaseSerializer
         {
             ushort fieldId = ReadUShort(stream);
             int fieldSize = ReadInt(stream);
+            if (fieldSize < 0)
+            {
+                throw new InvalidDataException($"Field {fieldId} has a negative size.");
+            }
+
+            long fieldEnd = checked(stream.Position + fieldSize);
+            if (fieldEnd > stream.Length)
+            {
+                throw new EndOfStreamException($"Field {fieldId} extends beyond the end of the stream.");
+            }
+
             if (!tryReadField(fieldId, fieldSize))
             {
-                // If we don't recognize the field id, skip the payload corresponding to that field.
-                SetPosition(stream, stream.Position + fieldSize);
+                SetPosition(stream, fieldEnd);
+                continue;
+            }
+
+            if (stream.Position > fieldEnd)
+            {
+                throw new InvalidDataException($"Field {fieldId} consumed more data than its declared size.");
+            }
+
+            SetPosition(stream, fieldEnd);
+        }
+    }
+
+    /// <summary>
+    /// Reads the standard field envelope while threading a value-type state through a non-capturing callback.
+    /// Returning <see langword="null"/> from the callback marks the field as unrecognized.
+    /// </summary>
+    /// <typeparam name="TState">The value-type state accumulated while fields are read.</typeparam>
+    protected static TState ReadFields<TState>(Stream stream, TState state, Func<Stream, ushort, int, TState, TState?> tryReadField)
+        where TState : struct
+    {
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            if (fieldSize < 0)
+            {
+                throw new InvalidDataException($"Field {fieldId} has a negative size.");
+            }
+
+            long fieldEnd = checked(stream.Position + fieldSize);
+            if (fieldEnd > stream.Length)
+            {
+                throw new EndOfStreamException($"Field {fieldId} extends beyond the end of the stream.");
+            }
+
+            TState? updatedState = tryReadField(stream, fieldId, fieldSize, state);
+            if (updatedState is null)
+            {
+                SetPosition(stream, fieldEnd);
+                continue;
+            }
+
+            state = updatedState.Value;
+            if (stream.Position > fieldEnd)
+            {
+                throw new InvalidDataException($"Field {fieldId} consumed more data than its declared size.");
+            }
+
+            SetPosition(stream, fieldEnd);
+        }
+
+        return state;
+    }
+
+    protected static T ReadFieldPayload<T>(Stream stream, int fieldSize, Func<Stream, T> readPayload)
+    {
+        ValidatePayloadSize(stream, fieldSize);
+        using var payloadStream = new BoundedReadStream(stream, fieldSize);
+        return readPayload(payloadStream);
+    }
+
+    protected static int ReadCollectionLength(Stream stream, int minimumBytesPerItem)
+    {
+        int length = ReadInt(stream);
+        long remainingBytes = stream.Length - stream.Position;
+        return (length < 0 ||
+            length > MaximumCollectionLength ||
+            minimumBytesPerItem <= 0 ||
+            length > remainingBytes / minimumBytesPerItem)
+            ? throw new InvalidDataException($"Collection length {length} is invalid for the remaining payload.")
+            : length;
+    }
+
+    private static void ValidatePayloadSize(Stream stream, int size)
+    {
+        if (size < 0 || size > stream.Length - stream.Position)
+        {
+            throw new InvalidDataException($"Payload size {size} is invalid for the remaining stream.");
+        }
+    }
+
+    private sealed class BoundedReadStream(Stream stream, long length) : Stream
+    {
+        private readonly long _start = stream.Position;
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => true;
+
+        public override bool CanWrite => false;
+
+        public override long Length { get; } = length;
+
+        public override long Position
+        {
+            get => stream.Position - _start;
+            set
+            {
+                if (value < 0 || value > Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value));
+                }
+
+                stream.Position = _start + value;
             }
         }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int bytesToRead = (int)Math.Min(count, Length - Position);
+            return bytesToRead == 0 ? 0 : stream.Read(buffer, offset, bytesToRead);
+        }
+
+#if NETCOREAPP
+        public override int Read(Span<byte> buffer)
+        {
+            int bytesToRead = (int)Math.Min(buffer.Length, Length - Position);
+            return bytesToRead == 0 ? 0 : stream.Read(buffer[..bytesToRead]);
+        }
+#endif
+
+        public override int ReadByte()
+            => Position == Length ? -1 : stream.ReadByte();
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            long position = origin switch
+            {
+                SeekOrigin.Begin => offset,
+                SeekOrigin.Current => Position + offset,
+                SeekOrigin.End => Length + offset,
+                _ => throw new ArgumentOutOfRangeException(nameof(origin)),
+            };
+            Position = position;
+            return Position;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override void SetLength(long value)
+            => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count)
+            => throw new NotSupportedException();
     }
 
     /// <summary>

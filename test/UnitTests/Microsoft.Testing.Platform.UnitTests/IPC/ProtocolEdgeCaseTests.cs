@@ -227,6 +227,36 @@ public sealed class ProtocolEdgeCaseTests
     }
 
     [TestMethod]
+    [DataRow(-1)]
+    [DataRow(1)]
+    [DataRow(1_000_001)]
+    [DataRow(int.MaxValue)]
+    public void DiscoveredTestMessages_WhenParameterTypeCountIsInvalid_ThrowsInvalidDataException(int count)
+    {
+        byte[] discoveredTest = WriteFields(
+            (DiscoveredTestMessageFieldsId.ParameterTypeFullNames, WriteInt(count)));
+        byte[] payload = WriteFields(
+            (DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, WriteList(discoveredTest)));
+
+        AssertDeserializeThrows<InvalidDataException>(new DiscoveredTestMessagesSerializer(), payload);
+    }
+
+    [TestMethod]
+    public void DiscoveredTestMessages_WhenIntFieldIsWiderThanPrimitive_SkipsPadding()
+    {
+        byte[] discoveredTest = WriteFields(
+            (DiscoveredTestMessageFieldsId.LineNumber, [.. BitConverter.GetBytes(42), 0xAA, 0xBB, 0xCC, 0xDD]),
+            (DiscoveredTestMessageFieldsId.DisplayName, WriteString("after padding")));
+        byte[] payload = WriteFields(
+            (DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, WriteList(discoveredTest)));
+
+        DiscoveredTestMessages actual = DeserializePayload<DiscoveredTestMessages>(new DiscoveredTestMessagesSerializer(), payload);
+
+        Assert.AreEqual(42, actual.DiscoveredMessages[0].LineNumber);
+        Assert.AreEqual("after padding", actual.DiscoveredMessages[0].DisplayName);
+    }
+
+    [TestMethod]
     public void FileArtifactMessages_WhenEmptyList_RoundTrips()
     {
         var message = new FileArtifactMessages("exec", "inst", []);
@@ -282,6 +312,51 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("/a/b.trx", actual.FileArtifacts[0].FullPath);
         Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
         Assert.IsNull(actual.FileArtifacts[0].InputArtifactPaths);
+    }
+
+    [TestMethod]
+    public void FileArtifactMessages_WhenInputArtifactPathCountIsTooLarge_ThrowsInvalidDataException()
+    {
+        byte[] fileArtifact = WriteFields(
+            (FileArtifactMessageFieldsId.InputArtifactPaths, WriteInt(int.MaxValue)));
+        byte[] payload = WriteFields(
+            (FileArtifactMessagesFieldsId.FileArtifactMessageList, WriteList(fileArtifact)));
+
+        AssertDeserializeThrows<InvalidDataException>(new FileArtifactMessagesSerializer(), payload);
+    }
+
+    [TestMethod]
+    public void DisplayMessage_WhenByteFieldIsWiderThanPrimitive_SkipsPadding()
+    {
+        byte[] payload = WriteFields(
+            (DisplayMessageFieldsId.Level, [DisplayMessageLevels.Warning, 0xFF]),
+            (DisplayMessageFieldsId.Text, WriteString("after padding")));
+
+        DisplayMessage actual = DeserializePayload<DisplayMessage>(new DisplayMessageSerializer(), payload);
+
+        Assert.AreEqual(DisplayMessageLevels.Warning, actual.Level);
+        Assert.AreEqual("after padding", actual.Text);
+    }
+
+    [TestMethod]
+    public void DisplayMessage_WhenByteFieldDeclaresNoPayload_ThrowsInvalidDataException()
+    {
+        byte[] payload = WriteFieldsWithDeclaredSizes(
+            (DisplayMessageFieldsId.Level, 0, [DisplayMessageLevels.Warning]),
+            (DisplayMessageFieldsId.Text, "after malformed field".Length, WriteString("after malformed field")));
+
+        AssertDeserializeThrows<InvalidDataException>(new DisplayMessageSerializer(), payload);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_WhenDurationExceedsDeclaredFieldSize_ThrowsInvalidDataException()
+    {
+        byte[] successfulResult = WriteFieldsWithDeclaredSizes(
+            (SuccessfulTestResultMessageFieldsId.Duration, sizeof(int), BitConverter.GetBytes(42L)));
+        byte[] payload = WriteFields(
+            (TestResultMessagesFieldsId.SuccessfulTestMessageList, WriteList(successfulResult)));
+
+        AssertDeserializeThrows<InvalidDataException>(new TestResultMessagesSerializer(), payload);
     }
 
     [TestMethod]
@@ -345,6 +420,15 @@ public sealed class ProtocolEdgeCaseTests
         return (TMessage)Deserialize(serializer, stream);
     }
 
+    private static void AssertDeserializeThrows<TException>(object serializer, byte[] payload)
+        where TException : Exception
+    {
+        using var stream = new MemoryStream(payload);
+        TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
+            () => Deserialize(serializer, stream));
+        Assert.IsInstanceOfType<TException>(wrapper.InnerException);
+    }
+
     private static byte[] WriteFields(params (ushort Id, byte[] Payload)[] fields)
     {
         using var stream = new MemoryStream();
@@ -372,7 +456,24 @@ public sealed class ProtocolEdgeCaseTests
         return stream.ToArray();
     }
 
+    private static byte[] WriteFieldsWithDeclaredSizes(params (ushort Id, int DeclaredSize, byte[] Payload)[] fields)
+    {
+        using var stream = new MemoryStream();
+        WriteUShort(stream, (ushort)fields.Length);
+
+        foreach ((ushort id, int declaredSize, byte[] payload) in fields)
+        {
+            WriteUShort(stream, id);
+            WriteInt(stream, declaredSize);
+            stream.Write(payload, 0, payload.Length);
+        }
+
+        return stream.ToArray();
+    }
+
     private static byte[] WriteString(string value) => Encoding.UTF8.GetBytes(value);
+
+    private static byte[] WriteInt(int value) => BitConverter.GetBytes(value);
 
     private static void WriteInt(Stream stream, int value)
     {
