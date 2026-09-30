@@ -6,7 +6,10 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -42,6 +45,18 @@ public sealed class ServiceProviderTests
 
         Assert.AreSame(expected, provider.GetPlatformService<object>());
         Assert.IsNull(new SingleServiceProvider(null).GetPlatformService<object>());
+    }
+
+    [TestMethod]
+    public void GetDiagnosticLoggingInformation_ReturnsServiceOrNull()
+    {
+#pragma warning disable TPEXP // IDiagnosticLoggingInformation is experimental.
+        var information = new Mock<IDiagnosticLoggingInformation>();
+        _serviceProvider.AddService(information.Object);
+
+        Assert.AreSame(information.Object, _serviceProvider.GetDiagnosticLoggingInformation());
+        Assert.IsNull(new ServiceProvider().GetDiagnosticLoggingInformation());
+#pragma warning restore TPEXP
     }
 
     [TestMethod]

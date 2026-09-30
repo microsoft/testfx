@@ -29,7 +29,7 @@ function Confirm-NugetPackages {
         "MSTest.Windows.UIAutomation"                 = 36
     }
     # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
-    $packagesWithOptionalPdbFiles = @("MSTest.Sdk", "MSTest.Windows.UIAutomation")
+    $packagesWithOptionalPdbFiles = @("MSTest.Extensions.Hosting", "MSTest.Sdk", "MSTest.Windows.UIAutomation")
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
     $tmpDirectory = Resolve-Path "$PSScriptRoot/../artifacts/tmp/$configuration"

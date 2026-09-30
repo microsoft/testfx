@@ -4,7 +4,6 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
     <MicrosoftTestingPlatformVersion>$(TestingPlatformPreviewVersion)</MicrosoftTestingPlatformVersion>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <TestingPlatformHostFactory>AspNetCoreTestHost.CreateHost</TestingPlatformHostFactory>
     <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
