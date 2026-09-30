@@ -3,8 +3,11 @@
 
 using System.Runtime.ExceptionServices;
 
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
@@ -15,6 +18,9 @@ using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 using Moq;
+
+using BackCompat = Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
+using PublicApi = Microsoft.Testing.Platform.TestHostOrchestrator;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -173,6 +179,68 @@ public sealed class TestHostBuilderTests
             controllerInfo,
             new TestCommandLineOptions([]),
             Mock.Of<IEnvironment>()));
+    }
+
+    [TestMethod]
+    public void ValidateTestHostOrchestratorMiddlewareConfiguration_WithNoOrchestrator_ThrowsWithCount()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => TestHostBuilder.ValidateTestHostOrchestratorMiddlewareConfiguration(orchestratorCount: 0, middlewareCount: 1));
+
+        Assert.Contains("0", exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public void ValidateTestHostOrchestratorMiddlewareConfiguration_WithMultipleOrchestrators_ThrowsWithCount()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => TestHostBuilder.ValidateTestHostOrchestratorMiddlewareConfiguration(orchestratorCount: 2, middlewareCount: 1));
+
+        Assert.Contains("2", exception.Message, StringComparison.Ordinal);
+    }
+
+    [DataRow(0)]
+    [DataRow(2)]
+    [TestMethod]
+    public async Task BuilderRegistrationWithInvalidOrchestratorCount_ThrowsWithCount(int orchestratorCount)
+    {
+        var builder = new TestApplicationBuilder(
+            new ApplicationLoggingState(LogLevel.None, new CommandLineParseResult(null, [], [])),
+            DateTimeOffset.UtcNow,
+            new TestApplicationOptions(),
+            Mock.Of<IUnhandledExceptionsHandler>(),
+            ["--no-banner"]);
+        builder.RegisterTestFramework(
+            _ => new TestFrameworkCapabilities(),
+            (_, _) => Mock.Of<ITestFramework>());
+        var orchestratorManager = (PublicApi.TestHostOrchestratorManager)builder.TestHostOrchestrator;
+        for (int i = 0; i < orchestratorCount; i++)
+        {
+            int orchestratorIndex = i;
+            orchestratorManager.AddTestHostOrchestrator(
+                _ =>
+                {
+                    Mock<BackCompat.ITestHostExecutionOrchestrator> orchestrator = new();
+                    orchestrator.SetupGet(x => x.Uid).Returns($"orchestrator-{orchestratorIndex}");
+                    orchestrator.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+                    return orchestrator.Object;
+                });
+        }
+
+        ((PublicApi.ITestHostExecutionOrchestratorMiddlewareManager)orchestratorManager)
+            .AddTestHostExecutionOrchestratorMiddleware(
+                _ =>
+                {
+                    Mock<BackCompat.ITestHostExecutionOrchestratorMiddleware> middleware = new();
+                    middleware.SetupGet(x => x.Uid).Returns("middleware");
+                    middleware.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+                    return middleware.Object;
+                });
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => builder.BuildAsync());
+
+        Assert.Contains($"Found {orchestratorCount} orchestrator(s) instead.", exception.Message, StringComparison.Ordinal);
     }
 
     private static TestHostControllerInfo CreateTestHostControllerInfo(int? testHostControllerPid)

@@ -126,11 +126,21 @@ internal sealed partial class TestHostBuilder
     private async Task<IHost?> TryBuildTestHostOrchestratorHostAsync(BuildContext context)
     {
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(context.ServiceProvider).ConfigureAwait(false);
-        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0
+
+        // Middleware only wraps an existing orchestrator invocation (see
+        // ITestHostExecutionOrchestratorMiddleware); it does not stand in for one. Registering middleware
+        // without also registering exactly one orchestrator is a misconfiguration, not silently ignored.
+        bool hasActiveMiddleware = testHostOrchestratorConfiguration.Middleware.Length > 0;
+
+        if ((testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0 && !hasActiveMiddleware)
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return null;
         }
+
+        ValidateTestHostOrchestratorMiddlewareConfiguration(
+            testHostOrchestratorConfiguration.TestHostOrchestrators.Length,
+            testHostOrchestratorConfiguration.Middleware.Length);
 
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
             static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
@@ -154,6 +164,18 @@ internal sealed partial class TestHostBuilder
 
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostOrchestratorHost));
         return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, context.ServiceProvider);
+    }
+
+    internal static void ValidateTestHostOrchestratorMiddlewareConfiguration(int orchestratorCount, int middlewareCount)
+    {
+        if (middlewareCount > 0 && orchestratorCount != 1)
+        {
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage,
+                    orchestratorCount));
+        }
     }
 
     private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context)

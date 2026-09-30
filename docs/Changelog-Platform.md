@@ -10,6 +10,7 @@ See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4
 
 ### Added
 
+* Introduce an experimental `ITestHostExecutionOrchestratorMiddleware` composed around exactly one existing `ITestHostExecutionOrchestrator` invocation, as a v1 single-invocation composition boundary. Register middleware via the new `AddTestHostExecutionOrchestratorMiddleware` extension method on `ITestHostOrchestratorManager`. This is not a typed multi-run retry/stress/shard engine: middleware cannot repeat, shard, or rewrite the wrapped orchestrator's result, must propagate downstream exceptions and cancellation unchanged, and the existing `--retry-failed-tests` orchestrator is unaffected.
 * Enable native Microsoft.Testing.Platform execution for UWP and AppContainer Windows test hosts through a full-trust sidecar controller, including exact package-SID authorization for controller and extension pipes, LocalState artifact recovery, and multi-host Retry activation.
 
 ### Changed

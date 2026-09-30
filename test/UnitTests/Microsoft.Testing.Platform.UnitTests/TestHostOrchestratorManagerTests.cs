@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 using BackCompat = Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using PublicApi = Microsoft.Testing.Platform.TestHostOrchestrator;
@@ -146,6 +147,103 @@ public sealed class TestHostOrchestratorManagerTests
         Assert.AreEqual("e2e-compat", config.TestHostOrchestrators[0].Uid);
     }
 
+    [TestMethod]
+    public async Task AddTestHostExecutionOrchestratorMiddleware_RegistersAndBuildsInRegistrationOrder()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+
+        PublicApi.ITestHostOrchestratorManager publicManager = manager;
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("outer"));
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("inner"));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.HasCount(2, config.Middleware);
+        Assert.AreEqual("outer", config.Middleware[0].Uid);
+        Assert.AreEqual("inner", config.Middleware[1].Uid);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_NoMiddleware_ReturnsEmptyMiddlewareArray()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsEmpty(config.Middleware);
+    }
+
+    [TestMethod]
+    public async Task AddTestHostExecutionOrchestratorMiddleware_DuplicatedId_ShouldFail()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+
+        PublicApi.ITestHostOrchestratorManager publicManager = manager;
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("duplicatedId"));
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("duplicatedId"));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(_serviceProvider));
+
+        Assert.Contains("duplicatedId", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(typeof(FakeMiddleware).ToString(), exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task AddTestHostExecutionOrchestratorMiddleware_DisabledMiddleware_IsNotIncludedInConfiguration()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+
+        PublicApi.ITestHostOrchestratorManager publicManager = manager;
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("disabled", enabled: false));
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("enabled"));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.HasCount(1, config.Middleware);
+        Assert.AreEqual("enabled", config.Middleware[0].Uid);
+    }
+
+    [TestMethod]
+    public async Task AddTestHostExecutionOrchestratorMiddleware_ViaBackCompatConcreteManager_RegistersAndBuilds()
+    {
+        // TestHostBuilder constructs the back-compat subclass at runtime; it must inherit the middleware
+        // capability from the base class unchanged.
+        var backCompatManager = new BackCompat.TestHostOrchestratorManager();
+
+        PublicApi.ITestHostOrchestratorManager publicManager = backCompatManager;
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("via-backcompat-concrete-type"));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await backCompatManager.BuildAsync(_serviceProvider);
+
+        Assert.HasCount(1, config.Middleware);
+        Assert.AreEqual("via-backcompat-concrete-type", config.Middleware[0].Uid);
+    }
+
+    [TestMethod]
+    public async Task AddTestHostExecutionOrchestratorMiddleware_ExtensionMethod_SupportedManager_Registers()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+
+        PublicApi.ITestHostOrchestratorManager publicManager = manager;
+        publicManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("via-extension"));
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.HasCount(1, config.Middleware);
+        Assert.AreEqual("via-extension", config.Middleware[0].Uid);
+    }
+
+    [TestMethod]
+    public void AddTestHostExecutionOrchestratorMiddleware_ExtensionMethod_UnsupportedManager_ThrowsNotSupportedException()
+    {
+        PublicApi.ITestHostOrchestratorManager unsupportedManager = new UnsupportedOrchestratorManager();
+
+        NotSupportedException exception = Assert.ThrowsExactly<NotSupportedException>(
+            () => unsupportedManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("never-registered")));
+
+        Assert.Contains(nameof(UnsupportedOrchestratorManager), exception.Message, StringComparison.Ordinal);
+    }
+
     private sealed class FakeOrchestrator : BackCompat.ITestHostOrchestrator
     {
         public FakeOrchestrator(string uid) => Uid = uid;
@@ -181,5 +279,38 @@ public sealed class TestHostOrchestratorManagerTests
         public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class FakeMiddleware(string uid, bool enabled = true) : BackCompat.ITestHostExecutionOrchestratorMiddleware
+    {
+        public string Uid => uid;
+
+        public string Version => PlatformVersion.Version;
+
+        public string DisplayName => uid;
+
+        public string Description => uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(enabled);
+
+        public Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken cancellationToken)
+            => next(cancellationToken);
+    }
+
+    /// <summary>
+    /// A manager that only implements the base <see cref="PublicApi.ITestHostOrchestratorManager"/>, not the
+    /// optional <see cref="PublicApi.ITestHostExecutionOrchestratorMiddlewareManager"/> capability - the
+    /// scenario <see cref="PublicApi.TestHostOrchestratorManagerExtensions.AddTestHostExecutionOrchestratorMiddleware"/>
+    /// must reject with a clear, actionable exception rather than an obscure cast failure.
+    /// </summary>
+    private sealed class UnsupportedOrchestratorManager : PublicApi.ITestHostOrchestratorManager
+    {
+        public void AddTestHostOrchestrator(Func<IServiceProvider, BackCompat.ITestHostExecutionOrchestrator> factory)
+        {
+        }
+
+        public void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, BackCompat.ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
+        {
+        }
     }
 }
