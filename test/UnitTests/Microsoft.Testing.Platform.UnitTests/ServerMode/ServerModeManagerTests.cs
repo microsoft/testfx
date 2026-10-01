@@ -7,7 +7,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -67,7 +66,6 @@ public sealed class ServerModeManagerTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(commandLineHandler);
         serviceProvider.AddService(loggerFactory.Object);
-        serviceProvider.AddService(Mock.Of<IOutputDevice>());
         return serviceProvider;
     }
 

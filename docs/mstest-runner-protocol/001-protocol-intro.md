@@ -246,7 +246,7 @@ interface InitializeParams {
     protocolVersions?: string[] | null,
 
     capabilities: {
-        // Opt in to RPC-only output-device routing and diagnostic connection messages.
+        // Opt in to RPC-only output-device routing.
         // The server must acknowledge true before the client relies on this behavior.
         rpcOnlyOutput?: boolean | null,
 
@@ -884,8 +884,8 @@ Once applied, messages sent through `IOutputDevice` are routed only to `client/l
 not also to the original output device. Plain text, formatted text (including
 padding), session messages, and progress updates remain Information; warnings and
 errors retain their levels. Progress updates retain their existing deduplication
-behavior. Built-in connection diagnostics are Debug, including connection messages
-queued before initialization. Banner messages are already Debug over RPC. Supported
+behavior. Built-in connection diagnostics use `ILogger` at Debug level, independently
+of this capability, and are not sent to `client/log`. Banner messages are already Debug over RPC. Supported
 user messages are not classified by matching their text and are not discarded.
 The built-in max-failed-tests message is registered once by the output proxy and
 follows the negotiated route when invoked, even though its callback is registered
@@ -904,9 +904,8 @@ Attachment-only additional connections currently acknowledge false when requeste
 they do not own an RPC output-device route. Normal CLI execution and the separate
 `dotnet test` pipe protocol are unchanged.
 
-Output already written before the handshake cannot be retracted. In particular,
-the initial connection text can still appear on stdout, and clients should use the
-existing `--no-banner` option to suppress the cosmetic startup banner. Startup
+Output already written before the handshake cannot be retracted. Clients should use
+the existing `--no-banner` option to suppress the cosmetic startup banner. Startup
 failures before a successful handshake keep their original output route. Pending
 RPC output is drained when discovery or execution first initializes the output
 device, as before; legitimate user messages queued during startup remain included.

@@ -48,7 +48,7 @@ internal sealed class MtpServerClientOptions
     public bool? IsStateful { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to request RPC-only output-device routing and diagnostic connection messages.
+    /// Gets or sets whether to request RPC-only output-device routing.
     /// A null value omits the request. The client must check the server's applied acknowledgement.
     /// </summary>
     public bool? RpcOnlyOutput { get; set; }

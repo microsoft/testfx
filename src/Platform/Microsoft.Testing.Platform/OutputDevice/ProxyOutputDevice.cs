@@ -41,10 +41,7 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
     {
         if (_serverModeOutputDevice?.RpcOnlyOutput != true)
         {
-            IOutputDeviceData originalData = data is ConnectionMessageOutputDeviceData connectionMessage
-                ? new TextOutputDeviceData(connectionMessage.Text)
-                : data;
-            await OriginalOutputDevice.DisplayAsync(producer, originalData, cancellationToken).ConfigureAwait(false);
+            await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
         }
 
         if (_serverModeOutputDevice is not null)

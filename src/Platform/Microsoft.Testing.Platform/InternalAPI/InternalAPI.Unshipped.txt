@@ -1,4 +1,29 @@
 #nullable enable
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.RpcOnlyOutput = "rpcOnlyOutput" -> string!
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ConfigureRpcOnlyOutput(bool? requested) -> bool
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Description.get -> string!
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.DisplayName.get -> string!
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ProxyOutputDevice(Microsoft.Testing.Platform.OutputDevice.IPlatformOutputDevice! originalOutputDevice, Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice? serverModeOutputDevice, Microsoft.Testing.Platform.Services.IStopPoliciesService? policiesService) -> void
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Uid.get -> string!
+Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Version.get -> string!
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.RpcOnlyOutput.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.RpcOnlyOutput.init -> void
+Microsoft.Testing.Platform.ServerMode.ServerCapabilities.RpcOnlyOutput.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ServerCapabilities.RpcOnlyOutput.init -> void
+Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.RpcOnlyOutput.get -> bool
+Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.RpcOnlyOutput.set -> void
+Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.ServerModePerCallOutputDevice(Microsoft.Testing.Platform.Logging.FileLoggerProvider? fileLoggerProvider) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ProxyOutputDevice(Microsoft.Testing.Platform.OutputDevice.IPlatformOutputDevice! originalOutputDevice, Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice? serverModeOutputDevice) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.Description.get -> string!
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.DisplayName.get -> string!
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.Uid.get -> string!
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.Version.get -> string!
+*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.ServerModePerCallOutputDevice(Microsoft.Testing.Platform.Logging.FileLoggerProvider? fileLoggerProvider, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState

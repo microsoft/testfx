@@ -23,6 +23,6 @@ internal sealed partial class ServerModeManager
             : "localhost";
 
         ILogger logger = serviceProvider.GetLoggerFactory().CreateLogger<TcpMessageHandler>();
-        return new MessageHandlerFactory(clientHostName, clientPort, serviceProvider.GetOutputDevice(), logger);
+        return new MessageHandlerFactory(clientHostName, clientPort, logger);
     }
 }

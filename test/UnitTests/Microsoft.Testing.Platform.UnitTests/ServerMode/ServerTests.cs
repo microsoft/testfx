@@ -10,10 +10,14 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -66,6 +70,11 @@ public sealed class ServerTests
         TestApplicationHooks testApplicationHooks = new();
         IClientInfo? clientInfo = null;
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        Mock<ILogger> logger = new();
+        logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+        Mock<ILoggerProvider> loggerProvider = new();
+        loggerProvider.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+        builder.Logging.AddProvider((_, _) => loggerProvider.Object);
         builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
         builder.RegisterTestFramework(
             _ => new TestFrameworkCapabilities(),
@@ -87,7 +96,6 @@ public sealed class ServerTests
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
         ProxyOutputDevice outputDevice = testApplication.ServiceProvider.GetRequiredService<ProxyOutputDevice>();
         await outputDevice.DisplayAsync(testApplicationHooks, new TextOutputDeviceData("user startup output"), CancellationToken.None);
-        await outputDevice.DisplayAsync(testApplicationHooks, new ConnectionMessageOutputDeviceData("user startup output"), CancellationToken.None);
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
@@ -189,14 +197,11 @@ public sealed class ServerTests
         Assert.AreEqual("1.0.0", clientInfo.Version);
         Assert.IsTrue(clientInfo.Capabilities.IsStateful);
 
-        Assert.HasCount(rpcOnlyOutput == true ? 1 : 2, logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Information")));
-        Assert.HasCount(rpcOnlyOutput == true ? 1 : 0, logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Debug")));
+        Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Information")));
         Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user after handshake") && Equals(log[JsonRpcStrings.Level], "Information")));
-        IDictionary<string, object?> connectionLog = Assert.ContainsSingle(logs.Where(log =>
-            !Equals(log[JsonRpcStrings.Message], "user startup output")
-            && !Equals(log[JsonRpcStrings.Message], "user after handshake")
-            && log[JsonRpcStrings.Level] is "Debug" or "Information"));
-        Assert.AreEqual(rpcOnlyOutput == true ? "Debug" : "Information", connectionLog[JsonRpcStrings.Level]);
+        string connectionMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, "127.0.0.1", server.Port);
+        Assert.IsEmpty(logs.Where(log => Equals(log[JsonRpcStrings.Message], connectionMessage)));
+        logger.Verify(value => value.LogAsync(LogLevel.Debug, connectionMessage, null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 

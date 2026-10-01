@@ -16,8 +16,6 @@ internal sealed class ServerLogMessage(LogLevel level, string message) : IData
 
     public string Message { get; } = message;
 
-    internal bool IsConnectionMessage { get; init; }
-
     public override string ToString()
     {
         StringBuilder builder = new();

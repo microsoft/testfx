@@ -121,7 +121,7 @@
       "properties": {
         "rpcOnlyOutput": {
           "type": ["boolean", "null"],
-          "description": "Requests RPC-only IOutputDevice routing and diagnostic-level connection messages. Requires an applied true acknowledgement."
+          "description": "Requests RPC-only IOutputDevice routing. Requires an applied true acknowledgement."
         },
         "testing": {
           "type": "object",

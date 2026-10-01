@@ -80,19 +80,20 @@ public sealed class ProxyOutputDeviceTests
     }
 
     [TestMethod]
-    public async Task DisplayAsync_BeforeHandshake_PreservesConnectionMessageTypeForOriginalDevice()
+    public async Task DisplayAsync_BeforeHandshake_PreservesUserMessageForOriginalDevice()
     {
         Mock<IPlatformOutputDevice> originalDevice = new();
         using var serverModeDevice = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(originalDevice.Object, serverModeDevice, policiesService: null);
         IOutputDeviceDataProducer producer = Mock.Of<IOutputDeviceDataProducer>();
 
-        await proxy.DisplayAsync(producer, new ConnectionMessageOutputDeviceData("connecting"), CancellationToken.None);
+        TextOutputDeviceData message = new("user startup output");
+        await proxy.DisplayAsync(producer, message, CancellationToken.None);
 
         originalDevice.Verify(
             value => value.DisplayAsync(
                 producer,
-                It.Is<IOutputDeviceData>(data => data.GetType() == typeof(TextOutputDeviceData) && ((TextOutputDeviceData)data).Text == "connecting"),
+                message,
                 CancellationToken.None),
             Times.Once);
     }

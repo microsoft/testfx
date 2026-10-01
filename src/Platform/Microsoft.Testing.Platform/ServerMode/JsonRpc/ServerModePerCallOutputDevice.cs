@@ -76,10 +76,6 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
     {
         switch (data)
         {
-            case ConnectionMessageOutputDeviceData connectionMessage:
-                await LogAsync(new ServerLogMessage(LogLevel.Information, connectionMessage.Text) { IsConnectionMessage = true }, cancellationToken).ConfigureAwait(false);
-                break;
-
             case SessionMessageOutputDeviceData sessionMessageData:
                 await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
@@ -167,11 +163,6 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
         }
         else
         {
-            if (RpcOnlyOutput && message.IsConnectionMessage)
-            {
-                message = new ServerLogMessage(LogLevel.Debug, message.Message);
-            }
-
             await _serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
         }
     }
