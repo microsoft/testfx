@@ -33,6 +33,21 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $samplesFolder = Join-Path $repoRoot "samples/public"
 
+function Get-SampleRelativePath {
+    param([string]$FullPath)
+
+    $samplesFolderWithTrailingSeparator = [System.IO.Path]::GetFullPath($samplesFolder).TrimEnd(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+    $normalizedFullPath = [System.IO.Path]::GetFullPath($FullPath)
+
+    if (!$normalizedFullPath.StartsWith($samplesFolderWithTrailingSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Path '$FullPath' is not under the public samples folder '$samplesFolder'."
+    }
+
+    return $normalizedFullPath.Substring($samplesFolderWithTrailingSeparator.Length)
+}
+
 . "$PSScriptRoot/common/tools.ps1"
 
 $dotnetRoot = InitializeDotNetCli -install:$true
@@ -97,7 +112,7 @@ foreach ($validation in $validations) {
 }
 
 $unclassifiedProjects = @(Get-ChildItem -Path $samplesFolder -Include @("*.csproj", "*.fsproj", "*.vbproj") -Recurse |
-    ForEach-Object { [System.IO.Path]::GetRelativePath($samplesFolder, $_.FullName) } |
+    ForEach-Object { Get-SampleRelativePath $_.FullName } |
     Where-Object { !$classifiedProjects.Contains($_) })
 
 if ($unclassifiedProjects.Count -ne 0) {
