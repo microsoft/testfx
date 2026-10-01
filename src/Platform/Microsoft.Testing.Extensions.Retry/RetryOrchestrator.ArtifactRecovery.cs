@@ -31,6 +31,9 @@ internal sealed partial class RetryOrchestrator
 
             using IFileStream stream = fileSystem.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = new BoundedManifestLineReader(stream.Stream);
+            // Normalize the attempt-directory containment prefix once here instead of inside the per-record loop
+            // below (up to RetryArtifactManifest.MaxRecords iterations), since attemptDirectory never changes.
+            string attemptDirectoryPrefix = PathContainment.NormalizeDirectoryPrefix(attemptDirectory);
             int recordCount = 0;
             while (recordCount++ < RetryArtifactManifest.MaxRecords)
             {
@@ -64,7 +67,7 @@ internal sealed partial class RetryOrchestrator
                     }
 
                     string artifactPath = Path.GetFullPath(path);
-                    if (!PathContainment.IsUnderDirectory(artifactPath, attemptDirectory))
+                    if (!PathContainment.IsUnderNormalizedDirectory(artifactPath, attemptDirectoryPrefix))
                     {
                         logger.LogWarning(
                             $"Ignoring recovered retry artifact '{path}' because it is outside the retry attempt directory '{attemptDirectory}'.");
@@ -131,12 +134,14 @@ internal sealed partial class RetryOrchestrator
 
         string? artifactRoot = environment.GetEnvironmentVariable(ArtifactPathDestinationRootEnvironmentVariable);
         string? diagnosticArtifactRoot = environment.GetEnvironmentVariable(DiagnosticArtifactPathDestinationRootEnvironmentVariable);
-        string[] allowedRoots =
+        // Normalize each allowed root's containment prefix once here, rather than inside the per-artifact loop
+        // below, since PathContainment.NormalizeDirectoryPrefix allocates and re-resolves the full path on every call.
+        string[] allowedRootPrefixes =
         [
             .. new[] { artifactRoot, diagnosticArtifactRoot }
                 .OfType<string>()
                 .Where(root => root.Length > 0)
-                .Select(Path.GetFullPath),
+                .Select(PathContainment.NormalizeDirectoryPrefix),
         ];
 
         for (int i = artifacts.Count - 1; i >= 0; i--)
@@ -145,7 +150,7 @@ internal sealed partial class RetryOrchestrator
             try
             {
                 string artifactPath = Path.GetFullPath(artifact.Path);
-                if (allowedRoots.Any(root => PathContainment.IsUnderDirectory(artifactPath, root)))
+                if (allowedRootPrefixes.Any(prefix => PathContainment.IsUnderNormalizedDirectory(artifactPath, prefix)))
                 {
                     continue;
                 }

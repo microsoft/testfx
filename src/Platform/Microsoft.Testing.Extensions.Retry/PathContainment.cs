@@ -5,14 +5,24 @@ namespace Microsoft.Testing.Extensions.Policy;
 
 internal static class PathContainment
 {
+    private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
     internal static bool IsUnderDirectory(string path, string directory)
-    {
-        string directoryPrefix = Path.GetFullPath(directory)
+        => IsUnderNormalizedDirectory(path, NormalizeDirectoryPrefix(directory));
+
+    // Callers that check containment against the same directory across many paths (e.g. a per-record or
+    // per-artifact loop) should normalize the prefix once via this method and reuse it with
+    // IsUnderNormalizedDirectory, instead of paying the Path.GetFullPath + string allocation cost on every call.
+    internal static string NormalizeDirectoryPrefix(string directory)
+        => Path.GetFullPath(directory)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             + Path.DirectorySeparatorChar;
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+
+    internal static bool IsUnderNormalizedDirectory(string path, string normalizedDirectoryPrefix)
+    {
+        StringComparison comparison = IsWindows
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
-        return path.StartsWith(directoryPrefix, comparison);
+        return path.StartsWith(normalizedDirectoryPrefix, comparison);
     }
 }
