@@ -12,7 +12,7 @@
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>
+    <EnableMicrosoftTestingExtensionsPackagedApp Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == ''">false</EnableMicrosoftTestingExtensionsPackagedApp>
     <DefineConstants Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'">$(DefineConstants);PACKAGED_APP_TESTING</DefineConstants>
   </PropertyGroup>
 

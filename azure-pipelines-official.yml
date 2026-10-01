@@ -17,6 +17,7 @@ trigger:
       # official pipeline for samples-only changes.
       - samples/**
       - eng/build-samples.ps1
+      - eng/test-samples.ps1
 
 parameters:
 - name: isRTM

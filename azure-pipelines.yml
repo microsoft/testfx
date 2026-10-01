@@ -481,6 +481,16 @@ stages:
             failOnStderr: true
             showWarnings: true
 
+        - ${{ if eq(parameters.SkipTests, False) }}:
+          - task: PowerShell@2
+            displayName: 'Preflight Windows sample test agent'
+            inputs:
+              targetType: filePath
+              filePath: './eng/pipelines/test-windows-app-model-preflight.ps1'
+              arguments: '-Mode Preflight -RemoveStaleTestPackages'
+              failOnStderr: true
+              showWarnings: true
+
         - task: PowerShell@2
           displayName: 'Build Samples'
           inputs:
@@ -489,10 +499,11 @@ stages:
             arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
             failOnStderr: false
 
-        - task: PowerShell@2
-          displayName: 'Test Samples'
-          inputs:
-            targetType: filePath
-            filePath: './eng/test-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig) -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
-            failOnStderr: false
+        - ${{ if eq(parameters.SkipTests, False) }}:
+          - task: PowerShell@2
+            displayName: 'Test Samples'
+            inputs:
+              targetType: filePath
+              filePath: './eng/test-samples.ps1'
+              arguments: '-Configuration $(_BuildConfig) -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
+              failOnStderr: false
