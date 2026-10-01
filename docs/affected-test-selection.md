@@ -13,17 +13,22 @@ registered by the repository's hand-authored MTP entry points.
 
 Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
 both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
-provider. SDK `12.0.100-alpha.1.26480.102` supports the collection handshake used by the pipeline. The known-bad
-.NET 11 SDKs remain blocked by `eng/validate-affected-tests.ps1` to prevent an accidental rollback.
+provider.
+
+Affected-test execution remains temporarily disabled in the pipeline. SDK `12.0.100-alpha.1.26480.103` predates the
+VMR flow containing [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection
+applications still exit `0` while the parent `dotnet test` command reports handshake failures and exits `1`. Keep
+the packages and storage configuration dormant until a newer .NET 12 SDK containing the fix is published and
+verified in this repository. The known-bad SDKs remain blocked by `eng/validate-affected-tests.ps1`.
 
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- The trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
+- Once re-enabled, the trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
   retry, or coverage arguments, because collection owns its instrumentation and launches discovery
   children with `--list-tests`. A normal full test run follows to retain test reporting and coverage.
-- The Windows Release PR test runs `--affected-tests`.
+- Once re-enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework outputs.
@@ -55,5 +60,5 @@ manual builds always keep full validation.
 Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
 after collection and full fallback runs still publish complete coverage.
 
-The one-switch rollback sets `enableAffectedTests` to `false`, which keeps the package and storage configuration in
-place while restoring the ordinary full-test command.
+The one-switch rollback is currently active: `enableAffectedTests` is `false`, which keeps the package and dormant
+storage configuration in place while restoring the ordinary full-test command.
