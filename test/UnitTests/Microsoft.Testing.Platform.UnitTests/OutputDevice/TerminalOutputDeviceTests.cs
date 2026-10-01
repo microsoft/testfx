@@ -52,11 +52,11 @@ public sealed class TerminalOutputDeviceTests
             },
             policiesService: policies.Object,
             console: console.Object);
-        using var serverDevice = new ServerModePerCallOutputDevice(null, policies.Object);
-        using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null);
+        using var serverDevice = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null, policies.Object);
         await originalDevice.InitializeAsync();
         await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
-        Assert.HasCount(hasServerDevice ? 2 : 1, callbacks);
+        Assert.HasCount(1, callbacks);
         proxy.ConfigureRpcOnlyOutput(requested);
 
         foreach (Func<int, CancellationToken, Task> callback in callbacks)

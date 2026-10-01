@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Base class for browser and WASI output devices that provides common functionality.
 /// </summary>
-internal abstract partial class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDeviceWithRoleMessages,
+internal abstract partial class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevice,
     IDataConsumer,
     IOutputDeviceDataProducer,
     ITestSessionLifetimeHandler,
@@ -138,21 +138,5 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase : IPlatformOut
     protected abstract void ConsoleLog(string? message);
 
     public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
-        => HandleProcessRoleAsync(processRole, static () => true, cancellationToken);
-
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole, Func<bool> shouldDisplayMessages, CancellationToken cancellationToken)
-    {
-        if (processRole == TestProcessRole.TestHost)
-        {
-            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) =>
-                {
-                    if (shouldDisplayMessages())
-                    {
-                        await DisplayAsync(
-                            this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false);
-                    }
-                }).ConfigureAwait(false);
-        }
-    }
+        => Task.CompletedTask;
 }

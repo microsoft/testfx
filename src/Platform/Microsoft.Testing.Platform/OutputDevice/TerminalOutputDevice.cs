@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
-using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -19,7 +18,6 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// </summary>
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDevice,
-    IPlatformOutputDeviceWithRoleMessages,
     IDataConsumer,
     IOutputDeviceDataProducer,
     IDisposable,
@@ -147,22 +145,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         => _terminalTestReporter?.Dispose();
 
     public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
-        => HandleProcessRoleAsync(processRole, static () => true, cancellationToken);
-
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole, Func<bool> shouldDisplayMessages, CancellationToken cancellationToken)
     {
         _processRole = processRole;
-        if (processRole == TestProcessRole.TestHost)
-        {
-            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) =>
-                {
-                    if (shouldDisplayMessages())
-                    {
-                        await DisplayAsync(
-                            this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false);
-                    }
-                }).ConfigureAwait(false);
-        }
+        return Task.CompletedTask;
     }
 }

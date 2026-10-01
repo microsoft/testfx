@@ -347,8 +347,9 @@ errors retain their levels. Progress updates retain their existing deduplication
 behavior. Built-in connection diagnostics are Debug, including connection messages
 queued before initialization. Banner messages are already Debug over RPC. Supported
 user messages are not classified by matching their text and are not discarded.
-Built-in max-failed-tests messages also follow the negotiated route, even though
-their callbacks are registered before initialization.
+The built-in max-failed-tests message is registered once by the output proxy and
+follows the negotiated route when invoked, even though its callback is registered
+before initialization.
 
 Opting in deliberately bypasses the original output device, including a custom
 device, for output-device presentation. Only payload types understood by the RPC

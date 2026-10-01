@@ -10,10 +10,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer, IDisposable
+internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDisposable
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
-    private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentQueue<ServerLogMessage> _messages = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
     private readonly SemaphoreSlim _progressMessagesSemaphore = new(1, 1);
@@ -23,11 +22,8 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
-    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
-    {
-        _fileLoggerProvider = fileLoggerProvider;
-        _policiesService = policiesService;
-    }
+    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider)
+        => _fileLoggerProvider = fileLoggerProvider;
 
     internal bool RpcOnlyOutput
     {
@@ -209,13 +205,6 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         return builder.ToString();
     }
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
-    {
-        if (processRole == TestProcessRole.TestHost)
-        {
-            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
-        }
-    }
+    public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
+        => Task.CompletedTask;
 }

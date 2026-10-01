@@ -40,10 +40,10 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             .Returns(Task.CompletedTask);
         using var monitor = new SystemAsyncMonitor();
         RecordingSimplifiedOutputDevice originalDevice = CreateOutputDevice(monitor, policiesService: policies.Object);
-        using var serverDevice = new ServerModePerCallOutputDevice(null, policies.Object);
-        using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null);
+        using var serverDevice = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null, policies.Object);
         await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
-        Assert.HasCount(hasServerDevice ? 2 : 1, callbacks);
+        Assert.HasCount(1, callbacks);
         proxy.ConfigureRpcOnlyOutput(requested);
 
         foreach (Func<int, CancellationToken, Task> callback in callbacks)

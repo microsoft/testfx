@@ -3,21 +3,36 @@
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
+internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProducer, IDisposable
 {
     private readonly ServerModePerCallOutputDevice? _serverModeOutputDevice;
+    private readonly IStopPoliciesService? _policiesService;
+    private int _maxFailedTestsCallbackRegistered;
 
-    public ProxyOutputDevice(IPlatformOutputDevice originalOutputDevice, ServerModePerCallOutputDevice? serverModeOutputDevice)
+    public ProxyOutputDevice(IPlatformOutputDevice originalOutputDevice, ServerModePerCallOutputDevice? serverModeOutputDevice, IStopPoliciesService? policiesService)
     {
         OriginalOutputDevice = originalOutputDevice;
         _serverModeOutputDevice = serverModeOutputDevice;
+        _policiesService = policiesService;
     }
 
+    public string Uid => nameof(ProxyOutputDevice);
+
+    public string Version => PlatformVersion.Version;
+
+    public string DisplayName => nameof(ProxyOutputDevice);
+
+    public string Description => nameof(ProxyOutputDevice);
+
     internal IPlatformOutputDevice OriginalOutputDevice { get; }
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     internal bool ConfigureRpcOnlyOutput(bool? requested)
         => _serverModeOutputDevice is not null && (_serverModeOutputDevice.RpcOnlyOutput = requested == true);
@@ -87,20 +102,20 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IDisposable
 
     internal async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
-        if (OriginalOutputDevice is IPlatformOutputDeviceWithRoleMessages roleMessagesDevice)
-        {
-            // Role callbacks are registered before initialize, so evaluate the negotiated route when they fire.
-            await roleMessagesDevice.HandleProcessRoleAsync(
-                processRole, () => _serverModeOutputDevice?.RpcOnlyOutput != true, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            await OriginalOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
-        }
+        await OriginalOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
 
         if (_serverModeOutputDevice is not null)
         {
             await _serverModeOutputDevice.HandleProcessRoleAsync(processRole, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (processRole == TestProcessRole.TestHost
+            && _policiesService is not null
+            && Interlocked.Exchange(ref _maxFailedTestsCallbackRegistered, 1) == 0)
+        {
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 
