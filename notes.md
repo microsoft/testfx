@@ -85,7 +85,7 @@
 
 ## Last Run
 
-2026-09-29 UTC (run 36642347630)
+2026-10-01 UTC (run 36937877564)
 
 ## Completed Work (recent, summarized)
 
@@ -170,43 +170,23 @@ Key lasting gotchas from this window:
 - `Activity.IsAllDataRequested` is always `true` for a plain `new Activity().Start()` regardless of listeners — need a dedicated `ActivitySource`+`ActivityListener` pair sampling `PropagationData` to get `IsRecording == false`.
 - Internal API surface is tracked too: `InternalAPI/InternalAPI.Unshipped.txt` (parallel to `PublicAPI.*.txt`) — adding an internal forwarding method via `InternalsVisibleTo` requires an entry there or RS0051 fails the build.
 - Analyzers area reconfirmed saturated (apparent gaps are just filename/project differences, e.g. source-generator variants live in `MSTest.SourceGeneration.UnitTests`). AzureFoundry, GitHubActionsReport/HtmlReport/JUnitReport, RandomId/RetryExtensions all confirmed resolved and removed from backlog.
-## Runs 2026-09-23 to 2026-09-26 — condensed summary
+## Runs 2026-09-23 to 2026-09-30 — condensed summary (ServerMode/IPC sweep)
 
-PRs from this window (all merged unless noted): TestHostProcessPIDRequestSerializer (2 tests, `ProtocolTests.cs`), RpcIdParser.TryParseNumericId (11 methods/34 DataRow cases, `RpcIdParserTests.cs`), DotnetTestHelper (12 tests, `HasDotnetTestServerOption`/`TryGetDotnetTestTransport` — PR #11545, still open as of 2026-09-27, approved but mergeable_state blocked), PerRequestServerDataConsumer (4 tests — PR #11552, MERGED).
+PRs from this window (all merged): TestHostProcessPIDRequestSerializer, RpcIdParser.TryParseNumericId, DotnetTestHelper (PR #11545), PerRequestServerDataConsumer (PR #11552), ServerModeManager.Build, ServerControlMessage/WaitForServerControlRequest serializers, PassiveNode invalid-params/attachments (PR #11685).
 
-Key lasting gotchas from this window:
-- `[Embedded]`-linked source files (e.g. `TestHostProcessPIDRequestSerializer`) need explicit `<Compile Include=...>` entries in the test csproj — `InternalsVisibleTo` alone is not sufficient.
+Key lasting gotchas:
+- `[Embedded]`-linked source files need explicit `<Compile Include=...>` entries in the test csproj — `InternalsVisibleTo` alone is not sufficient.
 - `RpcIdParser` lives in namespace `Microsoft.Testing.Platform.ServerMode`, not the top-level namespace.
-- Jsonite/`Json.*` family (JsonReader/JsonWriter/JsonReflector/JsonCollectionDeserializer) deprioritized as low-value — either trivial generic wrappers or large ported third-party reflection code already covered indirectly via `JsoniteTests.cs`/`JsonTests.cs`.
-- `ServerControlMessage`/`WaitForServerControlRequest` serializers and `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs` noted but not yet swept.
+- Jsonite/`Json.*` family deprioritized as low-value (trivial wrappers or already covered indirectly).
+- Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
+- `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
 
-## Run 2026-09-30 (run 36788317039) — PassiveNode invalid-params/attachments tests
+## Run 2026-10-01 (run 36937877564) — TcpMessageHandler reset/bare-LF tests
 
-- Task reconciliation: confirmed `ServerModeManagerTests.cs` (2026-09-27) and `ServerControlSerializersTests.cs` (2026-09-29) are both already merged to `main`. No open `[test-improver]`-prefixed PRs found via search — nothing needed maintenance this run.
-- Task 2/3: picked up standing backlog item `PassiveNode` edge cases beyond existing `PassiveNodeTests.cs` — found `ConnectAsync`'s `ErrorCodes.InvalidParams` branch (bad `InitializeRequestArgs` payload) and all of `SendAttachmentsAsync` (both the `AssertInitialized()` guard throw and the happy-path notification write) had zero coverage.
-- Added 3 tests to `PassiveNodeTests.cs`, reusing existing `TestMessageHandler`/`CreatePassiveNode` doubles already in the file — no new test infra needed.
-- Build succeeded (0 warnings after fixing one MSTEST0037 `Assert.HasCount` suggestion). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2774 total (was 2771), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
-- Created PR "Add unit tests for PassiveNode invalid-params and attachment branches" on branch `test-assist/passive-node-tests`.
-- Task 7: issue #10920 updated — new Run History entry, Suggested Actions refreshed (added new PR, removed prior serializer PR now confirmed merged), backlog item for `PassiveNode` narrowed to remaining `Dispose`/logging-trace branches only (very low value, likely saturated).
-- Remaining candidates for future runs: `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs`; HangDump/Retry IPC serializers (low priority, thin plumbing); MSTest.Engine internal classes (architecturally blocked).
-
-## Run 2026-09-29 (run 36642347630) — ServerControlMessage/WaitForServerControlRequest serializer tests
-
-- Task reconciliation: confirmed `ServerModeManagerTests.cs` (from 2026-09-27 run) and `DotnetTestHelper` PR #11545 both merged to `main`. No open `[test-improver]`-prefixed PRs need maintenance (search returned none).
-- Task 2/3: `ServerControlMessageSerializer`/`WaitForServerControlRequestSerializer` (`src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/Serializers/`) had zero direct tests — protocol-v1.4.0 reverse "server control" pipe messages used for CancelSession signaling, listed as a standing backlog candidate.
-- Added `ServerControlSerializersTests.cs` (5 tests): Kind round-trip (DataRow 0/1/255), unrecognized-field-is-skipped forward-compat case, zero-fields defaults Kind to 0, WaitForServerControlRequest round-trips the cached singleton instance, and confirms its serialize writes zero bytes (payload-less request). Followed `ProtocolTests.cs`/`ProtocolSerializerTestHelper` reflection-based round-trip pattern; for the "unrecognized field" test, wrote a small local raw-byte helper (not the internal `BaseSerializer` helpers) since the test intentionally builds a wire frame with an unknown field id from the outside.
-- Build succeeded (0 warnings/errors after removing 2 redundant-cast IDE0004 warnings). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2705 total (was 2648 pre-this-run baseline, difference includes unrelated `main` changes since 09-27), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
-- Created PR "Add unit tests for ServerControlMessage/WaitForServerControlRequest serializers" on branch `test-assist/server-control-serializer-tests`.
-- Task 7: issue #10920 updated — new Run History entry, Suggested Actions refreshed, backlog item for these serializers removed (now covered).
-- Remaining candidates for future runs: `PassiveNode` edge cases beyond existing `PassiveNodeTests.cs`; `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs`; HangDump/Retry IPC serializers (low priority, thin plumbing); MSTest.Engine internal classes (architecturally blocked).
-
-## Run 2026-09-27 (run 36356926698) — ServerModeManager.Build tests + reconciliation
-
-- Task reconciliation: confirmed via `search_pull_requests` that `PerRequestServerDataConsumer` PR (#11552) is merged and its tests are present in `ServerDataConsumerServiceTests.cs` locally. `DotnetTestHelper` PR #11545 remains open (approved, `mergeable_state: blocked` — likely awaiting another PR or CI, not test-improver's concern). No open issues labeled `testing` other than the Monthly Activity issue.
-- Task 2/3: picked up the standing backlog item `ServerModeManager.Build` (`src/Platform/Microsoft.Testing.Platform/ServerMode/JsonRpc/ServerModeManager.cs`) — zero direct tests, 3 branches: missing `--client-port` throws `InvalidOperationException`, `--client-port` without `--client-host` defaults host to loopback (localhost DNS workaround), both options explicit pass-through.
-- Added `ServerModeManagerTests.cs` (3 tests). Constructed a real `CommandLineHandler` via `CommandLineParser.Parse` (same pattern as `DotnetTestHelperTests.cs`), `ServiceProvider` with mocked `ILoggerFactory`/`IOutputDevice`; asserted private `_host`/`_port` fields on the returned `MessageHandlerFactory` via reflection (consistent with `DotnetTestDataConsumerTests.cs` pattern).
-- **New gotcha**: `PlatformResources.MissingClientPortFoJsonRpc` was NOT yet in the hand-maintained `IS_MTP_UNIT_TESTS` accessor block in `PlatformResources.cs` (CS0117) — had to add one line there (per the documented "hand-maintained resource accessors" repo convention) to let the unit test project read the exact resource string.
-- Build succeeded (0 warnings/errors). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2648 total (was 2645), 0 failed, 22 skipped (pre-existing, no regressions) — new tests confirmed present in generated .trx. `dotnet format whitespace TestFx.slnx --verify-no-changes --include <files>` clean (only the expected harmless F#-project warning).
-- Created PR "Add unit tests for ServerModeManager.Build" on branch `test-assist/server-mode-manager-tests`.
-- Task 7: issue #10920 updated — new Run History entry prepended, Suggested Actions includes the new PR (`DotnetTestHelper` PR #11545 still open/approved but blocked, left as-is since it's a Copilot Coding Agent PR, not a test-improver-authored one needing our maintenance).
-- Remaining candidates for future runs: `PassiveNode` edge cases beyond existing `PassiveNodeTests.cs`; HangDump/Retry IPC serializers and MSTest.Engine internal classes remain low-priority/blocked as before. `ServerModeManager`/ServerMode top-level sweep now largely exhausted — consider pivoting to a fresh area (e.g., Retry/HangDump extensions, or Task 5/6) next run if nothing new surfaces.
+- Task reconciliation: confirmed PR #11685 (PassiveNode) was merged by maintainer; no open `[test-improver]`-prefixed PRs needed maintenance.
+- Task 2/3: picked up standing backlog item `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs` — found the `IOException`-wrapping-`SocketException` catch-filter arm (the shape a real `NetworkStream` reset actually throws) and the documented bare-LF header-terminator tolerance both had zero coverage.
+- Added 2 tests to `TcpMessageHandlerTests.cs` (`ReadAsync_IOExceptionWrappingConnectionReset_ReturnsNull`, `ReadAsync_BareLineFeedHeaderTerminator_IsTolerated`) plus a small `ThrowingStream` helper (parallel to existing `ConnectionResetStream`).
+- Build succeeded (0 warnings). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2776 total (was 2774), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for TcpMessageHandler IOException-wrapped reset and bare-LF tolerance" on branch `test-assist/tcp-message-handler-tests`.
+- Task 7: closed September issue #10920, created October issue; Run History entry added for this run.
+- Remaining candidates for future runs: HangDump/Retry IPC serializers (low priority, thin plumbing); MSTest.Engine internal classes (architecturally blocked); consider pivoting to a fresh area (Retry/HangDump extensions, or Task 5/6) if ServerMode/IPC area yields nothing new next run.
