@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="ApplicationExitedBeforeWindowDiscovery">
         <source>Application '{0}' exited with code {1} before a window was discovered.</source>
-        <target state="new">Application '{0}' exited with code {1} before a window was discovered.</target>
+        <target state="translated">Die Anwendung „{0}“ wurde mit dem Code {1} beendet, bevor ein Fenster ermittelt wurde.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessFailedToStart">
         <source>Failed to start process '{0}'.</source>
-        <target state="new">Failed to start process '{0}'.</target>
+        <target state="translated">Beim Starten des Prozesses „{0}“ ist ein Fehler aufgetreten.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessNotAvailable">
         <source>The application process is available only after application setup and before disposal.</source>
-        <target state="new">The application process is available only after application setup and before disposal.</target>
+        <target state="translated">Der Anwendungsprozess ist nur nach der Einrichtung der Anwendung und vor deren Freigabe verfügbar.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationProcessTerminationTimedOut">
@@ -24,12 +24,12 @@
       </trans-unit>
       <trans-unit id="InvalidApplicationShutdownTimeout">
         <source>The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</source>
-        <target state="new">The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</target>
+        <target state="translated">Das Timeout für das Herunterfahren der Anwendung darf nicht negativ oder unendlich sein und darf höchstens Int32.MaxValue Millisekunden betragen.</target>
         <note>{Locked="Int32.MaxValue"}</note>
       </trans-unit>
       <trans-unit id="InvalidWindowDiscoveryTimeout">
         <source>The window discovery timeout must be non-negative or infinite.</source>
-        <target state="new">The window discovery timeout must be non-negative or infinite.</target>
+        <target state="translated">Das Timeout für die Fensterermittlung darf nicht negativ oder unendlich sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowDiscoveryTimedOut">

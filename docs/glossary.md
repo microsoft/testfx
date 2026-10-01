@@ -359,7 +359,7 @@ Individual extension toggles remain unset and disabled when a profile does not e
 
 | Property | Behavior |
 | --- | --- |
-| `TestingPlatformDotnetTestSupport` | Enables the compatibility integration used by `dotnet test` before the .NET SDK introduced native MTP runner selection. For test applications it defaults to `true` with .NET SDK 9 and earlier, and remains unset/disabled with .NET SDK 10 and later. |
+| `TestingPlatformDotnetTestSupport` | Deprecated compatibility integration used by `dotnet test` before the .NET SDK introduced native MTP runner selection. Do not set it in new projects; select `Microsoft.Testing.Platform` through `global.json` instead. For test applications it defaults to `true` with .NET SDK 9 and earlier, and remains unset/disabled with .NET SDK 10 and later. |
 | `EnableMicrosoftTestingPlatform` | Advanced version-alignment escape hatch. When `true` for an `IsTestApplication=true` ClassicEngine or NativeAOT project, adds an explicit `Microsoft.Testing.Platform` package reference using `MicrosoftTestingPlatformVersion`. It is ignored for test libraries and VSTest. It is normally unnecessary and does not select the runner or change `IsTestingPlatformApplication`. |
 | `EnableMSTestSourceGeneration` | Adds `MSTest.SourceGeneration` to non-NativeAOT projects. For reusable test libraries, it also adds `MSTest.TestAdapter`, which provides the runtime hooks referenced by generated code. .NET Standard is not supported because the adapter does not ship compatible runtime hooks. NativeAOT projects always include source generation. |
 | `MSTestVersion` | Overrides the versions of the MSTest framework, adapter, and source generator supplied by the SDK. |
@@ -579,6 +579,10 @@ A readonly MSTest struct (`Microsoft.VisualStudio.TestTools.UnitTesting.TestFilt
 - `TestFilterResult.Skip(string reason)` — mark the test Skipped (outcome: `Skipped`) with the given reason (throws `ArgumentNullException` if `reason` is `null`, `ArgumentException` if empty or whitespace-only).
 
 The underlying `TestFilterAction` enum values are `Run = 0`, `Drop = 1`, `Skip = 2`. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
+
+### TestHostExecutionOrchestratorMiddleware
+
+An experimental MTP interface (`Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestratorMiddleware`, `[TPEXP]`) that composes a single-invocation boundary around the one active [Orchestrator](#orchestrator) (`ITestHostExecutionOrchestrator`) invocation for a run. Register middleware with `ITestHostOrchestratorManager.AddTestHostExecutionOrchestratorMiddleware(Func<IServiceProvider, ITestHostExecutionOrchestratorMiddleware>)` (the extension method on `TestHostOrchestratorManagerExtensions`, which throws `NotSupportedException` if the manager does not implement the optional `ITestHostExecutionOrchestratorMiddlewareManager` capability). Middleware is composed outermost-first in registration order — the first middleware registered is the outermost layer, the last is innermost, closest to the wrapped orchestrator — with no numeric ordering key. Each middleware's `next` delegate can be invoked at most once, and that invocation must begin before the middleware method returns or throws; a middleware that invokes `next` must return its downstream exit code unchanged (it cannot rewrite the verdict), while a middleware that never invokes `next` (short-circuiting the pipeline) must return a non-success exit code. This v1 composition boundary preserves the existing single-orchestrator-per-run model, legacy orchestrator registration, `--retry-failed-tests` behavior, handshake metadata, and protocol semantics; it does not provide typed multi-run retry, stress, sharding, or protocol metadata composition. Introduced in [PR #11607](https://github.com/microsoft/testfx/pull/11607).
 
 ### TestNode
 

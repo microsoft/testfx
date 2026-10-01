@@ -234,17 +234,10 @@ public sealed class ModernUwpTests : AcceptanceTestBase
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <TestingExtensionsProfile>None</TestingExtensionsProfile>
-    <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
     <MicrosoftTestingPlatformVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingPlatformVersion>
     <MicrosoftTestingExtensionsCommonVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingExtensionsCommonVersion>
+    <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
   </PropertyGroup>
-
-  <ItemGroup>
-    <RuntimeHostConfigurationOption Include="MSTest.EnableParentProcessQuery"
-                                    Value="false"
-                                    Trim="true" />
-  </ItemGroup>
 
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
     <WriteLinesToFile

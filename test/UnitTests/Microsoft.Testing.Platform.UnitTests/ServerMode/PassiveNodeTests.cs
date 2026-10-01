@@ -41,6 +41,26 @@ public sealed class PassiveNodeTests
     }
 
     [TestMethod]
+    public async Task ConnectAsync_RejectsInitializeRequestWithInvalidParams()
+    {
+        RequestMessage request = new(
+            1,
+            JsonRpcMethods.Initialize,
+            new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, "Invalid initialize request params"))
+        {
+            StringId = "request-1",
+        };
+        TestMessageHandler handler = new(request);
+        using PassiveNode node = CreatePassiveNode(handler);
+
+        Assert.IsFalse(await node.ConnectAsync());
+
+        ErrorMessage error = Assert.IsInstanceOfType<ErrorMessage>(handler.WrittenMessage);
+        Assert.AreEqual(ErrorCodes.InvalidParams, error.ErrorCode);
+        Assert.AreEqual("request-1", error.StringId);
+    }
+
+    [TestMethod]
     public async Task ConnectAsync_RejectsNonInitializeRequestBeforeInitialization()
     {
         RequestMessage request = new(
@@ -69,6 +89,34 @@ public sealed class PassiveNodeTests
 
         Assert.IsFalse(await node.ConnectAsync());
         Assert.IsNull(handler.WrittenMessage);
+    }
+
+    [TestMethod]
+    public async Task SendAttachmentsAsync_BeforeConnectAsync_ThrowsInvalidOperationException()
+    {
+        TestMessageHandler handler = new(CreateInitializeRequest([JsonRpcProtocolVersions.Current]));
+        using PassiveNode node = CreatePassiveNode(handler);
+        TestsAttachments attachments = new([]);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => node.SendAttachmentsAsync(attachments, CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task SendAttachmentsAsync_AfterSuccessfulConnect_WritesAttachmentsNotification()
+    {
+        TestMessageHandler handler = new(CreateInitializeRequest([JsonRpcProtocolVersions.Current]));
+        using PassiveNode node = CreatePassiveNode(handler);
+        RunTestAttachment attachment = new("uri", "producer", "type", "name", "description");
+        TestsAttachments attachments = new([attachment]);
+
+        Assert.IsTrue(await node.ConnectAsync());
+        await node.SendAttachmentsAsync(attachments, CancellationToken.None);
+
+        NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(handler.WrittenMessage);
+        Assert.AreEqual(JsonRpcMethods.TestingTestUpdatesAttachments, notification.Method);
+        TestsAttachments notificationAttachments = Assert.IsInstanceOfType<TestsAttachments>(notification.Params);
+        Assert.AreSame(attachment, Assert.ContainsSingle(notificationAttachments.Attachments));
     }
 
     private static PassiveNode CreatePassiveNode(TestMessageHandler handler)

@@ -129,7 +129,7 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
     public async Task RunAsync_MiddlewareInvokesNextTwiceConcurrently_SecondInvocationThrowsButActualResultStillWins()
     {
         int leafInvocationCount = 0;
-        FakeMiddleware doubleInvoker = new("double-invoker", async (next, ct) =>
+        FakeMiddleware doubleInvoker = new("double-invoker", (next, ct) =>
         {
             using Barrier invocationBarrier = new(participantCount: 3);
 
@@ -137,12 +137,14 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
             Task<(Task<int>? Downstream, InvalidOperationException? Exception)> secondWorker = Task.Run(InvokeNext);
             invocationBarrier.SignalAndWait(TestContext.CancellationToken);
 
-            // Keep the middleware in its synchronous prefix until both workers have attempted next().
-            // Awaiting here would return the middleware task and let the pipeline close the guard before
-            // either worker is scheduled, making both invocations fail as late calls instead of exercising
-            // the intended concurrent double-invocation race.
+            // Keep both calls inside the middleware's synchronous prefix. Yielding here would return an
+            // incomplete middleware task, close the continuation guard, and correctly reject both calls
+            // as deferred invocations before either worker necessarily reaches next().
             (Task<int>? Downstream, InvalidOperationException? Exception)[] attempts =
-                Task.WhenAll(firstWorker, secondWorker).GetAwaiter().GetResult();
+                Task.WhenAll(firstWorker, secondWorker)
+                    .WaitAsync(TestContext.CancellationToken)
+                    .GetAwaiter()
+                    .GetResult();
             (Task<int>? Downstream, InvalidOperationException? Exception)[] acceptedAttempts =
                 attempts.Where(attempt => attempt.Downstream is not null).ToArray();
             (Task<int>? Downstream, InvalidOperationException? Exception)[] rejectedAttempts =
@@ -154,7 +156,7 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
 
             // Correlating the return value with the one legitimate invocation's actual result is what makes
             // a swallowed double-call violation surface instead of silently looking like success.
-            return await acceptedAttempts[0].Downstream!;
+            return acceptedAttempts[0].Downstream!;
 
             (Task<int>? Downstream, InvalidOperationException? Exception) InvokeNext()
             {

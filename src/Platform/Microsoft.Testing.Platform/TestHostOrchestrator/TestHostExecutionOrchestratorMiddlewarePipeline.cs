@@ -88,14 +88,7 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         catch
         {
             guard.Close();
-            if (guard.WasInvoked)
-            {
-                // A middleware failure cannot replace a downstream failure or cancellation. Await the
-                // accepted child even when this frame faulted, then preserve the middleware failure only
-                // when the child completed successfully.
-                await guard.DownstreamTask.ConfigureAwait(false);
-            }
-
+            await AwaitAcceptedChildOnFaultAsync(guard).ConfigureAwait(false);
             throw;
         }
 
@@ -111,14 +104,7 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
         }
         catch
         {
-            if (guard.WasInvoked)
-            {
-                // A middleware failure cannot replace a downstream failure or cancellation. Await the
-                // accepted child even when this frame faulted, then preserve the middleware failure only
-                // when the child completed successfully.
-                await guard.DownstreamTask.ConfigureAwait(false);
-            }
-
+            await AwaitAcceptedChildOnFaultAsync(guard).ConfigureAwait(false);
             throw;
         }
 
@@ -175,6 +161,17 @@ internal static class TestHostExecutionOrchestratorMiddlewarePipeline
             ? result
             : throw new InvalidOperationException(
                 string.Format(CultureInfo.InvariantCulture, PlatformResources.TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage, middleware.Uid, downstreamResult, result));
+    }
+
+    // A middleware failure cannot replace a downstream failure or cancellation. Await the accepted child
+    // even when this frame faulted, then preserve the middleware failure only when the child completed
+    // successfully.
+    private static async Task AwaitAcceptedChildOnFaultAsync(SingleInvocationNext guard)
+    {
+        if (guard.WasInvoked)
+        {
+            await guard.DownstreamTask.ConfigureAwait(false);
+        }
     }
 
     private static async Task DrainAsync(List<Task> inFlightDownstreamTasks, object inFlightLock, ILogger logger)

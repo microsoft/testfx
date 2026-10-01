@@ -16,17 +16,6 @@
 .PARAMETER BinaryLogDirectory
     Optional directory path where binary log files will be created for each solution.
 
-.PARAMETER LocalPackageDirectory
-    Optional directory containing locally packed TestFX packages. When provided, the sample
-    MSTest.Sdk global.json pins are temporarily replaced with LocalMSTestVersion and a temporary
-    NuGet.config exposes this directory.
-
-.PARAMETER LocalMSTestVersion
-    MSTest package version available in LocalPackageDirectory.
-
-.PARAMETER LocalTestingPlatformVersion
-    Microsoft.Testing.Platform package version available in LocalPackageDirectory.
-
 .EXAMPLE
     .\eng\build-samples.ps1
     Builds all samples in Release configuration.
@@ -44,10 +33,7 @@
 param(
     [string]$Configuration = "Release",
     [switch]$TreatWarningsAsErrors,
-    [string]$BinaryLogDirectory,
-    [string]$LocalPackageDirectory,
-    [string]$LocalMSTestVersion,
-    [string]$LocalTestingPlatformVersion
+    [string]$BinaryLogDirectory
 )
 
 Set-StrictMode -Version Latest
@@ -56,36 +42,6 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $repoRootWithTrailingSeparator = $repoRoot + [System.IO.Path]::DirectorySeparatorChar
 $samplesFolder = "$repoRoot/samples/public"
-$globalJsonBackups = @{}
-$nuGetConfigBackups = @{}
-$nuGetConfigPaths = @(
-    (Join-Path $repoRoot "NuGet.config"),
-    (Join-Path $samplesFolder "NuGet.config")
-)
-$localPackageSampleNames = @(
-    "ClassicUwpMtpApp",
-    "MTPHostIntegration",
-    "UwpMtpApp",
-    "WinUIMtpAppContainerApp",
-    "WinUIMtpPackagedApp",
-    "WinUIMtpUnpackagedApp"
-)
-$localPackageProperties = @()
-$localHostingVersion = $null
-$localRestorePackagesPath = $null
-$dotnetPath = $null
-
-function Remove-LocalRestorePackages {
-    if ($null -eq $localRestorePackagesPath -or -not (Test-Path $localRestorePackagesPath)) {
-        return
-    }
-
-    if ($null -ne $dotnetPath) {
-        & $dotnetPath build-server shutdown
-    }
-
-    Remove-Item -LiteralPath $localRestorePackagesPath -Recurse -Force
-}
 
 if ($BinaryLogDirectory) {
     New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
@@ -96,215 +52,98 @@ $successCount = 0
 $failureCount = 0
 $solutions = @()
 
-try {
-    $localPackageArguments = @($LocalPackageDirectory, $LocalMSTestVersion, $LocalTestingPlatformVersion)
-    $configuredLocalPackageArguments = @($localPackageArguments | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    if ($configuredLocalPackageArguments.Count -ne 0 -and $configuredLocalPackageArguments.Count -ne $localPackageArguments.Count) {
-        throw "LocalPackageDirectory, LocalMSTestVersion, and LocalTestingPlatformVersion must be provided together."
-    }
+# Source the arcade tools to get access to InitializeDotNetCli
+. "$PSScriptRoot/common/tools.ps1"
 
-    if ($configuredLocalPackageArguments.Count -ne 0) {
-        $LocalPackageDirectory = (Resolve-Path $LocalPackageDirectory).Path
-        $localRestorePackagesPath = Join-Path $repoRoot "artifacts/tmp/sample-packages-local"
-        Remove-LocalRestorePackages
+# Initialize .NET CLI to ensure the repo-pinned SDK is available.
+$dotnetRoot = InitializeDotNetCli -install:$true
+$dotnetPath = "$dotnetRoot/dotnet.exe"
 
-        $hostingPackage = Get-ChildItem -Path $LocalPackageDirectory -Filter "Microsoft.Testing.Extensions.Hosting.*.nupkg" | Select-Object -First 1
-        if ($null -eq $hostingPackage) {
-            throw "Microsoft.Testing.Extensions.Hosting package was not found in LocalPackageDirectory."
-        }
+Write-Host "Building samples in: $samplesFolder"
+Write-Host "Configuration: $Configuration"
+Write-Host ""
 
-        $localHostingVersion = $hostingPackage.BaseName.Substring("Microsoft.Testing.Extensions.Hosting.".Length)
+# Find all solution files in samples/public
+$solutions = Get-ChildItem -Path $samplesFolder -Include @("*.sln", "*.slnx") -Recurse
 
-        foreach ($sampleName in $localPackageSampleNames) {
-            $globalJsonPath = Get-Item (Join-Path $samplesFolder "$sampleName/global.json")
-            $globalJson = Get-Content -Raw -Path $globalJsonPath.FullName | ConvertFrom-Json
-            $msbuildSdksProperty = $globalJson.PSObject.Properties["msbuild-sdks"]
-            if ($null -eq $msbuildSdksProperty) {
-                continue
-            }
+foreach ($solution in $solutions) {
+    Write-Host "Building solution: $($solution.FullName)"
 
-            $mstestSdkProperty = $msbuildSdksProperty.Value.PSObject.Properties["MSTest.Sdk"]
-            if ($null -eq $mstestSdkProperty) {
-                continue
-            }
+    # UWP projects require MSBuild instead of dotnet build
+    $isUwpSolution = $solution.Name -in @("UwpVSTestApp.sln", "UwpMtpApp.sln", "ClassicUwpMtpApp.sln")
 
-            $globalJsonBackups[$globalJsonPath.FullName] = [System.IO.File]::ReadAllBytes($globalJsonPath.FullName)
-            $mstestSdkProperty.Value = $LocalMSTestVersion
-            $globalJson | ConvertTo-Json -Depth 20 | Set-Content -Path $globalJsonPath.FullName
-        }
-
-        foreach ($nuGetConfigPath in $nuGetConfigPaths) {
-            $nuGetConfigBackups[$nuGetConfigPath] = [System.IO.File]::ReadAllBytes($nuGetConfigPath)
-            [xml]$nuGetConfig = Get-Content -Raw -Path $nuGetConfigPath
-            $localSource = $nuGetConfig.CreateElement("add")
-            $localSource.SetAttribute("key", "local-testfx")
-            $localSource.SetAttribute("value", $LocalPackageDirectory)
-            [void]$nuGetConfig.configuration.packageSources.AppendChild($localSource)
-
-            $packageSourceMapping = $nuGetConfig.SelectSingleNode("/configuration/packageSourceMapping")
-            if ($null -ne $packageSourceMapping) {
-                $localSourceMapping = $nuGetConfig.CreateElement("packageSource")
-                $localSourceMapping.SetAttribute("key", "local-testfx")
-                $localPackagePatterns = @("MSTest", "MSTest.*", "Microsoft.Testing.*")
-                foreach ($patternValue in $localPackagePatterns) {
-                    $pattern = $nuGetConfig.CreateElement("package")
-                    $pattern.SetAttribute("pattern", $patternValue)
-                    [void]$localSourceMapping.AppendChild($pattern)
-                }
-
-                [void]$packageSourceMapping.AppendChild($localSourceMapping)
-
-                # Package source mapping selects only the sources with the most specific matching
-                # pattern. Add the same specific patterns to public feeds so released and preview
-                # package versions remain available alongside the local CI build.
-                foreach ($publicSource in @("dotnet-public", "test-tools")) {
-                    $publicSourceMapping = $packageSourceMapping.SelectSingleNode("packageSource[@key='$publicSource']")
-                    if ($null -eq $publicSourceMapping) {
-                        continue
-                    }
-
-                    foreach ($patternValue in $localPackagePatterns) {
-                        $pattern = $nuGetConfig.CreateElement("package")
-                        $pattern.SetAttribute("pattern", $patternValue)
-                        [void]$publicSourceMapping.AppendChild($pattern)
-                    }
-                }
-            }
-
-            $nuGetConfig.Save($nuGetConfigPath)
-        }
-
-        $localPackageProperties = @(
-            "/p:MSTestVersion=$LocalMSTestVersion",
-            "/p:MSTestExtensionsHostingVersion=$LocalMSTestVersion",
-            "/p:MSTestSdkAOTVersion=$LocalMSTestVersion",
-            "/p:MicrosoftTestingPlatformVersion=$LocalTestingPlatformVersion",
-            "/p:TestingPlatformPreviewVersion=$LocalTestingPlatformVersion",
-            "/p:MicrosoftTestingExtensionsCommonVersion=$LocalTestingPlatformVersion",
-            "/p:MicrosoftTestingExtensionsHostingVersion=$localHostingVersion",
-            "/p:RestorePackagesPath=$localRestorePackagesPath",
-            "/p:MicrosoftTestingExtensionsPackagedAppVersion=$LocalTestingPlatformVersion",
-            "/p:EnableMicrosoftTestingPlatform=true",
-            "/p:EnableMicrosoftTestingExtensionsCodeCoverage=false"
+    if ($isUwpSolution) {
+        # Restore NuGet packages first for UWP projects
+        $restoreArgs = @(
+            "restore",
+            $solution.FullName,
+            "/p:Configuration=$Configuration",
+            "/p:RepoRoot=$repoRootWithTrailingSeparator",
+            "/p:Platform=x64"
         )
-    }
 
-    # Source the arcade tools to get access to InitializeDotNetCli
-    . "$PSScriptRoot/common/tools.ps1"
-
-    # Initialize .NET CLI to ensure correct SDK version is available
-    $dotnetRoot = InitializeDotNetCli -install:$true
-    $dotnetPath = "$dotnetRoot/dotnet.exe"
-
-    Write-Host "Building samples in: $samplesFolder"
-    Write-Host "Configuration: $Configuration"
-    Write-Host ""
-
-    # Find all solution files in samples/public
-    $solutions = Get-ChildItem -Path $samplesFolder -Include @("*.sln", "*.slnx") -Recurse
-
-    foreach ($solution in $solutions) {
-        Write-Host "Building solution: $($solution.FullName)"
-
-        $usesLocalPackages = $localPackageSampleNames -contains $solution.Directory.Name
-        $solutionPackageProperties = if ($usesLocalPackages) {
-            $localPackageProperties
-        }
-        else {
-            @()
+        if ($BinaryLogDirectory) {
+            $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
+            $restoreBinlogPath = Join-Path $BinaryLogDirectory "$solutionName.restore.binlog"
+            $restoreArgs += "/bl:$restoreBinlogPath"
         }
 
-        # UWP projects require MSBuild instead of dotnet build
-        $isUwpSolution = $solution.Name -in @("UwpVSTestApp.sln", "UwpMtpApp.sln", "ClassicUwpMtpApp.sln")
-
-        if ($isUwpSolution) {
-            # Restore NuGet packages first for UWP projects
-            $restoreArgs = @(
-                "restore",
-                $solution.FullName,
-                "/p:Configuration=$Configuration",
-                "/p:RepoRoot=$repoRootWithTrailingSeparator",
-                "/p:Platform=x64"
-            ) + $solutionPackageProperties
-
-            if ($BinaryLogDirectory) {
-                $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
-                $restoreBinlogPath = Join-Path $BinaryLogDirectory "$solutionName.restore.binlog"
-                $restoreArgs += "/bl:$restoreBinlogPath"
-            }
-
-            & $dotnetPath $restoreArgs
-
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "ERROR: Failed to restore packages for $($solution.Name)"
-                $failed = $true
-                $failureCount++
-                continue
-            }
-
-            $msbuildPath = InitializeVisualStudioMSBuild -install:$true
-
-            $buildArgs = @(
-                $solution.FullName,
-                "/p:Configuration=$Configuration",
-                "/p:RepoRoot=$repoRootWithTrailingSeparator",
-                "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors",
-                "/p:Platform=x64",
-                "/v:minimal"
-            ) + $solutionPackageProperties
-
-            if ($BinaryLogDirectory) {
-                $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
-                $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
-                $buildArgs += "/bl:$binlogPath"
-            }
-
-            & $msbuildPath $buildArgs
-        }
-        else {
-            $buildArgs = @(
-                "build",
-                $solution.FullName,
-                "--configuration", $Configuration,
-                "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
-            ) + $solutionPackageProperties
-
-            if ($usesLocalPackages) {
-                $buildArgs += "/p:Platform=x64"
-            }
-
-            if ($BinaryLogDirectory) {
-                $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
-                $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
-                $buildArgs += "-bl:$binlogPath"
-            }
-
-            & $dotnetPath $buildArgs
-        }
+        & $dotnetPath $restoreArgs
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "ERROR: Failed to build $($solution.Name)"
+            Write-Host "ERROR: Failed to restore packages for $($solution.Name)"
             $failed = $true
             $failureCount++
-        }
-        else {
-            Write-Host "SUCCESS: Built $($solution.Name)"
-            $successCount++
+            continue
         }
 
-        Write-Host ""
+        $msbuildPath = InitializeVisualStudioMSBuild -install:$true
+
+        $buildArgs = @(
+            $solution.FullName,
+            "/p:Configuration=$Configuration",
+            "/p:RepoRoot=$repoRootWithTrailingSeparator",
+            "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors",
+            "/p:Platform=x64",
+            "/v:minimal"
+        )
+
+        if ($BinaryLogDirectory) {
+            $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
+            $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
+            $buildArgs += "/bl:$binlogPath"
+        }
+
+        & $msbuildPath $buildArgs
     }
-}
-finally {
-    foreach ($globalJsonPath in $globalJsonBackups.Keys) {
-        [System.IO.File]::WriteAllBytes($globalJsonPath, $globalJsonBackups[$globalJsonPath])
+    else {
+        $buildArgs = @(
+            "build",
+            $solution.FullName,
+            "--configuration", $Configuration,
+            "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
+        )
+
+        if ($BinaryLogDirectory) {
+            $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
+            $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
+            $buildArgs += "-bl:$binlogPath"
+        }
+
+        & $dotnetPath $buildArgs
     }
 
-    foreach ($nuGetConfigPath in $nuGetConfigBackups.Keys) {
-        [System.IO.File]::WriteAllBytes($nuGetConfigPath, $nuGetConfigBackups[$nuGetConfigPath])
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Failed to build $($solution.Name)"
+        $failed = $true
+        $failureCount++
+    }
+    else {
+        Write-Host "SUCCESS: Built $($solution.Name)"
+        $successCount++
     }
 
-    Remove-LocalRestorePackages
+    Write-Host ""
 }
 
 Write-Host "========================================"

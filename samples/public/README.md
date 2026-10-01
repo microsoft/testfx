@@ -6,6 +6,25 @@
 | --- | --- |
 | Use an application-owned `HostApplicationBuilder` to supply configuration and logging, collect MTP diagnostics with OpenTelemetry, and preserve the application's resource identity and service ownership | [`MTPOTel`](MTPOTel) |
 
+## Test reliability
+
+| Scenario | Sample |
+| --- | --- |
+| Engineer a deterministic parallel MSTest suite using isolation, `[DoNotParallelize]` or `[ResourceLock]`, conditional tests, cooperative timeouts, retries as a last resort, and seeded test-order randomization | [`ReliableTestSuite`](ReliableTestSuite) |
+
+## MSTest.Sdk and runner
+
+| Scenario | Sample |
+| --- | --- |
+| Compare MSTest.Sdk configurations for the default runner, VSTest, Native AOT, Playwright, Aspire, and Windows UI Automation | [`DemoMSTestSdk`](DemoMSTestSdk) |
+| Explore custom runner extensions, explicit entry points, Native AOT, Docker execution, and runner comparisons | [`mstest-runner`](mstest-runner) |
+
+## Microsoft.Testing.Platform basics
+
+| Scenario | Sample |
+| --- | --- |
+| Explore a custom testing framework and in-process and out-of-process platform extensions | [`TestingPlatformExamples/TestingPlatformExplorer`](TestingPlatformExamples/TestingPlatformExplorer) |
+
 ## Application hosting
 
 | Scenario | Sample |
@@ -33,10 +52,13 @@ tests, see [Testing UWP and WinUI apps with MSTest](../../docs/winui-testing.md)
 
 Run commands from a sample directory and select a concrete architecture:
 
-The MTP `dotnet test --project` syntax used by the WinUI samples requires .NET SDK 10 or later even
-though those projects target the supported .NET 8 minimum. The modern UWP sample targets .NET 10
-and also requires .NET SDK 10 or later, but uses Visual Studio desktop MSBuild for UWP build and
-execution.
+The MTP `dotnet test --project` syntax used by the WinUI samples requires .NET SDK 10 or later for
+the native runner and CLI. `WinUIMtpUnpackagedApp` is a framework-dependent
+`net8.0-windows10.0.19041.0` application and separately requires the .NET 8 Desktop Runtime for the
+selected architecture. This extra runtime prerequisite is specific to the unpackaged sample: the
+packaged WinUI MTP samples are self-contained, and app-model controllers roll forward to newer
+installed .NET major versions. The modern UWP sample targets .NET 10 and also requires .NET SDK 10
+or later, but uses Visual Studio desktop MSBuild for UWP build and execution.
 
 ```powershell
 # Full-trust and unpackaged WinUI MTP samples
@@ -58,3 +80,5 @@ require the Visual Studio test runtime provider.
 
 AppContainer WinUI uses the sidecar's `InvokeTestingPlatform` MSBuild target rather than native
 `dotnet test`; follow [`WinUIMtpAppContainerApp/README.md`](WinUIMtpAppContainerApp/README.md).
+
+When adding a public sample directory, include a link and scenario description in this index.

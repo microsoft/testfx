@@ -13,8 +13,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(TestingPlatformPreviewVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform" Version="$(TestingPlatformPreviewVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.OpenTelemetry" Version="$(MTPVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
   </ItemGroup>
 
   <ItemGroup>
