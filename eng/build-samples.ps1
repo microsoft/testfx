@@ -51,6 +51,7 @@ $failed = $false
 $successCount = 0
 $failureCount = 0
 $solutions = @()
+$solutionProjects = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
 # Source the arcade tools to get access to InitializeDotNetCli
 . "$PSScriptRoot/common/tools.ps1"
@@ -67,6 +68,24 @@ Write-Host ""
 $solutions = Get-ChildItem -Path $samplesFolder -Include @("*.sln", "*.slnx") -Recurse
 
 foreach ($solution in $solutions) {
+    $listedProjects = & $dotnetPath sln $solution.FullName list
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Failed to list projects in $($solution.Name)"
+        $failed = $true
+        $failureCount++
+        continue
+    }
+
+    foreach ($listedProject in $listedProjects) {
+        $relativeProjectPath = $listedProject.Trim()
+        if ($relativeProjectPath -notmatch '\.(cs|fs|vb)proj$') {
+            continue
+        }
+
+        $projectPath = [System.IO.Path]::GetFullPath((Join-Path $solution.DirectoryName $relativeProjectPath))
+        $null = $solutionProjects.Add($projectPath)
+    }
+
     Write-Host "Building solution: $($solution.FullName)"
 
     # UWP projects require MSBuild instead of dotnet build
@@ -146,9 +165,45 @@ foreach ($solution in $solutions) {
     Write-Host ""
 }
 
+$standaloneProjects = @(Get-ChildItem -Path $samplesFolder -Include @("*.csproj", "*.fsproj", "*.vbproj") -Recurse |
+    Where-Object { !$solutionProjects.Contains($_.FullName) })
+
+foreach ($project in $standaloneProjects) {
+    Write-Host "Building standalone project: $($project.FullName)"
+
+    $buildArgs = @(
+        "build",
+        $project.FullName,
+        "--configuration", $Configuration,
+        "/p:TreatWarningsAsErrors=$TreatWarningsAsErrors"
+    )
+
+    if ($BinaryLogDirectory) {
+        $relativeProjectPath = [System.IO.Path]::GetRelativePath($samplesFolder, $project.FullName)
+        $projectLogName = $relativeProjectPath.Replace([System.IO.Path]::DirectorySeparatorChar, ".")
+        $binlogPath = Join-Path $BinaryLogDirectory "$projectLogName.binlog"
+        $buildArgs += "-bl:$binlogPath"
+    }
+
+    & $dotnetPath $buildArgs
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Failed to build $($project.FullName)"
+        $failed = $true
+        $failureCount++
+    }
+    else {
+        Write-Host "SUCCESS: Built $($project.FullName)"
+        $successCount++
+    }
+
+    Write-Host ""
+}
+
 Write-Host "========================================"
 Write-Host "Build Summary:"
 Write-Host "  Total solutions: $($solutions.Count)"
+Write-Host "  Standalone projects: $($standaloneProjects.Count)"
 Write-Host "  Succeeded: $successCount"
 Write-Host "  Failed: $failureCount"
 Write-Host "========================================"
