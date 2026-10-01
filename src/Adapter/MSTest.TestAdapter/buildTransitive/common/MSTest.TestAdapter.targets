@@ -17,6 +17,10 @@
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
     <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net8.0/winui/</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>
+  <!--
+    Desktop Visual Studio MSBuild resolves UseUwpTools before NuGet imports this target. Use the
+    resolved tooling property so an explicit false continues to select the ordinary assemblies.
+  -->
   <PropertyGroup Condition=" '$(UseUwpTools)' == 'true' ">
     <_TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net9.0/uwp/</_TestAdapterPlatformServicesRoot>
   </PropertyGroup>

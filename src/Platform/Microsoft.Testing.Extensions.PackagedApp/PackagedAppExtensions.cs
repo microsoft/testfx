@@ -38,9 +38,8 @@ public static class PackagedAppExtensions
     /// windowsApp/UWP hosts restore launch activation arguments with
     /// <see cref="GetTestApplicationArguments(string)"/>. The launcher also contributes the selected
     /// application's exact package SID to the controller connection through
-    /// <see cref="ITestHostControllerConnectionAuthorizer"/>. These are communication primitives; the
-    /// SDK/platform startup path still routes true UWP/AppContainer test projects to VSTest rather than
-    /// starting them as MTP test hosts.
+    /// <see cref="ITestHostControllerConnectionAuthorizer"/>. MSTest.Sdk uses these primitives to start
+    /// modern UWP and AppContainer projects as MTP test hosts through its app-model controller.
     /// </summary>
     /// <remarks>
     /// The launcher only enables itself when the test application is a packaged layout, so calling this
