@@ -771,10 +771,10 @@ public sealed class MtpServerProcessTests
     {
         using var temp = TempDirectory.Create();
         string releaseFile = Path.Combine(temp.Path, "release.txt");
+        string escapedReleaseFile = releaseFile.Replace("'", "''");
         string source = temp.CreateFile(
             "ConnectsThenExits.cmd",
             "@echo off\r\n"
-            + $"set \"release={releaseFile}\"\r\n"
             + "set port=\r\n"
             + ":parse\r\n"
             + "if \"%~1\"==\"\" exit /b 2\r\n"
@@ -785,11 +785,7 @@ public sealed class MtpServerProcessTests
             + "shift\r\n"
             + "goto parse\r\n"
             + ":found\r\n"
-            // Keep the server alive until StartAsync has observed the connection, avoiding a scheduler-dependent
-            // race where the process exits before an overloaded test agent resumes the accept continuation.
-            + "powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); "
-            + "try { while (-not (Test-Path -LiteralPath $env:release)) { Start-Sleep -Milliseconds 50 } } "
-            + "finally { $client.Dispose() }; exit 23\"\r\n"
+            + $"powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); while (-not (Test-Path -LiteralPath '{escapedReleaseFile}')) {{ Start-Sleep -Milliseconds 10 }}; $client.Dispose(); exit 23\"\r\n"
             + "exit /b %errorlevel%\r\n");
         var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
 
