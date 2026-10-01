@@ -464,7 +464,7 @@ stages:
       - job: WindowsSamples
         dependsOn: DetectChanges
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false'))
-        timeoutInMinutes: 30
+        timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
@@ -487,4 +487,12 @@ stages:
             targetType: filePath
             filePath: './eng/build-samples.ps1'
             arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
+            failOnStderr: false
+
+        - task: PowerShell@2
+          displayName: 'Test Samples'
+          inputs:
+            targetType: filePath
+            filePath: './eng/test-samples.ps1'
+            arguments: '-Configuration $(_BuildConfig) -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
             failOnStderr: false

@@ -34,7 +34,7 @@
     <Error Condition="!Exists('$(_VSWherePath)')"
            Text="Running this Windows application test requires Visual Studio Installer's vswhere.exe at '$(_VSWherePath)'." />
 
-    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -property installationPath"
+    <Exec Command="&quot;$(_VSWherePath)&quot; -latest -prerelease -products * -requires Microsoft.Component.MSBuild -property installationPath"
           ConsoleToMSBuild="true"
           StandardOutputImportance="Low">
       <Output TaskParameter="ConsoleOutput" PropertyName="_WindowsAppVSInstallation" />
@@ -55,7 +55,7 @@
       <_WindowsAppVSTestRestoreArgument Condition="Exists('$(_WindowsAppVSTestRestoreMarker)')">/restore</_WindowsAppVSTestRestoreArgument>
     </PropertyGroup>
 
-    <Exec Command="&quot;$(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; $(_WindowsAppVSTestRestoreArgument) /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:IsTestProject=false /p:UseUwpTools=$(UseUwp) /nologo"
+    <Exec Command="&quot;$(_WindowsAppMSBuild)&quot; &quot;$(MSBuildProjectFullPath)&quot; $(_WindowsAppVSTestRestoreArgument) /t:Build /p:Configuration=$(Configuration) /p:Platform=$(Platform) /p:UseUwpTools=$(UseUwp) /nologo"
           Condition="'$(WindowsAppVSTestNoBuildRequested)' != 'true'" />
 
     <ItemGroup>
