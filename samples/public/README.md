@@ -6,6 +6,25 @@
 | --- | --- |
 | Use an application-owned `HostApplicationBuilder` to supply configuration and logging, collect MTP diagnostics with OpenTelemetry, and preserve the application's resource identity and service ownership | [`MTPOTel`](MTPOTel) |
 
+## Test reliability
+
+| Scenario | Sample |
+| --- | --- |
+| Engineer a deterministic parallel MSTest suite using isolation, `[DoNotParallelize]` or `[ResourceLock]`, conditional tests, cooperative timeouts, retries as a last resort, and seeded test-order randomization | [`ReliableTestSuite`](ReliableTestSuite) |
+
+## MSTest.Sdk and runner
+
+| Scenario | Sample |
+| --- | --- |
+| Compare MSTest.Sdk configurations for the default runner, VSTest, Native AOT, Playwright, Aspire, and Windows UI Automation | [`DemoMSTestSdk`](DemoMSTestSdk) |
+| Explore custom runner extensions, explicit entry points, Native AOT, Docker execution, and runner comparisons | [`mstest-runner`](mstest-runner) |
+
+## Microsoft.Testing.Platform basics
+
+| Scenario | Sample |
+| --- | --- |
+| Explore a custom testing framework and in-process and out-of-process platform extensions | [`TestingPlatformExamples/TestingPlatformExplorer`](TestingPlatformExamples/TestingPlatformExplorer) |
+
 ## Application hosting
 
 | Scenario | Sample |
@@ -61,3 +80,5 @@ require the Visual Studio test runtime provider.
 
 AppContainer WinUI uses the sidecar's `InvokeTestingPlatform` MSBuild target rather than native
 `dotnet test`; follow [`WinUIMtpAppContainerApp/README.md`](WinUIMtpAppContainerApp/README.md).
+
+When adding a public sample directory, include a link and scenario description in this index.
