@@ -770,6 +770,8 @@ public sealed class MtpServerProcessTests
     public async Task ShutdownPreservesNaturalExitCodeAfterDisposingProcess()
     {
         using var temp = TempDirectory.Create();
+        string releaseFile = Path.Combine(temp.Path, "release.txt");
+        string escapedReleaseFile = releaseFile.Replace("'", "''");
         string source = temp.CreateFile(
             "ConnectsThenExits.cmd",
             "@echo off\r\n"
@@ -783,13 +785,14 @@ public sealed class MtpServerProcessTests
             + "shift\r\n"
             + "goto parse\r\n"
             + ":found\r\n"
-            + "powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); Start-Sleep -Seconds 2; $client.Dispose(); exit 23\"\r\n"
+            + $"powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); while (-not (Test-Path -LiteralPath '{escapedReleaseFile}')) {{ Start-Sleep -Milliseconds 10 }}; $client.Dispose(); exit 23\"\r\n"
             + "exit /b %errorlevel%\r\n");
         var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
 
         using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken);
         Assert.IsGreaterThan(0, process.ProcessId);
         Assert.IsNull(process.ExitCode);
+        File.WriteAllText(releaseFile, string.Empty);
         Assert.IsTrue(
             SpinWait.SpinUntil(() => process.ExitCode == 23, TimeSpan.FromSeconds(10)),
             "The server process did not exit naturally with the expected code.");
