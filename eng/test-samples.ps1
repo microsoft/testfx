@@ -98,7 +98,7 @@ $validations = @(
     @{ Project = "ClassicUwpMtpApp/ClassicUwpMtpApp.csproj"; Mode = "VisualStudioInvoke"; Platform = "x64"; PackageName = "MSTestClassicUwpMtpSample" },
     @{ Project = "WinUIVSTestApp/WinUIVSTestApp.csproj"; Mode = "VSTest"; Platform = "x64" },
     @{ Project = "WinUIMtpPackagedApp/WinUIMtpPackagedApp.csproj"; Mode = "MtpTest"; Platform = "x64"; PackageName = "27a818e1-af01-4177-9e34-ad49120c15ed" },
-    @{ Project = "WinUIMtpUnpackagedApp/WinUIMtpUnpackagedApp.csproj"; Mode = "MtpTest"; Platform = "x64" },
+    @{ Project = "WinUIMtpUnpackagedApp/WinUIMtpUnpackagedApp.csproj"; Mode = "MtpTest"; Platform = "x64"; Timeout = "5m"; RetryHandshakeFailure = $true },
     @{ Project = "WinUIMtpAppContainerApp/WinUIMtpAppContainerApp.csproj"; Mode = "Invoke"; Platform = "x64"; PackageName = "MSTestWinUIAppContainerSample" }
 )
 
@@ -138,7 +138,9 @@ function Invoke-SampleCommand {
         [string]$Project,
         [string]$Mode,
         [string]$Platform,
-        [string]$PackageName
+        [string]$PackageName,
+        [string]$Timeout,
+        [bool]$RetryHandshakeFailure
     )
 
     $projectPath = Join-Path $samplesFolder $Project
@@ -221,9 +223,34 @@ function Invoke-SampleCommand {
             $arguments += $platformArgument
         }
 
-        & $dotnetPath $arguments
-        if ($LASTEXITCODE -ne 0) {
-            throw "Sample validation failed for '$Project' with exit code $LASTEXITCODE."
+        if ($Timeout) {
+            $arguments += @("--timeout", $Timeout)
+        }
+
+        $maxAttempts = if ($RetryHandshakeFailure) { 2 } else { 1 }
+        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+            if (!$RetryHandshakeFailure) {
+                & $dotnetPath $arguments
+                $exitCode = $LASTEXITCODE
+            }
+            else {
+                $commandOutput = @()
+                & $dotnetPath $arguments | Tee-Object -Variable commandOutput
+                $exitCode = $LASTEXITCODE
+            }
+
+            if ($exitCode -eq 0) {
+                break
+            }
+
+            $hasHandshakeFailure = $RetryHandshakeFailure -and
+                @($commandOutput | Where-Object { $_ -match "Handshake failures:" }).Count -ne 0
+            if (!$hasHandshakeFailure -or $attempt -eq $maxAttempts) {
+                throw "Sample validation failed for '$Project' with exit code $exitCode."
+            }
+
+            Write-Warning "Test host handshake failed for '$Project' on attempt $attempt; retrying once."
+            Start-Sleep -Seconds 5
         }
 
         Write-Host "SUCCESS: Validated $Project"
@@ -242,7 +269,9 @@ $selectedValidations = @($validations | Where-Object {
 foreach ($validation in $selectedValidations) {
     $platform = if ($validation.ContainsKey("Platform")) { $validation.Platform } else { $null }
     $packageName = if ($validation.ContainsKey("PackageName")) { $validation.PackageName } else { $null }
-    Invoke-SampleCommand -Project $validation.Project -Mode $validation.Mode -Platform $platform -PackageName $packageName
+    $timeout = if ($validation.ContainsKey("Timeout")) { $validation.Timeout } else { $null }
+    $retryHandshakeFailure = $validation.ContainsKey("RetryHandshakeFailure") -and $validation.RetryHandshakeFailure
+    Invoke-SampleCommand -Project $validation.Project -Mode $validation.Mode -Platform $platform -PackageName $packageName -Timeout $timeout -RetryHandshakeFailure $retryHandshakeFailure
 }
 
 Write-Host "Validated $($selectedValidations.Count) public sample invocation(s)."
