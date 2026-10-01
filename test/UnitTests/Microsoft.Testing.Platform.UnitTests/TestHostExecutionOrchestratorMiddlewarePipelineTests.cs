@@ -137,8 +137,12 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
             Task<(Task<int>? Downstream, InvalidOperationException? Exception)> secondWorker = Task.Run(InvokeNext);
             invocationBarrier.SignalAndWait(TestContext.CancellationToken);
 
+            // Keep the middleware in its synchronous prefix until both workers have attempted next().
+            // Awaiting here would return the middleware task and let the pipeline close the guard before
+            // either worker is scheduled, making both invocations fail as late calls instead of exercising
+            // the intended concurrent double-invocation race.
             (Task<int>? Downstream, InvalidOperationException? Exception)[] attempts =
-                await Task.WhenAll(firstWorker, secondWorker);
+                Task.WhenAll(firstWorker, secondWorker).GetAwaiter().GetResult();
             (Task<int>? Downstream, InvalidOperationException? Exception)[] acceptedAttempts =
                 attempts.Where(attempt => attempt.Downstream is not null).ToArray();
             (Task<int>? Downstream, InvalidOperationException? Exception)[] rejectedAttempts =
