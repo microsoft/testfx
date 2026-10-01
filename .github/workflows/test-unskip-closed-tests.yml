@@ -1,0 +1,52 @@
+name: Test unskip closed tests helper
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/unskip_closed_tests_verify.py'
+      - '.github/scripts/test_unskip_closed_tests_verify.py'
+      - '.github/agents/unskip-closed-tests.agent.md'
+      - '.github/workflows/unskip-closed-tests.config.json'
+      - '.github/workflows/unskip-closed-tests-prepare.md'
+      - '.github/workflows/unskip-closed-tests-shared.md'
+      - '.github/workflows/unskip-closed-tests-tool/**'
+      - '.github/workflows/unskip-closed-tests-verify.sh'
+      - '.github/workflows/test-unskip-closed-tests.yml'
+      - '.github/workflows/unskip-closed-tests.md'
+  push:
+    branches:
+      - main
+      - 'rel/*'
+    paths:
+      - '.github/scripts/unskip_closed_tests_verify.py'
+      - '.github/scripts/test_unskip_closed_tests_verify.py'
+      - '.github/agents/unskip-closed-tests.agent.md'
+      - '.github/workflows/unskip-closed-tests.config.json'
+      - '.github/workflows/unskip-closed-tests-prepare.md'
+      - '.github/workflows/unskip-closed-tests-shared.md'
+      - '.github/workflows/unskip-closed-tests-tool/**'
+      - '.github/workflows/unskip-closed-tests-verify.sh'
+      - '.github/workflows/test-unskip-closed-tests.yml'
+      - '.github/workflows/unskip-closed-tests.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-unskip-closed-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test unskip closed tests helper
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - run: python .github/scripts/test_unskip_closed_tests_verify.py

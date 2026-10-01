@@ -1,0 +1,40 @@
+{
+  "schema_version": "1",
+  "source_roots": [
+    "test",
+    "samples"
+  ],
+  "excluded_globs": [
+    "**/bin/**",
+    "**/obj/**"
+  ],
+  "generated_globs": [
+    "**/Generated/**",
+    "**/generated/**",
+    "**/*.Designer.cs",
+    "**/*.g.cs",
+    "**/*.generated.cs"
+  ],
+  "ignore_attribute_names": [
+    "Ignore",
+    "IgnoreAttribute"
+  ],
+  "test_attribute_names": [
+    "TestMethod",
+    "TestMethodAttribute",
+    "DataTestMethod",
+    "DataTestMethodAttribute",
+    "STATestMethod",
+    "STATestMethodAttribute",
+    "UITestMethod",
+    "UITestMethodAttribute"
+  ],
+  "verification": {
+    "command": [
+      "python3",
+      ".github/scripts/unskip_closed_tests_verify.py",
+      "{request_json}"
+    ],
+    "timeout_seconds": 1800
+  }
+}
