@@ -481,13 +481,10 @@ stages:
             failOnStderr: true
             showWarnings: true
 
-        - script: .\build.cmd -c $(_BuildConfig) -pack -ci -bl
-          displayName: 'Pack local TestFX packages'
-
         - task: PowerShell@2
           displayName: 'Build Samples'
           inputs:
             targetType: filePath
             filePath: './eng/build-samples.ps1'
-            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)" -LocalPackageDirectory "$(Build.SourcesDirectory)\artifacts\packages\$(_BuildConfig)\Shipping" -LocalMSTestVersion "4.5.0-ci" -LocalTestingPlatformVersion "2.5.0-ci"'
+            arguments: '-Configuration $(_BuildConfig) -TreatWarningsAsErrors -BinaryLogDirectory "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"'
             failOnStderr: false

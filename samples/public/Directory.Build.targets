@@ -4,7 +4,7 @@
     <!-- Keep implicit Native AOT dependencies on versions available from the validated public mirror. -->
     <PackageReference Update="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />
     <PackageReference Update="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
-    <PackageReference Update="MSTest.SourceGeneration" Version="$(MSTestSdkAOTVersion)" />
+    <PackageReference Update="MSTest.SourceGeneration" Version="$(MSTestVersion)" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(UseWindowsAppVSTestRecipe)' == 'true' AND '$(VSTestSessionCorrelationId)' != ''">
