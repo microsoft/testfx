@@ -332,7 +332,7 @@ interface InitializeResponse {
 ```
 
 For `capabilities.rpcOnlyOutput` semantics, see
-[RPC-only output-device routing](#rpc-only-output-device-routing) under `client/log`.
+[RPC-only output](#rpc-only-output) under `client/log`.
 
 #### Versioning capabilities
 
@@ -871,44 +871,19 @@ type TestingPlatformLogLevel =
     | 'None';
 ```
 
-#### RPC-only output-device routing
+#### RPC-only output
 
-A client can request `capabilities.rpcOnlyOutput: true` in `initialize`. A server
-that applies this policy returns `capabilities.rpcOnlyOutput: true` in the
-successful response. Clients must check that acknowledgement rather than infer
-support from the product version. An absent, null, or false request retains legacy
-output behavior. An absent or null response field means the policy was not
-acknowledged; false means it was not applied.
+By default, the server writes output messages to both stdout and `client/log`.
+Clients that display both streams therefore show duplicate output.
 
-Once applied, messages sent through `IOutputDevice` are routed only to `client/log`,
-not also to the original output device. Plain text, formatted text (including
-padding), session messages, and progress updates remain Information; warnings and
-errors retain their levels. Progress updates retain their existing deduplication
-behavior. Built-in connection diagnostics use `ILogger` at Debug level, independently
-of this capability, and are not sent to `client/log`. Banner messages are already Debug over RPC. Supported
-user messages are not classified by matching their text and are not discarded.
-The built-in max-failed-tests message is registered once by the output proxy and
-follows the negotiated route when invoked, even though its callback is registered
-before initialization.
+To avoid this, set `capabilities.rpcOnlyOutput: true` in `initialize`. When the
+server acknowledges it with `capabilities.rpcOnlyOutput: true`, subsequent output
+messages are sent only through `client/log`, without a duplicate stdout copy.
+Message levels are unchanged. Without a true acknowledgement, clients must retain
+their existing output handling. Each connection negotiates independently.
 
-Opting in deliberately bypasses the original output device, including a custom
-device, for output-device presentation. Only payload types understood by the RPC
-output device are forwarded: text, formatted text, session/progress messages,
-warnings, errors, and exceptions. Custom `IOutputDeviceData` types that the RPC
-device does not understand are not forwarded and no longer reach a custom original
-device. Clients relying on such custom rendering should not request this policy.
-
-The policy is scoped to the initialized JSON-RPC connection, not to a client name
-or process-wide console setting. Each peer must negotiate independently.
-Attachment-only additional connections currently acknowledge false when requested:
-they do not own an RPC output-device route. Normal CLI execution and the separate
-`dotnet test` pipe protocol are unchanged.
-
-Output already written before the handshake cannot be retracted. Clients should use
-the existing `--no-banner` option to suppress the cosmetic startup banner. Startup
-failures before a successful handshake keep their original output route. Pending
-RPC output is drained when discovery or execution first initializes the output
-device, as before; legitimate user messages queued during startup remain included.
-Direct `Console.WriteLine`/stderr writes are not `IOutputDevice` messages and are
-neither intercepted nor silenced. Clients must continue handling such raw output;
-the acknowledgement does not mean that stdout/stderr can be ignored.
+This does not suppress direct application writes to stdout/stderr or output
+already written before initialization; clients must still drain those streams.
+Use `--no-banner` to suppress the startup banner. Custom output rendering is
+bypassed, so clients that depend on it should not opt in. Normal CLI execution
+and the separate `dotnet test` protocol are unaffected.
