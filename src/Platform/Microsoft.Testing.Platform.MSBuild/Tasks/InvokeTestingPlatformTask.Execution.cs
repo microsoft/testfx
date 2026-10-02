@@ -60,31 +60,33 @@ public partial class InvokeTestingPlatformTask
 
     /// <inheritdoc />
     protected override void ProcessStarted()
-        => _connectionLoopTask = Task.Run(async () =>
-        {
-            try
+        => _connectionLoopTask = new SystemTask().Run(
+            async () =>
             {
-                while (!_waitForConnections.IsCancellationRequested)
+                try
                 {
-                    NamedPipeServer pipeServer = new(_pipeNameDescription, HandleRequestAsync, new SystemEnvironment(), new MSBuildLogger(), new SystemTask(), maxNumberOfServerInstances: 100, CancellationToken.None);
-                    pipeServer.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
-                    pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                    pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
-                    pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
-                    await pipeServer.WaitConnectionAsync(_waitForConnections.Token).ConfigureAwait(false);
-                    _connections.Add(pipeServer);
-                    Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
+                    while (!_waitForConnections.IsCancellationRequested)
+                    {
+                        NamedPipeServer pipeServer = new(_pipeNameDescription, HandleRequestAsync, new SystemEnvironment(), new MSBuildLogger(), new SystemTask(), maxNumberOfServerInstances: 100, CancellationToken.None);
+                        pipeServer.RegisterSerializer(new ModuleInfoRequestSerializer(), typeof(ModuleInfoRequest));
+                        pipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+                        pipeServer.RegisterSerializer(new FailedTestInfoRequestSerializer(), typeof(FailedTestInfoRequest));
+                        pipeServer.RegisterSerializer(new RunSummaryInfoRequestSerializer(), typeof(RunSummaryInfoRequest));
+                        await pipeServer.WaitConnectionAsync(_waitForConnections.Token).ConfigureAwait(false);
+                        _connections.Add(pipeServer);
+                        Log.LogMessage(MessageImportance.Low, $"Client connected to '{_pipeNameDescription.Name}'");
+                    }
                 }
-            }
-            catch (OperationCanceledException) when (_waitForConnections.IsCancellationRequested)
-            {
-                // Do nothing we're canceling
-            }
-            catch (Exception ex)
-            {
-                Log.LogError(ex.ToString());
-            }
-        });
+                catch (OperationCanceledException) when (_waitForConnections.IsCancellationRequested)
+                {
+                    // Do nothing we're canceling
+                }
+                catch (Exception ex)
+                {
+                    Log.LogError(ex.ToString());
+                }
+            },
+            CancellationToken.None);
 
     /// <inheritdoc />
     public override bool Execute()
@@ -153,7 +155,7 @@ public partial class InvokeTestingPlatformTask
     protected override bool HandleTaskExecutionErrors()
     {
         // This is an unexpected situation we simply print to the console the output and return false.
-        if (string.IsNullOrEmpty(_outputFileName) && ExitCode != (int)Helpers.ExitCode.InvalidCommandLine)
+        if (RoslynString.IsNullOrEmpty(_outputFileName) && ExitCode != (int)Helpers.ExitCode.InvalidCommandLine)
         {
             Log.LogError(null, "run failed", null, TargetPath.ItemSpec.Trim(), 0, 0, 0, 0, Resources.MSBuildResources.TestFailedNoDetail, _output);
         }

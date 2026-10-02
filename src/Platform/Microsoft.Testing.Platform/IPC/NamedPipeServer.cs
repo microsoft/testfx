@@ -311,17 +311,19 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     private async Task TryLogDebugAsync(string message)
     {
-        var loggingTask = Task.Run(async () =>
-        {
-            try
+        Task loggingTask = _task.Run(
+            async () =>
             {
-                await _logger.LogDebugAsync(message).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                // A graceful disconnect must remain graceful even when a logging provider fails.
-            }
-        });
+                try
+                {
+                    await _logger.LogDebugAsync(message).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // A graceful disconnect must remain graceful even when a logging provider fails.
+                }
+            },
+            CancellationToken.None);
 
         await Task.WhenAny(loggingTask, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false);
     }

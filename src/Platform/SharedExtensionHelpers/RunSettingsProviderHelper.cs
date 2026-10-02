@@ -13,7 +13,9 @@ namespace Microsoft.Testing.Extensions;
 /// The per-package concerns (resource strings, option registration, UWP guards) stay in the provider classes; only
 /// the shared logic lives here.
 /// </summary>
-[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into projects that are allowed to use MTP APIs")]
+#if MSTEST_TESTADAPTER
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into the MSTest adapter, which is allowed to use MTP APIs")]
+#endif
 internal static class RunSettingsProviderHelper
 {
     /// <summary>
@@ -62,10 +64,10 @@ internal static class RunSettingsProviderHelper
         }
 
         // If not from content env var, try environment variable with file path.
-        if (runSettingsFilePath is null && string.IsNullOrEmpty(runSettingsContent))
+        if (runSettingsFilePath is null && runSettingsContent is not { Length: > 0 })
         {
             string? envVarFilePath = environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
-            if (!string.IsNullOrEmpty(envVarFilePath) && fileSystem.ExistFile(envVarFilePath!))
+            if (envVarFilePath is { Length: > 0 } && fileSystem.ExistFile(envVarFilePath))
             {
                 runSettingsFilePath = envVarFilePath;
             }
@@ -84,8 +86,8 @@ internal static class RunSettingsProviderHelper
         }
 
         // If we have content, parse it directly.
-        return !string.IsNullOrEmpty(runSettingsContent)
-            ? XDocument.Parse(runSettingsContent!)
+        return runSettingsContent is { Length: > 0 }
+            ? XDocument.Parse(runSettingsContent)
             : null;
     }
 
