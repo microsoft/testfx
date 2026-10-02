@@ -56,22 +56,29 @@ steps:
         $executionOutput = $outputText.Substring(0, $handshakeSectionIndex)
         $handshakeOutput = $outputText.Substring($handshakeSectionIndex)
         $childResults = @{}
+        $allExecutionChildrenSucceeded = $true
         $segmentStart = 0
         foreach ($childSummary in [regex]::Matches(
           $executionOutput,
           '(?m)^(?<module>.+?) Zero tests ran\r?\nExit code: (?<exitCode>-?\d+)\s*$')) {
           $segment = $executionOutput.Substring($segmentStart, $childSummary.Index - $segmentStart)
+          $childExitCode = [int]$childSummary.Groups['exitCode'].Value
           $childResults[$childSummary.Groups['module'].Value] = @{
-            ExitCode = [int]$childSummary.Groups['exitCode'].Value
+            ExitCode = $childExitCode
             PersistedMap = $segment.Contains('[affected-tests] Collected test map')
           }
+          $allExecutionChildrenSucceeded =
+            $allExecutionChildrenSucceeded -and
+            $childExitCode -eq 0
           $segmentStart = $childSummary.Index + $childSummary.Length
         }
 
         $handshakeFailures = [regex]::Matches(
           $handshakeOutput,
           '(?m)^\s{2}(?<module>.+?)\r?\nExit code: (?<exitCode>-?\d+)\s*$')
-        $allHandshakeFailuresAreSuccessfulMapCollections = $handshakeFailures.Count -gt 0
+        $allHandshakeFailuresAreSuccessfulMapCollections =
+          $handshakeFailures.Count -gt 0 -and
+          $allExecutionChildrenSucceeded
         foreach ($handshakeFailure in $handshakeFailures) {
           $module = $handshakeFailure.Groups['module'].Value
           $allHandshakeFailuresAreSuccessfulMapCollections =

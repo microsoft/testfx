@@ -343,6 +343,54 @@ if ($requiresCollectionHandshakeWorkaround -ne $hasCollectionHandshakeWorkaround
     throw "Affected-test collection handshake normalization must be present only for SDKs that require it."
 }
 
+if ($requiresCollectionHandshakeWorkaround) {
+    $handshakeValidationScriptMatch = [regex]::Match(
+        $collectStep,
+        '(?s)\$handshakeSectionIndex = .*?(?=\r?\n\s+\$isKnownSdkHandshakeFailure =)')
+    if (-not $handshakeValidationScriptMatch.Success) {
+        throw "Affected-test collection handshake validation logic is missing."
+    }
+
+    $handshakeValidationScript = [scriptblock]::Create($handshakeValidationScriptMatch.Value)
+    function Test-CollectionHandshakeNormalization {
+        param(
+            [string]$OutputText,
+            [scriptblock]$ValidationScript
+        )
+
+        $allHandshakeFailuresAreSuccessfulMapCollections = $false
+        . $ValidationScript
+
+        return $allHandshakeFailuresAreSuccessfulMapCollections
+    }
+
+    $successfulHandshakeOutput = @(
+        "[affected-tests] Collected test map",
+        "module-a.dll Zero tests ran",
+        "Exit code: 0",
+        "Handshake failures:",
+        "  module-a.dll",
+        "Exit code: 0"
+    ) -join [Environment]::NewLine
+    if (-not (Test-CollectionHandshakeNormalization $successfulHandshakeOutput $handshakeValidationScript)) {
+        throw "Affected-test collection handshake normalization must accept correlated exit-zero map collection."
+    }
+
+    $mixedExecutionOutput = @(
+        "[affected-tests] Collected test map",
+        "module-a.dll Zero tests ran",
+        "Exit code: 0",
+        "module-b.dll Zero tests ran",
+        "Exit code: 1",
+        "Handshake failures:",
+        "  module-a.dll",
+        "Exit code: 0"
+    ) -join [Environment]::NewLine
+    if (Test-CollectionHandshakeNormalization $mixedExecutionOutput $handshakeValidationScript) {
+        throw "Affected-test collection handshake normalization must reject a nonzero execution child missing from the handshake recap."
+    }
+}
+
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
     -not $runBranch.Value.Contains('exit $exitCode')) {
     throw "The affected-test run must preserve exit codes 2 and 8 for failed or all-skipped selections."
