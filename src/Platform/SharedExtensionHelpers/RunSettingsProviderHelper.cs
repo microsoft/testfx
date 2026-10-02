@@ -62,10 +62,10 @@ internal static class RunSettingsProviderHelper
         }
 
         // If not from content env var, try environment variable with file path.
-        if (runSettingsFilePath is null && RoslynString.IsNullOrEmpty(runSettingsContent))
+        if (runSettingsFilePath is null && string.IsNullOrEmpty(runSettingsContent))
         {
             string? envVarFilePath = environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
-            if (!RoslynString.IsNullOrEmpty(envVarFilePath) && fileSystem.ExistFile(envVarFilePath!))
+            if (!string.IsNullOrEmpty(envVarFilePath) && fileSystem.ExistFile(envVarFilePath!))
             {
                 runSettingsFilePath = envVarFilePath;
             }
@@ -84,7 +84,7 @@ internal static class RunSettingsProviderHelper
         }
 
         // If we have content, parse it directly.
-        return !RoslynString.IsNullOrEmpty(runSettingsContent)
+        return !string.IsNullOrEmpty(runSettingsContent)
             ? XDocument.Parse(runSettingsContent!)
             : null;
     }
