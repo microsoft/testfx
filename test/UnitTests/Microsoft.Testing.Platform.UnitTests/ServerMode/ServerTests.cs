@@ -202,18 +202,6 @@ public sealed class ServerTests
         using StreamWriter writer = new(stream, Encoding.UTF8);
         TcpMessageHandler messageHandler = new(client, stream, stream, FormatterUtilities.CreateFormatter());
 
-        // Parallel server tests can broadcast process-wide unobserved-task warnings.
-        // Ignore only those warnings, not responses or the informational output under test.
-        Task<RpcMessage?> ReadHandoverMessageAsync()
-            => WaitForMessage(
-                messageHandler,
-                message => message is not NotificationMessage { Method: JsonRpcMethods.ClientLog, Params: IDictionary<string, object?> log }
-                    || !Equals(log[JsonRpcStrings.Level], "Warning")
-                    || log[JsonRpcStrings.Message] is not string text
-                    || !text.StartsWith("[ServerTestHost.OnTaskSchedulerUnobservedTaskException]", StringComparison.Ordinal),
-                "Wait output handover",
-                timeout.Token);
-
         ITestApplicationCancellationTokenSource originalCancellation = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
         int blockNextAccess = 1;
         Mock<ITestApplicationCancellationTokenSource> cancellation = new();
@@ -255,7 +243,7 @@ public sealed class ServerTests
 
             await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "id": 2, "method": "testing/unknown", "params": {} }""");
             await WriteMessageAsync(writer, initializeMessage.Replace("\"id\": 1", "\"id\": 3"));
-            ErrorMessage duplicateWhileFlushing = Assert.IsInstanceOfType<ErrorMessage>(await ReadHandoverMessageAsync());
+            ErrorMessage duplicateWhileFlushing = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
             Assert.AreEqual(3, duplicateWhileFlushing.Id);
             Assert.AreEqual(ErrorCodes.InvalidRequest, duplicateWhileFlushing.ErrorCode);
 
@@ -265,7 +253,7 @@ public sealed class ServerTests
             List<string> receivedMessages = [];
             for (int i = 0; i < concurrentMessages.Length; i++)
             {
-                NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await ReadHandoverMessageAsync());
+                NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
                 Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
                 receivedMessages.Add(Assert.IsInstanceOfType<string>(
                     Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message]));
@@ -285,16 +273,16 @@ public sealed class ServerTests
         }
         else
         {
-            NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await ReadHandoverMessageAsync());
+            NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
             Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
             Assert.AreEqual("buffered output", Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message]);
         }
 
-        ErrorMessage waitingRequestError = Assert.IsInstanceOfType<ErrorMessage>(await ReadHandoverMessageAsync());
+        ErrorMessage waitingRequestError = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
         Assert.AreEqual(2, waitingRequestError.Id);
         Assert.AreEqual(ErrorCodes.MethodNotFound, waitingRequestError.ErrorCode);
         await WriteMessageAsync(writer, initializeMessage.Replace("\"id\": 1", "\"id\": 4"));
-        ErrorMessage duplicateAfterFlush = Assert.IsInstanceOfType<ErrorMessage>(await ReadHandoverMessageAsync());
+        ErrorMessage duplicateAfterFlush = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
         Assert.AreEqual(4, duplicateAfterFlush.Id);
         Assert.AreEqual(ErrorCodes.InvalidRequest, duplicateAfterFlush.ErrorCode);
         ((ServiceProvider)testApplication.ServiceProvider).ReplaceService(originalCancellation);
@@ -426,24 +414,28 @@ public sealed class ServerTests
         bool startupOutputReceived = false;
         while (queuedRequestError is null || initializeResponse is null || !startupOutputReceived)
         {
-            RpcMessage? message = await messageHandler.ReadAsync(timeout.Token);
+            RpcMessage? message = initializeResponse is null
+                ? await messageHandler.ReadAsync(timeout.Token)
+                : await ReadPostInitializationMessageAsync(messageHandler, timeout.Token);
             if (queuedRequestError is null && message is ErrorMessage { Id: 20 } error)
             {
                 queuedRequestError = error;
             }
-
-            if (initializeResponse is null && message is ResponseMessage { Id: 2 } response)
+            else if (initializeResponse is null && message is ResponseMessage { Id: 2 } response)
             {
                 initializeResponse = response;
             }
-
-            if (message is NotificationMessage notification)
+            else if (message is NotificationMessage notification)
             {
                 Assert.IsNotNull(initializeResponse);
                 Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
                 Assert.IsFalse(startupOutputReceived);
                 Assert.AreEqual("buffered across initialization retry", Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message]);
                 startupOutputReceived = true;
+            }
+            else
+            {
+                Assert.Fail($"Unexpected initialization message: {message}");
             }
         }
 
@@ -468,11 +460,8 @@ public sealed class ServerTests
             }
             """);
 
-        var methodNotFoundError = (ErrorMessage)(await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ErrorMessage { Id: 4 },
-            "Wait method-not-found error",
-            timeout.Token))!;
+        ErrorMessage methodNotFoundError = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
+        Assert.AreEqual(4, methodNotFoundError.Id);
         Assert.AreEqual(ErrorCodes.MethodNotFound, methodNotFoundError.ErrorCode);
         Assert.AreEqual("4", methodNotFoundError.StringId);
 
@@ -591,15 +580,25 @@ public sealed class ServerTests
 
         ResponseMessage initializeResponse = Assert.IsInstanceOfType<ResponseMessage>(await messageHandler.ReadAsync(timeout.Token));
         Assert.AreEqual(1, initializeResponse.Id);
-        NotificationMessage startupLog = Assert.IsInstanceOfType<NotificationMessage>(await messageHandler.ReadAsync(timeout.Token));
+        NotificationMessage startupLog = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
         Assert.AreEqual(JsonRpcMethods.ClientLog, startupLog.Method);
         Assert.AreEqual("before pipelined discovery", Assert.IsInstanceOfType<IDictionary<string, object?>>(startupLog.Params)[JsonRpcStrings.Message]);
-        RpcMessage? discoveryResponse = await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ResponseMessage { Id: 2 } or ErrorMessage { Id: 2 },
-            "Wait pipelined discovery response",
-            timeout.Token);
-        Assert.IsInstanceOfType<ResponseMessage>(discoveryResponse);
+        RpcMessage? discoveryResponse = await ReadPostInitializationMessageAsync(messageHandler, timeout.Token);
+        while (discoveryResponse is NotificationMessage notification)
+        {
+            if (!IsTestUpdateCompletion(notification) && notification.Method != JsonRpcMethods.TelemetryUpdate)
+            {
+                Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+                IDictionary<string, object?> log = Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params);
+                Assert.AreEqual("Trace", log[JsonRpcStrings.Level]);
+                Assert.IsTrue(Equals(log[JsonRpcStrings.Message], PlatformResources.GetResourceString("StartingTestSession"))
+                    || Equals(log[JsonRpcStrings.Message], PlatformResources.GetResourceString("FinishedTestSession")));
+            }
+
+            discoveryResponse = await ReadPostInitializationMessageAsync(messageHandler, timeout.Token);
+        }
+
+        Assert.AreEqual(2, Assert.IsInstanceOfType<ResponseMessage>(discoveryResponse).Id);
         Assert.IsNotNull(clientInfo);
         Assert.AreEqual("testingplatform-unittests", clientInfo.Id);
         Assert.AreEqual("1.0.0", clientInfo.Version);
@@ -607,6 +606,93 @@ public sealed class ServerTests
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
         Assert.AreEqual(0, await serverTask);
+    }
+
+    [TestMethod]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public async Task ReadPostInitializationMessageAsync_SkipsKnownWarningsAroundStartupMarker(bool warningBeforeMarker, bool warningAfterMarker)
+    {
+        NotificationMessage warning = new(JsonRpcMethods.ClientLog, new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Level] = "Warning",
+            [JsonRpcStrings.Message] = "[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Synthetic warning",
+        });
+        NotificationMessage marker = new(JsonRpcMethods.ClientLog, new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Level] = "Information",
+            [JsonRpcStrings.Message] = "startup marker",
+        });
+        ResponseMessage initializeResponse = new(1, null);
+        ResponseMessage discoveryResponse = new(2, null);
+        Queue<RpcMessage> messages = new();
+        messages.Enqueue(initializeResponse);
+        if (warningBeforeMarker)
+        {
+            messages.Enqueue(warning);
+        }
+
+        messages.Enqueue(marker);
+        if (warningAfterMarker)
+        {
+            messages.Enqueue(warning);
+        }
+
+        messages.Enqueue(discoveryResponse);
+        Mock<IMessageHandler> messageHandler = new(MockBehavior.Strict);
+        messageHandler.Setup(handler => handler.ReadAsync(CancellationToken.None)).ReturnsAsync(() => messages.Dequeue());
+
+        Assert.AreSame(initializeResponse, await messageHandler.Object.ReadAsync(CancellationToken.None));
+        Assert.AreSame(marker, await ReadPostInitializationMessageAsync(messageHandler.Object, CancellationToken.None));
+        Assert.AreSame(discoveryResponse, await ReadPostInitializationMessageAsync(messageHandler.Object, CancellationToken.None));
+        Assert.IsEmpty(messages);
+    }
+
+    [TestMethod]
+    [DataRow(JsonRpcMethods.ClientLog, "Warning", "Unrelated warning")]
+    [DataRow(JsonRpcMethods.ClientLog, "Information", "[ServerTestHost.OnTaskSchedulerUnobservedTaskException]")]
+    [DataRow(JsonRpcMethods.ClientLog, "Error", "[ServerTestHost.OnTaskSchedulerUnobservedTaskException]")]
+    [DataRow("unexpected/notification", "Warning", "[ServerTestHost.OnTaskSchedulerUnobservedTaskException]")]
+    [DataRow(JsonRpcMethods.ClientLog, "Warning", "Other [ServerTestHost.OnTaskSchedulerUnobservedTaskException]")]
+    [DataRow(JsonRpcMethods.ClientLog, "Warning", "[servertesthost.OnTaskSchedulerUnobservedTaskException]")]
+    [DataRow(JsonRpcMethods.ClientLog, "Warning", null)]
+    public async Task ReadPostInitializationMessageAsync_PreservesOtherNotifications(string method, string level, string? text)
+    {
+        NotificationMessage notification = new(method, new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Level] = level,
+            [JsonRpcStrings.Message] = text,
+        });
+        Mock<IMessageHandler> messageHandler = new(MockBehavior.Strict);
+        messageHandler.SetupSequence(handler => handler.ReadAsync(CancellationToken.None))
+            .ReturnsAsync(notification)
+            .Throws(new InvalidOperationException("The notification must not be skipped."));
+
+        Assert.AreSame(notification, await ReadPostInitializationMessageAsync(messageHandler.Object, CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task ReadPostInitializationMessageAsync_PreservesResponsesAndMalformedNotifications()
+    {
+        RpcMessage?[] messages =
+        [
+            new ResponseMessage(42, null),
+            new ErrorMessage(42, ErrorCodes.InternalError, "Unexpected error", null),
+            new RequestMessage(42, "unexpected/request", null),
+            new NotificationMessage(JsonRpcMethods.ClientLog, null),
+            new NotificationMessage(JsonRpcMethods.ClientLog, new Dictionary<string, object?>()),
+            null,
+        ];
+        foreach (RpcMessage? message in messages)
+        {
+            Mock<IMessageHandler> messageHandler = new(MockBehavior.Strict);
+            messageHandler.SetupSequence(handler => handler.ReadAsync(CancellationToken.None))
+                .ReturnsAsync(message)
+                .Throws(new InvalidOperationException("The message must not be skipped."));
+
+            Assert.AreSame(message, await ReadPostInitializationMessageAsync(messageHandler.Object, CancellationToken.None));
+        }
     }
 
     [TestMethod]
@@ -1439,7 +1525,21 @@ public sealed class ServerTests
         Assert.AreEqual(0, result);
     }
 
-    private static async Task<RpcMessage?> WaitForMessage(TcpMessageHandler messageHandler, Func<RpcMessage?, bool> rpcMessageFilter, string label, CancellationToken cancellationToken)
+    // Use only after asserting the initialize response: no notification may precede it.
+    // Parallel server tests can broadcast these process-wide unobserved-task warnings.
+    private static Task<RpcMessage?> ReadPostInitializationMessageAsync(IMessageHandler messageHandler, CancellationToken cancellationToken)
+        => WaitForMessage(
+            messageHandler,
+            message => message is not NotificationMessage { Method: JsonRpcMethods.ClientLog, Params: IDictionary<string, object?> log }
+                || !log.TryGetValue(JsonRpcStrings.Level, out object? level)
+                || !Equals(level, "Warning")
+                || !log.TryGetValue(JsonRpcStrings.Message, out object? value)
+                || value is not string text
+                || !text.StartsWith("[ServerTestHost.OnTaskSchedulerUnobservedTaskException]", StringComparison.Ordinal),
+            "Wait post-initialization message",
+            cancellationToken);
+
+    private static async Task<RpcMessage?> WaitForMessage(IMessageHandler messageHandler, Func<RpcMessage?, bool> rpcMessageFilter, string label, CancellationToken cancellationToken)
     {
         while (true)
         {
