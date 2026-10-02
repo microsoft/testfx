@@ -115,6 +115,10 @@ if ($affectedTestsEnabled -and $selectedSdk -in $affectedTestsSdkVersionsWithCol
     throw "Affected-test execution must remain disabled with SDK '$selectedSdk', which reports successful collection children as handshake failures."
 }
 
+$affectedTestsSdkVersionsRequiringCollectionHandshakeWorkaround = @(
+    [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26480.103"
+)
+
 $lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
 if ($affectedTestsEnabled -and $bootstrappedSdk -le $lastUnsupportedAffectedTestsSdk) {
     throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55574."
@@ -294,7 +298,7 @@ if (-not $runBranch.Value.Contains("-p:TestRunnerAdditionalArguments=")) {
     throw "Affected-test execution must suppress the repository's retry arguments."
 }
 
-$collectStepStart = $collectBranch.Value.IndexOf("- script: |", [System.StringComparison]::Ordinal)
+$collectStepStart = $collectBranch.Value.IndexOf("- pwsh: |", [System.StringComparison]::Ordinal)
 if ($collectStepStart -lt 0) {
     throw "The affected-test collection step is missing."
 }
@@ -321,6 +325,21 @@ if ($collectStep.Contains("PublishCoverageReport") -or
     -not $fullTestStep.Contains("PublishCoverageReport") -or
     $fullTestStep.Contains("--collect-test-map")) {
     throw "Affected-test collection must be followed by the normal full test and coverage run."
+}
+
+$hasCollectionHandshakeWorkaround =
+    $collectStep.Contains('$isKnownSdkHandshakeFailure') -and
+    $collectStep.Contains('$exitCode -eq 1') -and
+    $collectStep.Contains('[affected-tests] Collected test map') -and
+    $collectStep.Contains('Test run completed with non-success exit code: 1') -and
+    $collectStep.Contains('Handshake failures:') -and
+    $collectStep.Contains('continuing to the authoritative full test run') -and
+    $collectStep.Contains('exit $exitCode')
+$requiresCollectionHandshakeWorkaround =
+    $affectedTestsEnabled -and
+    $selectedSdk -in $affectedTestsSdkVersionsRequiringCollectionHandshakeWorkaround
+if ($requiresCollectionHandshakeWorkaround -ne $hasCollectionHandshakeWorkaround) {
+    throw "Affected-test collection handshake normalization must be present only for SDKs that require it."
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or

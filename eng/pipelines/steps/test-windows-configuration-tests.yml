@@ -36,8 +36,30 @@ steps:
 # These branches implement affected-test collection and selection. The SDK owns
 # DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
-  - script: |
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map
+  - pwsh: |
+      $sdkVersion = dotnet --version
+      $collectOutput = & dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map 2>&1 |
+        Tee-Object -Variable collectOutput
+      $exitCode = $LASTEXITCODE
+
+      if ($exitCode -eq 0) {
+        exit 0
+      }
+
+      $outputText = $collectOutput -join [Environment]::NewLine
+      $isKnownSdkHandshakeFailure =
+        $sdkVersion -eq '12.0.100-alpha.1.26480.103' -and
+        $exitCode -eq 1 -and
+        $outputText.Contains('[affected-tests] Collected test map') -and
+        $outputText.Contains('Test run completed with non-success exit code: 1') -and
+        $outputText.Contains('Handshake failures:')
+
+      if ($isKnownSdkHandshakeFailure) {
+        Write-Host "##vso[task.logissue type=warning]SDK $sdkVersion misclassified affected-test collection after maps were persisted; continuing to the authoritative full test run."
+        exit 0
+      }
+
+      exit $exitCode
     name: CollectAffectedTests
     displayName: Test and collect affected-test map
     condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
