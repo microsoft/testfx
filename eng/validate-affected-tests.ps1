@@ -109,15 +109,12 @@ if ($bootstrappedSdk -ne $selectedSdk) {
 
 $affectedTestsSdkVersionsWithCollectionHandshakeFailure = @(
     [System.Management.Automation.SemanticVersion]"11.0.100-rc.2.26471.109",
-    [System.Management.Automation.SemanticVersion]"11.0.100-rtm.26476.107"
+    [System.Management.Automation.SemanticVersion]"11.0.100-rtm.26476.107",
+    [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26480.103"
 )
 if ($affectedTestsEnabled -and $selectedSdk -in $affectedTestsSdkVersionsWithCollectionHandshakeFailure) {
     throw "Affected-test execution must remain disabled with SDK '$selectedSdk', which reports successful collection children as handshake failures."
 }
-
-$affectedTestsSdkVersionsRequiringCollectionHandshakeWorkaround = @(
-    [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26480.103"
-)
 
 $lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
 if ($affectedTestsEnabled -and $bootstrappedSdk -le $lastUnsupportedAffectedTestsSdk) {
@@ -298,7 +295,7 @@ if (-not $runBranch.Value.Contains("-p:TestRunnerAdditionalArguments=")) {
     throw "Affected-test execution must suppress the repository's retry arguments."
 }
 
-$collectStepStart = $collectBranch.Value.IndexOf("- pwsh: |", [System.StringComparison]::Ordinal)
+$collectStepStart = $collectBranch.Value.IndexOf("- script: |", [System.StringComparison]::Ordinal)
 if ($collectStepStart -lt 0) {
     throw "The affected-test collection step is missing."
 }
@@ -325,71 +322,6 @@ if ($collectStep.Contains("PublishCoverageReport") -or
     -not $fullTestStep.Contains("PublishCoverageReport") -or
     $fullTestStep.Contains("--collect-test-map")) {
     throw "Affected-test collection must be followed by the normal full test and coverage run."
-}
-
-$hasCollectionHandshakeWorkaround =
-    $collectStep.Contains('$isKnownSdkHandshakeFailure') -and
-    $collectStep.Contains('$allHandshakeFailuresAreSuccessfulMapCollections') -and
-    $collectStep.Contains('$executionExitCodes') -and
-    $collectStep.Contains('$childResults.ContainsKey($module)') -and
-    $collectStep.Contains('$exitCode -eq 1') -and
-    $collectStep.Contains('[affected-tests] Collected test map') -and
-    $collectStep.Contains('Test run completed with non-success exit code: 1') -and
-    $collectStep.Contains('Handshake failures:') -and
-    $collectStep.Contains('continuing to the authoritative full test run') -and
-    $collectStep.Contains('exit $exitCode')
-$requiresCollectionHandshakeWorkaround =
-    $selectedSdk -in $affectedTestsSdkVersionsRequiringCollectionHandshakeWorkaround
-if ($requiresCollectionHandshakeWorkaround -ne $hasCollectionHandshakeWorkaround) {
-    throw "Affected-test collection handshake normalization must be present only for SDKs that require it."
-}
-
-if ($requiresCollectionHandshakeWorkaround) {
-    $handshakeValidationScriptMatch = [regex]::Match(
-        $collectStep,
-        '(?s)\$handshakeSectionIndex = .*?(?=\r?\n\s+\$isKnownSdkHandshakeFailure =)')
-    if (-not $handshakeValidationScriptMatch.Success) {
-        throw "Affected-test collection handshake validation logic is missing."
-    }
-
-    $handshakeValidationScript = [scriptblock]::Create($handshakeValidationScriptMatch.Value)
-    function Test-CollectionHandshakeNormalization {
-        param(
-            [string]$OutputText,
-            [scriptblock]$ValidationScript
-        )
-
-        $allHandshakeFailuresAreSuccessfulMapCollections = $false
-        . $ValidationScript
-
-        return $allHandshakeFailuresAreSuccessfulMapCollections
-    }
-
-    $successfulHandshakeOutput = @(
-        "[affected-tests] Collected test map",
-        "module-a.dll Zero tests ran",
-        "Exit code: 0",
-        "Handshake failures:",
-        "  module-a.dll",
-        "Exit code: 0"
-    ) -join [Environment]::NewLine
-    if (-not (Test-CollectionHandshakeNormalization $successfulHandshakeOutput $handshakeValidationScript)) {
-        throw "Affected-test collection handshake normalization must accept correlated exit-zero map collection."
-    }
-
-    $mixedExecutionOutput = @(
-        "[affected-tests] Collected test map",
-        "module-a.dll Zero tests ran",
-        "Exit code: 0",
-        "failed module-b-test",
-        "Exit code: 1",
-        "Handshake failures:",
-        "  module-a.dll",
-        "Exit code: 0"
-    ) -join [Environment]::NewLine
-    if (Test-CollectionHandshakeNormalization $mixedExecutionOutput $handshakeValidationScript) {
-        throw "Affected-test collection handshake normalization must reject a nonzero execution child missing from the handshake recap."
-    }
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or

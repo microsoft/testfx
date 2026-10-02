@@ -15,23 +15,21 @@ Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azu
 both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
 provider.
 
-SDK `12.0.100-alpha.1.26480.103` predates the VMR flow containing
-[dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection applications can exit `0`
-after persisting maps while the parent `dotnet test` command reports handshake failures and exits `1`. The
-main-branch collection step narrowly normalizes that exact SDK/output combination only when every handshake recap
-entry has exit code `0`, can be correlated with a map persisted by the same module, and every execution summary has
-exit code `0`. Nonzero, partial, rejected, and mapless collection failures remain failures. The authoritative full
-test suite then runs normally. Remove the temporary normalization when the repository moves to a .NET 12 SDK
-containing the upstream fix.
+Affected-test execution remains temporarily disabled in the pipeline. SDK `12.0.100-alpha.1.26480.103` predates the
+VMR flow containing [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection
+applications can exit `0` while the parent `dotnet test` command reports handshake failures and exits `1`. That
+output is indistinguishable from controller-only or partial handshake failures that must remain failures, so the
+pipeline cannot safely normalize it. Keep the packages and storage configuration dormant until a newer .NET 12 SDK
+containing the fix is published and verified in this repository.
 
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- The trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
+- Once re-enabled, the trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
   retry, or coverage arguments, because collection owns its instrumentation and launches discovery
   children with `--list-tests`. A normal full test run follows to retain test reporting and coverage.
-- The Windows Release PR test runs `--affected-tests`.
+- Once re-enabled, the Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework outputs.
@@ -57,12 +55,11 @@ The map uses the extension's Azure DevOps artifact provider:
   fields, so incompatible shards are rejected conservatively.
 
 A missing, stale, incompatible, or inaccessible artifact is an expected state, not a partial selection: the extension
-runs all tests. A module whose map collection fails is likewise selected in full. The main-branch full run remains
-authoritative after best-effort collection, the PR pipeline retains an explicit full-test fallback for
-extension/process failures, and scheduled and manual builds always keep full validation.
+runs all tests. The pipeline's explicit full-test fallback remains for extension/process failures, while scheduled and
+manual builds always keep full validation.
 
 Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
 after collection and full fallback runs still publish complete coverage.
 
-The one-switch rollback sets `enableAffectedTests` to `false`, which keeps the package and storage configuration in
-place while restoring the ordinary full-test command.
+The one-switch rollback is currently active: `enableAffectedTests` is `false`, which keeps the package and dormant
+storage configuration in place while restoring the ordinary full-test command.
