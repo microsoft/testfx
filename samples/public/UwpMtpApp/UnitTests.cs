@@ -2,10 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+#if !PACKAGED_APP_TESTING
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+#endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#if PACKAGED_APP_TESTING
+using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
+#endif
 
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Core;
@@ -59,6 +64,7 @@ public sealed class UnitTests
     }
 }
 
+#if !PACKAGED_APP_TESTING
 public sealed class UITestMethodAttribute : TestMethodAttribute
 {
     public UITestMethodAttribute(
@@ -100,3 +106,4 @@ public sealed class UITestMethodAttribute : TestMethodAttribute
         return [await completion.Task.ConfigureAwait(false)];
     }
 }
+#endif
