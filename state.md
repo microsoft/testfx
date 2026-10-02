@@ -11,18 +11,19 @@
 ```
 
 ## Task Schedule (last run dates)
-- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-28, 2026-09-30)
-- Task 2 (Identify Opportunities): 2026-09-30 (fresh scan of Hosting/TestHost orchestrator middleware [new PR #11607], ServerMode, remaining Assertions/Adapter files - no new findings)
+- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-28, 2026-09-30, 2026-10-02)
+- Task 2 (Identify Opportunities): 2026-10-02 (scanned all commits since 2026-10-01 incl. banned-API-conventions #11709, Assert.DoesNotContain split #11707, .NET 12 SDK bump #11710 - all cold/setup paths, no new findings)
 - Task 3 (Implement): 2026-09-27 (PR #11561 merged; no new work since - nothing to implement)
-- Task 4 (Maintain PRs): 2026-09-30 (confirmed no open perf-improver PRs via search)
-- Task 5 (Comment Issues): 2026-09-30 (no open performance-labeled issues; reviewed #3495 again - still just design discussion, no fresh angle)
-- Task 6 (Infrastructure): 2026-09-27 (AssertThatBenchmarks.cs added alongside fix; no new infra work since)
-- Task 7 (Monthly Summary): 2026-09-30
+- Task 4 (Maintain PRs): 2026-10-02 (confirmed no open perf-improver PRs via search)
+- Task 5 (Comment Issues): 2026-10-02 (no open performance-labeled issues; reviewed #3495 again - no new human comments since 2026-07-30, still no fresh angle)
+- Task 6 (Infrastructure): 2026-09-27 (AssertThatBenchmarks.cs added alongside fix; reviewed perf-timing-nightly.yml + Performance test infra 2026-10-02 - solid, no gaps)
+- Task 7 (Monthly Summary): 2026-10-02 (updated October issue #11691)
 
 Full history of individual PRs/fixes from July-August 2026 and early September 2026 is condensed in the "September 2026 Runs" and "August 2026 Runs Summary" sections below (all cross-referenced by PR number).
 
 ## Monthly Activity Issue
-- Issue #10914 (September 2026, open) — kept updated every run; rewrite-from-scratch needed multiple times 09-21 through 09-25 due to a recurring append-vs-replace duplication bug (not observed on 09-26 run).
+- Issue #10914 (September 2026, CLOSED 2026-10-01, month rollover performed).
+- Issue #11691 (October 2026, open) — kept updated every run (updated 2026-10-01, 2026-10-02). No duplication-bug recurrence observed since the September append-vs-replace issue.
 
 ## Work In Progress
 No PR in progress this run (2026-09-28). PR #11561 ("Avoid IL-emitting Compile() in Assert.That fast path") MERGED by Evangelink 2026-09-27. No other in-progress work.
@@ -174,3 +175,12 @@ Monthly Activity issue #10914 (September 2026): updated every run per Task 7 man
 - Task 7: **Monthly rollover performed** - closed September issue #10914 (final summary written, no duplication observed this run) and created new "[perf-improver] Monthly Activity 2026-10" issue per the Task 7 monthly-rollover rule (first time this agent has executed the rollover; prior runs only updated the existing issue since September was ongoing).
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enumeration (low volume, measured), RetryOrchestrator.ArtifactRecovery.cs Any() per-manifest-line (low volume) - all low priority, not fixed.
 - Task schedule: Task 2 done this run (fresh scan, no new findings), Task 4 done this run (nothing to maintain), Task 5 done this run (nothing actionable), Task 7 done this run (monthly rollover: closed #10914, created new October issue). Next run: continue with lighter-cadence Task 2 scans given 10 consecutive cycles with no new findings; consider investing more in Task 6 (CI perf-regression-gate infrastructure, still not attempted) since runtime hot-path scanning has plateaued.
+
+## Run 2026-10-02 Notes
+- Task 4: no open PRs with "[perf-improver]" title prefix (search confirmed 0 open).
+- Task 5: no open performance-labeled issues found. Reviewed #3495 "Show slowest tests" again - no new human comments since 2026-07-30 (last was the efficiency-improver's energy-efficiency framing comment), no fresh angle, skipped per anti-spam policy.
+- Task 2: dispatched explore-agent to scan all commits merged since the 2026-10-01 run: "Enforce banned API conventions in remaining Platform projects" (#11709, touched InvokeTestingPlatformTask.Execution.cs, NamedPipeServer.cs, RunSettings*ProviderBase.cs, SynchronizedSingleSessionVSTestAndTestAnywhereAdapter.cs), "Split Assert.DoesNotContain into focused files" (#11707), "Add TcpMessageHandler reset and bare-LF tests" (#11708, test-only), "Update to .NET 12 SDK" (#11710). RESULT: all touched call sites are cold/setup paths (once per build invocation, per pipe-server construction, per test-session/discover-run request, or per command-line-options registration) - not per-test hot paths. The Assert.DoesNotContain split is a pure mechanical file reorganization with no semantic/allocation changes (every overload still delegates to the same fast paths). No regressions or new opportunities found - 11th consecutive scan cycle without a new fixable hot-path issue since the Assert.That win (09-27).
+- Task 6: reviewed existing performance test infrastructure (test/Performance/MSTest.Performance.Runner end-to-end process benchmarks, MSTest.Performance.Benchmarks BenchmarkDotNet suite, perf-timing-nightly.yml workflow with rolling-baseline regression detection via compare_perf_timings.py) - confirmed solid and unchanged since last review, no gaps identified requiring new infra work this run. Looked at RuntimeRegistrationEmitter.cs (source generator, flagged by sibling efficiency-improver agent as "LOW-MEDIUM" in their October backlog) - confirms it's compile-time-only code generation (not a runtime hot path), consistent with their own assessment; not actionable for a runtime-focused perf-improver PR.
+- Task 7: Monthly Activity issue #11691 (October 2026) - single "## Activity" section, no duplication observed, did a normal update adding this run's entry and condensing older Run History.
+- Backlog unchanged (all items previously measured/verified, none newly actionable): PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact), ServerTestHost.RequestExecution.cs Select+ToArray (per-request not per-test), RetryArtifactProcessor.cs GroupBy/Count double-enumeration (low volume, measured), RetryOrchestrator.ArtifactRecovery.cs Any() per-manifest-line (low volume) - all low priority, not fixed.
+- Task schedule: Task 2 done this run (fresh scan of all commits since last run, no new findings), Task 4 done this run (nothing to maintain), Task 5 done this run (nothing actionable), Task 6 done this run (infra review, no gaps), Task 7 done this run (issue updated, no duplication). Next run: 11 consecutive cycles without a new runtime hot-path finding since the Assert.That win suggests the codebase has reached a stable well-optimized baseline for the areas scanned so far - consider leaning lighter on Task 2 cadence and watching for genuinely new PRs/commits as the primary source of fresh findings, or explore a not-yet-tried infra idea (e.g., adding a benchmark for a cold-but-interesting path, or investigating whether BenchmarkDotNet microbenchmark results could feed into compare_perf_timings.py style regression detection, currently only applied to the PlainProcess end-to-end timings not the allocation microbenchmarks).
