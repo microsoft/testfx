@@ -18,9 +18,10 @@ provider.
 SDK `12.0.100-alpha.1.26480.103` predates the VMR flow containing
 [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection applications can exit `0`
 after persisting maps while the parent `dotnet test` command reports handshake failures and exits `1`. The
-main-branch collection step narrowly normalizes that exact SDK/output combination and then runs the authoritative
-full test suite. Other collection failures remain failures. Remove the temporary normalization when the repository
-moves to a .NET 12 SDK containing the upstream fix.
+main-branch collection step narrowly normalizes that exact SDK/output combination only when every handshake recap
+entry has exit code `0` and can be correlated with a map persisted by the same module. Nonzero, partial, rejected,
+and mapless collection failures remain failures. The authoritative full test suite then runs normally. Remove the
+temporary normalization when the repository moves to a .NET 12 SDK containing the upstream fix.
 
 ## CI layout
 

@@ -38,7 +38,7 @@ steps:
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
   - pwsh: |
       $sdkVersion = dotnet --version
-      $collectOutput = & dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map 2>&1 |
+      & dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map 2>&1 |
         Tee-Object -Variable collectOutput
       $exitCode = $LASTEXITCODE
 
@@ -46,16 +46,51 @@ steps:
         exit 0
       }
 
-      $outputText = $collectOutput -join [Environment]::NewLine
+      $outputText = [regex]::Replace(
+        $collectOutput -join [Environment]::NewLine,
+        "$([char]0x1B)\[[0-?]*[ -/]*[@-~]",
+        '')
+      $handshakeSectionIndex = $outputText.LastIndexOf('Handshake failures:', [System.StringComparison]::Ordinal)
+      $allHandshakeFailuresAreSuccessfulMapCollections = $handshakeSectionIndex -ge 0
+      if ($allHandshakeFailuresAreSuccessfulMapCollections) {
+        $executionOutput = $outputText.Substring(0, $handshakeSectionIndex)
+        $handshakeOutput = $outputText.Substring($handshakeSectionIndex)
+        $childResults = @{}
+        $segmentStart = 0
+        foreach ($childSummary in [regex]::Matches(
+          $executionOutput,
+          '(?m)^(?<module>.+?) Zero tests ran\r?\nExit code: (?<exitCode>-?\d+)\s*$')) {
+          $segment = $executionOutput.Substring($segmentStart, $childSummary.Index - $segmentStart)
+          $childResults[$childSummary.Groups['module'].Value] = @{
+            ExitCode = [int]$childSummary.Groups['exitCode'].Value
+            PersistedMap = $segment.Contains('[affected-tests] Collected test map')
+          }
+          $segmentStart = $childSummary.Index + $childSummary.Length
+        }
+
+        $handshakeFailures = [regex]::Matches(
+          $handshakeOutput,
+          '(?m)^\s{2}(?<module>.+?)\r?\nExit code: (?<exitCode>-?\d+)\s*$')
+        $allHandshakeFailuresAreSuccessfulMapCollections = $handshakeFailures.Count -gt 0
+        foreach ($handshakeFailure in $handshakeFailures) {
+          $module = $handshakeFailure.Groups['module'].Value
+          $allHandshakeFailuresAreSuccessfulMapCollections =
+            $allHandshakeFailuresAreSuccessfulMapCollections -and
+            [int]$handshakeFailure.Groups['exitCode'].Value -eq 0 -and
+            $childResults.ContainsKey($module) -and
+            $childResults[$module].ExitCode -eq 0 -and
+            $childResults[$module].PersistedMap
+        }
+      }
+
       $isKnownSdkHandshakeFailure =
         $sdkVersion -eq '12.0.100-alpha.1.26480.103' -and
         $exitCode -eq 1 -and
-        $outputText.Contains('[affected-tests] Collected test map') -and
         $outputText.Contains('Test run completed with non-success exit code: 1') -and
-        $outputText.Contains('Handshake failures:')
+        $allHandshakeFailuresAreSuccessfulMapCollections
 
       if ($isKnownSdkHandshakeFailure) {
-        Write-Host "##vso[task.logissue type=warning]SDK $sdkVersion misclassified affected-test collection after maps were persisted; continuing to the authoritative full test run."
+        Write-Host "##vso[task.logissue type=warning]SDK $sdkVersion misclassified exit-zero affected-test collection modules after their maps were persisted; continuing to the authoritative full test run."
         exit 0
       }
 

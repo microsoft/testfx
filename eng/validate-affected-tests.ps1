@@ -329,6 +329,8 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 
 $hasCollectionHandshakeWorkaround =
     $collectStep.Contains('$isKnownSdkHandshakeFailure') -and
+    $collectStep.Contains('$allHandshakeFailuresAreSuccessfulMapCollections') -and
+    $collectStep.Contains('$childResults.ContainsKey($module)') -and
     $collectStep.Contains('$exitCode -eq 1') -and
     $collectStep.Contains('[affected-tests] Collected test map') -and
     $collectStep.Contains('Test run completed with non-success exit code: 1') -and
@@ -336,7 +338,6 @@ $hasCollectionHandshakeWorkaround =
     $collectStep.Contains('continuing to the authoritative full test run') -and
     $collectStep.Contains('exit $exitCode')
 $requiresCollectionHandshakeWorkaround =
-    $affectedTestsEnabled -and
     $selectedSdk -in $affectedTestsSdkVersionsRequiringCollectionHandshakeWorkaround
 if ($requiresCollectionHandshakeWorkaround -ne $hasCollectionHandshakeWorkaround) {
     throw "Affected-test collection handshake normalization must be present only for SDKs that require it."
