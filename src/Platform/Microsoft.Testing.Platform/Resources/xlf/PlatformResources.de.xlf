@@ -1309,7 +1309,7 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
-        <target state="new">Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</target>
+        <target state="translated">Middleware „{0}“ hat die Testhostausführungsorchestrator-Pipeline kurzgeschlossen (sie hat „next“ nicht aufgerufen), aber den Exitcode „Erfolgreich“ zurückgegeben. Das Kurzschließen der Middleware muss einen expliziten nicht erfolgreichen Exitcode zurückgeben, sodass die übersprungene Ausführung nicht so gemeldet werden kann, als ob Tests tatsächlich ausgeführt und bestanden worden wären.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
@@ -1319,7 +1319,7 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
         <source>The test host execution orchestrator middleware continuation returned a null task.</source>
-        <target state="new">The test host execution orchestrator middleware continuation returned a null task.</target>
+        <target state="translated">Die Middlewarefortsetzung der Testhostausführungsorchestrierung hat eine NULL-Aufgabe zurückgegeben.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
@@ -1329,12 +1329,12 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
         <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
-        <target state="new">Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</target>
+        <target state="translated">Middleware „{0}“ hat den Downstream-Exitcode von {1} in {2}geändert. Diese Version der Orchestratorpipeline für die Testhostausführung lässt nicht zu, dass Middleware das Downstreamergebnis neu schreibt.</target>
         <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
         <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
-        <target state="new">Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</target>
+        <target state="translated">Middleware „{0}“ wurde erfolgreich zurückgegeben, nachdem die Downstreamausführung mit dem Fehler „next“ gestartet wurde. Der Fehler wurde von der Middleware nicht erkannt oder weitergegeben, sodass es nicht aussehen kann, als wäre die Ausführung erfolgreich gewesen.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
