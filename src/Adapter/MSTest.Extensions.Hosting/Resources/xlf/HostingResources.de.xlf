@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
         <source>MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</source>
-        <target state="new">MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</target>
+        <target state="translated">MSTest konnte keinen eindeutigen public Konstruktor für die Testklasse '{0}' auswählen. Markieren Sie einen Konstruktor mit ActivatorUtilitiesConstructorAttribute oder entfernen Sie die Mehrdeutigkeit.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">
         <source>MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">MSTest konnte keinen Konstruktor für die Testklasse '{0}' auswählen, da mehrere public Konstruktoren mit ActivatorUtilitiesConstructorAttribute markiert sind. Markieren Sie genau einen Konstruktor.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
     </body>

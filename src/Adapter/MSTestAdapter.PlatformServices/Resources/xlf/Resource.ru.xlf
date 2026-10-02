@@ -300,7 +300,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="HostedTestClassInjectionRequiresNoAppDomain">
         <source>MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</source>
-        <target state="new">MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</target>
+        <target state="translated">Внедрение тестового класса MSTest из узла приложения не может пересекать границу домена приложения (AppDomain) .NET Framework. Установите для параметра DisableAppDomain значение true для этого размещенного запуска тестов.</target>
         <note>{Locked="MSTest"}{Locked=".NET Framework"}{Locked="AppDomain"}{Locked="DisableAppDomain"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">

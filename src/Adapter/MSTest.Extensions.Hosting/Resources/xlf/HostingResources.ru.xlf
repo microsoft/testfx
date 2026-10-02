@@ -9,17 +9,17 @@
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
         <source>MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</source>
-        <target state="new">MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</target>
+        <target state="translated">MSTest не удалось выбрать уникальный конструктор public для тестового класса '{0}'. Пометьте один конструктор ActivatorUtilitiesConstructorAttribute или устраните неоднозначность.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">
         <source>MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">MSTest не может предоставить параметр конструктора "{1}" в тестовом классе "{0}", так как он наследуется от TestContext. Используйте TestContext без изменений.</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="MSTest"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="DynamicCodeNotSupported">
         <source>MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</source>
-        <target state="new">MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</target>
+        <target state="translated">Внедрение зависимостей в тестовый класс MSTest из Microsoft.Extensions.Hosting требует динамического кода во время выполнения и не поддерживается этой средой выполнения.</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.Hosting"}</note>
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">

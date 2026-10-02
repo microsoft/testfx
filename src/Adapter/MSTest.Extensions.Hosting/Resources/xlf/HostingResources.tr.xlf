@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">
         <source>MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">MSTest, TestContext türevi olduğu için '{0}' test sınıfında oluşturucu parametresi '{1}' sağlayamıyor. Tam olarak TestContext kullanın.</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="MSTest"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="DynamicCodeNotSupported">

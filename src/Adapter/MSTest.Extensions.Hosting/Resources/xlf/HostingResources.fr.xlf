@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="ActivationFailed">
         <source>MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</source>
-        <target state="new">MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</target>
+        <target state="translated">MSTest n’avons pas pu créer de '{0}' de classe de test à partir du fournisseur de services hôte d’application. Assurez-vous qu’un seul constructeur public peut être satisfait par les services inscrits et les TestContext.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
         <source>MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</source>
-        <target state="new">MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</target>
+        <target state="translated">MSTest n’avons pas pu sélectionner un constructeur public unique pour la classe de test '{0}'. Marquez un constructeur avec ActivatorUtilitiesConstructorAttribute ou supprimez l’ambiguïté.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">

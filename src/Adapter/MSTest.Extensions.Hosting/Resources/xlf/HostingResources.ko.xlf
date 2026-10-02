@@ -9,12 +9,12 @@
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
         <source>MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</source>
-        <target state="new">MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</target>
+        <target state="translated">MSTest 테스트 클래스 '{0}'에 대해 고유한 public 생성자를 선택할 수 없습니다. 한 생성자를 ActivatorUtilitiesConstructorAttribute로 표시하거나 모호성을 제거합니다.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">
         <source>MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">MSTest TestContext에서 파생되므로 테스트 클래스 '{0}'에 생성자 매개 변수 '{1}'을 제공할 수 없습니다. TestContext 정확하게 사용하십시오.</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="MSTest"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="DynamicCodeNotSupported">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">
         <source>MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">여러 public 생성자가 ActivatorUtilitiesConstructorAttribute로 표시되어 있으므로 MSTest 테스트 클래스 '{0}'에 대한 생성자를 선택할 수 없습니다. 생성자를 하나만 표시합니다.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
     </body>
