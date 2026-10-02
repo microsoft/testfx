@@ -6,7 +6,7 @@ the UWP launch activation string is restored with
 `PackagedAppExtensions.GetTestApplicationArguments`.
 
 The application targets .NET 10. The .NET 10 SDK supplies the target framework and resolves
-`MSTest.Sdk`; desktop MSBuild from Visual Studio loads the UWP XAML and MSIX toolchain and runs the
+`MSTest.Sdk`; desktop MSBuild from Visual Studio loads the UWP and MSIX toolchain and runs the
 `InvokeTestingPlatform` target.
 
 ## Prerequisites
@@ -18,11 +18,21 @@ The application targets .NET 10. The .NET 10 SDK supplies the target framework a
 
 ## Build and run
 
+For a quick command-line validation, run:
+
+```powershell
+dotnet test
+```
+
+This builds the code-only UWP application without requiring the Visual Studio XAML compiler. The
+test host check runs directly; tests that require package identity or the UWP dispatcher are
+reported as inconclusive because native `dotnet test` launches the test module outside AppContainer.
+
 Use a Developer PowerShell for Visual Studio so desktop MSBuild can load the UWP toolchain:
 
 ```powershell
-msbuild UwpMtpApp.sln /restore /p:Configuration=Release /p:Platform=x64 /bl:UwpMtpApp-build.binlog
-msbuild UwpMtpApp.csproj /t:InvokeTestingPlatform /p:Configuration=Release /p:Platform=x64 /p:TestingPlatformCommandLineArguments="--report-trx" /bl:UwpMtpApp-test.binlog
+msbuild UwpMtpApp.sln /restore /p:Configuration=Release /p:Platform=x64 /p:EnableMicrosoftTestingExtensionsPackagedApp=true /bl:UwpMtpApp-build.binlog
+msbuild UwpMtpApp.csproj /t:InvokeTestingPlatform /p:Configuration=Release /p:Platform=x64 /p:EnableMicrosoftTestingExtensionsPackagedApp=true /p:TestingPlatformCommandLineArguments="--report-trx" /bl:UwpMtpApp-test.binlog
 ```
 
 The second command registers the build-output package, activates the exact manifest application by

@@ -17,6 +17,7 @@
       it works under Microsoft.Testing.Platform because the app itself hosts the test platform.
     -->
     <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
     <!-- Unpackaged apps do not need any of the MSIX packaging tooling. -->
     <EnableMsixTooling>false</EnableMsixTooling>

@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <!-- Enables the MSTest Windows UI Automation feature -->
     <EnableWindowsUIAutomation>true</EnableWindowsUIAutomation>
+    <MSTestWindowsUIAutomationVersion>$(MSTestVersion)</MSTestWindowsUIAutomationVersion>
   </PropertyGroup>
 
 </Project>

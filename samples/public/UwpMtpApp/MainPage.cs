@@ -7,5 +7,14 @@ namespace UwpMtpApp;
 
 public sealed partial class MainPage : Page
 {
-    public MainPage() => InitializeComponent();
+    public MainPage()
+    {
+#if PACKAGED_APP_TESTING
+        InitializeComponent();
+#else
+        var grid = new Grid();
+        grid.Children.Add(new TextBlock { Text = "MSTest modern UWP sample" });
+        Content = grid;
+#endif
+    }
 }
