@@ -47,21 +47,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Build repository
-        run: ./build.sh --binaryLog
-
-      - name: Install Stryker.NET
-        run: |
-          stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
-          test -n "$stryker_version"
-          ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
-
       - name: Create isolated mutation solution
         run: |
           python .github/scripts/mutation_testing.py create-solution \
             --manifest eng/mutation-testing/modules.json \
             --module "${{ matrix.id }}" \
             --output MutationTesting.generated.slnx
+
+      - name: Build mutation shard
+        run: ./build.sh --binaryLog --projects MutationTesting.generated.slnx
+
+      - name: Install Stryker.NET
+        run: |
+          stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+          test -n "$stryker_version"
+          ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
         env:

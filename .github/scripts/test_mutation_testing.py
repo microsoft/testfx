@@ -202,6 +202,51 @@ class MutationTestingTests(unittest.TestCase):
             self.assertEqual(1, report["successfulModules"])
             self.assertIn("second", report["problems"][0])
 
+    def test_aggregate_results_excludes_commit_mismatch_from_totals(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            artifacts = root / "artifacts"
+            matching_dir = artifacts / "mutation-testing-module-matching"
+            mismatched_dir = artifacts / "mutation-testing-module-mismatched"
+            target_manifest = manifest(
+                module("matching", legacy=True),
+                module("mismatched"),
+            )
+            write_mutation_report(
+                matching_dir / "reports" / "mutation-report.json",
+                ["Killed"],
+            )
+            write_mutation_report(
+                mismatched_dir / "reports" / "mutation-report.json",
+                ["Survived"],
+            )
+            MUTATION_TESTING.record_module(
+                target_manifest, "matching", matching_dir, "abc123", 0, 10
+            )
+            MUTATION_TESTING.record_module(
+                target_manifest, "mismatched", mismatched_dir, "different", 0, 20
+            )
+
+            report = MUTATION_TESTING.aggregate_results(
+                target_manifest,
+                artifacts,
+                root / "full",
+                "abc123",
+            )
+
+            self.assertFalse(report["complete"])
+            self.assertEqual(1, report["successfulModules"])
+            self.assertEqual(1, report["totals"]["Killed"])
+            self.assertEqual(0, report["totals"]["Survived"])
+            mismatched = next(
+                module_result
+                for module_result in report["modules"]
+                if module_result["id"] == "mismatched"
+            )
+            self.assertEqual("commit-mismatch", mismatched["status"])
+            self.assertIn("different", report["problems"][0])
+            self.assertIn("abc123", report["problems"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
