@@ -56,7 +56,16 @@ steps:
         $executionOutput = $outputText.Substring(0, $handshakeSectionIndex)
         $handshakeOutput = $outputText.Substring($handshakeSectionIndex)
         $childResults = @{}
-        $allExecutionChildrenSucceeded = $true
+        $executionExitCodes = [regex]::Matches(
+          $executionOutput,
+          '(?m)^Exit code: (?<exitCode>-?\d+)\s*$')
+        $allExecutionChildrenSucceeded = $executionExitCodes.Count -gt 0
+        foreach ($executionExitCode in $executionExitCodes) {
+          $allExecutionChildrenSucceeded =
+            $allExecutionChildrenSucceeded -and
+            [int]$executionExitCode.Groups['exitCode'].Value -eq 0
+        }
+
         $segmentStart = 0
         foreach ($childSummary in [regex]::Matches(
           $executionOutput,
@@ -67,9 +76,6 @@ steps:
             ExitCode = $childExitCode
             PersistedMap = $segment.Contains('[affected-tests] Collected test map')
           }
-          $allExecutionChildrenSucceeded =
-            $allExecutionChildrenSucceeded -and
-            $childExitCode -eq 0
           $segmentStart = $childSummary.Index + $childSummary.Length
         }
 

@@ -330,6 +330,7 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 $hasCollectionHandshakeWorkaround =
     $collectStep.Contains('$isKnownSdkHandshakeFailure') -and
     $collectStep.Contains('$allHandshakeFailuresAreSuccessfulMapCollections') -and
+    $collectStep.Contains('$executionExitCodes') -and
     $collectStep.Contains('$childResults.ContainsKey($module)') -and
     $collectStep.Contains('$exitCode -eq 1') -and
     $collectStep.Contains('[affected-tests] Collected test map') -and
@@ -380,7 +381,7 @@ if ($requiresCollectionHandshakeWorkaround) {
         "[affected-tests] Collected test map",
         "module-a.dll Zero tests ran",
         "Exit code: 0",
-        "module-b.dll Zero tests ran",
+        "failed module-b-test",
         "Exit code: 1",
         "Handshake failures:",
         "  module-a.dll",
