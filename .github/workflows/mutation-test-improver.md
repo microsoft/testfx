@@ -1,6 +1,6 @@
 ---
 description: |
-  Reacts to the daily "Mutation testing" (Stryker.NET) workflow finishing.
+  Reacts to the weekly "Mutation testing" (Stryker.NET) workflow finishing.
   Downloads its report, tracks the mutation score trend, and maintains a
   rolling "[mutation-test-improver] Monthly Report" issue summarizing the
   score, the highest-value survived mutants, and suggested actions for
@@ -116,7 +116,7 @@ Always be:
 
 ## Scope
 
-Mutation testing covers the server-mode client sources exercised by their unit-test project in `MutationTesting.slnx`, selected by the root `stryker-config.json` and run daily by [`.github/workflows/mutation-testing.yml`](../workflows/mutation-testing.yml). **Do not** widen the solution, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
+The weekly [Mutation testing workflow](../workflows/mutation-testing.yml) runs multiple isolated modules and publishes an aggregate report. This improver intentionally remains scoped to the backward-compatible `mutation-testing-report` artifact for the server-mode client sources exercised by their unit-test project in `MutationTesting.slnx`, selected by the root `stryker-config.json`. **Do not** widen this improver's module, mutate scope, or thresholds — those are maintainer decisions. If you believe the scope should grow, say so in the "Suggested Actions" section of the monthly report rather than doing it yourself.
 
 ## Persistent state
 
@@ -154,7 +154,7 @@ If the conclusion is not `success`:
 2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Compute a stable fingerprint for every candidate before comparing it to memory. Include at least the normalized repository-relative source path, mutator name, replacement text, start/end line and column, and original source snippet at that location. Revalidate any memory match against the current report and current source snippet before suppressing it; Stryker mutant IDs and line locations alone are not stable enough.
-5. Filter out mutants already recorded in the monthly report as equivalent or already attempted while their revalidated outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later daily runs.
+5. Filter out mutants already recorded in the monthly report as equivalent or already attempted while their revalidated outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later weekly runs.
 
 ### Step 4: Attempt to fix the top survived mutants (bounded)
 
