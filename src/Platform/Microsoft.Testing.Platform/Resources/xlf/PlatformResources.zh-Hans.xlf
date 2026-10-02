@@ -1324,7 +1324,7 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
         <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
-        <target state="new">One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</target>
+        <target state="translated">已注册一个或多个 'ITestHostExecutionOrchestratorMiddleware' 实例，但也必须注册一个 'ITestHostExecutionOrchestrator' 才能包装中间件。改为找到 {0} 业务流程协调程序()。</target>
         <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
