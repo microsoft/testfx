@@ -126,10 +126,17 @@ internal sealed class ApplyResult
     public string ManifestDigest { get; set; } = "";
     public List<RetainedCandidateResult> RetainedCandidates { get; set; } = [];
     public List<RevertedCandidateResult> RevertedCandidates { get; set; } = [];
+    public List<ChangedFileResult> ChangedFiles { get; set; } = [];
     public List<string> ChangedPaths { get; set; } = [];
     public bool HasChanges { get; set; }
     public string PrTitle { get; set; } = "";
     public string PrBody { get; set; } = "";
+}
+
+internal sealed class ChangedFileResult
+{
+    public string Path { get; set; } = "";
+    public string ContentSha256 { get; set; } = "";
 }
 
 internal sealed class RetainedCandidateResult

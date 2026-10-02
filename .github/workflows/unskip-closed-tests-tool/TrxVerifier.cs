@@ -7,17 +7,45 @@ internal static class TrxVerifier
 {
     public static (bool Success, string Reason) Verify(IReadOnlyList<VerificationTest> tests)
     {
-        HashSet<string> expectedFiles = tests
-            .Select(static test => Path.GetFullPath(test.ResultFile))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (string directory in tests.Select(static test => Path.GetDirectoryName(test.ResultFile)!)
+        Dictionary<string, VerificationTest> expectedFiles = new(StringComparer.OrdinalIgnoreCase);
+        foreach (VerificationTest test in tests)
+        {
+            string requestedFile = Path.GetFullPath(test.ResultFile);
+            string directory = Path.GetDirectoryName(requestedFile)!;
+            string requestedName = Path.GetFileName(requestedFile);
+            string targetPrefix = $"{Path.GetFileNameWithoutExtension(requestedFile)}--";
+            List<string> resultFiles = Directory.Exists(directory)
+                ? Directory.EnumerateFiles(directory, "*.trx", SearchOption.TopDirectoryOnly)
+                    .Select(Path.GetFullPath)
+                    .Where(path =>
+                        string.Equals(Path.GetFileName(path), requestedName, StringComparison.OrdinalIgnoreCase) ||
+                        Path.GetFileName(path).StartsWith(targetPrefix, StringComparison.OrdinalIgnoreCase))
+                    .Order(StringComparer.OrdinalIgnoreCase)
+                    .ToList()
+                : [];
+            if (resultFiles.Count == 0)
+            {
+                return (false, $"missing_trx:{requestedName}");
+            }
+
+            foreach (string resultFile in resultFiles)
+            {
+                if (!expectedFiles.TryAdd(resultFile, test))
+                {
+                    return (false, $"duplicate_trx_path:{Path.GetFileName(resultFile)}");
+                }
+            }
+        }
+
+        foreach (string directory in tests
+                     .Select(static test => Path.GetDirectoryName(Path.GetFullPath(test.ResultFile))!)
                      .Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (Directory.Exists(directory))
             {
                 string? unexpected = Directory.EnumerateFiles(directory, "*.trx", SearchOption.TopDirectoryOnly)
                     .Select(Path.GetFullPath)
-                    .FirstOrDefault(path => !expectedFiles.Contains(path));
+                    .FirstOrDefault(path => !expectedFiles.ContainsKey(path));
                 if (unexpected is not null)
                 {
                     return (false, $"unexpected_trx:{Path.GetFileName(unexpected)}");
@@ -25,16 +53,11 @@ internal static class TrxVerifier
             }
         }
 
-        foreach (VerificationTest test in tests)
+        foreach ((string resultFile, VerificationTest test) in expectedFiles)
         {
-            if (!File.Exists(test.ResultFile))
-            {
-                return (false, $"missing_trx:{Path.GetFileName(test.ResultFile)}");
-            }
-
             try
             {
-                XDocument document = XDocument.Load(test.ResultFile, LoadOptions.None);
+                XDocument document = XDocument.Load(resultFile, LoadOptions.None);
                 Dictionary<string, string> mappings = new(StringComparer.Ordinal);
                 foreach (XElement unitTest in document.Descendants().Where(static element =>
                              element.Name.LocalName == "UnitTest"))

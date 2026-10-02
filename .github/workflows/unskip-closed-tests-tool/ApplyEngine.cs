@@ -10,6 +10,26 @@ namespace UnskipClosedTests.Tool;
 
 internal static class ApplyEngine
 {
+    private static readonly string[] RestrictedVerificationEnvironmentVariables =
+    [
+        "ACTIONS_CACHE_URL",
+        "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+        "ACTIONS_ID_TOKEN_REQUEST_URL",
+        "ACTIONS_RESULTS_URL",
+        "ACTIONS_RUNTIME_TOKEN",
+        "GH_ENTERPRISE_TOKEN",
+        "GH_AW_AGENT_OUTPUT",
+        "GH_TOKEN",
+        "GITHUB_ENTERPRISE_TOKEN",
+        "GITHUB_ENV",
+        "GITHUB_OUTPUT",
+        "GITHUB_PATH",
+        "GITHUB_STEP_SUMMARY",
+        "GITHUB_TOKEN",
+        "ORIGINAL_MANIFEST",
+        "RESULT_PATH",
+    ];
+
     private sealed record SourceEdit(string Path, int Start, int Length, Candidate Candidate);
     private sealed record VerificationOutcome(bool Success, string Reason);
 
@@ -210,6 +230,9 @@ internal static class ApplyEngine
             .OrderBy(static candidate => candidate.Path, StringComparer.Ordinal)
             .ThenBy(static candidate => candidate.AttributeSpan.Start)
             .ToList();
+        List<ChangedFileResult> changedFiles = CreateChangedFiles(
+            repository.Root,
+            retainedCandidates.Select(static candidate => candidate.Path));
         return new ApplyResult
         {
             SourceCommit = requestedManifest.SourceCommit,
@@ -224,15 +247,10 @@ internal static class ApplyEngine
                 .OrderBy(static candidate => candidate.CandidateId, StringComparer.Ordinal)
                 .ToList(),
             RevertedCandidates = reverted.OrderBy(static item => item.CandidateId, StringComparer.Ordinal).ToList(),
-            ChangedPaths = retainedCandidates
-                .Select(static candidate => candidate.Path)
-                .Distinct(StringComparer.Ordinal)
-                .Order(StringComparer.Ordinal)
-                .ToList(),
+            ChangedFiles = changedFiles,
+            ChangedPaths = changedFiles.Select(static file => file.Path).ToList(),
             HasChanges = true,
-            PrTitle = retained.Count == 1
-                ? "Unskip test for completed GitHub work item"
-                : $"Unskip {retained.Count} tests for completed GitHub work items",
+            PrTitle = CreatePrTitle(retained.Count),
             PrBody = CreatePrBody(requestedManifest, retainedCandidates, reverted),
         };
     }
@@ -468,18 +486,10 @@ internal static class ApplyEngine
 
         List<string> argv = [.. config.VerificationCommand, requestPath];
 
-        ProcessStartInfo startInfo = new(argv[0])
-        {
-            WorkingDirectory = repository.Root,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        foreach (string argument in argv.Skip(1))
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
+        ProcessStartInfo startInfo = CreateVerificationStartInfo(
+            argv[0],
+            repository.Root,
+            argv.Skip(1));
 
         try
         {
@@ -528,6 +538,32 @@ internal static class ApplyEngine
 
         (bool success, string reason) = TrxVerifier.Verify(tests);
         return new VerificationOutcome(success, reason);
+    }
+
+    internal static ProcessStartInfo CreateVerificationStartInfo(
+        string executable,
+        string workingDirectory,
+        IEnumerable<string> arguments)
+    {
+        ProcessStartInfo startInfo = new(executable)
+        {
+            WorkingDirectory = workingDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        foreach (string variable in RestrictedVerificationEnvironmentVariables)
+        {
+            startInfo.Environment.Remove(variable);
+        }
+
+        return startInfo;
     }
 
     private static string? RestoreUnexpectedSourceMutations(
@@ -580,6 +616,29 @@ internal static class ApplyEngine
             throw new ContractException($"Candidate source is not valid UTF-8: {ex.Message}");
         }
     }
+
+    internal static List<ChangedFileResult> CreateChangedFiles(
+        string repositoryRoot,
+        IEnumerable<string> paths) =>
+        paths
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .Select(path =>
+            {
+                string normalized = PathRules.ValidateRelativePath(path, "changed path");
+                string fullPath = PathRules.ResolveInsideRoot(repositoryRoot, normalized, "changed path");
+                return new ChangedFileResult
+                {
+                    Path = normalized,
+                    ContentSha256 = JsonSupport.Sha256(ReadBytes(fullPath)),
+                };
+            })
+            .ToList();
+
+    internal static string CreatePrTitle(int retainedCount) =>
+        retainedCount == 1
+            ? "[unskip-closed-tests] Unskip test for completed GitHub work item"
+            : $"[unskip-closed-tests] Unskip {retainedCount} tests for completed GitHub work items";
 
     private static byte[] ReadBytes(string path)
     {

@@ -495,7 +495,7 @@ internal static partial class InventoryEngine
             .ToList();
     }
 
-    private static IEnumerable<IssueReference> ParseReferences(string value, string currentRepository)
+    internal static IEnumerable<IssueReference> ParseReferences(string value, string currentRepository)
     {
         List<(int Start, int Length, string Owner, string Repo, int Number, string Kind)> matches = [];
         foreach (Match match in FullReferenceRegex().Matches(value))
@@ -571,17 +571,17 @@ internal static partial class InventoryEngine
         firstStart < secondStart + secondLength && secondStart < firstStart + firstLength;
 
     [GeneratedRegex(
-        @"https://github\.com/(?<owner>[A-Za-z0-9_.-]+)/(?<repo>[A-Za-z0-9_.-]+)/(?<kind>issues|pull)/(?<number>[1-9][0-9]*)",
-        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.NonBacktracking)]
+        @"https://github\.com/(?<owner>[A-Za-z0-9_.-]+)/(?<repo>[A-Za-z0-9_.-]+)/(?<kind>issues|pull)/(?<number>[1-9][0-9]*)(?![A-Za-z0-9_])",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex FullReferenceRegex();
 
     [GeneratedRegex(
-        @"(?<![A-Za-z0-9_.-])(?<owner>[A-Za-z0-9_.-]+)/(?<repo>[A-Za-z0-9_.-]+)#(?<number>[1-9][0-9]*)(?![0-9])",
+        @"(?<![A-Za-z0-9_.-])(?<owner>[A-Za-z0-9_.-]+)/(?<repo>[A-Za-z0-9_.-]+)#(?<number>[1-9][0-9]*)(?![A-Za-z0-9_])",
         RegexOptions.CultureInvariant)]
     private static partial Regex QualifiedReferenceRegex();
 
     [GeneratedRegex(
-        @"(?<![A-Za-z0-9_/#])#(?<number>[1-9][0-9]*)(?![0-9])",
+        @"(?<![A-Za-z0-9_/#])#(?<number>[1-9][0-9]*)(?![A-Za-z0-9_])",
         RegexOptions.CultureInvariant)]
     private static partial Regex BareReferenceRegex();
 }

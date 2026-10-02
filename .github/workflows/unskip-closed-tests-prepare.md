@@ -163,21 +163,29 @@ safe-outputs:
               --agent-output "$GH_AW_AGENT_OUTPUT" \
               --output "$RESULT_PATH"
             APPLY_EXIT=$?
-            rm -rf bin obj
             set -e
 
             if [ "$APPLY_EXIT" -eq 10 ]; then
+              rm -rf bin obj
               git diff --quiet
               echo "no-action=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             if [ "$APPLY_EXIT" -ne 0 ]; then
+              rm -rf bin obj
               exit "$APPLY_EXIT"
             fi
 
             test -f "$RESULT_PATH"
             jq -e \
-              '.schema_version == "1" and .has_changes == true and (.changed_paths | length > 0)' \
+              '.schema_version == "1" and
+               .has_changes == true and
+               (.changed_files | length > 0) and
+               ([.changed_files[].path] | length) == ([.changed_files[].path] | unique | length) and
+               ([.changed_files[].path] | sort) == (.changed_paths | sort) and
+               all(.changed_files[];
+                 (.path | type == "string") and
+                 (.content_sha256 | type == "string" and test("^[0-9a-f]{64}$")))' \
               "$RESULT_PATH" >/dev/null
             echo "no-action=false" >> "$GITHUB_OUTPUT"
             echo "result-path=$RESULT_PATH" >> "$GITHUB_OUTPUT"
@@ -209,13 +217,18 @@ safe-outputs:
 
             TITLE=$(jq -r '.pr_title' "$RESULT_PATH")
             BODY_FILE="$RUNNER_TEMP/unskip-closed-tests-pr-body.md"
-            EXPECTED_PATHS="$RUNNER_TEMP/unskip-closed-tests-expected-paths.txt"
-            ACTUAL_PATHS="$RUNNER_TEMP/unskip-closed-tests-actual-paths.txt"
+            EXPECTED_FILES="$RUNNER_TEMP/unskip-closed-tests-expected-files.bin"
+            EXPECTED_PATHS="$RUNNER_TEMP/unskip-closed-tests-expected-paths.bin"
+            ACTUAL_PATHS="$RUNNER_TEMP/unskip-closed-tests-actual-paths.bin"
             jq -r '.pr_body' "$RESULT_PATH" > "$BODY_FILE"
-            jq -r '.changed_paths[]' "$RESULT_PATH" | sort > "$EXPECTED_PATHS"
-            git diff --name-only --diff-filter=M | sort > "$ACTUAL_PATHS"
-            diff -u "$EXPECTED_PATHS" "$ACTUAL_PATHS"
-            while IFS= read -r path; do
+            jq -j '.changed_files[] | .path, "\u0000", .content_sha256, "\u0000"' \
+              "$RESULT_PATH" > "$EXPECTED_FILES"
+            jq -j '.changed_files[].path, "\u0000"' "$RESULT_PATH" | sort -z > "$EXPECTED_PATHS"
+
+            git diff --cached --quiet
+            git diff --name-only --no-renames -z | sort -z > "$ACTUAL_PATHS"
+            cmp "$EXPECTED_PATHS" "$ACTUAL_PATHS"
+            while IFS= read -r -d '' path && IFS= read -r -d '' expected_sha; do
                 test -n "$path"
                 test "${path#/}" = "$path"
                 case "/$path/" in
@@ -225,10 +238,25 @@ safe-outputs:
                   *.cs) ;;
                   *) echo "::error::Unexpected changed path: $path"; exit 20 ;;
                 esac
+                actual_sha=$(sha256sum -- "$path")
+                actual_sha=${actual_sha%% *}
+                test "$actual_sha" = "$expected_sha" ||
+                  { echo "::error::Verified content changed for $path"; exit 20; }
                 git add -- "$path"
-            done < "$EXPECTED_PATHS"
+            done < "$EXPECTED_FILES"
 
-            test -n "$(git diff --cached --name-only)"
+            git diff --quiet
+            git diff --cached --name-only --no-renames -z | sort -z > "$ACTUAL_PATHS"
+            cmp "$EXPECTED_PATHS" "$ACTUAL_PATHS"
+            while IFS= read -r -d '' path && IFS= read -r -d '' expected_sha; do
+                staged_sha=$(git show ":$path" | sha256sum)
+                staged_sha=${staged_sha%% *}
+                test "$staged_sha" = "$expected_sha" ||
+                  { echo "::error::Staged content does not match verified content for $path"; exit 20; }
+            done < "$EXPECTED_FILES"
+
+            rm -rf .github/workflows/unskip-closed-tests-tool/bin \
+              .github/workflows/unskip-closed-tests-tool/obj
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "Re-enable tests with resolved tracking items"
@@ -264,10 +292,18 @@ safe-outputs:
 
             LIVE=$(gh pr view "$PR_URL" \
               --repo "$EXPECTED_REPOSITORY" \
-              --json body,isDraft,headRefName,baseRefName,url)
+              --json baseRefName,baseRefOid,body,isDraft,headRefName,number,state,url)
             test "$(printf '%s' "$LIVE" | jq -r '.isDraft')" = "true"
             test "$(printf '%s' "$LIVE" | jq -r '.headRefName')" = "$BRANCH"
             test "$(printf '%s' "$LIVE" | jq -r '.baseRefName')" = "$DEFAULT_BRANCH"
             printf '%s' "$LIVE" | jq -r '.body' | grep -F '<!-- unskip-closed-tests:v1;'
+            if [ "$(printf '%s' "$LIVE" | jq -r '.baseRefOid')" != "$EXPECTED_COMMIT" ]; then
+              PR_NUMBER=$(printf '%s' "$LIVE" | jq -r '.number')
+              gh pr close "$PR_NUMBER" --repo "$EXPECTED_REPOSITORY"
+              test "$(gh pr view "$PR_NUMBER" --repo "$EXPECTED_REPOSITORY" --json state --jq '.state')" = "CLOSED"
+              git push origin --delete "$BRANCH"
+              echo "::notice::Default branch advanced during PR creation; closed the draft and removed its branch."
+              exit 0
+            fi
 
 ---

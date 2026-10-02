@@ -170,16 +170,26 @@ try {
         } -Pattern 'No owning'
     }
 
-    Invoke-TestCase 'selects a portable target framework' {
-        Assert-Equal -Expected 'net8.0' -Actual (
-            Select-TargetFramework -Frameworks @('net462', 'net8.0', 'net10.0')
-        ) -Message 'net8.0 preference failed.'
-        Assert-Equal -Expected 'net9.0' -Actual (
-            Select-TargetFramework -Frameworks @('net9.0', 'net10.0')
+    Invoke-TestCase 'selects every portable target framework and rejects mixed unsupported targets' {
+        Assert-Equal -Expected 'net8.0,net10.0' -Actual (
+            (Select-TargetFrameworks -Frameworks @('net10.0', 'net8.0', 'net8.0')) -join ','
         ) -Message 'Portable framework ordering failed.'
         Assert-Throws -Action {
-            Select-TargetFramework -Frameworks @('net462', 'net8.0-windows')
-        } -Pattern 'No portable'
+            Select-TargetFrameworks -Frameworks @('net462', 'net8.0')
+        } -Pattern 'Cannot verify every target framework'
+        Assert-Throws -Action {
+            Select-TargetFrameworks -Frameworks @('net8.0-windows')
+        } -Pattern 'Cannot verify every target framework'
+    }
+
+    Invoke-TestCase 'uses distinct TRX files for multi-target verification' {
+        $requested = Join-Path $temporaryRoot 'results/TestOne.trx'
+        Assert-Equal -Expected $requested -Actual (
+            Get-TargetResultFile -RequestedResultFile $requested -TargetFramework 'net8.0' -TargetFrameworkCount 1
+        ) -Message 'Single-target result path changed.'
+        Assert-Equal -Expected (Join-Path $temporaryRoot 'results/TestOne--net9.0.trx') -Actual (
+            Get-TargetResultFile -RequestedResultFile $requested -TargetFramework 'net9.0' -TargetFrameworkCount 2
+        ) -Message 'Multi-target result path was not framework-specific.'
     }
 
     Invoke-TestCase 'builds exact-FQN and requested-TRX commands' {
@@ -211,6 +221,37 @@ try {
         } -Pattern 'Repository revision changed'
     }
 
+    Invoke-TestCase 'allows only runner temp and dedicated Git metadata results' {
+        $repository = Join-Path $temporaryRoot 'result-roots'
+        $runnerTemp = Join-Path $temporaryRoot 'runner-temp'
+        [void] (New-Item -ItemType Directory -Path $repository)
+        [void] (New-Item -ItemType Directory -Path $runnerTemp)
+        & git -C $repository init --quiet
+
+        $previousRunnerTemp = $env:RUNNER_TEMP
+        $env:RUNNER_TEMP = $runnerTemp
+        try {
+            $runnerResult = Join-Path $runnerTemp 'runner.trx'
+            Assert-Equal -Expected ([System.IO.Path]::GetFullPath($runnerResult)) -Actual (
+                Resolve-ResultPath -Root $repository -Value $runnerResult
+            ) -Message 'Runner temp result path was rejected.'
+
+            $gitDirectory = & git -C $repository rev-parse --git-dir
+            $metadataResult = Join-Path $repository "$gitDirectory/unskip-closed-tests/digest/candidate/result.trx"
+            Assert-Equal -Expected ([System.IO.Path]::GetFullPath($metadataResult)) -Actual (
+                Resolve-ResultPath -Root $repository -Value $metadataResult
+            ) -Message 'Dedicated Git metadata result path was rejected.'
+
+            $outsideResult = Join-Path $temporaryRoot 'outside/result.trx'
+            Assert-Throws -Action {
+                Resolve-ResultPath -Root $repository -Value $outsideResult
+            } -Pattern 'outside the trusted output roots'
+        }
+        finally {
+            $env:RUNNER_TEMP = $previousRunnerTemp
+        }
+    }
+
     Invoke-TestCase 'fails closed when the requested TRX is missing' {
         $root = Join-Path $temporaryRoot 'missing-trx'
         $source = Join-Path $root 'test/Example/Tests.cs'
@@ -231,14 +272,14 @@ try {
         $saved = Save-Functions -Names @(
             'Assert-Revision',
             'Initialize-RepositoryBuild',
-            'Get-ProjectTargetFramework',
+            'Get-ProjectTargetFrameworks',
             'Get-DotNetPath',
             'Invoke-CheckedProcess'
         )
         try {
             Set-Item Function:Assert-Revision -Value { param($Root, $ExpectedCommit) }
             Set-Item Function:Initialize-RepositoryBuild -Value { param($Root, $SourceCommit, $RequiresPack, $Timeout) }
-            Set-Item Function:Get-ProjectTargetFramework -Value { param($Root, $Project, $Timeout) 'net8.0' }
+            Set-Item Function:Get-ProjectTargetFrameworks -Value { param($Root, $Project, $Timeout) @('net8.0') }
             Set-Item Function:Get-DotNetPath -Value { param($Root) 'dotnet' }
             Set-Item Function:Invoke-CheckedProcess -Value { param($FileName, $Arguments, $WorkingDirectory, $Timeout) }
             $previousRunnerTemp = $env:RUNNER_TEMP
@@ -299,7 +340,7 @@ try {
         Assert-Contains -Values @($config.verification.command) -Expected '.github/workflows/unskip-closed-tests-verify.ps1' -Message 'PowerShell hook path is not configured.'
     }
 
-    Assert-Equal -Expected 10 -Actual $script:Passed -Message 'Unexpected hook test count.'
+    Assert-Equal -Expected 12 -Actual $script:Passed -Message 'Unexpected hook test count.'
     Write-Host "All $script:Passed unskip closed tests PowerShell hook tests passed."
 }
 finally {

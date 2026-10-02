@@ -327,31 +327,39 @@ function Invoke-CapturedProcess {
     }
 }
 
-function Select-TargetFramework {
+function Select-TargetFrameworks {
     param([Parameter(Mandatory)] [string[]] $Frameworks)
 
-    if ($Frameworks -contains 'net8.0') {
-        return 'net8.0'
+    $normalized = @($Frameworks | Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_)
+    } | ForEach-Object {
+        $_.Trim()
+    } | Sort-Object -Unique)
+    if ($normalized.Count -eq 0) {
+        throw 'Test project does not declare any target frameworks.'
     }
 
-    $candidates = foreach ($framework in $Frameworks) {
+    $supported = @()
+    $unsupported = @()
+    foreach ($framework in $normalized) {
         $match = [regex]::Match($framework, $script:TfmPattern)
         if ($match.Success -and $framework.Contains('.') -and -not $framework.Contains('-')) {
-            [pscustomobject]@{
+            $supported += [pscustomobject]@{
                 Version = [int] $match.Groups['version'].Value
                 Framework = $framework
             }
+        } else {
+            $unsupported += $framework
         }
     }
-    $selected = $candidates | Sort-Object Version, Framework | Select-Object -First 1
-    if ($null -eq $selected) {
-        throw 'No portable .NET target framework is available for verification.'
+    if ($unsupported.Count -gt 0) {
+        throw "Cannot verify every target framework on this runner: $($unsupported -join ', ')."
     }
 
-    return $selected.Framework
+    return @($supported | Sort-Object Version, Framework | ForEach-Object { $_.Framework })
 }
 
-function Get-ProjectTargetFramework {
+function Get-ProjectTargetFrameworks {
     param(
         [Parameter(Mandatory)] [string] $Root,
         [Parameter(Mandatory)] [string] $Project,
@@ -387,7 +395,7 @@ function Get-ProjectTargetFramework {
     } else {
         [string] $properties.TargetFrameworks
     }
-    return Select-TargetFramework -Frameworks @($frameworkText -split ';' | Where-Object { $_ })
+    return @(Select-TargetFrameworks -Frameworks @($frameworkText -split ';' | Where-Object { $_ }))
 }
 
 function Test-RequiresPackedPackages {
@@ -458,18 +466,42 @@ function Resolve-ResultPath {
     } else {
         [System.IO.Path]::GetFullPath((Join-Path $Root $Value))
     }
-    $trustedRoot = [System.IO.Path]::GetFullPath(
+    $runnerOutputRoot = [System.IO.Path]::GetFullPath(
         $(if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $Root })
     )
-    $prefix = $trustedRoot.TrimEnd(
-        [System.IO.Path]::DirectorySeparatorChar,
-        [System.IO.Path]::AltDirectorySeparatorChar
-    ) + [System.IO.Path]::DirectorySeparatorChar
-    if (
-        -not [string]::Equals($path, $trustedRoot, [StringComparison]::OrdinalIgnoreCase) -and
-        -not $path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)
-    ) {
-        throw "Requested result file is outside the trusted output root: $Value"
+    $isInsideRunnerOutput = [string]::Equals(
+        $path,
+        $runnerOutputRoot,
+        [StringComparison]::OrdinalIgnoreCase
+    ) -or $path.StartsWith(
+        $runnerOutputRoot.TrimEnd(
+            [System.IO.Path]::DirectorySeparatorChar,
+            [System.IO.Path]::AltDirectorySeparatorChar
+        ) + [System.IO.Path]::DirectorySeparatorChar,
+        [StringComparison]::OrdinalIgnoreCase
+    )
+    if (-not $isInsideRunnerOutput) {
+        $gitDirectory = Invoke-Git -Root $Root -Arguments @('rev-parse', '--git-dir')
+        if (-not [System.IO.Path]::IsPathRooted($gitDirectory)) {
+            $gitDirectory = Join-Path $Root $gitDirectory
+        }
+        $metadataOutputRoot = [System.IO.Path]::GetFullPath(
+            (Join-Path $gitDirectory 'unskip-closed-tests')
+        )
+        $isInsideMetadataOutput = [string]::Equals(
+            $path,
+            $metadataOutputRoot,
+            [StringComparison]::OrdinalIgnoreCase
+        ) -or $path.StartsWith(
+            $metadataOutputRoot.TrimEnd(
+                [System.IO.Path]::DirectorySeparatorChar,
+                [System.IO.Path]::AltDirectorySeparatorChar
+            ) + [System.IO.Path]::DirectorySeparatorChar,
+            [StringComparison]::OrdinalIgnoreCase
+        )
+        if (-not $isInsideMetadataOutput) {
+            throw "Requested result file is outside the trusted output roots: $Value"
+        }
     }
     if (-not $path.EndsWith('.trx', [StringComparison]::OrdinalIgnoreCase)) {
         throw "Requested result file must use .trx: $Value"
@@ -528,6 +560,22 @@ function Get-TestArguments {
     )
 }
 
+function Get-TargetResultFile {
+    param(
+        [Parameter(Mandatory)] [string] $RequestedResultFile,
+        [Parameter(Mandatory)] [string] $TargetFramework,
+        [Parameter(Mandatory)] [int] $TargetFrameworkCount
+    )
+
+    if ($TargetFrameworkCount -eq 1) {
+        return $RequestedResultFile
+    }
+
+    $directory = [System.IO.Path]::GetDirectoryName($RequestedResultFile)
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($RequestedResultFile)
+    return Join-Path $directory "$stem--$TargetFramework.trx"
+}
+
 function Invoke-UnskipVerification {
     param(
         [Parameter(Mandatory)] [string] $Path,
@@ -548,25 +596,46 @@ function Invoke-UnskipVerification {
     $project = $projects[0]
     $requiresPack = Test-RequiresPackedPackages -Root $resolvedRoot -Project $project
     Initialize-RepositoryBuild -Root $resolvedRoot -SourceCommit $request.SourceCommit -RequiresPack $requiresPack -Timeout $Timeout
-    $targetFramework = Get-ProjectTargetFramework -Root $resolvedRoot -Project $project -Timeout $Timeout
+    $targetFrameworks = @(
+        Get-ProjectTargetFrameworks -Root $resolvedRoot -Project $project -Timeout $Timeout
+    )
 
     $dotnet = Get-DotNetPath -Root $resolvedRoot
-    Invoke-CheckedProcess -FileName $dotnet -Arguments (
-        Get-BuildArguments -Project $project -TargetFramework $targetFramework
-    ) -WorkingDirectory $resolvedRoot -Timeout $Timeout
-    Assert-Revision -Root $resolvedRoot -ExpectedCommit $request.SourceCommit
-
-    foreach ($test in $request.Tests) {
-        $resultFile = Resolve-ResultPath -Root $resolvedRoot -Value $test.ResultFile
-        [void] (New-Item -ItemType Directory -Path ([System.IO.Path]::GetDirectoryName($resultFile)) -Force)
-        Remove-Item -LiteralPath $resultFile -Force -ErrorAction SilentlyContinue
+    foreach ($targetFramework in $targetFrameworks) {
         Invoke-CheckedProcess -FileName $dotnet -Arguments (
-            Get-TestArguments -Project $project -TargetFramework $targetFramework -Fqn $test.Fqn -ResultFile $resultFile
+            Get-BuildArguments -Project $project -TargetFramework $targetFramework
         ) -WorkingDirectory $resolvedRoot -Timeout $Timeout
-        if (-not (Test-Path -LiteralPath $resultFile -PathType Leaf)) {
-            throw "Test runner did not create requested TRX: $resultFile"
-        }
         Assert-Revision -Root $resolvedRoot -ExpectedCommit $request.SourceCommit
+    }
+
+    $capturedResults = @{}
+    foreach ($test in $request.Tests) {
+        $requestedResultFile = Resolve-ResultPath -Root $resolvedRoot -Value $test.ResultFile
+        $resultDirectory = [System.IO.Path]::GetDirectoryName($requestedResultFile)
+        $resultStem = [System.IO.Path]::GetFileNameWithoutExtension($requestedResultFile)
+        [void] (New-Item -ItemType Directory -Path $resultDirectory -Force)
+        Remove-Item -LiteralPath $requestedResultFile -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -LiteralPath $resultDirectory -Filter "$resultStem--*.trx" -File -ErrorAction SilentlyContinue |
+            Remove-Item -Force
+
+        foreach ($targetFramework in $targetFrameworks) {
+            $resultFile = Get-TargetResultFile `
+                -RequestedResultFile $requestedResultFile `
+                -TargetFramework $targetFramework `
+                -TargetFrameworkCount $targetFrameworks.Count
+            Invoke-CheckedProcess -FileName $dotnet -Arguments (
+                Get-TestArguments -Project $project -TargetFramework $targetFramework -Fqn $test.Fqn -ResultFile $resultFile
+            ) -WorkingDirectory $resolvedRoot -Timeout $Timeout
+            if (-not (Test-Path -LiteralPath $resultFile -PathType Leaf)) {
+                throw "Test runner did not create requested TRX for ${targetFramework}: $resultFile"
+            }
+            Assert-Revision -Root $resolvedRoot -ExpectedCommit $request.SourceCommit
+            $capturedResults[$resultFile] = [System.IO.File]::ReadAllBytes($resultFile)
+        }
+    }
+
+    foreach ($entry in $capturedResults.GetEnumerator()) {
+        [System.IO.File]::WriteAllBytes([string] $entry.Key, [byte[]] $entry.Value)
     }
 }
 
