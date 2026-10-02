@@ -109,7 +109,8 @@ if ($bootstrappedSdk -ne $selectedSdk) {
 
 $affectedTestsSdkVersionsWithCollectionHandshakeFailure = @(
     [System.Management.Automation.SemanticVersion]"11.0.100-rc.2.26471.109",
-    [System.Management.Automation.SemanticVersion]"11.0.100-rtm.26476.107"
+    [System.Management.Automation.SemanticVersion]"11.0.100-rtm.26476.107",
+    [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26480.103"
 )
 if ($affectedTestsEnabled -and $selectedSdk -in $affectedTestsSdkVersionsWithCollectionHandshakeFailure) {
     throw "Affected-test execution must remain disabled with SDK '$selectedSdk', which reports successful collection children as handshake failures."

@@ -134,6 +134,7 @@ public class TestAsset : IDisposable
         <!-- This feed is required for FSharp.Core until preview 1 or 2 is released -->
         <add key="dotnet10" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json" />
         <add key="dotnet11" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json" />
+        <add key="dotnet12" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json" />
     </packageSources>
     <packageSourceMapping>
         {publicFeedsMapping}
@@ -153,6 +154,9 @@ public class TestAsset : IDisposable
             <package pattern="*" />
         </packageSource>
         <packageSource key="dotnet11">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="dotnet12">
             <package pattern="*" />
         </packageSource>
     </packageSourceMapping>

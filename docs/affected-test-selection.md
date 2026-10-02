@@ -15,12 +15,12 @@ Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azu
 both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
 provider.
 
-Affected-test execution is temporarily disabled in the pipeline. SDK `11.0.100-rtm.26476.107` reports successful
-collection applications as handshake failures: the child applications can exit `0`, but the parent `dotnet test`
-command exits `1`. This affected all 45 test modules in
-[public build 1617452](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1617452). Keep the packages
-and storage configuration dormant until the collection protocol is corrected in the SDK and verified in this
-repository.
+Affected-test execution remains temporarily disabled in the pipeline. SDK `12.0.100-alpha.1.26480.103` predates the
+VMR flow containing [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection
+applications can exit `0` while the parent `dotnet test` command reports handshake failures and exits `1`. That
+output is indistinguishable from controller-only or partial handshake failures that must remain failures, so the
+pipeline cannot safely normalize it. Keep the packages and storage configuration dormant until a newer .NET 12 SDK
+containing the fix is published and verified in this repository.
 
 ## CI layout
 
