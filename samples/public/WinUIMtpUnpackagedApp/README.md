@@ -2,8 +2,9 @@
 
 This sample is an unpackaged WinUI 3 application whose process hosts Microsoft.Testing.Platform.
 It has no MSIX identity or `Package.appxmanifest`; `dotnet run` and `dotnet test` start the generated
-executable directly. The tests verify the absence of package identity, Windows App SDK bootstrap,
-and WinUI dispatcher access.
+executable directly. It carries the Windows App SDK with the app so it does not depend on a
+machine-wide Windows App Runtime installation. The tests verify the absence of package identity,
+Windows App SDK initialization, and WinUI dispatcher access.
 
 ## Prerequisites
 
@@ -25,9 +26,9 @@ dotnet test --project . --no-build -p:Platform=x64
 
 Both run commands must finish without manually closing the window. The .NET 10 SDK runs the native
 Microsoft.Testing.Platform CLI, but it does not supply the .NET 8 Desktop Runtime required by this
-framework-dependent sample. This extra runtime prerequisite is specific to the unpackaged sample:
-the packaged samples are self-contained, and their app-model controllers roll forward to newer
-installed .NET major versions.
+framework-dependent .NET application. `WindowsAppSDKSelfContained=true` applies only to the Windows
+App SDK: it avoids a machine-wide Windows App Runtime dependency and prevents its bootstrapper from
+blocking unattended runs when that runtime is missing.
 
 No package registration or package `LocalState` cleanup is required. See
 [Testing UWP and WinUI apps with MSTest](../../../docs/winui-testing.md) for dispatcher, bootstrap,
