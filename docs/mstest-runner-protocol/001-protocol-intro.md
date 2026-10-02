@@ -876,7 +876,11 @@ type TestingPlatformLogLevel =
 By default, the server writes output messages to both stdout and `client/log`.
 Clients that display both streams therefore show duplicate output.
 
-To avoid this, set `capabilities.rpcOnlyOutput: true` in `initialize`. When the
+For all clients, buffered output is forwarded through `client/log` after the
+successful `initialize` response. Output continues for the connection lifetime,
+without requiring a discovery or run request.
+
+To avoid duplicate output, set `capabilities.rpcOnlyOutput: true` in `initialize`. When the
 server acknowledges it with `capabilities.rpcOnlyOutput: true`, subsequent output
 messages are sent only through `client/log`, without a duplicate stdout copy.
 Message levels are unchanged. Without a true acknowledgement, clients must retain
