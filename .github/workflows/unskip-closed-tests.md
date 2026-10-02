@@ -32,6 +32,9 @@ jobs:
     needs: [collect-unskip-candidates]
     if: needs.collect-unskip-candidates.outputs.eligible-count != '0'
 
+safe-outputs:
+  timeout-minutes: 15
+
 imports:
   - unskip-closed-tests-prepare.md
   - unskip-closed-tests-shared.md
@@ -76,6 +79,7 @@ When one or more manifest candidates are safe to attempt, call
 - `candidate_ids_json` containing a JSON array of unique candidate IDs copied
   exactly from the manifest.
 
-The trusted safe-output job revalidates the source, remote state, proposed
-sites, edits, and structured test evidence before publishing one draft pull
+The trusted read-only verification job revalidates the source, remote state,
+proposed sites, edits, and structured test evidence, then a fresh publisher
+checkout applies only the validated package before opening one draft pull
 request. If no candidate should proceed, call `noop` once with a short reason.
