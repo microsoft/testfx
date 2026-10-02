@@ -60,7 +60,7 @@ public partial class InvokeTestingPlatformTask
 
     /// <inheritdoc />
     protected override void ProcessStarted()
-        => _connectionLoopTask = Task.Run(async () =>
+        => _connectionLoopTask = new SystemTask().Run(async () =>
         {
             try
             {
@@ -84,7 +84,7 @@ public partial class InvokeTestingPlatformTask
             {
                 Log.LogError(ex.ToString());
             }
-        });
+        }, CancellationToken.None);
 
     /// <inheritdoc />
     public override bool Execute()
@@ -153,7 +153,7 @@ public partial class InvokeTestingPlatformTask
     protected override bool HandleTaskExecutionErrors()
     {
         // This is an unexpected situation we simply print to the console the output and return false.
-        if (string.IsNullOrEmpty(_outputFileName) && ExitCode != (int)Helpers.ExitCode.InvalidCommandLine)
+        if (RoslynString.IsNullOrEmpty(_outputFileName) && ExitCode != (int)Helpers.ExitCode.InvalidCommandLine)
         {
             Log.LogError(null, "run failed", null, TargetPath.ItemSpec.Trim(), 0, 0, 0, 0, Resources.MSBuildResources.TestFailedNoDetail, _output);
         }

@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -41,7 +42,7 @@ internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSou
     /// <inheritdoc />
     public bool TryGet(string key, out string? value)
     {
-        if (string.IsNullOrEmpty(_runSettingsFileContent))
+        if (RoslynString.IsNullOrEmpty(_runSettingsFileContent))
         {
             value = null;
             return false;

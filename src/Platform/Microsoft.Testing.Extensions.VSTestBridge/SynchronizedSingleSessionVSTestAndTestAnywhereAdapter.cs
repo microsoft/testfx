@@ -187,7 +187,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     internal static string GetAssemblyPath(Assembly assembly)
     {
         string location = assembly.Location;
-        if (!string.IsNullOrEmpty(location))
+        if (!RoslynString.IsNullOrEmpty(location))
         {
             return location;
         }
