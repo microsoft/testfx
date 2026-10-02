@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ActivationFailed">
         <source>MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</source>
-        <target state="new">MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</target>
+        <target state="translated">MSTest가 애플리케이션 호스트 서비스 공급자에서 테스트 클래스 '{0}'을(를) 만들 수 없습니다. 등록된 서비스와 TestContext로 충족할 수 있는 public 생성자가 정확히 하나인지 확인하세요.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="DynamicCodeNotSupported">
         <source>MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</source>
-        <target state="new">MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</target>
+        <target state="translated">Microsoft.Extensions.Hosting의 MSTest 테스트 클래스 주입에는 런타임 동적 코드가 필요하며 이 런타임에서는 지원되지 않습니다.</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.Hosting"}</note>
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">
