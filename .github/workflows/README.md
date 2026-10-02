@@ -349,7 +349,7 @@ the cause.
 | [`resource-lock-refactoring.md`](./resource-lock-refactoring.md) | Daily + manual | Prepares one bounded test project for safe parallel execution by eliminating shared state or applying the narrowest appropriate `[ResourceLock]`, then opens a draft PR. |
 | [`repository-quality-improver.md`](./repository-quality-improver.md) | Weekday schedule + manual | Daily analysis of repository quality, rotating focus areas. Opens tracking issues like this one. |
 | [`daily-file-diet.md`](./daily-file-diet.md) | Daily + manual | Identifies oversized source files and opens actionable refactoring issues. |
-| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Finds tests skipped via `[Ignore("…#issue")]` whose tracking issue is now closed, verifies they pass, and opens a PR re-enabling them. |
+| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Builds a source-bound Ignore inventory at the exact commit, accepts only completed issues or merged PRs, and opens one draft PR only for tests proven executed and passed in structured TRX results. |
 | [`duplicate-code-detector.md`](./duplicate-code-detector.md) | Schedule + manual | Identifies duplicate code patterns and suggests refactoring opportunities. |
 | [`malicious-code-scan.md`](./malicious-code-scan.md) | Schedule + manual | Reviews code changes from the last 3 days for suspicious patterns indicating malicious or agentic threats. |
 | [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual | Runs Markdown quality checks using markdownlint-cli2 and opens issues for violations. |
