@@ -44,6 +44,7 @@
 
 ## Testing Opportunities Backlog
 
+0. **HangDump IPC serializers** (`ActivitySignalRequestSerializer`, `ConsumerPipeNameSerializer`, `GetInProgressTestsRequest`/`Response` in `src/Platform/Microsoft.Testing.Extensions.HangDump/Serializers/`) — same zero-direct-serializer-test gap as Retry (closed 2026-10-02); same reflection-helper pattern (see `RetrySerializersTests.cs`) should apply. Good candidate for next run.
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **DependsOnShouldBeValidAnalyzer / TestFilterProviderShouldBeValidAnalyzer (MSTEST0078/0081)** — internal-target-class gap closed (2026-08-07); accessibility (type vs constructor) gap closed (2026-08-08). Remaining: another pass for any leftover branch gaps.
@@ -56,6 +57,8 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-10-02 | Task 2/3 (Retry serializer round-trip tests: FailedTestRequest/GetListOfFailedTestsRequest+Response/TestRunCountsRequest/ArtifactRequest, 9 tests), Task 7. |
+| 2026-10-01 | Task 2/3 (TcpMessageHandler reset/bare-LF: 2 tests), Task 7. |
 | 2026-09-27 | Task 2/3 (ServerModeManager.Build: 3 tests), Task 7. |
 | 2026-08-17 | Task 2 (broad Assert/CollectionAssert/StringAssert audit — no new zero-coverage gaps found; area is saturated), Task 5 (closed issue #10316 as confirmed-complete, 3rd verification), Task 7. No new PR this run — did not find a genuine, undertested, non-trivial gap after build validated. |
 | 2026-08-13 | Task 3 (ReportFileWriterHelper.RetryWhenIOExceptionAsync unit tests, SharedExtensionHelpers), corrected #10316 status (still open, not closed as previously logged), Task 7. |
@@ -180,6 +183,17 @@ Key lasting gotchas:
 - Jsonite/`Json.*` family deprioritized as low-value (trivial wrappers or already covered indirectly).
 - Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
 - `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
+
+## Run 2026-10-02 (run 37075004936) — Retry named-pipe serializer tests
+
+- Task reconciliation: no open `[test-improver]`-prefixed PRs; PR #11708 (TcpMessageHandler, from run 36937877564) was merged by maintainer on 2026-10-02.
+- Task 2/3: picked up standing backlog item (HangDump/Retry IPC serializers, flagged "low priority, thin plumbing" but never actually checked) — found `FailedTestRequest`, `GetListOfFailedTestsRequest`/`Response`, `TestRunCountsRequest`, `ArtifactRequest` (all in `src/Platform/Microsoft.Testing.Extensions.Retry/Serializers/`) had zero direct serializer-level tests (only incidental exercise via `RetryTests.cs` pipe-client/server integration tests).
+- Added `RetrySerializersTests.cs` (9 tests): round-trip tests for all 5 serializer types, including empty-array/null-kind/empty-recovered-uids edge cases.
+- **New gotcha**: `NamedPipeSerializer<T>`/`INamedPipeSerializer` are `[Embedded]` linked-source types — each consuming project (`Microsoft.Testing.Platform`, `Microsoft.Testing.Extensions.Retry`, etc.) compiles its own private copy via `<Compile Include>` linking, so they are NOT type-identical across assemblies even with `InternalsVisibleTo`/ProjectReference. A test project referencing `Microsoft.Testing.Extensions.Retry` cannot declare a parameter of type `NamedPipeSerializer<T>` or `INamedPipeSerializer` and pass a `Retry`-assembly serializer instance to it (CS1503). Fix: use the same reflection-based `Serialize`/`Deserialize` invocation pattern as `Microsoft.Testing.Platform.UnitTests`' `ProtocolSerializerTestHelper` (reach the non-public instance methods via `GetMethods(...).Single(...)`), not a shared generic helper typed on the embedded base class.
+- Build succeeded (0 warnings). Full `Microsoft.Testing.Extensions.UnitTests` net9.0 suite: 2075 total (was 2066), 0 failed, 51 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for Retry named-pipe serializers" on branch `test-assist/retry-serializer-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, refined backlog item (HangDump/Retry IPC serializers → Retry done, HangDump still open for a future run).
+- Remaining candidates for future runs: HangDump IPC serializers (`ActivitySignalRequestSerializer`, `ConsumerPipeNameSerializer`, `GetInProgressTestsRequest`/`Response` in `src/Platform/Microsoft.Testing.Extensions.HangDump/Serializers/`) — same zero-direct-test gap, same reflection-helper pattern should apply; MSTest.Engine internal classes (architecturally blocked, unchanged).
 
 ## Run 2026-10-01 (run 36937877564) — TcpMessageHandler reset/bare-LF tests
 
