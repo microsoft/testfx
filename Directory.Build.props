@@ -60,6 +60,9 @@
 
     <!-- Experimental test API usages are allowed inside this solution -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- Stryker rewrites experimental MSTest APIs while instrumenting assemblies, which makes
+         the compiler diagnose the product's own declarations as experimental API usages. -->
+    <NoWarn Condition="'$(MutationTesting)' == 'true'">$(NoWarn);MSTESTEXP</NoWarn>
     <!-- Infrastructure APIs (marked [Experimental("TPINTERNAL")]) are public only so first-party
          extensions can consume them across the assembly boundary. External consumers still hit the
          diagnostic; inside this solution the usage is expected, so suppress it centrally. -->
