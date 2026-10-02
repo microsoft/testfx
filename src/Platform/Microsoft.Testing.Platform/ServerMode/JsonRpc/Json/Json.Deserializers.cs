@@ -214,7 +214,7 @@ internal sealed partial class Json
                     DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider),
                     IsStateful: isStateful)
             {
-                RpcOnlyOutput = GetOptionalBoolean(jsonElement, JsonRpcStrings.RpcOnlyOutput),
+                RpcOnlyOutput = GetOptionalBoolean(testing, JsonRpcStrings.RpcOnlyOutput),
             };
         });
 
@@ -247,10 +247,7 @@ internal sealed partial class Json
 
         deserializers[typeof(ServerCapabilities)] = new JsonElementDeserializer<ServerCapabilities>(
           (json, jsonElement) => new ServerCapabilities(
-                  TestingCapabilities: json.Bind<ServerTestingCapabilities>(jsonElement, JsonRpcStrings.Testing))
-          {
-              RpcOnlyOutput = GetOptionalBoolean(jsonElement, JsonRpcStrings.RpcOnlyOutput),
-          });
+                  TestingCapabilities: json.Bind<ServerTestingCapabilities>(jsonElement, JsonRpcStrings.Testing)));
 
         deserializers[typeof(ServerTestingCapabilities)] = new JsonElementDeserializer<ServerTestingCapabilities>(
           (json, jsonElement) => new ServerTestingCapabilities(
@@ -258,7 +255,10 @@ internal sealed partial class Json
               MultiRequestSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiRequestSupport),
               VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport),
               SupportsAttachments: json.Bind<bool>(jsonElement, JsonRpcStrings.AttachmentsSupport),
-              MultiConnectionProvider: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiConnectionProvider)));
+              MultiConnectionProvider: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiConnectionProvider))
+          {
+              RpcOnlyOutput = GetOptionalBoolean(jsonElement, JsonRpcStrings.RpcOnlyOutput),
+          });
 
         deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
         {

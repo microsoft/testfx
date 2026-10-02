@@ -97,10 +97,21 @@ internal static partial class SerializerUtilities
         });
 
         Serializers[typeof(ServerCapabilities)] = new ObjectSerializer<ServerCapabilities>(capabilities =>
+            new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = Serialize(capabilities.TestingCapabilities),
+            });
+
+        Serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities =>
         {
             Dictionary<string, object?> properties = new()
             {
-                [JsonRpcStrings.Testing] = Serialize(capabilities.TestingCapabilities),
+                [JsonRpcStrings.SupportsDiscovery] = capabilities.SupportsDiscovery,
+                [JsonRpcStrings.MultiRequestSupport] = capabilities.MultiRequestSupport,
+                [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
+                [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
+                [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
+                [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
             };
             if (capabilities.RpcOnlyOutput is { } rpcOnlyOutput)
             {
@@ -108,16 +119,6 @@ internal static partial class SerializerUtilities
             }
 
             return properties;
-        });
-
-        Serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities => new Dictionary<string, object?>
-        {
-            [JsonRpcStrings.SupportsDiscovery] = capabilities.SupportsDiscovery,
-            [JsonRpcStrings.MultiRequestSupport] = capabilities.MultiRequestSupport,
-            [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
-            [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
-            [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
-            [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
         });
 
         Serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>

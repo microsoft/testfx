@@ -109,11 +109,11 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we push attachments
                                 SupportsAttachments: true,
                                 // This means we're a push node
-                                MultiConnectionProvider: true))
-                        {
-                            // Attachment-only peers do not own an RPC output device.
-                            RpcOnlyOutput = initializeRequest.Capabilities.RpcOnlyOutput.HasValue ? false : null,
-                        })
+                                MultiConnectionProvider: true)
+                            {
+                                // Attachment-only peers do not own an RPC output device.
+                                RpcOnlyOutput = initializeRequest.Capabilities.RpcOnlyOutput.HasValue ? false : null,
+                            }))
         {
             ProtocolVersion = negotiatedProtocolVersion,
         };

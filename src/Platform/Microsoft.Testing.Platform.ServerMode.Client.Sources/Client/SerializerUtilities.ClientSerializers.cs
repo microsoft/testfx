@@ -79,7 +79,7 @@ internal static partial class SerializerUtilities
             };
             if (capabilities.RpcOnlyOutput is { } rpcOnlyOutput)
             {
-                properties[JsonRpcStrings.RpcOnlyOutput] = rpcOnlyOutput;
+                testingCapabilities[JsonRpcStrings.RpcOnlyOutput] = rpcOnlyOutput;
             }
 
             return properties;

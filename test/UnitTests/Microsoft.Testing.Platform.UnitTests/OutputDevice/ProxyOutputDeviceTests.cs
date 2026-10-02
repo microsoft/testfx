@@ -102,7 +102,7 @@ public sealed class ProxyOutputDeviceTests
     [DataRow(null)]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task DisplayAsync_RoutesAllMessagesAccordingToNegotiatedMode(bool? requested)
+    public async Task DisplayAsync_CustomRendererDeclinesAndPreservesAllDuties(bool? requested)
     {
         Mock<IPlatformOutputDevice> originalDevice = new();
         using var serverModeDevice = new ServerModePerCallOutputDevice(null);
@@ -119,11 +119,11 @@ public sealed class ProxyOutputDeviceTests
             new ExceptionOutputDeviceData(new InvalidOperationException("exception")),
         ];
 
-        Assert.AreEqual(requested == true, proxy.ConfigureRpcOnlyOutput(requested));
+        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(requested));
         foreach (IOutputDeviceData message in messages)
         {
             await proxy.DisplayAsync(producer, message, CancellationToken.None);
-            originalDevice.Verify(value => value.DisplayAsync(producer, message, CancellationToken.None), requested == true ? Times.Never() : Times.Once());
+            originalDevice.Verify(value => value.DisplayAsync(producer, message, CancellationToken.None), Times.Once());
         }
 
         var queuedMessages = (ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
@@ -145,13 +145,13 @@ public sealed class ProxyOutputDeviceTests
         Mock<IPlatformOutputDevice> originalDevice = new();
         using var serverModeDevice = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(originalDevice.Object, serverModeDevice, policiesService: null);
-        proxy.ConfigureRpcOnlyOutput(requested);
+        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(requested));
 
         await proxy.DisplayBannerAsync("banner", CancellationToken.None);
         await proxy.DisplayBeforeSessionStartAsync(CancellationToken.None);
         await proxy.DisplayAfterSessionEndRunAsync(CancellationToken.None);
 
-        Times count = requested == true ? Times.Never() : Times.Once();
+        var count = Times.Once();
         originalDevice.Verify(value => value.DisplayBannerAsync("banner", CancellationToken.None), count);
         originalDevice.Verify(value => value.DisplayBeforeSessionStartAsync(CancellationToken.None), count);
         originalDevice.Verify(value => value.DisplayAfterSessionEndRunAsync(CancellationToken.None), count);

@@ -154,7 +154,7 @@ internal static partial class SerializerUtilities
 
             return new ClientCapabilities(debuggerProvider, isStateful)
             {
-                RpcOnlyOutput = GetOptionalBoolean(capabilities, JsonRpcStrings.RpcOnlyOutput),
+                RpcOnlyOutput = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.RpcOnlyOutput),
             };
         });
 
@@ -199,10 +199,10 @@ internal static partial class SerializerUtilities
                 MultiRequestSupport: multiRequestSupport,
                 VSTestProviderSupport: vstestProviderSupport,
                 SupportsAttachments: attachmentsSupport,
-                MultiConnectionProvider: multiConnectionProvider))
+                MultiConnectionProvider: multiConnectionProvider)
             {
-                RpcOnlyOutput = GetOptionalBoolean(properties, JsonRpcStrings.RpcOnlyOutput),
-            };
+                RpcOnlyOutput = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.RpcOnlyOutput),
+            });
         });
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>

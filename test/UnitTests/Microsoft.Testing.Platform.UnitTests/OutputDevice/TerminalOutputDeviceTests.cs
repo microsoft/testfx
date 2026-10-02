@@ -47,6 +47,7 @@ public sealed class TerminalOutputDeviceTests
         using TerminalOutputDevice originalDevice = CreateOutputDevice(
             new Dictionary<string, string[]>
             {
+                [PlatformCommandLineProvider.ServerOptionKey] = [],
                 [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["off"],
                 [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
             },
@@ -57,7 +58,7 @@ public sealed class TerminalOutputDeviceTests
         await originalDevice.InitializeAsync();
         await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
         Assert.HasCount(1, callbacks);
-        proxy.ConfigureRpcOnlyOutput(requested);
+        Assert.AreEqual(hasServerDevice && requested == true, proxy.ConfigureRpcOnlyOutput(requested));
 
         foreach (Func<int, CancellationToken, Task> callback in callbacks)
         {
@@ -82,6 +83,129 @@ public sealed class TerminalOutputDeviceTests
 
         Assert.IsGreaterThan(firstOutput.Length, output.Length);
         Assert.HasCount(hasServerDevice ? 2 : 0, messages);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RpcOnlyOutput_PreservesDebugMirrorExactlyOnceAndSuppressesOnlyConsole(bool? requested)
+    {
+        StringBuilder output = new();
+        var console = new Mock<IConsole>();
+        console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => output.Append(value));
+        console.Setup(value => value.Write(It.IsAny<StringBuilder>())).Callback<StringBuilder>(value => output.Append(value));
+        console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => output.AppendLine(value));
+        var logger = new Mock<ILogger>();
+        logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+        using TerminalOutputDevice original = CreateOutputDevice(
+            new Dictionary<string, string[]>
+            {
+                [PlatformCommandLineProvider.ServerOptionKey] = [],
+                [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["off"],
+                [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
+            },
+            console: console.Object,
+            loggerFactory: loggerFactory.Object,
+            fileLoggerInformation: Mock.Of<IFileLoggerInformation>(info => info.LogFile == new FileInfo("diagnostics.log")));
+        using var server = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(original, server, null);
+        await original.InitializeAsync();
+        Assert.AreEqual(requested == true, proxy.ConfigureRpcOnlyOutput(requested));
+        IOutputDeviceData[] messages =
+        [
+            new TextOutputDeviceData("plain μ"),
+            new FormattedTextOutputDeviceData("formatted") { Padding = 2 },
+            new SessionMessageOutputDeviceData("session"),
+            new ProgressMessageOutputDeviceData("key", "progress"),
+            new ProgressMessageOutputDeviceData("key", null),
+            new WarningMessageOutputDeviceData("warning"),
+            new ErrorMessageOutputDeviceData("error"),
+            new ExceptionOutputDeviceData(new InvalidOperationException("exception")),
+        ];
+        string[] diagnostics = ["plain μ", "formatted", "session", "progress", string.Empty, "warning", "error", "System.InvalidOperationException: exception"];
+        foreach (IOutputDeviceData message in messages)
+        {
+            await proxy.DisplayAsync(Producer, message, CancellationToken.None);
+        }
+
+        foreach (string message in diagnostics)
+        {
+            logger.Verify(value => value.LogAsync(LogLevel.Debug, message, null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+        }
+
+        await proxy.DisplayBannerAsync("banner", CancellationToken.None);
+        await proxy.DisplayBeforeSessionStartAsync(CancellationToken.None);
+        await proxy.DisplayAfterSessionEndRunAsync(CancellationToken.None);
+        Assert.AreEqual(requested == true, output.Length == 0);
+        var queuedMessages = (ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
+            .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(server)!;
+        Assert.AreSequenceEqual(
+            new[] { LogLevel.Information, LogLevel.Information, LogLevel.Information, LogLevel.Information, LogLevel.Warning, LogLevel.Error, LogLevel.Error, LogLevel.Debug, LogLevel.Trace, LogLevel.Trace },
+            queuedMessages.Select(message => message.Level));
+        Assert.AreSequenceEqual(
+            new[] { "plain μ", "  formatted", "session", "progress", "warning", "error", "System.InvalidOperationException: exception" },
+            queuedMessages.Take(7).Select(message => message.Message));
+    }
+
+    [TestMethod]
+    [DataRow(null, true)]
+    [DataRow("off", false)]
+    [DataRow("false", false)]
+    public async Task RpcOnlyOutput_AzureDevOpsAgentDeclinesEvenWithAutomaticAnnotationsDisabled(string? annotationSetting, bool automaticAnnotations)
+    {
+        StringBuilder output = new();
+        var console = new Mock<IConsole>();
+        console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => output.Append(value));
+        console.Setup(value => value.Write(It.IsAny<StringBuilder>())).Callback<StringBuilder>(value => output.Append(value));
+        console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => output.AppendLine(value));
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(value => value.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+        environment.Setup(value => value.GetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT")).Returns(annotationSetting);
+        using TerminalOutputDevice original = CreateOutputDevice(
+            new Dictionary<string, string[]>
+            {
+                [PlatformCommandLineProvider.ServerOptionKey] = [],
+                [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["off"],
+            },
+            console: console.Object,
+            environmentOverride: environment.Object);
+        using var server = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(original, server, null);
+        await original.InitializeAsync();
+        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+
+        await proxy.DisplayAsync(Producer, new WarningMessageOutputDeviceData("warning"), CancellationToken.None);
+        await proxy.DisplayAsync(Producer, new TextOutputDeviceData("##vso[results.publish type=JUnit;]report.xml"), CancellationToken.None);
+
+        Assert.Contains("warning", output.ToString());
+        Assert.Contains("##vso[results.publish type=JUnit;]report.xml", output.ToString());
+        Assert.AreEqual(automaticAnnotations, output.ToString().Contains("##vso[task.logissue type=warning]warning", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    public async Task RpcOnlyOutput_NormalConsoleAndMachineReadableDiscoveryDecline(bool serverMode, bool listTestsJson)
+    {
+        Dictionary<string, string[]> options = [];
+        if (serverMode)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = [];
+        }
+
+        if (listTestsJson)
+        {
+            options[PlatformCommandLineProvider.DiscoverTestsOptionKey] = [PlatformCommandLineProvider.DiscoverTestsJsonArgument];
+        }
+
+        using TerminalOutputDevice original = CreateOutputDevice(options);
+        using var server = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(original, server, null);
+        await original.InitializeAsync();
+        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
     }
 
     [TestMethod]
@@ -259,7 +383,10 @@ public sealed class TerminalOutputDeviceTests
         Dictionary<string, string[]> options,
         bool isCIEnvironment = false,
         IStopPoliciesService? policiesService = null,
-        IConsole? console = null)
+        IConsole? console = null,
+        ILoggerFactory? loggerFactory = null,
+        IFileLoggerInformation? fileLoggerInformation = null,
+        IEnvironment? environmentOverride = null)
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
@@ -281,11 +408,11 @@ public sealed class TerminalOutputDeviceTests
             Mock.Of<ITestHostControllerInfo>(),
             Mock.Of<IAsyncMonitor>(),
             Mock.Of<IRuntimeFeature>(),
-            environment.Object,
+            environmentOverride ?? environment.Object,
             Mock.Of<IPlatformInformation>(),
             new TestCommandLineOptions(options),
-            fileLoggerInformation: null,
-            Mock.Of<ILoggerFactory>(),
+            fileLoggerInformation,
+            loggerFactory ?? Mock.Of<ILoggerFactory>(),
             Mock.Of<IClock>(),
             policiesService ?? stopPoliciesService.Object,
             testApplicationCancellationTokenSource.Object,

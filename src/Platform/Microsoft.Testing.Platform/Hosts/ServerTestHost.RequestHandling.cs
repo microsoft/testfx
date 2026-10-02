@@ -151,7 +151,10 @@ internal sealed partial class ServerTestHost
                     initializeResponseSent = true;
                     try
                     {
-                        await ServiceProvider.GetRequiredService<ProxyOutputDevice>().InitializeAsync(this).ConfigureAwait(false);
+                        if (response is InitializeResponseArgs { Capabilities.TestingCapabilities.RpcOnlyOutput: true })
+                        {
+                            await ServiceProvider.GetRequiredService<ProxyOutputDevice>().InitializeAsync(this).ConfigureAwait(false);
+                        }
                     }
                     finally
                     {

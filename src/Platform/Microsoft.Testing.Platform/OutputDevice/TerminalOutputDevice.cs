@@ -70,6 +70,20 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isAzureDevOpsEnvironment;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
+    private volatile bool _suppressConsoleOutput;
+
+    internal bool SupportsRpcOnlyOutput => _terminalTestReporter is not null
+        && _isServerMode
+        && !_isListTestsJson
+        && !_isAzureDevOpsEnvironment
+        // Extensions can emit Azure Pipelines commands even when automatic annotations are disabled.
+        && !AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(_environment);
+
+    internal bool SuppressConsoleOutput
+    {
+        get => _suppressConsoleOutput;
+        set => _suppressConsoleOutput = value;
+    }
 
     private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 

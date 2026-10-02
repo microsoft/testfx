@@ -35,14 +35,22 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     internal bool ConfigureRpcOnlyOutput(bool? requested)
-        => _serverModeOutputDevice is not null && (_serverModeOutputDevice.RpcOnlyOutput = requested == true);
+    {
+        bool applied = requested == true
+            && _serverModeOutputDevice is not null
+            && !OperatingSystem.IsBrowser()
+            && OriginalOutputDevice is TerminalOutputDevice { SupportsRpcOnlyOutput: true };
+        if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+        {
+            terminal.SuppressConsoleOutput = applied;
+        }
+
+        return applied;
+    }
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
-        {
-            await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
-        }
+        await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
 
         if (_serverModeOutputDevice is not null)
         {
@@ -52,10 +60,7 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 
     internal async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
-        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
-        {
-            await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
-        }
+        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
 
         if (_serverModeOutputDevice is not null)
         {
@@ -65,10 +70,7 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 
     internal async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
-        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
-        {
-            await OriginalOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
-        }
+        await OriginalOutputDevice.DisplayBeforeSessionStartAsync(cancellationToken).ConfigureAwait(false);
 
         if (_serverModeOutputDevice is not null)
         {
@@ -78,10 +80,7 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 
     internal async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
-        if (_serverModeOutputDevice?.RpcOnlyOutput != true)
-        {
-            await OriginalOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
-        }
+        await OriginalOutputDevice.DisplayAfterSessionEndRunAsync(cancellationToken).ConfigureAwait(false);
 
         if (_serverModeOutputDevice is not null)
         {

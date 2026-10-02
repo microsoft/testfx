@@ -59,10 +59,11 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    [DataRow(null)]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task ServerCanInitialize(bool? rpcOnlyOutput)
+    [DataRow(null, false)]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task ServerCanInitialize(bool? rpcOnlyOutput, bool customRenderer)
     {
         using var server = TcpServer.Create();
 
@@ -75,10 +76,25 @@ public sealed class ServerTests
         loggerProvider.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
         builder.Logging.AddProvider((_, _) => loggerProvider.Object);
         builder.TestHost.AddTestHostApplicationLifetime(_ => testApplicationHooks);
-        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new MockTestAdapter());
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new MockTestAdapter
+        {
+            DiscoveryAction = context =>
+            {
+                context.Complete();
+                return Task.CompletedTask;
+            },
+        });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-        ProxyOutputDevice outputDevice = testApplication.ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+        using ProxyOutputDevice defaultOutputDevice = testApplication.ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+        Mock<IPlatformOutputDevice> customOutputDevice = new();
+        ProxyOutputDevice outputDevice = defaultOutputDevice;
+        if (customRenderer)
+        {
+            outputDevice = new ProxyOutputDevice(customOutputDevice.Object, new ServerModePerCallOutputDevice(null), policiesService: null);
+            ((ServiceProvider)testApplication.ServiceProvider).ReplaceService(outputDevice);
+        }
+
         await outputDevice.DisplayAsync(testApplicationHooks, new TextOutputDeviceData("user startup output"), CancellationToken.None);
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
 
@@ -101,8 +117,8 @@ public sealed class ServerTests
                     "processId": 32,
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
-                        {{(rpcOnlyOutput.HasValue ? $"\"rpcOnlyOutput\":{rpcOnlyOutput.Value.ToString().ToLowerInvariant()}," : string.Empty)}}
                         "testing": {
+                            {{(rpcOnlyOutput.HasValue ? $"\"rpcOnlyOutput\":{rpcOnlyOutput.Value.ToString().ToLowerInvariant()}," : string.Empty)}}
                             "debuggerProvider": true,
                             "isStateful": true
                         }
@@ -135,10 +151,10 @@ public sealed class ServerTests
         InitializeResponseArgs expectedResponse = new(
                    1,
                    new ServerInfo("test-anywhere", "this is dynamic"),
-                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false))
+                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false)
                    {
-                       RpcOnlyOutput = rpcOnlyOutput,
-                   })
+                       RpcOnlyOutput = customRenderer ? false : rpcOnlyOutput,
+                   }))
         {
             ProtocolVersion = JsonRpcProtocolVersions.Current,
         };
@@ -149,6 +165,14 @@ public sealed class ServerTests
         Assert.IsNotEmpty(resultJson.ServerInfo.Version);
 
         await outputDevice.DisplayAsync(testApplicationHooks, new TextOutputDeviceData("user after handshake"), cancellationToken);
+        if (resultJson.Capabilities.TestingCapabilities.RpcOnlyOutput != true)
+        {
+            await WriteMessageAsync(writer, """{"jsonrpc":"2.0","id":2,"method":"testing/unknown","params":{}}""");
+            ErrorMessage unrelatedRequest = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, cancellationToken));
+            Assert.AreEqual(2, unrelatedRequest.Id);
+            await WriteMessageAsync(writer, """{"jsonrpc":"2.0","id":3,"method":"testing/discoverTests","params":{"runId":"00000000-0000-0000-0000-000000000003"}}""");
+        }
+
         List<IDictionary<string, object?>> logs = [];
         while (!logs.Any(log => Equals(log[JsonRpcStrings.Message], "user startup output"))
             || !logs.Any(log => Equals(log[JsonRpcStrings.Message], "user after handshake")))
@@ -160,6 +184,11 @@ public sealed class ServerTests
 
         Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Information")));
         Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user after handshake") && Equals(log[JsonRpcStrings.Level], "Information")));
+        if (customRenderer)
+        {
+            customOutputDevice.Verify(value => value.DisplayAsync(testApplicationHooks, It.IsAny<TextOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        }
+
         string connectionMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, "127.0.0.1", server.Port);
         Assert.IsEmpty(logs.Where(log => Equals(log[JsonRpcStrings.Message], connectionMessage)));
         logger.Verify(value => value.LogAsync(LogLevel.Debug, connectionMessage, null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
@@ -171,9 +200,10 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task InitializationOutputHandover_PreservesConcurrentOutputAndWaitingRequests(bool failFlush)
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task InitializationOutputHandover_PreservesConcurrentOutputAndWaitingRequests(bool failFlush, bool cancelFlush)
     {
         using var server = TcpServer.Create();
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
@@ -214,6 +244,11 @@ public sealed class ServerTests
                 releaseFlush.Wait(timeout.Token);
                 if (failFlush)
                 {
+                    if (cancelFlush)
+                    {
+                        throw new OperationCanceledException("Output initialization failed after acknowledgement");
+                    }
+
                     throw new InvalidOperationException("Output initialization failed after acknowledgement");
                 }
             }
@@ -229,7 +264,7 @@ public sealed class ServerTests
                 "params": {
                     "processId": 32,
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
-                    "capabilities": { "rpcOnlyOutput": true, "testing": { "debuggerProvider": false } }
+                    "capabilities": { "testing": { "rpcOnlyOutput": true, "debuggerProvider": false } }
                 }
             }
             """;
@@ -292,7 +327,9 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    public async Task ServerEnforcesLifecycleAndNegotiatesProtocolVersion()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ServerEnforcesLifecycleAndNegotiatesProtocolVersion(bool rpcOnlyOutput)
     {
         using var server = TcpServer.Create();
 
@@ -391,7 +428,7 @@ public sealed class ServerTests
             timeout.Token))!;
         Assert.AreEqual(ErrorCodes.ProtocolVersionNotSupported, incompatibleVersionError.ErrorCode);
 
-        const string initializeMessage = """
+        string initializeMessage = $$"""
             {
                 "jsonrpc": "2.0",
                 "id": 2,
@@ -401,6 +438,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "42.0.0" },
                     "capabilities": {
                         "testing": {
+                            "rpcOnlyOutput": {{rpcOnlyOutput.ToString().ToLowerInvariant()}},
                             "debuggerProvider": false
                         }
                     },
@@ -412,7 +450,7 @@ public sealed class ServerTests
 
         ResponseMessage? initializeResponse = null;
         bool startupOutputReceived = false;
-        while (queuedRequestError is null || initializeResponse is null || !startupOutputReceived)
+        while (queuedRequestError is null || initializeResponse is null || (rpcOnlyOutput && !startupOutputReceived))
         {
             RpcMessage? message = initializeResponse is null
                 ? await messageHandler.ReadAsync(timeout.Token)
@@ -481,10 +519,21 @@ public sealed class ServerTests
 
         RpcMessage? failedRunCompletion = await WaitForMessage(
             messageHandler,
-            IsTestUpdateCompletion,
+            message =>
+            {
+                if (message is NotificationMessage { Method: JsonRpcMethods.ClientLog } notification
+                    && Equals(Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message], "buffered across initialization retry"))
+                {
+                    Assert.IsFalse(startupOutputReceived);
+                    startupOutputReceived = true;
+                }
+
+                return IsTestUpdateCompletion(message);
+            },
             "Wait failed run completion",
             timeout.Token);
         Assert.IsNotNull(failedRunCompletion);
+        Assert.IsTrue(startupOutputReceived);
 
         var internalError = (ErrorMessage)(await WaitForMessage(
             messageHandler,
@@ -507,7 +556,9 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    public async Task PipelinedRequestWaitsForInitializeResponse()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PipelinedRequestWaitsForInitializeResponse(bool rpcOnlyOutput)
     {
         using var server = TcpServer.Create();
 
@@ -548,7 +599,7 @@ public sealed class ServerTests
 
         await WriteMessageAsync(
             writer,
-            """
+            $$"""
             {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -558,6 +609,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
                         "testing": {
+                            "rpcOnlyOutput": {{rpcOnlyOutput.ToString().ToLowerInvariant()}},
                             "debuggerProvider": false,
                             "isStateful": true
                         }
@@ -696,7 +748,9 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    public async Task PipelinedRequestCanBeCanceledWhileInitializationCompletes()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PipelinedRequestCanBeCanceledWhileInitializationCompletes(bool rpcOnlyOutput)
     {
         using var server = TcpServer.Create();
         using var testFrameworkCapabilities = new BlockingTestFrameworkCapabilities();
@@ -731,7 +785,7 @@ public sealed class ServerTests
         {
             await WriteMessageAsync(
                 writer,
-                """
+                $$"""
                 {
                     "jsonrpc": "2.0",
                     "id": 1,
@@ -741,6 +795,7 @@ public sealed class ServerTests
                         "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                         "capabilities": {
                             "testing": {
+                                "rpcOnlyOutput": {{rpcOnlyOutput.ToString().ToLowerInvariant()}},
                                 "debuggerProvider": false
                             }
                         }

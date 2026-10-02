@@ -44,14 +44,14 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null, policies.Object);
         await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
         Assert.HasCount(1, callbacks);
-        proxy.ConfigureRpcOnlyOutput(requested);
+        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(requested));
 
         foreach (Func<int, CancellationToken, Task> callback in callbacks)
         {
             await callback(42, CancellationToken.None);
         }
 
-        int expectedOriginalMessages = hasServerDevice && requested == true ? 0 : 1;
+        const int expectedOriginalMessages = 1;
         Assert.HasCount(expectedOriginalMessages, originalDevice.Messages);
         var messages = (ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
             .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(serverDevice)!;

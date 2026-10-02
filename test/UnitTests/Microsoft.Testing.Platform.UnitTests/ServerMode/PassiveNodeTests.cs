@@ -29,7 +29,7 @@ public sealed class PassiveNodeTests
 
         ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(handler.WrittenMessage);
         InitializeResponseArgs result = Assert.IsInstanceOfType<InitializeResponseArgs>(response.Result);
-        Assert.AreEqual(requested.HasValue ? false : null, result.Capabilities.RpcOnlyOutput);
+        Assert.AreEqual(requested.HasValue ? false : null, result.Capabilities.TestingCapabilities.RpcOnlyOutput);
     }
 
     [TestMethod]

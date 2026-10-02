@@ -50,10 +50,10 @@ internal sealed partial class ServerTestHost
                             MultiRequestSupport: false,
                             VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
                             SupportsAttachments: true,
-                            MultiConnectionProvider: false))
-                    {
-                        RpcOnlyOutput = args.Capabilities.RpcOnlyOutput.HasValue ? rpcOnlyOutput : null,
-                    })
+                            MultiConnectionProvider: false)
+                        {
+                            RpcOnlyOutput = args.Capabilities.RpcOnlyOutput.HasValue ? rpcOnlyOutput : null,
+                        }))
                 {
                     ProtocolVersion = negotiatedProtocolVersion,
                 };
@@ -157,6 +157,7 @@ internal sealed partial class ServerTestHost
             perRequestServiceProvider.TryAddService(_clientInfoService);
 
             ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+            await outputDevice.InitializeAsync(this).ConfigureAwait(false);
 
             // Build the per request adapter
             ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(

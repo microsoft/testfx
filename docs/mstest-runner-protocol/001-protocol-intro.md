@@ -246,15 +246,15 @@ interface InitializeParams {
     protocolVersions?: string[] | null,
 
     capabilities: {
-        // Opt in to RPC-only output-device routing.
-        // The server must acknowledge true before the client relies on this behavior.
-        rpcOnlyOutput?: boolean | null,
-
         // Note: Since the initialize message is compatible with the LSP protocol,
         // we should make sure that the capability paths for the testing features are unique.
         // As such, we put all of them under a single testing namespace.
         // This reduces collisions with other LSP capabilities.
         testing: {
+            // Opt in to RPC-only output-device routing, with a handler ready before initialize.
+            // The server must acknowledge true before the client relies on this behavior.
+            rpcOnlyOutput?: boolean | null,
+
             // Reserved for future debugger callbacks. Protocol 1.0 accepts this field
             // for compatibility but does not send debugger requests.
             debuggerProvider: boolean,
@@ -293,11 +293,11 @@ interface InitializeResponse {
     protocolVersion?: string | null,
 
     capabilities: {
-        // Applied acknowledgement, not just an advertisement of support.
-        // Missing/null is not an acknowledgement; false means legacy routing remains.
-        rpcOnlyOutput?: boolean | null,
-
         testing: {
+            // Applied acknowledgement, not just an advertisement of support.
+            // Missing/null is not an acknowledgement; false means legacy routing remains.
+            rpcOnlyOutput?: boolean | null,
+
             // If true, the server supports test discovery.
             supportsDiscovery: boolean;
 
@@ -331,7 +331,7 @@ interface InitializeResponse {
 }
 ```
 
-For `capabilities.rpcOnlyOutput` semantics, see
+For `capabilities.testing.rpcOnlyOutput` semantics, see
 [RPC-only output](#rpc-only-output) under `client/log`.
 
 #### Versioning capabilities
@@ -873,21 +873,32 @@ type TestingPlatformLogLevel =
 
 #### RPC-only output
 
-By default, the server writes output messages to both stdout and `client/log`.
-Clients that display both streams therefore show duplicate output.
+`client/log` already carries output-device messages, not `ILogger` diagnostics.
+By default, these messages also render on the console. RPC forwarding starts at
+discovery/run, allowing legacy clients to subscribe after awaiting `initialize`.
 
-For all clients, buffered output is forwarded through `client/log` after the
-successful `initialize` response. Output continues for the connection lifetime,
-without requiring a discovery or run request.
+To avoid duplicate rendering, request `capabilities.testing.rpcOnlyOutput: true`.
+Only the same nested field set to `true` in the response acknowledges that the
+policy was applied. Missing, null, false, or an ignored top-level field does not.
+Without a true acknowledgement, retain existing output handling and timing.
 
-To avoid duplicate output, set `capabilities.rpcOnlyOutput: true` in `initialize`. When the
-server acknowledges it with `capabilities.rpcOnlyOutput: true`, subsequent output
-messages are sent only through `client/log`, without a duplicate stdout copy.
-Message levels are unchanged. Without a true acknowledgement, clients must retain
-their existing output handling. Each connection negotiates independently.
+Opted-in clients must have their output handler ready **before** sending
+`initialize`. After its successful response, an acknowledging server forwards
+buffered and subsequent output for the connection lifetime, even without a
+discovery/run request. The source client enforces this subscription requirement
+and makes validated capabilities available before dispatching these messages.
+Each connection negotiates independently.
 
-This does not suppress direct application writes to stdout/stderr or output
-already written before initialization; clients must still drain those streams.
-Use `--no-banner` to suppress the startup banner. Custom output rendering is
-bypassed, so clients that depend on it should not opt in. Normal CLI execution
-and the separate `dotnet test` protocol are unaffected.
+Acknowledged user-visible messages must remain visible regardless of the client's
+diagnostic verbosity. Message levels are unchanged; Trace/Debug lifecycle notices
+retain diagnostic semantics. The server retains its existing diagnostic-file
+mirror. `client/log` remains plain text: colors and in-place progress are not preserved.
+
+Unsupported custom renderers, browser/WASI renderers, and machine-output
+configurations decline the request. This includes Azure DevOps agents even when
+automatic annotations are disabled, preserving extension `##vso` commands.
+Normal console execution and the native `dotnet test` pipe are unchanged.
+
+Direct application writes to stdout/stderr and output already written before
+initialization are outside this policy. Always drain both streams; use `--no-banner`
+to suppress the startup banner.

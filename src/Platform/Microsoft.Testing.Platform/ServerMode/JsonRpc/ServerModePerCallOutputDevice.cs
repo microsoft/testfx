@@ -18,25 +18,23 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
     private readonly SemaphoreSlim _progressMessagesSemaphore = new(1, 1);
 
     private ServerTestHost? _serverTestHost;
-    private volatile bool _rpcOnlyOutput;
 
     private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
     public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider)
         => _fileLoggerProvider = fileLoggerProvider;
 
-    internal bool RpcOnlyOutput
-    {
-        get => _rpcOnlyOutput;
-        set => _rpcOnlyOutput = value;
-    }
-
     internal async Task InitializeAsync(ServerTestHost serverTestHost)
     {
-        // Attach only after the initialize response, so buffered output cannot precede it.
+        // Opted-in clients attach after initialize; legacy clients attach at discovery/run.
         // Share the lock with enqueueing to avoid stranding messages during handover.
         lock (_messages)
         {
+            if (_serverTestHost == serverTestHost)
+            {
+                return;
+            }
+
             _serverTestHost = serverTestHost;
         }
 

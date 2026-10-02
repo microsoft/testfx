@@ -27,11 +27,16 @@ internal interface IMtpServerClient : IDisposable
     event EventHandler<MtpTestNodeUpdateEventArgs>? TestNodesUpdated;
 
     /// <summary>
-    /// Raised when the server sends a log message (<c>client/log</c>).
+    /// Raised for output-device messages and lifecycle notices (<c>client/log</c>), not ILogger diagnostics.
     /// </summary>
     /// <remarks>
     /// Handlers run synchronously on the ordered read loop and must not block or synchronously call back
     /// into this client.
+    /// When requesting <see cref="MtpServerClientOptions.RpcOnlyOutput"/>, subscribe before
+    /// <see cref="InitializeAsync"/> and keep the handler attached for the connection lifetime.
+    /// Validated <see cref="Capabilities"/> are available before post-initialize notifications.
+    /// If RPC-only output is acknowledged, user-visible messages must not be filtered by diagnostic
+    /// verbosity; Trace/Debug lifecycle notices retain diagnostic semantics.
     /// </remarks>
     event EventHandler<MtpLogEventArgs>? LogReceived;
 
@@ -99,6 +104,9 @@ internal interface IMtpServerClient : IDisposable
     /// <summary>
     /// Sends the <c>initialize</c> request and returns the negotiated server capabilities.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// RPC-only output was requested without a <see cref="LogReceived"/> handler.
+    /// </exception>
     Task<MtpServerCapabilities> InitializeAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -220,7 +228,7 @@ internal sealed class MtpServerCapabilities
     /// <summary>Gets the independently negotiated server-mode protocol version.</summary>
     public string? ProtocolVersion { get; }
 
-    /// <summary>Gets whether RPC-only output routing was applied; null means no acknowledgement.</summary>
+    /// <summary>Gets the applied <c>capabilities.testing.rpcOnlyOutput</c> acknowledgement; null means no acknowledgement.</summary>
     public bool? RpcOnlyOutput { get; init; }
 
     /// <summary>Gets a value indicating whether the server supports discovery.</summary>
