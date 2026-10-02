@@ -64,6 +64,22 @@ public sealed class TcpMessageHandlerTests
             Times.Once);
     }
 
+    [TestMethod]
+    public async Task ReadAsync_IOExceptionWrappingConnectionReset_ReturnsNull()
+    {
+        SocketException connectionReset = new((int)SocketError.ConnectionReset);
+        using TcpClient tcpClient = new();
+        using var handler = new TcpMessageHandler(
+            tcpClient,
+            new ThrowingStream(new IOException("Connection reset.", connectionReset)),
+            new MemoryStream(),
+            Mock.Of<IMessageFormatter>());
+
+        RpcMessage? message = await handler.ReadAsync(TestContext.CancellationToken);
+
+        Assert.IsNull(message);
+    }
+
     /// <summary>
     /// A conformant peer (the vstest client, or the source-shipped client running on a different formatter)
     /// emits the JSON body as raw UTF-8 and declares <c>Content-Length</c> in bytes, exactly as
@@ -144,6 +160,24 @@ public sealed class TcpMessageHandlerTests
 
         Assert.AreEqual("testing/first", first.Method);
         Assert.AreEqual("testing/second", second.Method);
+    }
+
+    [TestMethod]
+    public async Task ReadAsync_BareLineFeedHeaderTerminator_IsTolerated()
+    {
+        using ConnectedHandlers handlers = await ConnectedHandlers.CreateAsync().ConfigureAwait(false);
+
+        string body = BuildNotificationJson("testing/bare-lf");
+        byte[] bodyBytes = Encoding.UTF8.GetBytes(body);
+        byte[] header = Encoding.ASCII.GetBytes(
+            $"Content-Length: {bodyBytes.Length}\nContent-Type: application/testingplatform\n\n");
+
+        await handlers.WriterStream.WriteAsync(header, 0, header.Length, TestContext.CancellationToken).ConfigureAwait(false);
+        await handlers.WriterStream.WriteAsync(bodyBytes, 0, bodyBytes.Length, TestContext.CancellationToken).ConfigureAwait(false);
+
+        var message = (NotificationMessage)(await ReadWithTimeoutAsync(handlers).ConfigureAwait(false))!;
+
+        Assert.AreEqual("testing/bare-lf", message.Method);
     }
 
     /// <summary>
@@ -319,6 +353,19 @@ public sealed class TcpMessageHandlerTests
     }
 
     private sealed class ConnectionResetStream(SocketException exception) : MemoryStream
+    {
+        public override int Read(byte[] buffer, int offset, int count) => throw exception;
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => Task.FromException<int>(exception);
+
+#if NETCOREAPP
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            => ValueTask.FromException<int>(exception);
+#endif
+    }
+
+    private sealed class ThrowingStream(Exception exception) : MemoryStream
     {
         public override int Read(byte[] buffer, int offset, int count) => throw exception;
 
