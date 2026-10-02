@@ -25,7 +25,7 @@ network:
     - dotnet
 
 timeout-minutes: 20
-source: dotnet/skills/agentic-workflows/unskip-closed-tests@7bdab53812ed1ce4fe2cb6b0cf84e17c8ff0f097
+source: dotnet/skills/agentic-workflows/unskip-closed-tests@57e48d3619bf44b9307a3197239d398b0287b25c
 
 jobs:
   agent:

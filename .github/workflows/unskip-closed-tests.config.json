@@ -31,8 +31,11 @@
   ],
   "verification": {
     "command": [
-      "python3",
-      ".github/scripts/unskip_closed_tests_verify.py"
+      "pwsh",
+      "-NoLogo",
+      "-NoProfile",
+      "-File",
+      ".github/workflows/unskip-closed-tests-verify.ps1"
     ],
     "timeout_seconds": 1800
   }

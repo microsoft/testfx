@@ -231,8 +231,8 @@ internal static class ApplyEngine
                 .ToList(),
             HasChanges = true,
             PrTitle = retained.Count == 1
-                ? "[unskip-closed-tests] Unskip test for completed GitHub work item"
-                : $"[unskip-closed-tests] Unskip {retained.Count} tests for completed GitHub work items",
+                ? "Unskip test for completed GitHub work item"
+                : $"Unskip {retained.Count} tests for completed GitHub work items",
             PrBody = CreatePrBody(requestedManifest, retainedCandidates, reverted),
         };
     }
