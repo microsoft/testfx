@@ -261,7 +261,17 @@ def validate_result_path(root: pathlib.Path, value: str) -> pathlib.Path:
     resolved = path.resolve()
     runner_temp = os.environ.get("RUNNER_TEMP")
     allowed_root = pathlib.Path(runner_temp).resolve() if runner_temp else root.resolve()
-    if resolved != allowed_root and allowed_root not in resolved.parents:
+    is_trusted_output = resolved == allowed_root or allowed_root in resolved.parents
+    if not is_trusted_output:
+        git_directory_value = run_git(root, "rev-parse", "--git-dir")
+        git_directory = pathlib.Path(git_directory_value)
+        if not git_directory.is_absolute():
+            git_directory = root / git_directory
+        git_output_root = (git_directory / "unskip-closed-tests").resolve()
+        is_trusted_output = (
+            resolved == git_output_root or git_output_root in resolved.parents
+        )
+    if not is_trusted_output:
         raise VerificationError(
             f"Requested result file is outside the trusted output root: {value}"
         )

@@ -124,6 +124,35 @@ class UnskipClosedTestsVerifyTests(unittest.TestCase):
         with self.assertRaisesRegex(VERIFY.VerificationError, "No portable"):
             VERIFY.select_target_framework(("net462", "net8.0-windows"))
 
+    def test_validate_result_path_allows_only_trusted_output_roots(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            runner_temp = root / "runner-temp"
+            git_output = root / ".git" / "unskip-closed-tests" / "candidate"
+            git_result = git_output / "test.trx"
+
+            with mock.patch.object(
+                VERIFY, "run_git", return_value=".git"
+            ), mock.patch.dict(os.environ, {"RUNNER_TEMP": str(runner_temp)}):
+                self.assertEqual(
+                    (runner_temp / "test.trx").resolve(),
+                    VERIFY.validate_result_path(root, str(runner_temp / "test.trx")),
+                )
+                self.assertEqual(
+                    git_result.resolve(),
+                    VERIFY.validate_result_path(root, str(git_result)),
+                )
+                with self.assertRaisesRegex(
+                    VERIFY.VerificationError, "outside the trusted output root"
+                ):
+                    VERIFY.validate_result_path(
+                        root, str(root / "other" / "test.trx")
+                    )
+                with self.assertRaisesRegex(
+                    VERIFY.VerificationError, "must use .trx"
+                ):
+                    VERIFY.validate_result_path(root, str(git_output / "test.xml"))
+
     def test_repository_bootstrap_runs_pack_once_for_acceptance(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
