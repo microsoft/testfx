@@ -32,8 +32,7 @@
   "verification": {
     "command": [
       "python3",
-      ".github/scripts/unskip_closed_tests_verify.py",
-      "{request_json}"
+      ".github/scripts/unskip_closed_tests_verify.py"
     ],
     "timeout_seconds": 1800
   }
