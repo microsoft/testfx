@@ -191,17 +191,17 @@ public class UnitTest1
         string registry = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal)));
         Assert.DoesNotContain("DataRows", registry, "DataRowAttribute instances are authoritative; a second argument-array descriptor is redundant.");
         Assert.DoesNotContain("ParameterNames", registry, "runtime registration only resolves overloads by parameter type.");
-        StringAssert.Contains(registry, "SupportsGeneratedDescriptors = true");
-        StringAssert.Contains(registry, "IsDescriptorSupported = true");
-        StringAssert.Contains(registry, "AreGeneratedDescriptorsComplete = false");
+        Assert.Contains("SupportsGeneratedDescriptors = true", registry);
+        Assert.Contains("IsDescriptorSupported = true", registry);
+        Assert.Contains("AreGeneratedDescriptorsComplete = false", registry);
 
         string registration = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registration.g.cs", StringComparison.Ordinal)));
-        StringAssert.Contains(registration, "availableMethods ??= type.GetMethods(memberFlags)");
-        StringAssert.Contains(registration, "ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes)");
-        StringAssert.Contains(registration, "methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false)");
-        StringAssert.Contains(registration, "methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false)");
-        StringAssert.Contains(registration, "descriptorTestMethods[type] = descriptorMethodRoots.ToArray()");
-        StringAssert.Contains(registration, "descriptorTestMethods, descriptorCompleteTypes.ToArray()");
+        Assert.Contains("availableMethods ??= type.GetMethods(memberFlags)", registration);
+        Assert.Contains("ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes)", registration);
+        Assert.Contains("methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false)", registration);
+        Assert.Contains("methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false)", registration);
+        Assert.Contains("descriptorTestMethods[type] = descriptorMethodRoots.ToArray()", registration);
+        Assert.Contains("descriptorTestMethods, descriptorCompleteTypes.ToArray()", registration);
 
         // Behavioral evidence: tests still discover and run when the source-generated
         // ReflectionMetadataHook is the only metadata provider wired in at module init.
@@ -391,8 +391,8 @@ public class UnitTest1
             .OfType<string>()
             .ToArray();
 
-        CollectionAssert.Contains(dependencyIds, "MSTest.TestAdapter");
-        CollectionAssert.DoesNotContain(dependencyIds, "MSTest.SourceGeneration");
+        Assert.Contains("MSTest.TestAdapter", dependencyIds);
+        Assert.DoesNotContain("MSTest.SourceGeneration", dependencyIds);
     }
 
     [TestMethod]

@@ -133,14 +133,14 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
 
         // The classes are declared in source in the reverse of this order and carry no attribute, so only
         // the configuration can be responsible for First running before Second.
-        CollectionAssert.AreEqual(new[] { "First", "Second" }, order.Take(2).ToArray(), string.Join(",", order));
+        Assert.AreSequenceEqual(new[] { "First", "Second" }, order.Take(2).ToArray(), string.Join(",", order));
 
         // Neither skipped test executed its body.
-        CollectionAssert.DoesNotContain(order, "Verify");
-        CollectionAssert.DoesNotContain(order, "Third");
+        Assert.DoesNotContain("Verify", order);
+        Assert.DoesNotContain("Third", order);
 
         // Audit ran anyway, because its node set proceedOnFailure.
-        CollectionAssert.Contains(order, "Audit");
+        Assert.Contains("Audit", order);
     }
 
     public sealed class TestAssetFixture : ITestAssetFixture

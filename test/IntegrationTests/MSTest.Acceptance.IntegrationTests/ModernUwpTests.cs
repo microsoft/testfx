@@ -171,7 +171,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             await using FileStream stream = File.OpenRead(path);
             int bytesRead = await stream.ReadAsync(actualPreamble, cancellationToken);
             Assert.AreEqual(utf8Preamble.Length, bytesRead, $"Generated C# file '{path}' is shorter than the UTF-8 BOM.");
-            CollectionAssert.AreEqual(utf8Preamble, actualPreamble, $"Generated C# file '{path}' is not UTF-8 with BOM.");
+            Assert.AreSequenceEqual(utf8Preamble, actualPreamble, $"Generated C# file '{path}' is not UTF-8 with BOM.");
         }
     }
 
@@ -197,7 +197,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             "PlainTestMethod_RunsInPackagedUwp",
             "UITestMethod_RunsOnCoreWindowDispatcher",
         ];
-        CollectionAssert.AreEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
+        Assert.AreSequenceEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
         Assert.IsTrue(
             results.All(result => (string?)result.Attribute("outcome") == "Passed"),
             $"Every Modern UWP result must pass. TRX: '{trxPath}'.");

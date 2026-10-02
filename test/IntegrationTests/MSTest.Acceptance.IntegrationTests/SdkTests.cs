@@ -1123,10 +1123,10 @@ namespace MSTestWebTest
             File.Exists(resolvedAssetsReport),
             $"The resolved MSTest asset report '{resolvedAssetsReport}' was not created. Binlog: '{binlogPath}'.");
         string[] resolvedAssets = await File.ReadAllLinesAsync(resolvedAssetsReport, TestContext.CancellationToken);
-        CollectionAssert.Contains(resolvedAssets, "UseUwp=true");
-        CollectionAssert.Contains(resolvedAssets, "UseUwpTools=false");
-        CollectionAssert.Contains(resolvedAssets, "PackagedApp=false");
-        CollectionAssert.Contains(resolvedAssets, "TestingPlatformExecutablePath=");
+        Assert.Contains("UseUwp=true", resolvedAssets);
+        Assert.Contains("UseUwpTools=false", resolvedAssets);
+        Assert.Contains("PackagedApp=false", resolvedAssets);
+        Assert.Contains("TestingPlatformExecutablePath=", resolvedAssets);
 
         string adapterPath = resolvedAssets.Single(
             path => path.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase));
@@ -1295,7 +1295,7 @@ namespace MSTestWebTest
             .ToArray();
         string[] expected = expectedCultures.Order(StringComparer.OrdinalIgnoreCase).ToArray();
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             expected,
             actualCultures,
             $"Unexpected cultures for {resourceAssemblyName}. Expected: '{string.Join(";", expected)}'. Actual: '{string.Join(";", actualCultures)}'.");
