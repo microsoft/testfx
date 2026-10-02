@@ -452,17 +452,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedDescription">
         <source>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</source>
-        <target state="new">Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</target>
+        <target state="translated">호스트 소유 MSTest 테스트 클래스 주입은 리플렉션 기반 Microsoft.Extensions.DependencyInjection 활성화를 사용합니다. AddMSTestTestClassInjection을 제거하거나 지원되지 않는 빌드 모드를 활성화하세요.</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</note>
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedMessageFormat">
         <source>AddMSTestTestClassInjection is not supported when '{0}' is enabled</source>
-        <target state="new">AddMSTestTestClassInjection is not supported when '{0}' is enabled</target>
+        <target state="translated">'{0}'이(가) 활성화된 경우 AddMSTestTestClassInjection은 지원되지 않습니다.</target>
         <note>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</note>
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedTitle">
         <source>MSTest host test-class injection is not supported by the selected build mode</source>
-        <target state="new">MSTest host test-class injection is not supported by the selected build mode</target>
+        <target state="translated">선택한 빌드 모드에서는 MSTest 호스트의 테스트 클래스 주입이 지원되지 않습니다.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -1047,7 +1047,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorHasDerivedTestContextMessageFormat">
         <source>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">테스트 클래스 '{0}'의 생성자 매개 변수 '{1}'은(는) TestContext에서 파생됩니다. TestContext를 그대로 사용하세요.</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">
