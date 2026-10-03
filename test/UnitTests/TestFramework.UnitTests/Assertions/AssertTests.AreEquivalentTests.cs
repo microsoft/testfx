@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+
 using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
@@ -9,6 +12,32 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
 public partial class AssertTests : TestContainer
 {
+#if NET5_0_OR_GREATER
+    public void StructuralEquivalenceAssertions_DeclareTrimAndAotRequirements()
+    {
+        MethodInfo[] methods = typeof(Assert)
+            .GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(static method => method.Name is nameof(Assert.AreEquivalent) or nameof(Assert.AreNotEquivalent))
+            .ToArray();
+
+        methods.Count(static method => method.Name == nameof(Assert.AreEquivalent)).Should().BeGreaterThan(0);
+        methods.Count(static method => method.Name == nameof(Assert.AreNotEquivalent)).Should().BeGreaterThan(0);
+
+        foreach (MethodInfo method in methods)
+        {
+            RequiresUnreferencedCodeAttribute? trimAttribute = method.GetCustomAttribute<RequiresUnreferencedCodeAttribute>();
+            trimAttribute.Should().NotBeNull();
+            trimAttribute!.Message.Should().Be("Structural comparison uses reflection over runtime types, whose members cannot be statically preserved.");
+
+#if NET7_0_OR_GREATER
+            RequiresDynamicCodeAttribute? aotAttribute = method.GetCustomAttribute<RequiresDynamicCodeAttribute>();
+            aotAttribute.Should().NotBeNull();
+            aotAttribute!.Message.Should().Be("Structural comparison creates generic types at runtime.");
+#endif
+        }
+    }
+#endif
+
     #region AreEquivalent — primitives, nulls, strings
 
     public void AreEquivalent_BothNull_Passes()
