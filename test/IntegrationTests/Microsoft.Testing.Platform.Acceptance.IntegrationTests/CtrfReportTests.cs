@@ -237,7 +237,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         const string expected = """
 {
   "reportFormat": "CTRF",
-  "specVersion": "0.0.0",
+  "specVersion": "0.1.0",
   "reportId": "<GUID>",
   "runId": "<RUN_ID>",
   "timestamp": "<TIMESTAMP>",
