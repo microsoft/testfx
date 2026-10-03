@@ -48,6 +48,19 @@ internal sealed class MtpServerClientOptions
     public bool? IsStateful { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to request RPC-only output-device rendering (<c>capabilities.testing.rpcOnlyOutput</c>).
+    /// A null value omits the request. The client must check the server's applied acknowledgement.
+    /// </summary>
+    /// <remarks>
+    /// When true, attach <see cref="IMtpServerClient.LogReceived"/> before calling
+    /// <see cref="IMtpServerClient.InitializeAsync"/> and keep it attached until shutdown.
+    /// Acknowledged user-visible output must remain visible regardless of diagnostic verbosity.
+    /// False or absent acknowledgement retains legacy output and discovery/run activation.
+    /// Direct stdout/stderr writes are outside this policy; both streams must still be drained.
+    /// </remarks>
+    public bool? RpcOnlyOutput { get; set; }
+
+    /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback
     /// listener. Overridable by callers per the <c>VSTEST_CONNECTION_TIMEOUT</c> convention (seconds).
     /// Defaults to 90 seconds.

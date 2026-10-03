@@ -71,6 +71,7 @@ internal static class JsonRpcStrings
     public const string Testing = "testing";
     public const string DebuggerProvider = "debuggerProvider";
     public const string IsStateful = "isStateful";
+    public const string RpcOnlyOutput = "rpcOnlyOutput";
     public const string SupportsDiscovery = "supportsDiscovery";
     public const string MultiRequestSupport = "experimental_multiRequestSupport";
     public const string VSTestProviderSupport = "vstestProvider";

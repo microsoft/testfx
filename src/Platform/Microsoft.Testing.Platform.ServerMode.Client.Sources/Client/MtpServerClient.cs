@@ -200,16 +200,27 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <inheritdoc />
     public async Task<MtpServerCapabilities> InitializeAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_options.RpcOnlyOutput == true && LogReceived is null)
+        {
+            throw new InvalidOperationException("Subscribe to LogReceived before initializing with RpcOnlyOutput enabled.");
+        }
+
         EnsureStarted();
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful))
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { RpcOnlyOutput = _options.RpcOnlyOutput })
         {
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };
 
-        ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken).ConfigureAwait(false);
+        await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken, ProcessInitializeResponse).ConfigureAwait(false);
+        return Capabilities!;
+    }
+
+    private void ProcessInitializeResponse(ResponseMessage response)
+    {
         MtpServerCapabilities capabilities = DecodeCapabilities(AsResultDictionary(response.Result));
         string effectiveProtocolVersion = capabilities.ProtocolVersion ?? JsonRpcProtocolVersions.V1;
         if (!IsSupportedProtocolVersion(effectiveProtocolVersion))
@@ -220,7 +231,6 @@ internal sealed class MtpServerClient : IMtpServerClient
         }
 
         Capabilities = capabilities;
-        return capabilities;
     }
 
     /// <inheritdoc />
@@ -312,6 +322,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
+        bool? rpcOnlyOutput = null;
         string? protocolVersion = null;
         if (result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj))
         {
@@ -334,6 +345,14 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport = AsBool(testing, JsonRpcStrings.VSTestProviderSupport);
             supportsAttachments = AsBool(testing, JsonRpcStrings.AttachmentsSupport);
             multiConnectionProvider = AsBool(testing, JsonRpcStrings.MultiConnectionProvider);
+            rpcOnlyOutput = testing.TryGetValue(JsonRpcStrings.RpcOnlyOutput, out object? rpcOnlyOutputValue)
+                ? rpcOnlyOutputValue switch
+                {
+                    null => null,
+                    bool value => value,
+                    _ => throw new MtpServerClientException($"Expected '{JsonRpcStrings.RpcOnlyOutput}' to be a boolean."),
+                }
+                : null;
         }
 
         return new MtpServerCapabilities(
@@ -345,7 +364,10 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport,
             supportsAttachments,
             multiConnectionProvider,
-            protocolVersion);
+            protocolVersion)
+        {
+            RpcOnlyOutput = rpcOnlyOutput,
+        };
     }
 
     private bool IsSupportedProtocolVersion(string negotiatedProtocolVersion)

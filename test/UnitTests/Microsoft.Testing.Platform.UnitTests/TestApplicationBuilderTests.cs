@@ -302,7 +302,7 @@ public sealed class TestApplicationBuilderTests
         configuration
             .SetupGet(x => x[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds])
             .Returns("0.01");
-        var outputDevice = new ProxyOutputDevice(new NopPlatformOutputDevice(), serverModeOutputDevice: null);
+        var outputDevice = new ProxyOutputDevice(new NopPlatformOutputDevice(), serverModeOutputDevice: null, policiesService: null);
         var telemetryInformation = new TelemetryInformation(isEnabled: false, version: "test");
         using IDisposable testHostControllerIpc = CreateTestHostControllerIpc(host, CancellationToken.None);
         using var cancellationServer = new TestHostControllerCancellationServer(
@@ -587,7 +587,7 @@ public sealed class TestApplicationBuilderTests
     public void TestHostControllerOutputFinalization_AbandonmentTracksProxyAndOriginalDevice()
     {
         Mock<IPlatformOutputDevice> originalOutputDevice = new();
-        ProxyOutputDevice proxyOutputDevice = new(originalOutputDevice.Object, serverModeOutputDevice: null);
+        ProxyOutputDevice proxyOutputDevice = new(originalOutputDevice.Object, serverModeOutputDevice: null, policiesService: null);
         List<object> servicesStillRunning = [];
 
         MarkOutputDeviceStillRunning(servicesStillRunning, proxyOutputDevice);

@@ -12,6 +12,85 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class FormatterUtilitiesTests
 {
+    [TestMethod]
+    [DataRow("", null)]
+    [DataRow("\"rpcOnlyOutput\":null,", null)]
+    [DataRow("\"rpcOnlyOutput\":false,", false)]
+    [DataRow("\"rpcOnlyOutput\":true,", true)]
+    public void Deserialize_RpcOnlyOutput_RequestPreservesOptionalValue(string capability, bool? expected)
+    {
+        string json = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{ "testing":{ {{capability}} "debuggerProvider":false} } }
+            """;
+
+        Assert.AreEqual(expected, Deserialize<InitializeRequestArgs>(json).Capabilities.RpcOnlyOutput);
+    }
+
+    [TestMethod]
+    [DataRow("\"true\"")]
+    [DataRow("1")]
+    [DataRow("{}")]
+    [DataRow("[]")]
+    public void Deserialize_RpcOnlyOutput_InvalidRequestValueIsRejected(string value)
+    {
+        string json = $$"""
+            {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"rpcOnlyOutput":{{value}},"debuggerProvider":false} } } }
+            """;
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(Deserialize<RpcMessage>(json));
+        InvalidRequestParamsArgs error = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, error.ErrorCode);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Serialize_RpcOnlyOutput_ResponseRoundTripsOptionalAcknowledgement(bool? applied)
+    {
+        ServerCapabilities capabilities = new(new ServerTestingCapabilities(true, false, false, true, false)
+        {
+            RpcOnlyOutput = applied,
+        });
+
+        string json = await _formatter.SerializeAsync(capabilities);
+        Assert.AreEqual(applied, Deserialize<ServerCapabilities>(json).TestingCapabilities.RpcOnlyOutput);
+        Assert.AreEqual(applied.HasValue, json.Contains("\"rpcOnlyOutput\""));
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(capabilities);
+        Assert.IsFalse(properties.ContainsKey(JsonRpcStrings.RpcOnlyOutput));
+        IDictionary<string, object?> testing = Assert.IsInstanceOfType<IDictionary<string, object?>>(properties[JsonRpcStrings.Testing]);
+        Assert.AreEqual(applied.HasValue, testing.ContainsKey(JsonRpcStrings.RpcOnlyOutput));
+        Assert.AreEqual(applied, SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.RpcOnlyOutput);
+        if (applied is null)
+        {
+            testing[JsonRpcStrings.RpcOnlyOutput] = null;
+            Assert.IsNull(SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.RpcOnlyOutput);
+            string explicitNull = json.Replace(" ", string.Empty).Replace("\"testing\":{", "\"testing\":{\"rpcOnlyOutput\":null,");
+            Assert.Contains("\"rpcOnlyOutput\":null", explicitNull);
+            Assert.IsNull(Deserialize<ServerCapabilities>(explicitNull).TestingCapabilities.RpcOnlyOutput);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("true")]
+    [DataRow("false")]
+    [DataRow("null")]
+    [DataRow("\"ignored\"")]
+    public async Task RpcOnlyOutput_TopLevelDraftPropertyIsIgnored(string value)
+    {
+        string request = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"rpcOnlyOutput":{{value}},"testing":{"debuggerProvider":false} } }
+            """;
+        Assert.IsNull(Deserialize<InitializeRequestArgs>(request).Capabilities.RpcOnlyOutput);
+
+        ServerCapabilities capabilities = new(new ServerTestingCapabilities(true, false, false, true, false));
+        string response = await _formatter.SerializeAsync(capabilities);
+        Assert.IsNull(Deserialize<ServerCapabilities>(response.Insert(1, $"\"rpcOnlyOutput\":{value},")).TestingCapabilities.RpcOnlyOutput);
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(capabilities);
+        properties[JsonRpcStrings.RpcOnlyOutput] = true;
+        Assert.IsNull(SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.RpcOnlyOutput);
+    }
+
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
     public static IEnumerable<object[]> SerializerTypesForDynamicData

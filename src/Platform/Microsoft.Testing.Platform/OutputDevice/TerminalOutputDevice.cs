@@ -8,7 +8,6 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
-using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 
@@ -71,6 +70,20 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isAzureDevOpsEnvironment;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
+    private volatile bool _suppressConsoleOutput;
+
+    internal bool SupportsRpcOnlyOutput => _terminalTestReporter is not null
+        && _isServerMode
+        && !_isListTestsJson
+        && !_isAzureDevOpsEnvironment
+        // Extensions can emit Azure Pipelines commands even when automatic annotations are disabled.
+        && !AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(_environment);
+
+    internal bool SuppressConsoleOutput
+    {
+        get => _suppressConsoleOutput;
+        set => _suppressConsoleOutput = value;
+    }
 
     private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
@@ -145,14 +158,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     public void Dispose()
         => _terminalTestReporter?.Dispose();
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
+    public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
     {
         _processRole = processRole;
-        if (processRole == TestProcessRole.TestHost)
-        {
-            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
-        }
+        return Task.CompletedTask;
     }
 }

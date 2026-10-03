@@ -14,6 +14,25 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class PassiveNodeTests
 {
     [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ConnectAsync_AttachmentPeerDoesNotAcknowledgeRpcOnlyOutputAsApplied(bool? requested)
+    {
+        RequestMessage request = CreateInitializeRequest([JsonRpcProtocolVersions.Current]);
+        InitializeRequestArgs args = Assert.IsInstanceOfType<InitializeRequestArgs>(request.Params);
+        request = request with { Params = args with { Capabilities = args.Capabilities with { RpcOnlyOutput = requested } } };
+        TestMessageHandler handler = new(request);
+        using PassiveNode node = CreatePassiveNode(handler);
+
+        Assert.IsTrue(await node.ConnectAsync());
+
+        ResponseMessage response = Assert.IsInstanceOfType<ResponseMessage>(handler.WrittenMessage);
+        InitializeResponseArgs result = Assert.IsInstanceOfType<InitializeResponseArgs>(response.Result);
+        Assert.AreEqual(requested.HasValue ? false : null, result.Capabilities.TestingCapabilities.RpcOnlyOutput);
+    }
+
+    [TestMethod]
     public async Task ConnectAsync_NegotiatesSupportedProtocolVersion()
     {
         RequestMessage request = CreateInitializeRequest([JsonRpcProtocolVersions.Current]) with { StringId = "1" };

@@ -79,14 +79,23 @@ internal sealed partial class Json
         ]);
 
         serializers[typeof(ServerTestingCapabilities)] = new JsonObjectSerializer<ServerTestingCapabilities>(capabilities =>
-        [
-            (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
+        {
+            List<(string Key, object? Value)> properties =
+            [
+                (JsonRpcStrings.SupportsDiscovery, capabilities.SupportsDiscovery),
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
                 (JsonRpcStrings.AttachmentsSupport, capabilities.SupportsAttachments),
                 (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider),
                 (JsonRpcStrings.SupportsTestCoverageMessages, ServerTestingCapabilities.SupportsTestCoverageMessages)
-        ]);
+            ];
+            if (capabilities.RpcOnlyOutput is { } rpcOnlyOutput)
+            {
+                properties.Add((JsonRpcStrings.RpcOnlyOutput, rpcOnlyOutput));
+            }
+
+            return properties.ToArray();
+        });
 
         serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>
         [

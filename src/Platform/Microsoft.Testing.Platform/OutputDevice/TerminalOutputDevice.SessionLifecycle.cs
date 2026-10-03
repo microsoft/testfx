@@ -60,7 +60,7 @@ internal sealed partial class TerminalOutputDevice
                 }
             }
 
-            if (_fileLoggerInformation is not null)
+            if (_fileLoggerInformation is not null && !SuppressConsoleOutput)
             {
                 if (_fileLoggerInformation.SynchronousWrite)
                 {

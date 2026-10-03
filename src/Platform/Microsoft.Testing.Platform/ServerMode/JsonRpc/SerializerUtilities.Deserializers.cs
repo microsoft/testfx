@@ -152,7 +152,10 @@ internal static partial class SerializerUtilities
                     : throw new MessageFormatException($"'{JsonRpcStrings.IsStateful}' field has wrong type (expected {nameof(Boolean)})")
                 : null;
 
-            return new ClientCapabilities(debuggerProvider, isStateful);
+            return new ClientCapabilities(debuggerProvider, isStateful)
+            {
+                RpcOnlyOutput = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.RpcOnlyOutput),
+            };
         });
 
         Deserializers[typeof(InitializeResponseArgs)] = new ObjectDeserializer<InitializeResponseArgs>(properties =>
@@ -196,7 +199,10 @@ internal static partial class SerializerUtilities
                 MultiRequestSupport: multiRequestSupport,
                 VSTestProviderSupport: vstestProviderSupport,
                 SupportsAttachments: attachmentsSupport,
-                MultiConnectionProvider: multiConnectionProvider));
+                MultiConnectionProvider: multiConnectionProvider)
+            {
+                RpcOnlyOutput = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.RpcOnlyOutput),
+            });
         });
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>

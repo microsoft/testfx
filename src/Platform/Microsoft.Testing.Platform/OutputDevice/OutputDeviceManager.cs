@@ -40,7 +40,8 @@ internal sealed class PlatformOutputDeviceManager
         //     forwarding inconsistent with single-assembly runs.
         if (isPipeProtocol)
         {
-            return new ProxyOutputDevice(new DotnetTestPassthroughOutputDevice(serviceProvider), serverModeOutputDevice: null);
+            // The pipe protocol has never registered the console max-failed-tests message.
+            return new ProxyOutputDevice(new DotnetTestPassthroughOutputDevice(serviceProvider), serverModeOutputDevice: null, policiesService: null);
         }
 
         // SetPlatformOutputDevice isn't public yet. Before exposing it, we should decide
@@ -59,9 +60,9 @@ internal sealed class PlatformOutputDeviceManager
             nonServerOutputDevice,
             useServerModeOutputDevice
                 ? new ServerModePerCallOutputDevice(
-                    serviceProvider.GetService<FileLoggerProvider>(),
-                    serviceProvider.GetRequiredService<IStopPoliciesService>())
-                : null);
+                    serviceProvider.GetService<FileLoggerProvider>())
+                : null,
+            serviceProvider.GetRequiredService<IStopPoliciesService>());
     }
 
     public static IPlatformOutputDevice GetDefaultTerminalOutputDevice(ServiceProvider serviceProvider)

@@ -102,7 +102,11 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     /// before the response arrives, a <c>$/cancelRequest</c> notification is sent to the server and the
     /// returned task is canceled.
     /// </summary>
-    public async Task<ResponseMessage> SendRequestAsync(string method, object? @params, CancellationToken cancellationToken)
+    /// <remarks>
+    /// The optional response processor runs on the read loop before completion and before subsequent
+    /// notifications. It must not block. A failure faults the request and stops the read loop.
+    /// </remarks>
+    public async Task<ResponseMessage> SendRequestAsync(string method, object? @params, CancellationToken cancellationToken, Action<ResponseMessage>? processResponse = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -117,7 +121,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
         int id = Interlocked.Increment(ref _nextRequestId);
         (int Id, bool IsString) requestKey = GetRequestKey(id, stringId: null);
-        var pending = new PendingRequest(method);
+        var pending = new PendingRequest(method, processResponse);
         _pendingRequests[requestKey] = pending;
 
         // Re-check after registering: the read loop may have latched a terminal reason and run
@@ -208,7 +212,24 @@ internal sealed class MtpJsonRpcConnection : IDisposable
             case ResponseMessage response:
                 if (_pendingRequests.TryGetValue(GetRequestKey(response.Id, response.StringId), out PendingRequest? successful))
                 {
-                    successful.Completion.TrySetResult(response);
+                    lock (successful)
+                    {
+                        if (!successful.Completion.Task.IsCompleted)
+                        {
+                            try
+                            {
+                                // Establish negotiated policy before the next notification is read,
+                                // not in an asynchronously scheduled request continuation.
+                                successful.ProcessResponse?.Invoke(response);
+                                successful.Completion.TrySetResult(response);
+                            }
+                            catch (Exception ex)
+                            {
+                                successful.Completion.TrySetException(ex);
+                                throw;
+                            }
+                        }
+                    }
                 }
 
                 break;
@@ -279,7 +300,13 @@ internal sealed class MtpJsonRpcConnection : IDisposable
             return;
         }
 
-        pending.Completion.TrySetCanceled(cancellationToken);
+        lock (pending)
+        {
+            if (!pending.Completion.TrySetCanceled(cancellationToken))
+            {
+                return;
+            }
+        }
 
         // Best-effort notify the server to stop the in-flight work.
         _ = SendCancelNotificationAsync(id);
@@ -315,7 +342,10 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         {
             if (_pendingRequests.TryRemove(entry.Key, out PendingRequest? pending))
             {
-                pending.Completion.TrySetException(exception);
+                lock (pending)
+                {
+                    pending.Completion.TrySetException(exception);
+                }
             }
         }
     }
@@ -374,9 +404,11 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
     }
 
-    private sealed class PendingRequest(string method)
+    private sealed class PendingRequest(string method, Action<ResponseMessage>? processResponse)
     {
         public string Method { get; } = method;
+
+        public Action<ResponseMessage>? ProcessResponse { get; } = processResponse;
 
         public TaskCompletionSource<ResponseMessage> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }

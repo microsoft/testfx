@@ -10,10 +10,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer, IDisposable
+internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDisposable
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
-    private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentQueue<ServerLogMessage> _messages = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
     private readonly SemaphoreSlim _progressMessagesSemaphore = new(1, 1);
@@ -22,23 +21,22 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
-    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
-    {
-        _fileLoggerProvider = fileLoggerProvider;
-        _policiesService = policiesService;
-    }
+    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider)
+        => _fileLoggerProvider = fileLoggerProvider;
 
     internal async Task InitializeAsync(ServerTestHost serverTestHost)
     {
-        // Server mode output device is basically used to send messages to Test Explorer.
-        // For that, it needs the ServerTestHost.
-        // However, the ServerTestHost is available later than the time we create the output device.
-        // So, the server mode output device is initially created early without the ServerTestHost, and
-        // it keeps any messages in a list.
-        // Later when ServerTestHost is created and is available, we initialize the server mode output device.
-        // The initialization will setup the right state for pushing to Test Explorer, and will push any existing
-        // messages to Test Explorer as well.
-        _serverTestHost = serverTestHost;
+        // Opted-in clients attach after initialize; legacy clients attach at discovery/run.
+        // Share the lock with enqueueing to avoid stranding messages during handover.
+        lock (_messages)
+        {
+            if (_serverTestHost == serverTestHost)
+            {
+                return;
+            }
+
+            _serverTestHost = serverTestHost;
+        }
 
         while (_messages.TryDequeue(out ServerLogMessage? message))
         {
@@ -154,14 +152,18 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     private async Task LogAsync(ServerLogMessage message, CancellationToken cancellationToken)
     {
-        if (_serverTestHost is null)
+        ServerTestHost? serverTestHost;
+        lock (_messages)
         {
-            _messages.Enqueue(message);
+            serverTestHost = _serverTestHost;
+            if (serverTestHost is null)
+            {
+                _messages.Enqueue(message);
+                return;
+            }
         }
-        else
-        {
-            await _serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
-        }
+
+        await serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
     }
 
     private static ServerLogMessage GetServerLogMessage(LogLevel logLevel, string message, int? padding)
@@ -193,13 +195,6 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         return builder.ToString();
     }
 
-    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
-    {
-        if (processRole == TestProcessRole.TestHost)
-        {
-            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
-        }
-    }
+    public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
+        => Task.CompletedTask;
 }

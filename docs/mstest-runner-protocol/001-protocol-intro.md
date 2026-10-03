@@ -251,6 +251,10 @@ interface InitializeParams {
         // As such, we put all of them under a single testing namespace.
         // This reduces collisions with other LSP capabilities.
         testing: {
+            // Opt in to RPC-only output-device routing, with a handler ready before initialize.
+            // The server must acknowledge true before the client relies on this behavior.
+            rpcOnlyOutput?: boolean | null,
+
             // Reserved for future debugger callbacks. Protocol 1.0 accepts this field
             // for compatibility but does not send debugger requests.
             debuggerProvider: boolean,
@@ -290,6 +294,10 @@ interface InitializeResponse {
 
     capabilities: {
         testing: {
+            // Applied acknowledgement, not just an advertisement of support.
+            // Missing/null is not an acknowledgement; false means legacy routing remains.
+            rpcOnlyOutput?: boolean | null,
+
             // If true, the server supports test discovery.
             supportsDiscovery: boolean;
 
@@ -322,6 +330,9 @@ interface InitializeResponse {
     }
 }
 ```
+
+For `capabilities.testing.rpcOnlyOutput` semantics, see
+[RPC-only output](#rpc-only-output) under `client/log`.
 
 #### Versioning capabilities
 
@@ -859,3 +870,35 @@ type TestingPlatformLogLevel =
     | 'Critical'
     | 'None';
 ```
+
+#### RPC-only output
+
+`client/log` already carries output-device messages, not `ILogger` diagnostics.
+By default, these messages also render on the console. RPC forwarding starts at
+discovery/run, allowing legacy clients to subscribe after awaiting `initialize`.
+
+To avoid duplicate rendering, request `capabilities.testing.rpcOnlyOutput: true`.
+Only the same nested field set to `true` in the response acknowledges that the
+policy was applied. Missing, null, false, or an ignored top-level field does not.
+Without a true acknowledgement, retain existing output handling and timing.
+
+Opted-in clients must have their output handler ready **before** sending
+`initialize`. After its successful response, an acknowledging server forwards
+buffered and subsequent output for the connection lifetime, even without a
+discovery/run request. The source client enforces this subscription requirement
+and makes validated capabilities available before dispatching these messages.
+Each connection negotiates independently.
+
+Acknowledged user-visible messages must remain visible regardless of the client's
+diagnostic verbosity. Message levels are unchanged; Trace/Debug lifecycle notices
+retain diagnostic semantics. The server retains its existing diagnostic-file
+mirror. `client/log` remains plain text: colors and in-place progress are not preserved.
+
+Unsupported custom renderers, browser/WASI renderers, and machine-output
+configurations decline the request. This includes Azure DevOps agents even when
+automatic annotations are disabled, preserving extension `##vso` commands.
+Normal console execution and the native `dotnet test` pipe are unchanged.
+
+Direct application writes to stdout/stderr and output already written before
+initialization are outside this policy. Always drain both streams; use `--no-banner`
+to suppress the startup banner.

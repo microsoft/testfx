@@ -125,6 +125,10 @@
             "debuggerProvider"
           ],
           "properties": {
+            "rpcOnlyOutput": {
+              "type": ["boolean", "null"],
+              "description": "Requests RPC-only IOutputDevice rendering with a log handler ready before initialize. Requires an applied true acknowledgement."
+            },
             "debuggerProvider": {
               "type": "boolean"
             },
@@ -154,6 +158,10 @@
             "supportsTestCoverageMessages"
           ],
           "properties": {
+            "rpcOnlyOutput": {
+              "type": ["boolean", "null"],
+              "description": "True only when RPC-only IOutputDevice rendering was requested and applied on this connection. Absent/null means not acknowledged."
+            },
             "supportsDiscovery": {
               "type": "boolean"
             },
