@@ -146,6 +146,8 @@ public sealed partial class Assert
 
         internal Type KeyType { get; }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "The public Assert.AreEquivalent APIs declare that structural comparison requires unreferenced code.")]
+        [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The public Assert.AreEquivalent APIs declare that structural comparison requires dynamic code.")]
         internal static GenericDictionaryAccessors Build(Type dictionaryInterface)
         {
             Type[] args = dictionaryInterface.GetGenericArguments();

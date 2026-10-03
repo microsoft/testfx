@@ -85,6 +85,7 @@ public sealed partial class Assert
             return null;
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "The public Assert.AreEquivalent APIs declare that structural comparison requires unreferenced code.")]
         private static MemberLookup GetMembers(Type type)
             => MemberCache.GetOrAdd(type, static t =>
             {
