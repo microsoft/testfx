@@ -176,6 +176,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
         }
         catch
         {
+            // Stryker disable once Boolean: Async AcceptAsync failures already resume without a context; synchronous failures make cleanup synchronous.
             await CleanupFailedStartAsync(listener, acceptedClient, serverCancellation, serverTask, logger).ConfigureAwait(false);
             throw;
         }

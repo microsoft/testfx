@@ -411,17 +411,24 @@ public sealed class SerializationMutationTests
     [TestMethod]
     public void Json_DeserializeInitializeRequest_ValidatesProtocolVersionEntries()
     {
-        var json = new PlatformJson();
         byte[] payload = Encoding.UTF8.GetBytes(
             """{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"debuggerProvider":false}},"protocolVersions":["1.0",null]}""");
 
-        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
-            () => json.Deserialize<InitializeRequestArgs>(payload));
-        Assert.AreEqual($"'{JsonRpcStrings.ProtocolVersions}' entries must be strings", exception.Message);
+        TargetInvocationException exception = Assert.ThrowsExactly<TargetInvocationException>(
+            () => DeserializeClientJson<InitializeRequestArgs>(payload));
+        Assert.IsNotNull(exception.InnerException);
+        Assert.AreEqual(
+            "Microsoft.Testing.Platform.ServerMode.MessageFormatException",
+            exception.InnerException.GetType().FullName);
+        Assert.AreEqual(
+            $"'{JsonRpcStrings.ProtocolVersions}' entries must be strings",
+            exception.InnerException.Message);
 
-        InitializeRequestArgs valid = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(
+        object valid = DeserializeClientJson<InitializeRequestArgs>(Encoding.UTF8.GetBytes(
             """{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"debuggerProvider":false}},"protocolVersions":["1.0"]}"""));
-        Assert.AreSequenceEqual(["1.0"], valid.ProtocolVersions);
+        Assert.AreSequenceEqual(
+            ["1.0"],
+            (string[]?)valid.GetType().GetProperty(nameof(InitializeRequestArgs.ProtocolVersions))!.GetValue(valid));
     }
 
     [TestMethod]
@@ -704,6 +711,22 @@ public sealed class SerializationMutationTests
     private static MethodInfo GetStaticMethod(Type type, string name)
         => type.GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException($"Could not find static method '{name}' on '{type}'.");
+
+#if NETCOREAPP
+    private static object DeserializeClientJson<T>(byte[] payload)
+    {
+        Assembly clientAssembly = typeof(TestNode).Assembly;
+        Type jsonType = clientAssembly.GetType(
+            "Microsoft.Testing.Platform.ServerMode.Json.Json",
+            throwOnError: true)!;
+        Type targetType = clientAssembly.GetType(typeof(T).FullName!, throwOnError: true)!;
+        MethodInfo deserialize = jsonType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Single(method => method.Name == "Deserialize" && method.IsGenericMethodDefinition);
+        object json = Activator.CreateInstance(jsonType, [null, null])!;
+
+        return deserialize.MakeGenericMethod(targetType).Invoke(json, [new ReadOnlyMemory<byte>(payload)])!;
+    }
+#endif
 
     private sealed record Marker(int Value);
 

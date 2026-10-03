@@ -423,6 +423,42 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task LaunchInProcessAsync_FailedStartCleanup_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        MtpServerClientOptions options = CreateOptions();
+        options.ConnectionTimeout = TimeSpan.FromMilliseconds(100);
+
+        Task<MtpServerClient> launch = InvokeWithSynchronizationContext(
+            () => MtpServerClient.LaunchInProcessAsync(
+                async (_, serverToken) =>
+                {
+                    try
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, serverToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (serverToken.IsCancellationRequested)
+                    {
+                        await Task.Delay(100, TestContext.CancellationToken).ConfigureAwait(false);
+                    }
+
+                    return 0;
+                },
+                options,
+                TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+
+        bool completedWithoutPumping = await CompletesQuicklyAsync(launch);
+        DrainContextUntilCompleted(context, launch);
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => launch);
+
+        Assert.IsTrue(
+            completedWithoutPumping,
+            "Failed-launch cleanup must not capture the calling synchronization context.");
+        Assert.Contains("did not connect back within", exception.Message);
+    }
+
+    [TestMethod]
     public async Task LaunchInProcessAsync_AlreadyCanceled_DoesNotInvokeCallback()
     {
         using var alreadyCanceled = new CancellationTokenSource();

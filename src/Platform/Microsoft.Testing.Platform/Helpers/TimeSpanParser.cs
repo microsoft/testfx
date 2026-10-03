@@ -108,6 +108,7 @@ internal static partial class TimeSpanParser
             return TryCreateTimeSpan(TimeSpan.FromHours, number, out result);
         }
 
+        // Stryker disable once String: The regex guarantees every suffix reaching this final branch is a day alias.
         if (suffix.StartsWith("d", c))
         {
             return TryCreateTimeSpan(TimeSpan.FromDays, number, out result);

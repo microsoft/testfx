@@ -122,6 +122,10 @@ public sealed class MtpServerProcessTests
 
         using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken);
         Process launchedProcess = GetPrivateInstanceField<Process>(process, "_process");
+#if NET
+        TcpListener listener = GetPrivateInstanceField<TcpListener>(process, "_listener");
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+#endif
 
         Assert.IsGreaterThan(0, process.ProcessId);
         Assert.IsNull(process.ExitCode);
@@ -130,6 +134,9 @@ public sealed class MtpServerProcessTests
         Assert.IsNull(process.ExitCode, "A process killed during shutdown must not expose the forced-termination exit code.");
         Assert.ThrowsExactly<ObjectDisposedException>(process.Connection.Start);
         Assert.ThrowsExactly<InvalidOperationException>(() => _ = launchedProcess.Id);
+#if NET
+        await AssertPortCanBeReboundAsync(port);
+#endif
     }
 
     [TestMethod]
@@ -737,11 +744,14 @@ public sealed class MtpServerProcessTests
     public async Task SafeKillTerminatesEntireProcessTree()
     {
         using var temp = TempDirectory.Create();
+        string readyFile = Path.Combine(temp.Path, "child-ready.txt");
         string survivedFile = Path.Combine(temp.Path, "child-survived.txt");
+        string escapedReadyFile = readyFile.Replace("'", "''");
+        string escapedSurvivedFile = survivedFile.Replace("'", "''");
         string source = temp.CreateFile(
             "ProcessTree.cmd",
             "@echo off\r\n"
-            + $"start \"\" /min powershell.exe -NoProfile -Command \"Start-Sleep -Seconds 2; Set-Content -Path '{survivedFile}' -Value survived\"\r\n"
+            + $"start \"\" /min powershell.exe -NoProfile -Command \"Set-Content -LiteralPath '{escapedReadyFile}' -Value ready; Start-Sleep -Seconds 2; Set-Content -LiteralPath '{escapedSurvivedFile}' -Value survived\"\r\n"
             + "ping 127.0.0.1 -n 31 > nul\r\n");
         using Process process = Process.Start(new ProcessStartInfo
         {
@@ -752,6 +762,10 @@ public sealed class MtpServerProcessTests
 
         try
         {
+            Assert.IsTrue(
+                SpinWait.SpinUntil(() => File.Exists(readyFile), TimeSpan.FromSeconds(10)),
+                "The child process did not start before whole-tree termination was exercised.");
+
             bool killed = InvokePrivateStatic<bool>("SafeKill", process, NullMtpClientLogger.Instance);
 
             Assert.IsTrue(killed);
