@@ -43,7 +43,8 @@ function Test-SamplesAffectingPath {
     return (
         $Path.StartsWith("samples/", [System.StringComparison]::Ordinal) -or
         $Path.Equals("eng/build-samples.ps1", [System.StringComparison]::Ordinal) -or
-        $Path.Equals("eng/test-samples.ps1", [System.StringComparison]::Ordinal))
+        $Path.Equals("eng/test-samples.ps1", [System.StringComparison]::Ordinal) -or
+        $Path.Equals("eng/samples-tools.ps1", [System.StringComparison]::Ordinal))
 }
 
 function Test-InfrastructureOnlyPath {
@@ -250,7 +251,8 @@ function Invoke-SelfTest {
         @{ Path = "unknown/new-location.txt"; Infrastructure = $false; Samples = $false },
         @{ Path = "samples/public/Sample.cs"; Infrastructure = $false; Samples = $true },
         @{ Path = "eng/build-samples.ps1"; Infrastructure = $false; Samples = $true },
-        @{ Path = "eng/test-samples.ps1"; Infrastructure = $false; Samples = $true }
+        @{ Path = "eng/test-samples.ps1"; Infrastructure = $false; Samples = $true },
+        @{ Path = "eng/samples-tools.ps1"; Infrastructure = $false; Samples = $true }
     )) {
         $actualInfrastructure = Test-InfrastructureOnlyPath $pathCase.Path
         $actualSamples = Test-SamplesAffectingPath $pathCase.Path
@@ -275,7 +277,8 @@ function Invoke-SelfTest {
     Assert-Classification "Samples only" @(
         "samples/public/Sample.cs",
         "eng/build-samples.ps1",
-        "eng/test-samples.ps1"
+        "eng/test-samples.ps1",
+        "eng/samples-tools.ps1"
     ) $false $true $false
     Assert-Classification "XML documentation path remains product-affecting" @(
         "src/TestFramework/Assert.cs"
