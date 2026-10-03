@@ -50,14 +50,14 @@ The repository includes copy-ready modern and classic UWP samples. The classic s
 legacy `MSBuild.Sdk.Extras`/UAP project shape and its Visual Studio build-time prerequisites, while
 execution still uses the SDK-shipped MTP sidecar rather than the VSTest runtime provider.
 
-`UseUwp` adds UWP XAML references; Visual Studio normally enables `UseUwpTools` later in the build when `UseUwp=true`. MSTest.Sdk selects the UWP application model by default while that property is still unset. To use the references in a non-UWP MTP test application, disable the tools explicitly:
+`UseUwp` adds UWP XAML references. The desktop Visual Studio UWP targets enable `UseUwpTools` after MSTest.Sdk declares its package references and before the packages select their specialized UWP assemblies. MSTest.Sdk preserves the UWP application model during that earlier evaluation while `UseUwpTools` is still unset. To use the references in a non-UWP MTP test application, disable the tools explicitly:
 
 ```xml
 <UseUwp>true</UseUwp>
 <UseUwpTools>false</UseUwpTools>
 ```
 
-With `UseUwpTools=false`, `MSTest.Sdk` uses the direct MTP runner rather than assuming the project needs UWP package activation. Other application-model settings, such as packaged WinUI, still determine whether the package controller is needed.
+With `UseUwpTools=false`, `MSTest.Sdk` selects the ordinary MSTest assemblies and uses the direct MTP runner rather than assuming the project needs UWP package activation. Other application-model settings, such as packaged WinUI, still determine whether the package controller is needed.
 
 ## WinUI 3
 

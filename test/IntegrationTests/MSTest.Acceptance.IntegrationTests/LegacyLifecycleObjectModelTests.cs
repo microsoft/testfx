@@ -126,13 +126,14 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
             .ToImmutableArray();
 
         Assert.HasCount(2, inheritedCases);
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "LifecycleObjectModel.InheritedDerived.BaseTest",
                 "LifecycleObjectModel.InheritedDerived.DerivedTest",
             },
-            inheritedCases.Select(testCase => testCase.FullyQualifiedName).ToArray());
+            inheritedCases.Select(testCase => testCase.FullyQualifiedName).ToArray(),
+            SequenceOrder.InAnyOrder);
 
         foreach (TestCase testCase in inheritedCases)
         {

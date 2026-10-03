@@ -223,7 +223,7 @@ On Linux and macOS:
 
 The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.
 
-The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs daily (so the mutation-test-improver workflow always has fresh data) and can be started manually; it publishes the mutation score and a killed/survived/timeout breakdown to the run's job summary, and uploads the full HTML/JSON report as the `mutation-testing-report` artifact.
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It reads the enabled modules from [`eng/mutation-testing/modules.json`](../eng/mutation-testing/modules.json), runs each production/test-project mapping on an isolated runner, and uploads its detailed Stryker report. An aggregate job verifies that every enabled module used the same source revision, computes the weighted enabled-module score from the mutant counts, reports onboarding coverage against the mutation targets discovered in the earlier repository-wide analysis, and uploads the `mutation-testing-full-report` artifact with a Markdown summary, an HTML index, aggregate JSON, logs, and all module reports. If any expected module is missing or failed, the aggregate is explicitly marked partial and the workflow fails after publishing the available diagnostics.
 
 ## Working with Visual Studio
 

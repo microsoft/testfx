@@ -1309,37 +1309,37 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
-        <target state="new">Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</target>
+        <target state="translated">中介軟體 '{0}' 讓測試主機執行協調器管線提前結束 (未叫用 'next')，卻傳回成功結束代碼。讓管線提前結束的中介軟體必須傳回明確的非成功結束代碼，以免系統將略過的執行誤報為測試確實執行且通過。</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
         <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
-        <target state="new">The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</target>
+        <target state="translated">傳遞給 'ITestHostExecutionOrchestratorMiddleware' 的 'next' 委派最多只能叫用一次。不得在已叫用後再次叫用、與其他叫用同時進行，或在中介軟體本身的呼叫已傳回或擲回例外後叫用。</target>
         <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
         <source>The test host execution orchestrator middleware continuation returned a null task.</source>
-        <target state="new">The test host execution orchestrator middleware continuation returned a null task.</target>
+        <target state="translated">測試主機執行協調器中介軟體的延續傳回了 null 工作。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
         <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
-        <target state="new">One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</target>
+        <target state="translated">已註冊一個或多個 'ITestHostExecutionOrchestratorMiddleware' 實例，但必須另外註冊一個 'ITestHostExecutionOrchestrator'，供中介軟體包裝。找到 {0} 個協調器。</target>
         <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
         <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
-        <target state="new">Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</target>
+        <target state="translated">中介軟體 '{0}' 將下游結束碼從 {1} 變更為 {2}。此版本的測試主機執行協調器管線不允許中介軟體改寫下游結果。</target>
         <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
         <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
-        <target state="new">Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</target>
+        <target state="translated">中介軟體 '{0}' 以 'next' 啟動下游執行，而下游執行實際發生錯誤後，中介軟體仍成功返回。中介軟體未察覺或傳播該錯誤，因此不得將此結果視為成功。</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
         <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
-        <target state="new">Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</target>
+        <target state="translated">類型為 '{0}' 的測試主機協調器管理器不支援註冊 'ITestHostExecutionOrchestratorMiddleware'。請在管理器類型上實作 'ITestHostExecutionOrchestratorMiddlewareManager'，以支援此功能。</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">

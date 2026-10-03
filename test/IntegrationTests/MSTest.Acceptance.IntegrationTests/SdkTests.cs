@@ -1062,6 +1062,118 @@ namespace MSTestWebTest
     [TestMethod]
     [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_BuildsAndRunsDirectMtpRunner()
+    {
+        const string DirectMtpAssetName = "UwpXamlReferencesDirectMtp";
+        const string Source = """
+            #file $AssetName$.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <PlatformTarget>x64</PlatformTarget>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                <UseUwp>true</UseUwp>
+                <UseUwpTools>false</UseUwpTools>
+                <NoWarn>$(NoWarn);NU1507</NoWarn>
+              </PropertyGroup>
+
+              <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
+                <WriteLinesToFile
+                  File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
+                  Lines="UseUwp=$(UseUwp);UseUwpTools=$(UseUwpTools);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);TestingPlatformExecutablePath=$(TestingPlatformExecutablePath)"
+                  Overwrite="true" />
+                <WriteLinesToFile
+                  File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
+                  Lines="@(ReferencePath->'%(FullPath)')"
+                  Overwrite="false" />
+              </Target>
+            </Project>
+
+            #file UnitTest1.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace UwpXamlReferencesDirectMtp;
+
+            [TestClass]
+            public sealed class UnitTest1
+            {
+                [TestMethod]
+                public void UseUwpToolsFalse_RunsThroughDirectMtp()
+                    => Assert.AreEqual(4, 2 + 2);
+            }
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            DirectMtpAssetName,
+            Source
+                .PatchCodeWithReplace("$AssetName$", DirectMtpAssetName)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0"));
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{DirectMtpAssetName}.binlog");
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath} -bl:\"{binlogPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
+        Assert.IsTrue(
+            File.Exists(resolvedAssetsReport),
+            $"The resolved MSTest asset report '{resolvedAssetsReport}' was not created. Binlog: '{binlogPath}'.");
+        string[] resolvedAssets = await File.ReadAllLinesAsync(resolvedAssetsReport, TestContext.CancellationToken);
+        Assert.Contains("UseUwp=true", resolvedAssets);
+        Assert.Contains("UseUwpTools=false", resolvedAssets);
+        Assert.Contains("PackagedApp=false", resolvedAssets);
+        Assert.Contains("TestingPlatformExecutablePath=", resolvedAssets);
+
+        string adapterPath = resolvedAssets.Single(
+            path => path.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase));
+        string frameworkExtensionsPath = resolvedAssets.Single(
+            path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", adapterPath, adapterPath);
+        Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", frameworkExtensionsPath, frameworkExtensionsPath);
+        Assert.DoesNotContain(
+            path => path.Contains("Microsoft.Testing.Extensions.PackagedApp", StringComparison.OrdinalIgnoreCase),
+            resolvedAssets);
+        Assert.DoesNotContain(
+            path => path.Contains("mstest-appmodel-controller", StringComparison.OrdinalIgnoreCase),
+            resolvedAssets);
+
+        var testHost = TestHost.LocateFrom(
+            testAsset.TargetAssetPath,
+            DirectMtpAssetName,
+            $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0",
+            buildConfiguration: BuildConfiguration.Release);
+        Assert.AreEqual($"{DirectMtpAssetName}.exe", Path.GetFileName(testHost.FullName), ignoreCase: true);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_WithApplicationDefinition_UsesSelfHostedDirectMtp()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UwpXamlReferencesSelfHostedSdk",
+            """
+            <UseUwp>true</UseUwp>
+            <UseUwpTools>false</UseUwpTools>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
     public async Task MSTestSdk_UnpackagedWinUIWithUwpXamlReferences_DoesNotConflictWithUwpTools()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1183,7 +1295,7 @@ namespace MSTestWebTest
             .ToArray();
         string[] expected = expectedCultures.Order(StringComparer.OrdinalIgnoreCase).ToArray();
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             expected,
             actualCultures,
             $"Unexpected cultures for {resourceAssemblyName}. Expected: '{string.Join(";", expected)}'. Actual: '{string.Join(";", actualCultures)}'.");

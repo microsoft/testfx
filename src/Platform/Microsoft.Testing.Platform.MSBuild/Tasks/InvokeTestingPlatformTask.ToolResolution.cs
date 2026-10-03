@@ -153,7 +153,7 @@ public partial class InvokeTestingPlatformTask
         }
 
         string? dotnetRoot = Path.GetDirectoryName(DotnetHostPath.ItemSpec);
-        if (string.IsNullOrEmpty(dotnetRoot))
+        if (RoslynString.IsNullOrEmpty(dotnetRoot))
         {
             return;
         }

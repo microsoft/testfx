@@ -7,7 +7,11 @@
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
 
     <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
-    <!-- Visual Studio can set UseUwpTools after package references have been evaluated. -->
+    <!--
+      The desktop Visual Studio UWP imports set UseUwpTools after this SDK declares its package
+      references, but before NuGet buildTransitive targets select the specialized UWP assemblies.
+      Preserve the application-model and package decisions during this earlier evaluation.
+    -->
     <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') ">true</_MSTestUwpApplicationModel>
   </PropertyGroup>
 

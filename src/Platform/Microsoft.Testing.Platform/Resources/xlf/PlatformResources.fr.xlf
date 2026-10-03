@@ -1309,37 +1309,37 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
-        <target state="new">Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</target>
+        <target state="translated">L’intergiciel « {0} » a court-circuité le pipeline de l’orchestrateur d’exécution de l’hôte de test (il n’a pas appelé « next »), mais a renvoyé un code de sortie de réussite. Un court-circuit d’intergiciel doit renvoyer explicitement un code de sortie indiquant l’échec pour que l’exécution ignorée ne puisse pas être signalée comme si les tests avaient réellement été exécutés et réussis.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
         <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
-        <target state="new">The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</target>
+        <target state="translated">Vous ne pouvez appeler le délégué « next » transmis à un « ITestHostExecutionOrchestratorMiddleware » qu’une fois au maximum. Il a été appelé à nouveau après un premier appel, simultanément avec une autre invocation, ou après le retour ou la levée d’une exception par l’appel de l’intergiciel lui-même.</target>
         <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
         <source>The test host execution orchestrator middleware continuation returned a null task.</source>
-        <target state="new">The test host execution orchestrator middleware continuation returned a null task.</target>
+        <target state="translated">La continuation de l’intergiciel de l’orchestrateur d’exécution de l’hôte de test a renvoyé une tâche nulle.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
         <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
-        <target state="new">One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</target>
+        <target state="translated">Une ou plusieurs instances de « ITestHostExecutionOrchestratorMiddleware » sont inscrites, mais exactement une instance de « ITestHostExecutionOrchestrator » doit également être inscrite pour que l’intergiciel puisse l’inclure dans un wrapper. Nous avons trouvé {0} orchestrateur(s) à la place.</target>
         <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
         <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
-        <target state="new">Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</target>
+        <target state="translated">L’intergiciel '{0}' modifié le code de sortie en aval de {1} à {2}. Cette version du pipeline de l’orchestrateur d’exécution de l’hôte de test n’autorise pas le middleware à réécrire le résultat en aval.</target>
         <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
         <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
-        <target state="new">Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</target>
+        <target state="translated">L’intergiciel « {0} » s’est effectué correctement alors que l’exécution en aval qu’il avait démarrée avec « next » a effectivement généré une erreur. L’intergiciel n’a ni détecté ni propagé l’échec. Il ne peut donc pas donner l’impression que l’opération a réussi.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
         <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
-        <target state="new">Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</target>
+        <target state="translated">Le gestionnaire Orchestrator hôte de test de type '{0}' ne prend pas en charge l’inscription 'ITestHostExecutionOrchestratorMiddleware'. Implémentez « ITestHostExecutionOrchestratorMiddlewareManager » sur le type de gestionnaire pour le prendre en charge.</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">

@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="ActivationFailed">
         <source>MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</source>
-        <target state="new">MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</target>
+        <target state="translated">MSTest 無法從應用程式主機的服務提供者建立測試類別 '{0}'。請確保已註冊的服務和 TestContext 能夠滿足恰好一個 public 建構函式的需求。</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
         <source>MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</source>
-        <target state="new">MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</target>
+        <target state="translated">MSTest 無法為測試類別 '{0}' 選取唯一的 public 建構函式。請使用 ActivatorUtilitiesConstructorAttribute 標示其中一個建構函式，或消除歧義。</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">
         <source>MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">MSTest 無法在測試類別 '{1}' 中提供建構函式參數 '{0}'，因為該參數型別繼承自 TestContext。請直接使用 TestContext。</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="MSTest"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="DynamicCodeNotSupported">
         <source>MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</source>
-        <target state="new">MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</target>
+        <target state="translated">從 Microsoft.Extensions.Hosting 注入 MSTest 測試類別需要執行階段動態程式碼，但此執行階段不支援動態程式碼。</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.Hosting"}</note>
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">
         <source>MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">MSTest 無法選取測試類別 '{0}' 的建構函式，因為有多個 public 建構函式標記了 ActivatorUtilitiesConstructorAttribute。只標記一個建構函式。</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
     </body>

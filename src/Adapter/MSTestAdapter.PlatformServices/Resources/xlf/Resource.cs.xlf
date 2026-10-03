@@ -300,7 +300,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="HostedTestClassInjectionRequiresNoAppDomain">
         <source>MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</source>
-        <target state="new">MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</target>
+        <target state="translated">Injektáž testovací třídy MSTest z hostitele aplikace nemůže překročit hranici .NET Framework AppDomain. Nastavte vlastnost DisableAppDomain na hodnotu true pro tento hostovaný testovací běh.</target>
         <note>{Locked="MSTest"}{Locked=".NET Framework"}{Locked="AppDomain"}{Locked="DisableAppDomain"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">

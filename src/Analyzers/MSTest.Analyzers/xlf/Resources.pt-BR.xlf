@@ -452,17 +452,17 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedDescription">
         <source>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</source>
-        <target state="new">Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</target>
+        <target state="translated">A injeção de classe de teste do MSTest gerenciada pelo host usa a ativação baseada em reflexão do Microsoft.Extensions.DependencyInjection. Remova AddMSTestTestClassInjection ou desabilite o modo de compilação sem suporte.</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</note>
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedMessageFormat">
         <source>AddMSTestTestClassInjection is not supported when '{0}' is enabled</source>
-        <target state="new">AddMSTestTestClassInjection is not supported when '{0}' is enabled</target>
+        <target state="translated">AddMSTestTestClassInjection não tem suporte quando ''{0}'' está habilitado</target>
         <note>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</note>
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedTitle">
         <source>MSTest host test-class injection is not supported by the selected build mode</source>
-        <target state="new">MSTest host test-class injection is not supported by the selected build mode</target>
+        <target state="translated">A injeção de classe de teste pelo host do MSTest não tem suporte no modo de compilação selecionado</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -1047,12 +1047,12 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="TestClassConstructorHasDerivedTestContextMessageFormat">
         <source>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">O parâmetro de construtor ''{0}'' da classe de teste ''{1}'' é derivado de TestContext. Use exatamente TestContext.</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">
         <source>Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">A classe de teste '{0}' tem vários construtores public marcados com ActivatorUtilitiesConstructorAttribute. Marque exatamente um construtor.</target>
         <note>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">

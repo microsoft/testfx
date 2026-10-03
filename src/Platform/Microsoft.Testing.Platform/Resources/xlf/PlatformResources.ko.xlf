@@ -1309,37 +1309,37 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
         <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
-        <target state="new">Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</target>
+        <target state="translated">미들웨어 '{0}'이(가) 테스트 호스트 실행 오케스트레이터 파이프라인을 조기에 종료('next'를 호출하지 않음)했지만 성공 종료 코드를 반환했습니다. 조기에 종료하는 미들웨어는 명시적인 비성공 종료 코드를 반환해야 합니다. 그래야 건너뛴 실행이 마치 테스트가 실제로 실행되어 통과된 것처럼 보고되지 않습니다.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
         <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
-        <target state="new">The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</target>
+        <target state="translated">'ITestHostExecutionOrchestratorMiddleware'에 전달된 'next' 대리자는 최대 한 번만 호출할 수 있습니다. 이미 호출된 후, 다른 호출과 동시에 또는 미들웨어 자체 호출이 이미 반환되거나 throw된 후에 다시 호출되었습니다.</target>
         <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
         <source>The test host execution orchestrator middleware continuation returned a null task.</source>
-        <target state="new">The test host execution orchestrator middleware continuation returned a null task.</target>
+        <target state="translated">테스트 호스트 실행 오케스트레이터 미들웨어의 연속 실행에서 null 작업을 반환했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
         <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
-        <target state="new">One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</target>
+        <target state="translated">하나 이상의 'ITestHostExecutionOrchestratorMiddleware' 인스턴스가 등록되었지만 미들웨어를 래핑하려면 정확히 하나의 'ITestHostExecutionOrchestrator'도 등록해야 합니다. 대신 {0} 오케스트레이터를 찾았습니다.</target>
         <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
         <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
-        <target state="new">Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</target>
+        <target state="translated">미들웨어 '{0}'이(가) 다운스트림 종료 코드를 {1} 에서 {2}(으)로 변경했습니다. 이 버전의 테스트 호스트 실행 오케스트레이터 파이프라인에서는 미들웨어가 다운스트림 결과를 다시 쓸 수 없습니다.</target>
         <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
       </trans-unit>
       <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
         <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
-        <target state="new">Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</target>
+        <target state="translated">'next'로 시작한 다운스트림 실행이 실제로 오류가 발생했음에도 불구하고 미들웨어 '{0}'은(는) 올바르게 반환되었습니다. 미들웨어에서 실패를 확인하거나 전파하지 않았으므로 이를 성공으로 간주해서는 안 됩니다.</target>
         <note>{0} is the middleware's Uid. {Locked="next"}</note>
       </trans-unit>
       <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
         <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
-        <target state="new">Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</target>
+        <target state="translated">'{0}' 유형의 테스트 호스트 오케스트레이터 관리자가 'ITestHostExecutionOrchestratorMiddleware' 등록을 지원하지 않습니다. 관리자 유형에 'ITestHostExecutionOrchestratorMiddlewareManager'를 구현하여 지원하세요.</target>
         <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
