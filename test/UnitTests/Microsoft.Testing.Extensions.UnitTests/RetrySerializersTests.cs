@@ -28,6 +28,7 @@ public sealed class RetrySerializersTests
         Serialize(serializer, new GetListOfFailedTestsRequest(), stream);
 
         Assert.AreEqual(0, stream.Length);
+        stream.Position = 0;
         Assert.IsNotNull(Deserialize<GetListOfFailedTestsRequest>(serializer, stream));
     }
 
