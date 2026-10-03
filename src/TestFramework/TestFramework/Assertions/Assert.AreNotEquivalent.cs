@@ -42,6 +42,12 @@ public sealed partial class Assert
     /// See <see cref="AreEquivalent{T}(T, T, string, string, string)"/> and
     /// <see cref="AreEquivalent{T}(T, T, bool, string, string, string)"/> for the full set of comparison rules.
     /// </remarks>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(T? notExpected, T? actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected, actual, strict: false, message, notExpectedExpression, actualExpression);
 
@@ -80,6 +86,12 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> and <paramref name="actual"/> are structurally equivalent,
     /// or if the structural comparison cannot be completed.
     /// </exception>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(T? notExpected, T? actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
         TelemetryCollector.TrackAssertionCall("Assert.AreNotEquivalent");
@@ -121,6 +133,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(ReadOnlySpan<T> notExpected, ReadOnlySpan<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict: false, message, notExpectedExpression, actualExpression);
 
@@ -140,6 +158,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(ReadOnlySpan<T> notExpected, ReadOnlySpan<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict, message, notExpectedExpression, actualExpression);
 
@@ -158,6 +182,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(Span<T> notExpected, Span<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict: false, message, notExpectedExpression, actualExpression);
 
@@ -177,6 +207,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(Span<T> notExpected, Span<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict, message, notExpectedExpression, actualExpression);
 
@@ -195,6 +231,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(ReadOnlyMemory<T> notExpected, ReadOnlyMemory<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.Span, actual.Span, message, notExpectedExpression, actualExpression);
 
@@ -214,6 +256,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(ReadOnlyMemory<T> notExpected, ReadOnlyMemory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.Span, actual.Span, strict, message, notExpectedExpression, actualExpression);
 
@@ -232,6 +280,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(Memory<T> notExpected, Memory<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.Span, actual.Span, message, notExpectedExpression, actualExpression);
 
@@ -251,6 +305,12 @@ public sealed partial class Assert
     /// The syntactic expression of actual as given by the compiler via caller argument expression.
     /// Users shouldn't pass a value for this parameter.
     /// </param>
+#if NET5_0_OR_GREATER
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
+#endif
+#if NET7_0_OR_GREATER
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
+#endif
     public static void AreNotEquivalent<T>(Memory<T> notExpected, Memory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreNotEquivalent(notExpected.Span, actual.Span, strict, message, notExpectedExpression, actualExpression);
 

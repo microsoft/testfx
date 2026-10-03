@@ -6,10 +6,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
 #if NET5_0_OR_GREATER
-    private const string AreEquivalentRequiresUnreferencedCodeMessage = "Structural comparison uses reflection over runtime types, whose members cannot be statically preserved.";
+    private const string EquivalenceRequiresUnreferencedCodeMessage = "Structural comparison uses reflection over runtime types, whose members cannot be statically preserved.";
 #endif
 #if NET7_0_OR_GREATER
-    private const string AreEquivalentRequiresDynamicCodeMessage = "Structural comparison creates generic types at runtime.";
+    private const string EquivalenceRequiresDynamicCodeMessage = "Structural comparison creates generic types at runtime.";
 #endif
 
 #pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
@@ -123,10 +123,10 @@ public sealed partial class Assert
     /// </list>
     /// </remarks>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(T? expected, T? actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected, actual, strict: false, message, expectedExpression, actualExpression);
@@ -170,10 +170,10 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> and <paramref name="actual"/> are not structurally equivalent.
     /// </exception>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(T? expected, T? actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
     {
@@ -215,10 +215,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.ToArray(), actual.ToArray(), strict: false, message, expectedExpression, actualExpression);
@@ -240,10 +240,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.ToArray(), actual.ToArray(), strict, message, expectedExpression, actualExpression);
@@ -264,10 +264,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(Span<T> expected, Span<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.ToArray(), actual.ToArray(), strict: false, message, expectedExpression, actualExpression);
@@ -289,10 +289,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(Span<T> expected, Span<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.ToArray(), actual.ToArray(), strict, message, expectedExpression, actualExpression);
@@ -313,10 +313,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.Span, actual.Span, message, expectedExpression, actualExpression);
@@ -338,10 +338,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.Span, actual.Span, strict, message, expectedExpression, actualExpression);
@@ -362,10 +362,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(Memory<T> expected, Memory<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.Span, actual.Span, message, expectedExpression, actualExpression);
@@ -387,10 +387,10 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
 #if NET5_0_OR_GREATER
-    [RequiresUnreferencedCode(AreEquivalentRequiresUnreferencedCodeMessage)]
+    [RequiresUnreferencedCode(EquivalenceRequiresUnreferencedCodeMessage)]
 #endif
 #if NET7_0_OR_GREATER
-    [RequiresDynamicCode(AreEquivalentRequiresDynamicCodeMessage)]
+    [RequiresDynamicCode(EquivalenceRequiresDynamicCodeMessage)]
 #endif
     public static void AreEquivalent<T>(Memory<T> expected, Memory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
         => AreEquivalent(expected.Span, actual.Span, strict, message, expectedExpression, actualExpression);
