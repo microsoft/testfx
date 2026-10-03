@@ -109,6 +109,8 @@ public sealed class RetrySerializersTests
         Assert.IsNull(result.Kind);
     }
 
+    // The serializer base type and interface are [Embedded], so their members are hidden from consumer compilation
+    // even though the Retry assembly grants this test assembly internals access.
     private static TMessage RoundTrip<TMessage>(object serializer, TMessage message)
     {
         using var stream = new MemoryStream();
