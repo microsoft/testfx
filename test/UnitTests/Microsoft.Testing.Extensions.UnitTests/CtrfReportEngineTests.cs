@@ -66,7 +66,7 @@ public class CtrfReportEngineTests
         JsonElement root = document.RootElement;
 
         Assert.AreEqual("CTRF", root.GetProperty("reportFormat").GetString());
-        Assert.AreEqual("0.0.0", root.GetProperty("specVersion").GetString());
+        Assert.AreEqual("0.1.0", root.GetProperty("specVersion").GetString());
         Assert.IsGreaterThan(0, root.GetProperty("reportId").GetString()!.Length);
         Assert.IsGreaterThan(0, root.GetProperty("timestamp").GetString()!.Length);
         Assert.IsTrue(root.GetProperty("generatedBy").GetString()!.StartsWith("Microsoft.Testing.Extensions.CtrfReport", StringComparison.Ordinal));
