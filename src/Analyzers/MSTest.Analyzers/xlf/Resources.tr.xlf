@@ -1052,7 +1052,7 @@ Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
       </trans-unit>
       <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">
         <source>Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">'{0}' test sınıfında ActivatorUtilitiesConstructorAttribute ile işaretlenmiş birden çok public oluşturucu var. Tam olarak bir oluşturucu işaretle.</target>
         <note>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
