@@ -48,7 +48,7 @@ public sealed class TcpMessageHandlerTests
         using TcpClient tcpClient = new();
         using var handler = new TcpMessageHandler(
             tcpClient,
-            new ConnectionResetStream(connectionReset),
+            new ThrowingStream(connectionReset),
             new MemoryStream(),
             Mock.Of<IMessageFormatter>(),
             logger.Object);
@@ -350,19 +350,6 @@ public sealed class TcpMessageHandlerTests
         Task completed = await Task.WhenAny(readTask, Task.Delay(DefaultTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
         Assert.AreSame(readTask, completed, "Timed out reading a frame; the transport is most likely desynchronized.");
         return await readTask.ConfigureAwait(false);
-    }
-
-    private sealed class ConnectionResetStream(SocketException exception) : MemoryStream
-    {
-        public override int Read(byte[] buffer, int offset, int count) => throw exception;
-
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            => Task.FromException<int>(exception);
-
-#if NETCOREAPP
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-            => ValueTask.FromException<int>(exception);
-#endif
     }
 
     private sealed class ThrowingStream(Exception exception) : MemoryStream
