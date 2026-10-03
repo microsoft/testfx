@@ -43,20 +43,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $repoRootWithTrailingSeparator = $repoRoot + [System.IO.Path]::DirectorySeparatorChar
 $samplesFolder = "$repoRoot/samples/public"
 
-function Get-SampleRelativePath {
-    param([string]$FullPath)
-
-    $samplesFolderWithTrailingSeparator = [System.IO.Path]::GetFullPath($samplesFolder).TrimEnd(
-        [System.IO.Path]::DirectorySeparatorChar,
-        [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
-    $normalizedFullPath = [System.IO.Path]::GetFullPath($FullPath)
-
-    if (!$normalizedFullPath.StartsWith($samplesFolderWithTrailingSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Path '$FullPath' is not under the public samples folder '$samplesFolder'."
-    }
-
-    return $normalizedFullPath.Substring($samplesFolderWithTrailingSeparator.Length)
-}
+. "$PSScriptRoot/samples-tools.ps1"
 
 if ($BinaryLogDirectory) {
     New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
@@ -194,7 +181,7 @@ foreach ($project in $standaloneProjects) {
     )
 
     if ($BinaryLogDirectory) {
-        $relativeProjectPath = Get-SampleRelativePath $project.FullName
+        $relativeProjectPath = Get-SampleRelativePath -FullPath $project.FullName -SamplesFolder $samplesFolder
         $projectLogName = $relativeProjectPath.Replace([System.IO.Path]::DirectorySeparatorChar, ".")
         $binlogPath = Join-Path $BinaryLogDirectory "$projectLogName.binlog"
         $buildArgs += "-bl:$binlogPath"
