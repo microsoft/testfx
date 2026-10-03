@@ -8,6 +8,9 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class RetrySerializersTests
 {
+    private const string SerializeMethodName = "Serialize";
+    private const string DeserializeMethodName = "Deserialize";
+
     [TestMethod]
     public void FailedTestRequest_RoundTrips()
     {
@@ -117,7 +120,7 @@ public sealed class RetrySerializersTests
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
         => serializer.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Serialize)
+            .Single(method => method.Name == SerializeMethodName
                 && method.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }]
                 && messageType == typeof(TMessage)
                 && streamType == typeof(Stream))
@@ -126,7 +129,7 @@ public sealed class RetrySerializersTests
     private static TMessage Deserialize<TMessage>(object serializer, Stream stream)
         => (TMessage)serializer.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Deserialize)
+            .Single(method => method.Name == DeserializeMethodName
                 && method.GetParameters() is [{ ParameterType: var parameterType }]
                 && parameterType == typeof(Stream))
             .Invoke(serializer, [stream])!;
