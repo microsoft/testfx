@@ -364,14 +364,20 @@ public sealed class HangDumpTests
         Exception? loggedFailure = null;
 
         (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
-            queryCancellationToken =>
+            async queryCancellationToken =>
             {
-                cancellationObserved = queryCancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(5));
-                return cancellationObserved
-                    ? Task.FromCanceled<(string, int)[]>(queryCancellationToken)
-                    : Task.FromResult<(string, int)[]>([("Token was not canceled", 0)]);
+                try
+                {
+                    await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                    return [("Token was not canceled", 0)];
+                }
+                catch (OperationCanceledException) when (queryCancellationToken.IsCancellationRequested)
+                {
+                    cancellationObserved = true;
+                    throw;
+                }
             },
-            TimeSpan.FromMilliseconds(50),
+            TimeSpan.FromMilliseconds(200),
             ex =>
             {
                 loggedFailure = ex;

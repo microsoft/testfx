@@ -381,7 +381,8 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
         string directory = CreateTemporaryDirectory();
         try
         {
-            DateTimeOffset videoEndTime = RecordingStart.AddSeconds(40.0004);
+            // DateTimeOffset.AddSeconds rounds fractional milliseconds on .NET Framework.
+            DateTimeOffset videoEndTime = RecordingStart.AddSeconds(40).AddTicks(4_000);
             var context = new HandlerContext(
                 VideoRecorderPersistenceMode.Always,
                 VideoCaptureGranularity.PerSession,
@@ -406,7 +407,7 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
                     context.Handler,
                     "Boundary",
                     PassedTestNodeStateProperty.CachedInstance,
-                    RecordingStart.AddSeconds(40.0003),
+                    RecordingStart.AddSeconds(40).AddTicks(3_000),
                     RecordingStart.AddSeconds(50));
                 await AddRecordAsync(
                     context.Handler,
