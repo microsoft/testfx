@@ -179,9 +179,9 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         Func<Exception, Task> logFailureAsync,
         CancellationToken cancellationToken)
     {
+        using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         try
         {
-            using CancellationTokenSource queryCts = CreateTimeoutCancellationTokenSource(cancellationToken, timeout);
             Task<(string, int)[]> queryTask = requestInProgressTestsAsync(queryCts.Token);
             // Stryker disable once Boolean: continuation scheduling does not change the bounded query result.
             await queryTask.TimeoutAfterAsync(timeout, cancellationToken).ConfigureAwait(false);
@@ -190,6 +190,22 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         }
         catch (Exception ex)
         {
+            try
+            {
+#if NET
+                // Stryker disable once Boolean: continuation scheduling does not change best-effort cancellation.
+                await queryCts.CancelAsync().ConfigureAwait(false);
+#else
+#pragma warning disable VSTHRD103 // CancellationTokenSource.CancelAsync is not available on this target framework.
+                queryCts.Cancel();
+#pragma warning restore VSTHRD103
+#endif
+            }
+            catch (Exception)
+            {
+                // Cancellation is best-effort; the empty-list fallback must still let the dump proceed.
+            }
+
             // The empty-list fallback is the whole point of this method, so it must survive a failing
             // diagnostic too. logFailureAsync is a logger call and logger providers can fail; letting that
             // throw would escape the caller, which is explicitly best-effort, and skip the dump entirely.

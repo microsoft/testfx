@@ -360,22 +360,15 @@ public sealed class HangDumpTests
     [TestMethod]
     public async Task QueryInProgressTestsWithTimeout_WhenTimeoutElapses_CancelsTheRequestToken()
     {
-        bool cancellationObserved = false;
+        CancellationToken requestCancellationToken = default;
         Exception? loggedFailure = null;
 
         (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
             async queryCancellationToken =>
             {
-                try
-                {
-                    await Task.Delay(Timeout.Infinite, queryCancellationToken);
-                    return [("Token was not canceled", 0)];
-                }
-                catch (OperationCanceledException) when (queryCancellationToken.IsCancellationRequested)
-                {
-                    cancellationObserved = true;
-                    throw;
-                }
+                requestCancellationToken = queryCancellationToken;
+                await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                return [("Token was not canceled", 0)];
             },
             TimeSpan.FromMilliseconds(200),
             ex =>
@@ -385,7 +378,7 @@ public sealed class HangDumpTests
             },
             CancellationToken.None);
 
-        Assert.IsTrue(cancellationObserved);
+        Assert.IsTrue(requestCancellationToken.IsCancellationRequested);
         Assert.IsEmpty(result);
         Assert.IsNotNull(loggedFailure);
     }
