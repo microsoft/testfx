@@ -358,6 +358,33 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTimeoutElapses_CancelsTheRequestToken()
+    {
+        bool cancellationObserved = false;
+        Exception? loggedFailure = null;
+
+        (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            queryCancellationToken =>
+            {
+                cancellationObserved = queryCancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(5));
+                return cancellationObserved
+                    ? Task.FromCanceled<(string, int)[]>(queryCancellationToken)
+                    : Task.FromResult<(string, int)[]>([("Token was not canceled", 0)]);
+            },
+            TimeSpan.FromMilliseconds(50),
+            ex =>
+            {
+                loggedFailure = ex;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.IsTrue(cancellationObserved);
+        Assert.IsEmpty(result);
+        Assert.IsNotNull(loggedFailure);
+    }
+
+    [TestMethod]
     public async Task QueryInProgressTestsWithTimeout_WhenTheReplyIgnoresCancellation_ReturnsEmptyList()
     {
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -439,6 +466,7 @@ public sealed class HangDumpTests
     {
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
         IProcess rootProcess = Mock.Of<IProcess>();
+        Exception? loggedFailure = null;
 
         try
         {
@@ -449,12 +477,17 @@ public sealed class HangDumpTests
                     return [];
                 },
                 TimeSpan.FromMilliseconds(50),
-                _ => Task.CompletedTask,
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
                 rootProcess,
                 TestContext.CancellationToken);
 
             Assert.HasCount(1, processTree);
             Assert.AreSame(rootProcess, processTree[0].Process);
+            Assert.IsNotNull(loggedFailure);
         }
         finally
         {

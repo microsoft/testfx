@@ -58,26 +58,31 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             throw new ArgumentNullException(nameof(name));
         }
 
-        PipeOptions options = name.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
-            ? PipeOptions.Asynchronous
-            : AsyncCurrentUserPipeOptions;
+        PipeOptions options = GetPipeOptions(name);
         _namedPipeClientStream = new(".", name, PipeDirection.InOut, options);
         PipeName = name;
         _environment = environment;
         _exitProcessOnConnectionLoss = exitProcessOnConnectionLoss;
     }
 
+    internal static PipeOptions GetPipeOptions(string name)
+        => name.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
+            ? PipeOptions.Asynchronous
+            : AsyncCurrentUserPipeOptions;
+
     public string PipeName { get; }
 
     public bool IsConnected => _namedPipeClientStream.IsConnected;
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
+        // Stryker disable once Boolean: continuation scheduling does not change connection completion.
         => await _namedPipeClientStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
     public async Task<TResponse> RequestReplyAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
        where TRequest : IRequest
        where TResponse : IResponse
     {
+        // Stryker disable once Boolean: continuation scheduling does not change semaphore acquisition.
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -86,6 +91,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             // Serialize and send the request
             try
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the request bytes.
                 await WriteMessageAsync(_namedPipeClientStream, requestNamedPipeSerializer, request, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException or ObjectDisposedException)
@@ -104,6 +110,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             }
 
             // Read the response
+            // Stryker disable once Boolean: continuation scheduling does not change the response.
             object? response = await ReadNextMessageAsync(_namedPipeClientStream, cancellationToken).ConfigureAwait(false);
             if (response is null)
             {
@@ -151,8 +158,10 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
 
     public void Dispose()
     {
+        // Stryker disable once Block: every owned resource below has idempotent disposal.
         if (_disposed)
         {
+            // Stryker disable once Statement: every owned resource below also has idempotent disposal.
             return;
         }
 

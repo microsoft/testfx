@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
-internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) : IPlatformTestExecutionActivity
+internal sealed class ActivityWrapper(Activity activity) : IPlatformTestExecutionActivity
 {
     private const string ExceptionEventName = "exception";
     private const string ExceptionTypeTag = "exception.type";
@@ -98,17 +98,14 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
 
     public void Dispose()
     {
-        if (isAmbient)
-        {
-            activity.Dispose();
-            return;
-        }
-
-        // A non-ambient activity never became Activity.Current, so stopping it must not touch the ambient
-        // activity either. Activity.Stop() reassigns Activity.Current to its parent, so save and restore around it.
         Activity? current = Activity.Current;
         activity.Dispose();
-        Activity.Current = current;
+        if (current != activity)
+        {
+            // The wrapped activity was non-ambient. Activity.Stop() can reassign Activity.Current to its parent,
+            // so restore the activity that was actually ambient before disposal.
+            Activity.Current = current;
+        }
     }
 
     private sealed class ActivityScope : IDisposable

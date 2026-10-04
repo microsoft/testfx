@@ -6,6 +6,7 @@
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -38,6 +39,7 @@ public sealed class RetryDataConsumerTests
 
         Assert.AreEqual(1, fixture.Server.TotalTestRan);
         Assert.AreEqual(0, fixture.Server.FailedTestResults);
+        Assert.IsTrue(fixture.Server.CountsReported);
         Assert.AreSequenceEqual(["uid"], fixture.Server.RecoveredTests);
         Assert.IsEmpty(fixture.Server.FailedTests);
     }
@@ -152,9 +154,14 @@ public sealed class RetryDataConsumerTests
             null!,
             CreateUpdate("uid", PassedTestNodeStateProperty.CachedInstance),
             TestContext.CancellationToken);
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+            CreateUpdate("uid", new FailedTestNodeStateProperty()),
+            TestContext.CancellationToken);
         await fixture.FinishAsync(TestContext.CancellationToken);
 
-        Assert.AreEqual(1, fixture.Server.TotalTestRan);
+        Assert.AreEqual(2, fixture.Server.TotalTestRan);
+        Assert.AreEqual(1, fixture.Server.FailedTestResults);
         Assert.IsEmpty(fixture.Server.RecoveredTests);
     }
 
@@ -240,6 +247,136 @@ public sealed class RetryDataConsumerTests
         string? actual = GetControllerArtifactPath(consumer, artifactPath);
 
         Assert.AreEqual(artifactPath, actual);
+    }
+
+    [DataRow("TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT")]
+    [DataRow("TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT")]
+    [DataRow("TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT")]
+    [DataRow("TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT")]
+    [TestMethod]
+    public void GetControllerArtifactPath_AnyIncompleteAppContainerMappingRejectsUnmappedArtifact(
+        string configuredVariable)
+    {
+        string artifactPath = Path.GetFullPath(Path.Combine("other", "test.diag"));
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(configuredVariable))
+            .Returns(Path.GetFullPath("configured"));
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        Assert.IsNull(GetControllerArtifactPath(consumer, artifactPath));
+    }
+
+    [TestMethod]
+    public void GetControllerArtifactPath_WhenBothMappingsMatch_PrefersPrimaryArtifactMapping()
+    {
+        string sourceRoot = Path.GetFullPath("shared-source");
+        string artifactDestination = Path.GetFullPath("artifact-destination");
+        string diagnosticDestination = Path.GetFullPath("diagnostic-destination");
+        string artifactPath = Path.Combine(sourceRoot, "nested", "result.xml");
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT")).Returns(sourceRoot);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT")).Returns(artifactDestination);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT")).Returns(sourceRoot);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT")).Returns(diagnosticDestination);
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        Assert.AreEqual(
+            Path.Combine(artifactDestination, "nested", "result.xml"),
+            GetControllerArtifactPath(consumer, artifactPath));
+    }
+
+    [TestMethod]
+    public void GetControllerArtifactPath_EmptyMappingsAreTreatedAsUnconfigured()
+    {
+        string artifactPath = Path.GetFullPath(Path.Combine("other", "test.diag"));
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(It.IsAny<string>()))
+            .Returns(string.Empty);
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object);
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        Assert.AreEqual(artifactPath, GetControllerArtifactPath(consumer, artifactPath));
+    }
+
+    [TestMethod]
+    public void TryGetControllerArtifactPath_EmptyMappingHalfIsRejected()
+    {
+        MethodInfo method = typeof(RetryDataConsumer).GetMethod(
+            "TryGetControllerArtifactPath",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+        string artifactPath = Path.GetFullPath("artifact.bin");
+        string sourceRoot = Path.GetFullPath(".");
+        string destinationRoot = Path.GetFullPath("destination");
+
+        Assert.IsNull(method.Invoke(null, [artifactPath, string.Empty, destinationRoot]));
+        Assert.IsNull(method.Invoke(null, [artifactPath, sourceRoot, string.Empty]));
+    }
+
+    [TestMethod]
+    public void GetPathComparison_PreservesPlatformCaseRules()
+    {
+        MethodInfo method = typeof(RetryDataConsumer).GetMethod(
+            "GetPathComparison",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        Assert.AreEqual(StringComparison.OrdinalIgnoreCase, method.Invoke(null, [true]));
+        Assert.AreEqual(StringComparison.Ordinal, method.Invoke(null, [false]));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_ArtifactReportsMappedPathAndKind()
+    {
+        using ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync([], TestContext.CancellationToken);
+        string path = Path.GetFullPath("retry-artifact.trx");
+
+        await fixture.Consumer.ConsumeAsync(
+            null!,
+#pragma warning disable TPEXP // The artifact kind is the behavior under test.
+            new SessionFileArtifact(
+                new SessionUid("session"),
+                new FileInfo(path),
+                "TRX report",
+                description: null,
+                kind: "microsoft.testing.trx"),
+#pragma warning restore TPEXP
+            TestContext.CancellationToken);
+
+        ArtifactRequest artifact = Assert.ContainsSingle(fixture.Server.Artifacts);
+        Assert.AreEqual(path, artifact.Path);
+        Assert.AreEqual("microsoft.testing.trx", artifact.Kind);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_BeforeInitialization_ThrowsApplicationStateFailure()
+    {
+        ServiceProvider serviceProvider = CreateServiceProvider();
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var consumer = new RetryDataConsumer(serviceProvider);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => consumer.OnTestSessionFinishingAsync(CreateSessionContext(TestContext.CancellationToken)));
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_WithUnconnectedLifecycle_ThrowsApplicationStateFailure()
+    {
+        ServiceProvider serviceProvider = CreateServiceProvider();
+        serviceProvider.AddService(new TestCommandLineOptions([]));
+        var lifecycle = new RetryLifecycleCallbacks(serviceProvider);
+        var consumer = new RetryDataConsumer(serviceProvider);
+        typeof(RetryDataConsumer)
+            .GetField("_retryFailedTestsLifecycleCallbacks", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(consumer, lifecycle);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => consumer.OnTestSessionFinishingAsync(CreateSessionContext(TestContext.CancellationToken)));
     }
 
     private static TestNodeUpdateMessage CreateUpdate(string uid, params IProperty[] properties)

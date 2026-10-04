@@ -49,11 +49,20 @@ internal sealed class HotReloadHandler
     [SupportedOSPlatformGuard("wasi")]
     [SupportedOSPlatformGuard("browser")]
     private static bool IsCancelKeyPressNotSupported()
-        => OperatingSystem.IsAndroid() ||
-            OperatingSystem.IsIOS() ||
-            OperatingSystem.IsTvOS() ||
-            OperatingSystem.IsWasi() ||
-            OperatingSystem.IsBrowser();
+        => IsCancelKeyPressNotSupportedOnOperatingSystem(
+            OperatingSystem.IsAndroid(),
+            OperatingSystem.IsIOS(),
+            OperatingSystem.IsTvOS(),
+            OperatingSystem.IsWasi(),
+            OperatingSystem.IsBrowser());
+
+    private static bool IsCancelKeyPressNotSupportedOnOperatingSystem(
+        bool isAndroid,
+        bool isIOS,
+        bool isTvOS,
+        bool isWasi,
+        bool isBrowser)
+        => isAndroid | isIOS | isTvOS | isWasi | isBrowser;
 
     // Called automatically by the runtime through the MetadataUpdateHandlerAttribute
     public static void ClearCache(Type[]? _)
@@ -67,13 +76,11 @@ internal sealed class HotReloadHandler
     {
         lock (Sync)
         {
-            if (s_shutdownProcess)
+            if (!s_shutdownProcess)
             {
-                return;
+                s_shutdownProcess = true;
+                SignalWaiter();
             }
-
-            s_shutdownProcess = true;
-            SignalWaiter();
         }
     }
 
@@ -110,18 +117,18 @@ internal sealed class HotReloadHandler
 
         if (waitExecutionCompletion is not null)
         {
-            await waitExecutionCompletion.ConfigureAwait(false);
-            await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(false);
+            await waitExecutionCompletion.ConfigureAwait(continueOnCapturedContext: default);
+            await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionCompleted), cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
         }
 
-        await SemaphoreSlim.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        await SemaphoreSlim.WaitAsync(CancellationToken.None).ConfigureAwait(continueOnCapturedContext: default);
 
         if (!_console.IsOutputRedirected && !IsClearNotSupported())
         {
             _console.Clear();
         }
 
-        await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted), cancellationToken).ConfigureAwait(false);
+        await _outputDevice.DisplayAsync(_outputDeviceDataProducer, new TextOutputDeviceData(ExtensionResources.HotReloadSessionStarted), cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
 
         return !s_shutdownProcess;
     }
@@ -130,8 +137,12 @@ internal sealed class HotReloadHandler
     [SupportedOSPlatformGuard("ios")]
     [SupportedOSPlatformGuard("tvos")]
     private static bool IsClearNotSupported()
-        => OperatingSystem.IsAndroid() ||
-            OperatingSystem.IsIOS() ||
-            OperatingSystem.IsTvOS();
+        => IsClearNotSupportedOnOperatingSystem(
+            OperatingSystem.IsAndroid(),
+            OperatingSystem.IsIOS(),
+            OperatingSystem.IsTvOS());
+
+    private static bool IsClearNotSupportedOnOperatingSystem(bool isAndroid, bool isIOS, bool isTvOS)
+        => isAndroid | isIOS | isTvOS;
 #endif
 }

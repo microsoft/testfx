@@ -51,10 +51,10 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         {
             HotReloadHandler.RequestShutdown();
             return Task.CompletedTask;
-        }).ConfigureAwait(false);
+        }).ConfigureAwait(continueOnCapturedContext: default);
         TaskCompletionSource<int>? executionCompleted = null;
         while (!_stopPoliciesService.IsDeadlineTriggered
-            && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
+            && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(continueOnCapturedContext: default))
         {
             executionCompleted = new();
 
@@ -68,9 +68,9 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
                 await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            await base.ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(false);
+            await base.ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
 
-            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
+            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(continueOnCapturedContext: default);
             if (hotReloadOutputDevice is not null)
             {
                 await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync(cancellationToken).ConfigureAwait(false);

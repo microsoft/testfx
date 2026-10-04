@@ -40,7 +40,7 @@ internal sealed class OpenTelemetryPlatformService :
         // StartActivity unconditionally publishes the new activity as Activity.Current. Undo that immediately so
         // the span is timed and exported without ever leaking into an ExecutionContext captured by the code we wrap.
         Activity.Current = ambientBeforeStart;
-        return new ActivityWrapper(Stamp(activity), isAmbient: false);
+        return new ActivityWrapper(Stamp(activity));
     }
 
     public IPlatformTestExecutionActivity? StartTestExecutionActivity(
@@ -56,7 +56,7 @@ internal sealed class OpenTelemetryPlatformService :
         }
 
         Activity.Current = ambientBeforeStart;
-        return new ActivityWrapper(Stamp(activity), isAmbient: false);
+        return new ActivityWrapper(Stamp(activity));
     }
 
     public PlatformActivityContext? CaptureCurrentActivityContext()
@@ -97,9 +97,17 @@ internal sealed class OpenTelemetryPlatformService :
         string? parentId,
         IEnumerable<ActivityLink>? links,
         DateTimeOffset startTime)
-        => parentId is null && Activity.Current is { IdFormat: ActivityIdFormat.W3C } ambientActivity
-            ? _activitySource.StartActivity(name, ActivityKind.Internal, ambientActivity.Context, tags, links, startTime)
-            : _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: parentId ?? Activity.Current?.Id);
+        => (parentId, Activity.Current) switch
+        {
+            (null, { IdFormat: ActivityIdFormat.W3C } ambientActivity)
+                => _activitySource.StartActivity(name, ActivityKind.Internal, ambientActivity.Context, tags, links, startTime),
+            (null, { } ambientActivity)
+                => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: ambientActivity.Id),
+            (null, null)
+                => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: null),
+            ({ } explicitParentId, _)
+                => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, links: links, startTime: startTime, parentId: explicitParentId),
+        };
 
     /// <summary>
     /// Activity only derives tracestate from an in-process parent reference, which an explicit parent id string

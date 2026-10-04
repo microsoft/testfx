@@ -250,7 +250,7 @@ internal sealed partial class FfmpegVideoRecorder
 
     private static string? FindFfmpeg(string? configuredPath)
     {
-        if (!RoslynString.IsNullOrEmpty(configuredPath))
+        if (configuredPath is { Length: > 0 })
         {
             return File.Exists(configuredPath) ? configuredPath : null;
         }

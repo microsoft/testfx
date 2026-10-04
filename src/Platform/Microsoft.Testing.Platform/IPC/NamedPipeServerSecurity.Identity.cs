@@ -104,56 +104,46 @@ internal static partial class NamedPipeServerSecurity
     [SupportedOSPlatform("windows")]
     internal static string GetCurrentProcessOwnerSid()
     {
-        if (!OpenProcessToken(GetCurrentProcess(), TokenQuery, out IntPtr token))
+        if (!OpenProcessToken(GetCurrentProcess(), TokenQuery, out SafeTokenHandle token))
         {
             throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to open the current process token.");
         }
 
-        try
+        using (token)
         {
-            if (GetTokenInformation(token, TokenOwnerInformationClass, IntPtr.Zero, 0, out int length)
-                || Marshal.GetLastWin32Error() != ErrorInsufficientBuffer)
+            bool sizeQuerySucceeded = GetTokenInformation(token.Value, TokenOwnerInformationClass, IntPtr.Zero, 0, out int length);
+            if (sizeQuerySucceeded)
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to query the size of the current process token owner.");
             }
 
-            IntPtr buffer = Marshal.AllocHGlobal(length);
-            try
+            if (Marshal.GetLastWin32Error() != ErrorInsufficientBuffer)
             {
-                if (!GetTokenInformation(token, TokenOwnerInformationClass, buffer, length, out _))
-                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to query the current process token owner.");
-                }
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to query the size of the current process token owner.");
+            }
 
-                // TOKEN_OWNER is a single PSID field.
-                return ConvertSidToString(Marshal.ReadIntPtr(buffer));
-            }
-            finally
+            using var buffer = SafeHGlobalHandle.Allocate(length);
+            if (!GetTokenInformation(token.Value, TokenOwnerInformationClass, buffer.Value, length, out _))
             {
-                Marshal.FreeHGlobal(buffer);
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to query the current process token owner.");
             }
-        }
-        finally
-        {
-            CloseHandle(token);
+
+            // TOKEN_OWNER is a single PSID field.
+            return ConvertSidToString(Marshal.ReadIntPtr(buffer.Value));
         }
     }
 
     [SupportedOSPlatform("windows")]
     private static string ConvertSidToString(IntPtr sid)
     {
-        if (!ConvertSidToStringSid(sid, out IntPtr stringSid))
+        if (!ConvertSidToStringSid(sid, out SafeLocalAllocHandle stringSid))
         {
             throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to convert a SID to its string form.");
         }
 
-        try
+        using (stringSid)
         {
-            return Marshal.PtrToStringUni(stringSid)!;
-        }
-        finally
-        {
-            LocalFree(stringSid);
+            return Marshal.PtrToStringUni(stringSid.Value)!;
         }
     }
 }

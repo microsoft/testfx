@@ -18,6 +18,7 @@ internal sealed partial class VideoRecorderSessionHandler
 
         // A short random suffix guarantees uniqueness even if two clips share a name and are
         // produced within the same millisecond.
+        // Stryker disable once String: "N" and the default GUID format have the same first eight hexadecimal characters.
         string unique = Guid.NewGuid().ToString("N").Substring(0, 8);
         return sanitized.Length == 0
             ? $"recording_{timestamp}_{unique}.{extension}"
@@ -47,6 +48,7 @@ internal sealed partial class VideoRecorderSessionHandler
             return;
         }
 
+        // Stryker disable once Boolean: continuation scheduling does not change artifact publication.
         await _messageBus.PublishAsync(
             this,
             new SessionFileArtifact(sessionUid, new FileInfo(file), displayName, description)).ConfigureAwait(false);

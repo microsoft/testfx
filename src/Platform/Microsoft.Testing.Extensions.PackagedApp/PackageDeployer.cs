@@ -215,6 +215,7 @@ internal static class PackageDeployer
 
         string layoutDirectory = Path.GetDirectoryName(Path.GetFullPath(manifestPath))!;
 
+        // Stryker disable once Boolean: continuation scheduling does not change the completed registration operation.
         await RegisterPackageAsync(manifestPath, registerPackage, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         IReadOnlyList<RegisteredPackageInfo> packages = findRegisteredPackages();
@@ -242,6 +243,7 @@ internal static class PackageDeployer
             // A successful same-version registration can retain the old layout. Only development
             // registrations support removal with PreserveApplicationData; never uninstall a retail app.
             cancellationToken.ThrowIfCancellationRequested();
+            // Stryker disable once Boolean: continuation scheduling does not change the completed removal operation.
             await RemovePackageAsync(manifestPath, previousPackage.FullName, removeDevelopmentPackage, cancellationToken).ConfigureAwait(false);
 
             // Removal can report IsRegistered=true even after the registration is gone.
@@ -260,14 +262,13 @@ internal static class PackageDeployer
 
             // Once the previous registration is gone, finish restoring a usable package identity
             // even if the caller cancels. Cancellation is observed after the replacement is verified.
+            // Stryker disable once Boolean: continuation scheduling does not change the completed recovery registration.
             await RegisterPackageAsync(manifestPath, registerPackage, CancellationToken.None).ConfigureAwait(false);
             packages = findRegisteredPackages();
             if (!IsRegisteredFromLayout(packages, layoutDirectory))
             {
                 throw CreateLocationMismatchException(layoutDirectory, packages);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -280,6 +281,7 @@ internal static class PackageDeployer
     {
         try
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the delegated registration result.
             await registerPackage(cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -296,6 +298,7 @@ internal static class PackageDeployer
     {
         try
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the delegated removal result.
             await removeDevelopmentPackage(packageFullName, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

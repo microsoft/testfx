@@ -131,7 +131,7 @@ internal sealed partial class PackagedAppTestHostLauncher : ITestHostLauncher, I
         : this(
             AppContext.BaseDirectory,
             Environment.GetEnvironmentVariable,
-            PackagedAppConnectBackHandshake.TryGetHandshakeId(Environment.GetCommandLineArgs()) is not null)
+            IsActivatedChild(Environment.GetCommandLineArgs()))
     {
     }
 
@@ -160,6 +160,15 @@ internal sealed partial class PackagedAppTestHostLauncher : ITestHostLauncher, I
     public string DisplayName => ExtensionResources.PackagedAppExtensionDisplayName;
 
     public string Description => ExtensionResources.PackagedAppExtensionDescription;
+
+    private static bool IsActivatedChild(IReadOnlyList<string> processArguments)
+        => PackagedAppConnectBackHandshake.TryGetHandshakeId(processArguments) is not null;
+
+    private string? FindManifestPath()
+        // Stryker disable once Conditional: both overloads delegate to the same nullable-aware core when the target is absent.
+        => _targetExecutable is null
+            ? AppxManifestInfo.FindManifestPath(_testApplicationDirectory)
+            : AppxManifestInfo.FindManifestPath(_testApplicationDirectory, _targetExecutable);
 
     /// <summary>
     /// Reports whether this launcher should take over starting the test host.
@@ -200,9 +209,7 @@ internal sealed partial class PackagedAppTestHostLauncher : ITestHostLauncher, I
         // else — including an unset or misspelled value — falls back to probing the layout.
         return !string.Equals(mode, NeverMode, StringComparison.OrdinalIgnoreCase)
             && (string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase)
-                || (_targetExecutable is null
-                    ? AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not null
-                    : AppxManifestInfo.FindManifestPath(_testApplicationDirectory, _targetExecutable) is not null));
+                || FindManifestPath() is not null);
     }
 
     public async Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)

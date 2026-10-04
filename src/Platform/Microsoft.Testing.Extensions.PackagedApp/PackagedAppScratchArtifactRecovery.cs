@@ -5,16 +5,16 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 
 internal static class PackagedAppScratchArtifactRecovery
 {
-    private static readonly EnumerationOptions ReparsePointSafeEnumerationOptions = new()
-    {
-        AttributesToSkip = FileAttributes.ReparsePoint,
-        RecurseSubdirectories = true,
-    };
-
     public static void Recover(string scratchDirectory, string recoveryDirectory)
     {
+        var enumerationOptions = new EnumerationOptions
+        {
+            AttributesToSkip = FileAttributes.ReparsePoint,
+            RecurseSubdirectories = true,
+        };
+
         Directory.CreateDirectory(recoveryDirectory);
-        foreach (string sourcePath in Directory.EnumerateFiles(scratchDirectory, "*", ReparsePointSafeEnumerationOptions))
+        foreach (string sourcePath in Directory.EnumerateFiles(scratchDirectory, "*", enumerationOptions))
         {
             if ((File.GetAttributes(sourcePath) & FileAttributes.ReparsePoint) != 0)
             {

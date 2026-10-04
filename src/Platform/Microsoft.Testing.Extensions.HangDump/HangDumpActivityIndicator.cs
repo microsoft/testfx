@@ -135,6 +135,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             if (_traceLevelEnabled)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
                 await _logger.LogTraceAsync($"New in-progress test '{nodeChangedMessage.TestNode.DisplayName}'").ConfigureAwait(false);
             }
 
@@ -153,6 +154,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
             await _logger.LogTraceAsync($"Test removed from in-progress list '{record.Name}' after '{_clock.UtcNow.Subtract(record.StartTime)}', total in-progress '{_testsCurrentExecutionState.Count}'").ConfigureAwait(false);
         }
 
@@ -161,6 +163,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             if (_traceLevelEnabled)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
                 await _logger.LogTraceAsync($"Signal for action node {nodeChangedMessage.TestNode.DisplayName} - '{state}'. _exitSignalActivityIndicatorAsync: {_exitSignalActivityIndicatorAsync}").ConfigureAwait(false);
             }
 

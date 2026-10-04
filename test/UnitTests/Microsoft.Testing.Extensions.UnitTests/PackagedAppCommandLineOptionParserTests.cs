@@ -45,6 +45,13 @@ public sealed class PackagedAppCommandLineOptionParserTests
         Assert.IsFalse(CommandLineOptionParser.TryGetInlineOptionValue("--internal-testhostcontroller-pidx=9876", "--internal-testhostcontroller-pid", out string? value));
         Assert.IsNull(value);
     }
+
+    [TestMethod]
+    public void TryGetInlineOptionValue_ReturnsFalse_WhenArgumentIsExactlyTheOption()
+    {
+        Assert.IsFalse(CommandLineOptionParser.TryGetInlineOptionValue("--option", "--option", out string? value));
+        Assert.IsNull(value);
+    }
 }
 
 #endif

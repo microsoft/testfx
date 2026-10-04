@@ -34,6 +34,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
     {
         try
         {
+            // Stryker disable once Boolean: continuation scheduling is outside this best-effort helper's contract.
             await diagnosticAsync().TimeoutAfterAsync(timeout).ConfigureAwait(false);
         }
         catch (Exception)
@@ -49,17 +50,18 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         IProcess rootProcess,
         CancellationToken cancellationToken)
     {
-        using var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCancellationTokenSource.CancelAfter(timeout);
+        using CancellationTokenSource timeoutCancellationTokenSource = CreateTimeoutCancellationTokenSource(cancellationToken, timeout);
 
         try
         {
             Task<List<ProcessTreeNode>> processTreeTask = getProcessTreeAsync(timeoutCancellationTokenSource.Token);
+            // Stryker disable once Boolean: continuation scheduling does not change the bounded result.
             await processTreeTask.TimeoutAfterAsync(timeout, cancellationToken).ConfigureAwait(false);
             return await processTreeTask.ConfigureAwait(false);
         }
         catch (Exception ex)
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the fallback result.
             await RunBestEffortDiagnosticAsync(
                 () => logFailureAsync(ex),
                 BestEffortDiagnosticsTimeout).ConfigureAwait(false);
@@ -87,6 +89,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         Func<IProcess, (string, int)[], CancellationToken, Task> dumpProcessAsync,
         CancellationToken cancellationToken)
     {
+        // Stryker disable once Boolean: continuation scheduling does not change the query result shared by every dump.
         (string, int)[] inProgressTests = await queryInProgressTestsAsync(cancellationToken).ConfigureAwait(false);
 
         // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
@@ -101,19 +104,30 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             dumpTasks.Add(task.Run(() => dumpProcessAsync(p, inProgressTests, cancellationToken), CancellationToken.None));
         }
 
+        // Stryker disable once Boolean: continuation scheduling does not change completion of the dump set.
         await task.WhenAll([.. dumpTasks]).ConfigureAwait(false);
     }
 
     internal static IProcess? TryGetProcessById(IProcessHandler processHandler, int processId)
     {
+        IProcess? process = null;
         try
         {
-            return processHandler.GetProcessById(processId);
+            process = processHandler.GetProcessById(processId);
         }
         catch (ArgumentException)
         {
-            return null;
+            // The process exited between enumeration and lookup.
         }
+
+        return process;
+    }
+
+    private static CancellationTokenSource CreateTimeoutCancellationTokenSource(CancellationToken cancellationToken, TimeSpan timeout)
+    {
+        var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellationTokenSource.CancelAfter(timeout);
+        return timeoutCancellationTokenSource;
     }
 
     /// <summary>
@@ -167,10 +181,11 @@ internal sealed partial class HangDumpProcessLifetimeHandler
     {
         try
         {
-            using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            queryCts.CancelAfter(timeout);
+            using CancellationTokenSource queryCts = CreateTimeoutCancellationTokenSource(cancellationToken, timeout);
             Task<(string, int)[]> queryTask = requestInProgressTestsAsync(queryCts.Token);
+            // Stryker disable once Boolean: continuation scheduling does not change the bounded query result.
             await queryTask.TimeoutAfterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            // Stryker disable once Boolean: continuation scheduling does not change the returned annotations.
             return await queryTask.ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -178,6 +193,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             // The empty-list fallback is the whole point of this method, so it must survive a failing
             // diagnostic too. logFailureAsync is a logger call and logger providers can fail; letting that
             // throw would escape the caller, which is explicitly best-effort, and skip the dump entirely.
+            // Stryker disable once Boolean: continuation scheduling does not change the empty-list fallback.
             await RunBestEffortDiagnosticAsync(() => logFailureAsync(ex), BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
             return [];

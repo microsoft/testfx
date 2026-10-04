@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
 using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -42,14 +43,12 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers an unfiltered listener against the
 /// process-wide listener registry for that source name. Tests that only produce or observe their own filtered
 /// activities carry matching read locks, so they remain mutually parallel while serializing against the raw
-/// listeners. The end-to-end
-/// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
-/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c> through
-/// <see cref="TracerProviderBuilder"/>'s own SDK-level subscription, a broader and unbounded process-global
-/// registration that a single <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
-/// in-memory environment fake (or only read process state) and stay in the parallel set. Captured spans in the
-/// end-to-end test are additionally filtered by a per-test unique name prefix so an ambient provider in the test
-/// host cannot pollute the assertions.
+/// listeners. Tests that stand up a real <see cref="TracerProvider"/> or <see cref="MeterProvider"/> against the
+/// shared platform source or meter carry <see cref="DoNotParallelizeAttribute"/> because the SDK-level subscription
+/// is a broader and unbounded process-global registration that a single <see cref="ResourceLockAttribute"/> key
+/// cannot narrow. The remaining methods use a pure in-memory environment fake (or only read process state) and stay
+/// in the parallel set. Captured spans are additionally filtered by a per-test unique name prefix so an ambient
+/// provider in the test host cannot pollute the assertions.
 /// </remarks>
 [TestClass]
 public sealed class OpenTelemetryProviderExtensionsTests
@@ -251,6 +250,59 @@ public sealed class OpenTelemetryProviderExtensionsTests
         => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddOpenTelemetryProviderFromEnvironment());
 
     [TestMethod]
+    [DoNotParallelize]
+    public void AddTestingPlatformInstrumentation_ConfiguresDurationHistogramBoundaries()
+    {
+        CapturingMetricExporter exporter = new();
+
+        using (var provider = new OpenTelemetryProvider(
+            withMetrics: metrics => metrics
+                .AddTestingPlatformInstrumentation()
+                .AddReader(new BaseExportingMetricReader(exporter))))
+        using (var service = new OpenTelemetryPlatformService())
+        {
+            service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(0.25);
+            service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestRunDuration).Record(60);
+        }
+
+        AssertHistogramBounds(
+            exporter,
+            TestingPlatformSemanticConventions.Metrics.TestCaseDuration,
+            [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300]);
+        AssertHistogramBounds(
+            exporter,
+            TestingPlatformSemanticConventions.Metrics.TestRunDuration,
+            [1, 5, 10, 30, 60, 120, 300, 600, 1800, 3600]);
+    }
+
+    [TestMethod]
+    public void OpenTelemetryProvider_InvokesConfigurationDelegatesAndDisposesBothProviders()
+    {
+        CapturingActivityExporter activityExporter = new([], namePrefix: string.Empty);
+        CapturingMetricExporter metricExporter = new();
+        bool tracingConfigured = false;
+        bool metricsConfigured = false;
+        var provider = new OpenTelemetryProvider(
+            tracing =>
+            {
+                tracingConfigured = true;
+                tracing.AddProcessor(new SimpleActivityExportProcessor(activityExporter));
+            },
+            metrics =>
+            {
+                metricsConfigured = true;
+                metrics.AddReader(new BaseExportingMetricReader(metricExporter));
+            });
+
+        provider.Dispose();
+
+        Assert.IsTrue(tracingConfigured);
+        Assert.IsTrue(metricsConfigured);
+        Assert.AreEqual(1, activityExporter.ShutdownCount);
+        Assert.AreEqual(1, metricExporter.ShutdownCount);
+    }
+
+    [TestMethod]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
     public async Task AddOpenTelemetryProviderFromEnvironment_RegistersProviderWithDelegateAndSkipsWhenSdkDisabled()
         => await WithEnvironmentAsync(
@@ -288,6 +340,87 @@ public sealed class OpenTelemetryProviderExtensionsTests
                     Assert.IsNull(disabledService);
                     Assert.IsNull(disabledProvider);
                 }
+            });
+
+    [TestMethod]
+    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task AddOpenTelemetryProviderFromEnvironment_WithDelegates_InstrumentsBothSignals()
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "none",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                string activityName = $"environment-{Guid.NewGuid():N}";
+                List<Activity> activities = [];
+                CapturingActivityExporter activityExporter = new(activities, activityName);
+                CapturingMetricExporter metricExporter = new();
+                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+
+                builder.AddOpenTelemetryProviderFromEnvironment(
+                    tracing => tracing.AddProcessor(new SimpleActivityExportProcessor(activityExporter)),
+                    metrics => metrics.AddReader(new BaseExportingMetricReader(metricExporter)));
+
+                var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
+                IPlatformOpenTelemetryService? service = telemetryManager.BuildOTelService(new ServiceProvider());
+                IOpenTelemetryProvider? provider = telemetryManager.BuildOTelProvider(new ServiceProvider());
+                Assert.IsNotNull(service);
+                Assert.IsNotNull(provider);
+
+                using (service)
+                using (provider)
+                {
+                    using IPlatformActivity? activity = service.StartActivity(activityName);
+                    Assert.IsNotNull(activity);
+                    service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(1);
+                }
+
+                Assert.HasCount(1, activities);
+                Assert.AreEqual(activityName, activities[0].OperationName);
+                Assert.IsTrue(metricExporter.Contains(TestingPlatformSemanticConventions.Metrics.TestCaseDuration));
+            });
+
+    [TestMethod]
+    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task AddOpenTelemetryProviderFromEnvironment_WithOtlpTracing_AddsExporterBeforeDelegate()
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "otlp",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                bool foundOtlpRegistration = false;
+                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+                builder.AddOpenTelemetryProviderFromEnvironment(
+                    configureTracing: tracing =>
+                    {
+                        FieldInfo? innerBuilderField = tracing.GetType().GetField(
+                            "innerBuilder",
+                            BindingFlags.Instance | BindingFlags.NonPublic);
+                        Assert.IsNotNull(innerBuilderField);
+                        object? innerBuilder = innerBuilderField.GetValue(tracing);
+                        Assert.IsNotNull(innerBuilder);
+                        PropertyInfo? servicesProperty = innerBuilder.GetType().GetProperty(
+                            "Services",
+                            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        Assert.IsNotNull(servicesProperty);
+                        System.Collections.IEnumerable services = Assert.IsInstanceOfType<System.Collections.IEnumerable>(servicesProperty.GetValue(innerBuilder));
+                        foundOtlpRegistration = services
+                            .Cast<object>()
+                            .Any(service => service.ToString()?.Contains("OtlpExporterOptions", StringComparison.Ordinal) is true);
+                    });
+
+                var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
+                using IOpenTelemetryProvider? provider = telemetryManager.BuildOTelProvider(new ServiceProvider());
+
+                Assert.IsNotNull(provider);
+                Assert.IsTrue(foundOtlpRegistration);
             });
 
     [TestMethod]
@@ -656,6 +789,16 @@ public sealed class OpenTelemetryProviderExtensionsTests
         return attributes;
     }
 
+    private static void AssertHistogramBounds(CapturingMetricExporter exporter, string metricName, double[] expected)
+    {
+        double[] actual = exporter.GetExplicitBounds(metricName);
+        Assert.HasCount(expected.Length, actual);
+        for (int i = 0; i < expected.Length; i++)
+        {
+            Assert.AreEqual(expected[i], actual[i], $"Unexpected bound at index {i} for metric '{metricName}'.");
+        }
+    }
+
     private static void AssertDoesNotContainPrefixes(Dictionary<string, object> attributes, params string[] prefixes)
     {
         foreach (string prefix in prefixes)
@@ -774,6 +917,8 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
         public Resource? CapturedResource { get; private set; }
 
+        public int ShutdownCount { get; private set; }
+
         public override ExportResult Export(in Batch<Activity> batch)
         {
             CapturedResource ??= ParentProvider?.GetResource();
@@ -789,6 +934,61 @@ public sealed class OpenTelemetryProviderExtensionsTests
             }
 
             return ExportResult.Success;
+        }
+
+        protected override bool OnShutdown(int timeoutMilliseconds)
+        {
+            ShutdownCount++;
+            return base.OnShutdown(timeoutMilliseconds);
+        }
+    }
+
+    private sealed class CapturingMetricExporter : BaseExporter<Metric>
+    {
+        private readonly Dictionary<string, double[]> _histogramBounds = [];
+
+        public int ShutdownCount { get; private set; }
+
+        public override ExportResult Export(in Batch<Metric> batch)
+        {
+            foreach (Metric metric in batch)
+            {
+                if (metric.MetricType != MetricType.Histogram)
+                {
+                    continue;
+                }
+
+                foreach (ref readonly MetricPoint metricPoint in metric.GetMetricPoints())
+                {
+                    List<double> explicitBounds = [];
+                    foreach (HistogramBucket bucket in metricPoint.GetHistogramBuckets())
+                    {
+                        if (!double.IsPositiveInfinity(bucket.ExplicitBound))
+                        {
+                            explicitBounds.Add(bucket.ExplicitBound);
+                        }
+                    }
+
+                    _histogramBounds[metric.Name] = explicitBounds.ToArray();
+                    break;
+                }
+            }
+
+            return ExportResult.Success;
+        }
+
+        public bool Contains(string metricName) => _histogramBounds.ContainsKey(metricName);
+
+        public double[] GetExplicitBounds(string metricName)
+        {
+            Assert.IsTrue(_histogramBounds.ContainsKey(metricName));
+            return _histogramBounds[metricName];
+        }
+
+        protected override bool OnShutdown(int timeoutMilliseconds)
+        {
+            ShutdownCount++;
+            return base.OnShutdown(timeoutMilliseconds);
         }
     }
 

@@ -15,15 +15,44 @@ internal static partial class NamedPipeServerSecurity
         public int InheritHandle;
     }
 
-    private sealed class SafeLocalAllocHandle : SafeHandleZeroOrMinusOneIsInvalid
+    private sealed class SafeLocalAllocHandle : CriticalHandleZeroOrMinusOneIsInvalid
     {
         private SafeLocalAllocHandle()
-            : base(ownsHandle: true)
         {
         }
 
+        public IntPtr Value => handle;
+
         protected override bool ReleaseHandle()
-            => LocalFree(handle) == IntPtr.Zero;
+            => LocalFree(handle).Equals(IntPtr.Zero);
+    }
+
+    private sealed class SafeTokenHandle : CriticalHandleZeroOrMinusOneIsInvalid
+    {
+        private SafeTokenHandle()
+        {
+        }
+
+        public IntPtr Value => handle;
+
+        protected override bool ReleaseHandle()
+            => CloseHandle(handle);
+    }
+
+    private sealed class SafeHGlobalHandle : CriticalHandleZeroOrMinusOneIsInvalid
+    {
+        private SafeHGlobalHandle(int byteCount)
+        {
+            SetHandle(Marshal.AllocHGlobal(byteCount));
+        }
+
+        public IntPtr Value => handle;
+
+        public static SafeHGlobalHandle Allocate(int byteCount)
+            => new(byteCount);
+
+        protected override bool ReleaseHandle()
+            => LocalFree(handle).Equals(IntPtr.Zero);
     }
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
@@ -32,13 +61,13 @@ internal static partial class NamedPipeServerSecurity
     private static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(
         string stringSecurityDescriptor,
         uint stringSecurityDescriptorRevision,
-        out IntPtr securityDescriptor,
+        out SafeLocalAllocHandle securityDescriptor,
         IntPtr securityDescriptorSize);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", EntryPoint = "ConvertSidToStringSidW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool ConvertSidToStringSid(IntPtr sid, out IntPtr stringSid);
+    private static extern bool ConvertSidToStringSid(IntPtr sid, out SafeLocalAllocHandle stringSid);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", EntryPoint = "ConvertStringSidToSidW", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -58,7 +87,7 @@ internal static partial class NamedPipeServerSecurity
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out IntPtr tokenHandle);
+    private static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out SafeTokenHandle tokenHandle);
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", SetLastError = true)]
@@ -72,7 +101,7 @@ internal static partial class NamedPipeServerSecurity
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", EntryPoint = "CreateNamedPipeW", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern IntPtr CreateNamedPipe(
+    private static extern SafePipeHandle CreateNamedPipe(
         string name,
         uint openMode,
         uint pipeMode,

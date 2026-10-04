@@ -23,7 +23,6 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private const string EnableCrashReportOnlyVariable = "EnableCrashReportOnly";
     private const string EnabledValue = "1";
 
-    private static readonly string[] Prefixes = ["DOTNET_", "COMPlus_"];
     private readonly IConfiguration _configuration;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly CrashDumpConfiguration _crashDumpGeneratorConfiguration;
@@ -79,7 +78,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         // because '--crash-report-if-supported' was set on an unsupported runtime.
         bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
-        foreach (string prefix in Prefixes)
+        foreach (string prefix in GetPrefixes())
         {
             environmentVariables.SetVariable(new($"{prefix}{EnableMiniDumpVariable}", EnabledValue, false, true));
         }
@@ -91,7 +90,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             // When a dump is also requested, emit a crash report alongside it.
             // Otherwise emit only the crash report (no dump file).
             string reportVariable = crashDumpEnabled ? EnableCrashReportVariable : EnableCrashReportOnlyVariable;
-            foreach (string prefix in Prefixes)
+            foreach (string prefix in GetPrefixes())
             {
                 environmentVariables.SetVariable(new($"{prefix}{reportVariable}", EnabledValue, false, true));
             }
@@ -135,7 +134,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in Prefixes)
+        foreach (string prefix in GetPrefixes())
         {
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpTypeVariable}", miniDumpTypeValue, false, true));
         }
@@ -148,7 +147,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             _configuration.GetTestResultDirectory(),
             resolvedUserPattern ?? $"{testAppName}_%p_crash.dmp");
         _crashDumpGeneratorConfiguration.DumpFileNamePattern = _miniDumpNameValue;
-        foreach (string prefix in Prefixes)
+        foreach (string prefix in GetPrefixes())
         {
             environmentVariables.SetVariable(new($"{prefix}{MiniDumpNameVariable}", _miniDumpNameValue, false, true));
         }
@@ -169,7 +168,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             // {time}) so the sequence file name stays in sync with the dump file name; only the
             // runtime placeholders that we deferred to "createdump" (e.g. {pid} -> %p, {pname} -> %e)
             // are stripped here.
-            string uniqueToken = Guid.NewGuid().ToString("N").Substring(0, 8);
+            string uniqueToken = Guid.NewGuid().ToString().Substring(0, 8);
             string sequenceFileName = resolvedUserPattern is not null
                 ? $"{StripRuntimePlaceholders(resolvedUserPattern)}_{uniqueToken}.sequence.log"
                 : $"{testAppName}_{uniqueToken}_crash.sequence.log";
@@ -180,10 +179,13 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
+            // Stryker disable once Boolean: Capturing the current context does not change trace logging.
             await _logger.LogTraceAsync($"{MiniDumpNameVariable}: {_miniDumpNameValue}").ConfigureAwait(false);
+            // Stryker disable once Boolean: Capturing the current context does not change trace logging.
             await _logger.LogTraceAsync($"{MiniDumpTypeVariable}: {miniDumpTypeValue}").ConfigureAwait(false);
             if (_sequenceFileValue is not null)
             {
+                // Stryker disable once Boolean: Capturing the current context does not change trace logging.
                 await _logger.LogTraceAsync($"{SequenceFileEnvironmentVariableName}: {_sequenceFileValue}").ConfigureAwait(false);
             }
         }
@@ -248,6 +250,12 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         return sb.ToString();
     }
 
+    private static IEnumerable<string> GetPrefixes()
+    {
+        yield return "DOTNET_";
+        yield return "COMPlus_";
+    }
+
     public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
     {
 #if !NETCOREAPP
@@ -270,7 +278,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             ValidateBothPrefixes(reportVariable, EnabledValue);
         }
 
-        foreach (string prefix in Prefixes)
+        foreach (string prefix in GetPrefixes())
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{MiniDumpTypeVariable}", out OwnedEnvironmentVariable? miniDumpType))
             {
@@ -293,7 +301,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             }
         }
 
-        foreach (string prefix in Prefixes)
+        foreach (string prefix in GetPrefixes())
         {
             if (!environmentVariables.TryGetVariable($"{prefix}{MiniDumpNameVariable}", out OwnedEnvironmentVariable? miniDumpName)
             || miniDumpName.Value != _miniDumpNameValue)
@@ -312,7 +320,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 
         void ValidateBothPrefixes(string variableName, string expectedValue)
         {
-            foreach (string prefix in Prefixes)
+            foreach (string prefix in GetPrefixes())
             {
                 if (!environmentVariables.TryGetVariable($"{prefix}{variableName}", out OwnedEnvironmentVariable? variable)
                     || variable.Value != expectedValue)
@@ -348,6 +356,8 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 #if !NETCOREAPP
         return false;
 #else
+        // Stryker disable once all: Forcing the current mutation-test host's OS result is equivalent;
+        // the opposite platform behavior is covered by the cross-platform test matrix.
         return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
     }
