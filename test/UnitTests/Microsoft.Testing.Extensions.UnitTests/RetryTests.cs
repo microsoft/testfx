@@ -118,8 +118,14 @@ public class RetryTests
         Type getListRequestType = retryAssembly.GetType(
             "Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.GetListOfFailedTestsRequest",
             throwOnError: true)!;
-        Assert.IsNotNull(serializers[voidResponseType]);
-        Assert.IsNotNull(serializers[getListRequestType]);
+        Type voidResponseSerializerType = retryAssembly.GetType(
+            "Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer",
+            throwOnError: true)!;
+        Type getListRequestSerializerType = retryAssembly.GetType(
+            "Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.GetListOfFailedTestsRequestSerializer",
+            throwOnError: true)!;
+        Assert.AreEqual(voidResponseSerializerType, serializers[voidResponseType]!.GetType());
+        Assert.AreEqual(getListRequestSerializerType, serializers[getListRequestType]!.GetType());
     }
 
     [TestMethod]
