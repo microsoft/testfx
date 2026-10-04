@@ -150,7 +150,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     }
 
     [SupportedOSPlatformGuard("windows")]
-    internal static bool RequiresExplicitSecurity(IReadOnlyList<string>? authorizedSecurityIdentities)
+    private static bool RequiresExplicitSecurity(IReadOnlyList<string>? authorizedSecurityIdentities)
         => authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported;
 
     /// <summary>

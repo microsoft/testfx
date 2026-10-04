@@ -58,16 +58,13 @@ internal static class RuntimeFeatureHelper
     /// </remarks>
     public static bool IsMultiThreaded { get; } =
 #if NETCOREAPP
-        IsMultiThreadedRuntime(OperatingSystem.IsBrowser(), OperatingSystem.IsWasi());
-#else
-        // netstandard2.0 / .NET Framework builds never run on a single-threaded wasm runtime.
-        true;
-#endif
-
-    private static bool IsMultiThreadedRuntime(bool isBrowser, bool isWasi)
-        => (isBrowser, isWasi) switch
+        (OperatingSystem.IsBrowser(), OperatingSystem.IsWasi()) switch
         {
             (false, false) => true,
             _ => false,
         };
+#else
+        // netstandard2.0 / .NET Framework builds never run on a single-threaded wasm runtime.
+        true;
+#endif
 }

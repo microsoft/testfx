@@ -65,7 +65,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
         _exitProcessOnConnectionLoss = exitProcessOnConnectionLoss;
     }
 
-    internal static PipeOptions GetPipeOptions(string name)
+    private static PipeOptions GetPipeOptions(string name)
         => name.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
             ? PipeOptions.Asynchronous
             : AsyncCurrentUserPipeOptions;

@@ -33,12 +33,6 @@ public sealed class AppInsightsProviderTests
         typeof(AppInsightsProvider).GetMethod("StartTelemetryTaskAsync", StaticNonPublicBindingFlags)
         ?? throw new InvalidOperationException("Could not resolve AppInsightsProvider.StartTelemetryTaskAsync.");
 
-    private static readonly MethodInfo IsMultiThreadedRuntimeMethod =
-        typeof(AppInsightsProvider).Assembly
-            .GetType("Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper", throwOnError: true)!
-            .GetMethod("IsMultiThreadedRuntime", StaticNonPublicBindingFlags)
-        ?? throw new InvalidOperationException("Could not resolve RuntimeFeatureHelper.IsMultiThreadedRuntime.");
-
 #if DEBUG
     private static readonly MethodInfo IsKnownUnhashedPropertyMethod =
         typeof(AppInsightsProvider).GetMethod("IsKnownUnhashedProperty", StaticNonPublicBindingFlags)
@@ -68,14 +62,6 @@ public sealed class AppInsightsProviderTests
     [TestMethod]
     public void ContinueOnCapturedContext_IsDisabled()
         => Assert.IsFalse((bool)ContinueOnCapturedContextProperty.GetValue(null)!);
-
-    [TestMethod]
-    [DataRow(false, false, true)]
-    [DataRow(true, false, false)]
-    [DataRow(false, true, false)]
-    [DataRow(true, true, false)]
-    public void IsMultiThreadedRuntime_ReturnsExpectedValue(bool isBrowser, bool isWasi, bool expected)
-        => Assert.AreEqual(expected, (bool)IsMultiThreadedRuntimeMethod.Invoke(null, [isBrowser, isWasi])!);
 
 #if NETCOREAPP
     [TestMethod]

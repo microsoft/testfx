@@ -676,7 +676,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
 
     private string Name(string name) => _namePrefix + name;
 
-    private static IPlatformActivity WrapNonAmbient(Activity activity) => new ActivityWrapper(activity);
+    private static IPlatformActivity WrapNonAmbient(Activity activity) => new ActivityWrapper(activity, isAmbient: false);
 
     private Activity Single()
     {

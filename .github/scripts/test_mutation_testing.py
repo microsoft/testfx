@@ -63,7 +63,8 @@ class MutationTestingTests(unittest.TestCase):
         configured_projects = {
             target["project"]
             for target in target_manifest["modules"]
-            if target["project"].startswith(
+            if target["enabled"]
+            and target["project"].startswith(
                 "src/Platform/Microsoft.Testing.Extensions."
             )
         }

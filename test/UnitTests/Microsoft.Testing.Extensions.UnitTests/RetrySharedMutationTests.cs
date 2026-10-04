@@ -271,7 +271,7 @@ public sealed class RetryNamedPipeMutationTests
         {
             ((IDisposable)client).Dispose();
             Assert.IsNotNull(clientHandle);
-            Assert.IsTrue(clientHandle.IsClosed);
+            Assert.IsTrue(clientHandle!.IsClosed);
             ((IDisposable)server).Dispose();
         }
     }

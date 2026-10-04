@@ -254,11 +254,12 @@ public sealed class OpenTelemetryProviderExtensionsTests
     public void AddTestingPlatformInstrumentation_ConfiguresDurationHistogramBoundaries()
     {
         CapturingMetricExporter exporter = new();
+        using BaseExportingMetricReader reader = new(exporter);
 
         using (var provider = new OpenTelemetryProvider(
             withMetrics: metrics => metrics
                 .AddTestingPlatformInstrumentation()
-                .AddReader(new BaseExportingMetricReader(exporter))))
+                .AddReader(reader)))
         using (var service = new OpenTelemetryPlatformService())
         {
             service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(0.25);
@@ -282,16 +283,18 @@ public sealed class OpenTelemetryProviderExtensionsTests
         CapturingMetricExporter metricExporter = new();
         bool tracingConfigured = false;
         bool metricsConfigured = false;
+        using SimpleActivityExportProcessor activityProcessor = new(activityExporter);
+        using BaseExportingMetricReader metricReader = new(metricExporter);
         var provider = new OpenTelemetryProvider(
             tracing =>
             {
                 tracingConfigured = true;
-                tracing.AddProcessor(new SimpleActivityExportProcessor(activityExporter));
+                tracing.AddProcessor(activityProcessor);
             },
             metrics =>
             {
                 metricsConfigured = true;
-                metrics.AddReader(new BaseExportingMetricReader(metricExporter));
+                metrics.AddReader(metricReader);
             });
 
         provider.Dispose();
@@ -358,11 +361,13 @@ public sealed class OpenTelemetryProviderExtensionsTests
                 List<Activity> activities = [];
                 CapturingActivityExporter activityExporter = new(activities, activityName);
                 CapturingMetricExporter metricExporter = new();
+                using SimpleActivityExportProcessor activityProcessor = new(activityExporter);
+                using BaseExportingMetricReader metricReader = new(metricExporter);
                 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
 
                 builder.AddOpenTelemetryProviderFromEnvironment(
-                    tracing => tracing.AddProcessor(new SimpleActivityExportProcessor(activityExporter)),
-                    metrics => metrics.AddReader(new BaseExportingMetricReader(metricExporter)));
+                    tracing => tracing.AddProcessor(activityProcessor),
+                    metrics => metrics.AddReader(metricReader));
 
                 var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
                 IPlatformOpenTelemetryService? service = telemetryManager.BuildOTelService(new ServiceProvider());

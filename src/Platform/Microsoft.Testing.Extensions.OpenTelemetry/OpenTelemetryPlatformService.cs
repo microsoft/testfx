@@ -40,7 +40,7 @@ internal sealed class OpenTelemetryPlatformService :
         // StartActivity unconditionally publishes the new activity as Activity.Current. Undo that immediately so
         // the span is timed and exported without ever leaking into an ExecutionContext captured by the code we wrap.
         Activity.Current = ambientBeforeStart;
-        return new ActivityWrapper(Stamp(activity));
+        return new ActivityWrapper(Stamp(activity), isAmbient: false);
     }
 
     public IPlatformTestExecutionActivity? StartTestExecutionActivity(
@@ -56,7 +56,7 @@ internal sealed class OpenTelemetryPlatformService :
         }
 
         Activity.Current = ambientBeforeStart;
-        return new ActivityWrapper(Stamp(activity));
+        return new ActivityWrapper(Stamp(activity), isAmbient: false);
     }
 
     public PlatformActivityContext? CaptureCurrentActivityContext()
