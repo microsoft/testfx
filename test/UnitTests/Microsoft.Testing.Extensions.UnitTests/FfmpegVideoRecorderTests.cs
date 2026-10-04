@@ -28,11 +28,7 @@ public sealed class FfmpegVideoRecorderTests
 
     [TestMethod]
     public void PerMonitorAwareV2DpiContext_HasDocumentedNativeValue()
-    {
-        IntPtr context = (IntPtr)PerMonitorAwareV2DpiContextProperty.GetValue(null)!;
-
-        Assert.AreEqual(new IntPtr(-4), context);
-    }
+        => Assert.AreEqual(new IntPtr(-4), (IntPtr)PerMonitorAwareV2DpiContextProperty.GetValue(null)!);
 
     [TestMethod]
     public void Constructor_ExistingConfiguredPath_InitializesRecorder()

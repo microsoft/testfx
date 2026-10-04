@@ -546,7 +546,7 @@ public sealed class RetryNamedPipeMutationTests
             () => GetPrivateFieldFromHierarchy<bool>(server, "_disposed"),
             TimeSpan.FromSeconds(30)));
         Assert.IsFalse(
-            dispose.Wait(TimeSpan.FromMilliseconds(100), TestContext.CancellationToken),
+            dispose.Wait(millisecondsTimeout: 100, TestContext.CancellationToken),
             "Dispose returned before the connected read loop completed.");
 
         loopCompletion.SetResult(true);

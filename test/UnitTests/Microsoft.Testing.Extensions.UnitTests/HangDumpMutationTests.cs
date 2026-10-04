@@ -580,7 +580,7 @@ public sealed class HangDumpNamedPipeMutationTests
         if (Path.DirectorySeparatorChar == '/')
         {
             Assert.IsTrue(Path.IsPathRooted(name));
-            Assert.EndsWith("testingplatform.pipe.folder.name", name.Replace('\\', '.'));
+            Assert.EndsWith("folder.name", name.Replace('\\', '.'));
         }
         else
         {
@@ -801,7 +801,10 @@ public sealed class HangDumpNamedPipeMutationTests
         object endpoint = HangDumpLinkedTypes.InvokeStatic(factoryType, "CreateEndpoint")!;
         string pipeName = (string)endpoint.GetType().GetProperty("PipeName")!.GetValue(endpoint)!;
 
-        Assert.MatchesRegex(new Regex(@"(?:^|[\\/])testingplatform\.pipe\.[0-9a-f]{32}$", RegexOptions.CultureInvariant), pipeName);
+        string pattern = Path.DirectorySeparatorChar == '/'
+            ? @"(?:^|[\\/])[0-9a-f]{32}$"
+            : @"^testingplatform\.pipe\.[0-9a-f]{32}$";
+        Assert.MatchesRegex(new Regex(pattern, RegexOptions.CultureInvariant), pipeName);
     }
 
     private static object GetPipeName(string name)

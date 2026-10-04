@@ -66,7 +66,10 @@ public class RetryTests
 
         using var server = new RetryFailedTestsPipeServer(serviceProvider, [], logger.Object);
 
-        Assert.MatchesRegex(new Regex(@"(?:^|[\\/])testingplatform\.pipe\.[0-9a-f]{32}$", RegexOptions.CultureInvariant), server.PipeName);
+        string pattern = Path.DirectorySeparatorChar == '/'
+            ? @"(?:^|[\\/])[0-9a-f]{32}$"
+            : @"^testingplatform\.pipe\.[0-9a-f]{32}$";
+        Assert.MatchesRegex(new Regex(pattern, RegexOptions.CultureInvariant), server.PipeName);
         logger.Verify(
             value => value.Log(
                 LogLevel.Trace,

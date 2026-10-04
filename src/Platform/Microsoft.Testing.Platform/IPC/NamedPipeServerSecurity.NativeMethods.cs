@@ -52,7 +52,10 @@ internal static partial class NamedPipeServerSecurity
             => new(byteCount);
 
         protected override bool ReleaseHandle()
-            => LocalFree(handle).Equals(IntPtr.Zero);
+        {
+            Marshal.FreeHGlobal(handle);
+            return true;
+        }
     }
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]

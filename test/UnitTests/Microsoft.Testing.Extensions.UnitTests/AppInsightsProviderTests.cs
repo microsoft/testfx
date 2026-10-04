@@ -21,9 +21,11 @@ public sealed class AppInsightsProviderTests
 {
     private const BindingFlags StaticNonPublicBindingFlags = BindingFlags.Static | BindingFlags.NonPublic;
 
+#if NETCOREAPP
     private static readonly FieldInfo IsDisposedField =
         typeof(AppInsightsProvider).GetField("_isDisposed", BindingFlags.Instance | BindingFlags.NonPublic)
         ?? throw new InvalidOperationException("Could not resolve AppInsightsProvider._isDisposed.");
+#endif
 
     private static readonly PropertyInfo ContinueOnCapturedContextProperty =
         typeof(AppInsightsProvider).GetProperty("ContinueOnCapturedContext", StaticNonPublicBindingFlags)
