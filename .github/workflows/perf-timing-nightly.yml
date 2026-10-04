@@ -246,7 +246,11 @@ jobs:
             });
 
             for (const run of workflowRuns.data.workflow_runs) {
-              if (run.id === context.runId) {
+              if (
+                run.id === context.runId ||
+                run.conclusion !== 'success' ||
+                !['schedule', 'workflow_dispatch'].includes(run.event)
+              ) {
                 continue;
               }
 
@@ -278,18 +282,12 @@ jobs:
             core.info('No previous allocation baseline was found; this run will initialize it.');
             core.setOutput('found', 'false');
 
-      - name: Extract previous allocation baseline
-        if: ${{ always() && steps.previous-benchmark-baseline.outputs.found == 'true' }}
-        run: |
-          mkdir -p "$RUNNER_TEMP/perf-benchmark-baseline"
-          unzip -q "$RUNNER_TEMP/perf-benchmark-baseline.zip" -d "$RUNNER_TEMP/perf-benchmark-baseline"
-
       - name: Compare allocation microbenchmarks with rolling baseline
         if: ${{ always() }}
         run: |
           python .github/scripts/compare_benchmark_allocations.py \
             --current-dir artifacts/perf-microbenchmarks/results \
-            --baseline "$RUNNER_TEMP/perf-benchmark-baseline/Baseline.json" \
+            --baseline "$RUNNER_TEMP/perf-benchmark-baseline.zip" \
             --output artifacts/perf-benchmark-baseline/Baseline.json \
             --summary artifacts/perf-benchmark-baseline/Summary.md \
             --run-id "$GITHUB_RUN_ID"

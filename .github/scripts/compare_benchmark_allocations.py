@@ -6,12 +6,15 @@ import argparse
 import json
 import math
 import statistics
+import zipfile
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 SCHEMA_VERSION = 1
 REPORT_PATTERN = "*-report-full-compressed.json"
+MAX_BASELINE_BYTES = 10 * 1024 * 1024
 
 
 def validate_metric(value: object, source: str, name: str, *, allow_zero: bool) -> float:
@@ -24,6 +27,16 @@ def validate_metric(value: object, source: str, name: str, *, allow_zero: bool) 
     ):
         raise ValueError(f"{source} has an invalid {name}")
     return float(value)
+
+
+def escape_workflow_command(value: str) -> str:
+    return (
+        value.replace("%", "%25")
+        .replace("\r", "%0D")
+        .replace("\n", "%0A")
+        .replace(":", "%3A")
+        .replace(",", "%2C")
+    )
 
 
 def load_current_results(
@@ -89,7 +102,27 @@ def load_baseline(path: Path) -> list[dict]:
         return []
 
     try:
-        baseline = json.loads(path.read_text(encoding="utf-8"))
+        if path.suffix.lower() == ".zip":
+            with zipfile.ZipFile(path) as archive:
+                baseline_files = [
+                    member
+                    for member in archive.infolist()
+                    if member.filename == "Baseline.json" and not member.is_dir()
+                ]
+                if len(baseline_files) != 1:
+                    raise ValueError("Baseline archive must contain one Baseline.json file")
+                baseline_file = baseline_files[0]
+                if baseline_file.file_size > MAX_BASELINE_BYTES:
+                    raise ValueError("Baseline file exceeds the size limit")
+                with archive.open(baseline_file) as baseline_stream:
+                    baseline_contents = baseline_stream.read(MAX_BASELINE_BYTES + 1)
+                if len(baseline_contents) > MAX_BASELINE_BYTES:
+                    raise ValueError("Baseline file exceeds the size limit")
+                baseline = json.loads(baseline_contents.decode("utf-8-sig"))
+        else:
+            if path.stat().st_size > MAX_BASELINE_BYTES:
+                raise ValueError("Baseline file exceeds the size limit")
+            baseline = json.loads(path.read_text(encoding="utf-8-sig"))
         if not isinstance(baseline, dict):
             raise ValueError("Baseline root must be an object")
         if baseline.get("schemaVersion") != SCHEMA_VERSION:
@@ -126,8 +159,19 @@ def load_baseline(path: Path) -> list[dict]:
                     )
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
         message = f"Ignoring invalid benchmark baseline {path}: {error}"
-        escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        escaped = escape_workflow_command(message)
         print(f"::warning title=Invalid benchmark baseline::{escaped}")
+        return []
+    except (
+        UnicodeDecodeError,
+        RuntimeError,
+        zipfile.BadZipFile,
+        EOFError,
+        zlib.error,
+        NotImplementedError,
+    ) as error:
+        message = f"Ignoring invalid benchmark baseline {path}: {error}"
+        print(f"::warning title=Invalid benchmark baseline::{escape_workflow_command(message)}")
         return []
 
     return runs
@@ -334,7 +378,7 @@ def main() -> int:
     )
 
     for regression in regressions:
-        escaped = regression.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        escaped = escape_workflow_command(regression)
         print(f"::warning title=Allocation microbenchmark regression::{escaped}")
 
     return 0

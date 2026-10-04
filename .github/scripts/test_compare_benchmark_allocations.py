@@ -5,6 +5,7 @@ import json
 import pathlib
 import tempfile
 import unittest
+import zipfile
 
 
 SCRIPT_PATH = pathlib.Path(__file__).with_name("compare_benchmark_allocations.py")
@@ -76,6 +77,31 @@ class CompareBenchmarkAllocationsTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "environment does not match"):
                 COMPARE_BENCHMARK_ALLOCATIONS.load_current_results(root)
+
+    def test_load_baseline_reads_only_baseline_from_archive(self) -> None:
+        baseline = {
+            "schemaVersion": 1,
+            "runs": [
+                {
+                    "environment": ENVIRONMENT,
+                    "benchmarks": {
+                        "Example.Benchmarks.Run": {
+                            "meanTimeNanoseconds": 100,
+                            "bytesAllocatedPerOperation": 16,
+                        }
+                    },
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            archive_path = pathlib.Path(directory) / "Baseline.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("Baseline.json", json.dumps(baseline))
+                archive.writestr("Summary.md", "summary")
+
+            runs = COMPARE_BENCHMARK_ALLOCATIONS.load_baseline(archive_path)
+
+        self.assertEqual(baseline["runs"], runs)
 
     def test_build_summary_uses_rolling_median_and_reports_each_regressed_metric(self) -> None:
         runs = [
