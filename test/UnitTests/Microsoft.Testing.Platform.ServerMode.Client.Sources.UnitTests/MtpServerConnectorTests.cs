@@ -20,13 +20,7 @@ public sealed class MtpServerConnectorTests
 {
     public TestContext TestContext { get; set; } = null!;
 
-    // Only this test mutates the process-global SerializerUtilities.Serializers dictionary and
-    // s_clientSerializersRegistered flag (it removes the ClientInfo entry and resets the flag to force
-    // CreateFormatter to re-register, then restores both in the finally block). No other test in this class
-    // touches that static state, so [DoNotParallelize] is scoped to this method instead of the whole class;
-    // every other test here only touches per-test TCP listeners/sockets, TaskCompletionSource instances, or
-    // SynchronizationContext (which flows per-logical-call through ExecutionContext and does not leak across
-    // concurrently running tests).
+    // Mutates the process-global serializer registry and registration flag.
     [TestMethod]
     [DoNotParallelize]
     public async Task CreateFormatterRegistersClientSerializersBeforeCreatingFormatter()
@@ -383,6 +377,7 @@ public sealed class MtpServerConnectorTests
     }
 
     [TestMethod]
+    [DoNotParallelize] // The released port must remain available until the replacement listener binds it.
     public void SafeStopStopsListener()
     {
         TcpListener listener = MtpServerConnector.StartLoopbackListener(out int port);
