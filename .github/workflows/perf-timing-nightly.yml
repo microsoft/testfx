@@ -219,9 +219,90 @@ jobs:
             --project test/Performance/MSTest.Performance.Benchmarks \
             -c Release -- \
             --filter "*" \
+            --exporters JSON \
             --buildTimeout 600 \
             --generateBinLog \
             --artifacts "$GITHUB_WORKSPACE/artifacts/perf-microbenchmarks"
+
+      - name: Download previous allocation baseline
+        id: previous-benchmark-baseline
+        if: ${{ always() }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          BASELINE_ZIP: ${{ runner.temp }}/perf-benchmark-baseline.zip
+        with:
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const repository = await github.rest.repos.get({ owner, repo });
+            const workflowRuns = await github.rest.actions.listWorkflowRuns({
+              owner,
+              repo,
+              workflow_id: 'perf-timing-nightly.yml',
+              status: 'completed',
+              branch: repository.data.default_branch,
+              per_page: 100,
+            });
+
+            for (const run of workflowRuns.data.workflow_runs) {
+              if (run.id === context.runId) {
+                continue;
+              }
+
+              const workflowArtifacts =
+                await github.rest.actions.listWorkflowRunArtifacts({
+                  owner,
+                  repo,
+                  run_id: run.id,
+                  per_page: 100,
+                });
+              const baseline = workflowArtifacts.data.artifacts.find(
+                artifact => artifact.name === 'perf-benchmark-baseline-linux' && !artifact.expired);
+              if (!baseline) {
+                continue;
+              }
+
+              const download = await github.rest.actions.downloadArtifact({
+                owner,
+                repo,
+                artifact_id: baseline.id,
+                archive_format: 'zip',
+              });
+              fs.writeFileSync(process.env.BASELINE_ZIP, Buffer.from(download.data));
+              core.info(`Using allocation baseline artifact ${baseline.id} from run ${run.id}.`);
+              core.setOutput('found', 'true');
+              return;
+            }
+
+            core.info('No previous allocation baseline was found; this run will initialize it.');
+            core.setOutput('found', 'false');
+
+      - name: Extract previous allocation baseline
+        if: ${{ always() && steps.previous-benchmark-baseline.outputs.found == 'true' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/perf-benchmark-baseline"
+          unzip -q "$RUNNER_TEMP/perf-benchmark-baseline.zip" -d "$RUNNER_TEMP/perf-benchmark-baseline"
+
+      - name: Compare allocation microbenchmarks with rolling baseline
+        if: ${{ always() }}
+        run: |
+          python .github/scripts/compare_benchmark_allocations.py \
+            --current-dir artifacts/perf-microbenchmarks/results \
+            --baseline "$RUNNER_TEMP/perf-benchmark-baseline/Baseline.json" \
+            --output artifacts/perf-benchmark-baseline/Baseline.json \
+            --summary artifacts/perf-benchmark-baseline/Summary.md \
+            --run-id "$GITHUB_RUN_ID"
+          cat artifacts/perf-benchmark-baseline/Summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload allocation benchmark rolling baseline
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-benchmark-baseline-linux
+          path: artifacts/perf-benchmark-baseline/
+          if-no-files-found: warn
+          retention-days: 90
 
       - name: Upload allocation microbenchmarks
         if: ${{ always() }}
