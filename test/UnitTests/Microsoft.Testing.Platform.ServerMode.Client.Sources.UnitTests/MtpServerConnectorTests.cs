@@ -16,12 +16,19 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// by every teardown path that must never block indefinitely on a task it does not own.
 /// </summary>
 [TestClass]
-[DoNotParallelize]
 public sealed class MtpServerConnectorTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    // Only this test mutates the process-global SerializerUtilities.Serializers dictionary and
+    // s_clientSerializersRegistered flag (it removes the ClientInfo entry and resets the flag to force
+    // CreateFormatter to re-register, then restores both in the finally block). No other test in this class
+    // touches that static state, so [DoNotParallelize] is scoped to this method instead of the whole class;
+    // every other test here only touches per-test TCP listeners/sockets, TaskCompletionSource instances, or
+    // SynchronizationContext (which flows per-logical-call through ExecutionContext and does not leak across
+    // concurrently running tests).
     [TestMethod]
+    [DoNotParallelize]
     public async Task CreateFormatterRegistersClientSerializersBeforeCreatingFormatter()
     {
         FieldInfo serializersField = typeof(SerializerUtilities).GetField("Serializers", BindingFlags.NonPublic | BindingFlags.Static)!;
