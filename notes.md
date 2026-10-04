@@ -185,6 +185,18 @@ Key lasting gotchas:
 - Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
 - `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
 
+## Run 2026-10-04 (run 37241816633) — MSBuild FailedTestHelper tests
+
+- Task reconciliation: no open `[test-improver]`-prefixed PRs needed maintenance; PR #11741 (HangDump serializers) is green/approved by Copilot reviewer, awaiting maintainer merge. PR #11728 (Retry serializers) was merged; PR #11708 (TcpMessageHandler) was merged.
+- Task 2/3: ServerMode/IPC/Retry/HangDump serializer sweep confirmed exhausted (checked CrashDump/VideoRecorder — no named-pipe serializers there; checked Configuration/AI/OpenTelemetry extension areas — all already covered). Found `FailedTestHelper.FromFailedTest` (`src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/FailedTestHelper.cs`) — builds the MSBuild failed-test error message/location — had zero direct tests.
+- Added `FailedTestHelperTests.cs` (9 tests): stack-trace location resolution + CodeFilePath/targetPath fallbacks, canceled vs failed error code, multiline message (expected/actual/stack trace sections), non-multiline message (lowPriorityMessage, single-line stripping, place omission, long-message shortening).
+- **New gotcha**: `FailedTestInfoRequest` (in `Microsoft.Testing.Extensions.MSBuild.Serializers` namespace) is source-linked (`<Compile Include>`) into both `Microsoft.Testing.Extensions.MSBuild.csproj` and `Microsoft.Testing.Platform.MSBuild.csproj`. The `Microsoft.Testing.Platform.MSBuild.UnitTests` test project references both assemblies unaliased, so an unaliased reference to this type is CS0433-ambiguous. Fix: alias the `Microsoft.Testing.Platform.MSBuild` ProjectReference with `Aliases="global,PlatformMSBuild"` (keeps it usable unaliased for other files) and in the new test file add `extern alias PlatformMSBuild;` + `using FailedTestInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest;`.
+- MSTEST0046 requires `Assert.Contains(substring, value)` (not `StringAssert.Contains(value, substring)`) for new substring checks in this repo; MSTEST0037 requires `Assert.IsLessThanOrEqualTo(upperBound, value)` instead of `Assert.IsTrue(value <= bound)`.
+- Build succeeded (0 warnings) net8.0+net9.0. Full `Microsoft.Testing.Platform.MSBuild.UnitTests` suite: 148 total (was 139), 0 failed, 1 skipped (pre-existing, platform-gated), no regressions on both TFMs. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for FailedTestHelper.FromFailedTest" on branch `test-assist/msbuild-failed-test-helper-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, refined backlog (MSBuild area: FailedTestHelper done, MSBuildCompatibilityHelper remains a candidate — needs faking MSBuild's assembly version / Features.CheckFeatureAvailability, moderate effort).
+- Remaining candidates for future runs: `MSBuildCompatibilityHelper` (version/feature-gate helper in same project); MSTest.Engine internal classes (architecturally blocked, unchanged); other report-provider command-line providers not yet swept.
+
 ## Run 2026-10-03 (run 37162750314) — HangDump named-pipe serializer tests
 
 - Task reconciliation: no open `[test-improver]`-prefixed PRs needed maintenance (PR #11708 Retry serializers still pending review).
