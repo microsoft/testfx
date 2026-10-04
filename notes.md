@@ -44,7 +44,7 @@
 
 ## Testing Opportunities Backlog
 
-0. **HangDump IPC serializers** (`ActivitySignalRequestSerializer`, `ConsumerPipeNameSerializer`, `GetInProgressTestsRequest`/`Response` in `src/Platform/Microsoft.Testing.Extensions.HangDump/Serializers/`) — same zero-direct-serializer-test gap as Retry (closed 2026-10-02); same reflection-helper pattern (see `RetrySerializersTests.cs`) should apply. Good candidate for next run.
+0. **HangDump IPC serializers — DONE 2026-10-03** (`ActivitySignalRequestSerializer`, `ConsumerPipeNameRequestSerializer`, `GetInProgressTestsRequestSerializer`, `GetInProgressTestsResponseSerializer`): added `HangDumpSerializersTests.cs` (6 tests), same reflection-helper pattern as `RetrySerializersTests.cs`. ServerMode/IPC/Retry/HangDump serializer sweep now fully exhausted — next run should pivot to a fresh area (Task 5/6, or re-scan other extension projects e.g. CrashDump/VideoRecorder for similar zero-coverage serializer/plumbing gaps).
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **DependsOnShouldBeValidAnalyzer / TestFilterProviderShouldBeValidAnalyzer (MSTEST0078/0081)** — internal-target-class gap closed (2026-08-07); accessibility (type vs constructor) gap closed (2026-08-08). Remaining: another pass for any leftover branch gaps.
@@ -57,6 +57,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-10-03 | Task 2/3 (HangDump serializer tests: ActivitySignalRequest/ConsumerPipeNameRequest/GetInProgressTestsRequest+Response, 6 tests), Task 7. |
 | 2026-10-02 | Task 2/3 (Retry serializer round-trip tests: FailedTestRequest/GetListOfFailedTestsRequest+Response/TestRunCountsRequest/ArtifactRequest, 9 tests), Task 7. |
 | 2026-10-01 | Task 2/3 (TcpMessageHandler reset/bare-LF: 2 tests), Task 7. |
 | 2026-09-27 | Task 2/3 (ServerModeManager.Build: 3 tests), Task 7. |
@@ -183,6 +184,16 @@ Key lasting gotchas:
 - Jsonite/`Json.*` family deprioritized as low-value (trivial wrappers or already covered indirectly).
 - Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
 - `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
+
+## Run 2026-10-03 (run 37162750314) — HangDump named-pipe serializer tests
+
+- Task reconciliation: no open `[test-improver]`-prefixed PRs needed maintenance (PR #11708 Retry serializers still pending review).
+- Task 2/3: picked up standing backlog item (HangDump IPC serializers) — found `ActivitySignalRequestSerializer`, `ConsumerPipeNameRequestSerializer`, `GetInProgressTestsRequestSerializer`, `GetInProgressTestsResponseSerializer` (all in `src/Platform/Microsoft.Testing.Extensions.HangDump/Serializers/`) had zero direct serializer-level tests.
+- Added `HangDumpSerializersTests.cs` (6 tests): singleton round-trip, pipe-name round-trip, empty-record request, response with multiple entries/empty array/Unicode test name.
+- Build succeeded (0 warnings). Full `Microsoft.Testing.Extensions.UnitTests` net9.0 suite: 2081 total (was 2075), 0 failed, 51 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for HangDump named-pipe serializers" on branch `test-assist/hangdump-serializer-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, removed the now-addressed HangDump backlog item, noted ServerMode/IPC/Retry/HangDump sweep as fully exhausted.
+- Remaining candidates for future runs: MSTest.Engine internal classes (architecturally blocked, unchanged); pivot to Task 5 (issue comments) or Task 6 (test infrastructure), or re-scan other extension projects (CrashDump, VideoRecorder) for similar thin-plumbing zero-coverage gaps.
 
 ## Run 2026-10-02 (run 37075004936) — Retry named-pipe serializer tests
 
