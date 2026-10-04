@@ -179,7 +179,8 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         Func<Exception, Task> logFailureAsync,
         CancellationToken cancellationToken)
     {
-        using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        Task? cancellationTask = null;
         try
         {
             Task<(string, int)[]> queryTask = requestInProgressTestsAsync(queryCts.Token);
@@ -193,13 +194,19 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             try
             {
 #if NET
-                // Stryker disable once Boolean: continuation scheduling does not change best-effort cancellation.
-                await queryCts.CancelAsync().ConfigureAwait(false);
+                cancellationTask = queryCts.CancelAsync();
 #else
 #pragma warning disable VSTHRD103 // CancellationTokenSource.CancelAsync is not available on this target framework.
-                queryCts.Cancel();
+                cancellationTask = Task.Factory.StartNew(
+                    queryCts.Cancel,
+                    CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach,
+                    TaskScheduler.Default);
 #pragma warning restore VSTHRD103
 #endif
+                // A cancellation callback belongs to the remote-query implementation and may itself wedge.
+                // Cancellation is only cleanup after the request timeout, so it must not defeat that bound.
+                await cancellationTask.TimeoutAfterAsync(BestEffortDiagnosticsTimeout).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -213,6 +220,22 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             await RunBestEffortDiagnosticAsync(() => logFailureAsync(ex), BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
             return [];
+        }
+        finally
+        {
+            if (cancellationTask is null || cancellationTask.IsCompleted)
+            {
+                queryCts.Dispose();
+            }
+            else
+            {
+                _ = cancellationTask.ContinueWith(
+                    static (_, state) => ((CancellationTokenSource)state!).Dispose(),
+                    queryCts,
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
         }
     }
 }

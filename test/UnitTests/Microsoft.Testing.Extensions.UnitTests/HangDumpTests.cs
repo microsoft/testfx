@@ -417,6 +417,50 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenCancellationCallbackBlocks_ReturnsEmptyList()
+    {
+        using ManualResetEventSlim cancellationCallbackEntered = new();
+        using ManualResetEventSlim releaseCancellationCallback = new();
+        TaskCompletionSource<(string, int)[]> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration cancellationRegistration = default;
+        Exception? loggedFailure = null;
+
+        try
+        {
+            Task<(string, int)[]> query = HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                queryCancellationToken =>
+                {
+                    cancellationRegistration = queryCancellationToken.Register(
+                        () =>
+                        {
+                            cancellationCallbackEntered.Set();
+                            releaseCancellationCallback.Wait(TestContext.CancellationToken);
+                        });
+                    return neverCompletes.Task;
+                },
+                TimeSpan.FromMilliseconds(50),
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
+                CancellationToken.None);
+
+            Assert.IsTrue(cancellationCallbackEntered.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Task completed = await Task.WhenAny(query, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Assert.AreSame(query, completed, "A blocking cancellation callback blocked the dump.");
+            Assert.IsEmpty(await query);
+            Assert.IsNotNull(loggedFailure);
+        }
+        finally
+        {
+            releaseCancellationCallback.Set();
+            cancellationRegistration.Dispose();
+            neverCompletes.TrySetResult([]);
+        }
+    }
+
+    [TestMethod]
     public async Task QueryInProgressTestsWithTimeout_WhenTheHostReplies_ReturnsTheAnswer()
     {
         // The bound must not get in the way of the healthy path, which answers in milliseconds.
