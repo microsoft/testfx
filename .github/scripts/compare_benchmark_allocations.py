@@ -230,7 +230,8 @@ def build_summary(
         lines.extend(["No BenchmarkDotNet JSON reports were found for this run.", ""])
         return "\n".join(lines), []
 
-    assert environment is not None
+    if environment is None:
+        raise ValueError("Benchmark results do not contain environment information")
     lines.extend(
         [
             f"Environment: `{json.dumps(environment, sort_keys=True)}`.",
