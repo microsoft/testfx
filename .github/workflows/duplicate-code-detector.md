@@ -121,6 +121,8 @@ Assess findings to identify true code duplication:
 - **Impact**: Where duplication occurs (critical paths, frequently called code)
 - **Maintainability**: How duplication affects code maintainability
 - **Refactoring Opportunity**: Whether duplication can be easily refactored
+- **Semantic Equivalence**: Verify that a proposed extraction preserves compiler, analyzer, linker, and runtime behavior
+- **Existing Safeguards**: Search tests for guards that already keep intentionally repeated declarations synchronized
 
 ### 4. Issue Reporting
 
@@ -128,6 +130,7 @@ Create separate issues for each distinct duplication pattern found (maximum 3 pa
 
 **When to Create Issues**:
 - Only create issues if significant duplication is found (threshold: >10 lines of duplicated code OR 3+ instances of similar patterns)
+- Require at least one concrete, behavior-preserving refactoring approach; use `noop` when language or tooling semantics require the repetition
 - **Create one issue per distinct duplication pattern** - do NOT bundle multiple patterns in a single issue
 - Limit to the top 3 most significant patterns if more are found
 - Use the `create_issue` tool from safe-outputs MCP **once for each pattern**
@@ -158,6 +161,7 @@ Create separate issues for each distinct duplication pattern found (maximum 3 pa
 - **All workflow files** (files under `.github/workflows/*`)
 - Configuration files with similar structure
 - Language-specific patterns (constructors, getters/setters)
+- Declaration-site attributes, annotations, or modifiers that compilers, analyzers, linkers, or runtimes require on every affected member. In particular, do not suggest wrapping built-in trimming or AOT attributes in a custom attribute when that would stop caller diagnostics.
 - Small code snippets (<5 lines) unless highly repetitive
 - Generated code or vendored dependencies
 

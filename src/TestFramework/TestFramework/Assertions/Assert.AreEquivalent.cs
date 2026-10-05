@@ -5,6 +5,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
+    // Trimming and AOT diagnostics require the framework attributes to be applied directly to every public
+    // overload. StructuralEquivalenceAssertions_DeclareTrimAndAotRequirements keeps the repeated declarations
+    // synchronized.
 #if NET5_0_OR_GREATER
     private const string EquivalenceRequiresUnreferencedCodeMessage = "Structural comparison uses reflection over runtime types, whose members cannot be statically preserved.";
 #endif
