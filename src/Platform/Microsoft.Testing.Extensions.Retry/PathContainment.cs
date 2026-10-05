@@ -19,10 +19,10 @@ internal static class PathContainment
             + Path.DirectorySeparatorChar;
 
     internal static bool IsUnderNormalizedDirectory(string path, string normalizedDirectoryPrefix)
-    {
-        StringComparison comparison = IsWindows
+        => path.StartsWith(normalizedDirectoryPrefix, GetComparison(IsWindows));
+
+    private static StringComparison GetComparison(bool isWindows)
+        => isWindows
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
-        return path.StartsWith(normalizedDirectoryPrefix, comparison);
-    }
 }

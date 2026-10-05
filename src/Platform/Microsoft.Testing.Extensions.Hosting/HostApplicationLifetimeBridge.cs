@@ -36,13 +36,11 @@ internal sealed class HostApplicationLifetimeBridge(IHostApplicationLifetime hos
     {
         lock (_sync)
         {
-            if (!_isConnected)
+            if (_isConnected)
             {
-                return;
+                _isConnected = false;
+                _hostStoppingRegistration.Dispose();
             }
-
-            _isConnected = false;
-            _hostStoppingRegistration.Dispose();
         }
     }
 }

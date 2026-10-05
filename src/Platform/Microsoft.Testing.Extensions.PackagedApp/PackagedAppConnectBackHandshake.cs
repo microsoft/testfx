@@ -116,14 +116,15 @@ internal static class PackagedAppConnectBackHandshake
             builder.Append(entry.Key).Append('=');
             if (entry.Value is null)
             {
-                builder.Append(NullValueMarker);
+                builder.Append(NullValueMarker).Append('\n');
             }
             else
             {
-                builder.Append(StringValueMarker).Append(Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Value)));
+                builder
+                    .Append(StringValueMarker)
+                    .Append(Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Value)))
+                    .Append('\n');
             }
-
-            builder.Append('\n');
         }
 
         File.WriteAllText(filePath, builder.ToString(), Encoding.UTF8);

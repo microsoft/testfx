@@ -8,6 +8,7 @@ import unittest
 
 
 SCRIPT_PATH = pathlib.Path(__file__).with_name("mutation_testing.py")
+REPOSITORY_ROOT = SCRIPT_PATH.parents[2]
 SPEC = importlib.util.spec_from_file_location("mutation_testing", SCRIPT_PATH)
 assert SPEC is not None
 assert SPEC.loader is not None
@@ -55,6 +56,27 @@ def write_mutation_report(path: pathlib.Path, statuses: list[str]) -> None:
 
 
 class MutationTestingTests(unittest.TestCase):
+    def test_repository_manifest_onboards_every_mtp_extension(self) -> None:
+        target_manifest = MUTATION_TESTING.load_manifest(
+            REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
+        )
+        configured_projects = {
+            target["project"]
+            for target in target_manifest["modules"]
+            if target["enabled"]
+            and target["project"].startswith(
+                "src/Platform/Microsoft.Testing.Extensions."
+            )
+        }
+        extension_projects = {
+            project.relative_to(REPOSITORY_ROOT).as_posix()
+            for project in REPOSITORY_ROOT.glob(
+                "src/Platform/Microsoft.Testing.Extensions.*/*.csproj"
+            )
+        }
+
+        self.assertEqual(extension_projects, configured_projects)
+
     def test_load_manifest_requires_one_legacy_module(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = pathlib.Path(directory) / "manifest.json"

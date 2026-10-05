@@ -358,6 +358,32 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTimeoutElapses_CancelsTheRequestToken()
+    {
+        CancellationToken requestCancellationToken = default;
+        Exception? loggedFailure = null;
+
+        (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            async queryCancellationToken =>
+            {
+                requestCancellationToken = queryCancellationToken;
+                await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                return [("Token was not canceled", 0)];
+            },
+            TimeSpan.FromMilliseconds(200),
+            ex =>
+            {
+                loggedFailure = ex;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.IsTrue(requestCancellationToken.IsCancellationRequested);
+        Assert.IsEmpty(result);
+        Assert.IsNotNull(loggedFailure);
+    }
+
+    [TestMethod]
     public async Task QueryInProgressTestsWithTimeout_WhenTheReplyIgnoresCancellation_ReturnsEmptyList()
     {
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -387,6 +413,50 @@ public sealed class HangDumpTests
         finally
         {
             neverCompletes.TrySetResult(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenCancellationCallbackBlocks_ReturnsEmptyList()
+    {
+        using ManualResetEventSlim cancellationCallbackEntered = new();
+        using ManualResetEventSlim releaseCancellationCallback = new();
+        TaskCompletionSource<(string, int)[]> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        CancellationTokenRegistration cancellationRegistration = default;
+        Exception? loggedFailure = null;
+
+        try
+        {
+            Task<(string, int)[]> query = HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                queryCancellationToken =>
+                {
+                    cancellationRegistration = queryCancellationToken.Register(
+                        () =>
+                        {
+                            cancellationCallbackEntered.Set();
+                            releaseCancellationCallback.Wait(TestContext.CancellationToken);
+                        });
+                    return neverCompletes.Task;
+                },
+                TimeSpan.FromMilliseconds(50),
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
+                CancellationToken.None);
+
+            Assert.IsTrue(cancellationCallbackEntered.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Task completed = await Task.WhenAny(query, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Assert.AreSame(query, completed, "A blocking cancellation callback blocked the dump.");
+            Assert.IsEmpty(await query);
+            Assert.IsNotNull(loggedFailure);
+        }
+        finally
+        {
+            releaseCancellationCallback.Set();
+            cancellationRegistration.Dispose();
+            neverCompletes.TrySetResult([]);
         }
     }
 
@@ -439,6 +509,7 @@ public sealed class HangDumpTests
     {
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
         IProcess rootProcess = Mock.Of<IProcess>();
+        Exception? loggedFailure = null;
 
         try
         {
@@ -449,12 +520,17 @@ public sealed class HangDumpTests
                     return [];
                 },
                 TimeSpan.FromMilliseconds(50),
-                _ => Task.CompletedTask,
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
                 rootProcess,
                 TestContext.CancellationToken);
 
             Assert.HasCount(1, processTree);
             Assert.AreSame(rootProcess, processTree[0].Process);
+            Assert.IsNotNull(loggedFailure);
         }
         finally
         {

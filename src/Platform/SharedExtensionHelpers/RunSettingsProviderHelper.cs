@@ -78,6 +78,7 @@ internal static class RunSettingsProviderHelper
         {
             using IFileStream fileStream = fileSystem.NewFileStream(runSettingsFilePath, FileMode.Open, FileAccess.Read);
 #if NETCOREAPP
+            // Stryker disable once Boolean: Capturing the current context does not change the parsed runsettings result.
             return await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
 #else
             using StreamReader streamReader = new(fileStream.Stream);

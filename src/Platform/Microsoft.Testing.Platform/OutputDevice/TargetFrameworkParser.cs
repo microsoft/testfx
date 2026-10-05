@@ -65,10 +65,14 @@ internal static class TargetFrameworkParser
         string net = ".NET";
         if (frameworkDescription.StartsWith(net, ignoreCase: false, CultureInfo.InvariantCulture))
         {
-            int firstDotInVersion = frameworkDescription.IndexOf('.', net.Length + 1);
-            return firstDotInVersion < 1
+            const int NetVersionStartIndex = 5;
+            int firstDotInVersion = frameworkDescription.IndexOf(
+                '.',
+                Math.Min(NetVersionStartIndex, frameworkDescription.Length));
+            return firstDotInVersion <= NetVersionStartIndex
+                || firstDotInVersion == frameworkDescription.Length - 1
                 ? frameworkDescription
-                : $"net{frameworkDescription.Substring(net.Length + 1, firstDotInVersion - net.Length - 1)}.{frameworkDescription[firstDotInVersion + 1]}";
+                : $"net{frameworkDescription.Substring(NetVersionStartIndex, firstDotInVersion - NetVersionStartIndex)}.{frameworkDescription[firstDotInVersion + 1]}";
         }
 
         return frameworkDescription;

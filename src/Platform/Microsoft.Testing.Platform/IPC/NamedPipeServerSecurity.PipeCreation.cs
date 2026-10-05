@@ -14,13 +14,8 @@ internal static partial class NamedPipeServerSecurity
     private const uint PipeAccessDuplex = 0x00000003;
     private const uint FileFlagOverlapped = 0x40000000;
     private const uint FileFlagFirstPipeInstance = 0x00080000;
-    private const uint PipeTypeByte = 0x00000000;
-    private const uint PipeReadModeByte = 0x00000000;
-    private const uint PipeWait = 0x00000000;
     private const uint PipeRejectRemoteClients = 0x00000008;
     private const uint PipeUnlimitedInstances = 255;
-
-    private static readonly IntPtr InvalidHandleValue = new(-1);
 
     /// <summary>
     /// Creates a named pipe server stream whose DACL grants the current token's owner full control and each
@@ -60,33 +55,26 @@ internal static partial class NamedPipeServerSecurity
     [SupportedOSPlatform("windows")]
     private static NamedPipeServerStream CreateServerStreamCore(string nativePipePath, int maxNumberOfServerInstances, string securityDescriptorSddl)
     {
-        if (!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptorSddl, SddlRevision1, out IntPtr securityDescriptor, IntPtr.Zero))
+        if (!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptorSddl, SddlRevision1, out SafeLocalAllocHandle securityDescriptor, IntPtr.Zero))
         {
             throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to build the security descriptor for the named pipe '{nativePipePath}'.");
         }
 
-        try
+        using (securityDescriptor)
         {
             SecurityAttributes securityAttributes = new()
             {
                 Length = Marshal.SizeOf<SecurityAttributes>(),
-                SecurityDescriptor = securityDescriptor,
+                SecurityDescriptor = securityDescriptor.Value,
 
                 // The controller must never leak the listening handle into the test host (or any other
                 // child), which would bypass the DACL entirely.
                 InheritHandle = 0,
             };
 
-            uint openMode = PipeAccessDuplex
-                | FileFlagOverlapped
-                // Mirrors what NamedPipeServerStream does: for a single-instance pipe, refuse to attach to a
-                // name somebody else already created (anti-squatting).
-                | (maxNumberOfServerInstances == 1 ? FileFlagFirstPipeInstance : 0);
+            (uint openMode, uint pipeMode, uint maxInstances) = GetPipeCreationOptions(maxNumberOfServerInstances);
 
-            uint pipeMode = PipeTypeByte | PipeReadModeByte | PipeWait | PipeRejectRemoteClients;
-            uint maxInstances = maxNumberOfServerInstances == -1 ? PipeUnlimitedInstances : (uint)maxNumberOfServerInstances;
-
-            IntPtr handle = CreateNamedPipe(
+            SafePipeHandle safePipeHandle = CreateNamedPipe(
                 nativePipePath,
                 openMode,
                 pipeMode,
@@ -96,30 +84,45 @@ internal static partial class NamedPipeServerSecurity
                 nDefaultTimeOut: 0,
                 ref securityAttributes);
 
-            if (handle == InvalidHandleValue)
-            {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to create the named pipe '{nativePipePath}'.");
-            }
-
-            var safePipeHandle = new SafePipeHandle(handle, ownsHandle: true);
-            try
-            {
-                return new NamedPipeServerStream(PipeDirection.InOut, isAsync: true, isConnected: false, safePipeHandle);
-            }
-            catch
-            {
-                safePipeHandle.Dispose();
-                throw;
-            }
+            return safePipeHandle.IsInvalid
+                ? throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to create the named pipe '{nativePipePath}'.")
+                : CreateStreamWithOwnedHandle(
+                    safePipeHandle,
+                    static handle => new NamedPipeServerStream(PipeDirection.InOut, isAsync: true, isConnected: false, safePipeHandle: handle));
         }
-        finally
+    }
+
+    internal static (uint OpenMode, uint PipeMode, uint MaxInstances) GetPipeCreationOptions(int maxNumberOfServerInstances)
+    {
+        uint openMode = PipeAccessDuplex
+            | FileFlagOverlapped
+            // Mirrors what NamedPipeServerStream does: for a single-instance pipe, refuse to attach to a
+            // name somebody else already created (anti-squatting).
+            | (maxNumberOfServerInstances == 1 ? FileFlagFirstPipeInstance : 0);
+
+        uint pipeMode = PipeRejectRemoteClients;
+        uint maxInstances = maxNumberOfServerInstances == -1 ? PipeUnlimitedInstances : (uint)maxNumberOfServerInstances;
+        return (openMode, pipeMode, maxInstances);
+    }
+
+    [SupportedOSPlatform("windows")]
+    internal static NamedPipeServerStream CreateStreamWithOwnedHandle(
+        SafePipeHandle safePipeHandle,
+        Func<SafePipeHandle, NamedPipeServerStream> streamFactory)
+    {
+        try
         {
-            LocalFree(securityDescriptor);
+            return streamFactory(safePipeHandle);
+        }
+        catch
+        {
+            safePipeHandle.Dispose();
+            throw;
         }
     }
 
     [SupportedOSPlatform("windows")]
-    private static string GetNativePipePath(string pipeName, IReadOnlyList<string> authorizedSecurityIdentities)
+    internal static string GetNativePipePath(string pipeName, IReadOnlyList<string> authorizedSecurityIdentities)
     {
         if (!pipeName.StartsWith(SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal))
         {
@@ -143,7 +146,7 @@ internal static partial class NamedPipeServerSecurity
         {
             _ = GetAppContainerNamedObjectPath(
                 IntPtr.Zero,
-                appContainerSid.DangerousGetHandle(),
+                appContainerSid.Value,
                 objectPathLength: 0,
                 objectPath: null,
                 out uint requiredLength);
@@ -157,7 +160,7 @@ internal static partial class NamedPipeServerSecurity
             var objectPath = new StringBuilder((int)requiredLength);
             if (!GetAppContainerNamedObjectPath(
                 IntPtr.Zero,
-                appContainerSid.DangerousGetHandle(),
+                appContainerSid.Value,
                 requiredLength,
                 objectPath,
                 out _))
@@ -169,19 +172,22 @@ internal static partial class NamedPipeServerSecurity
 
             string unqualifiedPipeName = pipeName[SandboxedApplicationPipeNamePrefix.Length..];
             string namedObjectPath = objectPath.ToString().Trim('\\');
-            if (!namedObjectPath.StartsWith("Sessions\\", StringComparison.OrdinalIgnoreCase))
-            {
-                if (!ProcessIdToSessionId(GetCurrentProcessId(), out uint sessionId))
-                {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to resolve the current Windows session.");
-                }
-
-                namedObjectPath = $@"Sessions\{sessionId}\{namedObjectPath}";
-            }
+            namedObjectPath = EnsureSessionQualifiedNamedObjectPath(namedObjectPath, GetCurrentSessionId);
 
             return $@"\\.\pipe\{namedObjectPath}\{unqualifiedPipeName}";
         }
     }
+
+    internal static string EnsureSessionQualifiedNamedObjectPath(string namedObjectPath, Func<uint> sessionIdProvider)
+        => namedObjectPath.StartsWith("Sessions\\", StringComparison.OrdinalIgnoreCase)
+            ? namedObjectPath
+            : $@"Sessions\{sessionIdProvider()}\{namedObjectPath}";
+
+    [SupportedOSPlatform("windows")]
+    private static uint GetCurrentSessionId()
+        => ProcessIdToSessionId(GetCurrentProcessId(), out uint sessionId)
+            ? sessionId
+            : throw new Win32Exception(Marshal.GetLastWin32Error(), "Failed to resolve the current Windows session.");
 
     [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the platform wrapper for the current process ID.")]
     private static uint GetCurrentProcessId()

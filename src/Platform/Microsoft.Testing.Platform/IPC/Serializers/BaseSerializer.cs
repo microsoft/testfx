@@ -42,6 +42,8 @@ internal abstract class BaseSerializer
             ReadExactly(stream, rentedBytes, 0, size);
             return Encoding.UTF8.GetString(rentedBytes, 0, size);
         }
+
+        // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the decoded string.
         finally
         {
             System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
@@ -64,6 +66,8 @@ internal abstract class BaseSerializer
             WriteInt(stream, byteCount);
             stream.Write(rentedBytes, 0, byteCount);
         }
+
+        // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the encoded string.
         finally
         {
             System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);

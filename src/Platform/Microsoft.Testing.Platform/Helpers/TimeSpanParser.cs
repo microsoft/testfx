@@ -108,14 +108,9 @@ internal static partial class TimeSpanParser
             return TryCreateTimeSpan(TimeSpan.FromHours, number, out result);
         }
 
-        // Stryker disable once String: The regex guarantees every suffix reaching this final branch is a day alias.
-        if (suffix.StartsWith("d", c))
-        {
-            return TryCreateTimeSpan(TimeSpan.FromDays, number, out result);
-        }
-
-        result = TimeSpan.Zero;
-        return false;
+        // The regex limits suffixes to the units handled above plus day/days, so reaching
+        // this point unambiguously means days.
+        return TryCreateTimeSpan(TimeSpan.FromDays, number, out result);
     }
 
     private static bool TryFromUnit(double number, TimeSpanDefaultUnit unit, out TimeSpan result)

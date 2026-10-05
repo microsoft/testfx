@@ -14,6 +14,7 @@ public sealed class PackagedAppTestHostLauncherTests
 {
     private const string MicrosoftStorePublisher = "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US";
     private const string MicrosoftStorePublisherId = "8wekyb3d8bbwe";
+    private const string TargetExecutableEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_TARGET";
 
     /// <summary>A minimal manifest that makes a layout classify as packaged.</summary>
     private static readonly string PackagedManifestXml = BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, "App");
@@ -128,6 +129,59 @@ public sealed class PackagedAppTestHostLauncherTests
     public Task IsEnabledAsync_OnNonWindows_IsDisabledEvenForAPackagedLayoutAndAlwaysMode()
         => AssertIsEnabledAsync(expected: false, PackagedManifestXml, mode: "always");
 
+    [DataRow(false, new string[0])]
+    [DataRow(true, new[] { "--internal-testhostcontroller-pid", "1234" })]
+    [DataRow(true, new[] { "--internal-retry-pipename", "retry-pipe" })]
+    [TestMethod]
+    public void IsActivatedChild_ReturnsExpectedResult(bool expected, string[] arguments)
+        => Assert.AreEqual(expected, IsActivatedChild(arguments));
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps are a Windows-only scenario.")]
+    public async Task IsEnabledAsync_ActivatedChild_IsDisabledEvenWithAlwaysMode()
+    {
+        PackagedAppTestHostLauncher launcher = CreateLauncher(
+            Path.GetTempPath(),
+            name => name == PackagedAppTestHostLauncher.LauncherModeEnvironmentVariable ? "always" : null,
+            isActivatedChild: true);
+
+        Assert.IsFalse(await launcher.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps are a Windows-only scenario.")]
+    public Task IsEnabledAsync_WithConfiguredTarget_UsesTargetDirectory()
+        => RunInTemporaryLayoutAsync(PackagedManifestXml, async (root, _) =>
+        {
+            string unrelatedDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            string targetExecutable = Path.Combine(root, "MyTestApp.exe");
+            var launcher = new PackagedAppTestHostLauncher(
+                unrelatedDirectory,
+                name => name == TargetExecutableEnvironmentVariable
+                    ? targetExecutable
+                    : null);
+
+            Assert.IsTrue(await launcher.IsEnabledAsync());
+        });
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps are a Windows-only scenario.")]
+    public Task IsEnabledAsync_WithConfiguredTarget_RejectsManifestForDifferentExecutable()
+        => RunInTemporaryLayoutAsync(
+            BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, "Other", @"nested\Other.exe"),
+            async (_, appDirectory) =>
+            {
+                string targetExecutable = Path.Combine(appDirectory, "MyTestApp.exe");
+                var launcher = new PackagedAppTestHostLauncher(
+                    Path.GetTempPath(),
+                    name => name == TargetExecutableEnvironmentVariable
+                        ? targetExecutable
+                        : null);
+
+                Assert.IsFalse(await launcher.IsEnabledAsync());
+            },
+            appSubdirectoryDepth: 1);
+
     [TestMethod]
     public async Task LaunchTestHostAsync_WithPackagedLayout_ThrowsWithApplicationUserModelId()
     {
@@ -183,6 +237,81 @@ public sealed class PackagedAppTestHostLauncherTests
             appSubdirectoryDepth: AppSubdirectoryDepth);
 
         Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task LaunchTestHostAsync_WhenAlreadyCanceled_ThrowsBeforeInspectingContext()
+    {
+        var launcher = new PackagedAppTestHostLauncher(Path.GetTempPath(), static _ => null);
+        await Assert.ThrowsExactlyAsync<NullReferenceException>(
+            () => launcher.LaunchTestHostAsync(null!, CancellationToken.None));
+
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => launcher.LaunchTestHostAsync(null!, canceled.Token));
+
+        Assert.AreEqual(canceled.Token, exception.CancellationToken);
+    }
+
+    [TestMethod]
+    public Task LaunchTestHostAsync_WithConfiguredTarget_LaunchesTargetInsteadOfContextFile()
+        => RunInTemporaryLayoutAsync(
+            BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, "App", "MyTestApp.exe"),
+            async (root, _) =>
+            {
+                string targetExecutable = Path.Combine(root, "MyTestApp.exe");
+                var launcher = new PackagedAppTestHostLauncher(
+                    Path.GetTempPath(),
+                    name => name == TargetExecutableEnvironmentVariable
+                        ? targetExecutable
+                        : null);
+#pragma warning disable TPEXP // TestHostLaunchContext is experimental.
+                var context = new TestHostLaunchContext(
+                    Path.Combine(root, "decoy.exe"),
+                    [],
+                    new Dictionary<string, string?>(),
+                    workingDirectory: null);
+#pragma warning restore TPEXP
+
+                InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                    () => launcher.LaunchTestHostAsync(context, CancellationToken.None));
+
+                Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", exception.Message);
+            });
+
+    [TestMethod]
+    public void GetTargetExecutable_WithFullyQualifiedValue_ReturnsFullPath()
+    {
+        string targetExecutable = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), "target.exe");
+
+        string? actual = GetTargetExecutable(
+            name => name == TargetExecutableEnvironmentVariable
+                ? targetExecutable
+                : null);
+
+        Assert.AreEqual(Path.GetFullPath(targetExecutable), actual);
+    }
+
+    [TestMethod]
+    public void GetTargetExecutable_WithRelativeValue_Throws()
+    {
+        string fullPath = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), "target.exe");
+        Assert.AreEqual(
+            Path.GetFullPath(fullPath),
+            GetTargetExecutable(name => name == TargetExecutableEnvironmentVariable ? fullPath : null));
+
+        System.Reflection.TargetInvocationException exception =
+            Assert.ThrowsExactly<System.Reflection.TargetInvocationException>(
+                () => GetTargetExecutable(
+                    name => name == TargetExecutableEnvironmentVariable
+                        ? "relative-target.exe"
+                        : null));
+
+        Assert.IsNotNull(exception.InnerException);
+        Assert.IsInstanceOfType<InvalidOperationException>(exception.InnerException);
+        Assert.Contains(TargetExecutableEnvironmentVariable, exception.InnerException.Message);
     }
 
     [TestMethod]
@@ -319,6 +448,106 @@ public sealed class PackagedAppTestHostLauncherTests
     }
 
     [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_WithDuplicateDiagnosticFlags_AddsDiagnosticDirectory()
+    {
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--diagnostic", "--diagnostic"],
+            "results",
+            "diagnostics",
+            removeMSBuildNode: false);
+
+        Assert.AreSequenceEqual(
+            [
+                "--diagnostic",
+                "--diagnostic",
+                "--results-directory",
+                "results",
+                "--diagnostic-output-directory",
+                "diagnostics",
+            ],
+            actual);
+    }
+
+    [DataRow("--results-directory")]
+    [DataRow("--diagnostic-output-directory")]
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_WithTrailingValuedOption_DoesNotReadPastEnd(string option)
+    {
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            [option],
+            "results",
+            "diagnostics",
+            removeMSBuildNode: false);
+
+        Assert.AreSequenceEqual(
+            [option, "--results-directory", "results"],
+            actual);
+    }
+
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_ReplacedResultsValue_IsNotReinterpretedAsDiagnosticFlag()
+    {
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--results-directory", "controller-results"],
+            "--diagnostic",
+            "diagnostics",
+            removeMSBuildNode: false);
+
+        Assert.AreSequenceEqual(["--results-directory", "--diagnostic"], actual);
+    }
+
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_ReplacedDiagnosticValue_IsNotReinterpretedAsResultsOption()
+    {
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--diagnostic", "--diagnostic-output-directory", "controller-diagnostics", "sentinel"],
+            "results",
+            "--results-directory",
+            removeMSBuildNode: false);
+
+        Assert.AreSequenceEqual(
+            [
+                "--diagnostic",
+                "--diagnostic-output-directory",
+                "--results-directory",
+                "sentinel",
+                "--results-directory",
+                "results",
+            ],
+            actual);
+    }
+
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_ForRetry_RemovesTrailingMSBuildNodeOption()
+    {
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            ["--help", "--internal-msbuild-node"],
+            "results",
+            "diagnostics",
+            removeMSBuildNode: true);
+
+        Assert.AreSequenceEqual(["--help", "--results-directory", "results"], actual);
+    }
+
+    [TestMethod]
+    public void RedirectAppContainerFileSystemOptions_ForRetry_RemovesInlineMSBuildNodeOptionsOnly()
+    {
+        IReadOnlyList<string> actual = RedirectAppContainerFileSystemOptions(
+            [
+                "--internal-msbuild-node=first",
+                "--internal-msbuild-node:second",
+                "--internal-msbuild-nodex=keep",
+            ],
+            "results",
+            "diagnostics",
+            removeMSBuildNode: true);
+
+        Assert.AreSequenceEqual(
+            ["--internal-msbuild-nodex=keep", "--results-directory", "results"],
+            actual);
+    }
+
+    [TestMethod]
     public void GetControllerPath_WithRelativePath_UsesLaunchWorkingDirectory()
     {
         string workingDirectory = Path.GetFullPath("controller-working-directory");
@@ -386,6 +615,33 @@ public sealed class PackagedAppTestHostLauncherTests
     }
 
     [TestMethod]
+    public void IsAppxRecipeAlreadyMaterialized_WithoutManifestItem_ReturnsFalse()
+    {
+        var recipe = XDocument.Parse("<Project><AppxPackagedFile Include=\"testhost.exe\" /></Project>");
+
+        Assert.IsFalse(IsAppxRecipeAlreadyMaterialized(recipe, Path.GetTempPath()));
+    }
+
+    [TestMethod]
+    public void IsAppxRecipeAlreadyMaterialized_WithRelativeManifestPath_ResolvesAgainstSourceDirectory()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, AppxManifestInfo.AppxManifestFileName), "<Package />");
+            var recipe = XDocument.Parse(
+                "<Project><AppXManifest Include=\"AppxManifest.xml\"><PackagePath>AppxManifest.xml</PackagePath></AppXManifest></Project>");
+
+            Assert.IsTrue(IsAppxRecipeAlreadyMaterialized(recipe, directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void MaterializeAppxRecipeLayout_WithMultipleApplications_ReturnsRequestedPackagedExecutable()
     {
         string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
@@ -419,6 +675,10 @@ public sealed class PackagedAppTestHostLauncherTests
                 recipePath,
                 $"""
                 <Project>
+                  <AppxPackagedFile Include="{firstExecutablePath}" />
+                  <AppxPackagedFile>
+                    <PackagePath>Ignored.exe</PackagePath>
+                  </AppxPackagedFile>
                   <AppXManifest Include="{manifestPath}">
                     <PackagePath>AppxManifest.xml</PackagePath>
                   </AppXManifest>
@@ -465,16 +725,24 @@ public sealed class PackagedAppTestHostLauncherTests
             string manifestPath = Path.Combine(root, "AppxManifest.xml");
             File.WriteAllText(
                 manifestPath,
-                BuildManifestXml(
+                BuildManifestXmlWithApplications(
                     "Contoso.MyTestApp",
                     MicrosoftStorePublisher,
-                    applicationId: "App",
-                    executable: "Contoso.MyTestApp.exe"));
+                    """
+                    <Applications>
+                      <Application Id="App" Executable="Contoso.MyTestApp.exe" />
+                      <Application Id="Different" Executable="Different.exe" />
+                      <Application Id="WithoutExecutable" />
+                    </Applications>
+                    """));
             string requestedExecutablePath = Path.Combine(sourceDirectory, "Contoso.MyTestApp.exe");
             string stagedAppHostPath = Path.Combine(root, "obj", "apphost.exe");
+            string alternateAppHostPath = Path.Combine(root, "alternate", "Contoso.MyTestApp.exe");
             Directory.CreateDirectory(Path.GetDirectoryName(stagedAppHostPath)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(alternateAppHostPath)!);
             File.WriteAllText(requestedExecutablePath, "published apphost");
             File.WriteAllText(stagedAppHostPath, "staged apphost");
+            File.WriteAllText(alternateAppHostPath, "alternate apphost");
 
             File.WriteAllText(
                 Path.Combine(sourceDirectory, "App.build.appxrecipe"),
@@ -485,6 +753,9 @@ public sealed class PackagedAppTestHostLauncherTests
                   </AppXManifest>
                   <AppxPackagedFile Include="{stagedAppHostPath}">
                     <PackagePath>Contoso.MyTestApp.exe</PackagePath>
+                  </AppxPackagedFile>
+                  <AppxPackagedFile Include="{alternateAppHostPath}">
+                    <PackagePath>Other\Contoso.MyTestApp.exe</PackagePath>
                   </AppxPackagedFile>
                 </Project>
                 """);
@@ -551,6 +822,175 @@ public sealed class PackagedAppTestHostLauncherTests
         finally
         {
             Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithDeclaredClassicEntrypoint_UsesExactManifestApplication()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "Source");
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                BuildManifestXmlWithApplications(
+                    "Contoso.MyTestApp",
+                    MicrosoftStorePublisher,
+                    """
+                    <Applications>
+                      <Application Id="EntryPoint" Executable="entrypoint\Host.exe" />
+                      <Application Id="Bootstrap" Executable="Host.exe" />
+                    </Applications>
+                    """));
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "Host.exe");
+            string bootstrapExecutablePath = Path.Combine(root, "Core", "Host.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(bootstrapExecutablePath)!);
+            File.WriteAllText(requestedExecutablePath, "managed entrypoint");
+            File.WriteAllText(bootstrapExecutablePath, "native bootstrap");
+
+            File.WriteAllText(
+                Path.Combine(sourceDirectory, "App.build.appxrecipe"),
+                $"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                  <AppxPackagedFile Include="{requestedExecutablePath}">
+                    <PackagePath>entrypoint\Host.exe</PackagePath>
+                  </AppxPackagedFile>
+                  <AppxPackagedFile Include="{bootstrapExecutablePath}">
+                    <PackagePath>Host.exe</PackagePath>
+                  </AppxPackagedFile>
+                </Project>
+                """);
+
+            string materializedExecutablePath = MaterializeAppxRecipeLayout(requestedExecutablePath, out _);
+
+            string expectedPath = Path.Combine(sourceDirectory, "_MtpPackageLayout", "entrypoint", "Host.exe");
+            Assert.AreEqual(expectedPath, materializedExecutablePath);
+            Assert.AreEqual("managed entrypoint", File.ReadAllText(materializedExecutablePath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithDuplicatePackagePath_UsesLastRecipeItem()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "Source");
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, "App", "Target.exe"));
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "Target.exe");
+            string firstPayloadPath = Path.Combine(root, "first.txt");
+            string secondPayloadPath = Path.Combine(root, "second.txt");
+            File.WriteAllText(requestedExecutablePath, "target");
+            File.WriteAllText(firstPayloadPath, "first");
+            File.WriteAllText(secondPayloadPath, "second");
+
+            File.WriteAllText(
+                Path.Combine(sourceDirectory, "App.build.appxrecipe"),
+                $"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                  <AppxPackagedFile Include="{firstPayloadPath}">
+                    <PackagePath>duplicate.txt</PackagePath>
+                  </AppxPackagedFile>
+                  <AppxPackagedFile Include="{secondPayloadPath}">
+                    <PackagePath>duplicate.txt</PackagePath>
+                  </AppxPackagedFile>
+                  <AppxPackagedFile Include="{requestedExecutablePath}">
+                    <PackagePath>Target.exe</PackagePath>
+                  </AppxPackagedFile>
+                </Project>
+                """);
+
+            _ = MaterializeAppxRecipeLayout(requestedExecutablePath, out _);
+
+            Assert.AreEqual(
+                "second",
+                File.ReadAllText(Path.Combine(sourceDirectory, "_MtpPackageLayout", "duplicate.txt")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithNonClassicPackagePathMismatch_Throws()
+    {
+        string root = Path.Combine(Path.GetTempPath(), nameof(PackagedAppTestHostLauncherTests), Guid.NewGuid().ToString("N"));
+        string sourceDirectory = Path.Combine(root, "Source");
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, "App", "Target.exe"));
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "Target.exe");
+            File.WriteAllText(requestedExecutablePath, "target");
+            File.WriteAllText(
+                Path.Combine(sourceDirectory, "App.build.appxrecipe"),
+                $"""
+                <Project>
+                  <AppXManifest Include="{manifestPath}">
+                    <PackagePath>AppxManifest.xml</PackagePath>
+                  </AppXManifest>
+                  <AppxPackagedFile Include="{requestedExecutablePath}">
+                    <PackagePath>staging\Target.exe</PackagePath>
+                  </AppxPackagedFile>
+                </Project>
+                """);
+
+            System.Reflection.TargetInvocationException exception =
+                Assert.ThrowsExactly<System.Reflection.TargetInvocationException>(
+                    () => MaterializeAppxRecipeLayout(requestedExecutablePath, out _));
+            Assert.IsInstanceOfType<InvalidOperationException>(exception.InnerException);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void MaterializeAppxRecipeLayout_WithEmptyRecipe_CreatesLayoutBeforeReportingMissingManifest()
+    {
+        string sourceDirectory = Path.Combine(
+            Path.GetTempPath(),
+            nameof(PackagedAppTestHostLauncherTests),
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sourceDirectory);
+        try
+        {
+            string requestedExecutablePath = Path.Combine(sourceDirectory, "Target.exe");
+            File.WriteAllText(requestedExecutablePath, "target");
+            File.WriteAllText(Path.Combine(sourceDirectory, "App.build.appxrecipe"), "<Project />");
+
+            System.Reflection.TargetInvocationException exception =
+                Assert.ThrowsExactly<System.Reflection.TargetInvocationException>(
+                    () => MaterializeAppxRecipeLayout(requestedExecutablePath, out _));
+
+            Assert.IsInstanceOfType<FileNotFoundException>(exception.InnerException);
+            Assert.IsTrue(Directory.Exists(Path.Combine(sourceDirectory, "_MtpPackageLayout")));
+        }
+        finally
+        {
+            Directory.Delete(sourceDirectory, recursive: true);
         }
     }
 
@@ -659,6 +1099,32 @@ public sealed class PackagedAppTestHostLauncherTests
                 "GetControllerPath",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
             .Invoke(null, [path, context])!;
+
+    private static string? GetTargetExecutable(Func<string, string?> getEnvironmentVariable)
+        => (string?)typeof(PackagedAppTestHostLauncher)
+            .GetMethod(
+                "GetTargetExecutable",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [getEnvironmentVariable]);
+
+    private static bool IsActivatedChild(IReadOnlyList<string> processArguments)
+        => (bool)typeof(PackagedAppTestHostLauncher)
+            .GetMethod(
+                "IsActivatedChild",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [processArguments])!;
+
+    private static PackagedAppTestHostLauncher CreateLauncher(
+        string testApplicationDirectory,
+        Func<string, string?> getEnvironmentVariable,
+        bool isActivatedChild)
+        => (PackagedAppTestHostLauncher)typeof(PackagedAppTestHostLauncher)
+            .GetConstructor(
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+                binder: null,
+                types: [typeof(string), typeof(Func<string, string>), typeof(bool)],
+                modifiers: null)!
+            .Invoke([testApplicationDirectory, getEnvironmentVariable, isActivatedChild]);
 
     private static bool IsAppxRecipeAlreadyMaterialized(XDocument recipe, string sourceDirectory)
         => (bool)typeof(PackagedAppTestHostLauncher)

@@ -18,6 +18,8 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
         private const string CrashReportFileExtension = ".crashreport.json";
         private const string CrashReportFileSearchPattern = "*" + CrashReportFileExtension;
 
+        // Stryker disable once Conditional: On any single mutation-test host, forcing that host's
+        // platform branch is equivalent; the opposite branch remains covered by the platform matrix.
         private static readonly StringComparer PathComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
@@ -81,6 +83,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
             string dumpExtension = Path.GetExtension(dumpFileNameOnly);
             string dumpSearchPattern = CrashDumpFileNameHelper.GetDumpSearchPattern(dumpFileNamePattern);
 
+            // Stryker disable once Boolean: Capturing the current context does not change the observable result of this awaited operation.
             (bool PublishedAny, bool TesthostProduced) dumpResult = generateDump && Directory.Exists(dumpDirectory)
                 ? await PublishMatchingDumpsAsync(dumpDirectory, dumpSearchPattern, dumpExtension, dumpFileNameRegex, testhostDumpRegex).ConfigureAwait(false)
                 : default;
@@ -120,15 +123,18 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
                 (true, false) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated, testHostProcessInformation.PID),
                 (false, false) => string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpProcessCrashed, testHostProcessInformation.PID),
             };
+            // Stryker disable once Boolean: Capturing the current context does not change the displayed diagnostic.
             await _outputDisplay.DisplayAsync(_owner, new ErrorMessageOutputDeviceData(processCrashedMessage), cancellationToken).ConfigureAwait(false);
 
             if (generateDump && !testhostDumpProduced)
             {
+                // Stryker disable once Boolean: Capturing the current context does not change fallback dump publication.
                 await PublishFallbackDumpsAsync(expectedDumpFile, dumpDirectory, dumpResult.PublishedAny, cancellationToken).ConfigureAwait(false);
             }
 
             if (generateCrashReport)
             {
+                // Stryker disable once Boolean: Capturing the current context does not change crash-report publication.
                 await PublishCrashReportsAsync(
                     expectedCrashReportFile,
                     expectedCrashReportFileExists,
@@ -161,6 +167,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
                     continue;
                 }
 
+                // Stryker disable once Boolean: Capturing the current context does not change artifact publication.
                 await PublishArtifactAsync(dumpFile, CrashDumpResources.CrashDumpArtifactDisplayName, CrashDumpResources.CrashDumpArtifactDescription).ConfigureAwait(false);
                 publishedAny = true;
                 testhostProduced |= testhostDumpRegex.IsMatch(dumpFileNameOnDisk);
@@ -171,6 +178,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
 
         private async Task PublishFallbackDumpsAsync(string expectedDumpFile, string dumpDirectory, bool publishedAnyDump, CancellationToken cancellationToken)
         {
+            // Stryker disable once Boolean: Capturing the current context does not change the displayed diagnostic.
             await _outputDisplay.DisplayAsync(
                 _owner,
                 new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CannotFindExpectedCrashDumpFile, expectedDumpFile)),
@@ -200,6 +208,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
         {
             if (expectedCrashReportFileExists)
             {
+                // Stryker disable once Boolean: Capturing the current context does not change artifact publication.
                 await PublishArtifactAsync(expectedCrashReportFile, CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription).ConfigureAwait(false);
                 return;
             }
@@ -208,6 +217,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
             {
                 foreach (string crashReportFile in crashReportFiles!)
                 {
+                    // Stryker disable once Boolean: Capturing the current context does not change artifact publication.
                     await PublishArtifactAsync(crashReportFile, CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription).ConfigureAwait(false);
                 }
 

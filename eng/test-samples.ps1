@@ -116,8 +116,8 @@ function Get-BinlogArgument {
         return "-bl:{}"
     }
 
-    $logName = "$($Project.Replace('/', '.').Replace('\', '.')).$Mode.binlog"
-    return "-bl:$(Join-Path $BinaryLogDirectory $logName)"
+    $logName = "$($Project.Replace('/', '.').Replace('\', '.')).$Mode"
+    return Get-SampleBinlogArgument -BinaryLogDirectory $BinaryLogDirectory -LogName $logName
 }
 
 function Invoke-SampleCommand {

@@ -6,12 +6,81 @@
 
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Extensions.PackagedApp.Resources;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
 public sealed class PackagedAppActivationArgumentsTests
 {
+    [TestMethod]
+    public void Create_WithNullArguments_Throws()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            _ = PackagedAppActivationArguments.Create([], directory);
+
+            Assert.ThrowsExactly<ArgumentNullException>(
+                () => PackagedAppActivationArguments.Create(null!, directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Create_WithNullLocalStateDirectory_Throws()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            _ = PackagedAppActivationArguments.Create([], directory);
+
+            Assert.ThrowsExactly<ArgumentNullException>(
+                () => PackagedAppActivationArguments.Create([], null!));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Create_WithEmptyLocalStateDirectory_Throws()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            _ = PackagedAppActivationArguments.Create([], directory);
+
+            Assert.ThrowsExactly<ArgumentException>(
+                () => PackagedAppActivationArguments.Create([], string.Empty));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Create_WithNullArgument_Throws()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            _ = PackagedAppActivationArguments.Create(["valid"], directory);
+
+            Assert.ThrowsExactly<ArgumentNullException>(
+                () => PackagedAppActivationArguments.Create([null!], directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [TestMethod]
     public void CreateThenRead_InlinePayload_RoundTripsEveryArgumentShape()
     {
@@ -44,6 +113,60 @@ public sealed class PackagedAppActivationArgumentsTests
         {
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    [TestMethod]
+    public void Create_AtInlineBoundary_UsesInlineThenEncryptedPayload()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            PackagedAppActivationData inline = PackagedAppActivationArguments.Create([new string('a', 758)], directory);
+            PackagedAppActivationData encrypted = PackagedAppActivationArguments.Create([new string('a', 759)], directory);
+
+            Assert.IsNull(inline.PayloadPath);
+            Assert.HasCount(2046, inline.Arguments);
+            Assert.IsNotNull(encrypted.PayloadPath);
+            Assert.StartsWith("mtp:v1:file:", encrypted.Arguments);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Create_LargePayload_CreatesMissingLocalStateDirectory()
+    {
+        string root = CreateTemporaryDirectory();
+        string localStateDirectory = Path.Combine(root, "missing", "local-state");
+        try
+        {
+            PackagedAppActivationData activation =
+                PackagedAppActivationArguments.Create([new string('x', 3000)], localStateDirectory);
+
+            Assert.IsTrue(Directory.Exists(localStateDirectory));
+            Assert.IsNotNull(activation.PayloadPath);
+            Assert.IsTrue(File.Exists(activation.PayloadPath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [DataRow(0)]
+    [DataRow(1)]
+    [TestMethod]
+    public void CreateThenRead_EmptyArguments_RoundTrips(int argumentCount)
+    {
+        string[] expected = argumentCount == 0 ? [] : [string.Empty];
+
+        PackagedAppActivationData activation =
+            PackagedAppActivationArguments.Create(expected, Path.GetTempPath());
+        string[] actual = PackagedAppActivationArguments.Read(activation.Arguments, localStateDirectory: null);
+
+        AssertArgumentsAreEqual(expected, actual);
     }
 
     [TestMethod]
@@ -123,6 +246,37 @@ public sealed class PackagedAppActivationArgumentsTests
     }
 
     [TestMethod]
+    public void Read_ArgumentCountExceedingAvailableHeaders_ReportsInvalidCount()
+        => AssertInvalidInlinePayload(
+            [2, 0, 0, 0, 0, 0, 0, 0],
+            ExtensionResources.ActivationArgumentsInvalidArgumentCount);
+
+    [TestMethod]
+    public void Read_TruncatedArgumentHeader_ReportsTruncatedPayload()
+        => AssertInvalidInlinePayload(
+            [2, 0, 0, 0, 1, 0, 0, 0, (byte)'a', 0, 0, 0, 0],
+            ExtensionResources.ActivationArgumentsPayloadTruncated);
+
+    [TestMethod]
+    public void Read_ArgumentLengthExceedingRemainingPayload_ReportsInvalidLength()
+        => AssertInvalidInlinePayload(
+            [1, 0, 0, 0, 2, 0, 0, 0, (byte)'a', 0],
+            ExtensionResources.ActivationArgumentsInvalidArgumentLength);
+
+    [TestMethod]
+    public void GetAssociatedData_BindsFilePrefixAndToken()
+    {
+        const string Token = "0123456789abcdef0123456789abcdef";
+        byte[] associatedData = (byte[])typeof(PackagedAppActivationArguments)
+            .GetMethod(
+                "GetAssociatedData",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [Token])!;
+
+        Assert.AreSequenceEqual(Encoding.ASCII.GetBytes($"mtp:v1:file:{Token}"), associatedData);
+    }
+
+    [TestMethod]
     public void Read_TruncatedEncryptedPayload_RejectsAndDeletesPayload()
     {
         string directory = CreateTemporaryDirectory();
@@ -154,6 +308,26 @@ public sealed class PackagedAppActivationArgumentsTests
 
             AssertArgumentsAreEqual(expected, actual);
             Assert.ThrowsExactly<FormatException>(() => PackagedAppActivationArguments.Read(activation.Arguments, directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void TryDeletePayload_NullIsNoOpAndExistingFileIsDeleted()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string payloadPath = Path.Combine(directory, "payload.bin");
+            File.WriteAllText(payloadPath, "payload");
+
+            PackagedAppActivationArguments.TryDeletePayload(payloadPath: null);
+            PackagedAppActivationArguments.TryDeletePayload(payloadPath);
+
+            Assert.IsFalse(File.Exists(payloadPath));
         }
         finally
         {
@@ -336,6 +510,19 @@ public sealed class PackagedAppActivationArgumentsTests
 
     private static string CreateInlinePayload(byte[] payload)
         => "mtp:v1:inline:" + Convert.ToBase64String(payload);
+
+    private static void AssertInvalidInlinePayload(byte[] payload, string expectedMessage)
+    {
+        string[] warmup = PackagedAppActivationArguments.Read(
+            CreateInlinePayload([1, 0, 0, 0, 1, 0, 0, 0, (byte)'a', 0]),
+            localStateDirectory: null);
+        Assert.AreSequenceEqual(["a"], warmup);
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            () => PackagedAppActivationArguments.Read(CreateInlinePayload(payload), localStateDirectory: null));
+
+        Assert.AreEqual(expectedMessage, exception.Message);
+    }
 
     private static void AssertArgumentsAreEqual(string[] expected, string[] actual)
     {
