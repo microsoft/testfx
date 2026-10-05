@@ -268,17 +268,14 @@ public sealed class InvokeTestingPlatformTaskTests
         if (Path.DirectorySeparatorChar == '/')
         {
             Assert.IsTrue(Path.IsPathRooted(pipeName));
-            Assert.Contains(Prefix, pipeName);
+            Assert.IsTrue(Guid.TryParseExact(Path.GetFileName(pipeName), "N", out _));
         }
         else
         {
             Assert.StartsWith(Prefix, pipeName);
             Assert.DoesNotContain(Path.DirectorySeparatorChar.ToString(), pipeName);
+            Assert.IsTrue(Guid.TryParseExact(pipeName[Prefix.Length..], "N", out _));
         }
-
-        string fileName = Path.GetFileName(pipeName);
-        Assert.StartsWith(Prefix, fileName);
-        Assert.IsTrue(Guid.TryParseExact(fileName[Prefix.Length..], "N", out _));
     }
 
     private static string GetDotnetRootArchitectureVariableName()

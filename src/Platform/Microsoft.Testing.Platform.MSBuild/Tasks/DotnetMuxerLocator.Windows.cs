@@ -30,7 +30,7 @@ internal sealed partial class DotnetMuxerLocator
         uint peHeader = reader.ReadUInt32();
 
         // Check if the offset is invalid
-        if (peHeader > fs.Length - 5)
+        if (peHeader > fs.Length - sizeof(uint))
         {
             resolutionLog("[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset");
             return ThrowInvalidImage();

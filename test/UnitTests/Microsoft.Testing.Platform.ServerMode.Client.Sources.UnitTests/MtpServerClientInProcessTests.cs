@@ -423,10 +423,10 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
-    public async Task LaunchInProcessAsync_FailedStartCleanup_DoesNotCaptureTheCallingSynchronizationContext()
+    public async Task LaunchInProcessAsync_ZeroTimeoutFailedStartCleanup_DoesNotCaptureTheCallingSynchronizationContext()
     {
         MtpServerClientOptions options = CreateOptions();
-        options.ConnectionTimeout = TimeSpan.FromMilliseconds(100);
+        options.ConnectionTimeout = TimeSpan.Zero;
 
         Task<MtpServerClient> launch = InvokeWithSynchronizationContext(
             () => MtpServerClient.LaunchInProcessAsync(

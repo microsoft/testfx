@@ -48,10 +48,12 @@ public sealed class DotnetMuxerLocatorTests
     }
 
     [TestMethod]
-    public void GetMuxerArchitectureByPEHeaderOnWin_RejectsOffsetJustPastLastReadableSignature()
+    [DataRow(64, 61u)]
+    [DataRow(100, 97u)]
+    public void GetMuxerArchitectureByPEHeaderOnWin_RejectsOffsetJustPastLastReadableSignature(int fileLength, uint offset)
     {
-        byte[] bytes = new byte[64];
-        BitConverter.GetBytes(60u).CopyTo(bytes, 0x3C);
+        byte[] bytes = new byte[fileLength];
+        BitConverter.GetBytes(offset).CopyTo(bytes, 0x3C);
         using TemporaryFile file = new(bytes);
         List<string> logs = [];
 
@@ -63,13 +65,26 @@ public sealed class DotnetMuxerLocatorTests
     public void GetMuxerArchitectureByPEHeaderOnWin_OffsetAtLastReadableSignature_IsNotClassifiedAsInvalidOffset()
     {
         byte[] bytes = new byte[100];
-        BitConverter.GetBytes(95u).CopyTo(bytes, 0x3C);
-        BitConverter.GetBytes(0x00004550u).CopyTo(bytes, 95);
+        BitConverter.GetBytes(96u).CopyTo(bytes, 0x3C);
+        BitConverter.GetBytes(0x00004550u).CopyTo(bytes, 96);
         using TemporaryFile file = new(bytes);
         List<string> logs = [];
 
         Assert.ThrowsExactly<EndOfStreamException>(() => InvokePEHeaderParser(file.Path, logs.Add));
         Assert.DoesNotContain("[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset", logs);
+    }
+
+    [TestMethod]
+    public void GetMuxerArchitectureByPEHeaderOnWin_OffsetAtLastReadableSignatureInMinimalHeader_IsNotClassifiedAsInvalidOffset()
+    {
+        byte[] bytes = new byte[64];
+        BitConverter.GetBytes(60u).CopyTo(bytes, 0x3C);
+        using TemporaryFile file = new(bytes);
+        List<string> logs = [];
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => InvokePEHeaderParser(file.Path, logs.Add));
+        Assert.DoesNotContain("[GetMuxerArchitectureByPEHeaderOnWin]Invalid offset", logs);
+        Assert.Contains("[GetMuxerArchitectureByPEHeaderOnWin]Missing PE signature", logs);
     }
 
     [TestMethod]
