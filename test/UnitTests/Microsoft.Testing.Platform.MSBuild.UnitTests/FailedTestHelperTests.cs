@@ -132,7 +132,7 @@ public sealed class FailedTestHelperTests
     {
         string displayName = new('D', 1100);
         string errorMessage = new('E', 1100);
-        FailedTestInfoRequest request = CreateRequest(displayName: displayName, errorMessage: errorMessage);
+        FailedTestInfoRequest request = CreateRequest(displayName: displayName, duration: null, errorMessage: errorMessage);
 
         request.FromFailedTest(outputSupportsMultiline: false, "/repo/Target.dll",
             out _, out _, out _, out string message, out _);
