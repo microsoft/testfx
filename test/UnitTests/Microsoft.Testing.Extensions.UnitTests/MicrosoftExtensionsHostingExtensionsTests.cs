@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -126,7 +127,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, _) => new EmptyTestFramework()),
+                (_, serviceProvider) => SuppressOutput(serviceProvider, new EmptyTestFramework())),
             TestContext.CancellationToken);
 
         Assert.AreEqual(8, exitCode);
@@ -152,7 +153,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
                     {
                         hostWasStartedWhenFrameworkWasCreated = lifecycle.Started;
                         observedConfiguration = serviceProvider.GetConfiguration()["bridge:value"];
-                        return new EmptyTestFramework();
+                        return SuppressOutput(serviceProvider, new EmptyTestFramework());
                     }),
             TestContext.CancellationToken);
 
@@ -179,7 +180,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
                 operations.Add("caller");
                 testApplication.RegisterTestFramework(
                     _ => new TestFrameworkCapabilities(),
-                    (_, _) => new EmptyTestFramework());
+                    (_, serviceProvider) => SuppressOutput(serviceProvider, new EmptyTestFramework()));
             },
             TestContext.CancellationToken);
 
@@ -337,7 +338,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, _) => testFramework),
+                (_, serviceProvider) => SuppressOutput(serviceProvider, testFramework)),
             cancellationTokenSource.Token);
 
         await testFramework.Started;
@@ -361,7 +362,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, _) => testFramework),
+                (_, serviceProvider) => SuppressOutput(serviceProvider, testFramework)),
             TestContext.CancellationToken);
 
         await testFramework.Started;
@@ -384,7 +385,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, _) => testFramework),
+                (_, serviceProvider) => SuppressOutput(serviceProvider, testFramework)),
             cancellationTokenSource.Token);
 
         cancellationTokenSource.Cancel();
@@ -403,12 +404,21 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, serviceProvider) => new CancellingTestFramework(
-                    (ITestApplicationCancellationTokenSource)serviceProvider.GetService(typeof(ITestApplicationCancellationTokenSource))!)),
+                (_, serviceProvider) => SuppressOutput(
+                    serviceProvider,
+                    new CancellingTestFramework(
+                        (ITestApplicationCancellationTokenSource)serviceProvider.GetService(typeof(ITestApplicationCancellationTokenSource))!))),
             TestContext.CancellationToken);
 
         Assert.AreEqual(3, exitCode);
         Assert.IsFalse(host.ApplicationStoppingWasRequestedBeforeStopAsync);
+    }
+
+    private static TTestFramework SuppressOutput<TTestFramework>(IServiceProvider serviceProvider, TTestFramework testFramework)
+        where TTestFramework : ITestFramework
+    {
+        serviceProvider.GetRequiredPlatformService<SystemConsole>().SuppressOutput();
+        return testFramework;
     }
 
     private static string CreateDiagnosticDirectory()
