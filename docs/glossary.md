@@ -612,7 +612,7 @@ An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against
 
 ### UseUwpTools
 
-An [MSTest.Sdk](#mstestsdk) MSBuild property that explicitly selects the modern UWP application model. The desktop Visual Studio UWP targets set `UseUwpTools=true` automatically, after MSTest.Sdk has already declared its package references and before those UWP targets select their specialized assemblies; MSTest.Sdk preserves the UWP application model during that earlier evaluation while `UseUwpTools` is still unset. Set `<UseUwpTools>false</UseUwpTools>` alongside `<UseUwp>true</UseUwp>` to consume UWP XAML references from a non-UWP MTP test application — this selects the ordinary MSTest assemblies and the direct MTP runner instead of UWP package activation. See [docs/winui-testing.md](winui-testing.md). Introduced in [PR #11614](https://github.com/microsoft/testfx/pull/11614).
+An MSBuild property consumed by [MSTest.Sdk](#mstestsdk) to explicitly select the modern UWP application model. The desktop Visual Studio UWP targets set `UseUwpTools=true` automatically, after MSTest.Sdk has already declared its package references and before those packages select their specialized assemblies; MSTest.Sdk preserves the UWP application model during that earlier evaluation while `UseUwpTools` is still unset. Set `<UseUwpTools>false</UseUwpTools>` alongside `<UseUwp>true</UseUwp>` to consume UWP XAML references from a non-UWP MTP test application — this selects the ordinary MSTest assemblies and the direct MTP runner instead of UWP package activation. See [docs/winui-testing.md](winui-testing.md). Adopted as the MSTest.Sdk application-model selector in [PR #11614](https://github.com/microsoft/testfx/pull/11614).
 
 ## V
 
