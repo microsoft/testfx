@@ -90,10 +90,15 @@ public sealed class FailedTestHelperTests
         request.FromFailedTest(outputSupportsMultiline: true, "/repo/Target.dll",
             out _, out _, out _, out string message, out string? lowPriorityMessage);
 
-        Assert.Contains("Test (10ms): Values did not match.", message);
-        Assert.Contains(string.Format(CultureInfo.CurrentCulture, Resources.MSBuildResources.ExpectedValue, "expected") + Environment.NewLine, message);
-        Assert.Contains(string.Format(CultureInfo.CurrentCulture, Resources.MSBuildResources.ActualValue, "actual") + Environment.NewLine, message);
-        Assert.Contains($"{Resources.MSBuildResources.StackTrace}{Environment.NewLine}{errorStackTrace}", message);
+        Assert.AreEqual(
+            $"""
+            Test (10ms): Values did not match.
+            {string.Format(CultureInfo.CurrentCulture, Resources.MSBuildResources.ExpectedValue, "expected")}
+            {string.Format(CultureInfo.CurrentCulture, Resources.MSBuildResources.ActualValue, "actual")}
+            {Resources.MSBuildResources.StackTrace}
+            {errorStackTrace}
+
+            """, message);
         Assert.IsNull(lowPriorityMessage);
     }
 
@@ -108,8 +113,14 @@ public sealed class FailedTestHelperTests
             out _, out _, out _, out string message, out string? lowPriorityMessage);
 
         Assert.AreEqual("Test (10ms): Program.Main() First line  Second line", message);
-        Assert.IsNotNull(lowPriorityMessage);
-        Assert.Contains($"First line\r\nSecond line{Environment.NewLine}", lowPriorityMessage);
+        Assert.AreEqual(
+            """
+            Test (10ms): First line
+            Second line
+            Stack Trace:
+               at Program.Main() in /repo/Program.cs:line 42
+
+            """, lowPriorityMessage?.ReplaceLineEndings());
     }
 
     [TestMethod]
@@ -123,8 +134,14 @@ public sealed class FailedTestHelperTests
             out _, out _, out _, out string message, out string? lowPriorityMessage);
 
         Assert.AreEqual("Test (10ms) First line Second line", message);
-        Assert.IsNotNull(lowPriorityMessage);
-        Assert.Contains($"Stack Trace:{Environment.NewLine}   at Program.Main(){Environment.NewLine}", lowPriorityMessage);
+        Assert.AreEqual(
+            """
+            Test (10ms): First line
+            Second line
+            Stack Trace:
+               at Program.Main()
+
+            """, lowPriorityMessage?.ReplaceLineEndings());
     }
 
     [TestMethod]
