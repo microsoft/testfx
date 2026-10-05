@@ -503,7 +503,7 @@ namespace SomeNamespace
             "static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =\n        ()",
             fileSystem.Files["obj/extensions.fs"]!.ReplaceLineEndings("\n"));
         Assert.DoesNotContain(
-            message => message.Message?.StartsWith("TestingPlatformExtensionFullTypeNames:", StringComparison.Ordinal) == true,
+            message => message.Message is not null && message.Message.StartsWith("TestingPlatformExtensionFullTypeNames:", StringComparison.Ordinal),
             _messages);
     }
 
