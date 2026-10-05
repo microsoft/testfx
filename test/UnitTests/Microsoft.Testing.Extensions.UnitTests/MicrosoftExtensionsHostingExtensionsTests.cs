@@ -11,6 +11,12 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
+using Moq;
+
+using MelILogger = Microsoft.Extensions.Logging.ILogger;
+using MelILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
+using MtpLogLevel = Microsoft.Testing.Platform.Logging.LogLevel;
+
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
@@ -75,6 +81,10 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     [TestMethod]
     public void ShouldBypassApplicationHost_RecognizesInformationalOptions(string option, bool expected)
         => Assert.AreEqual(expected, MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost([option]));
+
+    [TestMethod]
+    public void ShouldBypassApplicationHost_InformationalOptionCombinedWithAnotherOption_ReturnsTrue()
+        => Assert.IsTrue(MicrosoftExtensionsHostingExtensions.ShouldBypassApplicationHost(["--list-tests", "--help"]));
 
     [TestMethod]
     public void ShouldBypassApplicationHost_ExpandsResponseFiles()
@@ -189,6 +199,42 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     }
 
     [TestMethod]
+    public async Task RunTestingPlatformAsync_ForwardsMtpLogsToHostLoggerFactory()
+    {
+        Mock<MelILogger> loggerMock = new();
+        Mock<MelILoggerFactory> loggerFactoryMock = new();
+        loggerFactoryMock
+            .Setup(factory => factory.CreateLogger(It.IsAny<string>()))
+            .Returns(loggerMock.Object);
+        HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
+        hostBuilder.Services.AddSingleton(loggerFactoryMock.Object);
+        using IHost host = hostBuilder.Build();
+        string diagnosticDirectory = CreateDiagnosticDirectory();
+
+        try
+        {
+            int exitCode = await host.RunTestingPlatformAsync(
+                CreateDiagnosticArguments(diagnosticDirectory),
+                testApplication => testApplication.RegisterTestFramework(
+                    _ => new TestFrameworkCapabilities(),
+                    (_, serviceProvider) =>
+                    {
+                        serviceProvider.GetLoggerFactory().CreateLogger("hosting-test")
+                            .Log(MtpLogLevel.Error, "message", null, static (state, _) => state);
+                        return new EmptyTestFramework();
+                    }),
+                TestContext.CancellationToken);
+
+            Assert.AreEqual(8, exitCode);
+            loggerFactoryMock.Verify(factory => factory.CreateLogger("hosting-test"), Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(diagnosticDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task RunTestingPlatformAsync_WhenMtpFails_StillStopsHost()
     {
         HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder();
@@ -269,6 +315,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
         Assert.HasCount(2, exception.InnerExceptions);
         Assert.AreSame(expectedException, exception.InnerExceptions[0]);
         Assert.AreSame(stopException, exception.InnerExceptions[1]);
+        Assert.StartsWith($"{nameof(IHost.StopAsync)} failed while handling another exception.", exception.Message);
     }
 
     [TestMethod]
@@ -396,6 +443,47 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     }
 
     [TestMethod]
+    public async Task RunTestingPlatformAsync_AfterRunCompletes_DisconnectsHostLifetimeBridge()
+    {
+        using IHost host = Host.CreateApplicationBuilder().Build();
+        var testFramework = new CancellationObservingTestFramework();
+
+        int exitCode = await host.RunTestingPlatformAsync(
+            [],
+            testApplication => testApplication.RegisterTestFramework(
+                _ => new TestFrameworkCapabilities(),
+                (_, _) => testFramework),
+            TestContext.CancellationToken);
+
+        Assert.AreEqual(8, exitCode);
+        Assert.IsFalse(testFramework.CancellationObserved);
+        testFramework.DisposeRegistration();
+    }
+
+    [TestMethod]
+    public void HostApplicationLifetimeBridge_ConnectDisconnectReconnect_TracksRegistration()
+    {
+        using var hostApplicationLifetime = new TestHostApplicationLifetime();
+        var bridge = new HostApplicationLifetimeBridge(hostApplicationLifetime);
+        int firstStopRequestCount = 0;
+        int secondStopRequestCount = 0;
+        bridge.Connect(() => firstStopRequestCount++);
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => bridge.Connect(static () => { }));
+
+        Assert.AreEqual("The host application lifetime bridge is already connected.", exception.Message);
+
+        bridge.Disconnect();
+        bridge.Connect(() => secondStopRequestCount++);
+        hostApplicationLifetime.StopApplication();
+
+        Assert.AreEqual(0, firstStopRequestCount);
+        Assert.AreEqual(1, secondStopRequestCount);
+        bridge.Disconnect();
+    }
+
+    [TestMethod]
     public async Task RunTestingPlatformAsync_WhenMtpStops_DoesNotRequestHostStopBeforeCleanup()
     {
         using var host = new StopObservationHost(Host.CreateApplicationBuilder().Build());
@@ -501,6 +589,28 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
     {
         public object? GetService(Type serviceType)
             => serviceType == typeof(IHostApplicationLifetime) ? null : innerServiceProvider.GetService(serviceType);
+    }
+
+    private sealed class TestHostApplicationLifetime : IHostApplicationLifetime, IDisposable
+    {
+        private readonly CancellationTokenSource _applicationStarted = new();
+        private readonly CancellationTokenSource _applicationStopping = new();
+        private readonly CancellationTokenSource _applicationStopped = new();
+
+        public CancellationToken ApplicationStarted => _applicationStarted.Token;
+
+        public CancellationToken ApplicationStopping => _applicationStopping.Token;
+
+        public CancellationToken ApplicationStopped => _applicationStopped.Token;
+
+        public void StopApplication() => _applicationStopping.Cancel();
+
+        public void Dispose()
+        {
+            _applicationStarted.Dispose();
+            _applicationStopping.Dispose();
+            _applicationStopped.Dispose();
+        }
     }
 
     private sealed class StopObservationHost(IHost innerHost) : IHost

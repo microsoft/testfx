@@ -59,8 +59,7 @@ internal sealed partial class RetryOrchestrator
                 {
                     string path = RetryArtifactManifest.DecodePath(encodedPath);
                     string? kind = RetryArtifactManifest.DecodeKind(encodedKindOrNullSentinel);
-                    if (path.Length > MaxRecoveredArtifactPathChars
-                        || kind?.Length > MaxRecoveredArtifactKindChars)
+                    if (IsRecoveredArtifactEntryOversized(path.Length, kind?.Length))
                     {
                         logger.LogWarning($"Ignoring oversized recovered retry artifact manifest entry in '{manifestPath}'.");
                         continue;
@@ -117,6 +116,21 @@ internal sealed partial class RetryOrchestrator
                 logger.LogWarning($"Failed to delete recovered retry artifact manifest '{manifestPath}': {ex}");
             }
         }
+    }
+
+    private static bool IsRecoveredArtifactEntryOversized(int pathLength, int? kindLength)
+        => pathLength > MaxRecoveredArtifactPathChars
+            || kindLength > MaxRecoveredArtifactKindChars;
+
+    private static bool TryAdvanceRecoveredArtifactManifestByteCount(ref long bytesRead)
+    {
+        if (bytesRead == RetryArtifactManifest.MaxBytes)
+        {
+            return false;
+        }
+
+        bytesRead++;
+        return true;
     }
 
     private static void RemoveArtifactsOutsideControllerRoots(
@@ -190,7 +204,7 @@ internal sealed partial class RetryOrchestrator
             int lineLength = 0;
             while (TryReadByte(out byte value))
             {
-                if (++_bytesRead > RetryArtifactManifest.MaxBytes)
+                if (!TryAdvanceRecoveredArtifactManifestByteCount(ref _bytesRead))
                 {
                     line = string.Empty;
                     return BoundedManifestLineReadResult.LimitExceeded;
@@ -203,6 +217,7 @@ internal sealed partial class RetryOrchestrator
 
                 if (lineLength >= RetryArtifactManifest.MaxLineLength)
                 {
+                    // Stryker disable once String: callers inspect only LimitExceeded and deliberately ignore this out value.
                     line = string.Empty;
                     return BoundedManifestLineReadResult.LimitExceeded;
                 }
@@ -212,6 +227,7 @@ internal sealed partial class RetryOrchestrator
 
             if (lineLength == 0)
             {
+                // Stryker disable once String: callers inspect only End and deliberately ignore this out value.
                 line = string.Empty;
                 return BoundedManifestLineReadResult.End;
             }

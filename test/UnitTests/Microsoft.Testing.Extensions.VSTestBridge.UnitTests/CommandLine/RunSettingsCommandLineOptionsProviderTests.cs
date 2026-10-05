@@ -16,6 +16,16 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.CommandLine;
 public sealed class RunSettingsCommandLineOptionsProviderTests
 {
     [TestMethod]
+    public void RunSettingsOption_IsVisible()
+    {
+        var provider = new RunSettingsCommandLineOptionsProvider(new TestExtension(), new Mock<IFileSystem>().Object);
+
+        CommandLineOption option = provider.GetCommandLineOptions().Single();
+
+        Assert.IsFalse(option.IsHidden);
+    }
+
+    [TestMethod]
     public async Task RunSettingsOption_WhenFileDoesNotExist_IsNotValid()
     {
         // Arrange

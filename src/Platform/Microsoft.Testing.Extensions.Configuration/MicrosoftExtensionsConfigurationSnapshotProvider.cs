@@ -58,7 +58,7 @@ internal sealed class MicrosoftExtensionsConfigurationSnapshotProvider(
             }
 
             int delimiterIndex = remainder.IndexOf(MelConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
-            childKeys.Add(delimiterIndex < 0 ? remainder : remainder.Substring(0, delimiterIndex));
+            childKeys.Add(delimiterIndex == -1 ? remainder : remainder.Substring(0, delimiterIndex));
         }
 
         return childKeys;

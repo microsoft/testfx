@@ -248,7 +248,7 @@ internal static class ObjectModelConverters
 
         if (isTrxEnabled)
         {
-            testNode.Properties.Add(new TrxMessagesProperty(trxMessages is { Count: > 0 } ? [.. trxMessages] : []));
+            testNode.Properties.Add(new TrxMessagesProperty([.. trxMessages!]));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
@@ -261,12 +261,12 @@ internal static class ObjectModelConverters
             }
         }
 
-        if (standardErrorMessages is { Count: > 0 })
+        if (standardErrorMessages is not null)
         {
             testNode.Properties.Add(new StandardErrorProperty(string.Join(Environment.NewLine, standardErrorMessages)));
         }
 
-        if (standardOutputMessages is { Count: > 0 })
+        if (standardOutputMessages is not null)
         {
             testNode.Properties.Add(new StandardOutputProperty(string.Join(Environment.NewLine, standardOutputMessages)));
         }

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers.Binary;
+using System.Buffers.Text;
 using System.Security.Cryptography;
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
@@ -38,7 +40,8 @@ internal static class PackagedAppActivationArguments
                 TryDeleteStalePayloads(localStateDirectory, TimeProvider.System.GetUtcNow().UtcDateTime);
             }
 
-            long inlineLength = InlinePrefix.Length + ((((long)serialized.Length + 2) / 3) * 4);
+            long inlineLength = InlinePrefix.Length + (long)Base64.GetMaxEncodedToUtf8Length(serialized.Length);
+            // Stryker disable once Equality: the 14-character prefix plus a base64 multiple of four can never equal the 2,048-character limit.
             if (inlineLength <= MaximumInlineLength)
             {
                 return new PackagedAppActivationData(
@@ -82,13 +85,19 @@ internal static class PackagedAppActivationArguments
                     throw;
                 }
             }
+
+            // Stryker disable once Block: clearing a method-local key is a security side effect with no observable managed result.
             finally
             {
+                // Stryker disable once Statement: clearing a method-local key is a security side effect with no observable managed result.
                 CryptographicOperations.ZeroMemory(key);
             }
         }
+
+        // Stryker disable once Block: clearing a method-local serialization buffer is a security side effect with no observable managed result.
         finally
         {
+            // Stryker disable once Statement: clearing a method-local serialization buffer is a security side effect with no observable managed result.
             CryptographicOperations.ZeroMemory(serialized);
         }
     }
@@ -126,11 +135,6 @@ internal static class PackagedAppActivationArguments
 
     public static void TryDeletePayload(string? payloadPath)
     {
-        if (payloadPath is null)
-        {
-            return;
-        }
-
         try
         {
             if (File.Exists(payloadPath))
@@ -276,6 +280,7 @@ internal static class PackagedAppActivationArguments
             byteCount += sizeof(int) + ((long)argument.Length * sizeof(char));
         }
 
+        // Stryker disable once Equality: byteCount is always even while int.MaxValue is odd, so equality is unreachable.
         if (byteCount > int.MaxValue)
         {
             throw new ArgumentException(ExtensionResources.ActivationArgumentsPayloadTooLarge, nameof(arguments));
@@ -292,8 +297,10 @@ internal static class PackagedAppActivationArguments
 
             foreach (char value in argument)
             {
-                destination[offset++] = (byte)value;
-                destination[offset++] = (byte)(value >> 8);
+                destination[offset] = (byte)value;
+                // Stryker disable once Bitwise: char is unsigned, so arithmetic and logical right shifts are identical.
+                destination[offset + 1] = (byte)(value >> 8);
+                offset += sizeof(char);
             }
         }
 
@@ -323,8 +330,8 @@ internal static class PackagedAppActivationArguments
             }
 
             int charCount = ReadInt32(payload[offset..]);
-            offset += sizeof(int);
-            if (charCount < 0 || charCount > (payload.Length - offset) / sizeof(char))
+            int charactersOffset = offset + sizeof(int);
+            if (charCount < 0 || charCount > (payload.Length - charactersOffset) / sizeof(char))
             {
                 throw new FormatException(ExtensionResources.ActivationArgumentsInvalidArgumentLength);
             }
@@ -332,12 +339,12 @@ internal static class PackagedAppActivationArguments
             char[] chars = new char[charCount];
             for (int i = 0; i < chars.Length; i++)
             {
-                int sourceOffset = offset + (i * sizeof(char));
+                int sourceOffset = charactersOffset + (i * sizeof(char));
                 chars[i] = (char)(payload[sourceOffset] | (payload[sourceOffset + 1] << 8));
             }
 
             arguments[argumentIndex] = new string(chars);
-            offset += charCount * sizeof(char);
+            offset = charactersOffset + (charCount * sizeof(char));
         }
 
         return offset == payload.Length
@@ -351,18 +358,10 @@ internal static class PackagedAppActivationArguments
         => Path.Combine(localStateDirectory, $"mtp-activation-{token}.payload");
 
     private static int ReadInt32(ReadOnlySpan<byte> source)
-        => source[0]
-            | (source[1] << 8)
-            | (source[2] << 16)
-            | (source[3] << 24);
+        => BinaryPrimitives.ReadInt32LittleEndian(source);
 
     private static void WriteInt32(Span<byte> destination, int value)
-    {
-        destination[0] = (byte)value;
-        destination[1] = (byte)(value >> 8);
-        destination[2] = (byte)(value >> 16);
-        destination[3] = (byte)(value >> 24);
-    }
+        => BinaryPrimitives.WriteInt32LittleEndian(destination, value);
 }
 
 internal sealed class PackagedAppActivationData
