@@ -91,9 +91,9 @@ public sealed class FailedTestHelperTests
             out _, out _, out _, out string message, out string? lowPriorityMessage);
 
         Assert.Contains("Test (10ms): Values did not match.", message);
-        Assert.Contains($"Expected value: expected{Environment.NewLine}", message);
-        Assert.Contains($"Actual value: actual{Environment.NewLine}", message);
-        Assert.Contains($"Stack Trace:{Environment.NewLine}{errorStackTrace}", message);
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, Resources.MSBuildResources.ExpectedValue, "expected") + Environment.NewLine, message);
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, Resources.MSBuildResources.ActualValue, "actual") + Environment.NewLine, message);
+        Assert.Contains($"{Resources.MSBuildResources.StackTrace}{Environment.NewLine}{errorStackTrace}", message);
         Assert.IsNull(lowPriorityMessage);
     }
 
