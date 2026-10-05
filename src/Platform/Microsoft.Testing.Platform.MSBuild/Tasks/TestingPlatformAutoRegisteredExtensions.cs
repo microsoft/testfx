@@ -39,6 +39,7 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
 
     internal TestingPlatformSelfRegisteredExtensions(IFileSystem fileSystem)
     {
+        // Stryker disable once String: The opt-in debugger hook cannot be exercised safely by an automated unit test.
         if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
         {
             Debugger.Launch();
@@ -148,6 +149,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 
         foreach (IGrouping<string, ITaskItem> group in SelfRegisteredExtensionsBuilderHook.GroupBy(x => x.ItemSpec))
         {
+            // Stryker disable once Linq: GroupBy never produces an empty grouping, so First and FirstOrDefault are equivalent here.
             ITaskItem firstItem = group.First();
             foreach (ITaskItem duplicateItem in group.Skip(1))
             {

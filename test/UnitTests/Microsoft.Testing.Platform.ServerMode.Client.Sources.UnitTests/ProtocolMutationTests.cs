@@ -6,6 +6,7 @@ extern alias serverclient;
 #if NETCOREAPP
 using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 #endif
 using System.Net.Sockets;
 using System.Reflection;
@@ -45,18 +46,39 @@ public sealed class ProtocolMutationTests
     [TestMethod]
     public void ErrorCodes_MatchTheJsonRpcAndTestingProtocol()
     {
-        Assert.AreEqual(-32700, ErrorCodes.ParseError);
-        Assert.AreEqual(-32600, ErrorCodes.InvalidRequest);
-        Assert.AreEqual(-32601, ErrorCodes.MethodNotFound);
-        Assert.AreEqual(-32602, ErrorCodes.InvalidParams);
-        Assert.AreEqual(-32603, ErrorCodes.InternalError);
-        Assert.AreEqual(-32002, ErrorCodes.ServerNotInitialized);
-        Assert.AreEqual(-32899, ErrorCodes.LspErrorRangeStart);
-        Assert.AreEqual(-32800, ErrorCodes.RequestCanceled);
-        Assert.AreEqual(-32800, ErrorCodes.LspErrorRangeEnd);
-        Assert.AreEqual(-31700, ErrorCodes.TestingPlatformErrorRangeStart);
-        Assert.AreEqual(-31699, ErrorCodes.ProtocolVersionNotSupported);
-        Assert.AreEqual(-31000, ErrorCodes.TestingPlatformErrorRangeEnd);
+        AssertErrorCodes(static name => name switch
+        {
+            nameof(ErrorCodes.ParseError) => ErrorCodes.ParseError,
+            nameof(ErrorCodes.InvalidRequest) => ErrorCodes.InvalidRequest,
+            nameof(ErrorCodes.MethodNotFound) => ErrorCodes.MethodNotFound,
+            nameof(ErrorCodes.InvalidParams) => ErrorCodes.InvalidParams,
+            nameof(ErrorCodes.InternalError) => ErrorCodes.InternalError,
+            nameof(ErrorCodes.ServerNotInitialized) => ErrorCodes.ServerNotInitialized,
+            nameof(ErrorCodes.LspErrorRangeStart) => ErrorCodes.LspErrorRangeStart,
+            nameof(ErrorCodes.RequestCanceled) => ErrorCodes.RequestCanceled,
+            nameof(ErrorCodes.LspErrorRangeEnd) => ErrorCodes.LspErrorRangeEnd,
+            nameof(ErrorCodes.TestingPlatformErrorRangeStart) => ErrorCodes.TestingPlatformErrorRangeStart,
+            nameof(ErrorCodes.ProtocolVersionNotSupported) => ErrorCodes.ProtocolVersionNotSupported,
+            nameof(ErrorCodes.TestingPlatformErrorRangeEnd) => ErrorCodes.TestingPlatformErrorRangeEnd,
+            _ => throw new ArgumentOutOfRangeException(nameof(name), name, null),
+        });
+
+        var loadContext = new IsolatedClientAssemblyLoadContext();
+        try
+        {
+            Assembly isolatedAssembly = loadContext.LoadFromAssemblyPath(ClientAssembly.Location);
+            Type errorCodes = isolatedAssembly.GetType(
+                "Microsoft.Testing.Platform.ServerMode.ErrorCodes",
+                throwOnError: true)!;
+
+            AssertErrorCodes(name => (int)errorCodes
+                .GetField(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!
+                .GetValue(null)!);
+        }
+        finally
+        {
+            loadContext.Unload();
+        }
     }
 
     [TestMethod]
@@ -591,6 +613,22 @@ public sealed class ProtocolMutationTests
             .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
             .GetValue(instance)!;
 
+    private static void AssertErrorCodes(Func<string, int> getValue)
+    {
+        Assert.AreEqual(-32700, getValue(nameof(ErrorCodes.ParseError)));
+        Assert.AreEqual(-32600, getValue(nameof(ErrorCodes.InvalidRequest)));
+        Assert.AreEqual(-32601, getValue(nameof(ErrorCodes.MethodNotFound)));
+        Assert.AreEqual(-32602, getValue(nameof(ErrorCodes.InvalidParams)));
+        Assert.AreEqual(-32603, getValue(nameof(ErrorCodes.InternalError)));
+        Assert.AreEqual(-32002, getValue(nameof(ErrorCodes.ServerNotInitialized)));
+        Assert.AreEqual(-32899, getValue(nameof(ErrorCodes.LspErrorRangeStart)));
+        Assert.AreEqual(-32800, getValue(nameof(ErrorCodes.RequestCanceled)));
+        Assert.AreEqual(-32800, getValue(nameof(ErrorCodes.LspErrorRangeEnd)));
+        Assert.AreEqual(-31700, getValue(nameof(ErrorCodes.TestingPlatformErrorRangeStart)));
+        Assert.AreEqual(-31699, getValue(nameof(ErrorCodes.ProtocolVersionNotSupported)));
+        Assert.AreEqual(-31000, getValue(nameof(ErrorCodes.TestingPlatformErrorRangeEnd)));
+    }
+
     private static string FormatLog(string state, Exception? exception)
     {
         var formatter = (Delegate)GetClientType("Microsoft.Testing.Platform.Logging.LoggingExtensions")
@@ -646,6 +684,20 @@ public sealed class ProtocolMutationTests
                 "Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities",
                 nameof(SupportsTestCoverageMessages));
     }
+
+#if NETCOREAPP
+    private sealed class IsolatedClientAssemblyLoadContext : AssemblyLoadContext
+    {
+        public IsolatedClientAssemblyLoadContext()
+            : base(isCollectible: true)
+        {
+        }
+
+        protected override Assembly? Load(AssemblyName assemblyName)
+            => Default.Assemblies.FirstOrDefault(
+                assembly => AssemblyName.ReferenceMatchesDefinition(assembly.GetName(), assemblyName));
+    }
+#endif
 
     private abstract record RpcMessage;
 

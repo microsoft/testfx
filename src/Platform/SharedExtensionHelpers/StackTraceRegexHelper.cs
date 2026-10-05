@@ -30,7 +30,9 @@ internal static class StackTraceRegexHelper
 
     private static (string AtString, string InPattern) GetLocalizedStackFrameRegexParts()
     {
+        // Stryker disable once String: A failed resource lookup intentionally falls back to the same invariant text.
         string atResourceName = "Word_At";
+        // Stryker disable once String: A failed resource lookup intentionally falls back to the same invariant pattern.
         string inResourceName = "StackTrace_InFileLineNumber";
 
         string? atString = null;
@@ -41,6 +43,7 @@ internal static class StackTraceRegexHelper
         {
             // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
 #pragma warning disable RS0030 // Do not use banned APIs
+            // Stryker disable once all: If the private runtime API cannot be found, the fallback below produces the same pattern.
             MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod(
                 "GetResourceString",
                 BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
@@ -64,7 +67,9 @@ internal static class StackTraceRegexHelper
             // If reflection lookup/invocation fails, populate the defaults below.
         }
 
+        // Stryker disable once Conditional: The current runtime returns the invariant fallback value for this private resource lookup.
         atString = atString is null || atString == atResourceName ? "at" : atString;
+        // Stryker disable once Conditional: The current runtime returns the invariant fallback value for this private resource lookup.
         inString = inString is null || inString == inResourceName ? "in {0}:line {1}" : inString;
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");

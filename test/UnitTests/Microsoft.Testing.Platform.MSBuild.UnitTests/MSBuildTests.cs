@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.Loader;
 using System.Text.Json;
 
 using Microsoft.Build.Framework;
@@ -14,9 +15,13 @@ public sealed class MSBuildTests
 {
     private readonly Mock<IBuildEngine> _buildEngine = new();
     private readonly List<BuildErrorEventArgs> _errors = [];
+    private readonly List<BuildMessageEventArgs> _messages = [];
 
-    public MSBuildTests() =>
+    public MSBuildTests()
+    {
         _buildEngine.Setup(x => x.LogErrorEvent(It.IsAny<BuildErrorEventArgs>())).Callback<BuildErrorEventArgs>(e => _errors.Add(e));
+        _buildEngine.Setup(x => x.LogMessageEvent(It.IsAny<BuildMessageEventArgs>())).Callback<BuildMessageEventArgs>(e => _messages.Add(e));
+    }
 
     [TestMethod]
     public void Verify_Correct_Registration_Order_For_WellKnown_Extensions()
@@ -182,6 +187,153 @@ namespace SomeNamespace
     }
 
     [TestMethod]
+    [DataRow("C#", null, null, true, "obj/entryPoint.cs")]
+    [DataRow("C#", null, null, false, "obj/application.no-root.cs")]
+    [DataRow("C#", "SomeNamespace", null, true, "obj/entryPoint.root.cs")]
+    [DataRow("C#", "SomeNamespace", null, false, "obj/application.cs")]
+    [DataRow("C#", null, "Contoso.Tests.TestHost.CreateHost", true, "obj/hostedEntryPoint.cs")]
+    [DataRow("C#", null, "Contoso.Tests.TestHost.CreateHost", false, "obj/hostedApplication.no-root.cs")]
+    [DataRow("C#", "SomeNamespace", "Contoso.Tests.TestHost.CreateHost", true, "obj/hostedEntryPoint.root.cs")]
+    [DataRow("C#", "SomeNamespace", "Contoso.Tests.TestHost.CreateHost", false, "obj/hostedApplication.cs")]
+    [DataRow("VB", null, null, true, "obj/entryPoint.vb")]
+    [DataRow("VB", null, null, false, "obj/application.vb")]
+    [DataRow("VB", "Ignored.Root", "Contoso.Tests.TestHost.CreateHost", true, "obj/hostedEntryPoint.vb")]
+    [DataRow("VB", "Ignored.Root", "Contoso.Tests.TestHost.CreateHost", false, "obj/hostedApplication.vb")]
+    [DataRow("F#", null, null, true, "obj/entryPoint.fs")]
+    [DataRow("F#", null, null, false, "obj/application.fs")]
+    [DataRow("F#", "SomeNamespace", null, true, "obj/entryPoint.root.fs")]
+    [DataRow("F#", "SomeNamespace", null, false, "obj/application.root.fs")]
+    [DataRow("F#", null, "Contoso.Tests.TestHost.CreateHost", true, "obj/hostedEntryPoint.no-root.fs")]
+    [DataRow("F#", null, "Contoso.Tests.TestHost.CreateHost", false, "obj/hostedApplication.no-root.fs")]
+    [DataRow("F#", "SomeNamespace", "Contoso.Tests.TestHost.CreateHost", true, "obj/hostedEntryPoint.fs")]
+    [DataRow("F#", "SomeNamespace", "Contoso.Tests.TestHost.CreateHost", false, "obj/hostedApplication.fs")]
+    public void EntryPointTask_GeneratesEveryTemplateBranch(
+        string language,
+        string? rootNamespace,
+        string? hostFactory,
+        bool generateEntryPoint,
+        string sourcePath)
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformEntryPointTask task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem(sourcePath),
+            Language = new CustomTaskItem(language),
+            RootNamespace = rootNamespace,
+            HostFactory = hostFactory,
+            GenerateEntryPoint = generateEntryPoint,
+        };
+
+        Assert.IsTrue(task.Execute());
+
+        string generatedSource = fileSystem.Files[sourcePath]!;
+        Assert.AreEqual(generateEntryPoint, generatedSource.Contains("MicrosoftTestingPlatformEntryPoint", StringComparison.Ordinal));
+        Assert.AreEqual(hostFactory is not null, generatedSource.Contains("RunTestingPlatformAsync", StringComparison.Ordinal));
+        Assert.DoesNotContain("Stryker was here!", generatedSource);
+
+        if (language == "C#")
+        {
+            if (rootNamespace is null)
+            {
+                Assert.DoesNotContain("namespace ", generatedSource);
+                Assert.Contains("global::SelfRegisteredExtensions.AddSelfRegisteredExtensions", generatedSource);
+            }
+            else
+            {
+                Assert.Contains($"namespace {rootNamespace}", generatedSource);
+                Assert.Contains($"global::{rootNamespace}.SelfRegisteredExtensions.AddSelfRegisteredExtensions", generatedSource);
+            }
+        }
+        else if (language == "VB")
+        {
+            Assert.DoesNotContain("Ignored.Root", generatedSource);
+            Assert.Contains("SelfRegisteredExtensions.AddSelfRegisteredExtensions", generatedSource);
+        }
+        else if (rootNamespace is null)
+        {
+            Assert.AreEqual(
+                !generateEntryPoint,
+                generatedSource.Contains("namespace Microsoft.TestingPlatform", StringComparison.Ordinal));
+            Assert.Contains(
+                "Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions",
+                generatedSource);
+        }
+        else
+        {
+            Assert.Contains($"namespace {rootNamespace}", generatedSource);
+            Assert.Contains("SelfRegisteredExtensions.AddSelfRegisteredExtensions", generatedSource);
+        }
+
+        Assert.AreEqual(sourcePath, task.TestingPlatformEntryPointGeneratedFilePath!.ItemSpec);
+        Assert.Contains(
+            message => message.Message == $"TestingPlatformEntryPointSourcePath: '{sourcePath}'",
+            _messages);
+        Assert.Contains(
+            message => message.Message == $"Language: '{language}'",
+            _messages);
+        Assert.Contains(
+            message => message.Message == $"Entrypoint source:\n'{generatedSource}'",
+            _messages);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void EntryPointTask_AcceptsMinimalQualifiedHostFactoryAndIdentifierCharacters()
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformEntryPointTask task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/entryPoint.cs"),
+            Language = new CustomTaskItem("C#"),
+            HostFactory = "_Host1.Create2",
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.Contains(
+            "global::_Host1.Create2()",
+            fileSystem.Files["obj/entryPoint.cs"]!);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void EntryPointTask_RejectsInvalidCharactersInsideHostFactoryIdentifiers()
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformEntryPointTask task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem("obj/entryPoint.cs"),
+            Language = new CustomTaskItem("C#"),
+            HostFactory = "Contoso.Bad-Name.Create",
+        };
+
+        Assert.IsFalse(task.Execute());
+        Assert.IsFalse(fileSystem.Files.ContainsKey("obj/entryPoint.cs"));
+        Assert.Contains("fully qualified static method path", Assert.ContainsSingle(_errors).Message ?? string.Empty);
+    }
+
+    [TestMethod]
+    [DataRow("C#", "obj/entryPoint.cs")]
+    [DataRow("F#", "obj/entryPoint.fs")]
+    public void EntryPointTask_SanitizesRootNamespaceForNonVisualBasicLanguages(string language, string sourcePath)
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformEntryPointTask task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            TestingPlatformEntryPointSourcePath = new CustomTaskItem(sourcePath),
+            Language = new CustomTaskItem(language),
+            RootNamespace = "Some-Namespace",
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.Contains("namespace Some_Namespace", fileSystem.Files[sourcePath]!);
+        Assert.DoesNotContain("namespace Some-Namespace", fileSystem.Files[sourcePath]!);
+    }
+
+    [TestMethod]
     public void SelfRegisteredExtensions_Deduplicates_Exact_Duplicate_BuilderHooks()
     {
         InMemoryFileSystem inMemoryFileSystem = new();
@@ -227,6 +379,206 @@ namespace SomeNamespace
         Assert.IsFalse(inMemoryFileSystem.Files.ContainsKey("obj/selfRegisteredExtensionsFile"));
         Assert.HasCount(1, _errors);
         Assert.Contains("Duplicate 'TestingPlatformBuilderHook' item with Include 'hook' has conflicting metadata.", _errors[0].Message ?? string.Empty);
+    }
+
+    [TestMethod]
+    [DataRow("DisplayName", "OtherHook")]
+    [DataRow("TypeFullName", "Contoso.OtherHook")]
+    public void SelfRegisteredExtensions_Fails_WhenOneDuplicateMetadataValueDiffers(string metadataName, string metadataValue)
+    {
+        InMemoryFileSystem fileSystem = new();
+        CustomTaskItem duplicate = new CustomTaskItem("hook")
+            .Add("DisplayName", "Hook")
+            .Add("TypeFullName", "Contoso.Hook")
+            .Add(metadataName, metadataValue);
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem("obj/extensions.cs"),
+            Language = new CustomTaskItem("C#"),
+            SelfRegisteredExtensionsBuilderHook =
+            [
+                new CustomTaskItem("hook").Add("DisplayName", "Hook").Add("TypeFullName", "Contoso.Hook"),
+                duplicate,
+            ],
+        };
+
+        Assert.IsFalse(task.Execute());
+        Assert.Contains("conflicting metadata", Assert.ContainsSingle(_errors).Message ?? string.Empty);
+        Assert.IsFalse(fileSystem.Files.ContainsKey("obj/extensions.cs"));
+    }
+
+    [TestMethod]
+    [DataRow("C#", null, "obj/extensions.cs", "global::Contoso.First.AddExtensions(builder, args);\n        global::Contoso.Second.AddExtensions(builder, args);")]
+    [DataRow("C#", "SomeNamespace", "obj/extensions.root.cs", "global::Contoso.First.AddExtensions(builder, args);\n        global::Contoso.Second.AddExtensions(builder, args);")]
+    [DataRow("VB", "Ignored.Root", "obj/extensions.vb", "Global.Contoso.First.AddExtensions(builder, args)\n        Global.Contoso.Second.AddExtensions(builder, args)")]
+    [DataRow("F#", null, "obj/extensions.fs", "global.Contoso.First.AddExtensions(builder, args)\n        global.Contoso.Second.AddExtensions(builder, args)")]
+    [DataRow("F#", "SomeNamespace", "obj/extensions.root.fs", "global.Contoso.First.AddExtensions(builder, args)\n        global.Contoso.Second.AddExtensions(builder, args)")]
+    public void SelfRegisteredExtensions_GeneratesEveryLanguageAndNamespaceBranch(
+        string language,
+        string? rootNamespace,
+        string sourcePath,
+        string expectedCalls)
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem(sourcePath),
+            Language = new CustomTaskItem(language),
+            RootNamespace = rootNamespace,
+            SelfRegisteredExtensionsBuilderHook =
+            [
+                new CustomTaskItem("first").Add("DisplayName", "First").Add("TypeFullName", "Contoso.First"),
+                new CustomTaskItem("second").Add("DisplayName", "Second").Add("TypeFullName", "Contoso.Second"),
+            ],
+        };
+
+        Assert.IsTrue(task.Execute());
+
+        string generatedSource = fileSystem.Files[sourcePath]!;
+        string normalizedSource = generatedSource.ReplaceLineEndings("\n");
+        Assert.Contains(expectedCalls, normalizedSource);
+        string lastCall = expectedCalls[(expectedCalls.LastIndexOf('\n') + 1)..];
+        Assert.DoesNotContain(lastCall + "\n\n", normalizedSource);
+        Assert.DoesNotContain("Stryker was here!", generatedSource);
+        if (language == "C#" && rootNamespace is not null)
+        {
+            Assert.Contains($"namespace {rootNamespace}", generatedSource);
+        }
+        else if (language == "C#")
+        {
+            Assert.DoesNotContain($"namespace {Environment.NewLine}{{", generatedSource);
+        }
+        else if (language == "F#" && rootNamespace is not null)
+        {
+            Assert.Contains($"namespace {rootNamespace}", generatedSource);
+        }
+        else if (language == "F#")
+        {
+            Assert.Contains("namespace Microsoft.TestingPlatform.Extensions", generatedSource);
+        }
+        else
+        {
+            Assert.DoesNotContain("Ignored.Root", generatedSource);
+        }
+
+        Assert.Contains(
+            message => message.Message == $"SelfRegisteredExtensionsSourcePath: '{sourcePath}'",
+            _messages);
+        Assert.Contains(
+            message => message.Message == $"Language: '{language}'",
+            _messages);
+        Assert.Contains(
+            message => message.Message == "TestingPlatformExtensionFullTypeNames:"
+                + Environment.NewLine
+                + " Hook UID: 'first' DisplayName: 'First' TypeFullName: 'Contoso.First'"
+                + Environment.NewLine
+                + " Hook UID: 'second' DisplayName: 'Second' TypeFullName: 'Contoso.Second'"
+                + Environment.NewLine,
+            _messages);
+        Assert.Contains(
+            message => message.Message == $"SelfRegisteredExtensions source:\n'{generatedSource}'",
+            _messages);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("SomeNamespace")]
+    public void SelfRegisteredExtensions_FSharpWithoutHooks_EmitsUnitExpression(string? rootNamespace)
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem("obj/extensions.fs"),
+            Language = new CustomTaskItem("F#"),
+            RootNamespace = rootNamespace,
+            SelfRegisteredExtensionsBuilderHook = [],
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.Contains(
+            "static member AddSelfRegisteredExtensions (builder: Microsoft.Testing.Platform.Builder.ITestApplicationBuilder, args: string[]) =\n        ()",
+            fileSystem.Files["obj/extensions.fs"]!.ReplaceLineEndings("\n"));
+        Assert.DoesNotContain(
+            message => message.Message is not null && message.Message.StartsWith("TestingPlatformExtensionFullTypeNames:", StringComparison.Ordinal),
+            _messages);
+    }
+
+    [TestMethod]
+    [DataRow("C#")]
+    [DataRow("F#")]
+    public void SelfRegisteredExtensions_SanitizesRootNamespaceForNonVisualBasicLanguages(string language)
+    {
+        string sourcePath = language == "C#" ? "obj/extensions.cs" : "obj/extensions.fs";
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem(sourcePath),
+            Language = new CustomTaskItem(language),
+            RootNamespace = "Some-Namespace",
+            SelfRegisteredExtensionsBuilderHook = [],
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.Contains("namespace Some_Namespace", fileSystem.Files[sourcePath]!);
+        Assert.DoesNotContain("namespace Some-Namespace", fileSystem.Files[sourcePath]!);
+    }
+
+    [TestMethod]
+    public void SelfRegisteredExtensions_StopsAfterFirstConflictingDuplicate()
+    {
+        InMemoryFileSystem fileSystem = new();
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem("obj/extensions.cs"),
+            Language = new CustomTaskItem("C#"),
+            SelfRegisteredExtensionsBuilderHook =
+            [
+                new CustomTaskItem("hook").Add("DisplayName", "First").Add("TypeFullName", "Contoso.First"),
+                new CustomTaskItem("hook").Add("DisplayName", "Second").Add("TypeFullName", "Contoso.First"),
+                new CustomTaskItem("hook").Add("DisplayName", "Third").Add("TypeFullName", "Contoso.Third"),
+            ],
+        };
+
+        Assert.IsFalse(task.Execute());
+        Assert.HasCount(1, _errors);
+    }
+
+    [TestMethod]
+    [DataRow("DisplayName")]
+    [DataRow("TypeFullName")]
+    public void SelfRegisteredExtensions_MissingMetadata_ReportsExpectedItemSpec(string missingMetadata)
+    {
+        InMemoryFileSystem fileSystem = new();
+        CustomTaskItem hook = new("hook");
+        if (missingMetadata != "DisplayName")
+        {
+            hook.Add("DisplayName", "Hook");
+        }
+
+        if (missingMetadata != "TypeFullName")
+        {
+            hook.Add("TypeFullName", "Contoso.Hook");
+        }
+
+        TestingPlatformSelfRegisteredExtensions task = new(fileSystem)
+        {
+            BuildEngine = _buildEngine.Object,
+            SelfRegisteredExtensionsSourcePath = new CustomTaskItem("obj/extensions.cs"),
+            Language = new CustomTaskItem("C#"),
+            SelfRegisteredExtensionsBuilderHook = [hook],
+        };
+
+        Assert.IsFalse(task.Execute());
+        string error = Assert.ContainsSingle(_errors).Message ?? string.Empty;
+        Assert.Contains($"Missing '{missingMetadata}' metadata", error);
+        Assert.Contains("<TestingPlatformBuilderHook Include=\"8E680F4D-E423-415A-9566-855439363BC0\" >", error);
+        Assert.Contains("static Contoso.BuilderHook.AddExtensions", error);
     }
 
     [TestMethod]
@@ -332,6 +684,137 @@ namespace SomeNamespace
         Assert.IsFalse(fileSystem.Files.ContainsKey(outputPath));
     }
 
+    [TestMethod]
+    public void ConfigurationFileTask_MissingSourceAndDefaults_ProducesNoOutputAndExactDiagnostics()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        InMemoryFileSystem fileSystem = new();
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+
+        Assert.IsTrue(task.Execute());
+        Assert.IsNull(task.FinalTestingPlatformConfigurationFile);
+        Assert.AreSequenceEqual(
+            [
+                $"Microsoft Testing Platform configuration file: '{Path.Combine(projectDirectory, "testconfig.json")}'",
+                "Microsoft Testing Platform configuration file not found",
+            ],
+            _messages.Select(message => message.Message).ToArray());
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_MissingSourceAndEmptyDefaults_ProducesNoOutput()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        InMemoryFileSystem fileSystem = new();
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+        task.TestingPlatformCommandLineOptionDefault = [];
+
+        Assert.IsTrue(task.Execute());
+        Assert.IsNull(task.FinalTestingPlatformConfigurationFile);
+        Assert.AreEqual(
+            "Microsoft Testing Platform configuration file not found",
+            _messages[^1].Message);
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void EmbeddedRuntimeDefaults_AreInitializedInFreshAssembly()
+    {
+        const string TimeoutEnvironmentVariable = "TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT";
+        string? originalTimeout = Environment.GetEnvironmentVariable(TimeoutEnvironmentVariable);
+        Environment.SetEnvironmentVariable(TimeoutEnvironmentVariable, null);
+        var loadContext = new IsolatedAssemblyLoadContext();
+        try
+        {
+            Assembly assembly = loadContext.LoadFromAssemblyPath(typeof(ConfigurationFileTask).Assembly.Location);
+
+            Type timeoutHelper = assembly.GetType("Microsoft.Testing.Platform.Helpers.TimeoutHelper", throwOnError: true)!;
+            Assert.AreEqual(
+                TimeSpan.FromMinutes(5),
+                timeoutHelper.GetProperty("DefaultHangTimeSpanTimeout", BindingFlags.Static | BindingFlags.Public)!.GetValue(null));
+            Assert.AreEqual(
+                300d,
+                timeoutHelper.GetProperty("DefaultHangTimeoutSeconds", BindingFlags.Static | BindingFlags.Public)!.GetValue(null));
+
+            Type invokeTask = assembly.GetType("Microsoft.Testing.Platform.MSBuild.InvokeTestingPlatformTask", throwOnError: true)!;
+            Assert.AreEqual(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet",
+                invokeTask.GetField("DotnetRunnerName", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null));
+        }
+        finally
+        {
+            loadContext.Unload();
+            Environment.SetEnvironmentVariable(TimeoutEnvironmentVariable, originalTimeout);
+        }
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_CopiesExistingSourceAndLogsEveryResolvedPath()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        string sourcePath = Path.Combine(projectDirectory, "testconfig.json");
+        string finalPath = Path.Combine(projectDirectory, "bin");
+        string outputPath = Path.Combine(finalPath, "Tests.testconfig.json");
+        InMemoryFileSystem fileSystem = new();
+        fileSystem.Files[sourcePath] = """{"original":true}""";
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+
+        Assert.IsTrue(task.Execute());
+
+        Assert.AreEqual(fileSystem.Files[sourcePath], fileSystem.Files[outputPath]);
+        Assert.AreEqual(outputPath, task.FinalTestingPlatformConfigurationFile!.ItemSpec);
+        Assert.AreSequenceEqual(
+            [
+                $"Microsoft Testing Platform configuration file: '{sourcePath}'",
+                $"MSBuildProjectDirectory: '{projectDirectory}'",
+                "AssemblyName: 'Tests'",
+                "OutputPath: 'bin'",
+                $"Final path: '{finalPath}'",
+                $"Final configuration file path : '{outputPath}'",
+                $"Configuration file found: '{sourcePath}'",
+                "Microsoft Testing Platform configuration file written",
+            ],
+            _messages.Select(message => message.Message).ToArray());
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_AllowsCommentsAndTrailingCommasAndWritesIndentedJson()
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        string sourcePath = Path.Combine(projectDirectory, "testconfig.json");
+        string outputPath = Path.Combine(projectDirectory, "bin", "Tests.testconfig.json");
+        InMemoryFileSystem fileSystem = new();
+        fileSystem.Files[sourcePath] =
+            """
+            {
+              // Preserve comments while parsing, but normalize them out of the generated file.
+              "platformOptions": {
+                "exitProcessOnUnhandledException": true,
+              },
+            }
+            """;
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+        task.TestingPlatformCommandLineOptionDefault =
+        [
+            new CustomTaskItem("filter-uid").Add("Value", "first"),
+            new CustomTaskItem("filter-uid").Add("Value", "second"),
+        ];
+
+        Assert.IsTrue(task.Execute());
+
+        string output = fileSystem.Files[outputPath]!;
+        Assert.Contains(Environment.NewLine + "  \"platformOptions\": {", output);
+        Assert.Contains(Environment.NewLine + "    \"exitProcessOnUnhandledException\": true", output);
+        Assert.Contains(Environment.NewLine + "  \"commandLineOptionDefaults\": {", output);
+        Assert.Contains(Environment.NewLine + "    \"filter-uid\": [", output);
+        Assert.EndsWith(Environment.NewLine, output);
+        Assert.DoesNotContain("// Preserve comments", output);
+        Assert.IsEmpty(_errors);
+    }
+
     private ConfigurationFileTask CreateConfigurationFileTask(InMemoryFileSystem fileSystem, string projectDirectory)
         => new(fileSystem)
         {
@@ -391,5 +874,17 @@ namespace SomeNamespace
         public void RemoveMetadata(string metadataName) => throw new NotImplementedException();
 
         public void SetMetadata(string metadataName, string metadataValue) => throw new NotImplementedException();
+    }
+
+    private sealed class IsolatedAssemblyLoadContext : AssemblyLoadContext
+    {
+        public IsolatedAssemblyLoadContext()
+            : base(isCollectible: true)
+        {
+        }
+
+        protected override Assembly? Load(AssemblyName assemblyName)
+            => Default.Assemblies.FirstOrDefault(
+                assembly => AssemblyName.ReferenceMatchesDefinition(assembly.GetName(), assemblyName));
     }
 }
