@@ -10,17 +10,6 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 
 internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderBase
 {
-    private static readonly string[] DumpTypeOptions = ["Mini", "Heap", "Triage", "Full"];
-    private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
-    [
-        new(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
-        new(CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpResources.CrashReportOptionDescription, ArgumentArity.Zero, false),
-        new(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, CrashDumpResources.CrashReportIfSupportedOptionDescription, ArgumentArity.Zero, false),
-        new(CrashDumpCommandLineOptions.CrashSequenceOptionName, CrashDumpResources.CrashSequenceOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-        new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false)
-    ];
-
     public CrashDumpCommandLineProvider()
         : base(
             // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
@@ -28,15 +17,26 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
             ExtensionVersion.DefaultSemVer,
             CrashDumpResources.CrashDumpDisplayName,
             CrashDumpResources.CrashDumpDescription,
-            CachedCommandLineOptions)
+            CreateCommandLineOptions())
     {
     }
+
+    private static IReadOnlyCollection<CommandLineOption> CreateCommandLineOptions()
+        =>
+        [
+            new(CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpResources.CrashDumpOptionDescription, ArgumentArity.Zero, false),
+            new(CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpResources.CrashReportOptionDescription, ArgumentArity.Zero, false),
+            new(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, CrashDumpResources.CrashReportIfSupportedOptionDescription, ArgumentArity.Zero, false),
+            new(CrashDumpCommandLineOptions.CrashSequenceOptionName, CrashDumpResources.CrashSequenceOptionDescription, ArgumentArity.ExactlyOne, false),
+            new(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpResources.CrashDumpFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
+            new(CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpResources.CrashDumpTypeOptionDescription, ArgumentArity.ExactlyOne, false),
+        ];
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
         if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName)
         {
-            return ValidateAllowedValuesAsync(arguments[0], DumpTypeOptions, CrashDumpResources.CrashDumpTypeOptionInvalidType);
+            return ValidateAllowedValuesAsync(arguments[0], ["Mini", "Heap", "Triage", "Full"], CrashDumpResources.CrashDumpTypeOptionInvalidType);
         }
 
         if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName

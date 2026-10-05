@@ -95,12 +95,21 @@ internal sealed partial class PackagedAppTestHostLauncher
             manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
             application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, testHostFileName);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or XmlException)
+        catch (IOException ex)
         {
-            // A manifest we cannot read is handled by the launch path, which reports it with a proper
-            // error. Widening the pipe DACL is never the right answer to a parsing problem.
-            Debug.WriteLine($"Unable to read '{manifestPath}' while computing the controller pipe authorization: {ex}");
-            return [];
+            return TraceManifestAuthorizationFailure(manifestPath, ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return TraceManifestAuthorizationFailure(manifestPath, ex);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return TraceManifestAuthorizationFailure(manifestPath, ex);
+        }
+        catch (XmlException ex)
+        {
+            return TraceManifestAuthorizationFailure(manifestPath, ex);
         }
 
         // Note this asks RunsInAppContainer, not UsesLaunchActivationArguments: a packagedClassicApp whose
@@ -111,5 +120,14 @@ internal sealed partial class PackagedAppTestHostLauncher
             : AppContainerSecurityIdentifier.TryDerive(manifestInfo.PackageFamilyName) is { } securityIdentifier
                 ? [securityIdentifier]
                 : [];
+    }
+
+    private static IReadOnlyList<string> TraceManifestAuthorizationFailure(string manifestPath, Exception exception)
+    {
+        // A manifest we cannot read is handled by the launch path, which reports it with a proper
+        // error. Widening the pipe DACL is never the right answer to a parsing problem.
+        // Stryker disable once all: debug-only diagnostics do not change the authorization decision returned to the platform.
+        Debug.WriteLine($"Unable to read '{manifestPath}' while computing the controller pipe authorization: {exception}");
+        return [];
     }
 }

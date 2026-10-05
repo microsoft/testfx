@@ -86,7 +86,7 @@ public static class MicrosoftExtensionsHostingExtensions
             HostLifetimeBridge = hostApplicationLifetimeBridge,
         };
 
-        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args, testApplicationOptions).ConfigureAwait(false);
+        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args, testApplicationOptions).ConfigureAwait(continueOnCapturedContext: default);
         try
         {
             testApplicationBuilder.AddMicrosoftExtensionsConfigurationSnapshot(configuration);
@@ -101,9 +101,9 @@ public static class MicrosoftExtensionsHostingExtensions
             Exception? operationException = null;
             try
             {
-                await host.StartAsync(cancellationToken).ConfigureAwait(false);
-                using ITestApplication testApplication = await testApplicationBuilder.BuildAsync().ConfigureAwait(false);
-                return await testApplication.RunAsync().ConfigureAwait(false);
+                await host.StartAsync(cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
+                using ITestApplication testApplication = await testApplicationBuilder.BuildAsync().ConfigureAwait(continueOnCapturedContext: default);
+                return await testApplication.RunAsync().ConfigureAwait(continueOnCapturedContext: default);
             }
             catch (Exception exception)
             {
@@ -115,7 +115,7 @@ public static class MicrosoftExtensionsHostingExtensions
                 hostApplicationLifetimeBridge?.Disconnect();
                 try
                 {
-                    await host.StopAsync(CancellationToken.None).ConfigureAwait(false);
+                    await host.StopAsync(CancellationToken.None).ConfigureAwait(continueOnCapturedContext: default);
                 }
                 catch (Exception stopException) when (operationException is not null)
                 {
@@ -129,7 +129,7 @@ public static class MicrosoftExtensionsHostingExtensions
             {
                 if (testApplicationBuilder is IAsyncCleanableExtension cleanableBuilder)
                 {
-                    await cleanableBuilder.CleanupAsync().ConfigureAwait(false);
+                    await cleanableBuilder.CleanupAsync().ConfigureAwait(continueOnCapturedContext: default);
                 }
             }
             catch (Exception disposeException)

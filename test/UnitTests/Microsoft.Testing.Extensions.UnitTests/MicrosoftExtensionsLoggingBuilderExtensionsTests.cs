@@ -100,13 +100,13 @@ public sealed class MicrosoftExtensionsLoggingBuilderExtensionsTests
             logging => logging.Services.AddSingleton<MelILoggerProvider>(_ => provider));
 
         Assert.AreSame(builder, returnedBuilder);
-        using (var loggerFactory = (IDisposable)await BuildLoggerFactoryAsync(builder, MtpLogLevel.Information))
+        using (var loggerFactory = (IDisposable)await BuildLoggerFactoryAsync(builder, MtpLogLevel.Trace))
         {
-            ((MtpILoggerFactory)loggerFactory).CreateLogger("category").Log(MtpLogLevel.Information, "message", null, static (state, _) => state);
+            ((MtpILoggerFactory)loggerFactory).CreateLogger("category").Log(MtpLogLevel.Trace, "message", null, static (state, _) => state);
         }
 
         Assert.AreEqual("category", provider.CategoryName);
-        Assert.AreEqual(MelLogLevel.Information, provider.LogLevel);
+        Assert.AreEqual(MelLogLevel.Trace, provider.LogLevel);
         Assert.AreEqual("message", provider.Message);
         Assert.AreEqual(1, provider.DisposeCallCount);
     }

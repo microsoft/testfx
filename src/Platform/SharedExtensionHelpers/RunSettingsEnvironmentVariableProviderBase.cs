@@ -43,6 +43,7 @@ internal abstract class RunSettingsEnvironmentVariableProviderBase : ITestHostEn
 
     public async Task<bool> IsEnabledAsync()
     {
+        // Stryker disable once Boolean: Capturing the current context does not change the resolved runsettings.
         _runSettings = await RunSettingsProviderHelper.TryLoadRunSettingsAsync(
             _commandLineOptions,
             _fileSystem,

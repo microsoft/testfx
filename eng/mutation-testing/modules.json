@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "knownTargetCount": 23,
+  "knownTargetCount": 26,
   "modules": [
     {
       "id": "server-mode-client",
@@ -12,6 +12,226 @@
       "timeoutMinutes": 360,
       "enabled": true,
       "legacyReport": true
+    },
+    {
+      "id": "azure-devops-report",
+      "displayName": "Microsoft.Testing.Extensions.AzureDevOpsReport",
+      "project": "src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport/Microsoft.Testing.Extensions.AzureDevOpsReport.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "azure-foundry",
+      "displayName": "Microsoft.Testing.Extensions.AzureFoundry",
+      "project": "src/Platform/Microsoft.Testing.Extensions.AzureFoundry/Microsoft.Testing.Extensions.AzureFoundry.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "configuration",
+      "displayName": "Microsoft.Testing.Extensions.Configuration",
+      "project": "src/Platform/Microsoft.Testing.Extensions.Configuration/Microsoft.Testing.Extensions.Configuration.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "crash-dump",
+      "displayName": "Microsoft.Testing.Extensions.CrashDump",
+      "project": "src/Platform/Microsoft.Testing.Extensions.CrashDump/Microsoft.Testing.Extensions.CrashDump.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "ctrf-report",
+      "displayName": "Microsoft.Testing.Extensions.CtrfReport",
+      "project": "src/Platform/Microsoft.Testing.Extensions.CtrfReport/Microsoft.Testing.Extensions.CtrfReport.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "github-actions-report",
+      "displayName": "Microsoft.Testing.Extensions.GitHubActionsReport",
+      "project": "src/Platform/Microsoft.Testing.Extensions.GitHubActionsReport/Microsoft.Testing.Extensions.GitHubActionsReport.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "hang-dump",
+      "displayName": "Microsoft.Testing.Extensions.HangDump",
+      "project": "src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "hosting",
+      "displayName": "Microsoft.Testing.Extensions.Hosting",
+      "project": "src/Platform/Microsoft.Testing.Extensions.Hosting/Microsoft.Testing.Extensions.Hosting.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "hot-reload",
+      "displayName": "Microsoft.Testing.Extensions.HotReload",
+      "project": "src/Platform/Microsoft.Testing.Extensions.HotReload/Microsoft.Testing.Extensions.HotReload.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "html-report",
+      "displayName": "Microsoft.Testing.Extensions.HtmlReport",
+      "project": "src/Platform/Microsoft.Testing.Extensions.HtmlReport/Microsoft.Testing.Extensions.HtmlReport.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "junit-report",
+      "displayName": "Microsoft.Testing.Extensions.JUnitReport",
+      "project": "src/Platform/Microsoft.Testing.Extensions.JUnitReport/Microsoft.Testing.Extensions.JUnitReport.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "logging",
+      "displayName": "Microsoft.Testing.Extensions.Logging",
+      "project": "src/Platform/Microsoft.Testing.Extensions.Logging/Microsoft.Testing.Extensions.Logging.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "extension-msbuild",
+      "displayName": "Microsoft.Testing.Extensions.MSBuild",
+      "project": "src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "open-telemetry",
+      "displayName": "Microsoft.Testing.Extensions.OpenTelemetry",
+      "project": "src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "packaged-app",
+      "displayName": "Microsoft.Testing.Extensions.PackagedApp",
+      "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp/Microsoft.Testing.Extensions.PackagedApp.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "retry",
+      "displayName": "Microsoft.Testing.Extensions.Retry",
+      "project": "src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "telemetry",
+      "displayName": "Microsoft.Testing.Extensions.Telemetry",
+      "project": "src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "trx-report",
+      "displayName": "Microsoft.Testing.Extensions.TrxReport",
+      "project": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "trx-report-abstractions",
+      "displayName": "Microsoft.Testing.Extensions.TrxReport.Abstractions",
+      "project": "src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "video-recorder",
+      "displayName": "Microsoft.Testing.Extensions.VideoRecorder",
+      "project": "src/Platform/Microsoft.Testing.Extensions.VideoRecorder/Microsoft.Testing.Extensions.VideoRecorder.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
     },
     {
       "id": "vstest-bridge",

@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.Hosting;
 using Microsoft.Testing.Extensions.Hosting.Resources;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -84,9 +85,95 @@ public sealed class HotReloadTests
             Times.Never);
     }
 
+    [TestMethod]
+    public void HotReloadHandler_Constructor_CurrentDesktopPlatform_SubscribesToCancelKeyPress()
+    {
+        var console = new Mock<IConsole>();
+
+        _ = new HotReloadHandler(
+            console.Object,
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IOutputDeviceDataProducer>());
+
+        console.VerifyAdd(
+            instance => instance.CancelKeyPress += It.IsAny<ConsoleCancelEventHandler>(),
+            Times.Once);
+        console.VerifyRemove(
+            instance => instance.CancelKeyPress -= It.IsAny<ConsoleCancelEventHandler>(),
+            Times.Never);
+    }
+
 #if NET6_0_OR_GREATER
     [TestMethod]
     public async Task ExecuteRequestAsync_HotReload_WaitsForRequestCompletionBeforeEndingCycle()
+    {
+        var stopPolicies = new Mock<IStopPoliciesService>();
+        bool deadlineTriggered = false;
+        Func<Task>? deadlineCallback = null;
+        stopPolicies.SetupGet(service => service.IsDeadlineTriggered).Returns(() => deadlineTriggered);
+        stopPolicies.Setup(service => service.RegisterOnDeadlineCallbackAsync(It.IsAny<Func<Task>>()))
+            .Callback<Func<Task>>(callback => deadlineCallback = callback)
+            .Returns(Task.CompletedTask);
+        ServiceProvider serviceProvider = CreateServiceProvider(
+            CreateEnvironment("1", null).Object,
+            new SystemRuntimeFeature(),
+            stopPolicies.Object);
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        serviceProvider.AddService(console.Object);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice.Setup(device => device.DisplayAsync(
+            It.IsAny<IOutputDeviceDataProducer>(),
+            It.IsAny<IOutputDeviceData>(),
+            It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        serviceProvider.AddService(outputDevice.Object);
+        serviceProvider.AddService(Mock.Of<IPlatformOutputDevice>());
+        var messageBus = new Mock<BaseMessageBus>();
+        messageBus.Setup(bus => bus.DrainDataAsync()).Returns(Task.CompletedTask);
+        serviceProvider.AddService(messageBus.Object);
+        var coverageResult = new TestCoverageResult();
+        await coverageResult.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new TestCoverageMessage(
+                new SessionUid("coverage-session"),
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                coveredCount: 1,
+                coverableCount: 1,
+                producerId: "producer"),
+            CancellationToken.None);
+        Assert.IsNotEmpty(coverageResult.Scopes);
+        serviceProvider.AddService(coverageResult);
+        var framework = new Mock<ITestFramework>();
+        var requestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool coverageWasReset = false;
+        framework.Setup(instance => instance.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
+            .Callback<ExecuteRequestContext>(context =>
+            {
+                coverageWasReset = coverageResult.Scopes.Count == 0;
+                requestStarted.SetResult(context);
+            })
+            .Returns(Task.CompletedTask);
+        var invoker = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
+        var request = new RunTestExecutionRequest(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("session")));
+
+        Task execution = invoker.ExecuteRequestAsync(framework.Object, request, messageBus.Object, TestContext.CancellationToken);
+        ExecuteRequestContext context = await requestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+        bool completedBeforeNotification = execution.IsCompleted;
+        deadlineTriggered = true;
+        context.Complete();
+        await execution.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+        Assert.IsFalse(completedBeforeNotification);
+        Assert.IsTrue(coverageWasReset);
+        Assert.IsNotNull(deadlineCallback);
+        messageBus.Verify(bus => bus.DrainDataAsync(), Times.Once);
+        await deadlineCallback!();
+        Assert.IsTrue(IsShutdownRequested());
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_HotReload_UpdateApplicationStartsNextCycle()
     {
         var stopPolicies = new Mock<IStopPoliciesService>();
         bool deadlineTriggered = false;
@@ -112,22 +199,35 @@ public sealed class HotReloadTests
         serviceProvider.AddService(messageBus.Object);
         serviceProvider.AddService(new TestCoverageResult());
         var framework = new Mock<ITestFramework>();
-        var requestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstRequestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondRequestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int requestCount = 0;
         framework.Setup(instance => instance.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
-            .Callback<ExecuteRequestContext>(context => requestStarted.SetResult(context))
+            .Callback<ExecuteRequestContext>(context =>
+            {
+                if (Interlocked.Increment(ref requestCount) == 1)
+                {
+                    firstRequestStarted.SetResult(context);
+                }
+                else
+                {
+                    secondRequestStarted.SetResult(context);
+                }
+            })
             .Returns(Task.CompletedTask);
         var invoker = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
         var request = new RunTestExecutionRequest(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("session")));
 
         Task execution = invoker.ExecuteRequestAsync(framework.Object, request, messageBus.Object, TestContext.CancellationToken);
-        ExecuteRequestContext context = await requestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
-        bool completedBeforeNotification = execution.IsCompleted;
+        ExecuteRequestContext firstContext = await firstRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+        firstContext.Complete();
+        HotReloadHandler.UpdateApplication(null);
+        ExecuteRequestContext secondContext = await secondRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
         deadlineTriggered = true;
-        context.Complete();
+        secondContext.Complete();
         await execution.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
 
-        Assert.IsFalse(completedBeforeNotification);
-        messageBus.Verify(bus => bus.DrainDataAsync(), Times.Once);
+        Assert.AreEqual(2, requestCount);
     }
 #endif
 
@@ -140,7 +240,45 @@ public sealed class HotReloadTests
 #endif
     }
 
+    [TestMethod]
+    [DataRow(false, false, false, false, false, false)]
+    [DataRow(true, false, false, false, false, true)]
+    [DataRow(false, true, false, false, false, true)]
+    [DataRow(false, false, true, false, false, true)]
+    [DataRow(false, false, false, true, false, true)]
+    [DataRow(false, false, false, false, true, true)]
+    public void IsCancelKeyPressNotSupportedOnOperatingSystem_PlatformFlags_ReturnExpected(
+        bool isAndroid,
+        bool isIOS,
+        bool isTvOS,
+        bool isWasi,
+        bool isBrowser,
+        bool expected)
+        => Assert.AreEqual(
+            expected,
+            InvokeGuard(
+                "IsCancelKeyPressNotSupportedOnOperatingSystem",
+                isAndroid,
+                isIOS,
+                isTvOS,
+                isWasi,
+                isBrowser));
+
 #if NET6_0_OR_GREATER
+    [TestMethod]
+    [DataRow(false, false, false, false)]
+    [DataRow(true, false, false, true)]
+    [DataRow(false, true, false, true)]
+    [DataRow(false, false, true, true)]
+    public void IsClearNotSupportedOnOperatingSystem_PlatformFlags_ReturnExpected(
+        bool isAndroid,
+        bool isIOS,
+        bool isTvOS,
+        bool expected)
+        => Assert.AreEqual(
+            expected,
+            InvokeGuard("IsClearNotSupportedOnOperatingSystem", isAndroid, isIOS, isTvOS));
+
     [TestMethod]
     public async Task ShouldRunAsync_IncompleteExecution_WaitsThenDisplaysCompletionClearsConsoleAndDisplaysStart()
     {
@@ -333,10 +471,23 @@ public sealed class HotReloadTests
         return serviceProvider;
     }
 
-    private static bool InvokeGuard(string methodName)
-        => (bool)typeof(HotReloadHandler)
-            .GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)!
-            .Invoke(null, null)!;
+    private static bool InvokeGuard(string methodName, params object[] arguments)
+    {
+        var parameterTypes = new Type[arguments.Length];
+        for (int i = 0; i < arguments.Length; i++)
+        {
+            parameterTypes[i] = arguments[i].GetType();
+        }
+
+        return (bool)typeof(HotReloadHandler)
+            .GetMethod(
+                methodName,
+                BindingFlags.NonPublic | BindingFlags.Static,
+                binder: null,
+                parameterTypes,
+                modifiers: null)!
+            .Invoke(null, arguments)!;
+    }
 
     private static bool IsShutdownRequested()
         => (bool)ShutdownProcessField.GetValue(null)!;

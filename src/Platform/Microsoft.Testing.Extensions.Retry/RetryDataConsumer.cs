@@ -67,14 +67,17 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             }
 
             NamedPipeClient client = GetClient();
-            await client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
+            Task<VoidResponse> requestTask = client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
                 new ArtifactRequest(artifactPath, artifact.Kind),
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
+            // Stryker disable once Boolean: continuation scheduling does not change the reported artifact.
+            await requestTask.ConfigureAwait(false);
             return;
         }
 
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        // Stryker disable once all: without a state none of the mutually exclusive outcome branches below can run.
         if (nodeState is null)
         {
             return;
@@ -91,13 +94,10 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
 
         string uid = testNodeUpdateMessage.TestNode.Uid;
-        if (nodeState is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
-            or TimeoutTestNodeStateProperty
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            or CancelledTestNodeStateProperty)
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+        if (IsNonPassingState(nodeState))
         {
             NamedPipeClient client = GetClient();
+            // Stryker disable once Boolean: continuation scheduling does not change the reported failure.
             await client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(uid, testNodeUpdateMessage.TestNode.DisplayName), cancellationToken).ConfigureAwait(false);
             _failedTests++;
             MarkNotRecovered(uid);
@@ -116,6 +116,18 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             MarkNotRecovered(uid);
         }
     }
+
+    private static bool IsNonPassingState(TestNodeStateProperty nodeState)
+        => nodeState switch
+        {
+            FailedTestNodeStateProperty => true,
+            ErrorTestNodeStateProperty => true,
+            TimeoutTestNodeStateProperty => true,
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+            CancelledTestNodeStateProperty => true,
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+            _ => false,
+        };
 
     private string? GetControllerArtifactPath(string artifactPath)
     {
@@ -163,9 +175,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         string sourcePrefix = Path.GetFullPath(sourceRoot)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             + Path.DirectorySeparatorChar;
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
+        StringComparison comparison = GetPathComparison(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         if (!fullArtifactPath.StartsWith(sourcePrefix, comparison))
         {
             return null;
@@ -174,6 +184,11 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         string relativePath = fullArtifactPath.Substring(sourcePrefix.Length);
         return Path.GetFullPath(Path.Combine(destinationRoot, relativePath));
     }
+
+    private static StringComparison GetPathComparison(bool isWindows)
+        => isWindows
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
     /// <summary>
     /// Records that <paramref name="uid"/> passed, provided it is one of the tests this attempt was asked to retry.
@@ -204,6 +219,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
+        // Stryker disable once Boolean: continuation scheduling does not change the reported counts.
         await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TestRunCountsRequest, VoidResponse>(
             new TestRunCountsRequest(_passedTests, _failedTests, _skippedTests, [.. _recoveredTests]),
             testSessionContext.CancellationToken).ConfigureAwait(false);
@@ -215,6 +231,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         // BeforeRunAsync, which the host runs after extension initialization but before the test session starts.
         // Reading it any earlier would always observe null and silently disable recovery tracking.
         string[]? testsToRetry = _retryFailedTestsLifecycleCallbacks?.FailedTestsIDToRetry;
+        // Stryker disable once Equality: an empty retry set and no retry set both make every membership test false.
         if (testsToRetry is { Length: > 0 })
         {
             _testsBeingRetried = new HashSet<string>(testsToRetry, StringComparer.Ordinal);
@@ -229,6 +246,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 
     public async Task InitializeAsync()
     {
+        // Stryker disable once Boolean: continuation scheduling does not change whether the extension is enabled.
         if (await IsEnabledAsync().ConfigureAwait(false))
         {
             _retryFailedTestsLifecycleCallbacks = _serviceProvider.GetRequiredService<RetryLifecycleCallbacks>();
