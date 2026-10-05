@@ -163,7 +163,6 @@ def load_baseline(path: Path) -> list[dict]:
         print(f"::warning title=Invalid benchmark baseline::{escaped}")
         return []
     except (
-        UnicodeDecodeError,
         RuntimeError,
         zipfile.BadZipFile,
         EOFError,
