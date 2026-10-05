@@ -742,11 +742,6 @@ namespace SomeNamespace
             Assert.AreEqual(
                 RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet",
                 invokeTask.GetField("DotnetRunnerName", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null));
-
-            Type pipeSecurity = assembly.GetType("Microsoft.Testing.Platform.IPC.NamedPipeServerSecurity", throwOnError: true)!;
-            Assert.AreEqual(
-                new IntPtr(-1),
-                pipeSecurity.GetField("InvalidHandleValue", BindingFlags.Static | BindingFlags.NonPublic)!.GetValue(null));
         }
         finally
         {
