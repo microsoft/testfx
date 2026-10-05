@@ -185,6 +185,17 @@ Key lasting gotchas:
 - Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
 - `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
 
+## Run 2026-10-05 (run 37385432650) — MSBuildCompatibilityHelper tests
+
+- Task reconciliation: no open `[test-improver]`-prefixed PRs found (search returned 0 open; PRs #11741/#11728/#11685/etc. all previously merged/closed) — nothing to maintain this run.
+- Task 2/3: picked up standing backlog item `MSBuildCompatibilityHelper` (`src/Platform/Microsoft.Testing.Platform.MSBuild/Tasks/MSBuildCompatibilityHelper.cs`) — had zero direct tests.
+- Added `MSBuildCompatibilityHelperTests.cs` (3 tests): `SupportsMultiLine`/`SupportsTerminalLoggerWithExtendedMessages` assert `true` against the real loaded MSBuild 17.11.48 assembly (repo-pinned version already exceeds the 17.10.0 feature thresholds — faking an older MSBuild version isn't practical, documented via comment instead); `TryWriteExtendedMessage` happy-path test uses a mocked `IBuildEngine` (same Moq pattern as `MSBuildTests.cs`) and asserts the logged `ExtendedBuildMessageEventArgs` type/message/importance/metadata.
+- Verified via scratch console app that `Features.CheckFeatureAvailability("TerminalLogger_MultiLineHandler")` returns `Available` and `AssemblyFileVersionAttribute` on `Microsoft.Build.Framework` resolves to `17.11.48.46605` in this sandbox — confirms the "Supports*" tests exercise the true positive branch deterministically.
+- Build succeeded (0 warnings) net8.0+net9.0. Full `Microsoft.Testing.Platform.MSBuild.UnitTests` suite: 216 total (was 213), 0 failed, 1 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for MSBuildCompatibilityHelper" on branch `test-assist/msbuild-compatibility-helper-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, removed the now-addressed MSBuildCompatibilityHelper backlog item.
+- Remaining candidates for future runs: MSTest.Engine internal classes (architecturally blocked, unchanged); other report-provider command-line providers not yet swept; consider Task 5 (issue comments) or Task 6 (test infrastructure) next run since MSBuild platform area is now well-covered.
+
 ## Run 2026-10-04 (run 37241816633) — MSBuild FailedTestHelper tests
 
 - Task reconciliation: no open `[test-improver]`-prefixed PRs needed maintenance; PR #11741 (HangDump serializers) is green/approved by Copilot reviewer, awaiting maintainer merge. PR #11728 (Retry serializers) was merged; PR #11708 (TcpMessageHandler) was merged.
