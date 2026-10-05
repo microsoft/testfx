@@ -15,3 +15,14 @@ function Get-SampleRelativePath {
 
     return $normalizedFullPath.Substring($samplesFolderWithTrailingSeparator.Length)
 }
+
+function Get-SampleBinlogArgument {
+    param(
+        [string]$BinaryLogDirectory,
+        [string]$LogName,
+        [string]$ArgumentPrefix = "-bl:"
+    )
+
+    $binlogPath = Join-Path $BinaryLogDirectory "$LogName.binlog"
+    return "$ArgumentPrefix$binlogPath"
+}

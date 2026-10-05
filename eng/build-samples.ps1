@@ -105,8 +105,7 @@ foreach ($solution in $solutions) {
 
         if ($BinaryLogDirectory) {
             $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
-            $restoreBinlogPath = Join-Path $BinaryLogDirectory "$solutionName.restore.binlog"
-            $restoreArgs += "/bl:$restoreBinlogPath"
+            $restoreArgs += Get-SampleBinlogArgument -BinaryLogDirectory $BinaryLogDirectory -LogName "$solutionName.restore" -ArgumentPrefix "/bl:"
         }
 
         & $dotnetPath $restoreArgs
@@ -131,8 +130,7 @@ foreach ($solution in $solutions) {
 
         if ($BinaryLogDirectory) {
             $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
-            $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
-            $buildArgs += "/bl:$binlogPath"
+            $buildArgs += Get-SampleBinlogArgument -BinaryLogDirectory $BinaryLogDirectory -LogName $solutionName -ArgumentPrefix "/bl:"
         }
 
         & $msbuildPath $buildArgs
@@ -147,8 +145,7 @@ foreach ($solution in $solutions) {
 
         if ($BinaryLogDirectory) {
             $solutionName = [System.IO.Path]::GetFileNameWithoutExtension($solution.Name)
-            $binlogPath = Join-Path $BinaryLogDirectory "$solutionName.binlog"
-            $buildArgs += "-bl:$binlogPath"
+            $buildArgs += Get-SampleBinlogArgument -BinaryLogDirectory $BinaryLogDirectory -LogName $solutionName
         }
 
         & $dotnetPath $buildArgs
@@ -183,8 +180,7 @@ foreach ($project in $standaloneProjects) {
     if ($BinaryLogDirectory) {
         $relativeProjectPath = Get-SampleRelativePath -FullPath $project.FullName -SamplesFolder $samplesFolder
         $projectLogName = $relativeProjectPath.Replace([System.IO.Path]::DirectorySeparatorChar, ".")
-        $binlogPath = Join-Path $BinaryLogDirectory "$projectLogName.binlog"
-        $buildArgs += "-bl:$binlogPath"
+        $buildArgs += Get-SampleBinlogArgument -BinaryLogDirectory $BinaryLogDirectory -LogName $projectLogName
     }
 
     & $dotnetPath $buildArgs
