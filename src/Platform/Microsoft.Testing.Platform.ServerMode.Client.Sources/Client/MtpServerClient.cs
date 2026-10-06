@@ -200,12 +200,6 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <inheritdoc />
     public async Task<MtpServerCapabilities> InitializeAsync(CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        if (_options.ShowMessage == true && LogReceived is null)
-        {
-            throw new InvalidOperationException("Subscribe to LogReceived before initializing with ShowMessage enabled.");
-        }
-
         EnsureStarted();
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
@@ -215,12 +209,7 @@ internal sealed class MtpServerClient : IMtpServerClient
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };
 
-        await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken, ProcessInitializeResponse).ConfigureAwait(false);
-        return Capabilities!;
-    }
-
-    private void ProcessInitializeResponse(ResponseMessage response)
-    {
+        ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken).ConfigureAwait(false);
         MtpServerCapabilities capabilities = DecodeCapabilities(AsResultDictionary(response.Result));
         string effectiveProtocolVersion = capabilities.ProtocolVersion ?? JsonRpcProtocolVersions.V1;
         if (!IsSupportedProtocolVersion(effectiveProtocolVersion))
@@ -231,6 +220,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         }
 
         Capabilities = capabilities;
+        return capabilities;
     }
 
     /// <inheritdoc />

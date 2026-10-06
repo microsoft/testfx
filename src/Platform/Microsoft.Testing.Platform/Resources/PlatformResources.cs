@@ -37,8 +37,6 @@ internal static partial class PlatformResources
     internal static string @NamedPipeDirectoryNotWritableErrorMessage => GetResourceString("NamedPipeDirectoryNotWritableErrorMessage");
 
 #if IS_MTP_UNIT_TESTS
-    internal static string @ConnectingToClientHost => GetResourceString("ConnectingToClientHost");
-
     internal static string @ArtifactPostProcessingManifestInvalid => GetResourceString("ArtifactPostProcessingManifestInvalid");
 
     internal static string @ArtifactPostProcessingManifestRunSummaryInvalid => GetResourceString("ArtifactPostProcessingManifestRunSummaryInvalid");

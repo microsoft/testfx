@@ -61,9 +61,11 @@ public sealed partial class ServerLoggingTests : ServerModeTestsBase<ServerLoggi
         Assert.IsNotEmpty(logs, "Logs are empty");
         string logsString = string.Join(Environment.NewLine, logs.Select(l => l.ToString()));
         string logPath = LogFilePathRegex().Match(logsString).Groups[1].Value;
+        string port = PortRegex().Match(logsString).Groups[1].Value;
 
         Assert.AreEqual(
             $$"""
+            Log { LogLevel = Information, Message = Connecting to client host '127.0.0.1' port '{{port}}' }
             Log { LogLevel = Trace, Message = Starting test session. The log file path is '{{logPath}}'. }
             Log { LogLevel = Error, Message = System.Exception: This is an exception output }
             Log { LogLevel = Information, Message =    This is a red output with padding set to 3 }
@@ -209,6 +211,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer, IOutputDeviceDa
 }
 """;
     }
+
+    [GeneratedRegex("Connecting to client host '127.0.0.1' port '(\\d+)'")]
+    private static partial Regex PortRegex();
 
     [GeneratedRegex("The log file path is '(.+?)'")]
     private static partial Regex LogFilePathRegex();

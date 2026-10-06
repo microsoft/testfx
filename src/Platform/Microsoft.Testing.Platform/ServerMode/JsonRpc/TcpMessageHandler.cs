@@ -59,9 +59,6 @@ internal sealed class TcpMessageHandler(
     private int _readBufferOffset;
     private int _readBufferCount;
     private bool _preambleHandled;
-    private int _connectionClosed;
-
-    internal Action? ConnectionClosedCallback { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TcpMessageHandler"/> class with a logger for low-noise
@@ -330,11 +327,6 @@ internal sealed class TcpMessageHandler(
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
     {
         string messageStr = await _formatter.SerializeAsync(message).ConfigureAwait(false);
-        cancellationToken.ThrowIfCancellationRequested();
-        if (Volatile.Read(ref _connectionClosed) != 0)
-        {
-            throw new ObjectDisposedException(nameof(TcpMessageHandler));
-        }
 
         // Encode the message body manually so Content-Length matches the UTF-8 byte count and
         // the body can be written directly to the stream without StreamWriter transcoding.
@@ -344,7 +336,16 @@ internal sealed class TcpMessageHandler(
         try
         {
             Encoding.UTF8.GetBytes(messageStr, rentedBytes);
-            await WriteFrameAsync(rentedBytes, byteCount, cancellationToken).ConfigureAwait(false);
+            await _writer.WriteLineAsync($"Content-Length: {byteCount}").ConfigureAwait(false);
+            await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
+            await _writer.WriteLineAsync().ConfigureAwait(false);
+            // Flush the StreamWriter's char buffer so the headers reach the underlying NetworkStream
+            // before we write the body bytes directly to BaseStream below (otherwise the body would
+            // overtake the still-buffered headers). No BaseStream.FlushAsync is needed here or after
+            // the body write because the underlying stream is always a NetworkStream (see
+            // MessageHandlerFactory) and NetworkStream.Flush/FlushAsync is a no-op.
+            await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await _writer.BaseStream.WriteAsync(rentedBytes.AsMemory(0, byteCount), cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -352,68 +353,20 @@ internal sealed class TcpMessageHandler(
         }
 #else
         byte[] messageBytes = Encoding.UTF8.GetBytes(messageStr);
-        await WriteFrameAsync(messageBytes, messageBytes.Length, cancellationToken).ConfigureAwait(false);
+        await _writer.WriteLineAsync($"Content-Length: {messageBytes.Length}").ConfigureAwait(false);
+        await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
+        await _writer.WriteLineAsync().ConfigureAwait(false);
+
+        // See the NETCOREAPP branch above for why only StreamWriter.FlushAsync (not
+        // BaseStream.FlushAsync) is required here.
+        await _writer.FlushAsync().ConfigureAwait(false);
+        await _writer.BaseStream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken).ConfigureAwait(false);
 #endif
-    }
-
-    private async Task WriteFrameAsync(byte[] bytes, int byteCount, CancellationToken cancellationToken)
-    {
-        // After the first header mutation, cancellation belongs to the connection, not the operation.
-        // Closing the transport interrupts a stalled write without abandoning its task or pooled buffer.
-        using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(30));
-        using CancellationTokenRegistration deadlineRegistration = deadline.Token.Register(CloseConnection);
-        cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            await _writer.WriteLineAsync($"Content-Length: {byteCount}").ConfigureAwait(false);
-            await _writer.WriteLineAsync("Content-Type: application/testingplatform").ConfigureAwait(false);
-            await _writer.WriteLineAsync().ConfigureAwait(false);
-
-            // Headers must reach the stream before the body bytes. NetworkStream.Flush is a no-op.
-#if NETCOREAPP
-            await _writer.FlushAsync(CancellationToken.None).ConfigureAwait(false);
-            await _writer.BaseStream.WriteAsync(bytes.AsMemory(0, byteCount), CancellationToken.None).ConfigureAwait(false);
-#else
-            await _writer.FlushAsync().ConfigureAwait(false);
-            await _writer.BaseStream.WriteAsync(bytes, 0, byteCount, CancellationToken.None).ConfigureAwait(false);
-#endif
-            if (Volatile.Read(ref _connectionClosed) != 0)
-            {
-                throw new ObjectDisposedException(nameof(TcpMessageHandler));
-            }
-        }
-        catch (Exception)
-        {
-            CloseConnection();
-            throw;
-        }
-    }
-
-    internal void CloseConnection()
-    {
-        if (Interlocked.Exchange(ref _connectionClosed, 1) != 0)
-        {
-            return;
-        }
-
-        ConnectionClosedCallback?.Invoke();
-
-        // Dispose the stream before StreamWriter: its flush must never block shutdown.
-        _writer.BaseStream.Dispose();
-        _readStream.Dispose();
-#if IS_MTP_SERVER_MODE_CLIENT
-        if (!Microsoft.Testing.Platform.ServerMode.Client.MtpClientOperatingSystem.IsBrowser())
-#else
-        if (!OperatingSystem.IsBrowser())
-#endif
-        {
-            _client.Dispose();
-        }
     }
 
     public void Dispose()
     {
-        CloseConnection();
+        _readStream.Dispose();
 
         try
         {
@@ -425,6 +378,15 @@ internal sealed class TcpMessageHandler(
             // In that case we can get an InvalidOperationException
             // (https://learn.microsoft.com/dotnet/api/system.io.streamwriter.writelineasync?view=net-7.0#system-io-streamwriter-writelineasync(system-string)):
             // The stream writer is currently in use by a previous write operation.
+        }
+
+#if IS_MTP_SERVER_MODE_CLIENT
+        if (!Microsoft.Testing.Platform.ServerMode.Client.MtpClientOperatingSystem.IsBrowser())
+#else
+        if (!OperatingSystem.IsBrowser())
+#endif
+        {
+            _client.Dispose();
         }
     }
 }

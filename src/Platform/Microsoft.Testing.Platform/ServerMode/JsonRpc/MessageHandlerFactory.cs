@@ -4,21 +4,32 @@
 using System.Net;
 using System.Net.Sockets;
 
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 #if NETSTANDARD
 using Microsoft.Testing.Platform.Helpers;
 #endif
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed partial class ServerModeManager
 {
-    internal sealed class MessageHandlerFactory : IMessageHandlerFactory
+    internal sealed class MessageHandlerFactory : IMessageHandlerFactory, IOutputDeviceDataProducer
     {
         private readonly string _host;
         private readonly int _port;
+        private readonly IOutputDevice _outputDevice;
         private readonly ILogger _logger;
+
+        public MessageHandlerFactory(
+            string host,
+            int port,
+            IOutputDevice outputDevice)
+            : this(host, port, outputDevice, new NopLogger())
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageHandlerFactory"/> class with a logger that is
@@ -27,19 +38,29 @@ internal sealed partial class ServerModeManager
         public MessageHandlerFactory(
             string host,
             int port,
+            IOutputDevice outputDevice,
             ILogger logger)
         {
             // Workaround for slow "localhost" resolve: https://github.com/dotnet/runtime/issues/31085
             // this will pass 127.0.0.1.
             _host = host != "localhost" ? host : IPAddress.Loopback.ToString();
             _port = port;
+            _outputDevice = outputDevice;
             _logger = logger;
         }
+
+        public string Uid => nameof(MessageHandlerFactory);
+
+        public string Version => PlatformVersion.Version;
+
+        public string DisplayName => nameof(MessageHandlerFactory);
+
+        public string Description => nameof(MessageHandlerFactory);
 
         [UnsupportedOSPlatform("browser")]
         public async Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
         {
-            await _logger.LogDebugAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, _host, _port)), cancellationToken).ConfigureAwait(false);
 
             TcpClient client = new();
             bool shouldDisposeClient = true;
@@ -79,5 +100,7 @@ internal sealed partial class ServerModeManager
                 }
             }
         }
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(false);
     }
 }

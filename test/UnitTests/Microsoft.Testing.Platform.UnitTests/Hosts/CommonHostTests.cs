@@ -83,7 +83,7 @@ public sealed class CommonHostTests
         testSessionLifetimeHandlerMock.Setup(x => x.OnTestSessionStartingAsync(It.IsAny<ITestSessionContext>())).Returns(Task.CompletedTask);
         testSessionLifetimeHandlerMock.Setup(x => x.OnTestSessionFinishingAsync(It.IsAny<ITestSessionContext>())).Returns(Task.CompletedTask);
 
-        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null, policiesService: null);
+        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null);
 
         Mock<ITestSessionContext> sessionContextMock = new();
         sessionContextMock.SetupGet(x => x.SessionUid).Returns(new SessionUid("session"));
@@ -149,7 +149,7 @@ public sealed class CommonHostTests
 
         InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             async () => await TestableCommonHost.ExecuteRequestForTestingAsync(
-                new ProxyOutputDevice(outputDeviceMock.Object, null, policiesService: null),
+                new ProxyOutputDevice(outputDeviceMock.Object, null),
                 sessionContextMock.Object,
                 serviceProvider,
                 baseMessageBusMock.Object,
@@ -202,7 +202,7 @@ public sealed class CommonHostTests
         outputDeviceMock.Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         outputDeviceMock.Setup(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null, policiesService: null);
+        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null);
 
         Mock<ITestSessionContext> sessionContextMock = new();
         sessionContextMock.SetupGet(x => x.SessionUid).Returns(new SessionUid("session"));
@@ -244,7 +244,7 @@ public sealed class CommonHostTests
         outputDeviceMock.Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         outputDeviceMock.Setup(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null, policiesService: null);
+        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null);
 
         Mock<ITestSessionContext> sessionContextMock = new();
         sessionContextMock.SetupGet(x => x.SessionUid).Returns(new SessionUid("session"));

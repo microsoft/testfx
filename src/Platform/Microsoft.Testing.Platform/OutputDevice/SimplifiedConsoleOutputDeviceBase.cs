@@ -137,6 +137,13 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase : IPlatformOut
 
     protected abstract void ConsoleLog(string? message);
 
-    public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
-        => Task.CompletedTask;
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+    }
 }

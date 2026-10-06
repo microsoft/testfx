@@ -28,15 +28,6 @@ internal sealed partial class TerminalOutputDevice
         => await Console.Error.WriteLineAsync(message).ConfigureAwait(false);
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
-        => await DisplayBannerWithSuppressionAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
-
-    internal Task<bool> DisplayBannerWithSuppressionAsync(string? bannerMessage, CancellationToken cancellationToken)
-        => DisplayBannerCoreAsync(bannerMessage, cancellationToken, renderOnly: false);
-
-    internal async Task RenderBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
-        => await DisplayBannerCoreAsync(bannerMessage, cancellationToken, renderOnly: true).ConfigureAwait(false);
-
-    private async Task<bool> DisplayBannerCoreAsync(string? bannerMessage, CancellationToken cancellationToken, bool renderOnly)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -47,12 +38,12 @@ internal sealed partial class TerminalOutputDevice
             // stay quiet — important because the JSON document must be the sole stdout content.
             _bannerDisplayed = true;
             _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
-            return false;
+            return;
         }
 
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            if (!renderOnly && !_bannerDisplayed && !_isServerMode)
+            if (!_bannerDisplayed && !_isServerMode)
             {
                 // skip the banner for the children processes
                 _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
@@ -71,11 +62,6 @@ internal sealed partial class TerminalOutputDevice
 
             if (_fileLoggerInformation is not null)
             {
-                if (!renderOnly && SuppressConsoleOutput)
-                {
-                    return true;
-                }
-
                 if (_fileLoggerInformation.SynchronousWrite)
                 {
                     _terminalTestReporter.WriteWarningMessage(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
@@ -85,8 +71,6 @@ internal sealed partial class TerminalOutputDevice
                     _terminalTestReporter.WriteWarningMessage(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerInformation.LogLevel, _fileLoggerInformation.LogFile.FullName), padding: null);
                 }
             }
-
-            return false;
         }
     }
 

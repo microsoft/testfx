@@ -73,16 +73,15 @@ internal static partial class SerializerUtilities
                 testingCapabilities[JsonRpcStrings.IsStateful] = isStateful;
             }
 
-            Dictionary<string, object?> properties = new()
-            {
-                [JsonRpcStrings.Testing] = testingCapabilities,
-            };
             if (capabilities.ShowMessage is { } showMessage)
             {
                 testingCapabilities[JsonRpcStrings.ShowMessage] = showMessage;
             }
 
-            return properties;
+            return new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.Testing] = testingCapabilities,
+            };
         });
 
         Serializers[typeof(InitializeRequestArgs)] = new ObjectSerializer<InitializeRequestArgs>(args =>

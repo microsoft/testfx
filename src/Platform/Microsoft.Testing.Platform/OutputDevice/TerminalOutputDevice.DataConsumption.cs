@@ -17,15 +17,6 @@ internal sealed partial class TerminalOutputDevice
     /// <param name="data">The data to be displayed.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
-        => await DisplayWithSuppressionAsync(producer, data, cancellationToken).ConfigureAwait(false);
-
-    internal Task<bool> DisplayWithSuppressionAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
-        => DisplayCoreAsync(producer, data, cancellationToken, renderOnly: false);
-
-    internal async Task RenderAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
-        => await DisplayCoreAsync(producer, data, cancellationToken, renderOnly: true).ConfigureAwait(false);
-
-    private async Task<bool> DisplayCoreAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken, bool renderOnly)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -76,40 +67,21 @@ internal sealed partial class TerminalOutputDevice
                 }
             }
 
-            return false;
+            return;
         }
 
         TerminalTestReporter terminalTestReporter = _terminalTestReporter ?? throw ApplicationStateGuard.Unreachable();
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
-            string? diagnosticMessage = data switch
-            {
-                SessionMessageOutputDeviceData session => session.Message,
-                ProgressMessageOutputDeviceData progress => progress.Message ?? string.Empty,
-                TextOutputDeviceData text => text.Text,
-                WarningMessageOutputDeviceData warning => warning.Message,
-                ErrorMessageOutputDeviceData error => error.Message,
-                ExceptionOutputDeviceData exception => exception.Exception.ToString(),
-                _ => null,
-            };
-            if (!renderOnly && diagnosticMessage is not null)
-            {
-                await LogDebugAsync(diagnosticMessage).ConfigureAwait(false);
-            }
-
-            if (!renderOnly && SuppressConsoleOutput)
-            {
-                // Record this display's decision, not a policy snapshot taken before or after forwarding.
-                return true;
-            }
-
             switch (data)
             {
                 case SessionMessageOutputDeviceData sessionMessageData:
+                    await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
                     terminalTestReporter.WriteMessage(sessionMessageData.Message);
                     break;
 
                 case ProgressMessageOutputDeviceData progressMessageData:
+                    await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
                     terminalTestReporter.UpdateProgressMessage(
                         InProcessExecutionId,
                         InProcessExecutionId,
@@ -119,14 +91,17 @@ internal sealed partial class TerminalOutputDevice
                     break;
 
                 case FormattedTextOutputDeviceData formattedTextData:
+                    await LogDebugAsync(formattedTextData.Text).ConfigureAwait(false);
                     terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
                     break;
 
                 case TextOutputDeviceData textData:
+                    await LogDebugAsync(textData.Text).ConfigureAwait(false);
                     terminalTestReporter.WriteMessage(textData.Text);
                     break;
 
                 case WarningMessageOutputDeviceData warningData:
+                    await LogDebugAsync(warningData.Message).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
                         terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
@@ -136,6 +111,7 @@ internal sealed partial class TerminalOutputDevice
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
+                    await LogDebugAsync(errorData.Message).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
                         terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
@@ -145,7 +121,8 @@ internal sealed partial class TerminalOutputDevice
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                    string exceptionMessage = diagnosticMessage!;
+                    string exceptionMessage = exceptionOutputDeviceData.Exception.ToString();
+                    await LogDebugAsync(exceptionMessage).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
                         terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
@@ -154,8 +131,6 @@ internal sealed partial class TerminalOutputDevice
                     terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }
-
-            return false;
         }
     }
 

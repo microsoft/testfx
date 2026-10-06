@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -135,7 +132,6 @@ internal sealed partial class ServerTestHost
             await Task.Yield();
 
             bool testUpdateCompletionSent = false;
-            bool initializeResponseSent = false;
             try
             {
                 rpcState.ThrowIfCancellationRequested();
@@ -148,19 +144,8 @@ internal sealed partial class ServerTestHost
                     stringId: request.StringId).ConfigureAwait(false);
                 if (isInitializeRequest)
                 {
-                    initializeResponseSent = true;
-                    try
-                    {
-                        if (response is InitializeResponseArgs { Capabilities.TestingCapabilities.ShowMessage: true })
-                        {
-                            _showMessage = true;
-                            await ServiceProvider.GetRequiredService<ProxyOutputDevice>().InitializeAsync(this).ConfigureAwait(false);
-                        }
-                    }
-                    finally
-                    {
-                        CompleteInitialization();
-                    }
+                    _showMessage = response is InitializeResponseArgs { Capabilities.TestingCapabilities.ShowMessage: true };
+                    CompleteInitialization();
                 }
 
                 CompleteRequest(
@@ -179,7 +164,6 @@ internal sealed partial class ServerTestHost
                     request,
                     rpcState,
                     isInitializeRequest,
-                    initializeResponseSent,
                     testUpdateCompletionSent,
                     cancellationToken,
                     errorCode,
@@ -192,7 +176,6 @@ internal sealed partial class ServerTestHost
                     request,
                     rpcState,
                     isInitializeRequest,
-                    initializeResponseSent,
                     testUpdateCompletionSent,
                     cancellationToken,
                     e.ErrorCode,
@@ -205,7 +188,6 @@ internal sealed partial class ServerTestHost
                     request,
                     rpcState,
                     isInitializeRequest,
-                    initializeResponseSent,
                     testUpdateCompletionSent,
                     cancellationToken,
                     ErrorCodes.InternalError,
@@ -219,22 +201,12 @@ internal sealed partial class ServerTestHost
         RequestMessage request,
         RpcInvocationState rpcState,
         bool isInitializeRequest,
-        bool initializeResponseSent,
         bool testUpdateCompletionSent,
         CancellationToken cancellationToken,
         int errorCode,
         string errorMessage,
         Action<TaskCompletionSource<object>> completion)
     {
-        if (initializeResponseSent)
-        {
-            // The client has already accepted initialization. An output failure must not
-            // send a second response or allow initialization to be retried.
-            QueueLog(LogLevel.Error, errorMessage);
-            CompleteFailedRequest(false, GetRequestKey(request.Id, request.StringId), rpcState, completion);
-            return;
-        }
-
         TaskCompletionSource<bool>? failedInitialization = isInitializeRequest
             ? MakeInitializationRetryable(
                 GetRequestKey(request.Id, request.StringId),

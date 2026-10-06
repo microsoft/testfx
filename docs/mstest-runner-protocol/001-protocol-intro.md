@@ -251,7 +251,7 @@ interface InitializeParams {
         // As such, we put all of them under a single testing namespace.
         // This reduces collisions with other LSP capabilities.
         testing: {
-            // Opt in to client/showMessage output-device routing, with a handler ready before initialize.
+            // Opt in to client/showMessage notifications instead of client/log.
             // The server must acknowledge true before the client relies on this behavior.
             showMessage?: boolean | null,
 
@@ -294,7 +294,7 @@ interface InitializeResponse {
 
     capabilities: {
         testing: {
-            // Applied acknowledgement, not just an advertisement of support.
+            // Acknowledges client/showMessage routing, not exclusive RPC rendering.
             // Missing/null is not an acknowledgement; false means legacy routing remains.
             showMessage?: boolean | null,
 
@@ -873,53 +873,33 @@ type TestingPlatformLogLevel =
 
 #### Negotiated `client/showMessage` output
 
-Both methods carry output-device messages, not `ILogger` diagnostics, with the
-identical `{level, message}` payload above. This is an MTP protocol, not LSP's
+Both methods carry the identical `{level, message}` payload above. This is an MTP protocol, not LSP's
 `window/showMessage` or `window/logMessage` wire format. It does not request a popup.
-By default, these messages also render on the console. RPC forwarding starts at
-discovery/run, allowing legacy clients to subscribe after awaiting `initialize`.
-
-To select `client/showMessage` and avoid duplicate console rendering, request
+To select `client/showMessage`, request
 `capabilities.testing.showMessage: true`.
 Only the same nested field set to `true` in the response acknowledges that the
-policy was applied. Missing, null, false, or an ignored top-level field does not.
-Without a true acknowledgement, retain existing output handling and timing.
+routing was applied. Missing, null, false, or an ignored top-level field does not.
+Without a true acknowledgment, retain existing log handling.
 Absent, null, or false requests MUST use legacy `client/log`; only requested and
 acknowledged true selects `client/showMessage`. The server MUST send the
 acknowledgement before the first new-method notification and MUST NOT dual-send.
 Clients accept both methods through the same output handler so older servers
 remain supported. An absent or false acknowledgement MUST preserve legacy log handling.
 
-Opted-in clients must have their output handler ready **before** sending
-`initialize`. After its successful response, an acknowledging server forwards
-buffered and subsequent output for the connection lifetime, even without a
-discovery/run request. The source client enforces this subscription requirement
-and makes validated capabilities available before dispatching these messages.
+RPC forwarding starts at discovery/run for every client, using the existing
+startup buffer. Subscribe to output notifications before discovery/run.
+The source client exposes negotiated capabilities after awaiting `InitializeAsync`;
+both notification methods use its existing `LogReceived` event.
 Each connection negotiates independently.
-Until forwarding attaches after the acknowledgement, buffered output still renders locally.
 
-Disconnect, a confirmed transport-write failure, or server shutdown ends console
-suppression for that connection. Output suppressed locally whose forwarding failed
-is rendered on the console without repeating its diagnostic-file mirror. A partial
-write may have reached the client, so this fallback can duplicate that message;
-previously successful output and startup output already shown locally are not replayed.
-An isolated canceled operation or serialization failure does not end the connection's policy.
-Operation cancellation is honored before a frame starts; a committed frame is
-completed independently of that token. Shutdown or a 30-second write deadline
-closes the transport instead of abandoning an in-flight write.
-
-Acknowledged user-visible messages must remain visible regardless of the client's
-diagnostic verbosity. Message levels are unchanged; Trace/Debug lifecycle notices
-retain diagnostic semantics. The server retains its existing diagnostic-file
-mirror. Both methods remain plain text: colors and in-place progress are not preserved.
-
-Unsupported custom renderers, browser/WASI renderers, and machine-output
-configurations decline the request. This includes Azure DevOps agents even when
-automatic annotations are disabled, preserving extension `##vso` commands.
-Normal console execution and the native `dotnet test` pipe are unchanged.
+The capability changes only the notification method. Local rendering, message
+levels, diagnostic mirrors, connection notices, and progress behavior remain unchanged.
+Messages can therefore appear both locally and through RPC; clients presenting
+both routes may show duplicates. Both methods remain plain text: colors and
+in-place progress are not preserved. Normal console execution and the native
+`dotnet test` pipe are unchanged.
 Passive attachment nodes do not provide output-device forwarding and explicitly
 decline this capability.
 
-Direct application writes to stdout/stderr and output already written before
-initialization are outside this policy. Always drain both streams; use `--no-banner`
+Always drain stdout and stderr independently; use `--no-banner`
 to suppress the startup banner.

@@ -39,7 +39,6 @@ internal sealed partial class ServerTestHost
                     $"Connection established with '{_client.Id}' version '{_client.Version}', protocol version '{negotiatedProtocolVersion}'").ConfigureAwait(false);
 
                 INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
-                bool showMessage = ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureShowMessage(args.Capabilities.ShowMessage, deferSuppression: true);
                 return new InitializeResponseArgs(
                     ProcessId: ServiceProvider.GetEnvironment().ProcessId,
                     ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),
@@ -52,7 +51,7 @@ internal sealed partial class ServerTestHost
                             SupportsAttachments: true,
                             MultiConnectionProvider: false)
                         {
-                            ShowMessage = args.Capabilities.ShowMessage.HasValue ? showMessage : null,
+                            ShowMessage = args.Capabilities.ShowMessage,
                         }))
                 {
                     ProtocolVersion = negotiatedProtocolVersion,

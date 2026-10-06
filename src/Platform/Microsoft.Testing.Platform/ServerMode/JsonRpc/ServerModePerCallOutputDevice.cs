@@ -10,9 +10,10 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDisposable
+internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer, IDisposable
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
+    private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentQueue<ServerLogMessage> _messages = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
     private readonly SemaphoreSlim _progressMessagesSemaphore = new(1, 1);
@@ -21,22 +22,23 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
 
     private static readonly string[] NewLineStrings = ["\r\n", "\n"];
 
-    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider)
-        => _fileLoggerProvider = fileLoggerProvider;
+    public ServerModePerCallOutputDevice(FileLoggerProvider? fileLoggerProvider, IStopPoliciesService policiesService)
+    {
+        _fileLoggerProvider = fileLoggerProvider;
+        _policiesService = policiesService;
+    }
 
     internal async Task InitializeAsync(ServerTestHost serverTestHost)
     {
-        // Opted-in clients attach after initialize; legacy clients attach at discovery/run.
-        // Share the lock with enqueueing to avoid stranding messages during handover.
-        lock (_messages)
-        {
-            if (_serverTestHost == serverTestHost)
-            {
-                return;
-            }
-
-            _serverTestHost = serverTestHost;
-        }
+        // Server mode output device is basically used to send messages to Test Explorer.
+        // For that, it needs the ServerTestHost.
+        // However, the ServerTestHost is available later than the time we create the output device.
+        // So, the server mode output device is initially created early without the ServerTestHost, and
+        // it keeps any messages in a list.
+        // Later when ServerTestHost is created and is available, we initialize the server mode output device.
+        // The initialization will setup the right state for pushing to Test Explorer, and will push any existing
+        // messages to Test Explorer as well.
+        _serverTestHost = serverTestHost;
 
         while (_messages.TryDequeue(out ServerLogMessage? message))
         {
@@ -68,15 +70,11 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
     }
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
-        => await ForwardAsync(producer, data, cancellationToken).ConfigureAwait(false);
-
-    internal async Task<bool> ForwardAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        bool forwarded = true;
         switch (data)
         {
             case SessionMessageOutputDeviceData sessionMessageData:
-                forwarded = await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ProgressMessageOutputDeviceData progressMessageData:
@@ -91,11 +89,8 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
                     else if (!_progressMessages.TryGetValue(identity, out string? existingMessage)
                         || existingMessage != progressMessageData.Message)
                     {
-                        forwarded = await LogAsync(LogLevel.Information, progressMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
-                        if (forwarded)
-                        {
-                            _progressMessages[identity] = progressMessageData.Message;
-                        }
+                        _progressMessages[identity] = progressMessageData.Message;
+                        await LogAsync(LogLevel.Information, progressMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -106,36 +101,36 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
                 break;
 
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
-                forwarded = await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
+                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
                 break;
 
             case TextOutputDeviceData textOutputDeviceData:
-                forwarded = await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null, cancellationToken).ConfigureAwait(false);
+                await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case WarningMessageOutputDeviceData warningData:
-                forwarded = await LogAsync(LogLevel.Warning, warningData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                await LogAsync(LogLevel.Warning, warningData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ErrorMessageOutputDeviceData errorData:
-                forwarded = await LogAsync(LogLevel.Error, errorData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                await LogAsync(LogLevel.Error, errorData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                forwarded = await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null, cancellationToken).ConfigureAwait(false);
+                await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null, cancellationToken).ConfigureAwait(false);
                 break;
         }
-
-        return forwarded;
     }
 
     private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
-        => await ForwardBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
-
-    internal async Task<bool> ForwardBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
-        => bannerMessage is null || await LogAsync(LogLevel.Debug, bannerMessage, padding: null, cancellationToken).ConfigureAwait(false);
+    {
+        if (bannerMessage is not null)
+        {
+            await LogAsync(LogLevel.Debug, bannerMessage, padding: null, cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
@@ -154,23 +149,19 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
     public void Dispose()
         => _progressMessagesSemaphore.Dispose();
 
-    private async Task<bool> LogAsync(LogLevel logLevel, string message, int? padding, CancellationToken cancellationToken)
+    private async Task LogAsync(LogLevel logLevel, string message, int? padding, CancellationToken cancellationToken)
         => await LogAsync(GetServerLogMessage(logLevel, message, padding), cancellationToken).ConfigureAwait(false);
 
-    private async Task<bool> LogAsync(ServerLogMessage message, CancellationToken cancellationToken)
+    private async Task LogAsync(ServerLogMessage message, CancellationToken cancellationToken)
     {
-        ServerTestHost? serverTestHost;
-        lock (_messages)
+        if (_serverTestHost is null)
         {
-            serverTestHost = _serverTestHost;
-            if (serverTestHost is null)
-            {
-                _messages.Enqueue(message);
-                return true;
-            }
+            _messages.Enqueue(message);
         }
-
-        return await serverTestHost.TryPushLogAsync(message, cancellationToken).ConfigureAwait(false);
+        else
+        {
+            await _serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private static ServerLogMessage GetServerLogMessage(LogLevel logLevel, string message, int? padding)
@@ -202,6 +193,13 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
         return builder.ToString();
     }
 
-    public Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
-        => Task.CompletedTask;
+    public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)
+    {
+        if (processRole == TestProcessRole.TestHost)
+        {
+            await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
+                async (maxFailedTests, _) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+        }
+    }
 }

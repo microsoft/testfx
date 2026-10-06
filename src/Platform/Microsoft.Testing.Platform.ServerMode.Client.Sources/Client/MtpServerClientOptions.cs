@@ -48,15 +48,13 @@ internal sealed class MtpServerClientOptions
     public bool? IsStateful { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to request <c>client/showMessage</c> output-device rendering (<c>capabilities.testing.showMessage</c>).
+    /// Gets or sets whether to request <c>client/showMessage</c> notifications (<c>capabilities.testing.showMessage</c>).
     /// A null value omits the request. The client must check the server's applied acknowledgement.
     /// </summary>
     /// <remarks>
-    /// When true, attach <see cref="IMtpServerClient.LogReceived"/> before calling
-    /// <see cref="IMtpServerClient.InitializeAsync"/> and keep it attached until shutdown.
-    /// Acknowledged user-visible output must remain visible regardless of diagnostic verbosity.
-    /// False or absent acknowledgement retains legacy output and discovery/run activation.
-    /// Direct stdout/stderr writes are outside this policy; both streams must still be drained.
+    /// Both methods use <see cref="IMtpServerClient.LogReceived"/>. False or absent acknowledgment
+    /// retains <c>client/log</c>. Forwarding still activates at discovery/run, and local rendering
+    /// is unchanged. Both stdout and stderr must still be drained independently.
     /// </remarks>
     public bool? ShowMessage { get; set; }
 

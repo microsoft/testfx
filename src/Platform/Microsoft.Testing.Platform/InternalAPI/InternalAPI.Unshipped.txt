@@ -1,43 +1,10 @@
 #nullable enable
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ShowMessage = "showMessage" -> string!
 const Microsoft.Testing.Platform.ServerMode.JsonRpcMethods.ClientShowMessage = "client/showMessage" -> string!
-Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.CloseConnection() -> void
-Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.ConnectionClosedCallback.get -> System.Action?
-Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.ConnectionClosedCallback.set -> void
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ConfigureShowMessage(bool? requested, bool deferSuppression = false) -> bool
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.EndConnection() -> void
-Microsoft.Testing.Platform.Hosts.ServerTestHost.TryPushLogAsync(Microsoft.Testing.Platform.Logging.ServerLogMessage! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.DisplayWithSuppressionAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.RenderAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.LogRenderFailureAsync(System.Exception! exception) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.DisplayBannerWithSuppressionAsync(string? bannerMessage, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.RenderBannerAsync(string? bannerMessage, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.ForwardAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.ForwardBannerAsync(string? bannerMessage, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Description.get -> string!
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.DisplayName.get -> string!
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ProxyOutputDevice(Microsoft.Testing.Platform.OutputDevice.IPlatformOutputDevice! originalOutputDevice, Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice? serverModeOutputDevice, Microsoft.Testing.Platform.Services.IStopPoliciesService? policiesService) -> void
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Uid.get -> string!
-Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Version.get -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.get -> bool?
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.init -> void
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.SupportsShowMessage.get -> bool
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.SuppressConsoleOutput.get -> bool
-Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.SuppressConsoleOutput.set -> void
-Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
-Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.ServerModePerCallOutputDevice(Microsoft.Testing.Platform.Logging.FileLoggerProvider? fileLoggerProvider) -> void
 Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.get -> bool?
 Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.init -> void
-*REMOVED*Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ProxyOutputDevice(Microsoft.Testing.Platform.OutputDevice.IPlatformOutputDevice! originalOutputDevice, Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice? serverModeOutputDevice) -> void
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.Description.get -> string!
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.DisplayName.get -> string!
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.Uid.get -> string!
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.Version.get -> string!
-*REMOVED*Microsoft.Testing.Platform.ServerMode.ServerModePerCallOutputDevice.ServerModePerCallOutputDevice(Microsoft.Testing.Platform.Logging.FileLoggerProvider? fileLoggerProvider, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState

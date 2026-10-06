@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Net.Sockets;
-
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -28,7 +24,7 @@ internal sealed partial class ServerTestHost
 
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await WriteMessageAsync(error, cancellationToken).ConfigureAwait(false);
+            await _messageHandler.WriteRequestAsync(error, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -43,35 +39,15 @@ internal sealed partial class ServerTestHost
 
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await WriteMessageAsync(response, cancellationToken).ConfigureAwait(false);
+            await _messageHandler.WriteRequestAsync(response, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    private void EndOutputConnection()
+    private async Task SendMessageAsync(string method, object? @params, CancellationToken cancellationToken, bool checkServerExit = false, bool rethrowException = true)
     {
-        Interlocked.Exchange(ref _outputConnectionClosed, 1);
-        ServiceProvider.GetRequiredService<ProxyOutputDevice>().EndConnection();
-    }
-
-    private async Task WriteMessageAsync(RpcMessage message, CancellationToken cancellationToken)
-    {
-        AssertInitialized();
-        try
+        if (checkServerExit && _messageHandlerStopPlusGlobalTokenSource.IsCancellationRequested)
         {
-            await _messageHandler.WriteRequestAsync(message, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is IOException or SocketException or ObjectDisposedException)
-        {
-            EndOutputConnection();
-            throw;
-        }
-    }
-
-    private async Task<bool> SendMessageAsync(string method, object? @params, CancellationToken cancellationToken, bool checkServerExit = false, bool rethrowException = true)
-    {
-        if (checkServerExit && (Volatile.Read(ref _outputConnectionClosed) != 0 || _messageHandlerStopPlusGlobalTokenSource.IsCancellationRequested))
-        {
-            return false;
+            return;
         }
 
         _requestCounter.AddCount();
@@ -81,16 +57,9 @@ internal sealed partial class ServerTestHost
 
             using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
             {
-                if (checkServerExit && Volatile.Read(ref _outputConnectionClosed) != 0)
-                {
-                    return false;
-                }
-
                 AssertInitialized();
-                await WriteMessageAsync(notification, cancellationToken).ConfigureAwait(false);
+                await _messageHandler.WriteRequestAsync(notification, cancellationToken).ConfigureAwait(false);
             }
-
-            return true;
         }
         catch (Exception ex)
         {
@@ -111,8 +80,6 @@ internal sealed partial class ServerTestHost
             {
                 QueueLog(LogLevel.Debug, $"Suppressed failure while sending '{method}': {ex}");
             }
-
-            return false;
         }
         finally
         {
@@ -163,18 +130,15 @@ internal sealed partial class ServerTestHost
         switch (value)
         {
             case ServerLogMessage logMessage:
-                await TryPushLogAsync(logMessage, cancellationToken).ConfigureAwait(false);
+                await SendMessageAsync(
+                    method: _showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog,
+                    @params: new LogEventArgs(logMessage),
+                    cancellationToken,
+                    checkServerExit: true,
+                    rethrowException: false).ConfigureAwait(false);
                 break;
         }
     }
-
-    internal Task<bool> TryPushLogAsync(ServerLogMessage message, CancellationToken cancellationToken)
-        => SendMessageAsync(
-            method: _showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog,
-            @params: new LogEventArgs(message),
-            cancellationToken,
-            checkServerExit: true,
-            rethrowException: false);
 
     public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 }

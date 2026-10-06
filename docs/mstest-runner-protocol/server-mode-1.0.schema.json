@@ -127,7 +127,7 @@
           "properties": {
             "showMessage": {
               "type": ["boolean", "null"],
-              "description": "Requests client/showMessage IOutputDevice rendering instead of client/log, with an output handler ready before initialize. Requires an applied true acknowledgement and suppresses eligible console rendering."
+              "description": "Requests client/showMessage notifications instead of client/log. Requires a true acknowledgment. Local rendering and discovery/run activation remain unchanged."
             },
             "debuggerProvider": {
               "type": "boolean"
@@ -160,7 +160,7 @@
           "properties": {
             "showMessage": {
               "type": ["boolean", "null"],
-              "description": "True only when client/showMessage IOutputDevice rendering was requested and applied on this connection. The acknowledgement precedes notifications. Absent/null/false retains client/log; messages are never dual-sent."
+              "description": "True only when client/showMessage routing was requested and applied on this connection. The acknowledgment precedes new-method notifications. Absent/null/false retains client/log; messages are never dual-sent."
             },
             "supportsDiscovery": {
               "type": "boolean"

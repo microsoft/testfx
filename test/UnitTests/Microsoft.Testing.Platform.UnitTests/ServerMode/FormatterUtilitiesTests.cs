@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
@@ -12,6 +13,26 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class FormatterUtilitiesTests
 {
+    [TestMethod]
+    [DataRow(JsonRpcMethods.ClientLog)]
+    [DataRow(JsonRpcMethods.ClientShowMessage)]
+    public async Task Serialize_OutputNotificationsKeepTheSamePayload(string method)
+    {
+        string json = await _formatter.SerializeAsync(new NotificationMessage(
+            method, new LogEventArgs(new ServerLogMessage(LogLevel.Information, "plain μ"))));
+        IDictionary<string, object?> properties =
+#if NETCOREAPP
+            Deserialize<IDictionary<string, object?>>(json);
+#else
+            Assert.IsInstanceOfType<IDictionary<string, object?>>(Jsonite.Json.Deserialize(json));
+#endif
+        Assert.AreEqual(method, properties[JsonRpcStrings.Method]);
+        var parameters = (IDictionary<string, object?>)properties[JsonRpcStrings.Params]!;
+        Assert.HasCount(2, parameters);
+        Assert.AreEqual("Information", parameters[JsonRpcStrings.Level]);
+        Assert.AreEqual("plain μ", parameters[JsonRpcStrings.Message]);
+    }
+
     [TestMethod]
     [DataRow("", null)]
     [DataRow("\"showMessage\":null,", null)]

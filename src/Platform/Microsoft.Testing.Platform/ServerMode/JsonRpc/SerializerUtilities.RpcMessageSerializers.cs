@@ -96,11 +96,10 @@ internal static partial class SerializerUtilities
             return values;
         });
 
-        Serializers[typeof(ServerCapabilities)] = new ObjectSerializer<ServerCapabilities>(capabilities =>
-            new Dictionary<string, object?>
-            {
-                [JsonRpcStrings.Testing] = Serialize(capabilities.TestingCapabilities),
-            });
+        Serializers[typeof(ServerCapabilities)] = new ObjectSerializer<ServerCapabilities>(capabilities => new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Testing] = Serialize(capabilities.TestingCapabilities),
+        });
 
         Serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities =>
         {

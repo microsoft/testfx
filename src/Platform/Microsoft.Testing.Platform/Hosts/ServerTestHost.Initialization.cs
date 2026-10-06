@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
-
 namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost
@@ -28,7 +25,6 @@ internal sealed partial class ServerTestHost
         lock (_initializeStateLock)
         {
             RoslynDebug.Assert(_initializeState == Initializing);
-            ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureShowMessage(false);
             RoslynDebug.Assert(_initializationCompletionSource is not null);
             bool requestDetached = ((ICollection<KeyValuePair<(int Id, bool IsString), RpcInvocationState>>)_clientToServerRequests)
                 .Remove(new(requestKey, rpcState));

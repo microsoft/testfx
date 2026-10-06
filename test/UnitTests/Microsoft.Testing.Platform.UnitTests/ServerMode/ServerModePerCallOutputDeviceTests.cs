@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
@@ -21,7 +22,7 @@ public sealed class ServerModePerCallOutputDeviceTests
     [TestMethod]
     public async Task DisplayAsync_SessionMessage_QueuesInformationalLog()
     {
-        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null);
+        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null, Mock.Of<IStopPoliciesService>());
 
         await device.DisplayAsync(Producer, new SessionMessageOutputDeviceData("Restoring assets"), CancellationToken.None);
 
@@ -35,7 +36,7 @@ public sealed class ServerModePerCallOutputDeviceTests
     [TestMethod]
     public async Task DisplayAsync_ProgressMessage_QueuesOnlyChangedValues()
     {
-        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null);
+        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null, Mock.Of<IStopPoliciesService>());
 
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
@@ -49,7 +50,7 @@ public sealed class ServerModePerCallOutputDeviceTests
     [TestMethod]
     public async Task DisplayAsync_ProgressMessageAfterRemoval_QueuesSameValueAgain()
     {
-        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null);
+        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null, Mock.Of<IStopPoliciesService>());
 
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", null), CancellationToken.None);
@@ -61,7 +62,7 @@ public sealed class ServerModePerCallOutputDeviceTests
     [TestMethod]
     public async Task DisplayAsync_ProgressMessageAfterSessionEnds_QueuesSameValueAgain()
     {
-        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null);
+        using var device = new ServerModePerCallOutputDevice(fileLoggerProvider: null, Mock.Of<IStopPoliciesService>());
 
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
         await device.DisplayAfterSessionEndRunAsync(CancellationToken.None);
