@@ -1,1 +1,3 @@
 #nullable enable
+*REMOVED*static Microsoft.Testing.Extensions.VSTestBridge.Helpers.SynchronousAwaiter.Await(this System.Threading.Tasks.Task! valueTask, bool busyWait = true) -> void
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.SynchronousAwaiter.Await(this System.Threading.Tasks.Task! valueTask, bool busyWait = false) -> void
