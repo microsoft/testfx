@@ -89,36 +89,11 @@
 
 ## Last Run
 
-2026-10-01 UTC (run 36937877564)
+2026-10-06 UTC (run 37543546908)
 
 ## Completed Work (recent, summarized)
 
-- PR (2026-09-08) — MicrosoftExtensionsLoggingBuilderExtensions.AddMicrosoftExtensionsLogging (both overloads, Microsoft.Testing.Extensions.Logging, previously 0 tests): added 9 tests covering null-argument validation (4), LogLevel.None short-circuit (2), happy-path log forwarding + ownsFactory disposal semantics (2), and builder chaining (1). Pattern: drive registered provider factories via internal `LoggingManager.BuildAsync(IServiceProvider, LogLevel, IMonitor)` (accessed via cast + IVT) rather than reaching into private fields; used a small in-file `CapturingLoggerProvider`/`CapturingLogger` to assert forwarded messages. New gotcha: `Microsoft.Extensions.Logging` and `Microsoft.Testing.Platform.Logging` both define `ILoggerFactory`/`ILogger` — causes CS0104 ambiguous-reference if both namespaces are `using`'d; resolve with explicit aliases (`MtpILogger`, `MtpILoggerFactory`) per existing `MicrosoftExtensionsLoggingBridgeTests.cs` convention. Also confirmed MTP's `ILoggerFactory`/`ILogger` do NOT implement `IDisposable` (unlike the MEL counterpart) — cannot `using`-declare them. CLI gotcha reconfirmed: `--treenode-filter` printed `--help` for this project too; `--filter-uid` ran but matched 0 tests silently — just run the built binary with no args for full-suite verification. Full Microsoft.Testing.Extensions.UnitTests suite: 1765 total, 1728 succeeded, 0 failed, 37 skipped (includes new tests).
-
-- PR (2026-08-13) — ReportFileWriterHelper.RetryWhenIOExceptionAsync (SharedExtensionHelpers, consumed by TrxReportEngine and other report writers): added 4 tests (immediate success, retry-then-success on transient IOException, immediate propagation of non-IOException, rethrow after retry timeout elapses via a SequenceClock stub). Also discovered/corrected: TrxReportGeneratorCommandLineTests.cs already existed with full coverage (memory/grep had missed it or it was added since); issue #10316 is still OPEN, not closed as previously recorded — corrected in backlog.
-- PR (2026-08-12) — RetryArtifactProcessor.ProcessAsync (Microsoft.Testing.Extensions.Retry, from PR #10542): added 8 tests covering no eligible processors, attemptCount<2, incomplete per-attempt coverage, null processor result, successful merge (replacement recorded), non-cancellation exception (warning logged + displayed, no throw), and OperationCanceledException rethrow. New `TestArtifactPostProcessor` fake helper added (delegate-based `IArtifactPostProcessor`). Full Microsoft.Testing.Extensions.UnitTests suite: 1097 total, 1063 succeeded, 0 failed, 34 skipped after change.
-- PR (2026-08-09) — SharedFileSystemPathInTestAnalyzer (MSTEST0077, issue #10316): added `WhenTestMethodCreatesFileSymbolicLinkToConstantTarget_NoDiagnostic`, mirroring the existing Directory.CreateSymbolicLink negative test — File.CreateSymbolicLink's `pathToTarget` param must not be flagged. Full MSTest.Analyzers.UnitTests suite: 1726/1726 passed. Note: most of issue #10316's other listed gaps (write/append/create family, Encrypt/Decrypt/SetAttributes/SetUnixFileMode) turned out to already be covered by existing DataRow tests — issue body may be stale; consider commenting/closing next run.
-- PR (2026-08-08) — TestFilterProviderShouldBeValidAnalyzer (MSTEST0081): added `WhenFilterTypeIsInternalWithPublicConstructor_NoDiagnostic` and `WhenFilterTypeIsInternalWithInternalConstructor_Diagnostic`, covering that the filter type's own accessibility is irrelevant but the constructor's declared accessibility (public vs internal) determines whether `Activator.CreateInstance(Type)` can instantiate it. Full MSTest.Analyzers.UnitTests suite: 1723/1723 passed.
-
-- PR (2026-08-07) — DependsOnShouldBeValidAnalyzer (MSTEST0078): added `WhenReferencedTypeIsInternalWithoutDiscoverInternals_NotATestClass` and `WhenReferencedTypeIsInternalWithDiscoverInternals_Cycle`, covering the `HasValidAccessibility` branch for internal *target classes* (previously only internal target *methods* were covered). Full MSTest.Analyzers.UnitTests suite: 1723/1723 passed.
-
-- PR (2026-08-06) — MSTEST0077 SharedFileSystemPathInTestAnalyzer: added `WhenAssemblyInitializeWritesConstantPath_NoDiagnostic` and `WhenGlobalTestInitializeWritesConstantPath_Diagnostic`, closing the last remaining fixture-branch gap among the 4 parallel-safety analyzers (0074/0075/0076/0077). Full MSTest.Analyzers.UnitTests suite: 1721/1721 passed.
-- PR (2026-08-05) — MSTEST0074 (UndeclaredProcessGlobalStateMutationAnalyzer) + MSTEST0076 (CultureMutationUnderParallelizationAnalyzer): added `WhenTestMethodSetsEnvironmentVariableInGlobalTestInitialize_DiagnosticWithoutFix` and `WhenGlobalTestInitializeSetsDefaultThreadCurrentCulture_Diagnostic` — fills the "global fixture: diagnostic fires but no fix offered" branch gap, mirroring PR #10383's pattern for MSTEST0075. Locally built + ran full MSTest.Analyzers.UnitTests suite (1718 tests, all passed) before submitting.
-- PR (2026-08-02) — MSTEST0054 UseCancellationTokenPropertyAnalyzer: 1 test; MSTEST0044 PreferTestMethodOverDataTestMethodAnalyzer: 1 test
-- PR (2026-07-31) — CurrentDirectoryMutationUnderParallelizationAnalyzer: 2 fixture edge-case tests
-- PR (2026-07-29) — CultureMutationUnderParallelizationAnalyzer (MSTEST0076): 2 edge-case tests
-- PR (2026-07-28) — UnusedParameterSuppressor (MSTEST0047): 2 edge-case tests
-- PR (2026-07-25) — DoNotStoreStaticTestContextAnalyzer (MSTEST0024): 2 edge-case tests
-- PR (2026-07-18) — NonNullableReferenceNotInitializedSuppressor (MSTEST0028): 2 edge-case tests
-- PR (2026-07-17) — MSTEST0038 AvoidAssertAreSameWithValueTypes: 3 edge-case tests
-- PR (2026-07-16) — MSTEST0070 MemberConditionShouldBeValid: 3 tests
-- PR (2026-07-15) — AvoidOutParameterOnAssertIsInstanceOfTypeFixer: 2 tests
-- PR (2026-07-14) — TestClassShouldBeValid static-class guard: 2 tests
-- PR (2026-07-13) — MSTEST0035 UseRetryWithTestMethod: 4 tests
-- PR (2026-07-10) — MSTEST0063: 4 tests
-- PR (2026-07-09) — MSTEST0061 MERGED; MSTEST0029 edge cases
-- PR #9731 MERGED; PR #9669 MERGED; PR #9615 MERGED
-- PRs #9516,#9489,#9481,#9468,#9438,#9410,#9382,#9355,#9314,#9301,#9223,#9199,#9164,#9103,#9092,#9061,#9020,#8977,#8941,#8909,#8885,#8869,#8837,#8809,#8781,#8721,#8706 — all merged
+Analyzer edge-case PRs from 2026-06 through 2026-08 (MSTEST0007/0024/0028/0029/0035/0038/0044/0047/0054/0061/0063/0070/0074/0076/0077/0078/0081, TestClassShouldBeValid, AvoidOutParameterOnAssertIsInstanceOfTypeFixer, UseExecuteAsyncOverrideFixer, DependsOnShouldBeValidAnalyzer, SharedFileSystemPathInTestAnalyzer) — all merged, analyzer area now saturated (see "Key Test Pattern Notes" above for the lasting gotchas these runs surfaced). PR (2026-08-12) RetryArtifactProcessor.ProcessAsync: 8 tests. PR (2026-08-13) ReportFileWriterHelper.RetryWhenIOExceptionAsync: 4 tests. PR (2026-09-08) MicrosoftExtensionsLoggingBuilderExtensions: 9 tests (gotcha: MEL vs MTP `ILoggerFactory`/`ILogger` namespace clash — use `MtpILogger`/`MtpILoggerFactory` aliases).
 
 ## Duplicate Monthly Activity Issues Note — RESOLVED 2026-08-06
 
@@ -184,6 +159,16 @@ Key lasting gotchas:
 - Jsonite/`Json.*` family deprioritized as low-value (trivial wrappers or already covered indirectly).
 - Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
 - `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
+
+## Run 2026-10-06 (run 37543546908) — MSBuild ModuleInfoRequest/RunSummaryInfoRequest serializer tests
+
+- Task reconciliation: PR #11741 (HangDump serializers) and #11750 (FailedTestHelper) merged. PR #11728 (Retry serializers) merged. PR #11767 "Add direct unit tests for MSBuildCompatibilityHelper" is open (state/approved, blocked mergeable_state — likely branch-protection/review gate, not a CI failure) — not actionable by this agent, left for maintainer.
+- Task 2/3: swept remaining Platform extension projects for zero-direct-test classes (CrashDump, VideoRecorder, GitHubActionsReport, Hosting, Configuration, Telemetry, OpenTelemetry, AzureFoundry all confirmed already covered). Found `ModuleInfoRequestSerializer` and `RunSummaryInfoRequestSerializer` (`src/Platform/Microsoft.Testing.Extensions.MSBuild/Serializers/`) — MSBuild IPC serializers analogous to the already-covered Retry/HangDump ones — had zero direct tests (only `FailedTestInfoRequestSerializer` was covered, via `FailedTestHelperTests.cs` indirectly through `FailedTestInfoRequest`).
+- Added `MSBuildSerializersTests.cs` (7 tests) in `Microsoft.Testing.Platform.MSBuild.UnitTests`: serializer ID assertions, `ModuleInfoRequest` round-trip (all fields + empty strings), `RunSummaryInfoRequest` round-trip (all fields, null-duration→empty-string normalization, AllowSkipped=false). Reused the `extern alias PlatformMSBuild` + reflection-based Serialize/Deserialize invocation pattern from `RetrySerializersTests.cs`/`HangDumpSerializersTests.cs` (serializer base type is `[Embedded]`, source-linked into both `Microsoft.Testing.Extensions.MSBuild` and `Microsoft.Testing.Platform.MSBuild`).
+- Build succeeded (0 warnings) net8.0+net9.0. Full `Microsoft.Testing.Platform.MSBuild.UnitTests` suite: 219 total (was 216), 0 failed, 1 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for MSBuild ModuleInfoRequest/RunSummaryInfoRequest serializers" on branch `test-assist/msbuild-serializers-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, noted #11728 (Retry serializers) merged, and #11767 (MSBuildCompatibilityHelper) is open+approved but blocked (not actionable here).
+- Remaining candidates for future runs: MSTest.Engine internal classes (architecturally blocked, unchanged); `Microsoft.Testing.Platform.MSBuild` + `Microsoft.Testing.Extensions.MSBuild` area now considered well-covered (FailedTestHelper, MSBuildCompatibilityHelper, and both MSBuild serializers done); broader `src/Platform/Microsoft.Testing.Platform` core (Messages/, Requests/, OutputDevice/Terminal/, Logging/, Configurations/, Helpers/) has many zero-direct-test internal classes but most are large/complex orchestration types (TestFrameworkManager, OutputDeviceManager, terminal rendering) better suited for a dedicated future deep-dive rather than a quick sweep; pivot next run to Task 5 (issue comments) or Task 6 (test infrastructure) given the extension-project low-hanging fruit is now largely exhausted.
 
 ## Run 2026-10-05 (run 37385432650) — MSBuildCompatibilityHelper tests
 
