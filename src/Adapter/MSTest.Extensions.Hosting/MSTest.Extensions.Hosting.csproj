@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks)</TargetFrameworks>
+    <!-- Keep this integration prerelease while Microsoft.Testing.Extensions.Hosting remains alpha. -->
+    <PreReleaseVersionLabel>alpha</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <IsPackable>true</IsPackable>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting.Hosting</RootNamespace>
     <PackageId>MSTest.Extensions.Hosting</PackageId>
