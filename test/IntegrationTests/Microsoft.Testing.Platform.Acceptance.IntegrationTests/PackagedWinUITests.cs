@@ -104,6 +104,41 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     }
 
     [TestMethod]
+    [DataRow("MSTest")]
+    [DataRow("MSTest.TestAdapter")]
+    public async Task PackagedAppContainerWinUI_ExplicitIntegrationPublishesTrx(string package)
+    {
+        GeneratedPackagedWinUIAsset generatedAsset = await GeneratePackagedWinUIAssetAsync(appContainer: true, package: package);
+        await ExecuteWithPackageCleanupAsync(
+            generatedAsset,
+            async () =>
+            {
+                PackagedWinUIBuild build = await BuildAssetAsync(
+                    generatedAsset.TestAsset,
+                    generatedAsset.AssetName,
+                    generatedAsset.PackageIdentityName,
+                    appContainer: true);
+                AssertResolvedWinUIAssets(build.ResolvedAssetsReportPath, usingSdk: false);
+
+                string resultsDirectory = Path.Combine(generatedAsset.TestAsset.TargetAssetPath, "TestResults");
+                DotnetMuxerResult result = await DotnetCli.RunAsync(
+                    $"msbuild \"{Path.Combine(generatedAsset.TestAsset.TargetAssetPath, $"{generatedAsset.AssetName}.csproj")}\" " +
+                    $"-t:InvokeTestingPlatform -p:Configuration=Release -p:Platform=x64 -p:RuntimeIdentifier={RuntimeIdentifier} " +
+                    $"-p:TestingPlatformCommandLineArguments=\"--report-trx --report-trx-filename explicit.trx --results-directory {resultsDirectory}\"",
+                    workingDirectory: generatedAsset.TestAsset.TargetAssetPath,
+                    failIfReturnValueIsNotZero: false,
+                    environmentVariables: new Dictionary<string, string?>
+                    {
+                        ["platformOptions__testHostControllersManager__singleConnectionNamedPipeServer__waitConnectionTimeoutSeconds"] = "45",
+                    },
+                    cancellationToken: TestContext.CancellationToken);
+                Assert.AreEqual(0, result.ExitCode, result.ToString());
+                AssertWinUITrx(Path.Combine(resultsDirectory, "explicit.trx"));
+                AssertAppContainerGeneratedManifest(build.GeneratedManifestPath);
+            });
+    }
+
+    [TestMethod]
     public async Task PackagedAppContainerWinUI_RetryRunsSecondHostAndPublishesTrx()
     {
         GeneratedPackagedWinUIAsset generatedAsset = await GeneratePackagedWinUIAssetAsync(
@@ -363,7 +398,8 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
     private async Task<GeneratedPackagedWinUIAsset> GeneratePackagedWinUIAssetAsync(
         bool appContainer = false,
-        bool retryTest = false)
+        bool retryTest = false,
+        string? package = null)
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
         // The Windows App SDK still runs the .NET Framework XamlCompiler.exe. Keep the generated
@@ -373,9 +409,27 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string packageIdentityName = $"MTPWinUI{uniqueSuffix}";
         string expectedPackageFamilyName = ComputePackageFamilyName(packageIdentityName, Publisher);
         string phoneProductId = Guid.NewGuid().ToString();
+        string source = SourceCode;
+        if (package is not null)
+        {
+            string references = package == "MSTest"
+                ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
+                : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+            source = source
+                .Replace("MSTest.Sdk/$MSTestVersion$", "Microsoft.NET.Sdk", StringComparison.Ordinal)
+                .Replace(
+                    "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>",
+                    "<EnableMSTestRunner>true</EnableMSTestRunner><EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp><EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>",
+                    StringComparison.Ordinal)
+                .Replace(
+                    "<PackageReference Include=\"Microsoft.Windows.SDK.BuildTools\"",
+                    $"{references}<PackageReference Include=\"Microsoft.Testing.Extensions.PackagedApp.MSBuild\" Version=\"{MicrosoftTestingPlatformVersion}\" /><PackageReference Include=\"Microsoft.Testing.Extensions.TrxReport\" Version=\"{MicrosoftTestingPlatformVersion}\" /><PackageReference Include=\"Microsoft.Windows.SDK.BuildTools\"",
+                    StringComparison.Ordinal);
+        }
+
         TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            SourceCode
+            source
                 .PatchCodeWithReplace("$AssetName$", AssetName)
                 .PatchCodeWithReplace("$PackageIdentityName$", packageIdentityName)
                 .PatchCodeWithReplace("$ExpectedPackageFamilyName$", expectedPackageFamilyName)
@@ -657,13 +711,13 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         Assert.AreEqual("Passed", (string?)secondAttemptResult.Attribute("outcome"), secondAttemptTrxPath);
     }
 
-    private static void AssertResolvedWinUIAssets(string reportPath)
+    private static void AssertResolvedWinUIAssets(string reportPath, bool usingSdk = true)
     {
         Assert.IsTrue(File.Exists(reportPath), $"The resolved WinUI asset report '{reportPath}' does not exist.");
         string report = File.ReadAllText(reportPath).Replace('\\', '/');
         Assert.Contains("UseWinUI=true", report, reportPath);
         Assert.Contains($"TargetFramework={TargetFramework}", report, reportPath);
-        Assert.Contains("UsingMSTestSdk=true", report, reportPath);
+        Assert.Contains($"UsingMSTestSdk={(usingSdk ? "true" : string.Empty)}", report, reportPath);
         Assert.Contains("EnableMSTestRunner=true", report, reportPath);
         Assert.Contains("GenerateTestingPlatformEntryPoint=false", report, reportPath);
         Assert.Contains("GenerateTestingPlatformApplicationHelper=true", report, reportPath);

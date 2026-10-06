@@ -28,6 +28,13 @@ For package identity, AUMID activation, unpackaged WinUI, UWP launch activation,
 AppContainer security guidance, see
 [Testing UWP and WinUI apps with MSTest](https://github.com/microsoft/testfx/blob/main/docs/winui-testing.md).
 
+For packaged Windows applications, the SDK references
+`Microsoft.Testing.Extensions.PackagedApp.MSBuild` from the aligned MTP release.
+That separately shipped package owns the full-trust controller, shared launch
+targets and classic UWP bootstrap; the SDK does not embed a second controller
+payload. MSTest metapackage and adapter-only projects can reference the same
+integration explicitly with `EnableMSTestRunner=true`.
+
 ## Documentation
 
 For setup guidance, see <https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-getting-started>.

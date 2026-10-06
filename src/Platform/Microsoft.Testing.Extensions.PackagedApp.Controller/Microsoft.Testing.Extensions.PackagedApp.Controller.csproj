@@ -6,6 +6,8 @@
     <AssemblyName>mstest-appmodel-controller</AssemblyName>
     <RootNamespace>Microsoft.Testing.Platform.AppModelController</RootNamespace>
     <IsPackable>false</IsPackable>
+    <IsTrimmable>false</IsTrimmable>
+    <IsAotCompatible>false</IsAotCompatible>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseAppHost>true</UseAppHost>
