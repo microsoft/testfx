@@ -115,7 +115,6 @@ Rule ID | Category | Severity | Notes
 MSTEST0044 | Design | Warning | PreferTestMethodOverDataTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0044)
 MSTEST0045 | Usage | Info | UseCooperativeCancellationForTimeoutAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0045)
 MSTEST0046 | Usage | Info | StringAssertToAssertAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0046)
-MSTEST0047 | Usage | Info | UnusedParameterSuppressor, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0047)
 MSTEST0048 | Usage | Warning | TestContextPropertyUsageAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0048)
 MSTEST0049 | Usage | Info | FlowTestContextCancellationTokenAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0049)
 MSTEST0050 | Usage | Error | GlobalTestFixtureShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0050)
@@ -164,7 +163,6 @@ MSTEST0037 | Usage | Info | UseProperAssertMethodsAnalyzer, [Documentation](http
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0018 | Usage | Warning | DynamicDataShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0018)
-MSTEST0033 | Usage | Info | NonNullableReferenceNotInitializedSuppressor, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0033)
 MSTEST0034 | Usage | Info | UseClassCleanupBehaviorEndOfClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0034)
 MSTEST0035 | Usage | Info | UseDeploymentItemWithTestMethodOrTestClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0035)
 MSTEST0036 | Design | Warning | DoNotUseShadowingAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0036)
@@ -176,8 +174,6 @@ MSTEST0036 | Design | Warning | DoNotUseShadowingAnalyzer, [Documentation](https
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0026 | Usage | Info | AssertionArgsShouldAvoidConditionalAccessRuleId, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0026)
-MSTEST0027 | Usage | Info | UseAsyncSuffixTestMethodSuppressor, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0027)
-MSTEST0028 | Usage | Info | UseAsyncSuffixTestFixtureMethodSuppressor, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0028)
 MSTEST0029 | Design | Disabled | PublicMethodShouldBeTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0029)
 MSTEST0030 | Usage | Info | TypeContainingTestMethodShouldBeATestClassAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0030)
 MSTEST0031 | Usage | Info | DoNotUseSystemDescriptionAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0031)
