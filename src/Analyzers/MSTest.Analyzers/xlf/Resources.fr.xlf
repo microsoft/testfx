@@ -790,6 +790,11 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
         <target state="translated">Ne négligez pas la valeur de retour des méthodes de chaîne</target>
         <note />
       </trans-unit>
+      <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
+        <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
+        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <note>{Locked="TestContext"}</note>
+      </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
         <target state="translated">Les attributs « SupportedOSPlatformAttribute » et « UnsupportedOSPlatformAttribute » informent l’analyse de compatibilité de la plateforme, mais ne contrôlent pas l’exécution de MSTest. Les méthodes de test et les classes de test utilisant ces attributs doivent également déclarer un « [OSCondition] » compatible pour que les tests soient ignorés à l’exécution sur les familles de systèmes d’exploitation non prises en charge. « [OSCondition] » n’impose pas de contraintes sur la version de la plateforme.</target>

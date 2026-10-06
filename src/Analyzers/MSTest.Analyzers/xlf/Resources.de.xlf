@@ -790,6 +790,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Rückgabewert von Zeichenfolgenmethoden nicht ignorieren</target>
         <note />
       </trans-unit>
+      <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
+        <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
+        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <note>{Locked="TestContext"}</note>
+      </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
         <target state="translated">'SupportedOSPlatformAttribute' und 'UnsupportedOSPlatformAttribute' informieren die Plattformkompatibilitätsanalyse, steuern jedoch nicht MSTest Ausführung. Testmethoden und Testklassen, die diese Attribute verwenden, müssen auch einen kompatiblen '[OSCondition]' deklarieren, sodass Tests für nicht unterstützte Betriebssystemfamilien zur Laufzeit übersprungen werden. '[OSCondition]' erzwingt keine Plattformversionseinschränkungen.</target>
