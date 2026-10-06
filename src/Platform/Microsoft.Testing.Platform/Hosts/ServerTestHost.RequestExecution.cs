@@ -39,7 +39,7 @@ internal sealed partial class ServerTestHost
                     $"Connection established with '{_client.Id}' version '{_client.Version}', protocol version '{negotiatedProtocolVersion}'").ConfigureAwait(false);
 
                 INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
-                bool rpcOnlyOutput = ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureRpcOnlyOutput(args.Capabilities.RpcOnlyOutput);
+                bool rpcOnlyOutput = ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureRpcOnlyOutput(args.Capabilities.RpcOnlyOutput, deferSuppression: true);
                 return new InitializeResponseArgs(
                     ProcessId: ServiceProvider.GetEnvironment().ProcessId,
                     ServerInfo: new ServerInfo("test-anywhere", Version: PlatformVersion.Version),

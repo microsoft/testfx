@@ -39,6 +39,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     // We start by one so we can wait all other requests
     private readonly CountdownEvent _requestCounter = new(1);
     private readonly IClock _clock;
+    private readonly CancellationTokenRegistration _outputConnectionCancellationRegistration;
 #if NET9_0_OR_GREATER
     private readonly Lock _initializeStateLock = new();
 #else
@@ -59,6 +60,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     private IClientInfo? _clientInfoService;
     private TaskCompletionSource<bool>? _initializationCompletionSource;
     private int _initializeState;
+    private int _outputConnectionClosed;
 
     public ServerTestHost(
         ServiceProvider serviceProvider,
@@ -83,6 +85,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
         _logger = ServiceProvider.GetLoggerFactory().CreateLogger<ServerTestHost>();
         _messageHandlerStopPlusGlobalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken, _stopMessageHandler.Token);
+        _outputConnectionCancellationRegistration = _messageHandlerStopPlusGlobalTokenSource.Token.Register(EndOutputConnection);
 
         // If we don't want to crash on unhandled exceptions, handle them differently
         if (!ServiceProvider.GetUnhandledExceptionsPolicy().FastFailOnFailure)
@@ -179,6 +182,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         }
         finally
         {
+            EndOutputConnection();
             (_messageHandler as IDisposable)?.Dispose();
 
             // Cleanup all services but special one because in the per-call mode we needed to keep them alive for reuse
@@ -193,6 +197,8 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
     public void Dispose()
     {
+        EndOutputConnection();
+        _outputConnectionCancellationRegistration.Dispose();
         // Note: The lifetime of the _reader/_writer should be currently handled by the RunAsync()
         // We could consider creating a stateful engine that has the lifetime == server connection UP.
         if (!ServiceProvider.GetUnhandledExceptionsPolicy().FastFailOnFailure)

@@ -888,6 +888,14 @@ buffered and subsequent output for the connection lifetime, even without a
 discovery/run request. The source client enforces this subscription requirement
 and makes validated capabilities available before dispatching these messages.
 Each connection negotiates independently.
+Until forwarding attaches after the acknowledgement, buffered output still renders locally.
+
+Disconnect, a confirmed transport-write failure, or server shutdown ends console
+suppression for that connection. Output suppressed locally whose forwarding failed
+is rendered on the console without repeating its diagnostic-file mirror. A partial
+write may have reached the client, so this fallback can duplicate that message;
+previously successful output and startup output already shown locally are not replayed.
+An isolated canceled operation or serialization failure does not end the connection's policy.
 
 Acknowledged user-visible messages must remain visible regardless of the client's
 diagnostic verbosity. Message levels are unchanged; Trace/Debug lifecycle notices

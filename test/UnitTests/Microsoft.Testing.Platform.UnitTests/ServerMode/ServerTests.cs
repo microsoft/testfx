@@ -16,6 +16,7 @@ using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 using Moq;
 
@@ -36,6 +37,20 @@ public sealed class ServerTests
     private static bool IsHotReloadEnabled(SystemEnvironment environment)
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+
+    private static async Task RunOutsideAzureAgentAsync(Func<Task> test)
+    {
+        string? previousValue = Environment.GetEnvironmentVariable("TF_BUILD");
+        try
+        {
+            Environment.SetEnvironmentVariable("TF_BUILD", null);
+            await test();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TF_BUILD", previousValue);
+        }
+    }
 
     [TestMethod]
     public async Task ServerCanBeStartedAndAborted_TcpIp()
@@ -63,7 +78,11 @@ public sealed class ServerTests
     [DataRow(false, false)]
     [DataRow(true, false)]
     [DataRow(true, true)]
-    public async Task ServerCanInitialize(bool? rpcOnlyOutput, bool customRenderer)
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public Task ServerCanInitialize(bool? rpcOnlyOutput, bool customRenderer)
+        => RunOutsideAzureAgentAsync(() => ServerCanInitializeCoreAsync(rpcOnlyOutput, customRenderer));
+
+    private static async Task ServerCanInitializeCoreAsync(bool? rpcOnlyOutput, bool customRenderer)
     {
         using var server = TcpServer.Create();
 
@@ -203,7 +222,11 @@ public sealed class ServerTests
     [DataRow(false, false)]
     [DataRow(true, false)]
     [DataRow(true, true)]
-    public async Task InitializationOutputHandover_PreservesConcurrentOutputAndWaitingRequests(bool failFlush, bool cancelFlush)
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public Task InitializationOutputHandover_PreservesConcurrentOutputAndWaitingRequests(bool failFlush, bool cancelFlush)
+        => RunOutsideAzureAgentAsync(() => InitializationOutputHandoverCoreAsync(failFlush, cancelFlush));
+
+    private static async Task InitializationOutputHandoverCoreAsync(bool failFlush, bool cancelFlush)
     {
         using var server = TcpServer.Create();
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
@@ -329,7 +352,11 @@ public sealed class ServerTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task ServerEnforcesLifecycleAndNegotiatesProtocolVersion(bool rpcOnlyOutput)
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public Task ServerEnforcesLifecycleAndNegotiatesProtocolVersion(bool rpcOnlyOutput)
+        => RunOutsideAzureAgentAsync(() => ServerEnforcesLifecycleCoreAsync(rpcOnlyOutput));
+
+    private static async Task ServerEnforcesLifecycleCoreAsync(bool rpcOnlyOutput)
     {
         using var server = TcpServer.Create();
 

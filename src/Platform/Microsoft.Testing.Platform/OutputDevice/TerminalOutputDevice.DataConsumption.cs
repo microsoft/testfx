@@ -17,6 +17,15 @@ internal sealed partial class TerminalOutputDevice
     /// <param name="data">The data to be displayed.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        => await DisplayWithSuppressionAsync(producer, data, cancellationToken).ConfigureAwait(false);
+
+    internal Task<bool> DisplayWithSuppressionAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        => DisplayCoreAsync(producer, data, cancellationToken, renderOnly: false);
+
+    internal async Task RenderAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        => await DisplayCoreAsync(producer, data, cancellationToken, renderOnly: true).ConfigureAwait(false);
+
+    private async Task<bool> DisplayCoreAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken, bool renderOnly)
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
 
@@ -67,7 +76,7 @@ internal sealed partial class TerminalOutputDevice
                 }
             }
 
-            return;
+            return false;
         }
 
         TerminalTestReporter terminalTestReporter = _terminalTestReporter ?? throw ApplicationStateGuard.Unreachable();
@@ -83,14 +92,15 @@ internal sealed partial class TerminalOutputDevice
                 ExceptionOutputDeviceData exception => exception.Exception.ToString(),
                 _ => null,
             };
-            if (diagnosticMessage is not null)
+            if (!renderOnly && diagnosticMessage is not null)
             {
                 await LogDebugAsync(diagnosticMessage).ConfigureAwait(false);
             }
 
-            if (SuppressConsoleOutput)
+            if (!renderOnly && SuppressConsoleOutput)
             {
-                return;
+                // Record this display's decision, not a policy snapshot taken before or after forwarding.
+                return true;
             }
 
             switch (data)
@@ -144,6 +154,8 @@ internal sealed partial class TerminalOutputDevice
                     terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }
+
+            return false;
         }
     }
 

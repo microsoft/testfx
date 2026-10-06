@@ -32,16 +32,19 @@ public sealed class ProxyOutputDeviceTests
         using var serverDevice = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(originalDevice.Object, serverDevice, policies.Object);
 
-        await proxy.HandleProcessRoleAsync(role, CancellationToken.None);
+        using CancellationTokenSource roleCancellation = new();
+        using CancellationTokenSource callbackCancellation = new();
+        await proxy.HandleProcessRoleAsync(role, roleCancellation.Token);
         await proxy.HandleProcessRoleAsync(role, CancellationToken.None);
 
-        originalDevice.Verify(device => device.HandleProcessRoleAsync(role, CancellationToken.None), Times.Exactly(2));
+        originalDevice.Verify(device => device.HandleProcessRoleAsync(role, roleCancellation.Token), Times.Once);
+        originalDevice.Verify(device => device.HandleProcessRoleAsync(role, CancellationToken.None), Times.Once);
         Assert.HasCount(expectedCallbacks, callbacks);
         if (expectedCallbacks == 1)
         {
-            await callbacks[0](42, CancellationToken.None);
+            await callbacks[0](42, callbackCancellation.Token);
             originalDevice.Verify(
-                device => device.DisplayAsync(proxy, It.IsAny<TextOutputDeviceData>(), CancellationToken.None),
+                device => device.DisplayAsync(proxy, It.IsAny<TextOutputDeviceData>(), callbackCancellation.Token),
                 Times.Once);
             Assert.AreEqual(nameof(ProxyOutputDevice), proxy.Uid);
         }

@@ -13,7 +13,14 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 {
     private readonly ServerModePerCallOutputDevice? _serverModeOutputDevice;
     private readonly IStopPoliciesService? _policiesService;
+#if NET9_0_OR_GREATER
+    private readonly Lock _outputPolicyLock = new();
+#else
+    private readonly object _outputPolicyLock = new();
+#endif
     private int _maxFailedTestsCallbackRegistered;
+    private bool _connectionClosed;
+    private bool _deferredRpcOnlyOutput;
 
     public ProxyOutputDevice(IPlatformOutputDevice originalOutputDevice, ServerModePerCallOutputDevice? serverModeOutputDevice, IStopPoliciesService? policiesService)
     {
@@ -34,37 +41,77 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    internal bool ConfigureRpcOnlyOutput(bool? requested)
+    internal bool ConfigureRpcOnlyOutput(bool? requested, bool deferSuppression = false)
     {
-        bool applied = requested == true
-            && _serverModeOutputDevice is not null
-            && !OperatingSystem.IsBrowser()
-            && OriginalOutputDevice is TerminalOutputDevice { SupportsRpcOnlyOutput: true };
-        if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+        lock (_outputPolicyLock)
         {
-            terminal.SuppressConsoleOutput = applied;
-        }
+            bool applied = !_connectionClosed && requested == true
+                && _serverModeOutputDevice is not null
+                && !OperatingSystem.IsBrowser()
+                && OriginalOutputDevice is TerminalOutputDevice { SupportsRpcOnlyOutput: true };
+            if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+            {
+                _deferredRpcOnlyOutput = applied && deferSuppression;
+                terminal.SuppressConsoleOutput = applied && !deferSuppression;
+            }
 
-        return applied;
+            return applied;
+        }
+    }
+
+    internal void EndConnection()
+    {
+        lock (_outputPolicyLock)
+        {
+            _connectionClosed = true;
+            if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+            {
+                terminal.SuppressConsoleOutput = false;
+            }
+        }
     }
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
+        bool suppressed = false;
+        if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+        {
+            suppressed = await terminal.DisplayWithSuppressionAsync(producer, data, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await OriginalOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
+        }
 
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayAsync(producer, data, cancellationToken).ConfigureAwait(false);
+            bool forwarded = await _serverModeOutputDevice.ForwardAsync(producer, data, cancellationToken).ConfigureAwait(false);
+            if (suppressed && !forwarded && !OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice fallbackTerminal)
+            {
+                await fallbackTerminal.RenderAsync(producer, data, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
     internal async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
-        await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+        bool suppressed = false;
+        if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+        {
+            suppressed = await terminal.DisplayBannerWithSuppressionAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await OriginalOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+        }
 
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.DisplayBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+            bool forwarded = await _serverModeOutputDevice.ForwardBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+            if (suppressed && !forwarded && !OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice fallbackTerminal)
+            {
+                await fallbackTerminal.RenderBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
@@ -92,7 +139,20 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
     {
         if (_serverModeOutputDevice is not null)
         {
-            await _serverModeOutputDevice.InitializeAsync(serverTestHost).ConfigureAwait(false);
+            // InitializeAsync attaches synchronously before draining output already shown locally.
+            Task initialization = _serverModeOutputDevice.InitializeAsync(serverTestHost);
+            lock (_outputPolicyLock)
+            {
+                if (_deferredRpcOnlyOutput && !_connectionClosed
+                    && !OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
+                {
+                    terminal.SuppressConsoleOutput = true;
+                }
+
+                _deferredRpcOnlyOutput = false;
+            }
+
+            await initialization.ConfigureAwait(false);
         }
     }
 
@@ -110,11 +170,14 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
             && Interlocked.Exchange(ref _maxFailedTestsCallbackRegistered, 1) == 0)
         {
             await _policiesService.RegisterOnMaxFailedTestsCallbackAsync(
-                async (maxFailedTests, _) => await DisplayAsync(
-                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
+                async (maxFailedTests, callbackCancellationToken) => await DisplayAsync(
+                    this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ReachedMaxFailedTestsMessage, maxFailedTests)), callbackCancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
     }
 
     public void Dispose()
-        => _serverModeOutputDevice?.Dispose();
+    {
+        EndConnection();
+        _serverModeOutputDevice?.Dispose();
+    }
 }

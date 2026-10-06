@@ -28,6 +28,7 @@ internal sealed partial class ServerTestHost
                 // because we're no more able to process things.
                 if (message is null)
                 {
+                    EndOutputConnection();
                     return;
                 }
 
@@ -94,6 +95,11 @@ internal sealed partial class ServerTestHost
             catch (OperationCanceledException ex) when (ex.CancellationToken == messageHandlerStopPlusGlobalToken)
             {
                 // We're shutting down the reader
+            }
+            catch
+            {
+                EndOutputConnection();
+                throw;
             }
         }
 

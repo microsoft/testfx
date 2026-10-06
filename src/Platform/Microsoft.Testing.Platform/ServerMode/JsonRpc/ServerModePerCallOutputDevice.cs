@@ -68,11 +68,15 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
     }
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        => await ForwardAsync(producer, data, cancellationToken).ConfigureAwait(false);
+
+    internal async Task<bool> ForwardAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
+        bool forwarded = true;
         switch (data)
         {
             case SessionMessageOutputDeviceData sessionMessageData:
-                await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                forwarded = await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ProgressMessageOutputDeviceData progressMessageData:
@@ -88,7 +92,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
                         || existingMessage != progressMessageData.Message)
                     {
                         _progressMessages[identity] = progressMessageData.Message;
-                        await LogAsync(LogLevel.Information, progressMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                        forwarded = await LogAsync(LogLevel.Information, progressMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -99,36 +103,36 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
                 break;
 
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
-                await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
+                forwarded = await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
                 break;
 
             case TextOutputDeviceData textOutputDeviceData:
-                await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null, cancellationToken).ConfigureAwait(false);
+                forwarded = await LogAsync(LogLevel.Information, textOutputDeviceData.Text, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case WarningMessageOutputDeviceData warningData:
-                await LogAsync(LogLevel.Warning, warningData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                forwarded = await LogAsync(LogLevel.Warning, warningData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ErrorMessageOutputDeviceData errorData:
-                await LogAsync(LogLevel.Error, errorData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                forwarded = await LogAsync(LogLevel.Error, errorData.Message, padding: null, cancellationToken).ConfigureAwait(false);
                 break;
 
             case ExceptionOutputDeviceData exceptionOutputDeviceData:
-                await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null, cancellationToken).ConfigureAwait(false);
+                forwarded = await LogAsync(LogLevel.Error, exceptionOutputDeviceData.Exception.ToString(), padding: null, cancellationToken).ConfigureAwait(false);
                 break;
         }
+
+        return forwarded;
     }
 
     private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
-    {
-        if (bannerMessage is not null)
-        {
-            await LogAsync(LogLevel.Debug, bannerMessage, padding: null, cancellationToken).ConfigureAwait(false);
-        }
-    }
+        => await ForwardBannerAsync(bannerMessage, cancellationToken).ConfigureAwait(false);
+
+    internal async Task<bool> ForwardBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
+        => bannerMessage is null || await LogAsync(LogLevel.Debug, bannerMessage, padding: null, cancellationToken).ConfigureAwait(false);
 
     public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
@@ -147,10 +151,10 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
     public void Dispose()
         => _progressMessagesSemaphore.Dispose();
 
-    private async Task LogAsync(LogLevel logLevel, string message, int? padding, CancellationToken cancellationToken)
+    private async Task<bool> LogAsync(LogLevel logLevel, string message, int? padding, CancellationToken cancellationToken)
         => await LogAsync(GetServerLogMessage(logLevel, message, padding), cancellationToken).ConfigureAwait(false);
 
-    private async Task LogAsync(ServerLogMessage message, CancellationToken cancellationToken)
+    private async Task<bool> LogAsync(ServerLogMessage message, CancellationToken cancellationToken)
     {
         ServerTestHost? serverTestHost;
         lock (_messages)
@@ -159,11 +163,11 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
             if (serverTestHost is null)
             {
                 _messages.Enqueue(message);
-                return;
+                return true;
             }
         }
 
-        await serverTestHost.PushDataAsync(message, cancellationToken).ConfigureAwait(false);
+        return await serverTestHost.TryPushLogAsync(message, cancellationToken).ConfigureAwait(false);
     }
 
     private static ServerLogMessage GetServerLogMessage(LogLevel logLevel, string message, int? padding)
