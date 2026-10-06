@@ -161,7 +161,9 @@
          NuGet package here pins the older flowed-in version and produces an NU1605 downgrade against the locally
          built project (see https://github.com/microsoft/testfx/pull/9259). -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition="'$(UseMSTestFromSource)' == 'true'" IsTestInfrastructure="true" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
+    <!-- AffectedTests requires the matching preview CodeCoverage build. Keep this test-only override separate
+         from the stable CodeCoverage version shipped by MSTest packages. -->
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" VersionOverride="$(MicrosoftTestingExtensionsAffectedTestsVersion)" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Import the capabilities for the Microsoft.Testing.Platform -->

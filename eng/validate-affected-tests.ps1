@@ -87,9 +87,9 @@ $affectedTestsEnabled = $affectedTestsCall.Groups["enabled"].Value -eq "true"
 $versionsProps = Get-Content -LiteralPath $versionsPropsPath -Raw
 $affectedTestsPackageVersionMatch = [regex]::Match(
     $versionsProps,
-    '<MicrosoftTestingExtensionsCodeCoverageVersion>(?<version>[^<]+)</MicrosoftTestingExtensionsCodeCoverageVersion>')
+    '<MicrosoftTestingExtensionsAffectedTestsVersion>(?<version>[^<]+)</MicrosoftTestingExtensionsAffectedTestsVersion>')
 if (-not $affectedTestsPackageVersionMatch.Success) {
-    throw "eng/Versions.props must define MicrosoftTestingExtensionsCodeCoverageVersion."
+    throw "eng/Versions.props must define MicrosoftTestingExtensionsAffectedTestsVersion."
 }
 
 $affectedTestsPackageVersion = $affectedTestsPackageVersionMatch.Groups["version"].Value
@@ -136,12 +136,12 @@ $directoryPackagesPath = Join-Path $repoRoot "Directory.Packages.props"
 $directoryPackages = Get-Content -LiteralPath $directoryPackagesPath -Raw
 Assert-Containment `
     -Text $directoryPackages `
-    -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
-    -Message "Directory.Packages.props must align Microsoft.Testing.Extensions.AffectedTests with the CodeCoverage dependency."
+    -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests" Version="$(MicrosoftTestingExtensionsAffectedTestsVersion)" />' `
+    -Message "Directory.Packages.props must use the affected-tests dependency version."
 Assert-Containment `
     -Text $directoryPackages `
-    -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />' `
-    -Message "Directory.Packages.props must align the Azure DevOps affected-tests provider with the CodeCoverage dependency."
+    -Substrings '<PackageVersion Include="Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps" Version="$(MicrosoftTestingExtensionsAffectedTestsVersion)" />' `
+    -Message "Directory.Packages.props must align the Azure DevOps provider with the affected-tests dependency."
 
 $directoryBuildTargetsPath = Join-Path $repoRoot "Directory.Build.targets"
 $directoryBuildTargets = Get-Content -LiteralPath $directoryBuildTargetsPath -Raw
@@ -172,6 +172,13 @@ Assert-Containment `
 ) `
     -ItemMessageFormatter { param($substring) "Affected-test package references must include projects enabled through $substring." } `
     -SubstringFormatter { param($substring) "'`$($substring)' == 'true'" }
+
+$testDirectoryBuildTargetsPath = Join-Path $repoRoot "test/Directory.Build.targets"
+$testDirectoryBuildTargets = Get-Content -LiteralPath $testDirectoryBuildTargetsPath -Raw
+Assert-Containment `
+    -Text $testDirectoryBuildTargets `
+    -Substrings '<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" VersionOverride="$(MicrosoftTestingExtensionsAffectedTestsVersion)"' `
+    -Message "Affected-test applications must use the matching preview CodeCoverage dependency without changing the shipping version."
 
 $manualEntryPoints = @(
     Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File
