@@ -72,7 +72,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private TestProcessRole? _processRole;
     private volatile bool _suppressConsoleOutput;
 
-    internal bool SupportsRpcOnlyOutput => _terminalTestReporter is not null
+    internal bool SupportsShowMessage => _terminalTestReporter is not null
         && _isServerMode
         && !_isListTestsJson
         && !_isAzureDevOpsEnvironment
@@ -154,6 +154,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    internal Task LogRenderFailureAsync(Exception exception)
+        => _logger?.LogErrorAsync("Output-device rendering failed during cancellation.", exception) ?? Task.CompletedTask;
 
     public void Dispose()
         => _terminalTestReporter?.Dispose();

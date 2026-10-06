@@ -44,7 +44,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         using var proxy = new ProxyOutputDevice(originalDevice, hasServerDevice ? serverDevice : null, policies.Object);
         await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
         Assert.HasCount(1, callbacks);
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(requested));
+        Assert.IsFalse(proxy.ConfigureShowMessage(requested));
 
         foreach (Func<int, CancellationToken, Task> callback in callbacks)
         {
@@ -61,7 +61,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             Assert.AreEqual(LogLevel.Information, Assert.ContainsSingle(messages).Level);
         }
 
-        proxy.ConfigureRpcOnlyOutput(false);
+        proxy.ConfigureShowMessage(false);
         foreach (Func<int, CancellationToken, Task> callback in callbacks)
         {
             await callback(42, CancellationToken.None);

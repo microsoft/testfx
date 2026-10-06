@@ -46,7 +46,7 @@ Here's the current list of APIs that supported by the client.
   - [testing/testUpdates/tests](#discovery-of-tests) - Notifies client about test updates (test cases and test results)
   - [testing/testUpdates/attachments](#execution-of-tests) - Notifies client about additional attachments (trx/coverage)
 - Client notifications updates
-  - [client/log](#logging-of-messages) - Notifies a client to logs a message to the output window
+  - [client/log and client/showMessage](#logging-of-messages) - Notifies a client of output-device messages
 - Miscellaneous requests
   - [telemetry/update](#telemetry) - Sends telemetry data to the client
   - [exit](#exit) - Notifies the server to stop the server process
@@ -251,9 +251,9 @@ interface InitializeParams {
         // As such, we put all of them under a single testing namespace.
         // This reduces collisions with other LSP capabilities.
         testing: {
-            // Opt in to RPC-only output-device routing, with a handler ready before initialize.
+            // Opt in to client/showMessage output-device routing, with a handler ready before initialize.
             // The server must acknowledge true before the client relies on this behavior.
-            rpcOnlyOutput?: boolean | null,
+            showMessage?: boolean | null,
 
             // Reserved for future debugger callbacks. Protocol 1.0 accepts this field
             // for compatibility but does not send debugger requests.
@@ -296,7 +296,7 @@ interface InitializeResponse {
         testing: {
             // Applied acknowledgement, not just an advertisement of support.
             // Missing/null is not an acknowledgement; false means legacy routing remains.
-            rpcOnlyOutput?: boolean | null,
+            showMessage?: boolean | null,
 
             // If true, the server supports test discovery.
             supportsDiscovery: boolean;
@@ -331,8 +331,8 @@ interface InitializeResponse {
 }
 ```
 
-For `capabilities.testing.rpcOnlyOutput` semantics, see
-[RPC-only output](#rpc-only-output) under `client/log`.
+For `capabilities.testing.showMessage` semantics, see
+[Negotiated output](#negotiated-clientshowmessage-output) under the output notifications.
 
 #### Versioning capabilities
 
@@ -852,7 +852,7 @@ Messages are logged to the output window.
 
 Notification:
 
-- method: `client/log`
+- method: `client/log` (legacy) or `client/showMessage` (negotiated)
 - params: `LogMessageParams` defined as follows:
 
 ```typescript
@@ -871,16 +871,24 @@ type TestingPlatformLogLevel =
     | 'None';
 ```
 
-#### RPC-only output
+#### Negotiated `client/showMessage` output
 
-`client/log` already carries output-device messages, not `ILogger` diagnostics.
+Both methods carry output-device messages, not `ILogger` diagnostics, with the
+identical `{level, message}` payload above. This is an MTP protocol, not LSP's
+`window/showMessage` or `window/logMessage` wire format. It does not request a popup.
 By default, these messages also render on the console. RPC forwarding starts at
 discovery/run, allowing legacy clients to subscribe after awaiting `initialize`.
 
-To avoid duplicate rendering, request `capabilities.testing.rpcOnlyOutput: true`.
+To select `client/showMessage` and avoid duplicate console rendering, request
+`capabilities.testing.showMessage: true`.
 Only the same nested field set to `true` in the response acknowledges that the
 policy was applied. Missing, null, false, or an ignored top-level field does not.
 Without a true acknowledgement, retain existing output handling and timing.
+Absent, null, or false requests MUST use legacy `client/log`; only requested and
+acknowledged true selects `client/showMessage`. The server MUST send the
+acknowledgement before the first new-method notification and MUST NOT dual-send.
+Clients accept both methods through the same output handler so older servers
+remain supported. An absent or false acknowledgement MUST preserve legacy log handling.
 
 Opted-in clients must have their output handler ready **before** sending
 `initialize`. After its successful response, an acknowledging server forwards
@@ -896,16 +904,21 @@ is rendered on the console without repeating its diagnostic-file mirror. A parti
 write may have reached the client, so this fallback can duplicate that message;
 previously successful output and startup output already shown locally are not replayed.
 An isolated canceled operation or serialization failure does not end the connection's policy.
+Operation cancellation is honored before a frame starts; a committed frame is
+completed independently of that token. Shutdown or a 30-second write deadline
+closes the transport instead of abandoning an in-flight write.
 
 Acknowledged user-visible messages must remain visible regardless of the client's
 diagnostic verbosity. Message levels are unchanged; Trace/Debug lifecycle notices
 retain diagnostic semantics. The server retains its existing diagnostic-file
-mirror. `client/log` remains plain text: colors and in-place progress are not preserved.
+mirror. Both methods remain plain text: colors and in-place progress are not preserved.
 
 Unsupported custom renderers, browser/WASI renderers, and machine-output
 configurations decline the request. This includes Azure DevOps agents even when
 automatic annotations are disabled, preserving extension `##vso` commands.
 Normal console execution and the native `dotnet test` pipe are unchanged.
+Passive attachment nodes do not provide output-device forwarding and explicitly
+decline this capability.
 
 Direct application writes to stdout/stderr and output already written before
 initialization are outside this policy. Always drain both streams; use `--no-banner`

@@ -74,7 +74,7 @@ public sealed class ProxyOutputDeviceTests
         if (isPipeProtocol)
         {
             Assert.IsInstanceOfType<DotnetTestPassthroughOutputDevice>(proxy.OriginalOutputDevice);
-            Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+            Assert.IsFalse(proxy.ConfigureShowMessage(true));
         }
         else
         {
@@ -122,7 +122,7 @@ public sealed class ProxyOutputDeviceTests
             new ExceptionOutputDeviceData(new InvalidOperationException("exception")),
         ];
 
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(requested));
+        Assert.IsFalse(proxy.ConfigureShowMessage(requested));
         foreach (IOutputDeviceData message in messages)
         {
             await proxy.DisplayAsync(producer, message, CancellationToken.None);
@@ -148,7 +148,7 @@ public sealed class ProxyOutputDeviceTests
         Mock<IPlatformOutputDevice> originalDevice = new();
         using var serverModeDevice = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(originalDevice.Object, serverModeDevice, policiesService: null);
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(requested));
+        Assert.IsFalse(proxy.ConfigureShowMessage(requested));
 
         await proxy.DisplayBannerAsync("banner", CancellationToken.None);
         await proxy.DisplayBeforeSessionStartAsync(CancellationToken.None);
@@ -161,29 +161,29 @@ public sealed class ProxyOutputDeviceTests
     }
 
     [TestMethod]
-    public async Task ConfigureRpcOnlyOutput_WithoutJsonRpcDevice_DoesNotSilenceOriginal()
+    public async Task ConfigureShowMessage_WithoutJsonRpcDevice_DoesNotSilenceOriginal()
     {
         Mock<IPlatformOutputDevice> originalDevice = new();
         using var proxy = new ProxyOutputDevice(originalDevice.Object, null, policiesService: null);
         IOutputDeviceDataProducer producer = Mock.Of<IOutputDeviceDataProducer>();
         TextOutputDeviceData message = new("CLI or pipe output");
 
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
         await proxy.DisplayAsync(producer, message, CancellationToken.None);
 
         originalDevice.Verify(value => value.DisplayAsync(producer, message, CancellationToken.None), Times.Once);
     }
 
     [TestMethod]
-    public async Task ConfigureRpcOnlyOutput_ResetRestoresOriginalRoute()
+    public async Task ConfigureShowMessage_ResetRestoresOriginalRoute()
     {
         Mock<IPlatformOutputDevice> originalDevice = new();
         using var serverModeDevice = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(originalDevice.Object, serverModeDevice, policiesService: null);
         IOutputDeviceDataProducer producer = Mock.Of<IOutputDeviceDataProducer>();
         TextOutputDeviceData message = new("startup failure");
-        proxy.ConfigureRpcOnlyOutput(true);
-        proxy.ConfigureRpcOnlyOutput(false);
+        proxy.ConfigureShowMessage(true);
+        proxy.ConfigureShowMessage(false);
 
         await proxy.DisplayAsync(producer, message, CancellationToken.None);
 

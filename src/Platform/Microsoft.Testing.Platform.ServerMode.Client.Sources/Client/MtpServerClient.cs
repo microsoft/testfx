@@ -201,16 +201,16 @@ internal sealed class MtpServerClient : IMtpServerClient
     public async Task<MtpServerCapabilities> InitializeAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (_options.RpcOnlyOutput == true && LogReceived is null)
+        if (_options.ShowMessage == true && LogReceived is null)
         {
-            throw new InvalidOperationException("Subscribe to LogReceived before initializing with RpcOnlyOutput enabled.");
+            throw new InvalidOperationException("Subscribe to LogReceived before initializing with ShowMessage enabled.");
         }
 
         EnsureStarted();
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { RpcOnlyOutput = _options.RpcOnlyOutput })
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { ShowMessage = _options.ShowMessage })
         {
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };
@@ -322,7 +322,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
-        bool? rpcOnlyOutput = null;
+        bool? showMessage = null;
         string? protocolVersion = null;
         if (result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj))
         {
@@ -345,12 +345,12 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport = AsBool(testing, JsonRpcStrings.VSTestProviderSupport);
             supportsAttachments = AsBool(testing, JsonRpcStrings.AttachmentsSupport);
             multiConnectionProvider = AsBool(testing, JsonRpcStrings.MultiConnectionProvider);
-            rpcOnlyOutput = testing.TryGetValue(JsonRpcStrings.RpcOnlyOutput, out object? rpcOnlyOutputValue)
-                ? rpcOnlyOutputValue switch
+            showMessage = testing.TryGetValue(JsonRpcStrings.ShowMessage, out object? showMessageValue)
+                ? showMessageValue switch
                 {
                     null => null,
                     bool value => value,
-                    _ => throw new MtpServerClientException($"Expected '{JsonRpcStrings.RpcOnlyOutput}' to be a boolean."),
+                    _ => throw new MtpServerClientException($"Expected '{JsonRpcStrings.ShowMessage}' to be a boolean."),
                 }
                 : null;
         }
@@ -366,7 +366,7 @@ internal sealed class MtpServerClient : IMtpServerClient
             multiConnectionProvider,
             protocolVersion)
         {
-            RpcOnlyOutput = rpcOnlyOutput,
+            ShowMessage = showMessage,
         };
     }
 
@@ -470,6 +470,7 @@ internal sealed class MtpServerClient : IMtpServerClient
                 break;
 
             case JsonRpcMethods.ClientLog:
+            case JsonRpcMethods.ClientShowMessage:
                 RaiseLog(notification.Params as IDictionary<string, object?>);
                 break;
 

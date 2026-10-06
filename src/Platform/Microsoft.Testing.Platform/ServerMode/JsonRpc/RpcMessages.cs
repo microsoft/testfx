@@ -110,7 +110,7 @@ internal sealed record ClientInfo(string Name, string Version);
 
 internal sealed record ClientCapabilities(bool DebuggerProvider, bool? IsStateful)
 {
-    public bool? RpcOnlyOutput { get; init; }
+    public bool? ShowMessage { get; init; }
 }
 
 internal sealed record ServerInfo(string Name, string Version);
@@ -124,7 +124,7 @@ internal sealed record ServerTestingCapabilities(
     bool SupportsAttachments,
     bool MultiConnectionProvider)
 {
-    public bool? RpcOnlyOutput { get; init; }
+    public bool? ShowMessage { get; init; }
 
     // This capability describes JSON-RPC wire forwarding, not in-process coverage-message consumption.
     // Keep it false until server mode forwards the first-class messages defined by RFC 019.

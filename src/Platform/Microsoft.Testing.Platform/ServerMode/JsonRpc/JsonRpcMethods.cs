@@ -12,6 +12,7 @@ internal static class JsonRpcMethods
     public const string TestingTestUpdatesTests = "testing/testUpdates/tests";
     public const string TelemetryUpdate = "telemetry/update";
     public const string ClientLog = "client/log";
+    public const string ClientShowMessage = "client/showMessage";
     public const string Exit = "exit";
     public const string CancelRequest = "$/cancelRequest";
     public const string TestingTestUpdatesAttachments = "testing/testUpdates/attachments";
@@ -71,7 +72,7 @@ internal static class JsonRpcStrings
     public const string Testing = "testing";
     public const string DebuggerProvider = "debuggerProvider";
     public const string IsStateful = "isStateful";
-    public const string RpcOnlyOutput = "rpcOnlyOutput";
+    public const string ShowMessage = "showMessage";
     public const string SupportsDiscovery = "supportsDiscovery";
     public const string MultiRequestSupport = "experimental_multiRequestSupport";
     public const string VSTestProviderSupport = "vstestProvider";

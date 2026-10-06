@@ -85,7 +85,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
 
         _logger = ServiceProvider.GetLoggerFactory().CreateLogger<ServerTestHost>();
         _messageHandlerStopPlusGlobalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken, _stopMessageHandler.Token);
-        _outputConnectionCancellationRegistration = _messageHandlerStopPlusGlobalTokenSource.Token.Register(EndOutputConnection);
+        _outputConnectionCancellationRegistration = _messageHandlerStopPlusGlobalTokenSource.Token.Register(() =>
+        {
+            EndOutputConnection();
+            (_messageHandler as TcpMessageHandler)?.CloseConnection();
+        });
 
         // If we don't want to crash on unhandled exceptions, handle them differently
         if (!ServiceProvider.GetUnhandledExceptionsPolicy().FastFailOnFailure)
@@ -159,6 +163,15 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         try
         {
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(cancellationToken).ConfigureAwait(false);
+            if (_messageHandler is TcpMessageHandler tcpMessageHandler)
+            {
+                tcpMessageHandler.ConnectionClosedCallback = EndOutputConnection;
+            }
+
+            if (_messageHandlerStopPlusGlobalTokenSource.IsCancellationRequested)
+            {
+                (_messageHandler as TcpMessageHandler)?.CloseConnection();
+            }
 
             await HandleMessagesAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -183,6 +196,11 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
         finally
         {
             EndOutputConnection();
+            if (_messageHandler is TcpMessageHandler tcpMessageHandler)
+            {
+                tcpMessageHandler.ConnectionClosedCallback = null;
+            }
+
             (_messageHandler as IDisposable)?.Dispose();
 
             // Cleanup all services but special one because in the per-call mode we needed to keep them alive for reuse
@@ -198,6 +216,7 @@ internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDis
     public void Dispose()
     {
         EndOutputConnection();
+        (_messageHandler as TcpMessageHandler)?.CloseConnection();
         _outputConnectionCancellationRegistration.Dispose();
         // Note: The lifetime of the _reader/_writer should be currently handled by the RunAsync()
         // We could consider creating a stateful engine that has the lifetime == server connection UP.

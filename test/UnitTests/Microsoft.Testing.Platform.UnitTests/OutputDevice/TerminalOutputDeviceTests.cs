@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Net.Sockets;
 using System.Reflection;
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -56,7 +57,7 @@ public sealed class TerminalOutputDeviceTests
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         await terminal.InitializeAsync();
         await proxy.InitializeAsync(host);
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
         Task reader = InvokeMessageLoopAsync(host);
         IOutputDeviceData message = kind switch
         {
@@ -73,7 +74,7 @@ public sealed class TerminalOutputDeviceTests
         read.SetResult(null);
         await reader;
         Assert.IsFalse(terminal.SuppressConsoleOutput);
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
         releaseWrite.SetResult(true);
         await display;
         Assert.Contains("first failed message", output.ToString());
@@ -107,7 +108,7 @@ public sealed class TerminalOutputDeviceTests
         await terminal.InitializeAsync();
         await proxy.DisplayAsync(Producer, new TextOutputDeviceData("startup already shown"), CancellationToken.None);
         await proxy.InitializeAsync(host);
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
         Task reader = InvokeMessageLoopAsync(host);
         await proxy.DisplayAsync(Producer, new TextOutputDeviceData("successful rpc output"), CancellationToken.None);
         IOutputDeviceData failedMessage = kind switch
@@ -143,7 +144,7 @@ public sealed class TerminalOutputDeviceTests
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         await terminal.InitializeAsync();
         await proxy.InitializeAsync(host);
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
         await proxy.DisplayBannerAsync("server banner", CancellationToken.None);
 
         Assert.AreEqual(1, CountOccurrences(output.ToString(), "diagnostics.log"));
@@ -169,7 +170,7 @@ public sealed class TerminalOutputDeviceTests
         handler.Setup(value => value.ReadAsync(It.IsAny<CancellationToken>())).ReturnsAsync((RpcMessage?)null);
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, shutdown.Token);
         await terminal.InitializeAsync();
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
 
         switch (reason)
         {
@@ -190,10 +191,10 @@ public sealed class TerminalOutputDeviceTests
 
         proxy.EndConnection();
         await Task.WhenAll(
-            Task.Run(() => proxy.ConfigureRpcOnlyOutput(true), CancellationToken.None),
+            Task.Run(() => proxy.ConfigureShowMessage(true), CancellationToken.None),
             Task.Run(proxy.EndConnection, CancellationToken.None));
         Assert.IsFalse(terminal.SuppressConsoleOutput);
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
     }
 
     [TestMethod]
@@ -209,14 +210,14 @@ public sealed class TerminalOutputDeviceTests
             .ThrowsAsync(new IOException("Write failed"));
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         await terminal.InitializeAsync();
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
         MethodInfo method = typeof(ServerTestHost).GetMethod(errorResponse ? "SendErrorAsync" : "SendResponseAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
         object?[] arguments = errorResponse
             ? [1, ErrorCodes.InternalError, "error", null, CancellationToken.None, null]
             : [1, new object(), CancellationToken.None, null];
         await Assert.ThrowsExactlyAsync<IOException>(() => (Task)method.Invoke(host, arguments)!);
         Assert.IsFalse(terminal.SuppressConsoleOutput);
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
     }
 
     [TestMethod]
@@ -243,7 +244,7 @@ public sealed class TerminalOutputDeviceTests
             Assert.IsTrue(releaseNegotiation.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout, CancellationToken.None));
             return null;
         });
-        Task<bool> negotiation = Task.Run(() => proxy.ConfigureRpcOnlyOutput(true), CancellationToken.None);
+        Task<bool> negotiation = Task.Run(() => proxy.ConfigureShowMessage(true), CancellationToken.None);
         try
         {
             await negotiationEntered.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, CancellationToken.None);
@@ -264,7 +265,7 @@ public sealed class TerminalOutputDeviceTests
         }
 
         Assert.IsFalse(terminal.SuppressConsoleOutput);
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
     }
 
     [TestMethod]
@@ -279,14 +280,14 @@ public sealed class TerminalOutputDeviceTests
         transport.Setup(value => value.Dispose()).Callback(() =>
         {
             Assert.IsFalse(terminal.SuppressConsoleOutput);
-            Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+            Assert.IsFalse(proxy.ConfigureShowMessage(true));
         });
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         Mock<IDisposable> service = new();
         service.Setup(value => value.Dispose()).Callback(() => Assert.IsFalse(terminal.SuppressConsoleOutput));
         host.ServiceProvider.AddService(service.Object);
         await terminal.InitializeAsync();
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
         var run = (Task<int>)typeof(ServerTestHost).GetMethod("InternalRunAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(host, [CancellationToken.None, new List<object>()])!;
         Assert.AreEqual((int)ExitCode.TestSessionAborted, await run);
@@ -315,7 +316,7 @@ public sealed class TerminalOutputDeviceTests
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         await terminal.InitializeAsync();
         await proxy.InitializeAsync(host);
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
         await proxy.DisplayAsync(Producer, new TextOutputDeviceData("failed operation"), CancellationToken.None);
         Assert.Contains("failed operation", output.ToString());
         Assert.IsTrue(terminal.SuppressConsoleOutput);
@@ -329,7 +330,162 @@ public sealed class TerminalOutputDeviceTests
             .Invoke(host, [CancellationToken.None])!;
 
     [TestMethod]
-    public async Task CanceledOutputRequest_DoesNotResetPolicyOrWriteToTransport()
+    [DataRow(false, false, false)]
+    [DataRow(true, false, false)]
+    [DataRow(true, true, false)]
+    [DataRow(true, true, true)]
+    public async Task CanceledProgressSemaphore_RendersOnlySuppressedOutputAndPreservesCancellation(bool suppress, bool rendererFails, bool loggerFails)
+    {
+        StringBuilder output = new();
+        Mock<ILogger> logger = new();
+        logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+        InvalidOperationException renderFailure = new("Renderer failed");
+        if (loggerFails)
+        {
+            logger.Setup(value => value.LogAsync(LogLevel.Error, It.IsAny<string>(), renderFailure, It.IsAny<Func<string, Exception?, string>>()))
+                .ThrowsAsync(new IOException("Failure diagnostics failed"));
+        }
+
+        using TerminalOutputDevice terminal = CreateRecoveryTerminal(output, logger.Object, rendererFails ? renderFailure : null);
+        using var serverDevice = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(terminal, serverDevice, null);
+        await terminal.InitializeAsync();
+        Assert.AreEqual(suppress, proxy.ConfigureShowMessage(suppress));
+        var semaphore = (SemaphoreSlim)typeof(ServerModePerCallOutputDevice)
+            .GetField("_progressMessagesSemaphore", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(serverDevice)!;
+        await semaphore.WaitAsync(CancellationToken.None);
+        using CancellationTokenSource operation = new();
+        try
+        {
+            Task display = proxy.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("key", "cancelled progress"), operation.Token);
+            Assert.IsFalse(display.IsCompleted);
+            operation.Cancel();
+            OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(() => display);
+            Assert.AreEqual(operation.Token, exception.CancellationToken);
+            Assert.Contains(nameof(ServerModePerCallOutputDevice), exception.StackTrace!);
+            Assert.AreEqual(suppress, terminal.SuppressConsoleOutput);
+            logger.Verify(value => value.LogAsync(LogLevel.Debug, "cancelled progress", null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+            if (!rendererFails)
+            {
+                Assert.AreEqual(1, CountOccurrences(output.ToString(), "cancelled progress"));
+            }
+            else
+            {
+                Assert.AreSame(renderFailure, exception.Data["OutputDeviceRenderException"]);
+                logger.Verify(value => value.LogAsync(LogLevel.Error, "Output-device rendering failed during cancellation.", renderFailure, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+            }
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+
+        if (!rendererFails)
+        {
+            await proxy.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("key", "cancelled progress"), CancellationToken.None);
+            await proxy.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("key", "cancelled progress"), CancellationToken.None);
+            var messages = (ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
+                .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(serverDevice)!;
+            Assert.AreEqual("cancelled progress", Assert.ContainsSingle(messages).Message);
+            Assert.AreEqual(1, CountOccurrences(output.ToString(), "cancelled progress"));
+        }
+    }
+
+    [TestMethod]
+    public async Task FailedProgressForwarding_DoesNotCommitIdenticalValueUntilSuccessfulRetry()
+    {
+        StringBuilder output = new();
+        using TerminalOutputDevice terminal = CreateRecoveryTerminal(output);
+        using var serverDevice = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(terminal, serverDevice, null);
+        Mock<IMessageHandler> handler = new();
+        handler.SetupSequence(value => value.WriteRequestAsync(It.IsAny<RpcMessage>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Serialization failed"))
+            .Returns(Task.CompletedTask);
+        using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
+        await terminal.InitializeAsync();
+        await proxy.InitializeAsync(host);
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
+        ProgressMessageOutputDeviceData progress = new("key", "retry progress");
+
+        await proxy.DisplayAsync(Producer, progress, CancellationToken.None);
+        Assert.AreEqual(1, CountOccurrences(output.ToString(), "retry progress"));
+        Assert.IsTrue(terminal.SuppressConsoleOutput);
+        await proxy.DisplayAsync(Producer, progress, CancellationToken.None);
+        await proxy.DisplayAsync(Producer, progress, CancellationToken.None);
+        Assert.AreEqual(1, CountOccurrences(output.ToString(), "retry progress"));
+        handler.Verify(value => value.WriteRequestAsync(It.IsAny<RpcMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CommittedFrameShutdownOrDeadline_RestoresConsoleBeforeClosingTransportAndObservesWrite(bool deadline)
+    {
+        StringBuilder output = new();
+        Mock<ILogger> logger = new();
+        logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+        using TerminalOutputDevice terminal = CreateRecoveryTerminal(output, logger.Object);
+        using var serverDevice = new ServerModePerCallOutputDevice(null);
+        using var proxy = new ProxyOutputDevice(terminal, serverDevice, null);
+        using CancellationTokenSource shutdown = new();
+        using TcpClient client = new();
+        using WaitingReadStream input = new();
+        using TcpMessageHandlerTests.BlockingWriteStream transport = new(2);
+        using var handler = new TcpMessageHandler(client, input, transport, FormatterUtilities.CreateFormatter());
+        using ServerTestHost host = CreateRecoveryHost(proxy, handler, shutdown.Token);
+        bool? suppressedAtClose = null;
+        transport.BeforeDispose = () => suppressedAtClose ??= terminal.SuppressConsoleOutput;
+        await terminal.InitializeAsync();
+        await proxy.InitializeAsync(host);
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
+        var run = (Task<int>)typeof(ServerTestHost).GetMethod("InternalRunAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(host, [shutdown.Token, new List<object>()])!;
+        await input.ReadStarted.Task.TimeoutAfterAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+        Task display = proxy.DisplayAsync(Producer, new TextOutputDeviceData("stalled frame fallback"), CancellationToken.None);
+        await transport.WriteStarted.Task.TimeoutAfterAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+        Assert.IsTrue(terminal.SuppressConsoleOutput);
+
+        if (!deadline)
+        {
+            shutdown.Cancel();
+        }
+
+        await display.TimeoutAfterAsync(TimeSpan.FromSeconds(deadline ? 40 : 5), CancellationToken.None);
+        Assert.IsFalse(suppressedAtClose);
+        Assert.IsFalse(terminal.SuppressConsoleOutput);
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
+        Assert.AreEqual(1, CountOccurrences(output.ToString(), "stalled frame fallback"));
+        logger.Verify(value => value.LogAsync(LogLevel.Debug, "stalled frame fallback", null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+        shutdown.Cancel();
+        await run.TimeoutAfterAsync(TimeSpan.FromSeconds(5), CancellationToken.None);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, await run);
+    }
+
+    private sealed class WaitingReadStream : MemoryStream
+    {
+        public TaskCompletionSource<bool> ReadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => WaitForCancellationAsync(cancellationToken);
+
+#if NETCOREAPP
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            => new(WaitForCancellationAsync(cancellationToken));
+#endif
+
+        private async Task<int> WaitForCancellationAsync(CancellationToken cancellationToken)
+        {
+            ReadStarted.TrySetResult(true);
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            return 0;
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CanceledOutputRequest_DoesNotResetPolicyOrWriteToTransport(bool contended)
     {
         using TerminalOutputDevice terminal = CreateRecoveryTerminal(new StringBuilder());
         using var serverDevice = new ServerModePerCallOutputDevice(null);
@@ -339,9 +495,30 @@ public sealed class TerminalOutputDeviceTests
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         using CancellationTokenSource request = new();
         await terminal.InitializeAsync();
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true));
-        request.Cancel();
-        Assert.IsFalse(await host.TryPushLogAsync(new ServerLogMessage(LogLevel.Warning, "canceled request"), request.Token));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true));
+        var monitor = (IAsyncMonitor)typeof(ServerTestHost).GetField("_messageMonitor", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(host)!;
+        IDisposable? heldLock = contended ? await monitor.LockAsync(CancellationToken.None) : null;
+        try
+        {
+            if (!contended)
+            {
+                request.Cancel();
+            }
+
+            Task<bool> forwarding = host.TryPushLogAsync(new ServerLogMessage(LogLevel.Warning, "canceled request"), request.Token);
+            if (contended)
+            {
+                Assert.IsFalse(forwarding.IsCompleted);
+                request.Cancel();
+            }
+
+            Assert.IsFalse(await forwarding);
+        }
+        finally
+        {
+            heldLock?.Dispose();
+        }
+
         Assert.IsTrue(terminal.SuppressConsoleOutput);
         handler.Verify(value => value.WriteRequestAsync(It.IsAny<RpcMessage>(), It.IsAny<CancellationToken>()), Times.Never);
         Assert.IsTrue(await host.TryPushLogAsync(new ServerLogMessage(LogLevel.Information, "healthy request"), CancellationToken.None));
@@ -362,7 +539,7 @@ public sealed class TerminalOutputDeviceTests
             .Returns(failFlush ? Task.FromException(new IOException("Handover failed")) : Task.CompletedTask);
         using ServerTestHost host = CreateRecoveryHost(proxy, handler.Object, CancellationToken.None);
         await terminal.InitializeAsync();
-        Assert.IsTrue(proxy.ConfigureRpcOnlyOutput(true, deferSuppression: true));
+        Assert.IsTrue(proxy.ConfigureShowMessage(true, deferSuppression: true));
         Assert.IsFalse(terminal.SuppressConsoleOutput);
         await proxy.DisplayAsync(Producer, new WarningMessageOutputDeviceData("buffered output already shown"), CancellationToken.None);
         await proxy.InitializeAsync(host);
@@ -370,7 +547,7 @@ public sealed class TerminalOutputDeviceTests
         Assert.AreEqual(1, CountOccurrences(output.ToString(), "buffered output already shown"));
         if (failFlush)
         {
-            Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true, deferSuppression: true));
+            Assert.IsFalse(proxy.ConfigureShowMessage(true, deferSuppression: true));
             await proxy.InitializeAsync(host);
             Assert.IsFalse(terminal.SuppressConsoleOutput);
         }
@@ -400,12 +577,36 @@ public sealed class TerminalOutputDeviceTests
         return host;
     }
 
-    private static TerminalOutputDevice CreateRecoveryTerminal(StringBuilder output, ILogger? logger = null)
+    private static TerminalOutputDevice CreateRecoveryTerminal(StringBuilder output, ILogger? logger = null, Exception? renderFailure = null)
     {
         Mock<IConsole> console = new();
-        console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => output.Append(value));
-        console.Setup(value => value.Write(It.IsAny<StringBuilder>())).Callback<StringBuilder>(value => output.Append(value));
-        console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => output.AppendLine(value));
+        console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value =>
+        {
+            if (renderFailure is not null)
+            {
+                throw renderFailure;
+            }
+
+            output.Append(value);
+        });
+        console.Setup(value => value.Write(It.IsAny<StringBuilder>())).Callback<StringBuilder>(value =>
+        {
+            if (renderFailure is not null)
+            {
+                throw renderFailure;
+            }
+
+            output.Append(value);
+        });
+        console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value =>
+        {
+            if (renderFailure is not null)
+            {
+                throw renderFailure;
+            }
+
+            output.AppendLine(value);
+        });
         Mock<ILoggerFactory> loggerFactory = new();
         loggerFactory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(logger ?? new NopLogger());
         return CreateOutputDevice(
@@ -452,7 +653,7 @@ public sealed class TerminalOutputDeviceTests
         await originalDevice.InitializeAsync();
         await proxy.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
         Assert.HasCount(1, callbacks);
-        Assert.AreEqual(hasServerDevice && requested == true, proxy.ConfigureRpcOnlyOutput(requested));
+        Assert.AreEqual(hasServerDevice && requested == true, proxy.ConfigureShowMessage(requested));
 
         foreach (Func<int, CancellationToken, Task> callback in callbacks)
         {
@@ -469,7 +670,7 @@ public sealed class TerminalOutputDeviceTests
             Assert.AreEqual(LogLevel.Information, Assert.ContainsSingle(messages).Level);
         }
 
-        proxy.ConfigureRpcOnlyOutput(false);
+        proxy.ConfigureShowMessage(false);
         foreach (Func<int, CancellationToken, Task> callback in callbacks)
         {
             await callback(42, CancellationToken.None);
@@ -483,7 +684,7 @@ public sealed class TerminalOutputDeviceTests
     [DataRow(null)]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task RpcOnlyOutput_PreservesDebugMirrorExactlyOnceAndSuppressesOnlyConsole(bool? requested)
+    public async Task ShowMessage_PreservesDebugMirrorExactlyOnceAndSuppressesOnlyConsole(bool? requested)
     {
         StringBuilder output = new();
         var console = new Mock<IConsole>();
@@ -507,7 +708,7 @@ public sealed class TerminalOutputDeviceTests
         using var server = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(original, server, null);
         await original.InitializeAsync();
-        Assert.AreEqual(requested == true, proxy.ConfigureRpcOnlyOutput(requested));
+        Assert.AreEqual(requested == true, proxy.ConfigureShowMessage(requested));
         IOutputDeviceData[] messages =
         [
             new TextOutputDeviceData("plain μ"),
@@ -548,7 +749,7 @@ public sealed class TerminalOutputDeviceTests
     [DataRow(null, true)]
     [DataRow("off", false)]
     [DataRow("false", false)]
-    public async Task RpcOnlyOutput_AzureDevOpsAgentDeclinesEvenWithAutomaticAnnotationsDisabled(string? annotationSetting, bool automaticAnnotations)
+    public async Task ShowMessage_AzureDevOpsAgentDeclinesEvenWithAutomaticAnnotationsDisabled(string? annotationSetting, bool automaticAnnotations)
     {
         StringBuilder output = new();
         var console = new Mock<IConsole>();
@@ -569,7 +770,7 @@ public sealed class TerminalOutputDeviceTests
         using var server = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(original, server, null);
         await original.InitializeAsync();
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
 
         await proxy.DisplayAsync(Producer, new WarningMessageOutputDeviceData("warning"), CancellationToken.None);
         await proxy.DisplayAsync(Producer, new TextOutputDeviceData("##vso[results.publish type=JUnit;]report.xml"), CancellationToken.None);
@@ -582,7 +783,7 @@ public sealed class TerminalOutputDeviceTests
     [TestMethod]
     [DataRow(false, false)]
     [DataRow(true, true)]
-    public async Task RpcOnlyOutput_NormalConsoleAndMachineReadableDiscoveryDecline(bool serverMode, bool listTestsJson)
+    public async Task ShowMessage_NormalConsoleAndMachineReadableDiscoveryDecline(bool serverMode, bool listTestsJson)
     {
         Dictionary<string, string[]> options = [];
         if (serverMode)
@@ -599,7 +800,7 @@ public sealed class TerminalOutputDeviceTests
         using var server = new ServerModePerCallOutputDevice(null);
         using var proxy = new ProxyOutputDevice(original, server, null);
         await original.InitializeAsync();
-        Assert.IsFalse(proxy.ConfigureRpcOnlyOutput(true));
+        Assert.IsFalse(proxy.ConfigureShowMessage(true));
     }
 
     [TestMethod]

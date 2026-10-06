@@ -214,7 +214,7 @@ internal sealed partial class Json
                     DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider),
                     IsStateful: isStateful)
             {
-                RpcOnlyOutput = GetOptionalBoolean(testing, JsonRpcStrings.RpcOnlyOutput),
+                ShowMessage = GetOptionalBoolean(testing, JsonRpcStrings.ShowMessage),
             };
         });
 
@@ -257,7 +257,7 @@ internal sealed partial class Json
               SupportsAttachments: json.Bind<bool>(jsonElement, JsonRpcStrings.AttachmentsSupport),
               MultiConnectionProvider: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiConnectionProvider))
           {
-              RpcOnlyOutput = GetOptionalBoolean(jsonElement, JsonRpcStrings.RpcOnlyOutput),
+              ShowMessage = GetOptionalBoolean(jsonElement, JsonRpcStrings.ShowMessage),
           });
 
         deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>

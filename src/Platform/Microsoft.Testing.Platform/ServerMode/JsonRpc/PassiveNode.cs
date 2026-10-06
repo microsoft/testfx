@@ -10,11 +10,18 @@ namespace Microsoft.Testing.Platform.ServerMode;
 internal sealed class PassiveNode : IDisposable
 {
     private readonly IMessageHandlerFactory _messageHandlerFactory;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private readonly CancellationToken _applicationShutdownToken;
     private readonly IEnvironment _environment;
     private readonly ILogger<PassiveNode> _logger;
     private readonly IAsyncMonitor _messageMonitor;
+    private readonly CancellationTokenRegistration _shutdownRegistration;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lifecycleLock = new();
+#else
+    private readonly object _lifecycleLock = new();
+#endif
     private IMessageHandler? _messageHandler;
+    private bool _disposed;
 
     public PassiveNode(
         IMessageHandlerFactory messageHandlerFactory,
@@ -24,10 +31,11 @@ internal sealed class PassiveNode : IDisposable
         ILogger<PassiveNode> logger)
     {
         _messageHandlerFactory = messageHandlerFactory;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _applicationShutdownToken = testApplicationCancellationTokenSource.CancellationToken;
         _environment = environment;
         _messageMonitor = asyncMonitorFactory.Create();
         _logger = logger;
+        _shutdownRegistration = _applicationShutdownToken.Register(CloseTransport);
     }
 
     [MemberNotNull(nameof(_messageHandler))]
@@ -41,13 +49,58 @@ internal sealed class PassiveNode : IDisposable
 
     public async Task<bool> ConnectAsync()
     {
+        try
+        {
+            return await ConnectCoreAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex) when (_applicationShutdownToken.IsCancellationRequested
+            && ex is IOException or System.Net.Sockets.SocketException or ObjectDisposedException)
+        {
+            throw new OperationCanceledException(null, ex, _applicationShutdownToken);
+        }
+    }
+
+    private async Task<bool> ConnectCoreAsync()
+    {
+        CancellationToken shutdown = _applicationShutdownToken;
+        shutdown.ThrowIfCancellationRequested();
+        lock (_lifecycleLock)
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(PassiveNode));
+            }
+        }
+
         // Create message handler
         await _logger.LogDebugAsync("Create message handler").ConfigureAwait(false);
-        _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        IMessageHandler handler = await _messageHandlerFactory.CreateMessageHandlerAsync(shutdown).ConfigureAwait(false);
+        bool disposed;
+        lock (_lifecycleLock)
+        {
+            disposed = _disposed;
+            if (!disposed)
+            {
+                _messageHandler = handler;
+            }
+        }
+
+        if (disposed)
+        {
+            (handler as IDisposable)?.Dispose();
+            throw new ObjectDisposedException(nameof(PassiveNode));
+        }
+
+        // Cancellation may have run its callback before the factory published the handler.
+        if (shutdown.IsCancellationRequested)
+        {
+            (handler as TcpMessageHandler)?.CloseConnection();
+            shutdown.ThrowIfCancellationRequested();
+        }
 
         // Wait the initial message
         await _logger.LogDebugAsync("Wait the initial message").ConfigureAwait(false);
-        RpcMessage? message = await _messageHandler.ReadAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        RpcMessage? message = await handler.ReadAsync(shutdown).ConfigureAwait(false);
         if (message is null)
         {
             return false;
@@ -70,7 +123,7 @@ internal sealed class PassiveNode : IDisposable
                 requestMessage.Id,
                 ErrorCodes.ServerNotInitialized,
                 "The server must be initialized before this request can be processed.",
-                _testApplicationCancellationTokenSource.CancellationToken,
+                _applicationShutdownToken,
                 requestMessage.StringId).ConfigureAwait(false);
             return false;
         }
@@ -81,7 +134,7 @@ internal sealed class PassiveNode : IDisposable
                 requestMessage.Id,
                 ErrorCodes.InvalidParams,
                 "The initialize request params are invalid.",
-                _testApplicationCancellationTokenSource.CancellationToken,
+                _applicationShutdownToken,
                 requestMessage.StringId).ConfigureAwait(false);
             return false;
         }
@@ -93,7 +146,7 @@ internal sealed class PassiveNode : IDisposable
                 requestMessage.Id,
                 ErrorCodes.ProtocolVersionNotSupported,
                 $"None of the client's protocol versions are supported. Server versions: {string.Join(", ", JsonRpcProtocolVersions.Supported)}.",
-                _testApplicationCancellationTokenSource.CancellationToken,
+                _applicationShutdownToken,
                 requestMessage.StringId).ConfigureAwait(false);
             return false;
         }
@@ -112,7 +165,7 @@ internal sealed class PassiveNode : IDisposable
                                 MultiConnectionProvider: true)
                             {
                                 // Attachment-only peers do not own an RPC output device.
-                                RpcOnlyOutput = initializeRequest.Capabilities.RpcOnlyOutput.HasValue ? false : null,
+                                ShowMessage = initializeRequest.Capabilities.ShowMessage.HasValue ? false : null,
                             }))
         {
             ProtocolVersion = negotiatedProtocolVersion,
@@ -121,7 +174,7 @@ internal sealed class PassiveNode : IDisposable
         await SendResponseAsync(
             requestMessage.Id,
             responseObject,
-            _testApplicationCancellationTokenSource.CancellationToken,
+            _applicationShutdownToken,
             requestMessage.StringId).ConfigureAwait(false);
         return true;
     }
@@ -138,7 +191,7 @@ internal sealed class PassiveNode : IDisposable
         ErrorMessage error = new(reqId, errorCode, message, Data: null) { StringId = stringId };
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(error, cancellationToken).ConfigureAwait(false);
+            await WriteMessageAsync(error, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -153,7 +206,7 @@ internal sealed class PassiveNode : IDisposable
         ResponseMessage response = new(reqId, result) { StringId = stringId };
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(response, cancellationToken).ConfigureAwait(false);
+            await WriteMessageAsync(response, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -164,15 +217,52 @@ internal sealed class PassiveNode : IDisposable
         NotificationMessage notification = new(JsonRpcMethods.TestingTestUpdatesAttachments, testsAttachments);
         using (await _messageMonitor.LockAsync(cancellationToken).ConfigureAwait(false))
         {
-            await _messageHandler.WriteRequestAsync(notification, cancellationToken).ConfigureAwait(false);
+            await WriteMessageAsync(notification, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task WriteMessageAsync(RpcMessage message, CancellationToken cancellationToken)
+    {
+        AssertInitialized();
+        try
+        {
+            await _messageHandler.WriteRequestAsync(message, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (_applicationShutdownToken.IsCancellationRequested
+            && ex is IOException or System.Net.Sockets.SocketException or ObjectDisposedException)
+        {
+            // Closing a committed frame during application shutdown is cancellation, not a host failure.
+            throw new OperationCanceledException(null, ex, _applicationShutdownToken);
         }
     }
 
     public void Dispose()
     {
-        if (_messageHandler is IDisposable disposable)
+        IMessageHandler? handler;
+        lock (_lifecycleLock)
         {
-            disposable.Dispose();
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            handler = _messageHandler;
         }
+
+        // Wait for an in-flight shutdown callback without holding the lock it acquires.
+        _shutdownRegistration.Dispose();
+        (handler as IDisposable)?.Dispose();
+    }
+
+    private void CloseTransport()
+    {
+        IMessageHandler? handler;
+        lock (_lifecycleLock)
+        {
+            handler = _messageHandler;
+        }
+
+        (handler as TcpMessageHandler)?.CloseConnection();
     }
 }

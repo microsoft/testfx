@@ -89,9 +89,9 @@ internal sealed partial class Json
                 (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider),
                 (JsonRpcStrings.SupportsTestCoverageMessages, ServerTestingCapabilities.SupportsTestCoverageMessages)
             ];
-            if (capabilities.RpcOnlyOutput is { } rpcOnlyOutput)
+            if (capabilities.ShowMessage is { } showMessage)
             {
-                properties.Add((JsonRpcStrings.RpcOnlyOutput, rpcOnlyOutput));
+                properties.Add((JsonRpcStrings.ShowMessage, showMessage));
             }
 
             return properties.ToArray();

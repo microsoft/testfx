@@ -91,8 +91,11 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IDi
                     else if (!_progressMessages.TryGetValue(identity, out string? existingMessage)
                         || existingMessage != progressMessageData.Message)
                     {
-                        _progressMessages[identity] = progressMessageData.Message;
                         forwarded = await LogAsync(LogLevel.Information, progressMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                        if (forwarded)
+                        {
+                            _progressMessages[identity] = progressMessageData.Message;
+                        }
                     }
                 }
                 finally

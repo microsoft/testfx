@@ -48,7 +48,7 @@ internal sealed class MtpServerClientOptions
     public bool? IsStateful { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to request RPC-only output-device rendering (<c>capabilities.testing.rpcOnlyOutput</c>).
+    /// Gets or sets whether to request <c>client/showMessage</c> output-device rendering (<c>capabilities.testing.showMessage</c>).
     /// A null value omits the request. The client must check the server's applied acknowledgement.
     /// </summary>
     /// <remarks>
@@ -58,7 +58,7 @@ internal sealed class MtpServerClientOptions
     /// False or absent acknowledgement retains legacy output and discovery/run activation.
     /// Direct stdout/stderr writes are outside this policy; both streams must still be drained.
     /// </remarks>
-    public bool? RpcOnlyOutput { get; set; }
+    public bool? ShowMessage { get; set; }
 
     /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback

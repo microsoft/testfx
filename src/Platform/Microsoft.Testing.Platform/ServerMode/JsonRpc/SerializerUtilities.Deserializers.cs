@@ -154,7 +154,7 @@ internal static partial class SerializerUtilities
 
             return new ClientCapabilities(debuggerProvider, isStateful)
             {
-                RpcOnlyOutput = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.RpcOnlyOutput),
+                ShowMessage = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.ShowMessage),
             };
         });
 
@@ -201,7 +201,7 @@ internal static partial class SerializerUtilities
                 SupportsAttachments: attachmentsSupport,
                 MultiConnectionProvider: multiConnectionProvider)
             {
-                RpcOnlyOutput = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.RpcOnlyOutput),
+                ShowMessage = GetOptionalBoolean(testingCapabilities, JsonRpcStrings.ShowMessage),
             });
         });
 

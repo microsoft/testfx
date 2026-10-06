@@ -113,9 +113,9 @@ internal static partial class SerializerUtilities
                 [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
                 [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
             };
-            if (capabilities.RpcOnlyOutput is { } rpcOnlyOutput)
+            if (capabilities.ShowMessage is { } showMessage)
             {
-                properties[JsonRpcStrings.RpcOnlyOutput] = rpcOnlyOutput;
+                properties[JsonRpcStrings.ShowMessage] = showMessage;
             }
 
             return properties;

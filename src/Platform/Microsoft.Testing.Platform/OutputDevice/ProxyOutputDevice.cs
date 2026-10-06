@@ -20,7 +20,7 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 #endif
     private int _maxFailedTestsCallbackRegistered;
     private bool _connectionClosed;
-    private bool _deferredRpcOnlyOutput;
+    private bool _deferredShowMessage;
 
     public ProxyOutputDevice(IPlatformOutputDevice originalOutputDevice, ServerModePerCallOutputDevice? serverModeOutputDevice, IStopPoliciesService? policiesService)
     {
@@ -41,17 +41,17 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    internal bool ConfigureRpcOnlyOutput(bool? requested, bool deferSuppression = false)
+    internal bool ConfigureShowMessage(bool? requested, bool deferSuppression = false)
     {
         lock (_outputPolicyLock)
         {
             bool applied = !_connectionClosed && requested == true
                 && _serverModeOutputDevice is not null
                 && !OperatingSystem.IsBrowser()
-                && OriginalOutputDevice is TerminalOutputDevice { SupportsRpcOnlyOutput: true };
+                && OriginalOutputDevice is TerminalOutputDevice { SupportsShowMessage: true };
             if (!OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
             {
-                _deferredRpcOnlyOutput = applied && deferSuppression;
+                _deferredShowMessage = applied && deferSuppression;
                 terminal.SuppressConsoleOutput = applied && !deferSuppression;
             }
 
@@ -85,7 +85,37 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
 
         if (_serverModeOutputDevice is not null)
         {
-            bool forwarded = await _serverModeOutputDevice.ForwardAsync(producer, data, cancellationToken).ConfigureAwait(false);
+            bool forwarded;
+            try
+            {
+                forwarded = await _serverModeOutputDevice.ForwardAsync(producer, data, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException exception) when (cancellationToken.IsCancellationRequested)
+            {
+                if (suppressed && !OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice cancelledTerminal)
+                {
+                    try
+                    {
+                        await cancelledTerminal.RenderAsync(producer, data, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception renderException)
+                    {
+                        // Preserve the forwarding cancellation, but make a secondary renderer failure observable.
+                        exception.Data["OutputDeviceRenderException"] = renderException;
+                        try
+                        {
+                            await cancelledTerminal.LogRenderFailureAsync(renderException).ConfigureAwait(false);
+                        }
+                        catch (Exception)
+                        {
+                            // The original cancellation still owns this operation; the render failure is attached above.
+                        }
+                    }
+                }
+
+                throw;
+            }
+
             if (suppressed && !forwarded && !OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice fallbackTerminal)
             {
                 await fallbackTerminal.RenderAsync(producer, data, cancellationToken).ConfigureAwait(false);
@@ -143,13 +173,13 @@ internal sealed class ProxyOutputDevice : IOutputDevice, IOutputDeviceDataProduc
             Task initialization = _serverModeOutputDevice.InitializeAsync(serverTestHost);
             lock (_outputPolicyLock)
             {
-                if (_deferredRpcOnlyOutput && !_connectionClosed
+                if (_deferredShowMessage && !_connectionClosed
                     && !OperatingSystem.IsBrowser() && OriginalOutputDevice is TerminalOutputDevice terminal)
                 {
                     terminal.SuppressConsoleOutput = true;
                 }
 
-                _deferredRpcOnlyOutput = false;
+                _deferredShowMessage = false;
             }
 
             await initialization.ConfigureAwait(false);

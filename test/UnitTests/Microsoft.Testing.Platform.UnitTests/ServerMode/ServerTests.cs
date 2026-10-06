@@ -79,10 +79,10 @@ public sealed class ServerTests
     [DataRow(true, false)]
     [DataRow(true, true)]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
-    public Task ServerCanInitialize(bool? rpcOnlyOutput, bool customRenderer)
-        => RunOutsideAzureAgentAsync(() => ServerCanInitializeCoreAsync(rpcOnlyOutput, customRenderer));
+    public Task ServerCanInitialize(bool? showMessage, bool customRenderer)
+        => RunOutsideAzureAgentAsync(() => ServerCanInitializeCoreAsync(showMessage, customRenderer));
 
-    private static async Task ServerCanInitializeCoreAsync(bool? rpcOnlyOutput, bool customRenderer)
+    private static async Task ServerCanInitializeCoreAsync(bool? showMessage, bool customRenderer)
     {
         using var server = TcpServer.Create();
 
@@ -137,7 +137,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
                         "testing": {
-                            {{(rpcOnlyOutput.HasValue ? $"\"rpcOnlyOutput\":{rpcOnlyOutput.Value.ToString().ToLowerInvariant()}," : string.Empty)}}
+                            {{(showMessage.HasValue ? $"\"showMessage\":{showMessage.Value.ToString().ToLowerInvariant()}," : string.Empty)}}
                             "debuggerProvider": true,
                             "isStateful": true
                         }
@@ -172,7 +172,7 @@ public sealed class ServerTests
                    new ServerInfo("test-anywhere", "this is dynamic"),
                    new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false)
                    {
-                       RpcOnlyOutput = customRenderer ? false : rpcOnlyOutput,
+                       ShowMessage = customRenderer ? false : showMessage,
                    }))
         {
             ProtocolVersion = JsonRpcProtocolVersions.Current,
@@ -184,7 +184,7 @@ public sealed class ServerTests
         Assert.IsNotEmpty(resultJson.ServerInfo.Version);
 
         await outputDevice.DisplayAsync(testApplicationHooks, new TextOutputDeviceData("user after handshake"), cancellationToken);
-        if (resultJson.Capabilities.TestingCapabilities.RpcOnlyOutput != true)
+        if (resultJson.Capabilities.TestingCapabilities.ShowMessage != true)
         {
             await WriteMessageAsync(writer, """{"jsonrpc":"2.0","id":2,"method":"testing/unknown","params":{}}""");
             ErrorMessage unrelatedRequest = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, cancellationToken));
@@ -197,12 +197,19 @@ public sealed class ServerTests
             || !logs.Any(log => Equals(log[JsonRpcStrings.Message], "user after handshake")))
         {
             NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await messageHandler.ReadAsync(cancellationToken));
-            Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+            Assert.AreEqual(resultJson.Capabilities.TestingCapabilities.ShowMessage == true ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog, notification.Method);
             logs.Add(Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params));
         }
 
         Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user startup output") && Equals(log[JsonRpcStrings.Level], "Information")));
         Assert.ContainsSingle(logs.Where(log => Equals(log[JsonRpcStrings.Message], "user after handshake") && Equals(log[JsonRpcStrings.Level], "Information")));
+        if (resultJson.Capabilities.TestingCapabilities.ShowMessage == true)
+        {
+            await WriteMessageAsync(writer, """{"jsonrpc":"2.0","id":4,"method":"testing/unknown","params":{}}""");
+            ErrorMessage barrier = Assert.IsInstanceOfType<ErrorMessage>(await ReadPostInitializationMessageAsync(messageHandler, cancellationToken));
+            Assert.AreEqual(4, barrier.Id, "No duplicate legacy or new-method output may remain behind the emitted messages.");
+        }
+
         if (customRenderer)
         {
             customOutputDevice.Verify(value => value.DisplayAsync(testApplicationHooks, It.IsAny<TextOutputDeviceData>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
@@ -287,7 +294,7 @@ public sealed class ServerTests
                 "params": {
                     "processId": 32,
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
-                    "capabilities": { "testing": { "rpcOnlyOutput": true, "debuggerProvider": false } }
+                    "capabilities": { "testing": { "showMessage": true, "debuggerProvider": false } }
                 }
             }
             """;
@@ -312,7 +319,7 @@ public sealed class ServerTests
             for (int i = 0; i < concurrentMessages.Length; i++)
             {
                 NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
-                Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+                Assert.AreEqual(JsonRpcMethods.ClientShowMessage, notification.Method);
                 receivedMessages.Add(Assert.IsInstanceOfType<string>(
                     Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message]));
             }
@@ -332,7 +339,7 @@ public sealed class ServerTests
         else
         {
             NotificationMessage notification = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
-            Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+            Assert.AreEqual(JsonRpcMethods.ClientShowMessage, notification.Method);
             Assert.AreEqual("buffered output", Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message]);
         }
 
@@ -353,10 +360,10 @@ public sealed class ServerTests
     [DataRow(false)]
     [DataRow(true)]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
-    public Task ServerEnforcesLifecycleAndNegotiatesProtocolVersion(bool rpcOnlyOutput)
-        => RunOutsideAzureAgentAsync(() => ServerEnforcesLifecycleCoreAsync(rpcOnlyOutput));
+    public Task ServerEnforcesLifecycleAndNegotiatesProtocolVersion(bool showMessage)
+        => RunOutsideAzureAgentAsync(() => ServerEnforcesLifecycleCoreAsync(showMessage));
 
-    private static async Task ServerEnforcesLifecycleCoreAsync(bool rpcOnlyOutput)
+    private static async Task ServerEnforcesLifecycleCoreAsync(bool showMessage)
     {
         using var server = TcpServer.Create();
 
@@ -465,7 +472,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "42.0.0" },
                     "capabilities": {
                         "testing": {
-                            "rpcOnlyOutput": {{rpcOnlyOutput.ToString().ToLowerInvariant()}},
+                            "showMessage": {{showMessage.ToString().ToLowerInvariant()}},
                             "debuggerProvider": false
                         }
                     },
@@ -477,7 +484,7 @@ public sealed class ServerTests
 
         ResponseMessage? initializeResponse = null;
         bool startupOutputReceived = false;
-        while (queuedRequestError is null || initializeResponse is null || (rpcOnlyOutput && !startupOutputReceived))
+        while (queuedRequestError is null || initializeResponse is null || (showMessage && !startupOutputReceived))
         {
             RpcMessage? message = initializeResponse is null
                 ? await messageHandler.ReadAsync(timeout.Token)
@@ -493,7 +500,7 @@ public sealed class ServerTests
             else if (message is NotificationMessage notification)
             {
                 Assert.IsNotNull(initializeResponse);
-                Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+                Assert.AreEqual(showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog, notification.Method);
                 Assert.IsFalse(startupOutputReceived);
                 Assert.AreEqual("buffered across initialization retry", Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message]);
                 startupOutputReceived = true;
@@ -548,7 +555,8 @@ public sealed class ServerTests
             messageHandler,
             message =>
             {
-                if (message is NotificationMessage { Method: JsonRpcMethods.ClientLog } notification
+                if (message is NotificationMessage notification
+                    && notification.Method == (showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog)
                     && Equals(Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params)[JsonRpcStrings.Message], "buffered across initialization retry"))
                 {
                     Assert.IsFalse(startupOutputReceived);
@@ -585,7 +593,7 @@ public sealed class ServerTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task PipelinedRequestWaitsForInitializeResponse(bool rpcOnlyOutput)
+    public async Task PipelinedRequestWaitsForInitializeResponse(bool showMessage)
     {
         using var server = TcpServer.Create();
 
@@ -636,7 +644,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
                         "testing": {
-                            "rpcOnlyOutput": {{rpcOnlyOutput.ToString().ToLowerInvariant()}},
+                            "showMessage": {{showMessage.ToString().ToLowerInvariant()}},
                             "debuggerProvider": false,
                             "isStateful": true
                         }
@@ -660,14 +668,14 @@ public sealed class ServerTests
         ResponseMessage initializeResponse = Assert.IsInstanceOfType<ResponseMessage>(await messageHandler.ReadAsync(timeout.Token));
         Assert.AreEqual(1, initializeResponse.Id);
         NotificationMessage startupLog = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
-        Assert.AreEqual(JsonRpcMethods.ClientLog, startupLog.Method);
+        Assert.AreEqual(showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog, startupLog.Method);
         Assert.AreEqual("before pipelined discovery", Assert.IsInstanceOfType<IDictionary<string, object?>>(startupLog.Params)[JsonRpcStrings.Message]);
         RpcMessage? discoveryResponse = await ReadPostInitializationMessageAsync(messageHandler, timeout.Token);
         while (discoveryResponse is NotificationMessage notification)
         {
             if (!IsTestUpdateCompletion(notification) && notification.Method != JsonRpcMethods.TelemetryUpdate)
             {
-                Assert.AreEqual(JsonRpcMethods.ClientLog, notification.Method);
+                Assert.AreEqual(showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog, notification.Method);
                 IDictionary<string, object?> log = Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params);
                 Assert.AreEqual("Trace", log[JsonRpcStrings.Level]);
                 Assert.IsTrue(Equals(log[JsonRpcStrings.Message], PlatformResources.GetResourceString("StartingTestSession"))
@@ -688,17 +696,20 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    [DataRow(true, false)]
-    [DataRow(false, true)]
-    [DataRow(true, true)]
-    public async Task ReadPostInitializationMessageAsync_SkipsKnownWarningsAroundStartupMarker(bool warningBeforeMarker, bool warningAfterMarker)
+    [DataRow(true, false, JsonRpcMethods.ClientLog)]
+    [DataRow(false, true, JsonRpcMethods.ClientLog)]
+    [DataRow(true, true, JsonRpcMethods.ClientLog)]
+    [DataRow(true, false, JsonRpcMethods.ClientShowMessage)]
+    [DataRow(false, true, JsonRpcMethods.ClientShowMessage)]
+    [DataRow(true, true, JsonRpcMethods.ClientShowMessage)]
+    public async Task ReadPostInitializationMessageAsync_SkipsKnownWarningsAroundStartupMarker(bool warningBeforeMarker, bool warningAfterMarker, string method)
     {
-        NotificationMessage warning = new(JsonRpcMethods.ClientLog, new Dictionary<string, object?>
+        NotificationMessage warning = new(method, new Dictionary<string, object?>
         {
             [JsonRpcStrings.Level] = "Warning",
             [JsonRpcStrings.Message] = "[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Synthetic warning",
         });
-        NotificationMessage marker = new(JsonRpcMethods.ClientLog, new Dictionary<string, object?>
+        NotificationMessage marker = new(method, new Dictionary<string, object?>
         {
             [JsonRpcStrings.Level] = "Information",
             [JsonRpcStrings.Message] = "startup marker",
@@ -777,7 +788,7 @@ public sealed class ServerTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task PipelinedRequestCanBeCanceledWhileInitializationCompletes(bool rpcOnlyOutput)
+    public async Task PipelinedRequestCanBeCanceledWhileInitializationCompletes(bool showMessage)
     {
         using var server = TcpServer.Create();
         using var testFrameworkCapabilities = new BlockingTestFrameworkCapabilities();
@@ -822,7 +833,7 @@ public sealed class ServerTests
                         "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                         "capabilities": {
                             "testing": {
-                                "rpcOnlyOutput": {{rpcOnlyOutput.ToString().ToLowerInvariant()}},
+                                "showMessage": {{showMessage.ToString().ToLowerInvariant()}},
                                 "debuggerProvider": false
                             }
                         }
@@ -1612,7 +1623,7 @@ public sealed class ServerTests
     private static Task<RpcMessage?> ReadPostInitializationMessageAsync(IMessageHandler messageHandler, CancellationToken cancellationToken)
         => WaitForMessage(
             messageHandler,
-            message => message is not NotificationMessage { Method: JsonRpcMethods.ClientLog, Params: IDictionary<string, object?> log }
+            message => message is not NotificationMessage { Method: JsonRpcMethods.ClientLog or JsonRpcMethods.ClientShowMessage, Params: IDictionary<string, object?> log }
                 || !log.TryGetValue(JsonRpcStrings.Level, out object? level)
                 || !Equals(level, "Warning")
                 || !log.TryGetValue(JsonRpcStrings.Message, out object? value)

@@ -4,6 +4,7 @@
 using System.Net;
 using System.Net.Sockets;
 
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 
@@ -27,6 +28,192 @@ public sealed class TcpMessageHandlerTests
     private const string NonAsciiMethod = "testing/Grüße 日本語 🎉 Čau";
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task WriteRequestAsync_PreFrameCancellationLeavesConnectionReusable(bool cancelDuringSerialization)
+    {
+        using TcpClient client = new();
+        using MemoryStream output = new();
+        using CancellationTokenSource operation = new();
+        IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
+        if (cancelDuringSerialization)
+        {
+            string body = await formatter.SerializeAsync(new NotificationMessage(NonAsciiMethod, null));
+            Mock<IMessageFormatter> cancelingFormatter = new();
+            cancelingFormatter.Setup(value => value.SerializeAsync(It.IsAny<RpcMessage>()))
+                .Callback(operation.Cancel)
+                .ReturnsAsync(body);
+            formatter = cancelingFormatter.Object;
+        }
+        else
+        {
+            operation.Cancel();
+        }
+
+        using var writer = new TcpMessageHandler(client, new MemoryStream(), output, formatter);
+        int connectionClosed = 0;
+        writer.ConnectionClosedCallback = () => connectionClosed++;
+
+        OperationCanceledException exception = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => writer.WriteRequestAsync(new NotificationMessage(NonAsciiMethod, null), operation.Token));
+        Assert.AreEqual(operation.Token, exception.CancellationToken);
+        Assert.AreEqual(0L, output.Length);
+        Assert.AreEqual(0, connectionClosed);
+
+        await writer.WriteRequestAsync(new NotificationMessage(NonAsciiMethod, null), CancellationToken.None);
+        await AssertFramesAsync(output.ToArray(), NonAsciiMethod);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task WriteRequestAsync_CancellationAfterCommitCompletesFrameAndPreservesNextFrame(int boundary)
+    {
+        using TcpClient client = new();
+        using CancellationTokenSource operation = new();
+        using BoundaryWriteStream output = new(boundary, operation);
+        using var writer = new TcpMessageHandler(client, new MemoryStream(), output, FormatterUtilities.CreateFormatter());
+        int connectionClosed = 0;
+        writer.ConnectionClosedCallback = () => connectionClosed++;
+
+        await writer.WriteRequestAsync(new NotificationMessage(NonAsciiMethod, null), operation.Token);
+        Assert.IsTrue(operation.IsCancellationRequested);
+        Assert.IsTrue(output.WriteTokens.All(static token => !token.CanBeCanceled));
+        await writer.WriteRequestAsync(new NotificationMessage("after/cancellation", null), CancellationToken.None);
+        await AssertFramesAsync(output.ToArray(), NonAsciiMethod, "after/cancellation");
+        Assert.AreEqual(0, connectionClosed);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task WriteRequestAsync_ShutdownUnblocksCommittedWriteAndPermanentlyClosesConnection(int boundary)
+    {
+        using TcpClient client = new();
+        using BlockingWriteStream output = new(boundary);
+        using var writer = new TcpMessageHandler(client, new MemoryStream(), output, FormatterUtilities.CreateFormatter());
+        int connectionClosed = 0;
+        writer.ConnectionClosedCallback = () => connectionClosed++;
+        Task write = writer.WriteRequestAsync(new NotificationMessage(NonAsciiMethod, null), CancellationToken.None);
+        await output.WriteStarted.Task.TimeoutAfterAsync(DefaultTimeout, TestContext.CancellationToken);
+
+        writer.CloseConnection();
+        await Assert.ThrowsExactlyAsync<IOException>(() => write);
+        Assert.IsTrue(write.IsCompleted);
+        Assert.AreEqual(1, connectionClosed);
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
+            () => writer.WriteRequestAsync(new NotificationMessage("must/not/write", null), CancellationToken.None));
+    }
+
+    private static async Task AssertFramesAsync(byte[] bytes, params string[] methods)
+    {
+        using TcpClient client = new();
+        using var reader = new TcpMessageHandler(client, new MemoryStream(bytes), new MemoryStream(), FormatterUtilities.CreateFormatter());
+        foreach (string method in methods)
+        {
+            NotificationMessage frame = Assert.IsInstanceOfType<NotificationMessage>(await reader.ReadAsync(CancellationToken.None));
+            Assert.AreEqual(method, frame.Method);
+        }
+
+        Assert.IsNull(await reader.ReadAsync(CancellationToken.None));
+    }
+
+    [TestMethod]
+    public async Task WriteRequestAsync_DeadlineClosesTransportAndObservesCommittedWrite()
+    {
+        using TcpClient client = new();
+        using BlockingWriteStream output = new(2);
+        using var writer = new TcpMessageHandler(client, new MemoryStream(), output, FormatterUtilities.CreateFormatter());
+        int connectionClosed = 0;
+        writer.ConnectionClosedCallback = () => connectionClosed++;
+        Task write = writer.WriteRequestAsync(new NotificationMessage(NonAsciiMethod, null), CancellationToken.None);
+        await output.WriteStarted.Task.TimeoutAfterAsync(DefaultTimeout, TestContext.CancellationToken);
+
+        await Assert.ThrowsExactlyAsync<IOException>(
+            () => write.TimeoutAfterAsync(TimeSpan.FromSeconds(40), TestContext.CancellationToken));
+        Assert.IsTrue(write.IsCompleted);
+        Assert.AreEqual(1, connectionClosed);
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
+            () => writer.WriteRequestAsync(new NotificationMessage("must/not/write", null), CancellationToken.None));
+    }
+
+    private sealed class BoundaryWriteStream(int boundary, CancellationTokenSource operation) : MemoryStream
+    {
+        private int _writes;
+
+        public List<CancellationToken> WriteTokens { get; } = [];
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            Write(buffer, offset, count);
+            OnWrite(cancellationToken);
+            return Task.CompletedTask;
+        }
+
+#if NETCOREAPP
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            Write(buffer.Span);
+            OnWrite(cancellationToken);
+            return default;
+        }
+#endif
+
+        private void OnWrite(CancellationToken token)
+        {
+            WriteTokens.Add(token);
+            if (++_writes == boundary)
+            {
+                operation.Cancel();
+            }
+        }
+    }
+
+    internal sealed class BlockingWriteStream(int boundary) : MemoryStream
+    {
+        private readonly TaskCompletionSource<bool> _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _writes;
+
+        public TaskCompletionSource<bool> WriteStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Action? BeforeDispose { get; set; }
+
+        internal void CompleteWrite() => _release.TrySetResult(true);
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            Write(buffer, offset, count);
+            return OnWrite();
+        }
+
+#if NETCOREAPP
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            Write(buffer.Span);
+            return new ValueTask(OnWrite());
+        }
+#endif
+
+        private Task OnWrite()
+        {
+            if (++_writes != boundary)
+            {
+                return Task.CompletedTask;
+            }
+
+            WriteStarted.TrySetResult(true);
+            return _release.Task;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            BeforeDispose?.Invoke();
+            _release.TrySetException(new IOException("Transport closed during write"));
+            base.Dispose(disposing);
+        }
+    }
 
     [TestMethod]
     public async Task ReadAsync_ConnectionReset_LogsFullExceptionAndReturnsNullWhenLoggerFails()

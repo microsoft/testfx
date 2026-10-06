@@ -125,9 +125,9 @@
             "debuggerProvider"
           ],
           "properties": {
-            "rpcOnlyOutput": {
+            "showMessage": {
               "type": ["boolean", "null"],
-              "description": "Requests RPC-only IOutputDevice rendering with a log handler ready before initialize. Requires an applied true acknowledgement."
+              "description": "Requests client/showMessage IOutputDevice rendering instead of client/log, with an output handler ready before initialize. Requires an applied true acknowledgement and suppresses eligible console rendering."
             },
             "debuggerProvider": {
               "type": "boolean"
@@ -158,9 +158,9 @@
             "supportsTestCoverageMessages"
           ],
           "properties": {
-            "rpcOnlyOutput": {
+            "showMessage": {
               "type": ["boolean", "null"],
-              "description": "True only when RPC-only IOutputDevice rendering was requested and applied on this connection. Absent/null means not acknowledged."
+              "description": "True only when client/showMessage IOutputDevice rendering was requested and applied on this connection. The acknowledgement precedes notifications. Absent/null/false retains client/log; messages are never dual-sent."
             },
             "supportsDiscovery": {
               "type": "boolean"
@@ -584,7 +584,7 @@
           ],
           "properties": {
             "method": {
-              "const": "client/log"
+              "enum": ["client/log", "client/showMessage"]
             },
             "params": {
               "type": "object",

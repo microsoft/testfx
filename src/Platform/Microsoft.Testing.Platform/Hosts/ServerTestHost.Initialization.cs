@@ -28,7 +28,7 @@ internal sealed partial class ServerTestHost
         lock (_initializeStateLock)
         {
             RoslynDebug.Assert(_initializeState == Initializing);
-            ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureRpcOnlyOutput(false);
+            ServiceProvider.GetRequiredService<ProxyOutputDevice>().ConfigureShowMessage(false);
             RoslynDebug.Assert(_initializationCompletionSource is not null);
             bool requestDetached = ((ICollection<KeyValuePair<(int Id, bool IsString), RpcInvocationState>>)_clientToServerRequests)
                 .Remove(new(requestKey, rpcState));

@@ -96,6 +96,11 @@ internal sealed partial class ServerTestHost
             {
                 // We're shutting down the reader
             }
+            catch (Exception ex) when (messageHandlerStopPlusGlobalToken.IsCancellationRequested
+                && ex is IOException or System.Net.Sockets.SocketException or ObjectDisposedException)
+            {
+                // Shutdown closes the transport to unblock a committed frame as well as the reader.
+            }
             catch
             {
                 EndOutputConnection();

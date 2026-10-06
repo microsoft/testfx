@@ -77,9 +77,9 @@ internal static partial class SerializerUtilities
             {
                 [JsonRpcStrings.Testing] = testingCapabilities,
             };
-            if (capabilities.RpcOnlyOutput is { } rpcOnlyOutput)
+            if (capabilities.ShowMessage is { } showMessage)
             {
-                testingCapabilities[JsonRpcStrings.RpcOnlyOutput] = rpcOnlyOutput;
+                testingCapabilities[JsonRpcStrings.ShowMessage] = showMessage;
             }
 
             return properties;
@@ -141,7 +141,7 @@ internal static partial class SerializerUtilities
         // The server's decoder (SerializerUtilities.Deserializers.cs) is written from the server's point of
         // view: its method switch only knows the requests a *server* receives and returns null (dropping the
         // params) for every other method. A client instead receives notifications
-        // (testing/testUpdates/tests, client/log, telemetry/update, testing/testUpdates/attachments) and
+        // (testing/testUpdates/tests, client/log, client/showMessage, telemetry/update, testing/testUpdates/attachments) and
         // server-initiated requests (client/attachDebugger, client/launchDebugger) whose params it must keep.
         // We therefore preserve the raw params dictionary and let the client typed-deserialize per method.
         Deserializers[typeof(RpcMessage)] = new ObjectDeserializer<RpcMessage>(properties =>
