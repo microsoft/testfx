@@ -14,6 +14,7 @@ internal sealed partial class DotnetMuxerLocator
 
     internal DotnetMuxerLocator(Action<string> resolutionLog)
     {
+        // Stryker disable once Conditional: Forcing the branch that matches the current operating system is equivalent.
         _muxerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
         using var currentProcess = Process.GetCurrentProcess();
         _currentProcessFileName = currentProcess.MainModule!.FileName!;
@@ -40,6 +41,7 @@ internal sealed partial class DotnetMuxerLocator
             _ => throw new NotSupportedException(),
         };
 
+    // Stryker disable once Conditional: Forcing the branch that matches the current operating system is equivalent.
     private static PlatformOperatingSystem GetOperatingSystem() => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? PlatformOperatingSystem.Windows
             : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? PlatformOperatingSystem.OSX : PlatformOperatingSystem.Unix;

@@ -4,15 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.5.0" />[4.5.0] - UNRELEASED
+## <a name="4.5.0" />[4.5.0] - 2026-10-05
 
-See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4.1...main)
+See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4.4.1...v4.5.0)
 
 ### Added
 
-* Run classic UWP, modern UWP, and AppContainer-configured WinUI test applications end to end through Microsoft.Testing.Platform using the MSTest.Sdk app-model sidecar controller, with AUMID activation, exact package-SID IPC authorization, UI-thread tests, TRX, HangDump, Retry, and encrypted activation payloads.
+* Add the preview `MSTest.Windows.UIAutomation` package for MSTest-managed application lifecycle and UIA2 window access in unpackaged Win32, WinForms and WPF tests, with opt-in `MSTest.Sdk` integration for Microsoft.Testing.Platform and VSTest, by @Evangelink in [#10862](https://github.com/microsoft/testfx/pull/10862)
+* Run classic UWP, modern UWP, and AppContainer-configured WinUI test applications end to end through Microsoft.Testing.Platform using the MSTest.Sdk app-model sidecar controller, with AUMID activation, exact package-SID IPC authorization, UI-thread tests, TRX, HangDump, Retry, and encrypted activation payloads, by @Evangelink in [#11484](https://github.com/microsoft/testfx/pull/11484)
 * Ship the MSTest adapter's Microsoft.Testing.Platform integration and required runtime assets for classic and modern UWP targets while retaining VSTest routing for true UWP/AppContainer `MSTest.Sdk` applications, by @Evangelink in [#11118](https://github.com/microsoft/testfx/pull/11118)
 * Add opt-in assertion failure diagnostics through `CaptureAssertionFailureDiagnostics` / `mstest:execution:captureAssertionFailureDiagnostics`, producing bounded per-test artifacts with assertion values, source frames, concurrent tests and process state for supported VSTest and Microsoft.Testing.Platform runs, by @Evangelink in [#11244](https://github.com/microsoft/testfx/pull/11244)
+* Add the opt-in `MSTest.Extensions.Hosting` package so MSTest test classes can be constructed from a caller-owned Microsoft.Extensions.Hosting service provider with one dependency-injection scope per test invocation, data row and retry, by @Evangelink in [#11635](https://github.com/microsoft/testfx/pull/11635)
 * Add MSTEST0084 and a code fix to align MSTest `OSCondition` attributes with `SupportedOSPlatformAttribute` and `UnsupportedOSPlatformAttribute`, including safe handling of versioned platform constraints, by @Evangelink in [#11044](https://github.com/microsoft/testfx/pull/11044) and [#11302](https://github.com/microsoft/testfx/pull/11302)
 * Add MSTEST0085 to report `[TestClass]` and derived attributes on abstract classes that MSTest cannot discover directly, by @Evangelink in [#11240](https://github.com/microsoft/testfx/pull/11240)
 * Add MSTEST0086 and a code fix to remove method-level MSTest attributes whose effective behavior is already supplied by the containing test class, by @Evangelink in [#11267](https://github.com/microsoft/testfx/pull/11267)
@@ -24,12 +26,17 @@ See full log [of v4.4.1...main](https://github.com/microsoft/testfx/compare/v4.4
 * Reduce reflection, resource lookup, allocation and array-enumeration overhead when generating data-driven test display names, by @Evangelink in [#11019](https://github.com/microsoft/testfx/pull/11019)
 * Escape control characters and unpaired surrogates in automatically generated data-driven test display names while preserving valid surrogate pairs and distinguishing literal escape-sequence text, by @Evangelink in [#11428](https://github.com/microsoft/testfx/pull/11428)
 * Avoid double enumeration and unnecessary allocation when converting VSTest test traits into Microsoft.Testing.Platform properties, by @Evangelink in [#11452](https://github.com/microsoft/testfx/pull/11452)
+* Reduce one-shot `Assert.That` expression overhead by using interpreted expression compilation where supported, and cache invalid path and file-name character sets used by deployment and test temporary-directory sanitization, by @Evangelink in [#11554](https://github.com/microsoft/testfx/pull/11554), [#11555](https://github.com/microsoft/testfx/pull/11555) and [#11561](https://github.com/microsoft/testfx/pull/11561)
+* Run native Microsoft.Testing.Platform MSTest user code inside one canonical test activity so automatic and custom child activities correlate with the logical test without duplicate test spans, by @Evangelink in [#11596](https://github.com/microsoft/testfx/pull/11596)
+* Use `UseUwpTools` to select the specialized MSTest UWP application model, allowing `UseUwpTools=false` to retain UWP XAML references while opting into direct Microsoft.Testing.Platform execution, by @Sergio0694 in [#11614](https://github.com/microsoft/testfx/pull/11614)
 
 ### Fixed
 
 * Copy requested classic UWP adapter satellite assemblies independently of the build-machine culture when `EnableMSTestRunner=true`, by @Evangelink in [#11112](https://github.com/microsoft/testfx/pull/11112)
 * Prevent the MSTest source generator from crashing on null array attribute arguments such as `[DataRow(null)]`, preserving the value as one null test argument, by @Sergio0694 in [#11371](https://github.com/microsoft/testfx/pull/11371)
 * Restore source compatibility when asserting a non-null value against a collection with nullable element types, by @Sergio0694 in [#11374](https://github.com/microsoft/testfx/pull/11374)
+* Preserve `TestContext.AddResultFile` attachments for deferred Microsoft.Testing.Platform reporters after MSTest deployment cleanup, including same-named files and long TRX paths, by @Evangelink in [#11606](https://github.com/microsoft/testfx/pull/11606)
+* Launch .NET 10 modern UWP tests through Microsoft.Testing.Platform when the AppX recipe names the published executable differently from its source path, by @Evangelink in [#11609](https://github.com/microsoft/testfx/pull/11609)
 
 ## <a name="4.4.1" />[4.4.1] - 2026-09-15
 

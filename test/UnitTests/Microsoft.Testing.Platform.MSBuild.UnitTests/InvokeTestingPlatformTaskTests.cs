@@ -66,6 +66,14 @@ public sealed class InvokeTestingPlatformTaskTests
         // Regular output keeps flowing through the MSBuild logger and does not leak to stdout.
         Assert.Contains("normal output line", loggedMessages);
         Assert.DoesNotContain("normal output line", capturedStdout.ToString());
+        Assert.AreEqual(
+            "##[group]Tests: MyAssembly (net9.0)"
+                + Environment.NewLine
+                + "##[endgroup]"
+                + Environment.NewLine
+                + "normal output line"
+                + Environment.NewLine,
+            task.GetCapturedOutput());
     }
 
     [TestMethod]
@@ -81,6 +89,57 @@ public sealed class InvokeTestingPlatformTaskTests
         Assert.HasCount(2, task.EnvironmentVariables);
         Assert.AreEqual($"{GetDotnetRootArchitectureVariableName()}={fixture.DotnetRoot}", task.EnvironmentVariables[0]);
         Assert.AreEqual("CUSTOM_VARIABLE=value", task.EnvironmentVariables[1]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_WithNoUserVariables_AddsOnlyResolvedVariableAndLogsIt()
+    {
+        using AppHostTaskFixture fixture = new();
+        List<BuildMessageEventArgs> messages = [];
+        Mock<IBuildEngine> buildEngine = new();
+        buildEngine
+            .Setup(engine => engine.LogMessageEvent(It.IsAny<BuildMessageEventArgs>()))
+            .Callback<BuildMessageEventArgs>(messages.Add);
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.BuildEngine = buildEngine.Object;
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.AreSequenceEqual(
+            [$"{GetDotnetRootArchitectureVariableName()}={fixture.DotnetRoot}"],
+            task.EnvironmentVariables);
+        Assert.Contains(
+            message => message.Importance == MessageImportance.Low
+                && message.Message == $"Setting '{GetDotnetRootArchitectureVariableName()}' to '{fixture.DotnetRoot}' for apphost runtime resolution.",
+            messages);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_UsesRequestedEnvironmentVariableComparison()
+    {
+        using AppHostTaskFixture fixture = new();
+        string variableName = GetDotnetRootArchitectureVariableName();
+
+        TestableInvokeTestingPlatformTask windowsTask = fixture.CreateTask();
+        windowsTask.EnvironmentVariables = [$"{variableName.ToLowerInvariant()}=explicit"];
+        windowsTask.InvokeAddAppHostDotnetRootEnvironmentVariable(
+            RuntimeInformation.ProcessArchitecture,
+            isWindows: true,
+            Environment.Is64BitOperatingSystem);
+        Assert.AreSequenceEqual(
+            [$"{variableName.ToLowerInvariant()}=explicit"],
+            windowsTask.EnvironmentVariables!);
+
+        TestableInvokeTestingPlatformTask unixTask = fixture.CreateTask();
+        unixTask.EnvironmentVariables = [$"{variableName.ToLowerInvariant()}=explicit"];
+        unixTask.InvokeAddAppHostDotnetRootEnvironmentVariable(
+            RuntimeInformation.ProcessArchitecture,
+            isWindows: false,
+            Environment.Is64BitOperatingSystem);
+        Assert.AreSequenceEqual(
+            [$"{variableName}={fixture.DotnetRoot}", $"{variableName.ToLowerInvariant()}=explicit"],
+            unixTask.EnvironmentVariables!);
     }
 
     [TestMethod]
@@ -199,6 +258,26 @@ public sealed class InvokeTestingPlatformTaskTests
                 isWindows,
                 is64BitOperatingSystem));
 
+    [TestMethod]
+    public void Constructor_UsesPlatformSpecificPipeName()
+    {
+        TestableInvokeTestingPlatformTask task = new();
+        string pipeName = task.GetPipeName();
+        const string Prefix = "testingplatform.pipe.";
+
+        if (Path.DirectorySeparatorChar == '/')
+        {
+            Assert.IsTrue(Path.IsPathRooted(pipeName));
+            Assert.IsTrue(Guid.TryParseExact(Path.GetFileName(pipeName), "N", out _));
+        }
+        else
+        {
+            Assert.StartsWith(Prefix, pipeName);
+            Assert.DoesNotContain(Path.DirectorySeparatorChar.ToString(), pipeName);
+            Assert.IsTrue(Guid.TryParseExact(pipeName[Prefix.Length..], "N", out _));
+        }
+    }
+
     private static string GetDotnetRootArchitectureVariableName()
         => $"DOTNET_ROOT_{RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}";
 
@@ -231,6 +310,19 @@ public sealed class InvokeTestingPlatformTaskTests
             bool isWindows,
             bool is64BitOperatingSystem)
             => AddAppHostDotnetRootEnvironmentVariable(currentProcessArchitecture, isWindows, is64BitOperatingSystem);
+
+        public string GetCapturedOutput()
+            => ((StringBuilder)typeof(InvokeTestingPlatformTask)
+                .GetField("_output", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(this)!).ToString();
+
+        public string GetPipeName()
+        {
+            object description = typeof(InvokeTestingPlatformTask)
+                .GetField("_pipeNameDescription", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(this)!;
+            return (string)description.GetType().GetProperty("Name")!.GetValue(description)!;
+        }
     }
 
     private sealed class AppHostTaskFixture : IDisposable

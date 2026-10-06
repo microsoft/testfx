@@ -173,8 +173,8 @@ public partial class InvokeTestingPlatformTask
         if (hasExplicitDotnetRoot || hasExplicitWindowsX86DotnetRoot)
         {
             EnvironmentVariables = hasExplicitDotnetRoot && isWindowsX86 && !hasExplicitWindowsX86DotnetRoot
-                ? [$"{variableName}=", "DOTNET_ROOT(x86)=", .. EnvironmentVariables ?? []]
-                : [$"{variableName}=", .. EnvironmentVariables ?? []];
+                ? [$"{variableName}=", "DOTNET_ROOT(x86)=", .. EnvironmentVariables!]
+                : [$"{variableName}=", .. EnvironmentVariables!];
             return;
         }
 
@@ -199,6 +199,7 @@ public partial class InvokeTestingPlatformTask
         foreach (string environmentVariable in EnvironmentVariables)
         {
             int separatorIndex = environmentVariable.IndexOf('=');
+            // Stryker disable once Equality: At index zero the extracted name is empty and cannot equal the non-empty requested variable name.
             if (separatorIndex > 0
                 && string.Equals(environmentVariable.Substring(0, separatorIndex), variableName, comparison))
             {

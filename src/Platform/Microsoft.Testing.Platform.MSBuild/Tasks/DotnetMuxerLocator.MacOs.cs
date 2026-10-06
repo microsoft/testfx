@@ -41,6 +41,7 @@ internal sealed partial class DotnetMuxerLocator
             }
 
             byte[] cpuInfoBytes = ReadFourBytes(headerReader);
+            // Stryker disable once all: Each byte order maps to paired Magic/Cigam CPU values for the same architecture.
             uint cpuInfo = magic is MachOMagic32LittleEndian or MachOMagic64LittleEndian
                 ? BinaryPrimitives.ReadUInt32LittleEndian(cpuInfoBytes)
                 : BinaryPrimitives.ReadUInt32BigEndian(cpuInfoBytes);
