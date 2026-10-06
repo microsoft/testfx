@@ -35,8 +35,20 @@ using TestNodeUpdateMessage = serverclient::Microsoft.Testing.Platform.Extension
 
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
+/// <remarks>
+/// Only <see cref="RegisterClientSerializers_WhenUnregistered_PopulatesTablesAndPublishesRegistration"/> mutates
+/// the process-global <c>SerializerUtilities.Serializers</c>/<c>Deserializers</c> tables and the
+/// <c>s_clientSerializersRegistered</c> flag (by clearing them and restoring afterwards); every other test in
+/// this class only reads through <see cref="SerializerUtilities.Serialize{T}(T)"/> /
+/// <see cref="SerializerUtilities.Deserialize{T}(IDictionary{string, object?})"/> or other pure helpers. A
+/// method-level <see cref="DoNotParallelizeAttribute"/> on just that one mutator - the same pattern already used
+/// by <c>MtpServerConnectorTests.CreateFormatterRegistersClientSerializersBeforeCreatingFormatter</c> for the
+/// identical resource - defers it to the sequential phase that runs only after every parallel test (including
+/// this class's own readers and the reader tests in <c>MtpServerClientTests</c> /
+/// <c>MtpServerClientInProcessTests</c>) has already completed, so no concurrent reader can observe the
+/// temporarily-cleared tables. The remaining tests need no lock and can rejoin the parallel set.
+/// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class SerializationMutationTests
 {
     public TestContext TestContext { get; set; } = null!;
@@ -71,6 +83,7 @@ public sealed class SerializationMutationTests
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public void RegisterClientSerializers_WhenUnregistered_PopulatesTablesAndPublishesRegistration()
     {
         FieldInfo registeredField = GetStaticField(typeof(SerializerUtilities), "s_clientSerializersRegistered");
