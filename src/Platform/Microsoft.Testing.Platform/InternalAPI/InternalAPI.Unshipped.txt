@@ -6,7 +6,7 @@ Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.ConnectionClosedCallback
 Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.ConnectionClosedCallback.set -> void
 Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.ConfigureShowMessage(bool? requested, bool deferSuppression = false) -> bool
 Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.EndConnection() -> void
-Microsoft.Testing.Platform.Hosts.ServerTestHost.TryPushLogAsync(Microsoft.Testing.Platform.ServerMode.ServerLogMessage! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Hosts.ServerTestHost.TryPushLogAsync(Microsoft.Testing.Platform.Logging.ServerLogMessage! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.DisplayWithSuppressionAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.RenderAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.LogRenderFailureAsync(System.Exception! exception) -> System.Threading.Tasks.Task!

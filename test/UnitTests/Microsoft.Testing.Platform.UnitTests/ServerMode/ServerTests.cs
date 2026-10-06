@@ -593,7 +593,11 @@ public sealed class ServerTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task PipelinedRequestWaitsForInitializeResponse(bool showMessage)
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public Task PipelinedRequestWaitsForInitializeResponse(bool showMessage)
+        => RunOutsideAzureAgentAsync(() => PipelinedRequestWaitsForInitializeResponseCoreAsync(showMessage));
+
+    private static async Task PipelinedRequestWaitsForInitializeResponseCoreAsync(bool showMessage)
     {
         using var server = TcpServer.Create();
 
@@ -667,6 +671,8 @@ public sealed class ServerTests
 
         ResponseMessage initializeResponse = Assert.IsInstanceOfType<ResponseMessage>(await messageHandler.ReadAsync(timeout.Token));
         Assert.AreEqual(1, initializeResponse.Id);
+        InitializeResponseArgs resultJson = SerializerUtilities.Deserialize<InitializeResponseArgs>((IDictionary<string, object?>)initializeResponse.Result!);
+        Assert.AreEqual(showMessage, resultJson.Capabilities.TestingCapabilities.ShowMessage);
         NotificationMessage startupLog = Assert.IsInstanceOfType<NotificationMessage>(await ReadPostInitializationMessageAsync(messageHandler, timeout.Token));
         Assert.AreEqual(showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog, startupLog.Method);
         Assert.AreEqual("before pipelined discovery", Assert.IsInstanceOfType<IDictionary<string, object?>>(startupLog.Params)[JsonRpcStrings.Message]);
