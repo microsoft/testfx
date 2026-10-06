@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// Verbatim port of https://github.com/dotnet/runtime/blob/main/src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHashShared.cs
+// Adapted from https://github.com/dotnet/runtime/blob/cd6580ff499dd9ae37656edcf2239bbab2362251/src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHashShared.cs
 using System.Buffers.Binary;
 using System.Numerics;
 #if NET
@@ -174,7 +174,7 @@ internal static unsafe class XxHashShared
     {
         state.Seed = seed;
 
-        fixed (byte* secret = state.Secret)
+        fixed (byte* secret = &state.Secret[0])
         {
             if (seed == 0)
             {
@@ -202,7 +202,7 @@ internal static unsafe class XxHashShared
         state.StripesProcessedInCurrentBlock = 0;
         state.TotalLength = 0;
 
-        fixed (ulong* accumulators = state.Accumulators)
+        fixed (ulong* accumulators = &state.Accumulators[0])
         {
             InitializeAccumulators(accumulators);
         }
@@ -214,7 +214,7 @@ internal static unsafe class XxHashShared
 
         state.TotalLength += (uint)source.Length;
 
-        fixed (byte* buffer = state.Buffer)
+        fixed (byte* buffer = &state.Buffer[0])
         {
             // Small input: just copy the data to the buffer.
             if (source.Length <= InternalBufferLengthBytes - state.BufferedCount)
@@ -231,9 +231,9 @@ internal static unsafe class XxHashShared
                 return;
             }
 
-            fixed (byte* secret = state.Secret)
+            fixed (byte* secret = &state.Secret[0])
 #pragma warning disable SA1519 // Braces should not be omitted from multi-line child statement
-            fixed (ulong* accumulators = state.Accumulators)
+            fixed (ulong* accumulators = &state.Accumulators[0])
 #if NET
             fixed (byte* sourcePtr = &MemoryMarshal.GetReference(source))
 #else
@@ -385,7 +385,7 @@ internal static unsafe class XxHashShared
 
     public static void CopyAccumulators(ref State state, ulong* accumulators)
     {
-        fixed (ulong* stateAccumulators = state.Accumulators)
+        fixed (ulong* stateAccumulators = &state.Accumulators[0])
         {
 #if NET
             if (Vector256.IsHardwareAccelerated)
@@ -415,7 +415,7 @@ internal static unsafe class XxHashShared
     {
         Debug.Assert(state.BufferedCount > 0, "BufferedCount was expected to be greater than zero.");
 
-        fixed (byte* buffer = state.Buffer)
+        fixed (byte* buffer = &state.Buffer[0])
         {
             byte* accumulateData;
             if (state.BufferedCount >= StripeLengthBytes)
@@ -901,6 +901,16 @@ internal static unsafe class XxHashShared
     [StructLayout(LayoutKind.Auto)]
     public struct State
     {
+#if NET
+        /// <summary>The accumulators. Length is <see cref="AccumulatorCount"/>.</summary>
+        internal AccumulatorsBuffer Accumulators;
+
+        /// <summary>Used to store a custom secret generated from a seed. Length is <see cref="SecretLengthBytes"/>.</summary>
+        internal SecretBuffer Secret;
+
+        /// <summary>The internal buffer. Length is <see cref="InternalBufferLengthBytes"/>.</summary>
+        internal InputBuffer Buffer;
+#else
         /// <summary>The accumulators. Length is <see cref="AccumulatorCount"/>.</summary>
         internal fixed ulong Accumulators[AccumulatorCount];
 
@@ -909,6 +919,7 @@ internal static unsafe class XxHashShared
 
         /// <summary>The internal buffer. Length is <see cref="InternalBufferLengthBytes"/>.</summary>
         internal fixed byte Buffer[InternalBufferLengthBytes];
+#endif
 
         /// <summary>The amount of memory in <see cref="Buffer"/>.</summary>
         internal uint BufferedCount;
@@ -921,5 +932,25 @@ internal static unsafe class XxHashShared
 
         /// <summary>The seed employed (possibly 0).</summary>
         internal ulong Seed;
+
+#if NET
+        [InlineArray(AccumulatorCount)]
+        internal struct AccumulatorsBuffer
+        {
+            private ulong _element0;
+        }
+
+        [InlineArray(SecretLengthBytes)]
+        internal struct SecretBuffer
+        {
+            private byte _element0;
+        }
+
+        [InlineArray(InternalBufferLengthBytes)]
+        internal struct InputBuffer
+        {
+            private byte _element0;
+        }
+#endif
     }
 }
