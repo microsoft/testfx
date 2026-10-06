@@ -141,27 +141,78 @@ public sealed class AggregatedConfigurationTests
     }
 
     [TestMethod]
-    public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_TestHostChild_DoesNotTouchControllerDirectory()
+    [DataRow(".")]
+    [DataRow("a/b/c")]
+    [DataRow("a/../results")]
+    public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_TestHostChild_AnchorsRelativeDirectoryWithoutFileSystemAccess(string resultsDirectory)
     {
-        Mock<IFileLoggerProvider> mockFileLogger = new();
+        Mock<IFileSystem> mockFileSystem = new(MockBehavior.Strict);
+        Mock<IFileLoggerProvider> mockFileLogger = new(MockBehavior.Strict);
         AggregatedConfiguration aggregatedConfiguration = new(
             [],
             _testApplicationModuleInfoMock.Object,
-            _fileSystemMock.Object,
+            mockFileSystem.Object,
             _environmentMock.Object,
             new(
                 null,
                 [
-                    new CommandLineParseOption("results-directory", [ExpectedPath]),
+                    new CommandLineParseOption("results-directory", [resultsDirectory]),
                     new CommandLineParseOption(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, ["42"]),
                 ],
                 []));
 
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
 
-        _fileSystemMock.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Never);
-        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>()), Times.Never);
-        Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        Assert.AreEqual(Path.GetFullPath(resultsDirectory), aggregatedConfiguration.GetTestResultDirectory());
+        mockFileSystem.VerifyNoOtherCalls();
+        mockFileLogger.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_TestHostChild_PreservesAbsoluteDirectoryWithoutFileSystemAccess()
+    {
+        string resultsDirectory = Path.Combine(Path.GetPathRoot(AppContext.BaseDirectory)!, "controller-only", Guid.NewGuid().ToString("N"), "results");
+        Mock<IFileSystem> mockFileSystem = new(MockBehavior.Strict);
+        Mock<IFileLoggerProvider> mockFileLogger = new(MockBehavior.Strict);
+        AggregatedConfiguration aggregatedConfiguration = new(
+            [],
+            _testApplicationModuleInfoMock.Object,
+            mockFileSystem.Object,
+            _environmentMock.Object,
+            new(
+                null,
+                [
+                    new CommandLineParseOption("results-directory", [resultsDirectory]),
+                    new CommandLineParseOption(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, ["42"]),
+                ],
+                []));
+
+        await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
+
+        Assert.AreEqual(resultsDirectory, aggregatedConfiguration.GetTestResultDirectory());
+        mockFileSystem.VerifyNoOtherCalls();
+        mockFileLogger.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_NoController_CreatesAndUsesAbsoluteDirectory()
+    {
+        string resultsDirectory = Path.Combine("relative", "results");
+        string absoluteDirectory = Path.GetFullPath(resultsDirectory);
+        _fileSystemMock.Setup(x => x.CreateDirectory(resultsDirectory)).Returns(absoluteDirectory);
+        Mock<IFileLoggerProvider> mockFileLogger = new();
+        AggregatedConfiguration aggregatedConfiguration = new(
+            [],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            new(null, [new CommandLineParseOption("results-directory", [resultsDirectory])], []));
+
+        await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(mockFileLogger.Object);
+
+        Assert.AreEqual(absoluteDirectory, aggregatedConfiguration.GetTestResultDirectory());
+        _fileSystemMock.Verify(x => x.CreateDirectory(resultsDirectory), Times.Once);
+        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(absoluteDirectory), Times.Once);
     }
 
     [TestMethod]
