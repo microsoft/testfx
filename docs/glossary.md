@@ -274,6 +274,10 @@ An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severi
 
 An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-blank `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit non-blank `DisplayName` values — missing, null, empty, or whitespace-only names are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
 
+### MSTEST0089 (conflicting data-row display names)
+
+An MSTest analyzer (`ConflictingDataRowDisplayNamesAnalyzer`, warning severity, enabled by default) that reports constant `DisplayName` and `ArgumentsDisplayName` values supplied together on `[DataRow]`, `new DataRowAttribute(...)`, or `new TestDataRow<T>(...)` when the full name makes the non-blank argument label ineffective. A blank full name is unset on `DataRowAttribute`, but any non-null full name takes precedence on `TestDataRow<T>`. Null or blank argument labels, values not known at compile time, generated code, and custom derived attributes are not reported. Remove `ArgumentsDisplayName` to preserve the existing full name, or remove `DisplayName` to retain the method name with the argument label. The analyzer does not change runtime precedence.
+
 ### MSTest
 
 Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.

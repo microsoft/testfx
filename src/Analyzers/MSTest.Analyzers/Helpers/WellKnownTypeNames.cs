@@ -49,6 +49,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestContext = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingTestDataRow1 = "Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow`1";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestFilterProviderAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestFilterProviderAttribute1 = "Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute`1";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute";
