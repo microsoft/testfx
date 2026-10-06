@@ -1,4 +1,13 @@
 #nullable enable
+System.IO.Hashing.XxHashShared.State.Accumulators -> System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
+System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
+System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer.AccumulatorsBuffer() -> void
+System.IO.Hashing.XxHashShared.State.Buffer -> System.IO.Hashing.XxHashShared.State.InputBuffer
+System.IO.Hashing.XxHashShared.State.InputBuffer
+System.IO.Hashing.XxHashShared.State.InputBuffer.InputBuffer() -> void
+System.IO.Hashing.XxHashShared.State.Secret -> System.IO.Hashing.XxHashShared.State.SecretBuffer
+System.IO.Hashing.XxHashShared.State.SecretBuffer
+System.IO.Hashing.XxHashShared.State.SecretBuffer.SecretBuffer() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInstanceFactoryProvider
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInstanceFactoryProvider.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory?
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInstanceFactoryProvider.Push(Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory? factory) -> System.IDisposable!
