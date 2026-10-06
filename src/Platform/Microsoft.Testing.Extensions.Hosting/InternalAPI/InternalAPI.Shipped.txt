@@ -1,6 +1,10 @@
 #nullable enable
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge.Connect(System.Action! requestTestApplicationStop) -> void
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge.Disconnect() -> void
+Microsoft.Testing.Extensions.HostApplicationLifetimeBridge.HostApplicationLifetimeBridge(Microsoft.Extensions.Hosting.IHostApplicationLifetime! hostApplicationLifetime) -> void
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
