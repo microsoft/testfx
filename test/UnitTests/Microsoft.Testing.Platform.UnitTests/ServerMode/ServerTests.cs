@@ -417,6 +417,7 @@ public sealed class ServerTests
     private static async Task PipelinedRequestWaitsForInitializeResponseCoreAsync(bool? showMessage)
     {
         using var server = TcpServer.Create();
+        const string bufferedOutput = "buffered output μ";
 
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
@@ -432,7 +433,7 @@ public sealed class ServerTests
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
         await testApplication.ServiceProvider.GetOutputDevice().DisplayAsync(
             Mock.Of<IOutputDeviceDataProducer>(value => value.Uid == "routing-test"),
-            new TextOutputDeviceData("buffered output μ"),
+            new TextOutputDeviceData(bufferedOutput),
             CancellationToken.None);
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
 
@@ -486,7 +487,7 @@ public sealed class ServerTests
             (IDictionary<string, object?>)initializeResponse.Result!);
         Assert.AreEqual(showMessage, acknowledgment.Capabilities.TestingCapabilities.ShowMessage);
         string expectedMethod = showMessage == true ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog;
-        int outputNotifications = 0;
+        int bufferedOutputNotifications = 0;
         while (true)
         {
             RpcMessage? message = await messageHandler.ReadAsync(timeout.Token);
@@ -500,11 +501,16 @@ public sealed class ServerTests
                 && notification.Method is JsonRpcMethods.ClientLog or JsonRpcMethods.ClientShowMessage)
             {
                 Assert.AreEqual(expectedMethod, notification.Method);
-                outputNotifications++;
+                IDictionary<string, object?> parameters = Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params);
+                if (parameters[JsonRpcStrings.Message] is string output && output == bufferedOutput)
+                {
+                    Assert.AreEqual("Information", parameters[JsonRpcStrings.Level]);
+                    bufferedOutputNotifications++;
+                }
             }
         }
 
-        Assert.IsGreaterThan(0, outputNotifications);
+        Assert.AreEqual(1, bufferedOutputNotifications);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
         Assert.AreEqual(0, await serverTask);
