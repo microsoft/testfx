@@ -27,6 +27,16 @@ The Markdown summary is independent from the self-contained HTML report produced
 
 Enable Azure DevOps reporting with the `--report-azdo` command line option.
 
+### Live publishing with parallel test modules
+
+Modules using `--publish-azdo-test-results` and the same results directory can share a test run. The owner waits for registered modules to finish publishing before completing the run. Modules scheduled after completion acquire a new run, so a solution invocation can produce several runs; all modules in a shared directory must use the same extension version.
+
+Coordination uses an exclusive handle to an `azdo-runid.<buildId>.lock` file. This file remains in the results directory, but its existence does not indicate an active run: the operating system releases the handle when the owning process exits. Do not remove coordination files while modules are running. Per-project results directories disable sharing between projects.
+
+Attachments larger than 16 MiB or files that cannot be read are reported as upload failures without failing otherwise successful tests.
+
+Under native `dotnet test`, live-publishing warnings require an SDK that negotiates Microsoft.Testing.Platform protocol 1.3.0 or later. Older SDKs, including 10.0.102, do not display these host warnings. Use `--diagnostic` and preserve the diagnostic logs to investigate publishing failures with those SDKs.
+
 ## Related packages
 
 - [Microsoft.Testing.Extensions.TrxReport](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport): TRX report generation for standardized test result files

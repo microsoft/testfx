@@ -19,6 +19,33 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
 
     private static readonly UTF8Encoding Utf8EncodingWithoutBom = new(encoderShouldEmitUTF8Identifier: false);
 
+    private async Task<IFileStream> AcquireCoordinationLockAsync(string resultsDirectory, int buildId, CancellationToken cancellationToken)
+    {
+        string path = Path.Combine(resultsDirectory, $"{CoordinationFilePrefix}.{buildId}.lock");
+        DateTimeOffset deadline = _clock.UtcNow + _options.CoordinationJoinerMaxWaitTime;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                // Keep the file: deleting it can give waiters and a new owner different file identities.
+                // The exclusive handle, not its contents or age, owns the gate; process exit releases it.
+                return _fileSystem.NewFileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException ex)
+            {
+                if (_clock.UtcNow >= deadline)
+                {
+                    throw new TimeoutException(
+                        string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingCoordinationLockTimedOut, path, _options.CoordinationJoinerMaxWaitTime),
+                        ex);
+                }
+            }
+
+            await _task.Delay(_options.CoordinationReadRetryDelay, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     /// <summary>
     /// Logs a warning, swallowing any failure from the logging providers.
     /// </summary>
