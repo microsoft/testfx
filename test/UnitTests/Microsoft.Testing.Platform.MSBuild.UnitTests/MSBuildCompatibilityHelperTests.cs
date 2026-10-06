@@ -10,6 +10,7 @@ namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 [TestClass]
 public sealed class MSBuildCompatibilityHelperTests
 {
+    // The pinned MSBuild package is newer than the 17.10 feature thresholds.
     [TestMethod]
     public void SupportsMultiLine_WithCurrentMSBuildVersion_ReturnsTrue()
         => Assert.IsTrue(MSBuildCompatibilityHelper.SupportsMultiLine());
