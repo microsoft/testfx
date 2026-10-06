@@ -113,9 +113,12 @@ public sealed class WindowsApplicationModelPackageTests
             AcceptanceTestBase.MicrosoftTestingPlatformVersion);
         using ZipArchive archive = ZipFile.OpenRead(packagePath);
         string[] entries = archive.Entries
-            .Select(entry => entry.FullName.Replace('\\', '/'))
+            .Select(entry => entry.FullName)
             .Where(entry => entry.StartsWith("tools/AppModelController/", StringComparison.OrdinalIgnoreCase))
             .ToArray();
+        Assert.IsEmpty(
+            entries.Where(entry => entry.Contains('\\') || entry.Contains("//", StringComparison.Ordinal)).ToArray(),
+            "Controller ZIP entries must use canonical single-slash paths on every producer host.");
 
         string[] targetFrameworks = ["net8.0", "net9.0"];
         foreach (string targetFramework in targetFrameworks)

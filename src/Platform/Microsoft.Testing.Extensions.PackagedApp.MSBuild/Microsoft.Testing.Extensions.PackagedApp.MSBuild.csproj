@@ -50,9 +50,15 @@ $(CommonProductDescription)]]></PackageDescription>
     <Error Condition="!Exists('$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\mstest-appmodel-controller.exe')"
            Text="The Windows packaged-app controller was not built for %(_PackagedAppControllerFramework.Identity). The integration package requires both win-x64 apphosts on every pack host." />
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\*"
-                              Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\.*">
-        <PackagePath>tools\AppModelController\%(_PackagedAppControllerFramework.Identity)\</PackagePath>
+      <_PackagedAppControllerPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\*"
+                                         Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\.*">
+        <ControllerTargetFramework>%(_PackagedAppControllerFramework.Identity)</ControllerTargetFramework>
+      </_PackagedAppControllerPackageFile>
+    </ItemGroup>
+    <ItemGroup>
+      <!-- Explicit file paths avoid host-dependent implicit directory mapping. -->
+      <TfmSpecificPackageFile Include="@(_PackagedAppControllerPackageFile)">
+        <PackagePath>tools/AppModelController/%(_PackagedAppControllerPackageFile.ControllerTargetFramework)/$([System.String]::Copy('%(_PackagedAppControllerPackageFile.RecursiveDir)').Replace('\', '/').TrimStart('/'))%(_PackagedAppControllerPackageFile.Filename)%(_PackagedAppControllerPackageFile.Extension)</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
   </Target>
