@@ -22,7 +22,8 @@ $(CommonProductDescription)]]></PackageDescription>
                       Condition="'$(TargetFramework)' == 'net8.0'" PrivateAssets="none" />
     <ProjectReference Include="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
                       ReferenceOutputAssembly="false" PrivateAssets="all"
-                      SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
+                      SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;UseAppHost;EnableWindowsTargeting" />
   </ItemGroup>
 
   <!-- The controller and its consumers must resolve the same platform/protocol version. -->
@@ -44,8 +45,10 @@ $(CommonProductDescription)]]></PackageDescription>
     </ItemGroup>
     <MSBuild Projects="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
              Targets="Build"
-             Properties="Configuration=$(Configuration);TargetFramework=%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0"
-             RemoveProperties="TargetFramework" />
+             Properties="Configuration=$(Configuration);TargetFramework=%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0;RuntimeIdentifier=win-x64;SelfContained=false;UseAppHost=true;EnableWindowsTargeting=true"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;UseAppHost;EnableWindowsTargeting" />
+    <Error Condition="!Exists('$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\mstest-appmodel-controller.exe')"
+           Text="The Windows packaged-app controller was not built for %(_PackagedAppControllerFramework.Identity). The integration package requires both win-x64 apphosts on every pack host." />
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\*"
                               Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\.*">
