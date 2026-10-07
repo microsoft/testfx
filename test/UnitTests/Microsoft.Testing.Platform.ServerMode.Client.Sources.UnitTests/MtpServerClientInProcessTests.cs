@@ -874,59 +874,36 @@ public sealed class MtpServerClientInProcessTests
     [DoNotParallelize]
     public async Task ShutdownServerAsync_ObservesTheInFlightCancellationTaskWithExactDiagnostic()
     {
-        FieldInfo asyncDebugging = typeof(Task).GetField(
-            "s_asyncDebuggingEnabled",
-            BindingFlags.Static | BindingFlags.NonPublic)!;
-        bool previousAsyncDebugging = (bool)asyncDebugging.GetValue(null)!;
-        asyncDebugging.SetValue(null, true);
-
+        using var observation = new CancellationTaskObservationScope();
         using var cancellation = new CancellationTokenSource();
         using var releaseRegistration = new ManualResetEventSlim();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var cancellationTaskId = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var log = new ConcurrentQueue<string>();
         using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
         {
+            serverCompletion.TrySetResult(0);
             cancellationTaskId.TrySetResult(Task.CurrentId!.Value);
             releaseRegistration.Wait(TestContext.CancellationToken);
-        });
-        Task<int> serverTask = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(Timeout.Infinite, cancellation.Token);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-
-            return 0;
         });
 
         try
         {
             Task<bool> shutdown = InvokeShutdownServerAsync(
-                serverTask,
+                serverCompletion.Task,
                 cancellation,
                 TimeSpan.Zero,
-                NullMtpClientLogger.Instance);
+                new DelegateMtpClientLogger((_, message) => log.Enqueue(message)));
             int taskId = await WithTimeoutAsync(cancellationTaskId.Task);
-            Task cancelling = GetActiveTask(taskId);
-            object continuation = await WaitForContinuationAsync(cancelling);
+            await observation.AssertObservedAsync(taskId);
 
-            Assert.IsTrue(
-                ObjectGraphContainsString(
-                    continuation,
-                    "Canceling the in-process MTP application failed",
-                    [with(ReferenceComparer.Instance)],
-                    remainingDepth: 8),
-                "The in-flight cancellation task must be observed with the exact diagnostic used for late failures.");
-
-            releaseRegistration.Set();
-            Assert.IsTrue(await WithTimeoutAsync(shutdown));
+            Assert.IsFalse(await WithTimeoutAsync(shutdown));
+            Assert.IsEmpty(log, "Shutdown must not report abandonment of a still-running server.");
         }
         finally
         {
             releaseRegistration.Set();
-            asyncDebugging.SetValue(null, previousAsyncDebugging);
+            serverCompletion.TrySetResult(0);
         }
     }
 
@@ -1566,51 +1543,111 @@ public sealed class MtpServerClientInProcessTests
             null,
             [serverTask, cancellation, gracefulTimeout, logger])!;
 
-    private static Task GetActiveTask(int taskId)
-        => (Task)typeof(Task).GetMethod(
-            "GetActiveTaskFromId",
-            BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [taskId])!;
-
-    private static async Task<object> WaitForContinuationAsync(Task task)
+    // Task has no public API for inspecting the attached diagnostic continuation. Keep its private hooks
+    // here, restoring the process-wide tracking flag after the cancellation registration has finished.
+    private sealed class CancellationTaskObservationScope : IDisposable
     {
-        FieldInfo continuationField = typeof(Task).GetField(
-            "m_continuationObject",
-            BindingFlags.Instance | BindingFlags.NonPublic)!;
-        var stopwatch = Stopwatch.StartNew();
-        while (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
+        private readonly FieldInfo _asyncDebugging = typeof(Task).GetField(
+            "s_asyncDebuggingEnabled",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        private readonly bool _previousAsyncDebugging;
+
+        public CancellationTaskObservationScope()
         {
-            if (continuationField.GetValue(task) is { } continuation)
+            _previousAsyncDebugging = (bool)_asyncDebugging.GetValue(null)!;
+            _asyncDebugging.SetValue(null, true);
+        }
+
+        public async Task AssertObservedAsync(int taskId)
+        {
+            Task cancelling = GetActiveTask(taskId);
+            object continuation = await WaitForContinuationAsync(cancelling).ConfigureAwait(false);
+
+            Assert.IsTrue(
+                ObjectGraphContainsString(
+                    continuation,
+                    "Canceling the in-process MTP application failed",
+                    [with(ReferenceComparer.Instance)],
+                    remainingDepth: 8),
+                "The in-flight cancellation task must be observed with the exact diagnostic used for late failures.");
+        }
+
+        public void Dispose()
+            => _asyncDebugging.SetValue(null, _previousAsyncDebugging);
+
+        private static Task GetActiveTask(int taskId)
+            => (Task)typeof(Task).GetMethod(
+                "GetActiveTaskFromId",
+                BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [taskId])!;
+
+        private static async Task<object> WaitForContinuationAsync(Task task)
+        {
+            FieldInfo continuationField = typeof(Task).GetField(
+                "m_continuationObject",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
             {
-                return continuation;
+                if (continuationField.GetValue(task) is { } continuation)
+                {
+                    return continuation;
+                }
+
+                await Task.Delay(10).ConfigureAwait(false);
             }
 
-            await Task.Delay(10).ConfigureAwait(false);
+            throw new TimeoutException("The cancellation task was not observed.");
         }
 
-        throw new TimeoutException("The cancellation task was not observed.");
-    }
-
-    private static bool ObjectGraphContainsString(
-        object? value,
-        string expected,
-        HashSet<object> visited,
-        int remainingDepth)
-    {
-        if (value is null || remainingDepth < 0)
+        private static bool ObjectGraphContainsString(
+            object? value,
+            string expected,
+            HashSet<object> visited,
+            int remainingDepth)
         {
-            return false;
-        }
-
-        if (value is string text)
-        {
-            return text.Contains(expected, StringComparison.Ordinal);
-        }
-
-        if (value is Array array)
-        {
-            foreach (object? element in array)
+            if (value is null || remainingDepth < 0)
             {
-                if (ObjectGraphContainsString(element, expected, visited, remainingDepth - 1))
+                return false;
+            }
+
+            if (value is string text)
+            {
+                return text.Contains(expected, StringComparison.Ordinal);
+            }
+
+            if (value is Array array)
+            {
+                foreach (object? element in array)
+                {
+                    if (ObjectGraphContainsString(element, expected, visited, remainingDepth - 1))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            Type type = value.GetType();
+            if (type.IsPrimitive || type.IsEnum || !visited.Add(value))
+            {
+                return false;
+            }
+
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                object? fieldValue;
+                try
+                {
+                    fieldValue = field.GetValue(value);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (ObjectGraphContainsString(fieldValue, expected, visited, remainingDepth - 1))
                 {
                     return true;
                 }
@@ -1619,31 +1656,16 @@ public sealed class MtpServerClientInProcessTests
             return false;
         }
 
-        Type type = value.GetType();
-        if (type.IsPrimitive || type.IsEnum || !visited.Add(value))
+        private sealed class ReferenceComparer : IEqualityComparer<object>
         {
-            return false;
+            public static ReferenceComparer Instance { get; } = new();
+
+            public new bool Equals(object? x, object? y)
+                => ReferenceEquals(x, y);
+
+            public int GetHashCode(object obj)
+                => RuntimeHelpers.GetHashCode(obj);
         }
-
-        foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-        {
-            object? fieldValue;
-            try
-            {
-                fieldValue = field.GetValue(value);
-            }
-            catch (Exception)
-            {
-                continue;
-            }
-
-            if (ObjectGraphContainsString(fieldValue, expected, visited, remainingDepth - 1))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private sealed class DisposableTcpListener(IPAddress localaddr, int port) : TcpListener(localaddr, port), IDisposable
@@ -1821,17 +1843,6 @@ public sealed class MtpServerClientInProcessTests
 
             return true;
         }
-    }
-
-    private sealed class ReferenceComparer : IEqualityComparer<object>
-    {
-        public static ReferenceComparer Instance { get; } = new();
-
-        public new bool Equals(object? x, object? y)
-            => ReferenceEquals(x, y);
-
-        public int GetHashCode(object obj)
-            => RuntimeHelpers.GetHashCode(obj);
     }
 
     private sealed class TrackingMessageHandler : IMessageHandler, IDisposable
