@@ -10,10 +10,11 @@ internal static partial class ApplyEngine
         foreach ((string path, byte[] expected) in expectedBytes)
         {
             string fullPath = PathRules.ResolveInsideRoot(repository.Root, path, "candidate path");
-            byte[] actual = ReadBytes(fullPath);
-            if (!actual.AsSpan().SequenceEqual(expected))
+            byte[]? actual = File.Exists(fullPath) ? ReadBytes(fullPath) : null;
+            if (actual is null || !actual.AsSpan().SequenceEqual(expected))
             {
                 firstMutation ??= path;
+                Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
                 WriteBytes(fullPath, expected);
             }
         }

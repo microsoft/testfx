@@ -15,10 +15,10 @@ internal static partial class ApplyEngine
         }
         else if (root.ValueKind == JsonValueKind.Object)
         {
-            JsonElement collection;
-            if (root.TryGetProperty("items", out collection) ||
-                root.TryGetProperty("outputs", out collection) ||
-                root.TryGetProperty("safe_outputs", out collection))
+            JsonProperty[] collections = root.EnumerateObject()
+                .Where(static property => property.Name is "items" or "outputs" or "safe_outputs")
+                .ToArray();
+            if (collections.Length > 0)
             {
                 foreach (JsonProperty property in root.EnumerateObject())
                 {
@@ -28,12 +28,12 @@ internal static partial class ApplyEngine
                     }
                 }
 
-                if (collection.ValueKind != JsonValueKind.Array)
+                if (collections.Length != 1 || collections[0].Value.ValueKind != JsonValueKind.Array)
                 {
-                    throw new ContractException("Agent output item collection must be an array.");
+                    throw new ContractException("Agent output must contain exactly one item array.");
                 }
 
-                items.AddRange(collection.EnumerateArray());
+                items.AddRange(collections[0].Value.EnumerateArray());
             }
             else if (root.TryGetProperty("type", out _))
             {

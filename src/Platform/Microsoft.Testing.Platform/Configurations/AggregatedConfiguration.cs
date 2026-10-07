@@ -331,9 +331,9 @@ internal sealed class AggregatedConfiguration(
         {
             // The controller owns the user-selected results directory. A sandboxed or remote test host
             // may not be able to access that path, and controller-side report/lifetime extensions publish
-            // the final artifacts there. Preserve the logical value for option consumers without touching
-            // the filesystem from the child process.
-            _resultsDirectory = resultsDirectory;
+            // the final artifacts there. Anchor relative paths before tests can change the working
+            // directory, without touching the filesystem from the child process.
+            _resultsDirectory = Path.GetFullPath(resultsDirectory);
             return;
         }
 

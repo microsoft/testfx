@@ -325,6 +325,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Использование "Assert" вместо "CollectionAssert"</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesDescription">
+        <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
+        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
+        <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
+        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesTitle">
+        <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
+        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
         <target state="translated">Параметры "CultureInfo.DefaultThreadCurrentCulture" и "DefaultThreadCurrentUICulture" устанавливают язык по умолчанию для всего процесса, поэтому каждый одновременно выполняющийся тест отслеживает это изменение, и форматирование или синтаксический анализ могут быть нарушены при распараллеливании на уровне сборки. Потоковые и промежуточные формы намеренно не помечаются: в современной .NET сеттеры "Thread.CurrentThread.CurrentCulture" / "CurrentUICulture" и "CultureInfo.CurrentCulture" / "CurrentUICulture" присваивают значение, поддерживаемое "AsyncLocal", которое передается вместе с контекстом выполнения, поэтому они не искажают соседние проверки и не проникают в потоки, находящиеся в пуле позже. Поскольку помеченные сеттеры применяются ко всему процессу, восстановление предыдущего значения в блоке "finally" не помогает — параллельно выполняющиеся тесты по-прежнему будут отслеживать измененную культуру на протяжении всего процесса мутации. Вместо этого следует объявить "[DoNotParallelize]" для теста или избегать изменения культуры всего процесса.</target>

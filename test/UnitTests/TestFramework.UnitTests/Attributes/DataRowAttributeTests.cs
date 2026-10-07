@@ -3,6 +3,8 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
@@ -105,6 +107,96 @@ public class DataRowAttributeTests : TestContainer
 
         string? displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         displayName.Should().Be("DataRowTestWithDisplayName");
+    }
+
+    public void GetDisplayNameWithArgumentsDisplayNameKeepsMethodName()
+    {
+        var attribute = new DataRowAttribute(string.Empty) { ArgumentsDisplayName = "empty input" };
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod (empty input)");
+        attribute.GetDisplayName(methodInfo, null).Should().Be("DataRowTestMethod (empty input)");
+    }
+
+    public void GetDisplayNameWithArgumentsDisplayNameKeepsMethodDisplayName()
+    {
+        var attribute = new DataRowAttribute(string.Empty) { ArgumentsDisplayName = "empty input" };
+        var methodInfo = new ReflectionTestMethodInfo(
+            typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!,
+            "Friendly method");
+
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Friendly method (empty input)");
+    }
+
+    public void GetDisplayNameFullNameTakesPrecedenceOverArgumentsDisplayName()
+    {
+        var attribute = new DataRowAttribute(string.Empty)
+        {
+            DisplayName = "Functional Case FC100.1",
+            ArgumentsDisplayName = "empty input",
+        };
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Functional Case FC100.1");
+    }
+
+    public void GetDisplayNameBlankFullNamesAllowArgumentsDisplayName()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+        foreach (string? fullName in new string?[] { null, string.Empty, " \t" })
+        {
+            var attribute = new DataRowAttribute(string.Empty) { DisplayName = fullName, ArgumentsDisplayName = "empty input" };
+
+            attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod (empty input)");
+        }
+    }
+
+    public void GetDisplayNameBlankArgumentsDisplayNamesKeepDefaultNaming()
+    {
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+        foreach (string? label in new string?[] { null, string.Empty, " \t" })
+        {
+            var attribute = new DataRowAttribute(string.Empty) { ArgumentsDisplayName = label };
+
+            attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod (\"\")");
+            attribute.GetDisplayName(methodInfo, null).Should().BeNull();
+        }
+    }
+
+    public void GetDisplayNameArgumentsDisplayNameIsVerbatim()
+    {
+        var attribute = new DataRowAttribute(string.Empty) { ArgumentsDisplayName = " {m} {a} \"label\" " };
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod ( {m} {a} \"label\" )");
+    }
+
+    public void GetDisplayNameArgumentsDisplayNameHonorsOverride()
+    {
+        var attribute = new DummyDataRowAttribute { ArgumentsDisplayName = "label" };
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+        attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("Overridden DisplayName");
+    }
+
+    public void GetDisplayNameArgumentsDisplayNameRefreshesLocalizedFormat()
+    {
+        CultureInfo previousUICulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            var attribute = new DataRowAttribute(string.Empty) { ArgumentsDisplayName = "label" };
+            MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DataRowTestMethod))!;
+
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod (label)");
+
+            CultureInfo.CurrentUICulture = new CultureInfo("ko-KR");
+            attribute.GetDisplayName(methodInfo, attribute.Data).Should().Be("DataRowTestMethod(label)");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousUICulture;
+        }
     }
 
     public void GetDisplayNameForArrayOfOneItem()

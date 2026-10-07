@@ -423,6 +423,7 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
             // Cancel() runs registrations synchronously on the calling thread, so a caller registration that
             // blocks would stop the grace below from ever starting and make this "bounded" wait unbounded.
             // Kick it off separately and start the grace regardless.
+            var cancellationGrace = Stopwatch.StartNew();
             var cancelling = Task.Run(() => SafeCancel(serverCancellation, logger));
             MtpServerConnector.ObserveFailure(cancelling, logger, "Canceling the in-process MTP application failed");
 
@@ -433,10 +434,12 @@ internal sealed class MtpServerInProcessHost : IMtpServerHost
                     MtpClientLogLevel.Warning,
                     $"The in-process MTP application is still running {CancellationGrace.TotalSeconds:N0}s after cancellation was requested; abandoning it.");
             }
-            else if (!cancelling.IsCompleted)
+            else if (!await MtpServerConnector.WaitBoundedAsync(
+                cancelling,
+                CancellationGrace - cancellationGrace.Elapsed).ConfigureAwait(false))
             {
-                // A cancellation registration is still executing and still holds the token. Report the source
-                // as unsafe to dispose: leaking one CancellationTokenSource beats a use-after-dispose.
+                // The callback can complete from inside a cancellation registration before Cancel() returns.
+                // Give that registration the remainder of the same grace period before leaking the source.
                 stopped = false;
             }
         }

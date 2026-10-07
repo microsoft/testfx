@@ -1,4 +1,5 @@
 #nullable enable
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.TryHandleITestDataRow(object?[]! d, System.Reflection.ParameterInfo![]! testMethodParameters, out object?[]! data, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out System.Collections.Generic.IList<string!>? testCategoriesFromTestDataRow, out string? argumentsDisplayNameFromTestDataRow) -> bool
 System.IO.Hashing.XxHashShared.State.Accumulators -> System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
 System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
 System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer.AccumulatorsBuffer() -> void
