@@ -1,14 +1,1 @@
 #nullable enable
-Microsoft.CodeAnalysis.EmbeddedAttribute
-Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceFactory
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceFactory.CreateInstance(System.Type! testClassType, Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease!
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceFactory.MicrosoftExtensionsTestClassInstanceFactory(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! serviceScopeFactory) -> void
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.DisposeAsync() -> System.Threading.Tasks.Task!
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.Instance.get -> object!
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.MicrosoftExtensionsTestClassInstanceLease(object! instance, Microsoft.Extensions.DependencyInjection.IServiceScope! scope) -> void
-Microsoft.Extensions.DependencyInjection.MicrosoftExtensionsTestClassInstanceLease.RequiresCleanup.get -> bool
-Microsoft.Extensions.DependencyInjection.MSTestTestClassBuilderConfigurator
-Microsoft.Extensions.DependencyInjection.MSTestTestClassBuilderConfigurator.Configure(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder) -> void
-Microsoft.Extensions.DependencyInjection.MSTestTestClassBuilderConfigurator.MSTestTestClassBuilderConfigurator(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! serviceScopeFactory) -> void
