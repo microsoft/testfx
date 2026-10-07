@@ -44,6 +44,14 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
 
         testHostResult.AssertOutputContains("Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored");
+        testHostResult.AssertOutputContains("Runsettings section 'Playwright' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.");
+        testHostResult.AssertOutputContains("Runsettings section 'CustomSettings' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.");
+        testHostResult.AssertOutputDoesNotContain("Runsettings section 'MSTest'");
+        testHostResult.AssertOutputDoesNotContain("Runsettings section 'TestRunParameters'");
+        testHostResult.AssertOutputDoesNotContain("Runsettings section 'RunConfiguration'");
+        testHostResult.AssertOutputDoesNotContain("Runsettings section 'LoggerRunSettings'");
+        testHostResult.AssertOutputDoesNotContain("Runsettings section 'DataCollectionRunSettings'");
+        testHostResult.AssertOutputDoesNotContain("Runsettings section 'BrowserName'");
         testHostResult.AssertOutputContains("Runsettings attribute 'MaxCpuCount' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TargetFrameworkVersion' is not supported by Microsoft.Testing.Platform and will be ignored");
         testHostResult.AssertOutputContains("Runsettings attribute 'TargetPlatform' is not supported by Microsoft.Testing.Platform and will be ignored");
@@ -246,6 +254,11 @@ public sealed class RunSettingsTests : AcceptanceTestBase<RunSettingsTests.TestA
     </AssemblyResolution>
   </MSTest>
 
+  <Playwright>
+    <BrowserName>firefox</BrowserName>
+  </Playwright>
+  <CustomSettings />
+
 </RunSettings>
 
 #file UnitTest1.cs
@@ -254,11 +267,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
+    public TestContext TestContext { get; set; }
 
     [TestMethod]
     public void TestMethod()
     {
         Assert.AreEqual("SAMPLEVALUE", System.Environment.GetEnvironmentVariable("SAMPLEKEY")!);
+        Assert.AreEqual("http://localhost", TestContext.Properties["webAppUrl"]);
     }
 }
 """;
