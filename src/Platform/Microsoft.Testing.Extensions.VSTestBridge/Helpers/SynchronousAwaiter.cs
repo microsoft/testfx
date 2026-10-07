@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 /// </summary>
 internal static class SynchronousAwaiter
 {
-    public static void Await(this Task valueTask, bool busyWait = true)
+    public static void Await(this Task valueTask, bool busyWait = false)
     {
         if (busyWait)
         {
@@ -23,6 +23,9 @@ internal static class SynchronousAwaiter
         }
         else
         {
+            // Block rather than explicitly poll when the task is incomplete.
+            // Already-completed tasks, including uncontended synchronous inline consumption,
+            // do not wait; GetResult still propagates faults and cancellation.
             valueTask.GetAwaiter().GetResult();
         }
     }
