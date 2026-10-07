@@ -517,7 +517,7 @@ public sealed class TerminalTestReporterTests
             ␛[m␛[33m  skipped: 1
             ␛[m  duration:
             """;
-        Assert.Contains(expectedSummaryLines, escapedOutput);
+        Assert.Contains(expectedSummaryLines.Replace("\r\n", "\n"), escapedOutput.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1173,8 +1173,8 @@ public sealed class TerminalTestReporterTests
               Coverage Threshold Results:
                 Total - Line (Minimum over Module): 85.5% >= 80.0% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1194,8 +1194,8 @@ public sealed class TerminalTestReporterTests
               Coverage Threshold Results:
                 Total - Branch (Total over Module): 75.0% < 80.0% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1217,8 +1217,8 @@ public sealed class TerminalTestReporterTests
               Coverage Threshold Results:
                 Total - Line: {actual}% < {required}% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1251,8 +1251,8 @@ public sealed class TerminalTestReporterTests
               Coverage Threshold Results:
                 Total - Line: {expectedText}
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1273,8 +1273,8 @@ public sealed class TerminalTestReporterTests
               Code Coverage Summary:
                 Total - Line: N/A
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1294,8 +1294,8 @@ public sealed class TerminalTestReporterTests
               Coverage Threshold Results:
                 Total - Branch (Total over Module): 75.0% < 80.0% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1319,8 +1319,8 @@ public sealed class TerminalTestReporterTests
                 Total - Line (Minimum over Module): 90.0% >= 80.0% threshold
                 Total - Method (Average over Type): 70.0% < 80.0% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1343,8 +1343,8 @@ public sealed class TerminalTestReporterTests
             ␛[32m    Total - Line: 90.0% >= 80.0% threshold
             ␛[m␛[31m    Total - Branch: 70.0% < 80.0% threshold
             ␛[m
-            """,
-            escaped);
+            """.Replace("\r\n", "\n"),
+            escaped.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1370,8 +1370,8 @@ public sealed class TerminalTestReporterTests
                 Total - Line: 85.5%
                 MyModule.dll - Branch: 75.0%
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1410,8 +1410,8 @@ public sealed class TerminalTestReporterTests
               Coverage Threshold Results:
                 MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1437,8 +1437,8 @@ public sealed class TerminalTestReporterTests
               Code Coverage Summary:
                 Module␊Name - MC/DC␉Metric: 50.0%
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1465,8 +1465,8 @@ public sealed class TerminalTestReporterTests
                 Total - Line [producer␊b]: 70.0%
                 Total - Branch: 60.0%
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1511,8 +1511,8 @@ public sealed class TerminalTestReporterTests
                 Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold
                 Total - Branch: 90.0% >= 80.0% threshold
 
-            """,
-            console.Output);
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -1546,8 +1546,8 @@ public sealed class TerminalTestReporterTests
                   Coverage Threshold Results:
                     Total - Line: 79.5% < 80.0% threshold
 
-                """,
-                console.Output);
+                """.Replace("\r\n", "\n"),
+                console.Output.Replace("\r\n", "\n"));
         }
         finally
         {

@@ -223,8 +223,8 @@ public sealed class CommandLineParseResultTests
                opt
                     val
 
-            """,
-            text);
+            """.Replace("\r\n", "\n"),
+            text.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -240,7 +240,7 @@ public sealed class CommandLineParseResultTests
             Options:
                 None
 
-            """,
-            text);
+            """.Replace("\r\n", "\n"),
+            text.Replace("\r\n", "\n"));
     }
 }
