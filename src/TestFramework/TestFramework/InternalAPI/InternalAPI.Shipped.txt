@@ -98,6 +98,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.R
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper
 Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.ArgumentsDisplayName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.DisplayName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.IgnoreMessage.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.TestCategories.get -> System.Collections.Generic.IList<string!>?
@@ -225,6 +226,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.
 static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.GetEscapedCharacterLength(string! value, int index) -> int
 static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.StringEscapeHelper.IsEscapedString(string! value, string! rendered) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.ComputeDefaultDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.ComputeDisplayName(System.Reflection.MethodInfo! methodInfo, string! argumentsDisplayName) -> string!
 static Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.IsAcceptableResultForRetry(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringEx.IsNullOrEmpty(string? value) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringEx.IsNullOrWhiteSpace(string? value) -> bool

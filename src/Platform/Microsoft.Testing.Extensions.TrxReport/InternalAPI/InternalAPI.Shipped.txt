@@ -751,10 +751,19 @@ static TestFx.Hashing.XxHash128.TryHash(byte[]! source, byte[]! destination, out
 System.Buffers.Binary.BinaryPrimitives
 System.IO.Hashing.XxHashShared
 System.IO.Hashing.XxHashShared.State
+System.IO.Hashing.XxHashShared.State.Accumulators -> System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
 System.IO.Hashing.XxHashShared.State.Accumulators -> ulong*
+System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
+System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer.AccumulatorsBuffer() -> void
 System.IO.Hashing.XxHashShared.State.Buffer -> byte*
+System.IO.Hashing.XxHashShared.State.Buffer -> System.IO.Hashing.XxHashShared.State.InputBuffer
 System.IO.Hashing.XxHashShared.State.BufferedCount -> uint
+System.IO.Hashing.XxHashShared.State.InputBuffer
+System.IO.Hashing.XxHashShared.State.InputBuffer.InputBuffer() -> void
 System.IO.Hashing.XxHashShared.State.Secret -> byte*
+System.IO.Hashing.XxHashShared.State.Secret -> System.IO.Hashing.XxHashShared.State.SecretBuffer
+System.IO.Hashing.XxHashShared.State.SecretBuffer
+System.IO.Hashing.XxHashShared.State.SecretBuffer.SecretBuffer() -> void
 System.IO.Hashing.XxHashShared.State.Seed -> ulong
 System.IO.Hashing.XxHashShared.State.State() -> void
 System.IO.Hashing.XxHashShared.State.StripesProcessedInCurrentBlock -> ulong

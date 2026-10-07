@@ -10,6 +10,37 @@ public class MSBuildTests_Solution : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestProject";
 
+    [TestMethod]
+    [DataRow(null, "0")]
+    [DataRow("false", "false")]
+    public async Task DotnetCli_MSBuildServer_DefaultsToDisabledAndPreservesExplicitSettings(string? serverSetting, string expectedSetting)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            nameof(DotnetCli_MSBuildServer_DefaultsToDisabledAndPreservesExplicitSettings),
+            """
+            #file MSBuildServer.proj
+            <Project>
+              <Target Name="CheckServerSetting">
+                <Error Condition="'$(MSBUILDUSESERVER)' != '$(ExpectedServerSetting)'" Text="Unexpected MSBuild server setting: '$(MSBUILDUSESERVER)'." />
+                <Message Importance="high" Text="MSBuild server setting: $(MSBUILDUSESERVER)" />
+              </Target>
+            </Project>
+            """);
+        Dictionary<string, string?> environmentVariables = [];
+        if (serverSetting is not null)
+        {
+            environmentVariables["MSBUILDUSESERVER"] = serverSetting;
+        }
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"msbuild \"{Path.Combine(testAsset.TargetAssetPath, "MSBuildServer.proj")}\" -t:CheckServerSetting -p:ExpectedServerSetting={expectedSetting}",
+            environmentVariables: environmentVariables,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains($"MSBuild server setting: {expectedSetting}");
+    }
+
     [DynamicData(nameof(GetBuildMatrixSingleAndMultiTfmBuildConfiguration))]
     [TestMethod]
     public async Task MSBuildTests_UseMSBuildTestInfrastructure_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration _, bool isMultiTfm)

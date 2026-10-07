@@ -17,7 +17,17 @@ public class TestDataRowTests : TestContainer
         testDataRow.Value.Should().Be(value);
         testDataRow.IgnoreMessage.Should().BeNull();
         testDataRow.DisplayName.Should().BeNull();
+        testDataRow.ArgumentsDisplayName.Should().BeNull();
         testDataRow.TestCategories.Should().BeNull();
+    }
+
+    public void TestDataRowShouldExposeArgumentsDisplayNameThroughInterface()
+    {
+        var testDataRow = new TestDataRow<string>(string.Empty) { ArgumentsDisplayName = "empty input" };
+
+        testDataRow.ArgumentsDisplayName.Should().Be("empty input");
+        ITestDataRow dataRow = testDataRow;
+        dataRow.ArgumentsDisplayName.Should().Be("empty input");
     }
 
     public void TestDataRowShouldAllowSettingTestCategories()

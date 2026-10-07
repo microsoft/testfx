@@ -1,0 +1,76 @@
+<Project>
+
+  <PropertyGroup>
+    <_TestingPlatformPackagedAppPackageRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</_TestingPlatformPackagedAppPackageRoot>
+  </PropertyGroup>
+
+  <!-- Adapter targets may set IsTestingPlatformApplication after this file is imported. -->
+  <Target Name="_ConfigureTestingPlatformPackagedAppEntryPoint"
+          BeforeTargets="_CalculateGenerateTestingPlatformEntryPoint;_CalculateGenerateSelfRegisteredExtensions;PrepareForBuild"
+          Condition="'$(IsTestingPlatformApplication)' == 'true' AND '$(IsTestApplication)' != 'false' AND '$(OutputType)' != 'Library' AND '$(UseVSTest)' != 'true' AND '$(TargetFramework)' != ''">
+    <PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
+      <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+      <GenerateTestingPlatformApplicationHelper>false</GenerateTestingPlatformApplicationHelper>
+      <GenerateSelfRegisteredExtensions>false</GenerateSelfRegisteredExtensions>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(UseWinUI)' == 'true' OR '$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') AND '@(ApplicationDefinition)' != ''">
+      <GenerateTestingPlatformEntryPoint Condition="'$(GenerateTestingPlatformEntryPoint)' == ''">false</GenerateTestingPlatformEntryPoint>
+      <GenerateTestingPlatformApplicationHelper Condition="'$(GenerateTestingPlatformApplicationHelper)' == '' AND !$(TargetFramework.StartsWith('uap'))">true</GenerateTestingPlatformApplicationHelper>
+    </PropertyGroup>
+    <ItemGroup Condition="$(TargetFramework.StartsWith('uap')) AND '$(EnableMSTestRunner)' == 'true'">
+      <Compile Include="$(_TestingPlatformPackagedAppPackageRoot)buildTransitive\ClassicUwpMtpBootstrap.cs"
+               Link="MicrosoftTestingPlatformApplication.g.cs" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_ConfigureTestingPlatformPackagedAppController"
+          BeforeTargets="_CalculateGenerateTestingPlatformEntryPoint;PrepareForBuild;InvokeTestingPlatform"
+          Condition="'$(OS)' == 'Windows_NT' AND '$(IsTestingPlatformApplication)' == 'true' AND '$(IsTestApplication)' != 'false' AND '$(OutputType)' != 'Library' AND '$(UseVSTest)' != 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' != 'false' AND '$(TargetFramework)' != '' AND (('$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None') OR '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap')))">
+    <PropertyGroup>
+      <_TestingPlatformPackagedAppControllerTfm Condition="$(TargetFramework.StartsWith('net9.')) OR $(TargetFramework.StartsWith('net10.'))">net9.0</_TestingPlatformPackagedAppControllerTfm>
+      <_TestingPlatformPackagedAppControllerTfm Condition="'$(_TestingPlatformPackagedAppControllerTfm)' == ''">net8.0</_TestingPlatformPackagedAppControllerTfm>
+      <_TestingPlatformPackagedAppControllerPath>$(_TestingPlatformPackagedAppPackageRoot)tools\AppModelController\$(_TestingPlatformPackagedAppControllerTfm)\mstest-appmodel-controller.exe</_TestingPlatformPackagedAppControllerPath>
+      <TestingPlatformExecutablePath Condition="'$(TestingPlatformExecutablePath)' == ''">$(_TestingPlatformPackagedAppControllerPath)</TestingPlatformExecutablePath>
+    </PropertyGroup>
+    <Error Condition="'$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND (!Exists('$(TestingPlatformExecutablePath)') OR !Exists('$(_TestingPlatformPackagedAppPackageRoot)tools\AppModelController\$(_TestingPlatformPackagedAppControllerTfm)\mstest-appmodel-controller.runtimeconfig.json') OR !Exists('$(_TestingPlatformPackagedAppPackageRoot)tools\AppModelController\$(_TestingPlatformPackagedAppControllerTfm)\Microsoft.Testing.Extensions.PackagedApp.dll'))"
+           Text="The packaged-app controller payload is missing or incomplete. Restore Microsoft.Testing.Extensions.PackagedApp.MSBuild and use matching Microsoft.Testing.Platform packages." />
+    <GetAssemblyIdentity AssemblyFiles="$(_TestingPlatformPackagedAppPackageRoot)tools\AppModelController\$(_TestingPlatformPackagedAppControllerTfm)\mstest-appmodel-controller.dll"
+                         Condition="'$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
+      <Output TaskParameter="Assemblies" ItemName="_TestingPlatformPackagedAppControllerIdentity" />
+    </GetAssemblyIdentity>
+    <Error Condition="'$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND (!Exists('$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll') OR !Exists('$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.dll'))"
+           Text="The packaged-app controller requires version-aligned Microsoft.Testing.Platform.MSBuild assets. Restore matching Microsoft.Testing.Platform packages." />
+    <GetAssemblyIdentity AssemblyFiles="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll;$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.dll"
+                         Condition="'$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
+      <Output TaskParameter="Assemblies" ItemName="_TestingPlatformPackagedAppMSBuildIdentity" />
+    </GetAssemblyIdentity>
+    <Error Condition="'%(_TestingPlatformPackagedAppMSBuildIdentity.Version)' != '@(_TestingPlatformPackagedAppControllerIdentity->'%(Version)')'"
+           Text="The packaged-app controller requires version-aligned Microsoft.Testing.Platform.MSBuild assets. Restore matching Microsoft.Testing.Platform packages." />
+    <PropertyGroup Condition="'$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
+      <_TestingPlatformPackagedAppControllerExtensions>msbuild;packagedapp</_TestingPlatformPackagedAppControllerExtensions>
+      <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true'">$(_TestingPlatformPackagedAppControllerExtensions);codecoverage</_TestingPlatformPackagedAppControllerExtensions>
+      <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsHangDump)' == 'true'">$(_TestingPlatformPackagedAppControllerExtensions);hangdump</_TestingPlatformPackagedAppControllerExtensions>
+      <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsRetry)' == 'true'">$(_TestingPlatformPackagedAppControllerExtensions);retry</_TestingPlatformPackagedAppControllerExtensions>
+      <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' OR $(TargetFramework.StartsWith('uap'))">$(_TestingPlatformPackagedAppControllerExtensions);trx</_TestingPlatformPackagedAppControllerExtensions>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Resolve the built apphost only at execution time, including a clean Build;InvokeTestingPlatform call. -->
+  <Target Name="_ConfigureTestingPlatformPackagedAppEnvironment"
+          BeforeTargets="InvokeTestingPlatform"
+          DependsOnTargets="_ConfigureTestingPlatformPackagedAppController">
+    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
+      <_TestingPlatformPackagedAppTarget>$(TargetPath)</_TestingPlatformPackagedAppTarget>
+      <_TestingPlatformPackagedAppTarget Condition="'$(_IsExecutable)' == 'true' AND '$(UseAppHost)' == 'true' AND Exists('$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)')">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_TestingPlatformPackagedAppTarget>
+      <_TestingPlatformPackagedAppTarget Condition="$(TargetFramework.StartsWith('uap')) AND Exists('$(TargetDir)$(AssemblyName).exe')">$(TargetDir)$(AssemblyName).exe</_TestingPlatformPackagedAppTarget>
+      <_TestingPlatformPackagedAppTarget Condition="'$(TestingPlatformPackagedAppTargetPath)' != ''">$(TestingPlatformPackagedAppTargetPath)</_TestingPlatformPackagedAppTarget>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
+      <!-- Keep these protocol identifiers compatible with existing applications. -->
+      <TestingPlatformEnvironmentVariable Remove="TESTINGPLATFORM_PACKAGEDAPP_TARGET;MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" />
+      <TestingPlatformEnvironmentVariable Include="TESTINGPLATFORM_PACKAGEDAPP_TARGET" Value="$(_TestingPlatformPackagedAppTarget)" />
+      <TestingPlatformEnvironmentVariable Include="MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" Value="$(_TestingPlatformPackagedAppControllerExtensions)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -325,6 +325,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'CollectionAssert' 대신 'Assert'를 사용하세요.</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesDescription">
+        <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
+        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
+        <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
+        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesTitle">
+        <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
+        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
         <target state="translated">'CultureInfo.DefaultThreadCurrentCulture'와 'DefaultThreadCurrentUICulture'는 전체 프로세스의 기본 문화권을 설정합니다. 따라서 동시에 실행되는 모든 테스트가 이 변경을 관찰하게 되고, 어셈블리 내 병렬화에서는 서식 지정이나 구문 분석이 손상될 수 있습니다. 스레드별 및 ambient 형식은 의도적으로 플래그를 지정하지 않습니다. 최신 .NET에서는 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture'와 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setter가 모두 실행 컨텍스트와 함께 흐르는 'AsyncLocal' 기반 값을 할당하므로, 다른 테스트를 손상시키거나 나중에 재사용되는 스레드로 값이 누출되지 않습니다. 플래그가 지정된 setter는 프로세스 전역이므로, 'finally'에서 이전 값을 복원해도 도움이 되지 않습니다. 변경이 진행되는 동안 동시에 실행되는 테스트는 여전히 변경된 문화권을 관찰하기 때문입니다. 테스트에는 '[DoNotParallelize]'를 선언하거나, 프로세스 전역 문화권 변경을 피하세요.</target>
@@ -789,6 +804,11 @@ The type declaring these methods should also respect the following rules:
         <source>Do not ignore the return value of string methods</source>
         <target state="translated">문자열 메서드의 반환 값을 무시하지 마세요.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
+        <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
+        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>

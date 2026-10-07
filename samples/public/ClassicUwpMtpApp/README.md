@@ -13,7 +13,7 @@ extension SDK. It targets the current Windows SDK while retaining the classic pr
 - .NET SDK 10 or later for the MSTest 4.5 toolchain.
 - Windows Developer Mode or another policy that permits registering unsigned package layouts.
 
-The Visual Studio components are build-time requirements. Execution uses the SDK-shipped MTP
+The Visual Studio components are build-time requirements. Execution uses the MTP integration package's
 sidecar and does not use `vstest.console`, `UwpTestHostRuntimeProvider`, or the Visual Studio
 deployment runtime.
 

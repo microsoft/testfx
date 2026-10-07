@@ -24,6 +24,7 @@ internal static class Program
     {
         List<(string Name, Action Test)> tests =
         [
+            ("inventories method and class ignores from Git", InventoriesMethodAndClassIgnores),
             ("rejects malformed issue reference suffixes", RejectsMalformedIssueReferenceSuffixes),
             ("removes GitHub credentials from verification", RemovesGitHubCredentialsFromVerification),
             ("records exact final content hashes", RecordsExactFinalContentHashes),
@@ -39,6 +40,77 @@ internal static class Program
 
         Console.WriteLine($"All {tests.Count} unskip closed tests tool tests passed.");
         return 0;
+    }
+
+    private static void InventoriesMethodAndClassIgnores()
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"unskip-inventory-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "Sample.cs"), """
+                namespace Example;
+
+                [Ignore("#123")]
+                public class SkippedClass
+                {
+                    [TestMethod]
+                    public void TestOne() { }
+                }
+
+                public class SkippedMethod
+                {
+                    [TestMethod]
+                    [Ignore("https://github.com/microsoft/testfx/issues/456")]
+                    public void TestTwo() { }
+                }
+                """, new UTF8Encoding(true));
+            RunGit(root, "init", "-q");
+            RunGit(root, "add", "Sample.cs");
+            RunGit(root, "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "Initial");
+
+            ToolConfig config = new()
+            {
+                SourceRoots = ["Sample.cs"],
+                IgnoreAttributeNames = ["Ignore"],
+                TestAttributeNames = ["TestMethod"],
+            };
+            Manifest manifest = InventoryEngine.Create(root, "microsoft/testfx", config);
+            AssertEqual(2, manifest.CandidateCount, "Not all ignored owners were inventoried.");
+            Candidate classCandidate = manifest.Candidates.Single(static candidate => candidate.Owner.Kind == "class");
+            AssertEqual("Example.SkippedClass", classCandidate.Owner.TypeFqn, "Class owner was misidentified.");
+            AssertEqual("Example.SkippedClass.TestOne", classCandidate.Owner.TestFqns.Single(), "Class test was not enumerated.");
+            AssertEqual("microsoft/testfx#123", classCandidate.CanonicalIssueReferences.Single().Canonical, "Class issue was not parsed.");
+
+            Candidate methodCandidate = manifest.Candidates.Single(static candidate => candidate.Owner.Kind == "method");
+            AssertEqual("M:Example.SkippedMethod.TestTwo()", methodCandidate.Owner.DeclarationId, "Method owner was misidentified.");
+            AssertEqual("Example.SkippedMethod.TestTwo", methodCandidate.Owner.TestFqns.Single(), "Method test was not enumerated.");
+            AssertEqual("microsoft/testfx#456", methodCandidate.CanonicalIssueReferences.Single().Canonical, "Method issue was not parsed.");
+            AssertEqual(manifest.ManifestDigest, InventoryEngine.Create(root, "microsoft/testfx", config).ManifestDigest,
+                "Inventory changed without a source change.");
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private static void RunGit(string root, params string[] arguments)
+    {
+        ProcessStartInfo startInfo = new("git")
+        {
+            WorkingDirectory = root,
+            RedirectStandardError = true,
+        };
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using Process process = Process.Start(startInfo)!;
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        AssertEqual(0, process.ExitCode, $"git {string.Join(' ', arguments)} failed: {error}");
     }
 
     private static void RejectsMalformedIssueReferenceSuffixes()

@@ -28,6 +28,16 @@ internal static class TestDataSourceHelpers
         out string? ignoreMessageFromTestDataRow,
         out string? displayNameFromTestDataRow,
         out IList<string>? testCategoriesFromTestDataRow)
+        => TryHandleITestDataRow(d, testMethodParameters, out data, out ignoreMessageFromTestDataRow, out displayNameFromTestDataRow, out testCategoriesFromTestDataRow, out _);
+
+    public static bool TryHandleITestDataRow(
+        object?[] d,
+        ParameterInfo[] testMethodParameters,
+        out object?[] data,
+        out string? ignoreMessageFromTestDataRow,
+        out string? displayNameFromTestDataRow,
+        out IList<string>? testCategoriesFromTestDataRow,
+        out string? argumentsDisplayNameFromTestDataRow)
     {
         if (d.Length == 1 && d[0] is ITestDataRow testDataRow)
         {
@@ -35,6 +45,7 @@ internal static class TestDataSourceHelpers
             ignoreMessageFromTestDataRow = testDataRow.IgnoreMessage;
             displayNameFromTestDataRow = testDataRow.DisplayName;
             testCategoriesFromTestDataRow = testDataRow.TestCategories;
+            argumentsDisplayNameFromTestDataRow = testDataRow.ArgumentsDisplayName;
 
             data = TryHandleTupleDataSource(dataFromTestDataRow, testMethodParameters, out object?[] tupleExpandedToArray)
                 ? tupleExpandedToArray
@@ -47,6 +58,7 @@ internal static class TestDataSourceHelpers
         ignoreMessageFromTestDataRow = null;
         displayNameFromTestDataRow = null;
         testCategoriesFromTestDataRow = null;
+        argumentsDisplayNameFromTestDataRow = null;
         return false;
     }
 

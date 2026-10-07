@@ -11,5 +11,7 @@ internal interface ITestDataRow
 
     string? DisplayName { get; }
 
+    string? ArgumentsDisplayName { get; }
+
     IList<string>? TestCategories { get; }
 }

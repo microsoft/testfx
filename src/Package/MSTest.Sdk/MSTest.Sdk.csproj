@@ -19,7 +19,6 @@ $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Sdk\Runner\ClassicUwpMtpBootstrap.cs" />
     <!--
       Pack the MSBuild SDK props/targets into the 'Sdk' folder of the package.
       These are listed explicitly (rather than via a glob) because Sdk.props and
@@ -35,7 +34,6 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="Sdk\Features\WindowsUIAutomation.targets" Pack="true" PackagePath="Sdk\Features\WindowsUIAutomation.targets" />
     <None Include="Sdk\Runner\Runner.targets" Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
     <None Include="Sdk\Runner\Common.targets" Pack="true" PackagePath="Sdk\Runner\Common.targets" />
-    <None Include="Sdk\Runner\ClassicUwpMtpBootstrap.cs" Pack="true" PackagePath="Sdk\Runner\ClassicUwpMtpBootstrap.cs" />
     <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
     <None Include="Sdk\Runner\NativeAOT.targets" Pack="true" PackagePath="Sdk\Runner\NativeAOT.targets" />
     <None Include="Sdk\VSTest\VSTest.targets" Pack="true" PackagePath="Sdk\VSTest\VSTest.targets" />
@@ -45,35 +43,15 @@ $(CommonProductDescription)]]></PackageDescription>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAppModelControllerToPackage</TargetsForTfmSpecificContentInPackage>
-  </PropertyGroup>
+  <ItemGroup>
+    <!-- Build the separately shipped integration without adding a dependency to the MSBuild SDK itself. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.PackagedApp.MSBuild\Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"
+                      SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework" />
+  </ItemGroup>
 
-  <Target Name="_AddAppModelControllerToPackage">
-    <MSBuild Projects="$(RepoRoot)src\Package\MSTest.Sdk.AppModelController\MSTest.Sdk.AppModelController.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);TargetFramework=net8.0-windows10.0.19041.0" />
-    <MSBuild Projects="$(RepoRoot)src\Package\MSTest.Sdk.AppModelController\MSTest.Sdk.AppModelController.csproj"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);TargetFramework=net9.0-windows10.0.19041.0" />
-
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
-        <PackagePath>tools/AppModelController/net8.0/mstest-appmodel-controller.exe</PackagePath>
-      </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
-        <PackagePath>tools/AppModelController/net9.0/mstest-appmodel-controller.exe</PackagePath>
-      </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/**/*"
-                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/**/.*;$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net8.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
-        <PackagePath>tools/AppModelController/net8.0/</PackagePath>
-      </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/**/*"
-                              Exclude="$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/**/.*;$(ArtifactsBinDir)MSTest.Sdk.AppModelController/$(Configuration)/net9.0-windows10.0.19041.0/win-x64/mstest-appmodel-controller.exe">
-        <PackagePath>tools/AppModelController/net9.0/</PackagePath>
-      </TfmSpecificPackageFile>
-    </ItemGroup>
-  </Target>
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>

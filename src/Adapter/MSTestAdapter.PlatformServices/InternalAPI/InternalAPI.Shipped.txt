@@ -1214,6 +1214,7 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RunSetting
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsHotReloadEnabled.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(object?[]? data, System.Reflection.ParameterInfo![]! parameters) -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.TryHandleITestDataRow(object?[]! d, System.Reflection.ParameterInfo![]! testMethodParameters, out object?[]! data, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out System.Collections.Generic.IList<string!>? testCategoriesFromTestDataRow, out string? argumentsDisplayNameFromTestDataRow) -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.TryHandleITestDataRow(object?[]! d, System.Reflection.ParameterInfo![]! testMethodParameters, out object?[]! data, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out System.Collections.Generic.IList<string!>? testCategoriesFromTestDataRow) -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.TryHandleITestDataRow(object?[]! d, System.Reflection.ParameterInfo![]! testMethodParameters, out object?[]! data, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow) -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.TryHandleTupleDataSource(object? data, System.Reflection.ParameterInfo![]! testMethodParameters, out object?[]! array) -> bool
@@ -1367,10 +1368,19 @@ static TestFx.Hashing.XxHash128.TryHash(byte[]! source, byte[]! destination, out
 System.HashHelpers
 System.IO.Hashing.XxHashShared
 System.IO.Hashing.XxHashShared.State
+System.IO.Hashing.XxHashShared.State.Accumulators -> System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
 System.IO.Hashing.XxHashShared.State.Accumulators -> ulong*
+System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
+System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer.AccumulatorsBuffer() -> void
 System.IO.Hashing.XxHashShared.State.Buffer -> byte*
+System.IO.Hashing.XxHashShared.State.Buffer -> System.IO.Hashing.XxHashShared.State.InputBuffer
 System.IO.Hashing.XxHashShared.State.BufferedCount -> uint
+System.IO.Hashing.XxHashShared.State.InputBuffer
+System.IO.Hashing.XxHashShared.State.InputBuffer.InputBuffer() -> void
 System.IO.Hashing.XxHashShared.State.Secret -> byte*
+System.IO.Hashing.XxHashShared.State.Secret -> System.IO.Hashing.XxHashShared.State.SecretBuffer
+System.IO.Hashing.XxHashShared.State.SecretBuffer
+System.IO.Hashing.XxHashShared.State.SecretBuffer.SecretBuffer() -> void
 System.IO.Hashing.XxHashShared.State.Seed -> ulong
 System.IO.Hashing.XxHashShared.State.State() -> void
 System.IO.Hashing.XxHashShared.State.StripesProcessedInCurrentBlock -> ulong

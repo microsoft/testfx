@@ -136,7 +136,7 @@ public sealed class GeneratedMSTestHostingInjectionTests : AcceptanceTestBase<Ge
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$MicrosoftTestingExtensionsHostingVersion$" />
-        <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestExtensionsHostingVersion$" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" Condition="'$(TargetFramework)' == 'net462'" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" Condition="'$(TargetFramework)' == 'net8.0'" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" Condition="'$(TargetFramework)' == 'net9.0'" />
@@ -375,6 +375,7 @@ public sealed class ParallelInjectedTests(InvocationScope scope, InvocationTrack
             TestCode
                 .PatchTargetFrameworks(CompatibilityFrameworks)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MSTestExtensionsHostingVersion$", MSTestExtensionsHostingVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsHostingVersion$", MicrosoftTestingExtensionsHostingVersion));
     }

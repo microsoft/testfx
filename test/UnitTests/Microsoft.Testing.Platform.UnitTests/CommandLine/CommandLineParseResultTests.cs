@@ -208,23 +208,39 @@ public sealed class CommandLineParseResultTests
     }
 
     [TestMethod]
-    public void ToString_ContainsToolNameAndOptions()
+    public void ToString_FormatsToolNameErrorsAndOptions()
     {
         var result = new CommandLineParseResult("mytool", [new CommandLineParseOption("opt", ["val"])], ["an error"]);
 
         string text = result.ToString();
 
-        Assert.IsTrue(text.Contains("mytool", StringComparison.Ordinal));
-        Assert.IsTrue(text.Contains("opt", StringComparison.Ordinal));
-        Assert.IsTrue(text.Contains("an error", StringComparison.Ordinal));
+        Assert.AreEqual(
+            """
+            ToolName: mytool
+            Errors:
+                an error
+            Options:
+               opt
+                    val
+
+            """.Replace("\r\n", "\n"),
+            text.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
-    public void ToString_EmptyResult_ContainsNone()
+    public void ToString_EmptyResult_FormatsEmptyToolNameAndNone()
     {
         string text = CommandLineParseResult.Empty.ToString();
 
-        Assert.IsTrue(text.Contains($"Errors:{Environment.NewLine}    None", StringComparison.Ordinal));
-        Assert.IsTrue(text.Contains($"Options:{Environment.NewLine}    None", StringComparison.Ordinal));
+        Assert.AreEqual(
+            $"""
+            ToolName: {string.Empty}
+            Errors:
+                None
+            Options:
+                None
+
+            """.Replace("\r\n", "\n"),
+            text.Replace("\r\n", "\n"));
     }
 }

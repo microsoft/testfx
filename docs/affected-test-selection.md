@@ -5,11 +5,14 @@ This repository is wired for the experimental affected-test workflow from
 builds on the composable filter-provider support from
 [testfx#10235](https://github.com/microsoft/testfx/pull/10235).
 
-The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `test-tools` feed at the same version as
-`Microsoft.Testing.Extensions.CodeCoverage`, plus the provider-specific
-`Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps` package. The provider publishes versioned per-module
-mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder hook is
-registered by the repository's hand-authored MTP entry points.
+The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `test-tools` feed together with the
+provider-specific `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps` package. Their shared version is
+pinned separately from `Microsoft.Testing.Extensions.CodeCoverage`, allowing the shipping CodeCoverage dependency to
+remain on a stable release while affected-test development continues on preview builds. Test applications that
+register the affected-test provider override their direct CodeCoverage reference to that matching preview version;
+the packages shipped by this repository retain the stable central version. The provider publishes versioned
+per-module mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder
+hook is registered by the repository's hand-authored MTP entry points.
 
 Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
 both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps

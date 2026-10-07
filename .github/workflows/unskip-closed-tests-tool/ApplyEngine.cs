@@ -5,6 +5,15 @@ internal static partial class ApplyEngine
     private sealed record SourceEdit(string Path, int Start, int Length, Candidate Candidate);
     private sealed record VerificationOutcome(bool Success, string Reason);
 
+    private static Dictionary<string, Candidate> ToCandidateMap(IEnumerable<Candidate> candidates) =>
+        candidates.ToDictionary(static candidate => candidate.CandidateId, StringComparer.Ordinal);
+
+    private static Dictionary<string, byte[]> CloneBytesMap(Dictionary<string, byte[]> source) =>
+        source.ToDictionary(
+            static pair => pair.Key,
+            static pair => pair.Value.ToArray(),
+            StringComparer.Ordinal);
+
     public static async Task<ApplyResult> ApplyAsync(
         string requestedRoot,
         ToolConfig config,
@@ -19,8 +28,7 @@ internal static partial class ApplyEngine
         }
 
         List<string> selectedIds = ReadAgentSelection(agentOutputPath, requestedManifest.ManifestDigest);
-        Dictionary<string, Candidate> requestedCandidates = requestedManifest.Candidates
-            .ToDictionary(static candidate => candidate.CandidateId, StringComparer.Ordinal);
+        Dictionary<string, Candidate> requestedCandidates = ToCandidateMap(requestedManifest.Candidates);
         foreach (string candidateId in selectedIds)
         {
             if (!requestedCandidates.TryGetValue(candidateId, out Candidate? candidate))
@@ -54,8 +62,7 @@ internal static partial class ApplyEngine
             return EmptyResult(requestedManifest.SourceCommit, requestedManifest.ManifestDigest);
         }
 
-        Dictionary<string, Candidate> candidates = freshResolved.Candidates
-            .ToDictionary(static candidate => candidate.CandidateId, StringComparer.Ordinal);
+        Dictionary<string, Candidate> candidates = ToCandidateMap(freshResolved.Candidates);
         List<SourceEdit> edits = selectedIds
             .Select(candidateId => CreateEdit(repository, config, candidates[candidateId]))
             .OrderBy(static edit => edit.Path, StringComparer.Ordinal)
@@ -70,10 +77,7 @@ internal static partial class ApplyEngine
                 static path => path,
                 path => ReadBytes(PathRules.ResolveInsideRoot(repository.Root, path, "candidate path")),
                 StringComparer.Ordinal);
-        Dictionary<string, byte[]> expectedBytes = originalBytes.ToDictionary(
-            static pair => pair.Key,
-            static pair => pair.Value.ToArray(),
-            StringComparer.Ordinal);
+        Dictionary<string, byte[]> expectedBytes = CloneBytesMap(originalBytes);
         List<string> retained = [];
         List<RevertedCandidateResult> reverted = [];
 
@@ -167,10 +171,7 @@ internal static partial class ApplyEngine
             if (retained.Count > 0)
             {
                 HashSet<string> retainedSet = retained.ToHashSet(StringComparer.Ordinal);
-                Dictionary<string, byte[]> rebuiltBytes = originalBytes.ToDictionary(
-                    static pair => pair.Key,
-                    static pair => pair.Value.ToArray(),
-                    StringComparer.Ordinal);
+                Dictionary<string, byte[]> rebuiltBytes = CloneBytesMap(originalBytes);
                 foreach (SourceEdit edit in edits.Where(edit => retainedSet.Contains(edit.Candidate.CandidateId)))
                 {
                     rebuiltBytes[edit.Path] = ApplyTextEdit(
@@ -196,8 +197,7 @@ internal static partial class ApplyEngine
             };
         }
 
-        Dictionary<string, Candidate> finalCandidates = finalEligibility.Candidates
-            .ToDictionary(static candidate => candidate.CandidateId, StringComparer.Ordinal);
+        Dictionary<string, Candidate> finalCandidates = ToCandidateMap(finalEligibility.Candidates);
         List<Candidate> retainedCandidates = retained.Select(id => finalCandidates[id])
             .OrderBy(static candidate => candidate.Path, StringComparer.Ordinal)
             .ThenBy(static candidate => candidate.AttributeSpan.Start)

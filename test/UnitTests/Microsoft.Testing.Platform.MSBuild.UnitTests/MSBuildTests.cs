@@ -806,12 +806,22 @@ namespace SomeNamespace
         Assert.IsTrue(task.Execute());
 
         string output = fileSystem.Files[outputPath]!;
-        Assert.Contains(Environment.NewLine + "  \"platformOptions\": {", output);
-        Assert.Contains(Environment.NewLine + "    \"exitProcessOnUnhandledException\": true", output);
-        Assert.Contains(Environment.NewLine + "  \"commandLineOptionDefaults\": {", output);
-        Assert.Contains(Environment.NewLine + "    \"filter-uid\": [", output);
-        Assert.EndsWith(Environment.NewLine, output);
-        Assert.DoesNotContain("// Preserve comments", output);
+        Assert.AreEqual(
+            """
+            {
+              "platformOptions": {
+                "exitProcessOnUnhandledException": true
+              },
+              "commandLineOptionDefaults": {
+                "filter-uid": [
+                  "first",
+                  "second"
+                ]
+              }
+            }
+
+            """.ReplaceLineEndings("\n"),
+            output.ReplaceLineEndings("\n"));
         Assert.IsEmpty(_errors);
     }
 

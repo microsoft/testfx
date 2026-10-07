@@ -423,6 +423,55 @@ public class TestMethodRunnerTests : TestContainer
         results[0].DisplayName.Should().Be("DataRowTestDisplayName");
     }
 
+    public async Task RunTestMethodArgumentsDisplayNameOverridesSourceNameAndKeepsMethodDisplayName()
+    {
+        var row = new TestDataRow<string>(string.Empty) { ArgumentsDisplayName = "empty input" };
+        var source = new DataRowAttribute(row) { DisplayName = "Source name" };
+        _testMethod.DisplayName = "Friendly method";
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(new Attribute[] { source });
+        var methodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
+        var runner = new TestMethodRunner(methodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await runner.RunTestMethodAsync();
+
+        results.Should().ContainSingle().Which.DisplayName.Should().Be("Friendly method (empty input)");
+    }
+
+    public async Task RunTestMethodArgumentsDisplayNamePreservesBlankFullRowNames()
+    {
+        foreach (string fullName in new[] { string.Empty, " \t" })
+        {
+            var row = new TestDataRow<string>(string.Empty) { DisplayName = fullName, ArgumentsDisplayName = "empty input" };
+            var source = new DataRowAttribute(row) { DisplayName = "Source name" };
+            _testablePlatformServiceProvider.MockReflectionOperations
+                .Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(new Attribute[] { source });
+            var methodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
+            var runner = new TestMethodRunner(methodInfo, _testMethod, _testContextImplementation);
+
+            TestResult[] results = await runner.RunTestMethodAsync();
+
+            results.Should().ContainSingle().Which.DisplayName.Should().Be(fullName);
+        }
+    }
+
+    public async Task RunTestMethodBlankArgumentsDisplayNamesKeepSourceCustomization()
+    {
+        foreach (string? label in new string?[] { null, string.Empty, " \t" })
+        {
+            var row = new TestDataRow<string>(string.Empty) { ArgumentsDisplayName = label };
+            var source = new DataRowAttribute(row) { DisplayName = "Source name" };
+            _testablePlatformServiceProvider.MockReflectionOperations
+                .Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(new Attribute[] { source });
+            var methodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
+            var runner = new TestMethodRunner(methodInfo, _testMethod, _testContextImplementation);
+
+            TestResult[] results = await runner.RunTestMethodAsync();
+
+            results.Should().ContainSingle().Which.DisplayName.Should().Be("Source name");
+        }
+    }
+
     public async Task RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
     {
         TestResult testResult = new();

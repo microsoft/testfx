@@ -87,7 +87,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsHostingVersion$", MicrosoftTestingExtensionsHostingVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsOpenTelemetryVersion$", MicrosoftTestingExtensionsOpenTelemetryVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+                .PatchCodeWithReplace("$MSTestExtensionsHostingVersion$", MSTestExtensionsHostingVersion);
             using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                 $"{nameof(InvalidHostedEntryPointSettingsFailWithActionableErrors)}_{name}",
                 source);
@@ -114,7 +114,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsHostingVersion$", MicrosoftTestingExtensionsHostingVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsOpenTelemetryVersion$", MicrosoftTestingExtensionsOpenTelemetryVersion)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+            .PatchCodeWithReplace("$MSTestExtensionsHostingVersion$", MSTestExtensionsHostingVersion);
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             nameof(MSTestHostingPackageReferenceWithoutOptInBuilds),
             source);
@@ -141,7 +141,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
         {
             string source = MSTestHostInjectionAsset
                 .PatchCodeWithReplace("$Properties$", properties)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+                .PatchCodeWithReplace("$MSTestExtensionsHostingVersion$", MSTestExtensionsHostingVersion);
             using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                 $"{nameof(MSTestHostingInjectionUnsupportedBuildModesFailAtTheOptInCall)}_{name}",
                 source);
@@ -161,7 +161,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
     public async Task MSTestHostingInjectionOptInFlowsAcrossProjectReferences()
     {
         string source = CrossProjectMSTestHostInjectionAsset
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestExtensionsHostingVersion$", MSTestExtensionsHostingVersion)
             .PatchCodeWithReplace("$Properties$", string.Empty);
         using TestAsset supportedAsset = await TestAsset.GenerateAssetAsync(
             $"{nameof(MSTestHostingInjectionOptInFlowsAcrossProjectReferences)}_Supported",
@@ -174,7 +174,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
         supportedResult.AssertExitCodeIs(0);
 
         source = CrossProjectMSTestHostInjectionAsset
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestExtensionsHostingVersion$", MSTestExtensionsHostingVersion)
             .PatchCodeWithReplace("$Properties$", """
                 <PublishAot>true</PublishAot>
                 <RunAnalyzers>false</RunAnalyzers>
@@ -204,7 +204,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
     """;
 
     private const string MSTestHostingPackage = """
-        <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestExtensionsHostingVersion$" />
     """;
 
     private const string MSTestHostInjectionAsset = """
@@ -218,7 +218,7 @@ public sealed class GeneratedHostedEntryPointValidationTests : AcceptanceTestBas
 $Properties$
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestExtensionsHostingVersion$" />
   </ItemGroup>
 </Project>
 
@@ -280,7 +280,7 @@ public sealed class InjectedOnlyTest(ApplicationService service)
     <NoWarn>$(NoWarn);MSTESTEXP</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$MSTestExtensionsHostingVersion$" />
   </ItemGroup>
 </Project>
 
