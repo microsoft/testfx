@@ -23,12 +23,9 @@ internal static class SynchronousAwaiter
         }
         else
         {
-            // GetAwaiter().GetResult() blocks the calling thread the same way spinning does (both
-            // keep this thread from returning to the producer until the task completes), but it parks
-            // the thread on a kernel wait handle instead of burning CPU polling IsCompleted. Every call
-            // site here is invoked once per test start/end or per discovered test case, so for large
-            // suites the busy-wait default used to hold a core pegged for no measurable latency benefit
-            // whenever the awaited publish involved any real (even inline-blocking-consumer) work.
+            // Block rather than explicitly poll when the task is incomplete.
+            // Already-completed tasks, including uncontended synchronous inline consumption,
+            // do not wait; GetResult still propagates faults and cancellation.
             valueTask.GetAwaiter().GetResult();
         }
     }
