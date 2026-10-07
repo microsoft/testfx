@@ -849,29 +849,18 @@ public sealed class MtpServerClientInProcessTests
 
         using var cancellation = new CancellationTokenSource();
         using var releaseRegistration = new ManualResetEventSlim();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var cancellationTaskId = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
         {
             cancellationTaskId.TrySetResult(Task.CurrentId!.Value);
             releaseRegistration.Wait(TestContext.CancellationToken);
         });
-        Task<int> serverTask = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(Timeout.Infinite, cancellation.Token);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-
-            return 0;
-        });
 
         try
         {
             Task<bool> shutdown = InvokeShutdownServerAsync(
-                serverTask,
+                serverCompletion.Task,
                 cancellation,
                 TimeSpan.Zero,
                 NullMtpClientLogger.Instance);
@@ -887,12 +876,13 @@ public sealed class MtpServerClientInProcessTests
                     remainingDepth: 8),
                 "The in-flight cancellation task must be observed with the exact diagnostic used for late failures.");
 
-            releaseRegistration.Set();
+            serverCompletion.TrySetResult(0);
             Assert.IsFalse(await WithTimeoutAsync(shutdown));
         }
         finally
         {
             releaseRegistration.Set();
+            serverCompletion.TrySetResult(0);
             asyncDebugging.SetValue(null, previousAsyncDebugging);
         }
     }
