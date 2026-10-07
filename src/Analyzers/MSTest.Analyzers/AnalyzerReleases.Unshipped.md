@@ -10,3 +10,4 @@ MSTEST0085 | Usage | Info | TestClassAttributeShouldNotBeAppliedToAbstractClassA
 MSTEST0086 | Usage | Info | RedundantTestMethodAttributeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0086)
 MSTEST0087 | Usage | Warning | DuplicateDataRowDisplayNameAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0087)
 MSTEST0088 | Usage | Error | TestClassConstructorShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0088)
+MSTEST0089 | Usage | Warning | ConflictingDataRowDisplayNamesAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0089)

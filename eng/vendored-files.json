@@ -282,14 +282,14 @@
     {
       "id": "trx-xxhash128",
       "local_path": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHash128.cs",
-      "notes": "Verbatim port of runtime's System.IO.Hashing XxHash128 (BSD-2-Clause xxHash algorithm by Yann Collet). Lives under TestFx.Hashing namespace and is consumed by TRX report hashing.",
+      "notes": "Adapted from runtime's System.IO.Hashing XxHash128 (BSD-2-Clause xxHash algorithm by Yann Collet). Internal type in TestFx.Hashing with byte-array APIs; shared by TRX reporting and MSTest adapter identity hashing. Hash algorithm and big-endian output are unchanged.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHash128.cs",
-          "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
-          "baseline_blob_sha": "23ff9fce02a671f415a535f0a5d1151cda6ed9ba",
+          "baseline_ref_sha": "cd6580ff499dd9ae37656edcf2239bbab2362251",
+          "baseline_blob_sha": "31c21b251118fb7cd0f103daa85e1daebde12eb6",
           "scope": "entire file; namespace adapted to TestFx.Hashing"
         }
       ]
@@ -297,14 +297,14 @@
     {
       "id": "trx-xxhash-shared",
       "local_path": "src/Platform/Microsoft.Testing.Extensions.TrxReport/Hashing/XxHashShared.cs",
-      "notes": "Verbatim port of runtime's System.IO.Hashing XxHashShared (shared XXH3 implementation used by XxHash128).",
+      "notes": "Adapted from runtime's System.IO.Hashing XxHashShared (shared XXH3 implementation used by XxHash128). Uses inline-array state buffers on modern .NET and fixed buffers on legacy targets; byte-array APIs and compatibility fallbacks are retained.",
       "sources": [
         {
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHashShared.cs",
-          "baseline_ref_sha": "c366a53872872cbcafd5145a23038659ac3815c3",
-          "baseline_blob_sha": "0f8a6dfa2e75409a23cc2a793c64596556235e81",
+          "baseline_ref_sha": "cd6580ff499dd9ae37656edcf2239bbab2362251",
+          "baseline_blob_sha": "d5671725df4c15a23853e9126361cbd9922b990c",
           "scope": "entire file"
         }
       ]

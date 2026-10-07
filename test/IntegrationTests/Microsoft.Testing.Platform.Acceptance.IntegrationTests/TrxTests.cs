@@ -100,6 +100,71 @@ Out of process file artifacts produced:
         Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
     }
 
+    public static IEnumerable<(string TargetFramework, string ControllerOptions)> RelativeResultsDirectoryData =>
+        TargetFrameworks.All.Select(tfm => (tfm, string.Empty))
+            .Concat(TargetFrameworks.Net.Select(tfm => (tfm, "--crashdump --hangdump --hangdump-timeout 48m")));
+
+    [TestMethod]
+    [DynamicData(nameof(RelativeResultsDirectoryData))]
+    public async Task Trx_WhenRelativeResultsDirectoryAndTestChangesCurrentDirectory_TemporaryDirectoryCanBeDeleted(string tfm, string controllerOptions)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string testRoot = Path.Combine(clone.Path, "test-owned");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--results-directory .{Path.DirectorySeparatorChar} --report-trx --report-trx-filename result.trx {controllerOptions}",
+            new() { ["CHANGE_CURRENT_DIRECTORY"] = testRoot },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+        testHostResult.AssertOutputContains($"TRX sidecar directory: {clone.Path}");
+        Assert.IsFalse(Directory.Exists(testRoot), testHostResult.ToString());
+        Assert.IsEmpty(Directory.GetFiles(clone.Path, "trx-stream-*.bin", SearchOption.AllDirectories));
+
+        var trxDocument = XDocument.Load(Path.Combine(clone.Path, "result.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement counters = trxDocument.Descendants(ns + "Counters").Single();
+        Assert.AreEqual("2", counters.Attribute("total")?.Value, trxDocument.ToString());
+        Assert.AreEqual("2", counters.Attribute("passed")?.Value, trxDocument.ToString());
+        Assert.AreEqual("Completed", trxDocument.Descendants(ns + "ResultSummary").Single().Attribute("outcome")?.Value);
+        Assert.AreEqual(
+            "CleanupAfterChangedDirectory,ResultDuringChangedDirectory",
+            string.Join(",", trxDocument.Descendants(ns + "UnitTestResult").Select(result => result.Attribute("testName")!.Value).OrderBy(name => name, StringComparer.Ordinal)));
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task Trx_WhenRelativeResultsDirectoryAndTestCrashesAfterChangingCurrentDirectory_RecoversCompletedResult(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        using TempDirectory clone = new();
+        testHost = await CloneTestHostAsync(testHost, clone, TestAssetFixture.AssetName);
+        string testRoot = Path.Combine(clone.Path, "test-owned");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--results-directory .{Path.DirectorySeparatorChar} --report-trx --report-trx-filename result.trx",
+            new() { ["CHANGE_CURRENT_DIRECTORY"] = testRoot, ["CRASH_AFTER_CWD_CHANGE"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertOutputContains($"TRX sidecar directory: {clone.Path}");
+        Assert.IsFalse(Directory.Exists(testRoot), testHostResult.ToString());
+        Assert.IsEmpty(Directory.GetFiles(clone.Path, "trx-stream-*.bin", SearchOption.AllDirectories));
+
+        var trxDocument = XDocument.Load(Path.Combine(clone.Path, "result.trx"));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        Assert.AreEqual("Failed", trxDocument.Descendants(ns + "ResultSummary").Single().Attribute("outcome")?.Value);
+        XElement counters = trxDocument.Descendants(ns + "Counters").Single();
+        Assert.AreEqual("1", counters.Attribute("total")?.Value, trxDocument.ToString());
+        Assert.AreEqual("1", counters.Attribute("passed")?.Value, trxDocument.ToString());
+        XElement result = Assert.ContainsSingle(trxDocument.Descendants(ns + "UnitTestResult"));
+        Assert.AreEqual("ResultDuringChangedDirectory", result.Attribute("testName")?.Value);
+        Assert.AreEqual("Passed", result.Attribute("outcome")?.Value);
+    }
+
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Trx_WhenOutOfProcessReportHasNoSelectedTests_LifetimeHandshakeCompletes(string tfm)
@@ -452,6 +517,7 @@ Out of process file artifacts produced:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
@@ -475,6 +541,7 @@ public class Program
             sp => new TestFrameworkCapabilities(new TrxReportCapability()),
             (_,__) => new DummyTestFramework());
         builder.AddCrashDumpProvider();
+        builder.AddHangDumpProvider();
         builder.AddTrxReportProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
@@ -524,6 +591,49 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             return;
         }
 
+        if (Environment.GetEnvironmentVariable("CHANGE_CURRENT_DIRECTORY") is { } testRoot)
+        {
+            string startupDirectory = Directory.GetCurrentDirectory();
+            string temporaryDirectory = Path.Combine(testRoot, "spawn");
+            Directory.CreateDirectory(temporaryDirectory);
+            try
+            {
+                Directory.SetCurrentDirectory(temporaryDirectory);
+                await PublishPassedTestAsync(context, "ResultDuringChangedDirectory");
+
+                // Wait for an actual flushed result, not a delay: cleanup must run while the
+                // streaming writer still owns its handle, and crash recovery needs durable data.
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken);
+                timeout.CancelAfter(TimeSpan.FromSeconds(60));
+                while (true)
+                {
+                    string[] sidecars = Directory.GetFiles(startupDirectory, "trx-stream-*.bin")
+                        .Concat(Directory.GetFiles(temporaryDirectory, "trx-stream-*.bin")).ToArray();
+                    if (sidecars.Any(path => new FileInfo(path).Length > 0))
+                    {
+                        Console.WriteLine($"TRX sidecar directory: {Path.GetDirectoryName(sidecars.Single())}");
+                        break;
+                    }
+
+                    await Task.Delay(10, timeout.Token);
+                }
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(startupDirectory);
+                Directory.Delete(testRoot, recursive: true);
+            }
+
+            if (Environment.GetEnvironmentVariable("CRASH_AFTER_CWD_CHANGE") == "1")
+            {
+                Environment.FailFast("CRASH_AFTER_CWD_CHANGE");
+            }
+
+            await PublishPassedTestAsync(context, "CleanupAfterChangedDirectory");
+            context.Complete();
+            return;
+        }
+
         var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
         PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier);
         // WITH_ARTIFACT carries the file name rather than a flag: the working directory is the test
@@ -552,6 +662,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         }
 
         context.Complete();
+    }
+
+    private async Task PublishPassedTestAsync(ExecuteRequestContext context, string name)
+    {
+        var identifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", name, 0, Array.Empty<string>(), string.Empty);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode() { Uid = name, DisplayName = name, Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, identifier) }));
     }
 }
 """;

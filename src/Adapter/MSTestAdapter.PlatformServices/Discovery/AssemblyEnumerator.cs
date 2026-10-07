@@ -315,7 +315,7 @@ internal class AssemblyEnumerator
             // TestDataRow<T>), falling back to the whole-source ignore message. It must be
             // recomputed per row so an ignore message on one row does not leak to later rows.
             string? testDataSourceIgnoreMessage = sourceLevelIgnoreMessage;
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow, out string? argumentsDisplayNameFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? sourceLevelIgnoreMessage;
             }
@@ -342,6 +342,9 @@ internal class AssemblyEnumerator
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.TestMethod.DisplayName = displayNameFromTestDataRow
+                ?? (!StringEx.IsNullOrWhiteSpace(argumentsDisplayNameFromTestDataRow)
+                    ? TestDataSourceUtilities.ComputeDisplayName(methodInfo, argumentsDisplayNameFromTestDataRow)
+                    : null)
                 ?? dataSource.GetDisplayName(methodInfo, d)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
                 ?? discoveredTest.TestMethod.DisplayName;
