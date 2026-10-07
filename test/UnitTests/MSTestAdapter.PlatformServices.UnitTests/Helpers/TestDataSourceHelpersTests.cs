@@ -11,6 +11,49 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uni
 
 public class TestDataSourceHelpersTests : TestContainer
 {
+    public void TryHandleITestDataRow_ShouldExtractArgumentsDisplayNameAndPreserveOtherMetadata()
+    {
+        var testData = new TestDataRow<(string, int)>((string.Empty, 42))
+        {
+            ArgumentsDisplayName = "empty input",
+            DisplayName = "full name",
+            IgnoreMessage = "ignored row",
+            TestCategories = ["row category"],
+        };
+
+        bool result = TestDataSourceHelpers.TryHandleITestDataRow(
+            [testData], [], out object?[] data, out string? ignoreMessage, out string? displayName,
+            out IList<string>? categories, out string? argumentsDisplayName);
+
+        result.Should().BeTrue();
+        data.Should().Equal(string.Empty, 42);
+        ignoreMessage.Should().Be("ignored row");
+        displayName.Should().Be("full name");
+        categories.Should().Equal("row category");
+        argumentsDisplayName.Should().Be("empty input");
+    }
+
+    public void TryHandleITestDataRow_ArgumentsDisplayNameDefaultsToNull()
+    {
+        bool result = TestDataSourceHelpers.TryHandleITestDataRow(
+            [new TestDataRow<string>(string.Empty)], [], out object?[] data, out _, out _, out _, out string? argumentsDisplayName);
+
+        result.Should().BeTrue();
+        data.Should().Equal(string.Empty);
+        argumentsDisplayName.Should().BeNull();
+    }
+
+    public void TryHandleITestDataRow_WithoutWrapperLeavesDataUnchangedAndArgumentsDisplayNameNull()
+    {
+        object?[] originalData = [string.Empty, 42];
+        bool result = TestDataSourceHelpers.TryHandleITestDataRow(
+            originalData, [], out object?[] data, out _, out _, out _, out string? argumentsDisplayName);
+
+        result.Should().BeFalse();
+        data.Should().BeSameAs(originalData);
+        argumentsDisplayName.Should().BeNull();
+    }
+
     public void TryHandleITestDataRow_WithTestDataRow_ShouldExtractTestCategories()
     {
         // Arrange
