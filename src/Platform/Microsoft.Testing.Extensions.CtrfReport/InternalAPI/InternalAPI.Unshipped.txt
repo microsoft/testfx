@@ -1,3 +1,1 @@
 #nullable enable
-Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.TestId.get -> string!
-Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.TestId.init -> void
