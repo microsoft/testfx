@@ -1512,7 +1512,7 @@ public sealed class MtpServerClientTests
 
         try
         {
-            Assert.IsTrue(handler.Disposed.Wait(DefaultTimeout, TestContext.CancellationToken));
+            Assert.IsTrue(handler.Disposed.Wait((int)DefaultTimeout.TotalMilliseconds, TestContext.CancellationToken));
             // Observe the dedicated disposer, not a pool timer that can lose a race to the bounded shutdown wait.
             Assert.IsTrue(SpinWait.SpinUntil(
                 () => disposeCompletion.Task.IsCompleted || (disposeThread.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
