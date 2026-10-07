@@ -1,0 +1,40 @@
+name: Test build failure analysis
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/build-failure-analysis*.md'
+      - '.github/workflows/shared/build-failure-analysis-fetch.md'
+      - '.github/workflows/tests/test_archive_validation.py'
+      - '.github/workflows/test-build-failure-analysis.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-failure-analysis*.md'
+      - '.github/workflows/shared/build-failure-analysis-fetch.md'
+      - '.github/workflows/tests/test_archive_validation.py'
+      - '.github/workflows/test-build-failure-analysis.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-build-failure-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test archive validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Test build failure analysis archive validation
+        run: python .github/workflows/tests/test_archive_validation.py

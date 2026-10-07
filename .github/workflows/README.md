@@ -380,6 +380,7 @@ the cause.
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
 | [`enable-auto-merge.yml`](./enable-auto-merge.yml) | `pull_request_target` | Enables auto-merge on eligible PRs. |
 | [`markdownlint.yml`](./markdownlint.yml) | PR | Runs `markdownlint` on changed Markdown files. |
+| [`test-build-failure-analysis.yml`](./test-build-failure-analysis.yml) | PR + push + manual | Runs the Build Failure Analysis archive-validation regression suite when its workflow sources or tests change. |
 
 ## Shared components
 
