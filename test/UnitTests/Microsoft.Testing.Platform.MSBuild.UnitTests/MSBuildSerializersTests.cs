@@ -96,19 +96,42 @@ public sealed class MSBuildSerializersTests
     }
 
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
-        => serializer.GetType()
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == SerializeMethodName
-                && method.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }]
+    {
+        MethodInfo method = GetSerializerMethod(
+            serializer,
+            SerializeMethodName,
+            candidate => candidate.Name == SerializeMethodName
+                && candidate.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }]
                 && messageType == typeof(TMessage)
-                && streamType == typeof(Stream))
-            .Invoke(serializer, [message!, stream]);
+                && streamType == typeof(Stream));
+        _ = method.Invoke(serializer, [message!, stream]);
+    }
 
     private static TMessage Deserialize<TMessage>(object serializer, Stream stream)
-        => (TMessage)serializer.GetType()
+    {
+        MethodInfo method = GetSerializerMethod(
+            serializer,
+            DeserializeMethodName,
+            candidate => candidate.Name == DeserializeMethodName
+                && candidate.GetParameters() is [{ ParameterType: var parameterType }]
+                && parameterType == typeof(Stream));
+        return (TMessage)method.Invoke(serializer, [stream])!;
+    }
+
+    private static MethodInfo GetSerializerMethod(object serializer, string methodName, Func<MethodInfo, bool> predicate)
+    {
+        MethodInfo[] methods = serializer.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == DeserializeMethodName
-                && method.GetParameters() is [{ ParameterType: var parameterType }]
-                && parameterType == typeof(Stream))
-            .Invoke(serializer, [stream])!;
+            .Where(predicate)
+            .ToArray();
+
+        return methods.Length switch
+        {
+            1 => methods[0],
+            0 => throw new InvalidOperationException(
+                $"No matching '{methodName}' method was found on serializer '{serializer.GetType().FullName}'."),
+            _ => throw new InvalidOperationException(
+                $"Multiple matching '{methodName}' methods were found on serializer '{serializer.GetType().FullName}'."),
+        };
+    }
 }
