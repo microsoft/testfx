@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AspireTestingVersion>13.4.6</AspireTestingVersion>
-    <CodeCoverageVersion>18.12.0-preview.26479.4</CodeCoverageVersion>
+    <CodeCoverageVersion>18.12.0</CodeCoverageVersion>
     <MSTestVersion>4.5.0-preview.26480.9</MSTestVersion>
     <!-- MSTest.Extensions.Hosting is independently prerelease; update this pin separately
          when selecting a new MSTest sample release, rather than copying MSTestVersion. -->
