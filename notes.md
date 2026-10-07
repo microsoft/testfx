@@ -57,6 +57,10 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-10-07 | Task 2/3 (ConfigurationProviderHelpers.GetChildKeys: 9 tests), Task 7. |
+| 2026-10-06 | Task 2/3 (MSBuild ModuleInfoRequest/RunSummaryInfoRequest serializer tests: 7 tests), Task 7. |
+| 2026-10-05 | Task 2/3 (MSBuildCompatibilityHelper: 3 tests), Task 7. |
+| 2026-10-04 | Task 2/3 (MSBuild FailedTestHelper.FromFailedTest: 9 tests), Task 7. |
 | 2026-10-03 | Task 2/3 (HangDump serializer tests: ActivitySignalRequest/ConsumerPipeNameRequest/GetInProgressTestsRequest+Response, 6 tests), Task 7. |
 | 2026-10-02 | Task 2/3 (Retry serializer round-trip tests: FailedTestRequest/GetListOfFailedTestsRequest+Response/TestRunCountsRequest/ArtifactRequest, 9 tests), Task 7. |
 | 2026-10-01 | Task 2/3 (TcpMessageHandler reset/bare-LF: 2 tests), Task 7. |
@@ -89,7 +93,7 @@
 
 ## Last Run
 
-2026-10-06 UTC (run 37543546908)
+2026-10-07 UTC (run 37699199542)
 
 ## Completed Work (recent, summarized)
 
@@ -160,6 +164,17 @@ Key lasting gotchas:
 - Hand-maintained resource accessors (`PlatformResources.cs` `IS_MTP_UNIT_TESTS` block) must be updated when a unit test needs a newly-referenced resource string (hit for `MissingClientPortFoJsonRpc`).
 - `ServerModeManager`/ServerMode top-level + IPC serializer + `PassiveNode` sweep now largely exhausted.
 
+## Run 2026-10-07 (run 37699199542) — ConfigurationProviderHelpers.GetChildKeys tests
+
+- Task reconciliation: both prior-run PRs merged — #11787 (MSBuild IPC serializers) and #11767 (MSBuildCompatibilityHelper). No open `[test-improver]`-prefixed PRs found needing maintenance.
+- Task 2/3: with the MSBuild/serializer sweep exhausted, pivoted to core `Microsoft.Testing.Platform` internals (Configurations/, Helpers/, Messages/, Requests/, Logging/) flagged in prior runs as "zero-direct-test but needs a dedicated look". Found `ConfigurationProviderHelpers.GetChildKeys` — the hierarchical key-splitting logic shared by `CommandLineConfigurationProvider`, `EnvironmentVariablesConfigurationProvider`, and `JsonConfigurationProvider` — had zero direct unit tests (only incidental exercise via hand-rolled test-double providers in `CommandLineConfigurationProviderTests.cs`/`AggregatedConfigurationTests.cs`).
+- Added `ConfigurationProviderHelpersTests.cs` (9 tests): top-level segments (null parent), immediate-children extraction, dedup, non-matching-prefix exclusion, exact-parent-path-match exclusion (empty remainder), case-insensitive prefix match, case-insensitive dedup, empty input, no-delimiter key with null parent.
+- Gotcha confirmed: MSTEST0068/MSTEST0037 analyzers push `Assert.AreSequenceEqual(expected, actual, SequenceOrder.InAnyOrder)` over `CollectionAssert.AreEquivalent`, and `Assert.HasCount`/`Assert.IsEmpty` over `Assert.AreEqual(count, ...)` — worth remembering as the default pattern for new collection-equality assertions in this repo (not just `CollectionAssert.Subset`/`Membership` as previously noted).
+- Build succeeded (0 warnings) net8.0+net9.0. Full `Microsoft.Testing.Platform.UnitTests` suite: 2789 total net8.0 (was 2780), 2790 total net9.0 (was 2781), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for ConfigurationProviderHelpers.GetChildKeys" on branch `test-assist/configuration-provider-helpers-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, confirmed both prior PRs (#11787, #11767) merged and removed from action list.
+- Remaining candidates for future runs: `Microsoft.Testing.Platform` core internals still have many zero-direct-test classes (Messages/ property types, Requests/TreeNodeFilter internals already covered via `TreeNodeFilterTests.cs`, Logging/ `TypeNameHelper`/`FileLoggerProvider`) — worth another targeted pass; `ObjectPool<T>` is `[ExcludeFromCodeCoverage]` ported Roslyn code, not a candidate; `CountDownEventExtensions`/`ArgumentGuard` already have adequate coverage via `CountDownEventTests.cs` and indirect `ArgumentGuard.Ensure` exercise (initially misidentified as gaps — corrected after closer look at `test/UnitTests/Microsoft.Testing.Platform.UnitTests/Helpers/`); MSTest.Engine internal classes (architecturally blocked, unchanged).
+
 ## Run 2026-10-06 (run 37543546908) — MSBuild ModuleInfoRequest/RunSummaryInfoRequest serializer tests
 
 - Task reconciliation: PR #11741 (HangDump serializers) and #11750 (FailedTestHelper) merged. PR #11728 (Retry serializers) merged. PR #11767 "Add direct unit tests for MSBuildCompatibilityHelper" is open (state/approved, blocked mergeable_state — likely branch-protection/review gate, not a CI failure) — not actionable by this agent, left for maintainer.
@@ -203,23 +218,7 @@ Key lasting gotchas:
 - Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, removed the now-addressed HangDump backlog item, noted ServerMode/IPC/Retry/HangDump sweep as fully exhausted.
 - Remaining candidates for future runs: MSTest.Engine internal classes (architecturally blocked, unchanged); pivot to Task 5 (issue comments) or Task 6 (test infrastructure), or re-scan other extension projects (CrashDump, VideoRecorder) for similar thin-plumbing zero-coverage gaps.
 
-## Run 2026-10-02 (run 37075004936) — Retry named-pipe serializer tests
+## Runs 2026-10-01 to 2026-10-02 — condensed summary
 
-- Task reconciliation: no open `[test-improver]`-prefixed PRs; PR #11708 (TcpMessageHandler, from run 36937877564) was merged by maintainer on 2026-10-02.
-- Task 2/3: picked up standing backlog item (HangDump/Retry IPC serializers, flagged "low priority, thin plumbing" but never actually checked) — found `FailedTestRequest`, `GetListOfFailedTestsRequest`/`Response`, `TestRunCountsRequest`, `ArtifactRequest` (all in `src/Platform/Microsoft.Testing.Extensions.Retry/Serializers/`) had zero direct serializer-level tests (only incidental exercise via `RetryTests.cs` pipe-client/server integration tests).
-- Added `RetrySerializersTests.cs` (9 tests): round-trip tests for all 5 serializer types, including empty-array/null-kind/empty-recovered-uids edge cases.
-- **New gotcha**: `NamedPipeSerializer<T>`/`INamedPipeSerializer` are `[Embedded]` linked-source types — each consuming project (`Microsoft.Testing.Platform`, `Microsoft.Testing.Extensions.Retry`, etc.) compiles its own private copy via `<Compile Include>` linking, so they are NOT type-identical across assemblies even with `InternalsVisibleTo`/ProjectReference. A test project referencing `Microsoft.Testing.Extensions.Retry` cannot declare a parameter of type `NamedPipeSerializer<T>` or `INamedPipeSerializer` and pass a `Retry`-assembly serializer instance to it (CS1503). Fix: use the same reflection-based `Serialize`/`Deserialize` invocation pattern as `Microsoft.Testing.Platform.UnitTests`' `ProtocolSerializerTestHelper` (reach the non-public instance methods via `GetMethods(...).Single(...)`), not a shared generic helper typed on the embedded base class.
-- Build succeeded (0 warnings). Full `Microsoft.Testing.Extensions.UnitTests` net9.0 suite: 2075 total (was 2066), 0 failed, 51 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
-- Created PR "Add unit tests for Retry named-pipe serializers" on branch `test-assist/retry-serializer-tests`.
-- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions, refined backlog item (HangDump/Retry IPC serializers → Retry done, HangDump still open for a future run).
-- Remaining candidates for future runs: HangDump IPC serializers (`ActivitySignalRequestSerializer`, `ConsumerPipeNameSerializer`, `GetInProgressTestsRequest`/`Response` in `src/Platform/Microsoft.Testing.Extensions.HangDump/Serializers/`) — same zero-direct-test gap, same reflection-helper pattern should apply; MSTest.Engine internal classes (architecturally blocked, unchanged).
-
-## Run 2026-10-01 (run 36937877564) — TcpMessageHandler reset/bare-LF tests
-
-- Task reconciliation: confirmed PR #11685 (PassiveNode) was merged by maintainer; no open `[test-improver]`-prefixed PRs needed maintenance.
-- Task 2/3: picked up standing backlog item `TcpMessageHandler` edge cases beyond existing `TcpMessageHandlerTests.cs` — found the `IOException`-wrapping-`SocketException` catch-filter arm (the shape a real `NetworkStream` reset actually throws) and the documented bare-LF header-terminator tolerance both had zero coverage.
-- Added 2 tests to `TcpMessageHandlerTests.cs` (`ReadAsync_IOExceptionWrappingConnectionReset_ReturnsNull`, `ReadAsync_BareLineFeedHeaderTerminator_IsTolerated`) plus a small `ThrowingStream` helper (parallel to existing `ConnectionResetStream`).
-- Build succeeded (0 warnings). Full `Microsoft.Testing.Platform.UnitTests` net8.0 suite: 2776 total (was 2774), 0 failed, 22 skipped (pre-existing), no regressions. `dotnet format whitespace --verify-no-changes` clean.
-- Created PR "Add unit tests for TcpMessageHandler IOException-wrapped reset and bare-LF tolerance" on branch `test-assist/tcp-message-handler-tests`.
-- Task 7: closed September issue #10920, created October issue; Run History entry added for this run.
-- Remaining candidates for future runs: HangDump/Retry IPC serializers (low priority, thin plumbing); MSTest.Engine internal classes (architecturally blocked); consider pivoting to a fresh area (Retry/HangDump extensions, or Task 5/6) if ServerMode/IPC area yields nothing new next run.
+PR (2026-10-01, merged): TcpMessageHandler IOException-wrapped reset + bare-LF tolerance (2 tests). PR (2026-10-02, merged): Retry named-pipe serializers (9 tests, `RetrySerializersTests.cs`).
+Key lasting gotcha: `NamedPipeSerializer<T>`/`INamedPipeSerializer` are `[Embedded]` linked-source types — each consuming project compiles its own private copy, so they are NOT type-identical across assemblies even with `InternalsVisibleTo`. Use the reflection-based `Serialize`/`Deserialize` invocation pattern (`GetMethods(...).Single(...)`), not a shared generic helper typed on the embedded base class.
