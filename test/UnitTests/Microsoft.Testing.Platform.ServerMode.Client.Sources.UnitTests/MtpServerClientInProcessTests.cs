@@ -797,6 +797,39 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task ShutdownServerAsync_ServerStopsBeforeCancellationCompletes_WaitsForCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        using var releaseRegistration = new ManualResetEventSlim();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
+        {
+            serverCompletion.TrySetResult(0);
+            releaseRegistration.Wait(TestContext.CancellationToken);
+        });
+
+        Task<bool> shutdown = InvokeShutdownServerAsync(
+            serverCompletion.Task,
+            cancellation,
+            TimeSpan.Zero,
+            NullMtpClientLogger.Instance);
+
+        try
+        {
+            await WithTimeoutAsync(serverCompletion.Task);
+            Assert.IsFalse(
+                await CompletesQuicklyAsync(shutdown),
+                "Shutdown must keep waiting while a cancellation registration can still use the token.");
+        }
+        finally
+        {
+            releaseRegistration.Set();
+        }
+
+        Assert.IsTrue(await WithTimeoutAsync(shutdown));
+    }
+
+    [TestMethod]
     public async Task ShutdownServerAsync_BlockingCancellationRegistration_ReturnsFalse()
     {
         using var cancellation = new CancellationTokenSource();
@@ -888,7 +921,7 @@ public sealed class MtpServerClientInProcessTests
                 "The in-flight cancellation task must be observed with the exact diagnostic used for late failures.");
 
             releaseRegistration.Set();
-            Assert.IsFalse(await WithTimeoutAsync(shutdown));
+            Assert.IsTrue(await WithTimeoutAsync(shutdown));
         }
         finally
         {
@@ -1571,6 +1604,19 @@ public sealed class MtpServerClientInProcessTests
         if (value is string text)
         {
             return text.Contains(expected, StringComparison.Ordinal);
+        }
+
+        if (value is Array array)
+        {
+            foreach (object? element in array)
+            {
+                if (ObjectGraphContainsString(element, expected, visited, remainingDepth - 1))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         Type type = value.GetType();
