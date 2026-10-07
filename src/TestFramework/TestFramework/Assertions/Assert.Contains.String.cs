@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     #region Contains
+
     /// <summary>
     /// Tests whether the specified string contains the specified substring
     /// and throws an exception if the substring does not occur within the
@@ -76,7 +77,6 @@ public sealed partial class Assert
         ContainsCore(substring, value, comparisonType, "Assert.Contains", message, substringExpression, valueExpression, shouldContain: true);
     }
 
-    #endregion // Contains
     #endregion // Contains
     [DoesNotReturn]
     private static void ReportAssertContainsItemFailed(object? expected, string? userMessage, string expectedExpression, string collectionExpression, object? comparer = null)

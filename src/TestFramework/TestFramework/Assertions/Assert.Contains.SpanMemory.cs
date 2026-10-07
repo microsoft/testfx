@@ -8,6 +8,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     #region Contains
+#if NETCOREAPP3_1_OR_GREATER
+
     /// <summary>
     /// Tests whether the specified span contains the given element.
     /// </summary>

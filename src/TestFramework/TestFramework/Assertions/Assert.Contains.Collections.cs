@@ -237,5 +237,7 @@ public sealed partial class Assert
         where TCollection : IEnumerable<T>
         => Contains(predicate, (IEnumerable<T>)collection, message, predicateExpression, collectionExpression);
 
+#endif
+
     #endregion // Contains
 }
