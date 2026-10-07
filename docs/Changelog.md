@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="4.5.1" />[4.5.1] - 2026-10-07
 
-See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4.5.1...v4.5.0)
+See full log [of v4.5.0...v4.5.1](https://github.com/microsoft/testfx/compare/v4.5.0...v4.5.1)
 
 There was a problem with the release infrastructure preventing us from shipping `4.5.0`.
 
