@@ -27,7 +27,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
         string pidFile = Path.Combine(AssetFixture.ProjectPath, $"{Guid.NewGuid():N}.pid");
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--filter ClassName=CharacterMapTests",
+            "--filter ClassName=DesktopApplicationTests",
             environmentVariables: new()
             {
                 ["DOTNET_ROLL_FORWARD"] = "Major",
@@ -54,7 +54,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
         buildResult.AssertExitCodeIs(0);
 
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --no-build --no-restore --filter ClassName=CharacterMapTests",
+            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --no-build --no-restore --filter ClassName=DesktopApplicationTests",
             workingDirectory: AssetFixture.VSTestProjectPath,
             environmentVariables: new()
             {
@@ -349,6 +349,7 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <None Update="DesktopApplication.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
 
@@ -403,24 +404,51 @@ public sealed class WindowsUIAutomationSdkTests : AcceptanceTestBase<WindowsUIAu
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\CharacterMapTests.cs" Link="CharacterMapTests.cs" />
+    <Compile Include="..\DesktopApplicationTests.cs" Link="DesktopApplicationTests.cs" />
+    <None Include="..\DesktopApplication.ps1" Link="DesktopApplication.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
 
-#file CharacterMapTests.cs
+#file DesktopApplication.ps1
+param([string]$ChildPidFile)
+
+$ErrorActionPreference = 'Stop'
+
+if ($ChildPidFile) {
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new(
+        (Join-Path $PSHOME 'powershell.exe'),
+        "-NoProfile -NonInteractive -ExecutionPolicy Bypass -STA -File `"$PSCommandPath`"")
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $child = [System.Diagnostics.Process]::Start($startInfo)
+    [System.IO.File]::WriteAllText($ChildPidFile, $child.Id.ToString([System.Globalization.CultureInfo]::InvariantCulture))
+    $child.Dispose()
+    exit
+}
+
+Add-Type -AssemblyName System.Windows.Forms
+$window = [System.Windows.Forms.Form]::new()
+$window.Text = 'TestFx UI Automation'
+try {
+    [System.Windows.Forms.Application]::Run($window)
+} finally {
+    $window.Dispose()
+}
+
+#file DesktopApplicationTests.cs
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [STATestClass]
-public class CharacterMapTests : WindowTest
+public class DesktopApplicationTests : WindowTest
 {
     protected override ProcessStartInfo CreateProcessStartInfo()
-        => new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe"));
+        => DesktopApplication.CreateProcessStartInfo();
 
     [TestMethod]
-    public void CharacterMap_MainWindow_IsVisible()
+    public void DesktopApplication_MainWindow_IsVisible()
     {
         string pidFile = Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_PID_FILE")
             ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_PID_FILE must be set.");
@@ -431,10 +459,29 @@ public class CharacterMapTests : WindowTest
     }
 
     [TestMethod]
-    public void CharacterMap_MainWindow_HasNonEmptyTitle()
+    public void DesktopApplication_MainWindow_HasExpectedTitle()
+        => Assert.AreEqual("TestFx UI Automation", MainWindow.Current.Name);
+}
+
+internal static class DesktopApplication
+{
+    internal static ProcessStartInfo CreateProcessStartInfo()
     {
-        string title = MainWindow.Current.Name;
-        Assert.IsFalse(string.IsNullOrEmpty(title), "Window title should not be empty.");
+        // Keep the window and its lifetime under fixture control rather than launching a system app.
+        ProcessStartInfo startInfo = new(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"))
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        startInfo.ArgumentList.Add("-NoProfile");
+        startInfo.ArgumentList.Add("-NonInteractive");
+        startInfo.ArgumentList.Add("-ExecutionPolicy");
+        startInfo.ArgumentList.Add("Bypass");
+        startInfo.ArgumentList.Add("-STA");
+        startInfo.ArgumentList.Add("-File");
+        startInfo.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "DesktopApplication.ps1"));
+        return startInfo;
     }
 }
 
@@ -487,7 +534,7 @@ public class CustomWindowDiscoveryTests : WindowTest
     private int _findWindowInvocationCount;
 
     protected override ProcessStartInfo CreateProcessStartInfo()
-        => new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "charmap.exe"));
+        => DesktopApplication.CreateProcessStartInfo();
 
     protected override AutomationElement? FindWindow(Process applicationProcess)
     {
@@ -584,9 +631,14 @@ public class LauncherChildWindowTests : WindowTest
     private Process? _childProcess;
 
     protected override ProcessStartInfo CreateProcessStartInfo()
-        => new(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe"),
-            "-NoProfile -NonInteractive -Command \"$process = Start-Process -FilePath (Join-Path $env:WINDIR 'System32\\charmap.exe') -PassThru; $process.Id | Set-Content -LiteralPath $env:MSTEST_UI_AUTOMATION_CHILD_PID_FILE\"");
+    {
+        ProcessStartInfo startInfo = DesktopApplication.CreateProcessStartInfo();
+        startInfo.ArgumentList.Add("-ChildPidFile");
+        startInfo.ArgumentList.Add(
+            Environment.GetEnvironmentVariable("MSTEST_UI_AUTOMATION_CHILD_PID_FILE")
+                ?? throw new InvalidOperationException("MSTEST_UI_AUTOMATION_CHILD_PID_FILE must be set."));
+        return startInfo;
+    }
 
     protected override AutomationElement? FindWindow(Process applicationProcess)
     {
@@ -614,7 +666,10 @@ public class LauncherChildWindowTests : WindowTest
 
     [TestMethod]
     public void ChildWindowIsDiscovered()
-        => Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType);
+    {
+        Assert.AreEqual(ControlType.Window, MainWindow.Current.ControlType);
+        Assert.AreEqual("TestFx UI Automation", MainWindow.Current.Name);
+    }
 
     private static Process? TryGetChildProcess()
     {
