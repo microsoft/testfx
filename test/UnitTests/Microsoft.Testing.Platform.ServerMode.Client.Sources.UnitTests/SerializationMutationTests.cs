@@ -35,8 +35,13 @@ using TestNodeUpdateMessage = serverclient::Microsoft.Testing.Platform.Extension
 
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
+/// <remarks>
+/// Only <see cref="RegisterClientSerializers_WhenUnregistered_PopulatesTablesAndPublishesRegistration"/> changes
+/// the process-global serializer registry and registration flag. Its method-level
+/// <see cref="DoNotParallelizeAttribute"/> keeps those changes isolated from parallel readers.
+/// The already-registered probe holds the registration lock without changing the registry.
+/// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class SerializationMutationTests
 {
     public TestContext TestContext { get; set; } = null!;
@@ -46,20 +51,18 @@ public sealed class SerializationMutationTests
     {
         SerializerUtilities.RegisterClientSerializers();
         object registrationLock = GetStaticField<object>(typeof(SerializerUtilities), "ClientSerializersLock");
+        Task? registration = null;
 
         Monitor.Enter(registrationLock);
         try
         {
-            using ManualResetEventSlim started = new();
-            var registration = Task.Run(
-                () =>
-                {
-                    started.Set();
-                    SerializerUtilities.RegisterClientSerializers();
-                },
-                TestContext.CancellationToken);
+            // A pool-backed probe can starve while this test blocks a parallel worker holding the lock.
+            registration = Task.Factory.StartNew(
+                SerializerUtilities.RegisterClientSerializers,
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
 
-            Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
             Assert.IsTrue(
                 registration.Wait(5_000, TestContext.CancellationToken),
                 "Registration should return before the held lock is released.");
@@ -67,10 +70,18 @@ public sealed class SerializationMutationTests
         finally
         {
             Monitor.Exit(registrationLock);
+            if (registration is not null)
+            {
+                // Drain the probe even if the test was canceled while waiting with the lock held.
+                Assert.IsTrue(
+                    registration.Wait(5_000, CancellationToken.None),
+                    "Registration should complete after the lock is released.");
+            }
         }
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public void RegisterClientSerializers_WhenUnregistered_PopulatesTablesAndPublishesRegistration()
     {
         FieldInfo registeredField = GetStaticField(typeof(SerializerUtilities), "s_clientSerializersRegistered");

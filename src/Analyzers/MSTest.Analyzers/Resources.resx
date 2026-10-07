@@ -514,6 +514,10 @@ The type declaring these methods should also respect the following rules:
     <value>Asynchronous test fixture methods do not require the 'Async' suffix</value>
     <comment>{Locked="'Async'"}</comment>
   </data>
+  <data name="NonNullableReferenceNotInitializedSuppressorJustification" xml:space="preserve">
+    <value>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</value>
+    <comment>{Locked="TestContext"}</comment>
+  </data>
   <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test methods do not require the 'Async' suffix</value>
     <comment>{Locked="'Async'"}</comment>

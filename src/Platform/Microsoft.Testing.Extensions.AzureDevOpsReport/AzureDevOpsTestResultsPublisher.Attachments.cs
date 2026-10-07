@@ -29,7 +29,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _failedAttachmentCount);
-                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+                await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}", CancellationToken.None).ConfigureAwait(false);
             }
         }
     }
@@ -74,7 +74,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _failedAttachmentCount);
-                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+                await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}", CancellationToken.None).ConfigureAwait(false);
             }
         }
     }
