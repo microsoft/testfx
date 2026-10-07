@@ -2,6 +2,8 @@
 
 `MSTest.Extensions.Hosting` lets an application-owned `Microsoft.Extensions.Hosting` container create MSTest test classes.
 
+This package remains prerelease, including in MSTest RTM builds, while its `Microsoft.Testing.Extensions.Hosting` dependency is alpha.
+
 Register the integration while building the same host that runs Microsoft Testing Platform:
 
 ```csharp
