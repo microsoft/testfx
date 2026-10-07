@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MTPVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Extensions.Hosting" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$(MSTestExtensionsHostingVersion)" />
   </ItemGroup>
 
   <ItemGroup>

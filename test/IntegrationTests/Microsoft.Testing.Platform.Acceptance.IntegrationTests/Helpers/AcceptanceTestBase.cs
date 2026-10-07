@@ -33,6 +33,7 @@ public abstract class AcceptanceTestBase
             ?? throw new InvalidOperationException("The repository global.json does not define a non-empty MSBuild.Sdk.Extras version.");
 
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
+        MSTestExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Extensions.Hosting.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
         MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
@@ -84,6 +85,8 @@ public abstract class AcceptanceTestBase
     }
 
     public static string MSTestVersion { get; private set; }
+
+    public static string MSTestExtensionsHostingVersion { get; private set; }
 
     public static string MSTestSourceGenerationVersion { get; private set; }
 
