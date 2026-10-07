@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.5.1" />[4.5.1] - Unreleased
+## <a name="4.5.1" />[4.5.1] - 2026-10-07
 
-## <a name="4.5.0" />[4.5.0] - 2026-10-05
+See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4.5.1...v4.5.0)
+
+There was a problem with the release infrastructure preventing us to ship `4.5.0`.
+
+## <a name="4.5.0" />[4.5.0] - Unreleased
 
 See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4.4.1...v4.5.0)
 
