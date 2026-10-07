@@ -43,23 +43,30 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
         {
             await WriteParticipantLeaseAsync(participantFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
 
-            ownsOwnerFile = await TryAcquireOwnerAsync(ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
-            if (ownsOwnerFile)
+            async Task<AzureDevOpsCoordinatedRun?> TryCreateOwnedRunAsync()
             {
+                ownsOwnerFile = await TryAcquireOwnerAsync(ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
+                if (!ownsOwnerFile)
+                {
+                    return null;
+                }
+
                 int runId = await createRunAsync(cancellationToken).ConfigureAwait(false);
                 await TryWriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
                 return new AzureDevOpsCoordinatedRun(runId, true, configuration.BuildId, configuration.ResultsDirectory, runIdFilePath, ownerFilePath, participantFilePath);
             }
 
+            if (await TryCreateOwnedRunAsync().ConfigureAwait(false) is { } ownedRun)
+            {
+                return ownedRun;
+            }
+
             AzureDevOpsRunIdFile? runIdFile = await WaitForRunIdFileAsync(runIdFilePath, ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
             if (runIdFile is null)
             {
-                ownsOwnerFile = await TryAcquireOwnerAsync(ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
-                if (ownsOwnerFile)
+                if (await TryCreateOwnedRunAsync().ConfigureAwait(false) is { } retriedOwnedRun)
                 {
-                    int runId = await createRunAsync(cancellationToken).ConfigureAwait(false);
-                    await TryWriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
-                    return new AzureDevOpsCoordinatedRun(runId, true, configuration.BuildId, configuration.ResultsDirectory, runIdFilePath, ownerFilePath, participantFilePath);
+                    return retriedOwnedRun;
                 }
 
                 runIdFile = await WaitForRunIdFileAsync(runIdFilePath, ownerFilePath, configuration.BuildId, cancellationToken).ConfigureAwait(false);
