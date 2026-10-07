@@ -202,12 +202,12 @@ internal sealed class MSTestRunSettings : IRunSettings
     {
         XElement runSettingsElement = document.Element("RunSettings")!;
 
-        if (runSettingsElement.Element("LoggerRunSettings") is not null)
+        if (runSettingsElement.Elements().Any(section => string.Equals(section.Name.ToString(), "LoggerRunSettings", StringComparison.OrdinalIgnoreCase)))
         {
             messageLogger.SendMessage(TestMessageLevel.Warning, PlatformAdapterResources.UnsupportedRunsettingsLoggers);
         }
 
-        if (runSettingsElement.Element("DataCollectionRunSettings") is not null)
+        if (runSettingsElement.Elements().Any(section => string.Equals(section.Name.ToString(), "DataCollectionRunSettings", StringComparison.OrdinalIgnoreCase)))
         {
             messageLogger.SendMessage(TestMessageLevel.Warning, PlatformAdapterResources.UnsupportedRunsettingsDatacollectors);
         }

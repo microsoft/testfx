@@ -104,27 +104,35 @@ public sealed class MSTestRunSettingsTests : TestContainer
 
     public void KnownUnsupportedSectionsKeepExistingWarnings()
     {
-        const string SettingsXml = """
-            <RunSettings>
-              <LoggerRunSettings />
-              <DataCollectionRunSettings />
-              <RunConfiguration>
-                <MaxCpuCount>2</MaxCpuCount>
-              </RunConfiguration>
-            </RunSettings>
-            """;
-        List<string> warnings = [];
-        Mock<IMessageLogger> messageLogger = new(MockBehavior.Strict);
-        messageLogger
-            .Setup(logger => logger.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()))
-            .Callback<TestMessageLevel, string>((_, message) => warnings.Add(message));
+        foreach ((string loggerSection, string dataCollectorSection) in new[]
+        {
+            ("LoggerRunSettings", "DataCollectionRunSettings"),
+            ("loggerrunsettings", "datacollectionrunsettings"),
+            ("LoGgErRuNsEtTiNgS", "DaTaCoLlEcTiOnRuNsEtTiNgS"),
+        })
+        {
+            string settingsXml = $"""
+                <RunSettings>
+                  <{loggerSection} />
+                  <{dataCollectorSection} />
+                  <RunConfiguration>
+                    <MaxCpuCount>2</MaxCpuCount>
+                  </RunConfiguration>
+                </RunSettings>
+                """;
+            List<string> warnings = [];
+            Mock<IMessageLogger> messageLogger = new(MockBehavior.Strict);
+            messageLogger
+                .Setup(logger => logger.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()))
+                .Callback<TestMessageLevel, string>((_, message) => warnings.Add(message));
 
-        _ = CreateRunSettings(SettingsXml, messageLogger.Object);
+            _ = CreateRunSettings(settingsXml, messageLogger.Object);
 
-        warnings.Should().Equal(
-            PlatformAdapterResources.UnsupportedRunsettingsLoggers,
-            PlatformAdapterResources.UnsupportedRunsettingsDatacollectors,
-            string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.UnsupportedRunconfigurationSetting, "MaxCpuCount"));
+            warnings.Should().Equal(
+                PlatformAdapterResources.UnsupportedRunsettingsLoggers,
+                PlatformAdapterResources.UnsupportedRunsettingsDatacollectors,
+                string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.UnsupportedRunconfigurationSetting, "MaxCpuCount"));
+        }
     }
 
     private static bool GetDesignMode(string clientId, bool? isStateful)
