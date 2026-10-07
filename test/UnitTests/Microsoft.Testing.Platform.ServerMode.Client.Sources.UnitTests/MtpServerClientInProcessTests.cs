@@ -801,10 +801,12 @@ public sealed class MtpServerClientInProcessTests
     {
         using var cancellation = new CancellationTokenSource();
         using var releaseRegistration = new ManualResetEventSlim();
+        using var serverStopped = new ManualResetEventSlim();
         var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
         {
             serverCompletion.TrySetResult(0);
+            serverStopped.Set();
             releaseRegistration.Wait(TestContext.CancellationToken);
         });
 
@@ -814,17 +816,28 @@ public sealed class MtpServerClientInProcessTests
             TimeSpan.Zero,
             NullMtpClientLogger.Instance);
 
-        try
-        {
-            await WithTimeoutAsync(serverCompletion.Task);
-            Assert.IsFalse(
-                await CompletesQuicklyAsync(shutdown),
-                "Shutdown must keep waiting while a cancellation registration can still use the token.");
-        }
-        finally
-        {
-            releaseRegistration.Set();
-        }
+        // Keep the probe off the thread pool: on net462 an awaited timer can resume only after
+        // shutdown has exhausted its shared cancellation grace and correctly returned false.
+        await Task.Factory.StartNew(
+            () =>
+            {
+                try
+                {
+                    Assert.IsTrue(
+                        serverStopped.Wait(DefaultTimeout, TestContext.CancellationToken),
+                        "The server must stop inside the cancellation registration.");
+                    Assert.IsFalse(
+                        shutdown.Wait(100, TestContext.CancellationToken),
+                        "Shutdown must keep waiting while a cancellation registration can still use the token.");
+                }
+                finally
+                {
+                    releaseRegistration.Set();
+                }
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
 
         Assert.IsTrue(await WithTimeoutAsync(shutdown));
     }
