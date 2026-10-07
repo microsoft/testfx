@@ -25,6 +25,10 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
     public async Task NativeSdk_ParallelModulesPublishAllResultsAndPreserveFailureExitStatus(bool failingTests)
     {
         using TempDirectory directory = new();
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        // Bound the rendezvous if the SDK stops launching concurrent modules, allowing loaded agents
+        // ample time for three process startups and teardown.
+        cancellation.CancelAfter(TimeSpan.FromMinutes(2));
         await using AzureDevOpsService service = new();
         service.AllowFirstCompletion.SetResult(true);
         var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -51,7 +55,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             ["BUILD_BUILDID"] = "123",
             ["TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID"] = null,
             ["TESTINGPLATFORM_AZUREDEVOPS_RESULTMAP"] = null,
-            ["AZDO_MODULE"] = "C",
+            ["AZDO_NATIVE_RENDEZVOUS"] = "true",
             ["AZDO_RENDEZVOUS"] = directory.Path,
             ["AZDO_FAIL"] = failingTests ? "true" : "false",
             ["DOTNET_ROOT"] = Path.GetDirectoryName(muxer),
@@ -61,7 +65,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             $"\"{muxer}\" test --test-modules \"{Path.Combine("*", AssetName + ".dll")}\" --max-parallel-test-modules 3 --publish-azdo-test-results --results-directory \"{directory.Path}\" --no-ansi --progress off",
             environmentVariables: environment,
             workingDirectory: directory.Path,
-            cancellationToken: TestContext.CancellationToken);
+            cancellationToken: cancellation.Token);
 
         if (failingTests)
         {
@@ -72,9 +76,9 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             Assert.AreEqual((int)ExitCode.Success, exitCode, command.StandardOutput + command.ErrorOutput);
         }
 
-        Assert.AreSequenceEqual(new[] { "C", "C", "C" }, service.TestNames);
-        Assert.IsGreaterThanOrEqualTo(1, service.CompletedRunCount);
-        Assert.AreEqual(service.CreatedRunCount, service.CompletedRunCount);
+        Assert.AreSequenceEqual(new[] { "First", "Second", "Third" }, service.TestNames.OrderBy(name => name, StringComparer.Ordinal));
+        Assert.AreEqual(1, service.CreatedRunCount);
+        Assert.AreEqual(1, service.CompletedRunCount);
         Assert.AreEqual(0, service.RejectedResultCount);
     }
 
@@ -103,6 +107,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 ["TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID"] = null,
                 ["TESTINGPLATFORM_AZUREDEVOPS_RESULTMAP"] = null,
                 ["AZDO_MODULE"] = module,
+                ["AZDO_NATIVE_RENDEZVOUS"] = "false",
                 ["AZDO_RENDEZVOUS"] = directory.Path,
                 ["AZDO_FAIL"] = module == "C" && failingSuccessor ? "true" : "false",
             };
@@ -387,16 +392,19 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
-string module = Environment.GetEnvironmentVariable("AZDO_MODULE")!;
+bool nativeRendezvous = Environment.GetEnvironmentVariable("AZDO_NATIVE_RENDEZVOUS") == "true";
+string module = nativeRendezvous
+    ? new DirectoryInfo(AppContext.BaseDirectory).Name
+    : Environment.GetEnvironmentVariable("AZDO_MODULE")!;
 string rendezvous = Environment.GetEnvironmentVariable("AZDO_RENDEZVOUS")!;
 File.WriteAllText(Path.Combine(rendezvous, $"{module}.started"), string.Empty);
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new Framework(module, rendezvous));
+builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new Framework(module, rendezvous, nativeRendezvous));
 builder.AddAzureDevOpsProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
-sealed class Framework(string module, string rendezvous) : ITestFramework, IDataProducer
+sealed class Framework(string module, string rendezvous, bool nativeRendezvous) : ITestFramework, IDataProducer
 {
     public string Uid => nameof(Framework);
     public string Version => "1.0.0";
@@ -411,7 +419,17 @@ sealed class Framework(string module, string rendezvous) : ITestFramework, IData
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         File.WriteAllText(Path.Combine(rendezvous, $"{module}.ready"), string.Empty);
-        if (module != "C")
+        if (nativeRendezvous)
+        {
+            // Session-start publishing has registered every module before its framework writes ready.
+            // No publisher can finish until all three have acquired the same active run.
+            string[] modules = ["First", "Second", "Third"];
+            while (modules.Any(name => !File.Exists(Path.Combine(rendezvous, $"{name}.ready"))))
+            {
+                await Task.Delay(50, context.CancellationToken);
+            }
+        }
+        else if (module != "C")
         {
             while (!File.Exists(Path.Combine(rendezvous, $"{module}.release")))
             {
@@ -429,7 +447,7 @@ sealed class Framework(string module, string rendezvous) : ITestFramework, IData
             DisplayName = module,
             Properties = new PropertyBag(state),
         }));
-        if (module != "C")
+        if (module is "A" or "B")
         {
             string path = Path.Combine(rendezvous, $"{module}.coverage");
             using (FileStream file = File.OpenWrite(path))
