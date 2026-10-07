@@ -190,6 +190,11 @@ In particular, verify:
 - Tests would fail if the production behavior were wrong; reject missing,
   tautological, self-comparing, or only-trivial assertions.
 - Async assertions and operations are awaited.
+- Deterministic multiline output is checked with one exact raw-string
+  (`"""..."""`) expectation, not multiple substring assertions or escaped
+  line breaks. Where surrounding output is genuinely variable, match a
+  complete deterministic raw-string block rather than individual lines.
+  Preserve ordering, indentation, blank lines, and trailing newlines.
 - Tests are isolated under parallel execution and restore environment, culture,
   static state, files, and other process-wide state.
 - Synchronization is deterministic. Avoid sleeps and fragile duration

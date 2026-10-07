@@ -511,8 +511,12 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
 
         string escapedOutput = ShowEscape(stringBuilderConsole.Output)!;
-        string expectedSummaryLines =
-            $"\x241b[32m  succeeded: 1{Environment.NewLine}\x241b[m\x241b[33m  skipped: 1{Environment.NewLine}\x241b[m  duration:";
+        const string expectedSummaryLines =
+            """
+            ␛[32m  succeeded: 1
+            ␛[m␛[33m  skipped: 1
+            ␛[m  duration:
+            """;
         Assert.Contains(expectedSummaryLines, escapedOutput);
     }
 
@@ -1163,9 +1167,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        Assert.Contains("Coverage Threshold Results:", console.Output);
-        Assert.Contains("Total - Line (Minimum over Module): 85.5% >= 80.0% threshold", console.Output);
-        Assert.DoesNotContain("Coverage Threshold Failures:", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line (Minimum over Module): 85.5% >= 80.0% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1179,8 +1188,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        Assert.Contains("Total - Branch (Total over Module): 75.0% < 80.0% threshold", console.Output);
-        Assert.DoesNotContain(">=", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Branch (Total over Module): 75.0% < 80.0% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1196,8 +1211,14 @@ public sealed class TerminalTestReporterTests
 
         string actual = 79.96d.ToString("G17", CultureInfo.InvariantCulture);
         string required = 80d.ToString("G17", CultureInfo.InvariantCulture);
-        Assert.Contains($"Total - Line: {actual}% < {required}% threshold", console.Output);
-        Assert.DoesNotContain("80.0% < 80.0%", console.Output);
+        Assert.AreEqual(
+            $"""
+
+              Coverage Threshold Results:
+                Total - Line: {actual}% < {required}% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1224,8 +1245,14 @@ public sealed class TerminalTestReporterTests
         reporter.AppendCoverageSummary([], [threshold]);
 
         Assert.AreEqual(expectedPassed, threshold.Passed);
-        Assert.Contains($"Total - Line: {expectedText}", console.Output);
-        Assert.DoesNotContain("%", console.Output);
+        Assert.AreEqual(
+            $"""
+
+              Coverage Threshold Results:
+                Total - Line: {expectedText}
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1240,8 +1267,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([summary], []);
 
-        Assert.Contains("Total - Line: N/A", console.Output);
-        Assert.DoesNotContain("N/A%", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line: N/A
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1255,9 +1288,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        string output = console.Output.Replace("\r\n", "\n");
-        Assert.Contains("Coverage Threshold Results:", output);
-        Assert.DoesNotContain("\n\n", output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Branch (Total over Module): 75.0% < 80.0% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1274,8 +1312,15 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [passing, failing]);
 
-        Assert.Contains("Line (Minimum over Module): 90.0% >= 80.0% threshold", console.Output);
-        Assert.Contains("Method (Average over Type): 70.0% < 80.0% threshold", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line (Minimum over Module): 90.0% >= 80.0% threshold
+                Total - Method (Average over Type): 70.0% < 80.0% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1291,8 +1336,15 @@ public sealed class TerminalTestReporterTests
         reporter.AppendCoverageSummary([], [passing, failing]);
 
         string escaped = ShowEscape(console.Output)!;
-        Assert.Contains("\x241b[32m    Total - Line:", escaped);
-        Assert.Contains("\x241b[31m    Total - Branch:", escaped);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+            ␛[32m    Total - Line: 90.0% >= 80.0% threshold
+            ␛[m␛[31m    Total - Branch: 70.0% < 80.0% threshold
+            ␛[m
+            """,
+            escaped);
     }
 
     [TestMethod]
@@ -1311,9 +1363,15 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([overall, module], []);
 
-        Assert.Contains("Code Coverage Summary:", console.Output);
-        Assert.Contains("Total - Line: 85.5%", console.Output);
-        Assert.Contains("MyModule.dll - Branch: 75.0%", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line: 85.5%
+                MyModule.dll - Branch: 75.0%
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1346,7 +1404,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        Assert.Contains("MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1366,9 +1431,14 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([summary], []);
 
-        Assert.Contains("Module␊Name - MC/DC␉Metric: 50.0%", console.Output);
-        Assert.DoesNotContain("Module\nName", console.Output);
-        Assert.DoesNotContain("MC/DC\tMetric", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Module␊Name - MC/DC␉Metric: 50.0%
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1387,10 +1457,16 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([summary], []);
 
-        Assert.Contains("Total - Line [producer-a]: 80.0%", console.Output);
-        Assert.Contains("Total - Line [producer␊b]: 70.0%", console.Output);
-        Assert.Contains("Total - Branch: 60.0%", console.Output);
-        Assert.DoesNotContain("Branch [producer-a]", console.Output);
+        Assert.AreEqual(
+            """
+
+              Code Coverage Summary:
+                Total - Line [producer-a]: 80.0%
+                Total - Line [producer␊b]: 70.0%
+                Total - Branch: 60.0%
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1427,10 +1503,16 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [first, second, unique]);
 
-        Assert.Contains("Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold", console.Output);
-        Assert.Contains("Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold", console.Output);
-        Assert.Contains("Total - Branch: 90.0% >= 80.0% threshold", console.Output);
-        Assert.DoesNotContain("Branch [", console.Output);
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold
+                Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold
+                Total - Branch: 90.0% >= 80.0% threshold
+
+            """,
+            console.Output);
     }
 
     [TestMethod]
@@ -1455,10 +1537,17 @@ public sealed class TerminalTestReporterTests
 
             reporter.AppendCoverageSummary([summary], [threshold]);
 
-            Assert.Contains("Total - Line: 50.0%", console.Output);
-            Assert.Contains("Total - Line: 79.5% < 80.0% threshold", console.Output);
-            Assert.DoesNotContain("50,0%", console.Output);
-            Assert.DoesNotContain("79,5%", console.Output);
+            Assert.AreEqual(
+                """
+
+                  Code Coverage Summary:
+                    Total - Line: 50.0%
+
+                  Coverage Threshold Results:
+                    Total - Line: 79.5% < 80.0% threshold
+
+                """,
+                console.Output);
         }
         finally
         {
