@@ -1258,18 +1258,23 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    public async Task MSTestSdk_PackagedWinUI_DefaultsToMtpWithPackagedAppLauncher()
+    [DataRow("Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx")]
+    [DataRow("Unix", "", "", "")]
+    public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
+        string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "PackagedWinUISdk",
-            """
+            $$"""
             <UseWinUI>true</UseWinUI>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            <OS>{{operatingSystem}}</OS>
             """);
 
-        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
-        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
-        result.AssertOutputContains("OutputType=Exe");
+        result.AssertOutputContains(
+            "WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true;OutputType=Exe;");
+        result.AssertOutputContains(
+            $";Controller={controller};ControllerTfm={controllerTfm};ControllerExtensions={controllerExtensions}");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
 
