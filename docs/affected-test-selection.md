@@ -14,7 +14,7 @@ the packages shipped by this repository retain the stable central version. The p
 per-module mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder
 hook is registered by the repository's hand-authored MTP entry points.
 
-Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
+Package `18.12.0-preview.26501.1` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
 both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
 provider.
 
@@ -22,8 +22,21 @@ Affected-test execution remains temporarily disabled in the pipeline. SDK `12.0.
 VMR flow containing [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection
 applications can exit `0` while the parent `dotnet test` command reports handshake failures and exits `1`. That
 output is indistinguishable from controller-only or partial handshake failures that must remain failures, so the
-pipeline cannot safely normalize it. Keep the packages and storage configuration dormant until a newer .NET 12 SDK
-containing the fix is published and verified in this repository.
+pipeline cannot safely normalize it.
+
+Public SDK `12.0.100-alpha.1.26506.125` contains that fix, but composed-product validation still rejects successful
+collection with the current platform. The platform negotiates a `TestHostOrchestrator` handshake identifying
+`RefreshMappingsOrchestrator`; collection intentionally does not send an ordinary `TestHost` handshake. The SDK
+still classifies that legitimate orchestrator-only completion as a partial handshake failure. An affected-test run
+that selects no tests similarly finishes after its `RunAffectedTestsOrchestrator` handshake and is incorrectly
+reported as failed. Both SDK builds remain denied for rollout.
+
+Activation requires a publicly consumable SDK that accepts successful completion of the matching affected-test
+orchestrator in the requested collection or selection mode, while retaining failures for nonzero exits,
+controller-only or mixed partial handshakes, and protocol rejection. Preserve protocol negotiation and the
+orchestrator's server-control cancellation channel; do not suppress handshakes or normalize failure output. Keep
+the packages and storage configuration dormant until the corrected shipping SDK passes collection, selection,
+zero-result, storage fallback, cancellation, and multi-module validation with the built TestFx packages.
 
 ## CI layout
 
