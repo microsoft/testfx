@@ -18,13 +18,31 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class ClassicUwpTests : AcceptanceTestBase
 {
     [TestMethod]
+    [DataRow("MSTest.Sdk")]
+    [DataRow("MSTest")]
+    [DataRow("MSTest.TestAdapter")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP execution is supported only on Windows.")]
-    public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp()
+    public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp(string package)
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
         const string assetName = "CUwp";
         string packageIdentityName = $"MSTestClassicUwp{uniqueSuffix}";
-        string sourceCode = ClassicUwpSourceCode
+        string source = ClassicUwpSourceCode;
+        if (package != "MSTest.Sdk")
+        {
+            string references = package == "MSTest"
+                ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
+                : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+            source = source
+                .Replace("  <Import Project=\"Sdk.props\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
+                .Replace("  <Import Project=\"Sdk.targets\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
+                .Replace(
+                    "<PackageReference Include=\"Microsoft.NETCore.UniversalWindowsPlatform\"",
+                    $"{references}<PackageReference Include=\"Microsoft.Testing.Extensions.PackagedApp.MSBuild\" Version=\"{MicrosoftTestingPlatformVersion}\" /><PackageReference Include=\"Microsoft.NETCore.UniversalWindowsPlatform\"",
+                    StringComparison.Ordinal);
+        }
+
+        string sourceCode = source
             .PatchCodeWithReplace("$AssetName$", assetName)
             .PatchCodeWithReplace("$PackageIdentityName$", packageIdentityName)
             .PatchCodeWithReplace("$MSBuildSdkExtrasVersion$", MSBuildSdkExtrasVersion)

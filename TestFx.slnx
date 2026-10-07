@@ -53,6 +53,8 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.PackagedApp/Microsoft.Testing.Extensions.PackagedApp.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.PackagedApp.Controller/Microsoft.Testing.Extensions.PackagedApp.Controller.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.PackagedApp.MSBuild/Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
@@ -63,9 +65,6 @@
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources/Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
-  </Folder>
-  <Folder Name="/src/1 - Packages/">
-    <Project Path="src/Package/MSTest.Sdk.AppModelController/MSTest.Sdk.AppModelController.csproj" />
   </Folder>
   <Folder Name="/src/2 - Adapter/">
     <Project Path="src/Adapter/MSTest.Extensions.Hosting/MSTest.Extensions.Hosting.csproj" />

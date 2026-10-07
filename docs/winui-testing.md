@@ -21,7 +21,39 @@ Two independent settings describe a Windows app:
 
 A packaged WinUI 3 desktop app is full trust by default. Packaging gives it identity and MSIX file/registry virtualization, but does not put it in AppContainer. A WinUI 3 app can be explicitly configured for AppContainer with `uap10:TrustLevel="appContainer"` in its package manifest; it then has the same MTP communication restrictions as UWP.
 
-`Microsoft.Testing.Extensions.PackagedApp` supports both full-trust and AppContainer hosts end to end. `MSTest.Sdk` supplies the full-trust sidecar controller, selects the packaged test executable explicitly, and ships the UAP-compatible bootstrap and adapter assets needed by classic UWP.
+`Microsoft.Testing.Extensions.PackagedApp` supports both full-trust and AppContainer hosts end to end. `Microsoft.Testing.Extensions.PackagedApp.MSBuild` supplies the full-trust sidecar controller, selects the packaged test executable explicitly, and ships the UAP-compatible bootstrap. `MSTest.Sdk` references that integration package automatically; the adapter supplies classic UWP's runtime assets.
+
+### Explicit metapackage or adapter integration
+
+Projects using `Microsoft.NET.Sdk` or `MSBuild.Sdk.Extras` instead of `MSTest.Sdk`
+can reference the same integration package explicitly:
+
+```xml
+<PropertyGroup>
+  <EnableMSTestRunner>true</EnableMSTestRunner>
+  <OutputType>Exe</OutputType>
+  <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
+</PropertyGroup>
+<ItemGroup>
+  <PackageReference Include="MSTest" Version="4.5.0" />
+  <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Version="2.5.0" />
+</ItemGroup>
+```
+
+The `MSTest` reference can be replaced with explicit `MSTest.TestAdapter` and
+`MSTest.TestFramework` references. Preserve the application's WinUI/UWP build
+settings and `OnLaunched` bootstrap, then execute
+`msbuild MyTests.csproj -t:InvokeTestingPlatform`. Desktop MSBuild and
+`dotnet msbuild` both reuse `InvokeTestingPlatformTask` to launch the controller
+out of process. Libraries, VSTest, unpackaged apps and non-Windows builds keep
+their existing launch paths. An explicit `TestingPlatformExecutablePath`
+override is never replaced or given controller-specific environment variables.
+
+This new package targets the main/next-release lineage, not a servicing
+backport. It must be published alongside the matching MTP runtime and MSTest
+packages before SDK or explicit consumers reference it; all MTP packages must
+remain version-aligned. The integration pins its direct runtime/MSBuild
+dependencies to its own version.
 
 #### AppContainer communication primitives
 
@@ -48,7 +80,7 @@ The UWP XAML, MSIX, architecture, and Native AOT settings remain application con
 
 The repository includes copy-ready modern and classic UWP samples. The classic sample preserves the
 legacy `MSBuild.Sdk.Extras`/UAP project shape and its Visual Studio build-time prerequisites, while
-execution still uses the SDK-shipped MTP sidecar rather than the VSTest runtime provider.
+execution still uses the integration package's MTP sidecar rather than the VSTest runtime provider.
 
 `UseUwp` adds UWP XAML references. The desktop Visual Studio UWP targets enable `UseUwpTools` after MSTest.Sdk declares its package references and before the packages select their specialized UWP assemblies. MSTest.Sdk preserves the UWP application model during that earlier evaluation while `UseUwpTools` is still unset. To use the references in a non-UWP MTP test application, disable the tools explicitly:
 
