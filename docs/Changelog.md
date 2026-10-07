@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.5.0" />[4.5.0] - 2026-10-05
+## <a name="4.5.0" />[4.5.0] - Unreleased
+
+Release delayed due to an infrastructure issue.
 
 See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4.4.1...v4.5.0)
 
