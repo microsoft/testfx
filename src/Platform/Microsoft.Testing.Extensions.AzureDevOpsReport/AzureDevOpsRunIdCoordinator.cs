@@ -36,6 +36,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
         string ownerFilePath = Path.Combine(configuration.ResultsDirectory, GetOwnerFileName(configuration.BuildId));
         string participantFilePath = Path.Combine(configuration.ResultsDirectory, GetParticipantFileName(configuration.BuildId, _environment.ProcessId));
         using IFileStream coordinationLock = await AcquireCoordinationLockAsync(configuration.ResultsDirectory, configuration.BuildId, cancellationToken).ConfigureAwait(false);
+        await RecoverPendingCleanupAsync(coordinationLock, configuration, ownerFilePath, runIdFilePath, cancellationToken).ConfigureAwait(false);
         bool ownsOwnerFile = false;
 
         try
@@ -84,8 +85,18 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
             TryDeleteFile(participantFilePath);
             if (ownsOwnerFile)
             {
-                TryDeleteFile(runIdFilePath);
+                try
+                {
+                    await MarkCleanupPendingAsync(coordinationLock).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    // Preserve the acquisition failure even if its recovery marker cannot be written.
+                    TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToWriteCoordinationFile} {coordinationLock.Name}: {ex.Message}");
+                }
+
                 TryDeleteFile(ownerFilePath);
+                TryDeleteFile(runIdFilePath);
             }
 
             throw;
@@ -164,7 +175,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
 
                 if (participantFiles.Length == 0)
                 {
-                    await CompleteRunAsync(coordinatedRun, finalizeRunAsync, cancellationToken).ConfigureAwait(false);
+                    await CompleteRunAsync(coordinatedRun, coordinationLock, finalizeRunAsync, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
@@ -183,7 +194,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
                         : _options.CoordinationFinalizeTimeout;
                     // A diagnostic failure must not prevent closing the run.
                     TryLogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut, timeout, participantFiles.Length));
-                    await CompleteRunAsync(coordinatedRun, finalizeRunAsync, cancellationToken).ConfigureAwait(false);
+                    await CompleteRunAsync(coordinatedRun, coordinationLock, finalizeRunAsync, cancellationToken).ConfigureAwait(false);
                     return;
                 }
             }
@@ -192,16 +203,19 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
         }
     }
 
-    private async Task CompleteRunAsync(AzureDevOpsCoordinatedRun coordinatedRun, Func<CancellationToken, Task> finalizeRunAsync, CancellationToken cancellationToken)
+    private async Task CompleteRunAsync(AzureDevOpsCoordinatedRun coordinatedRun, IFileStream coordinationLock, Func<CancellationToken, Task> finalizeRunAsync, CancellationToken cancellationToken)
     {
+        // A deletion can fail independently of the other file. Persist the closing state before
+        // completing the run so surviving files cannot admit a peer to a completed run.
+        await MarkCleanupPendingAsync(coordinationLock).ConfigureAwait(false);
         try
         {
             await finalizeRunAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
-            TryDeleteFile(coordinatedRun.RunIdFilePath);
             TryDeleteFile(coordinatedRun.OwnerFilePath);
+            TryDeleteFile(coordinatedRun.RunIdFilePath);
         }
     }
 }

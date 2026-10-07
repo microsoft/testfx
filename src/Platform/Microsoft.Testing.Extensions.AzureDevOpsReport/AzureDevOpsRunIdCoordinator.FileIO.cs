@@ -30,6 +30,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
             {
                 // Keep the file: deleting it can give waiters and a new owner different file identities.
                 // The exclusive handle, not its contents or age, owns the gate; process exit releases it.
+                // Nonempty contents record pending cleanup, not lock ownership.
                 return _fileSystem.NewFileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             }
             catch (IOException ex)
@@ -40,6 +41,57 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
                         string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingCoordinationLockTimedOut, path, _options.CoordinationJoinerMaxWaitTime),
                         ex);
                 }
+            }
+
+            await _task.Delay(_options.CoordinationReadRetryDelay, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task MarkCleanupPendingAsync(IFileStream coordinationLock)
+    {
+        coordinationLock.Stream.SetLength(1);
+        await coordinationLock.Stream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private async Task RecoverPendingCleanupAsync(IFileStream coordinationLock, AzureDevOpsPublishConfiguration configuration, string ownerFilePath, string runIdFilePath, CancellationToken cancellationToken)
+    {
+        if (coordinationLock.Stream.Length == 0)
+        {
+            return;
+        }
+
+        // Keep the marker until the old generation's files are gone. Retrying under the gate neither joins the
+        // completed run nor lets an earlier owner's cleanup delete a successor's files.
+        DateTimeOffset deadline = _clock.UtcNow + _options.CoordinationJoinerMaxWaitTime;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            // File.Exists can report false for access errors; require the deletes themselves to
+            // succeed before clearing the marker. Deleting a nonexistent file is a no-op.
+            bool ownerDeleted = TryDeleteFile(ownerFilePath, checkExistence: false);
+            bool runIdDeleted = TryDeleteFile(runIdFilePath, checkExistence: false);
+            string? undeletedParticipant = null;
+            foreach (string participantFilePath in _fileSystem.GetFiles(configuration.ResultsDirectory, GetParticipantSearchPattern(configuration.BuildId), SearchOption.TopDirectoryOnly))
+            {
+                // No successor can register under this gate. Any surviving participants belong to
+                // the closing run and must not make its successor wait on publishers that already left.
+                if (!TryDeleteFile(participantFilePath, checkExistence: false))
+                {
+                    undeletedParticipant = participantFilePath;
+                }
+            }
+
+            if (ownerDeleted && runIdDeleted && undeletedParticipant is null)
+            {
+                coordinationLock.Stream.SetLength(0);
+                await coordinationLock.Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            if (_clock.UtcNow >= deadline)
+            {
+                string path = !ownerDeleted ? ownerFilePath : !runIdDeleted ? runIdFilePath : undeletedParticipant!;
+                throw new TimeoutException($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}");
             }
 
             await _task.Delay(_options.CoordinationReadRetryDelay, cancellationToken).ConfigureAwait(false);
@@ -82,18 +134,21 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
 #endif
     }
 
-    private void TryDeleteFile(string path)
+    private bool TryDeleteFile(string path, bool checkExistence = true)
     {
         try
         {
-            if (_fileSystem.ExistFile(path))
+            if (!checkExistence || _fileSystem.ExistFile(path))
             {
                 _fileSystem.DeleteFile(path);
             }
+
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
+            return false;
         }
     }
 }

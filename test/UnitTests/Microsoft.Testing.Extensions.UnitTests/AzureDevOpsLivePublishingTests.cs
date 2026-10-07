@@ -1022,10 +1022,11 @@ public sealed class AzureDevOpsLivePublishingTests
         string smallPath = Path.Combine(directory.Path, "small.coverage");
         File.WriteAllText(smallPath, "small content");
         int httpRequests = 0;
+        using HttpResponseMessage response = new(HttpStatusCode.OK) { Content = new StringContent("{}") };
         using HttpClient httpClient = new(new QueueHttpMessageHandler((_, _) =>
         {
             httpRequests++;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") });
+            return Task.FromResult(response);
         }));
         CollectingOutputDevice output = new();
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _, outputDevice: output);
@@ -1400,12 +1401,183 @@ public sealed class AzureDevOpsLivePublishingTests
 
         await coordinator.FinalizeRunAsync(run, _ => Task.CompletedTask, CancellationToken.None);
 
-        Assert.AreSequenceEqual(new[] { run.RunIdFilePath, run.OwnerFilePath }, cleanup);
+        Assert.AreSequenceEqual(new[] { run.OwnerFilePath, run.RunIdFilePath }, cleanup);
         fileSystem.AfterDelete = null;
         AzureDevOpsCoordinatedRun successor = await coordinator.AcquireRunAsync(configuration, _ => Task.FromResult(105), CancellationToken.None);
         Assert.AreEqual(105, successor.RunId);
         Assert.IsTrue(File.Exists(successor.RunIdFilePath));
         await coordinator.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+    }
+
+    [TestMethod]
+    [DataRow(false, false, false)]
+    [DataRow(true, false, false)]
+    [DataRow(false, true, false)]
+    [DataRow(true, true, false)]
+    [DataRow(true, false, true)]
+    [DataRow(true, true, true)]
+    public async Task RunIdCoordinator_FinalizeRunAsync_DeleteFailureIsRecoveredBeforeSuccessorAdmission(bool ownerDeleteFails, bool completionFails, bool allDeletesFail)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        UndeletableFileSystem fileSystem = new();
+        CollectingLogger logger = new();
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, logger, AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(106), CancellationToken.None);
+        string blockedPath = ownerDeleteFails ? ownedRun.OwnerFilePath : ownedRun.RunIdFilePath;
+        fileSystem.BlockedDeletePath = blockedPath;
+        fileSystem.FailDeletes = allDeletesFail;
+        Task finalization = owner.FinalizeRunAsync(
+            ownedRun,
+            _ => completionFails ? throw new HttpRequestException("Completion failed") : Task.CompletedTask,
+            CancellationToken.None);
+        if (completionFails)
+        {
+            await Assert.ThrowsExactlyAsync<HttpRequestException>(() => finalization);
+        }
+        else
+        {
+            await finalization;
+        }
+
+        Assert.IsTrue(File.Exists(blockedPath), "The test must leave an undeletable coordination file behind.");
+        Assert.AreEqual(allDeletesFail, File.Exists(ownerDeleteFails ? ownedRun.RunIdFilePath : ownedRun.OwnerFilePath));
+        Assert.Contains($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {blockedPath}", string.Join(Environment.NewLine, logger.Logs));
+        fileSystem.HideBlockedFile = true;
+        Assert.IsFalse(fileSystem.ExistFile(blockedPath), "Recovery must tolerate File.Exists reporting an access error as a missing file.");
+        string successorParticipantPath = Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue}.json");
+        FakeTask retryTask = new(delay =>
+        {
+            Assert.IsFalse(File.Exists(successorParticipantPath), "A successor must not register before the old files are removed.");
+            clock.UtcNow += delay;
+            fileSystem.BlockedDeletePath = null;
+            fileSystem.FailDeletes = false;
+        });
+        AzureDevOpsRunIdCoordinator peer = new(fileSystem, retryTask, clock, CreateEnvironmentMock(processId: int.MaxValue).Object, logger, AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun successor = await peer.AcquireRunAsync(configuration, _ =>
+        {
+            Assert.IsNull(fileSystem.BlockedDeletePath, "A successor must retry the failed delete instead of joining or replacing the closing run.");
+            Assert.IsFalse(File.Exists(ownedRun.RunIdFilePath));
+            Assert.IsFalse(File.Exists(ownedRun.ParticipantFilePath), "The successor must not wait on a surviving participant from the completed run.");
+            return Task.FromResult(107);
+        }, CancellationToken.None);
+
+        Assert.HasCount(1, retryTask.DelayCalls);
+        Assert.IsTrue(successor.IsOwner);
+        Assert.AreEqual(107, successor.RunId);
+        AzureDevOpsRunIdFile? persisted = JsonSerializer.Deserialize<AzureDevOpsRunIdFile>(File.ReadAllText(successor.RunIdFilePath));
+        Assert.IsNotNull(persisted);
+        Assert.AreEqual(107, persisted.RunId);
+        AzureDevOpsRunIdCoordinator joiner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId() + 1).Object, logger, AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun joined = await joiner.AcquireRunAsync(configuration, _ => throw new InvalidOperationException("The successor must not be deleted by stale cleanup"), CancellationToken.None);
+        Assert.AreEqual(107, joined.RunId);
+        Assert.IsFalse(joined.IsOwner);
+        await joiner.FinalizeRunAsync(joined, _ => Task.CompletedTask, CancellationToken.None);
+        await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public async Task RunIdCoordinator_AcquireRunAsync_PendingCleanupTimesOutOrCancelsWithoutRegisteringThenRecovers(bool ownerDeleteFails, bool cancel)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        using CancellationTokenSource cancellation = new();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        UndeletableFileSystem fileSystem = new();
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 0, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMilliseconds(2));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(108), CancellationToken.None);
+        string blockedPath = ownerDeleteFails ? ownedRun.OwnerFilePath : ownedRun.RunIdFilePath;
+        fileSystem.BlockedDeletePath = blockedPath;
+        await owner.FinalizeRunAsync(ownedRun, _ => Task.CompletedTask, CancellationToken.None);
+        FakeTask retryTask = new(delay =>
+        {
+            clock.UtcNow += delay;
+            if (cancel)
+            {
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+                cancellation.Cancel();
+#pragma warning restore VSTHRD103
+            }
+        });
+        AzureDevOpsRunIdCoordinator peer = new(fileSystem, retryTask, clock, CreateEnvironmentMock(processId: int.MaxValue).Object, new CollectingLogger(), options);
+        Func<Task> admission = () => peer.AcquireRunAsync(configuration, _ => throw new InvalidOperationException("Must not create or join a run during pending cleanup"), cancellation.Token);
+        if (cancel)
+        {
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(admission);
+        }
+        else
+        {
+            TimeoutException exception = await Assert.ThrowsExactlyAsync<TimeoutException>(admission);
+            Assert.AreEqual($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {blockedPath}", exception.Message);
+        }
+
+        Assert.IsTrue(File.Exists(blockedPath));
+        Assert.IsFalse(File.Exists(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue}.json")));
+        fileSystem.BlockedDeletePath = null;
+        AzureDevOpsCoordinatedRun successor = await peer.AcquireRunAsync(configuration, _ => Task.FromResult(109), CancellationToken.None);
+        Assert.IsTrue(successor.IsOwner);
+        Assert.AreEqual(109, successor.RunId);
+        await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_UnwritableCleanupMarkerDoesNotCompleteTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        using MemoryStream readOnlyGate = new([], writable: false);
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        string ownerPath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        string runIdPath = Path.Combine(directory.Path, "azdo-runid.123.json");
+        File.WriteAllText(ownerPath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(GetAliveProcessId(), 123, clock.UtcNow.AddHours(1))));
+        File.WriteAllText(runIdPath, JsonSerializer.Serialize(new AzureDevOpsRunIdFile(111, 123, "https://dev.azure.com/org/", "project", clock.UtcNow.AddHours(1))));
+        Mock<IFileStream> gate = new();
+        gate.SetupGet(stream => stream.Stream).Returns(readOnlyGate);
+        Mock<IFileSystem> fileSystem = new(MockBehavior.Strict);
+        fileSystem.Setup(system => system.ExistFile(It.IsAny<string>())).Returns<string>(File.Exists);
+        fileSystem.Setup(system => system.DeleteFile(It.IsAny<string>())).Callback<string>(File.Delete);
+        fileSystem.Setup(system => system.GetFiles(directory.Path, It.IsAny<string>(), SearchOption.TopDirectoryOnly)).Returns([]);
+        fileSystem.Setup(system => system.NewFileStream(It.IsAny<string>(), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None)).Returns(gate.Object);
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem.Object, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun run = new(111, true, 123, directory.Path, runIdPath, ownerPath, Path.Combine(directory.Path, "participant.json"));
+        bool completed = false;
+
+        await Assert.ThrowsExactlyAsync<NotSupportedException>(() => coordinator.FinalizeRunAsync(run, _ =>
+        {
+            completed = true;
+            return Task.CompletedTask;
+        }, CancellationToken.None));
+
+        Assert.IsFalse(completed, "The run must remain active if its closing state cannot be persisted.");
+        Assert.IsTrue(File.Exists(ownerPath));
+        Assert.IsTrue(File.Exists(runIdPath));
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_FailedCreationWithUndeletableOwnerDoesNotBlockSuccessor()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = RetryTestStartTime };
+        string ownerPath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        UndeletableFileSystem fileSystem = new() { BlockedDeletePath = ownerPath };
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+
+        await Assert.ThrowsExactlyAsync<HttpRequestException>(
+            () => owner.AcquireRunAsync(configuration, _ => throw new HttpRequestException("Creation failed"), CancellationToken.None));
+
+        Assert.IsTrue(File.Exists(ownerPath));
+        fileSystem.BlockedDeletePath = null;
+        AzureDevOpsRunIdCoordinator peer = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: int.MaxValue).Object, new CollectingLogger(), AzureDevOpsTestResultsPublisherOptions.Default);
+        AzureDevOpsCoordinatedRun successor = await peer.AcquireRunAsync(configuration, _ => Task.FromResult(110), CancellationToken.None);
+        Assert.IsTrue(successor.IsOwner);
+        Assert.AreEqual(110, successor.RunId);
+        await peer.FinalizeRunAsync(successor, _ => Task.CompletedTask, CancellationToken.None);
     }
 
     [TestMethod]
@@ -5153,11 +5325,15 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool FailDeletes { get; set; }
 
+        public string? BlockedDeletePath { get; set; }
+
+        public bool HideBlockedFile { get; set; }
+
         public Action<string>? AfterDelete { get; set; }
 
         public void DeleteFile(string path)
         {
-            if (FailDeletes)
+            if (FailDeletes || path == BlockedDeletePath)
             {
                 throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.");
             }
@@ -5172,7 +5348,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 
-        public bool ExistFile(string path) => _inner.ExistFile(path);
+        public bool ExistFile(string path) => !(HideBlockedFile && path == BlockedDeletePath) && _inner.ExistFile(path);
 
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 

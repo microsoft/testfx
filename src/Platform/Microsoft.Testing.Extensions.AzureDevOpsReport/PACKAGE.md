@@ -31,7 +31,7 @@ Enable Azure DevOps reporting with the `--report-azdo` command line option.
 
 Modules using `--publish-azdo-test-results` and the same results directory can share a test run. The owner waits for registered modules to finish publishing before completing the run. Modules scheduled after completion acquire a new run, so a solution invocation can produce several runs; all modules in a shared directory must use the same extension version.
 
-Coordination uses an exclusive handle to an `azdo-runid.<buildId>.lock` file. This file remains in the results directory, but its existence does not indicate an active run: the operating system releases the handle when the owning process exits. Do not remove coordination files while modules are running. Per-project results directories disable sharing between projects.
+Coordination uses an exclusive handle to an `azdo-runid.<buildId>.lock` file. This file remains in the results directory, but its existence does not indicate an active run: the operating system releases the handle when the owning process exits. The file also records pending cleanup so later modules retry failed coordination-file deletions before acquiring a new run, rather than joining a completed run or waiting for its owner lease to expire. Do not remove coordination files while modules are running. Per-project results directories disable sharing between projects.
 
 Attachments larger than 16 MiB or files that cannot be read are reported as upload failures without failing otherwise successful tests.
 
