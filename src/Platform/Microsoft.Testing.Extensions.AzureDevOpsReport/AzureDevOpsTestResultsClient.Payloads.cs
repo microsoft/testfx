@@ -6,6 +6,8 @@ using System.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
+
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsClient
@@ -135,41 +137,23 @@ internal sealed partial class AzureDevOpsTestResultsClient
         return publishedResults;
     }
 
-    private static AttachmentRequest? TryBuildAttachmentRequest(AzureDevOpsTestResultAttachment attachment)
+    private static AttachmentRequest BuildAttachmentRequest(AzureDevOpsTestResultAttachment attachment)
     {
         byte[]? bytes;
         if (attachment.FilePath is { Length: > 0 } filePath)
         {
-            FileInfo fileInfo;
             try
             {
-                fileInfo = new FileInfo(filePath);
-                if (!fileInfo.Exists)
-                {
-                    return null;
-                }
-
-                if (fileInfo.Length > AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes)
-                {
-                    return null;
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
-            {
-                return null;
-            }
-
-            try
-            {
+                FileInfo fileInfo = new(filePath);
+                ValidateAttachmentSize(attachment.FileName, fileInfo.Length);
                 bytes = File.ReadAllBytes(filePath);
-                if (bytes.Length > AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes)
-                {
-                    return null;
-                }
+                ValidateAttachmentSize(attachment.FileName, bytes.Length);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
             {
-                return null;
+                throw new InvalidOperationException(
+                    string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentReadFailed, attachment.FileName, ex.Message),
+                    ex);
             }
         }
         else if (attachment.InlineContent is { } inline)
@@ -179,7 +163,8 @@ internal sealed partial class AzureDevOpsTestResultsClient
         }
         else
         {
-            return null;
+            throw new InvalidOperationException(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentReadFailed, attachment.FileName, AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse));
         }
 
         return new AttachmentRequest(
@@ -187,6 +172,15 @@ internal sealed partial class AzureDevOpsTestResultsClient
             attachment.FileName,
             attachment.Comment,
             attachment.AttachmentType);
+    }
+
+    private static void ValidateAttachmentSize(string fileName, long size)
+    {
+        if (size > AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes)
+        {
+            throw new InvalidOperationException(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentTooLarge, fileName, size, AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes));
+        }
     }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
