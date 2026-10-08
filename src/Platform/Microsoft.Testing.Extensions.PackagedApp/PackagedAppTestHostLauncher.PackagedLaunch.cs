@@ -81,6 +81,8 @@ internal sealed partial class PackagedAppTestHostLauncher
                     manifestInfo.PackageFamilyName,
                     manifestPath));
 
+        PackagedAppControllerArguments.ValidateNativeApplication(application.RunsInAppContainer, context.Arguments);
+
         // Registration provisions the package-owned LocalState directory and its AppContainer ACL.
         // Handoffs must be written only after this completes; creating the directory from the unpackaged
         // controller first would give it the controller's ACL and make it unreadable by the activated app.

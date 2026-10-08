@@ -64,6 +64,7 @@
       <_TestingPlatformPackagedAppTarget Condition="'$(_IsExecutable)' == 'true' AND '$(UseAppHost)' == 'true' AND Exists('$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)')">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_TestingPlatformPackagedAppTarget>
       <_TestingPlatformPackagedAppTarget Condition="$(TargetFramework.StartsWith('uap')) AND Exists('$(TargetDir)$(AssemblyName).exe')">$(TargetDir)$(AssemblyName).exe</_TestingPlatformPackagedAppTarget>
       <_TestingPlatformPackagedAppTarget Condition="'$(TestingPlatformPackagedAppTargetPath)' != ''">$(TestingPlatformPackagedAppTargetPath)</_TestingPlatformPackagedAppTarget>
+      <_TestingPlatformPackagedAppTarget>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_TestingPlatformPackagedAppTarget)'))</_TestingPlatformPackagedAppTarget>
     </PropertyGroup>
     <ItemGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
       <!-- Keep these protocol identifiers compatible with existing applications. -->
@@ -71,6 +72,29 @@
       <TestingPlatformEnvironmentVariable Include="TESTINGPLATFORM_PACKAGEDAPP_TARGET" Value="$(_TestingPlatformPackagedAppTarget)" />
       <TestingPlatformEnvironmentVariable Include="MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" Value="$(_TestingPlatformPackagedAppControllerExtensions)" />
     </ItemGroup>
+  </Target>
+
+  <!-- The native SDK evaluates this target in a fresh project, even when builds are skipped.
+       It consumes RunCommand/RunArguments, not TestingPlatformEnvironmentVariable. -->
+  <Target Name="_ConfigureTestingPlatformPackagedAppRunArguments"
+          AfterTargets="ComputeRunArguments"
+          DependsOnTargets="_ConfigureTestingPlatformPackagedAppEnvironment">
+    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(StartAction)' != 'Program'">
+      <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' == 'true'">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_TestingPlatformPackagedAppDefaultRunCommand>
+      <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' != 'true'">dotnet</_TestingPlatformPackagedAppDefaultRunCommand>
+      <_TestingPlatformPackagedAppConfigureRun Condition="'$(RunCommand)' == '$(_TestingPlatformPackagedAppDefaultRunCommand)'">true</_TestingPlatformPackagedAppConfigureRun>
+      <_TestingPlatformPackagedAppRunArguments>$(RunArguments)</_TestingPlatformPackagedAppRunArguments>
+      <_TestingPlatformPackagedAppRunArguments Condition="'$(UseAppHost)' != 'true' AND $(RunArguments.StartsWith('$(_NetCoreRunArguments)'))">$(RunArguments.Substring($(_NetCoreRunArguments.Length)))</_TestingPlatformPackagedAppRunArguments>
+      <_TestingPlatformPackagedAppConfigureRun Condition="'$(UseAppHost)' != 'true' AND !$(RunArguments.StartsWith('$(_NetCoreRunArguments)'))">false</_TestingPlatformPackagedAppConfigureRun>
+      <_TestingPlatformPackagedAppTargetExtension>$([System.IO.Path]::GetExtension('$(_TestingPlatformPackagedAppTarget)'))</_TestingPlatformPackagedAppTargetExtension>
+    </PropertyGroup>
+    <Error Condition="'$(_TestingPlatformPackagedAppConfigureRun)' == 'true' AND '$(_TestingPlatformPackagedAppTargetExtension)' != '.exe'"
+           Text="The packaged test host must be an executable. Enable UseAppHost or set TestingPlatformPackagedAppTargetPath to the staged packaged executable." />
+    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppConfigureRun)' == 'true'">
+      <RunCommand>$(_TestingPlatformPackagedAppControllerPath)</RunCommand>
+      <RunArguments>--internal-packagedapp-controller-v1 &quot;$(_TestingPlatformPackagedAppTarget)&quot; &quot;$(_TestingPlatformPackagedAppControllerExtensions)&quot; $(_TestingPlatformPackagedAppRunArguments)</RunArguments>
+      <_TestingPlatformPackagedAppConfigureRun>false</_TestingPlatformPackagedAppConfigureRun>
+    </PropertyGroup>
   </Target>
 
 </Project>

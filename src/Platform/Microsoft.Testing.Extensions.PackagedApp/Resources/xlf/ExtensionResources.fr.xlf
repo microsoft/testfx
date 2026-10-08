@@ -72,6 +72,26 @@
         <target state="translated">Le manifeste de l’application packagée ne déclare pas d’élément &lt;Identity Name="..." Publisher="..." /&gt; valide.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PackagedAppControllerInvalidBootstrap">
+        <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
+        <target state="new">The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</target>
+        <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerInvalidTransport">
+        <source>The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</source>
+        <target state="new">The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</target>
+        <note>{Locked="--server"}{Locked="--dotnet-test-*"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
+        <source>Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</source>
+        <target state="new">Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</target>
+        <note>{Locked="dotnet test"}{Locked="AppContainer"}{Locked="InvokeTestingPlatform"}{Locked="MSBuild"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
+        <source>Native packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</source>
+        <target state="new">Native packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</target>
+        <note>{Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never"}</note>
+      </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
         <target state="translated">Inscrit un hôte de test MSIX empaqueté, puis l’active par ID de modèle d’utilisateur d’application Application User Model ID (build Windows), en transmettant les arguments de la plateforme de test Microsoft Testing Platform via argv pour les hôtes packagedClassicApp/win32App (y compris les hôtes AppContainer classiques) ou en utilisant l’activation au lancement pour les hôtes windowsApp/UWP. En cas d’acceptation via TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, cet élément déploie également un hôte de test Windows non empaqueté (loose-layout) dans un répertoire isolé et le lance depuis cet emplacement. Par défaut, cette fonctionnalité n’est activée que pour une disposition en package, de sorte qu’une application sans package reste sur le chemin de lancement par défaut. L’exécution de bout en bout d’AppContainer nécessite en outre une autorisation controller-pipe. Consultez https://github.com/microsoft/testfx/issues/10486.</target>
