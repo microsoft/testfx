@@ -24,6 +24,14 @@ $arguments = "--report-trx --report-trx-filename appcontainer.trx --results-dire
 dotnet msbuild .\WinUIMtpAppContainerApp.csproj -t:InvokeTestingPlatform -p:Platform=x64 "-p:TestingPlatformCommandLineArguments=$arguments" -bl:{{}}
 ```
 
+To exercise selective execution, add
+`--filter FullyQualifiedName~PackageIdentityAndSandboxMatchManifest` to `$arguments`.
+The TRX must contain exactly that one passed result, not the UI test. The
+application-model acceptance suite builds this sample against the current packed
+MSTest/MTP packages and verifies this filtered MSBuild run, including sandbox identity.
+The filter example requires a matching MSTest/MTP release containing packaged-app
+sidecar filter support; published sample pins must be advanced together after that release.
+
 Use the `InvokeTestingPlatform` target for this AppContainer-hosted sample so the full-trust sidecar
 can recover TRX from package `LocalState` to the absolute results directory. Native `dotnet test`
 execution-ID handoff is demonstrated by the full-trust

@@ -20,10 +20,19 @@ From this directory:
 dotnet build -p:Platform=x64 -bl:{{}}
 dotnet run --no-build -p:Platform=x64
 dotnet test --project . --no-build -p:Platform=x64
+dotnet test --project . --no-build -p:Platform=x64 --filter "FullyQualifiedName~PackageIdentityAndAumidMatchManifest" --report-trx --report-trx-filename filtered.trx
 ```
 
 Both run commands must finish without manually closing the window. `dotnet test` requires .NET SDK
 10 or later because `global.json` selects the native Microsoft.Testing.Platform runner.
+
+The filtered command must produce exactly one passed result named
+`PackageIdentityAndAumidMatchManifest` in `TestResults\filtered.trx`; the UI test must
+not run. The application-model acceptance suite builds this sample with the current
+packed MSTest/MTP packages and checks this selection through both native `dotnet test`
+and `InvokeTestingPlatform`, rather than relying on the sample's published package pins.
+The filter example requires a matching MSTest/MTP release containing packaged-app
+sidecar filter support; published sample pins must be advanced together after that release.
 
 The development package registration is intentionally retained so repeated runs can reuse the same
 layout. To remove it manually:

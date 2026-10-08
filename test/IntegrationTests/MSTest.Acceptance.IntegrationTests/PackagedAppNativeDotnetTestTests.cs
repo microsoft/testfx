@@ -11,6 +11,11 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+[TestCategory("WindowsApplicationModel")]
+[MemberCondition(
+    typeof(AcceptanceTestBase),
+    nameof(AcceptanceTestBase.IsWindowsApplicationModelTestEnvironment),
+    IgnoreMessage = "Requires the dedicated preflight-gated Windows application-model test environment.")]
 [OSCondition(OperatingSystems.Windows)]
 [SupportedOSPlatform("windows")]
 public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAssetFixture>
@@ -240,17 +245,15 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = Environment.GetEnvironmentVariable("TESTFX_DOTNET_10_PATH")
             ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "dotnet", "dotnet.exe");
-        if (!File.Exists(Path.Combine(Path.GetDirectoryName(dotnet)!, "sdk", SdkVersion, "dotnet.dll")))
-        {
-            Assert.Inconclusive($"Requires .NET SDK {SdkVersion}; set TESTFX_DOTNET_10_PATH to its dotnet executable.");
-        }
+        Assert.IsTrue(
+            File.Exists(Path.Combine(Path.GetDirectoryName(dotnet)!, "sdk", SdkVersion, "dotnet.dll")),
+            $"Requires .NET SDK {SdkVersion}; set TESTFX_DOTNET_10_PATH to its dotnet executable.");
 
         using Microsoft.Win32.RegistryKey? key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
             @"SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock");
-        if (key?.GetValue("AllowDevelopmentWithoutDevLicense") is not 1)
-        {
-            Assert.Inconclusive("Requires Windows Developer Mode for unsigned packaged activation; no WinUI or Visual Studio workload is needed.");
-        }
+        Assert.IsTrue(
+            key?.GetValue("AllowDevelopmentWithoutDevLicense") is 1,
+            "Requires Windows Developer Mode for unsigned packaged activation; no WinUI or Visual Studio workload is needed.");
 
         return dotnet;
     }
