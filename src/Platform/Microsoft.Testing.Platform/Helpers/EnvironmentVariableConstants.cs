@@ -84,12 +84,13 @@ internal static class EnvironmentVariableConstants
 
     // Correlates the processes that make up one logical test run, so report formats that can describe a run
     // spanning several documents (CTRF 'runId') can tie those documents back together. The retry orchestrator
-    // sets it before launching its attempts, and any process tree started from there inherits it.
+    // sets it for standalone runs before launching its attempts, and any process tree started from there inherits it.
     //
     // NOTE: a multi-project 'dotnet test' does NOT set this. Each module is a separate root test application
     // with its own execution id (see docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md), so its
-    // modules are distinct execution trees. Correlating them — or correlating shards running on different
-    // machines — requires setting this variable explicitly before launching them.
+    // modules are distinct execution trees, not distinct logical runs. Correlating them — or correlating shards
+    // running on different machines — requires setting this variable explicitly before launching them. Without
+    // invocation-wide context, report formats must not substitute the module-local execution id as a logical run id.
     public const string TESTINGPLATFORM_LOGICAL_RUN_ID = nameof(TESTINGPLATFORM_LOGICAL_RUN_ID);
 
     // Trx
