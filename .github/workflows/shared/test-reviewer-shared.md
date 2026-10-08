@@ -550,11 +550,11 @@ thread in the summary. A moved/outdated anchor or new HEAD alone does not make
 the defect novel; revisit a resolved or declined concern only with new evidence
 that addresses its disposition.
 
-For each remaining novel group with a valid changed-line **Anchor**, post at
-most one inline comment with the `create_pull_request_review_comment` safe-output
-tool, subject to the 10-comment cap below. Choose a representative anchor and
-list other affected tests/locations compactly. Use `path` + `line` (and
-`start_line` for multi-line replacements); `side` is always `RIGHT`.
+For each remaining novel group with a valid changed-line **Anchor**, prepare at
+most one inline comment for Step 5, subject to the 10-comment cap below. Choose
+a representative anchor and list other affected tests/locations compactly.
+Record `path` + `line` (and `start_line` for multi-line replacements); `side`
+is always `RIGHT`. Do not call `create_pull_request_review_comment` in this step.
 
 When the Step 3 record has a safe concrete **Replacement**, include the
 apply-ready `suggestion` block. Otherwise use a text-only comment that still
@@ -605,7 +605,7 @@ Rules:
   AwesomeAssertions `Should()`, or `TestFramework.ForTestingMSTest`'s
   `Verify(...)` — check the file, and see the deviations listed in Step 2).
   Never propose switching a project to the other style.
-- **When `Replacement: none`**, post the same comment body without a code
+- **When `Replacement: none`**, prepare the same comment body without a code
   block: marker, grade line, and the concrete improvement sentence. Do not
   post a `csharp` sketch; it cannot be applied and is easily mistaken for a
   complete fix. Never emit a `suggestion` block you are not confident applies.
@@ -694,8 +694,10 @@ Validate the returned envelope before using it:
 First reconcile both analyses under the publication contract. Group candidates
 across their scopes, retain one representative inline edit per root cause, and
 refresh the existing-thread check before posting. Then publish qualifying
-prepared inline comments under Step 4's format and cap. Never publish a
-grading-derived comment before the parallel-safety result has been considered.
+prepared inline comments with the `create_pull_request_review_comment`
+safe-output tool, using Step 4's recorded anchors, format, and cap. Never
+publish a grading-derived comment before the parallel-safety result has been
+considered.
 
 For an automatic `pull_request` run, call `noop` and stop without publishing
 only when **all** of these are true:
@@ -711,7 +713,7 @@ For slash-command runs, always publish the requested combined result. A
 behind an otherwise-clean grading result.
 
 Otherwise, use **exactly one** `submit-pull-request-review` call with
-`event: "COMMENT"`. The inline comments from Step 4 are bundled into this
+`event: "COMMENT"`. The inline comments published in this step are bundled into this
 review. Structure the body as follows:
 
 ```markdown
