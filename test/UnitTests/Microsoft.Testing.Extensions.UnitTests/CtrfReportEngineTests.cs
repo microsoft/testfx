@@ -497,6 +497,34 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
+    public async Task GenerateReportAsync_RetryMerge_PreservesAmbiguousDuplicateUids()
+    {
+        async Task<string> GenerateAsync(CapturedTestResult[] tests)
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns("retry-workflow");
+            await engine.GenerateReportAsync(tests);
+            return memoryStream.GetUtf8Content();
+        }
+
+        string firstReport = await GenerateAsync(
+            [Captured("same", "First", "failed"), Captured("same", "Second", "passed")]);
+        string retryReport = await GenerateAsync([Captured("same", "First", "passed")]);
+        using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([firstReport, retryReport], CtrfMergeMode.CollapseRetryAttempts));
+        JsonElement results = merged.RootElement.GetProperty("results");
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+
+        Assert.HasCount(3, tests);
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(["First", "Second", "First"], tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => test.GetProperty("status").GetString()!).ToArray());
+        Assert.HasCount(3, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
+        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+    }
+
+    [TestMethod]
     public async Task GenerateReportAsync_CollapsesExplicitRetryAttemptsAndFlagsFlaky()
     {
         using var memoryStream = new MemoryFileStream();

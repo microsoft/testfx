@@ -43,37 +43,92 @@ internal static partial class CtrfReportMerger
     /// than a sum across attempts. Attempts an input already recorded in its own <c>retryAttempts[]</c> (in-process
     /// retries within a single attempt process) are flattened into the same history so no execution is lost.
     /// </remarks>
-    private static JsonArray CollapseRetryAttempts(JsonArray tests)
+    private static JsonArray CollapseRetryAttempts(IReadOnlyList<IReadOnlyList<JsonObject>> reports)
     {
-        var slots = new List<(JsonObject Final, List<JsonObject> Priors)>();
-        var byIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
-
-        foreach (JsonNode? test in tests)
+        var ambiguousIdentities = new HashSet<string>(StringComparer.Ordinal);
+        var ambiguousLifecycles = new HashSet<(string TestIdentity, string ExecutionId)>();
+        // A null value means that this case has several explicitly different execution lifecycles.
+        var knownExecutionIds = new Dictionary<string, string?>(StringComparer.Ordinal);
+        foreach (IReadOnlyList<JsonObject> report in reports)
         {
-            // Non-objects were already rejected during ingestion; this only re-establishes the type.
-            if (test is not JsonObject testObject)
+            var reportIdentities = new HashSet<string>(StringComparer.Ordinal);
+            var reportLifecycles = new HashSet<(string TestIdentity, string ExecutionId)>();
+            foreach (JsonObject test in report)
             {
-                continue;
-            }
+                if (GetTestIdentity(test) is not string identity)
+                {
+                    continue;
+                }
 
-            // A row we cannot identify gets its own slot: fusing unrelated rows would lose results, whereas an
-            // uncollapsed duplicate is merely redundant.
-            if (GetTestIdentity(testObject) is not string identity)
-            {
-                slots.Add((testObject, []));
-                continue;
-            }
+                if (!reportIdentities.Add(identity))
+                {
+                    ambiguousIdentities.Add(identity);
+                }
 
-            if (byIdentity.TryGetValue(identity, out int index))
-            {
-                (JsonObject previousFinal, List<JsonObject> priors) = slots[index];
-                priors.Add(previousFinal);
-                slots[index] = (testObject, priors);
+                if (ReadString(test, "executionId") is not { Length: > 0 } executionId)
+                {
+                    continue;
+                }
+
+                if (!reportLifecycles.Add((identity, executionId)))
+                {
+                    ambiguousLifecycles.Add((identity, executionId));
+                }
+
+                if (!knownExecutionIds.TryGetValue(identity, out string? knownExecutionId))
+                {
+                    knownExecutionIds.Add(identity, executionId);
+                }
+                else if (!string.Equals(knownExecutionId, executionId, StringComparison.Ordinal))
+                {
+                    knownExecutionIds[identity] = null;
+                }
             }
-            else
+        }
+
+        var slots = new List<(JsonObject Final, List<JsonObject> Priors)>();
+        var byIdentity = new Dictionary<(string TestIdentity, string? ExecutionId), int>();
+
+        foreach (IReadOnlyList<JsonObject> report in reports)
+        {
+            foreach (JsonObject test in report)
             {
-                byIdentity.Add(identity, slots.Count);
-                slots.Add((testObject, []));
+                // Preserve unidentified or ambiguous rows instead of guessing which execution they belong to.
+                if (GetTestIdentity(test) is not string identity)
+                {
+                    slots.Add((test, []));
+                    continue;
+                }
+
+                string? executionId = ReadString(test, "executionId");
+                if (RoslynString.IsNullOrEmpty(executionId))
+                {
+                    bool hasKnownExecution = knownExecutionIds.TryGetValue(identity, out executionId);
+                    if (ambiguousIdentities.Contains(identity) || (hasKnownExecution && executionId is null))
+                    {
+                        slots.Add((test, []));
+                        continue;
+                    }
+                }
+
+                if (executionId is not null && ambiguousLifecycles.Contains((identity, executionId)))
+                {
+                    slots.Add((test, []));
+                    continue;
+                }
+
+                (string TestIdentity, string? ExecutionId) key = (identity, executionId);
+                if (byIdentity.TryGetValue(key, out int index))
+                {
+                    (JsonObject previousFinal, List<JsonObject> priors) = slots[index];
+                    priors.Add(previousFinal);
+                    slots[index] = (test, priors);
+                }
+                else
+                {
+                    byIdentity.Add(key, slots.Count);
+                    slots.Add((test, []));
+                }
             }
         }
 

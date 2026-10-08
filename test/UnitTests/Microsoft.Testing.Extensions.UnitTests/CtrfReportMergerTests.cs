@@ -880,6 +880,82 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_CollapseRetryAttempts_PreservesDuplicateCaseIdentities(bool hasExecutionIds)
+    {
+        JsonObject first = Attempt("First", "failed", uid: "same");
+        JsonObject second = Attempt("Second", "passed", uid: "same");
+        JsonObject retry = Attempt("First", "passed", uid: "same");
+        if (hasExecutionIds)
+        {
+            first["executionId"] = "first-lifecycle";
+            second["executionId"] = "second-lifecycle";
+            retry["executionId"] = "first-lifecycle";
+        }
+
+        JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(testEntries: [first, second]), BuildReport(testEntries: [retry])],
+            CtrfMergeMode.CollapseRetryAttempts))!["results"]!;
+        var tests = (JsonArray)results["tests"]!;
+
+        Assert.HasCount(hasExecutionIds ? 2 : 3, tests);
+        Assert.AreEqual(hasExecutionIds ? 2 : 3, (long)results["summary"]!["tests"]!);
+        Assert.AreSequenceEqual(
+            hasExecutionIds ? ["First", "Second"] : ["First", "Second", "First"],
+            tests.Select(test => (string)test!["name"]!).ToArray());
+        if (hasExecutionIds)
+        {
+            Assert.AreEqual("passed", (string?)tests[0]!["status"]);
+            Assert.AreEqual(1, (long)tests[0]!["retries"]!);
+            Assert.AreEqual("failed", (string?)tests[0]!["retryAttempts"]![0]!["status"]);
+            Assert.IsNull(tests[1]!["retryAttempts"]);
+        }
+        else
+        {
+            Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => (string)test!["status"]!).ToArray());
+            Assert.IsTrue(tests.All(test => test!["retryAttempts"] is null));
+        }
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotAssignUnknownLifecycleToConflictingExecutions()
+    {
+        JsonObject first = Attempt("First", "failed", uid: "same");
+        first["executionId"] = "first-lifecycle";
+        JsonObject unknown = Attempt("Unknown", "passed", uid: "same");
+        JsonObject second = Attempt("Second", "failed", uid: "same");
+        second["executionId"] = "second-lifecycle";
+        JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(testEntries: [first]), BuildReport(testEntries: [unknown]), BuildReport(testEntries: [second])],
+            CtrfMergeMode.CollapseRetryAttempts))!["results"]!;
+        var tests = (JsonArray)results["tests"]!;
+
+        Assert.HasCount(3, tests);
+        Assert.AreSequenceEqual(["First", "Unknown", "Second"], tests.Select(test => (string)test!["name"]!).ToArray());
+        Assert.IsTrue(tests.All(test => test!["retryAttempts"] is null));
+        Assert.IsNull(tests[1]!["executionId"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotCollapseDuplicateLifecycleWithinOneReport()
+    {
+        JsonObject first = Attempt("First", "failed", uid: "same");
+        JsonObject second = Attempt("Second", "passed", uid: "same");
+        JsonObject retry = Attempt("Retry", "passed", uid: "same");
+        first["executionId"] = "same-lifecycle";
+        second["executionId"] = "same-lifecycle";
+        retry["executionId"] = "same-lifecycle";
+        var tests = (JsonArray)JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(testEntries: [first, second]), BuildReport(testEntries: [retry])],
+            CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        Assert.HasCount(3, tests);
+        Assert.AreSequenceEqual(["First", "Second", "Retry"], tests.Select(test => (string)test!["name"]!).ToArray());
+        Assert.IsTrue(tests.All(test => test!["retryAttempts"] is null));
+    }
+
+    [TestMethod]
     public void Merge_CollapseRetryAttempts_DoesNotInventAttemptIdentityForLegacyExecutions()
     {
         JsonObject failing = Attempt("t", "failed", uid: "u1");
@@ -1171,10 +1247,11 @@ public sealed class CtrfReportMergerTests
         JsonObject finalAttempt = Test("t", "passed");
         finalAttempt["extra"] = new JsonObject { ["uid"] = "u1" };
 
-        string report = BuildReport(testEntries: [firstAttempt, finalAttempt]);
+        string firstReport = BuildReport(testEntries: [firstAttempt]);
+        string finalReport = BuildReport(testEntries: [finalAttempt]);
 
         JsonNode test = ((JsonArray)JsonNode.Parse(
-            CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
+            CtrfReportMerger.Merge([firstReport, finalReport], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
 
         var retryAttempts = (JsonArray)test["retryAttempts"]!;
         Assert.HasCount(2, retryAttempts);
