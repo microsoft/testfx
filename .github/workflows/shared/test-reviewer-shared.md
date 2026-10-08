@@ -564,11 +564,12 @@ test is below A. Keep all grades in Step 5.
 
 Body format — the marker comment must be the first line so re-runs can
 recognize the workflow's own comments (the outer fence below is four
-backticks so the inner `suggestion` fence survives verbatim):
+backticks so the inner `suggestion` fence survives verbatim). Use the
+representative test's actual letter grade and score band:
 
 ````markdown
 <!-- test-reviewer-suggestion -->
-🧪 **Test review · Grade C (70–79)** — <verified consequence for the representative test>
+🧪 **Test review · Grade <letter grade> (<score band>)** — <verified consequence for the representative test>
 
 <concrete trigger, correction, and any other affected tests/locations>
 
@@ -767,7 +768,7 @@ Do not emit an empty table. Otherwise emit the table below. -->
 </table>
 
 <sub>This advisory review is heuristic and non-blocking.
-<!-- Only when Step 4 posted at least one inline suggestion, add:
+<!-- Only when Step 5 posted at least one inline suggestion, add:
 N apply-ready suggestion(s) are available in Files changed. -->
 Re-run the combined review with `/review-tests`, or only the parallel-safety
 specialist with `/parallel-audit`.</sub>
