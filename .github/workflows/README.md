@@ -51,6 +51,15 @@ setup steps and agent-launched child processes inherit it. MTP and MSTest honor
 the same opt-out; do not add Application Insights destinations just to silence
 blocked telemetry requests.
 
+This is client-side suppression, not a blanket firewall ban on telemetry:
+gh-aw v0.89.21's maintained `dotnet` bundle also permits the Application Insights
+ingestion host `dc.services.visualstudio.com`. Adding `dotnet` therefore permits
+that host as well as package and SDK downloads. The removed regional
+`*.in.applicationinsights.azure.com` exception stays denied. The local firewall
+replay verified denial of `southcentralus-0.in.applicationinsights.azure.com`,
+not every telemetry endpoint. Keep the maintained SDK/feed bundle for restore
+compatibility rather than treating the opt-out as an egress-enforcement control.
+
 When investigating a blocked request, inspect the downloaded raw firewall
 `access.log` as well as the gh-aw summary. A `TCP_DENIED` entry remains a denial
 even when its HTTP status is `200`; some gh-aw summaries count those entries as
