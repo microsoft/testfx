@@ -94,6 +94,7 @@ internal static partial class CtrfReportMerger
         // The merged document belongs to the same logical run as its inputs only when they all belong to the
         // same one, so a run id is carried over only when every input reported the very same value.
         var distinctRunIds = new HashSet<string>(StringComparer.Ordinal);
+        var lineageInputs = new JsonArray();
 
         // Collect each input's environment so shared fields can be retained and module- or agent-specific
         // ones (values that differ across inputs) dropped, rather than attributing the first report's
@@ -137,6 +138,13 @@ internal static partial class CtrfReportMerger
             reportCount++;
             acceptedReports.Add(reportJson);
 
+            JsonNode lineageInput = new JsonObject();
+            if (ReadString(root, "reportId") is { Length: > 0 } inputReportId)
+            {
+                lineageInput["reportId"] = inputReportId;
+            }
+
+            lineageInputs.Add(lineageInput);
             distinctRunIds.Add(ReadString(root, "runId") is { Length: > 0 } runIdText ? runIdText : string.Empty);
 
             if (root["results"]?["environment"] is JsonObject environment)
@@ -334,6 +342,19 @@ internal static partial class CtrfReportMerger
         // rather than carrying the first input's 'generatedBy' (which could report a different producer
         // or version when merging reports from different tool versions).
         merged["generatedBy"] = GeneratedByName;
+        // Immediate input lineage does not establish that all executions of the logical run were supplied.
+        // Even strict mode only checks the supplied documents, not the orchestrator's expected input set.
+        merged["extra"] = new JsonObject
+        {
+            ["microsoft.testingplatform"] = new JsonObject
+            {
+                ["documentRole"] = "merged",
+                ["mergeMode"] = mode == CtrfMergeMode.CollapseRetryAttempts ? "collapseRetryAttempts" : "concatenate",
+                ["inputCount"] = reportCount,
+                ["inputs"] = lineageInputs,
+                ["inputCompleteness"] = "unknown",
+            },
+        };
         merged["results"] = resultsObject;
 
         return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
