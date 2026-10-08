@@ -347,6 +347,23 @@ internal sealed partial class TestHostControllersTestHost
 
         bool outputConsumerStillRunning = messageBusProxy.ConsumersStillRunning.Any(
             consumer => ReferenceEquals(consumer, outputDevice.OriginalOutputDevice));
+        if (!_controllerFinalizationTimedOut && !testExecutionCanceled && !outputConsumerStillRunning)
+        {
+            TestCoverageResult coverageResult = ServiceProvider.GetRequiredService<TestCoverageResult>();
+            foreach (string error in coverageResult.GetThresholdErrors())
+            {
+                bool displayed = await TryRunControllerExtensionAsync(
+                    token => outputDevice.DisplayAsync(coverageResult, new ErrorMessageOutputDeviceData(error), token),
+                    finalizationCancellationToken).ConfigureAwait(false);
+                if (!displayed)
+                {
+                    MarkOutputDeviceStillRunning(_servicesStillRunning, outputDevice);
+                    _controllerFinalizationTimedOut = true;
+                    break;
+                }
+            }
+        }
+
         if (!_controllerFinalizationTimedOut && !outputConsumerStillRunning)
         {
             bool outputFinalized = await TryRunControllerExtensionAsync(
@@ -441,6 +458,27 @@ internal sealed partial class TestHostControllersTestHost
         // ignore policy exactly once so ignoring a higher-priority child verdict cannot expose coverage 14.
         exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
         exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
+
+        if (!_controllerFinalizationTimedOut)
+        {
+            foreach (ITestHostControllerRunCompletionHandler handler in _testHostsInformation.RunCompletionHandlers)
+            {
+                if (!await TryRunControllerExtensionAsync(
+                    token => handler.OnRunCompletedAsync(exitCode, _controllerSummaryArtifacts, token),
+                    finalizationCancellationToken).ConfigureAwait(false))
+                {
+                    _servicesStillRunning.Add(handler);
+                    _controllerFinalizationTimedOut = true;
+                    ScheduleFinalizationTimeoutWarning();
+                    if (exitCode == (int)ExitCode.Success)
+                    {
+                        exitCode = (int)ExitCode.TestSessionAborted;
+                    }
+
+                    break;
+                }
+            }
+        }
 
         await _logger.LogInformationAsync(
             $"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'.").ConfigureAwait(false);

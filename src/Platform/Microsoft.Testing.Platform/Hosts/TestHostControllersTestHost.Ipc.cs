@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
@@ -11,6 +12,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class TestHostControllersTestHost
 {
+    private SessionFileArtifact[] _controllerSummaryArtifacts = [];
+
     private NamedPipeServer CreateTestHostControllerIpc(
         IReadOnlyList<string>? authorizedSecurityIdentities,
         CancellationToken cancellationToken)
@@ -34,6 +37,7 @@ internal sealed partial class TestHostControllersTestHost
             switch (request)
             {
                 case TestHostCompletedRequest testHostCompletedRequest:
+                    _controllerSummaryArtifacts = testHostCompletedRequest.SummaryArtifacts;
                     _testHostCompletedReceived = true;
                     _testHostExitCodeReceived = testHostCompletedRequest.ExitCode;
                     _testHostUnfilteredExitCodeReceived = testHostCompletedRequest.UnfilteredExitCode;

@@ -113,6 +113,10 @@
       <_CodeCoverageExcludedSource Include="TestInfrastructure">
         <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageTestInfrastructureRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
       </_CodeCoverageExcludedSource>
+      <!-- Keep repository-owned validation and process-lifetime logic measurable while excluding BCL compatibility shims. -->
+      <_CodeCoverageExcludedSource Include="Polyfills">
+        <XmlPattern>(^|[\\/])Polyfills[\\/](?!Ensure\.cs$|ProcessExtensions\.cs$).*\.cs$</XmlPattern>
+      </_CodeCoverageExcludedSource>
     </ItemGroup>
 
     <ItemGroup>
@@ -123,6 +127,9 @@
       <_CodeCoverageSettingsLine Include="      &lt;Include&gt;" />
       <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference->'        &lt;ModulePath&gt;.*%(CoverageAssemblyPattern)\.dll$&lt;/ModulePath&gt;')" />
       <_CodeCoverageSettingsLine Include="      &lt;/Include&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="        &lt;ModulePath&gt;.*Microsoft\.Testing\.TestInfrastructure\.dll$&lt;/ModulePath&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;/ModulePaths&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;Sources&gt;" />
       <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />

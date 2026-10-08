@@ -13,6 +13,73 @@ public sealed class CoverageThresholdExitCodeTests : AcceptanceTestBase<Coverage
 {
     private const string AssetName = "CoverageThresholdExitCode";
 
+    [TestMethod]
+    [DataRow("--coverage-threshold-line 80 --coverage-threshold-branch 70", "normal", (int)ExitCode.Success, "Total - Branch: 70.0% >= 70.0% threshold")]
+    [DataRow("--coverage-threshold-line 80", "below", (int)ExitCode.CoverageThresholdFailed, "Total - Line: 79.0% < 80.0% threshold")]
+    [DataRow("--coverage-threshold-line 80", "boundary", (int)ExitCode.CoverageThresholdFailed, "Coverage threshold for '--coverage-threshold-line' failed:")]
+    [DataRow("--coverage-threshold-line 79.995", "boundary", (int)ExitCode.Success, "Coverage Threshold Results:")]
+    [DataRow("--coverage-threshold-branch 71", "normal", (int)ExitCode.CoverageThresholdFailed, "Total - Branch: 70.0% < 71.0% threshold")]
+    [DataRow("--coverage-threshold-branch 0", "line-only", (int)ExitCode.CoverageThresholdFailed, "requires an overall coverage measurement")]
+    [DataRow("--coverage-threshold-line 0", "empty", (int)ExitCode.CoverageThresholdFailed, "requires non-empty overall coverage data")]
+    [DataRow("--coverage-threshold-line 80", "missing", (int)ExitCode.CoverageThresholdFailed, "Enable a compatible coverage collector")]
+    [DataRow("--coverage-threshold-line 80", "module", (int)ExitCode.CoverageThresholdFailed, "requires an overall coverage measurement")]
+    [DataRow("--coverage-threshold-line 80", "ambiguous", (int)ExitCode.CoverageThresholdFailed, "multiple coverage producers")]
+    [DataRow("--coverage-threshold-line 80 --ignore-exit-code 14", "below", (int)ExitCode.Success, "Coverage Threshold Results:")]
+    [DataRow("--coverage-threshold-line 80 --minimum-expected-tests 2", "below", (int)ExitCode.MinimumExpectedTestsPolicyViolation, "Coverage Threshold Results:")]
+    [DataRow("--coverage-threshold-line 101", "normal", (int)ExitCode.InvalidCommandLine, "expects a percentage from 0 to 100")]
+    [DataRow("--coverage-threshold-branch NaN", "normal", (int)ExitCode.InvalidCommandLine, "expects a percentage from 0 to 100")]
+    [DataRow("--coverage-threshold-line 80 --list-tests", "normal", (int)ExitCode.InvalidCommandLine, "Coverage thresholds cannot be combined")]
+    [DataRow("--coverage-threshold-line 49.92", "exact-boundary", (int)ExitCode.Success, "Total - Line: 49.9% >= 49.9% threshold")]
+    public async Task ConfiguredThreshold_UsesOverallMeasurements(string command, string mode, int expectedExitCode, string expectedOutput)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            command,
+            environmentVariables: new Dictionary<string, string?> { ["COVERAGE_MEASUREMENTS"] = mode },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs((ExitCode)expectedExitCode);
+        result.AssertOutputContains(expectedOutput);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task ConfiguredThreshold_WithFailingTest_PreservesTestFailure(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--coverage-threshold-line 80",
+            environmentVariables: new Dictionary<string, string?> { ["COVERAGE_MEASUREMENTS"] = "below", ["FAIL_TEST"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContains("Total - Line: 79.0% < 80.0% threshold");
+    }
+
+    [TestMethod]
+    public async Task ConfiguredThreshold_WithCancellation_PreservesAbort()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--coverage-threshold-line 80 --timeout 500ms",
+            environmentVariables: new Dictionary<string, string?> { ["DELAY_TEST"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.TestSessionAborted);
+    }
+
+    [TestMethod]
+    public async Task ConfiguredThreshold_WithNoTests_PreservesZeroTests()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--coverage-threshold-line 80",
+            environmentVariables: new Dictionary<string, string?> { ["SKIP_TEST"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.ZeroTests);
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task FailedThreshold_WithPassingTests_ReturnsCoverageThresholdFailedExitCode(string currentTfm)
@@ -124,7 +191,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage), typeof(TestCoverageThresholdMessage) };
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageMessage) };
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
@@ -134,16 +201,42 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        if (Environment.GetEnvironmentVariable("DELAY_TEST") == "1")
+        {
+            await Task.Delay(Timeout.Infinite, context.CancellationToken);
+        }
+
         IProperty state = Environment.GetEnvironmentVariable("FAIL_TEST") == "1"
             ? new FailedTestNodeStateProperty()
             : new PassedTestNodeStateProperty();
 
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        if (Environment.GetEnvironmentVariable("SKIP_TEST") != "1")
         {
-            Uid = "Test1",
-            DisplayName = "Test1",
-            Properties = new PropertyBag(state),
-        }));
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+            {
+                Uid = "Test1",
+                DisplayName = "Test1",
+                Properties = new PropertyBag(state),
+            }));
+        }
+
+        string? measurements = Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS");
+        if (measurements is not null and not "missing")
+        {
+            CoverageScope scope = measurements == "module" ? new CoverageScope(CoverageScopeLevel.Module, "app.dll") : CoverageScope.Overall;
+            long covered = measurements switch { "empty" => 0, "below" => 79, "boundary" => 15999, "exact-boundary" => 312, _ => 80 };
+            long coverable = measurements switch { "empty" => 0, "boundary" => 20000, "exact-boundary" => 625, _ => 100 };
+            await context.MessageBus.PublishAsync(this, new TestCoverageMessage(context.Request.Session.SessionUid, scope, CoverageMetric.Line, covered, coverable, Uid));
+            if (measurements != "line-only")
+            {
+                await context.MessageBus.PublishAsync(this, new TestCoverageMessage(context.Request.Session.SessionUid, scope, CoverageMetric.Branch, 70, 100, Uid));
+            }
+
+            if (measurements == "ambiguous")
+            {
+                await context.MessageBus.PublishAsync(this, new TestCoverageMessage(context.Request.Session.SessionUid, scope, CoverageMetric.Line, 100, 100, "other"));
+            }
+        }
 
         string? thresholdStatus = Environment.GetEnvironmentVariable("COVERAGE_THRESHOLD_STATUS");
         if (thresholdStatus is "Failed" or "Passed")
