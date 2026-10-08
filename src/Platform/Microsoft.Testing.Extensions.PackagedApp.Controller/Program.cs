@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.PackagedApp;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 using CodeCoverageBuilderHook = Microsoft.Testing.Extensions.CodeCoverage.TestingPlatformBuilderHook;
 using HangDumpBuilderHook = Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook;
@@ -20,9 +22,52 @@ internal static class Program
 
     public static async Task<int> Main(string[] args)
     {
-        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args).ConfigureAwait(false);
+        bool isNativeInformationalRequest;
+        try
+        {
+            (args, isNativeInformationalRequest) = PackagedAppControllerArguments.Configure(args, Environment.GetEnvironmentVariable, Environment.SetEnvironmentVariable);
+        }
+        catch (FormatException exception)
+        {
+            await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
+            return 5;
+        }
 
         HashSet<string> enabledExtensions = GetEnabledExtensions();
+        if (isNativeInformationalRequest)
+        {
+            using CancellationTokenSource cancellation = new();
+            ConsoleCancelEventHandler cancelHandler = (_, eventArgs) =>
+            {
+                eventArgs.Cancel = true;
+                cancellation.Cancel();
+            };
+            Console.CancelKeyPress += cancelHandler;
+            try
+            {
+                var environment = Environment.GetEnvironmentVariables()
+                    .Cast<DictionaryEntry>()
+                    .ToDictionary(entry => entry.Key.ToString()!, entry => entry.Value?.ToString(), StringComparer.OrdinalIgnoreCase);
+                TestHostLaunchContext context = new(
+                    Environment.GetEnvironmentVariable(PackagedAppControllerArguments.TargetEnvironmentVariable)!,
+                    args,
+                    environment,
+                    Environment.CurrentDirectory);
+                return await PackagedAppNativeInformationalLaunch.RunAsync(
+                    new PackagedAppTestHostLauncher(),
+                    context,
+                    enabledExtensions.Contains("packagedapp"),
+                    Console.Error,
+                    cancellation.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                Console.CancelKeyPress -= cancelHandler;
+            }
+        }
+
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args).ConfigureAwait(false);
+
         if (enabledExtensions.Contains("msbuild"))
         {
             MSBuildBuilderHook.AddExtensions(builder, args);

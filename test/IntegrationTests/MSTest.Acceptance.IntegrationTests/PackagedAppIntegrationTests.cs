@@ -75,6 +75,92 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+    [DynamicData(nameof(ConsumerContracts))]
+    public async Task ComputeRunArguments_SelectsSidecarOnlyForPackagedMtpApplication(
+        string package, string properties, bool controller, bool helper)
+    {
+        _ = helper;
+        using TestAsset asset = await GenerateConsumerAsync(package, properties);
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken);
+        bool selectsController = controller && OperatingSystem.IsWindows();
+        string expectedCommand = properties.Contains("<OutputType>Library</OutputType>", StringComparison.Ordinal)
+            ? string.Empty
+            : OperatingSystem.IsWindows() ? "PackagedConsumer.exe" : "PackagedConsumer";
+        Assert.AreEqual($"Command={(selectsController ? "mstest-appmodel-controller.exe" : expectedCommand)}", lines[0]);
+        if (selectsController)
+        {
+            Assert.AreEqual(
+                $"Arguments=--internal-packagedapp-controller-v1 \"{executable}\" \"msbuild;packagedapp;trx\"",
+                lines[1].TrimEnd());
+        }
+        else
+        {
+            Assert.AreEqual("Arguments=", lines[1]);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("<RunCommand>custom-run.exe</RunCommand>", "custom-run.exe")]
+    [DataRow("<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>", "PackagedConsumer.exe")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_PreservesExplicitOverrides(string properties, string expectedCommand)
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{properties}");
+        string executable = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken);
+        Assert.AreEqual($"Command={expectedCommand}", lines[0]);
+        Assert.DoesNotContain("--internal-packagedapp-controller", string.Join(Environment.NewLine, lines));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_ResolvesRelativeTargetAndPreservesTailWithoutAppHost()
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            """
+            <UseWinUI>true</UseWinUI>
+            <UseAppHost>false</UseAppHost>
+            <TestingPlatformPackagedAppTargetPath>staged\host.exe</TestingPlatformPackagedAppTargetPath>
+            <StartArguments>--results-directory &quot;a b&quot;</StartArguments>
+            <TestingPlatformCommandLineArguments>--report-trx</TestingPlatformCommandLineArguments>
+            """);
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                "Command=mstest-appmodel-controller.exe",
+                $"Arguments=--internal-packagedapp-controller-v1 \"{Path.Combine(asset.TargetAssetPath, "staged", "host.exe")}\" \"msbuild;packagedapp;trx\"  --results-directory \"a b\" --report-trx",
+            },
+            await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_NoAppHostWithoutStagedExecutableFailsExplicitly()
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI><UseAppHost>false</UseAppHost>");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("Enable UseAppHost or set TestingPlatformPackagedAppTargetPath");
+    }
+
+    [TestMethod]
     [DataRow("MSTest")]
     [DataRow("MSTest.TestAdapter")]
     [OSCondition(OperatingSystems.Windows)]
@@ -343,6 +429,12 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\contract.txt"
                                   Lines="Helper=$(GenerateTestingPlatformApplicationHelper)" />
                 <Message Importance="high" Text="CallerEnvironment=%(TestingPlatformEnvironmentVariable.Value)" />
+              </Target>
+              <Target Name="WriteRunContract" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;ComputeRunArguments">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt" Overwrite="true"
+                                  Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt"
+                                  Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
               </Target>
             </Project>
             #file Tests.cs
