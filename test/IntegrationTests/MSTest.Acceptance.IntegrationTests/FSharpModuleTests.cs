@@ -70,6 +70,8 @@ public sealed class FSharpModuleTests : AcceptanceTestBase<FSharpModuleTests.Tes
 
         Assert.AreEqual(0, result.ExitCode, result.ToString());
         Assert.DoesNotContain("non-public class FSharpModuleTestProject.MicrosoftTestingPlatformApplication", result.StandardOutput);
+        Assert.Contains("F# module FSharpModuleTestProject.NamedModule", result.StandardOutput);
+        Assert.Contains("must be static and public", result.StandardOutput);
         foreach (string name in DiscoveryNames)
         {
             Assert.Contains(name, result.StandardOutput, result.ToString());

@@ -336,7 +336,10 @@ internal sealed partial class TypeCache
 
         if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature())
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+            string signatureMessage = classInfo.IsFSharpModule
+                ? Resource.UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature
+                : Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature;
+            string message = string.Format(CultureInfo.CurrentCulture, signatureMessage, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
         }
 

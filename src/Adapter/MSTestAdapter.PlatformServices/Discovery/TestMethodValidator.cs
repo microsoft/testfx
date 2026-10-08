@@ -67,9 +67,12 @@ internal class TestMethodValidator
                 && !testMethodInfo.IsAbstract && hasValidInstanceKind
                 && IsGenericValueTaskReturnType(testMethodInfo);
 
+            string signatureMessage = type.IsFSharpModule()
+                ? Resource.UTA_ErrorIncorrectFSharpTestMethodSignature
+                : Resource.UTA_ErrorIncorrectTestMethodSignature;
             string message = isInvalidOnlyBecauseOfReturnType
                 ? string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericValueTaskReturnType, type.FullName, testMethodInfo.Name)
-                : string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectTestMethodSignature, type.FullName, testMethodInfo.Name);
+                : string.Format(CultureInfo.CurrentCulture, signatureMessage, type.FullName, testMethodInfo.Name);
             warnings.Add(message);
             return false;
         }
