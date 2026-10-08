@@ -109,6 +109,9 @@ namespace MSTestSdkTest
         <Configuration>
           <IncludeTestAssembly>True</IncludeTestAssembly>
           <CodeCoverage>
+            <!-- Do not rewrite the already loaded controller/test assembly during collection. -->
+            <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
+            <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
             <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
             <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
           </CodeCoverage>
