@@ -660,7 +660,7 @@ jobs:
 
       - name: Upload test evidence
         if: steps.collect.outputs.evidence-found == 'true'
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: pipeline-test-triage-data
           path: ${{ runner.temp }}/pipeline-test-triage
@@ -669,7 +669,7 @@ jobs:
 
 steps:
   - name: Download test evidence
-    uses: actions/download-artifact@v8.0.1
+    uses: actions/download-artifact@v8.0.2
     with:
       name: pipeline-test-triage-data
       path: /tmp/gh-aw/agent/pipeline-test-triage
