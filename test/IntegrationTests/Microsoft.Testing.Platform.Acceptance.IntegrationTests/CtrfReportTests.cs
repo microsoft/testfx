@@ -52,24 +52,33 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         Assert.AreEqual((int)(hasFailures ? ExitCode.AtLeastOneTestFailed : ExitCode.Success), result.ExitCode);
         string[] reports = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories);
         int physicalReportCount = 0;
-        foreach (string path in reports)
+        foreach (var reportData in reports.Select(path =>
         {
             using var report = JsonDocument.Parse(File.ReadAllText(path));
             JsonElement root = report.RootElement;
+            bool hasRunId = root.TryGetProperty("runId", out JsonElement runId);
+            return new
+            {
+                HasRunId = hasRunId,
+                RunId = hasRunId ? runId.GetString() : null,
+                Role = root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString(),
+                TestsCount = root.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32(),
+            };
+        }))
+        {
             if (supplyLogicalRunId)
             {
-                Assert.AreEqual(logicalRunId, root.GetProperty("runId").GetString());
+                Assert.AreEqual(logicalRunId, reportData.RunId);
             }
             else
             {
-                Assert.IsFalse(root.TryGetProperty("runId", out _));
+                Assert.IsFalse(reportData.HasRunId);
             }
 
-            string role = root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString()!;
-            if (role == "execution")
+            if (reportData.Role == "execution")
             {
                 physicalReportCount++;
-                Assert.AreEqual(hasFailures ? 4 : 1, root.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32());
+                Assert.AreEqual(hasFailures ? 4 : 1, reportData.TestsCount);
             }
         }
 
