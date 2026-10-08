@@ -91,9 +91,20 @@
 
 7. **Assert/CollectionAssert/StringAssert audit (2026-08-17)**: Did a broad sweep of `src/TestFramework/TestFramework/Assertions/*.cs` looking for zero-coverage newer methods (AreAllDistinct, AreAllNotNull, AreAllOfType, AreAllOfType span/memory, StringAssert.Regex, CollectionAssert.Subset/Type/Membership, Assert.That expression evaluation internals). All are already thoroughly covered (dozens of edge-case tests each) by prior runs. No fresh zero-coverage gap found this pass — future runs should look at MTP/Retry/Analyzer areas rather than core Assert methods, which appear saturated.
 
+## Run 2026-10-08 (run 37856580472) — FileLoggerProvider skip-move guard tests
+
+- Task reconciliation: PR #11811 (ConfigurationProviderHelpers.GetChildKeys, originally our branch) was recreated/merged by a maintainer from `dev/amauryleve/configuration-child-key-tests` and closed as merged — treat as resolved, nothing to maintain. No open `[test-improver]`-prefixed PRs found.
+- Task 2/3: continued the `Microsoft.Testing.Platform` core-internals sweep (Logging/). `TypeNameHelper` confirmed `[ExcludeFromCodeCoverage]` ported runtime code — not a candidate. Found `FileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync`'s early-return guard (`_customDirectory || testResultDirectory == currentDir`) had zero direct coverage — only the "needs to move" paths were tested in `DiagnosticLoggingInformationTests.cs`. Confirmed `customDirectory: true` is a real production path (set in `TestApplication.CreateLoggingState` for `--results-directory`/`--diagnostic-output-directory`/matching env vars).
+- Added 2 tests to `DiagnosticLoggingInformationTests.cs`: custom-directory skip, already-in-target-directory skip. Both use `MockBehavior.Strict` `IFileSystem` so an unexpected `MoveFile` call fails loudly.
+- Verified red/green: replaced the guard with `if (false)` — both new tests failed with `Moq.MockException` on the strict `MoveFile` setup (2/2866 failed); reverted, reran — 0/2866 failed, 22 pre-existing skips.
+- Build succeeded (0 warnings) net8.0+net9.0. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for FileLoggerProvider relocation skip-move guard" on branch `test-assist/file-logger-provider-skip-move-tests`.
+- Task 7: updated October issue #11698 — new Run History entry prepended, added new PR to Suggested Actions.
+- Remaining candidates for future runs: `Microsoft.Testing.Platform` core internals still have zero-direct-test areas (Messages/ property types, `FileLoggerCategory` thin forwarding — likely too trivial); MSTest.Engine internal classes (architecturally blocked, unchanged). Consider Task 5 (issue comments) or Task 6 (test infrastructure) next run.
+
 ## Last Run
 
-2026-10-07 UTC (run 37699199542)
+2026-10-08 UTC (run 37856580472)
 
 ## Completed Work (recent, summarized)
 
