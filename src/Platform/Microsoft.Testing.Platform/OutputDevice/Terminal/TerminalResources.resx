@@ -456,6 +456,9 @@ Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it
     <value>No coverable data (failed by policy)</value>
     <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</comment>
   </data>
+  <data name="CoverageThresholdFailedRoundedValues" xml:space="preserve">
+    <value>Coverage is below the required threshold (the percentages round to the same value).</value>
+  </data>
   <data name="CoverageThresholdNoDataPassed" xml:space="preserve">
     <value>No coverable data (passed by policy)</value>
     <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</comment>

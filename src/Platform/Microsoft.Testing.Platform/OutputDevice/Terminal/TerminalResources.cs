@@ -45,6 +45,8 @@ internal static partial class TerminalResources
 
     internal static string @CoverageThresholdFailed => GetResourceString("CoverageThresholdFailed");
 
+    internal static string @CoverageThresholdFailedRoundedValues => GetResourceString("CoverageThresholdFailedRoundedValues");
+
     internal static string @CoverageThresholdNoDataFailed => GetResourceString("CoverageThresholdNoDataFailed");
 
     internal static string @CoverageThresholdNoDataPassed => GetResourceString("CoverageThresholdNoDataPassed");

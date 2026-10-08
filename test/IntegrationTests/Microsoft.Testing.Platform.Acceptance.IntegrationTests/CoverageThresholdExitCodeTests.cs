@@ -29,6 +29,7 @@ public sealed class CoverageThresholdExitCodeTests : AcceptanceTestBase<Coverage
     [DataRow("--coverage-threshold-line 101", "normal", (int)ExitCode.InvalidCommandLine, "expects a percentage from 0 to 100")]
     [DataRow("--coverage-threshold-branch NaN", "normal", (int)ExitCode.InvalidCommandLine, "expects a percentage from 0 to 100")]
     [DataRow("--coverage-threshold-line 80 --list-tests", "normal", (int)ExitCode.InvalidCommandLine, "Coverage thresholds cannot be combined")]
+    [DataRow("--coverage-threshold-line 49.92", "exact-boundary", (int)ExitCode.Success, "Total - Line: 49.9% >= 49.9% threshold")]
     public async Task ConfiguredThreshold_UsesOverallMeasurements(string command, string mode, int expectedExitCode, string expectedOutput)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -223,8 +224,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         if (measurements is not null and not "missing")
         {
             CoverageScope scope = measurements == "module" ? new CoverageScope(CoverageScopeLevel.Module, "app.dll") : CoverageScope.Overall;
-            long covered = measurements switch { "empty" => 0, "below" => 79, "boundary" => 15999, _ => 80 };
-            long coverable = measurements switch { "empty" => 0, "boundary" => 20000, _ => 100 };
+            long covered = measurements switch { "empty" => 0, "below" => 79, "boundary" => 15999, "exact-boundary" => 312, _ => 80 };
+            long coverable = measurements switch { "empty" => 0, "boundary" => 20000, "exact-boundary" => 625, _ => 100 };
             await context.MessageBus.PublishAsync(this, new TestCoverageMessage(context.Request.Session.SessionUid, scope, CoverageMetric.Line, covered, coverable, Uid));
             if (measurements != "line-only")
             {

@@ -38,9 +38,11 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer, I
 
     private readonly Dictionary<ReportKey, CoverageReportReference> _reports = [];
     private readonly List<ReportKey> _reportOrder = [];
+    private readonly List<SessionFileArtifact> _controllerSummaryArtifacts = [];
     private ILogger? _logger;
     private ICommandLineOptions? _thresholdOptions;
     private SessionUid? _thresholdSessionUid;
+    private bool _deferToController;
 
     public TestCoverageResult()
     {
@@ -58,7 +60,21 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer, I
     public string Description => "Consumes and correlates test coverage data, threshold results, and report references.";
 
     public Type[] DataTypesConsumed { get; } =
-        [typeof(TestCoverageMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageReportMessage)];
+        [typeof(TestCoverageMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageReportMessage), typeof(SessionFileArtifact)];
+
+    internal SessionFileArtifact[] ControllerSummaryArtifacts
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _controllerSummaryArtifacts];
+            }
+        }
+    }
+
+    internal void DeferToController()
+        => _deferToController = true;
 
     public IReadOnlyList<TestCoverageThresholdMessage> Thresholds
     {
@@ -208,6 +224,8 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer, I
             _reportOrder.Clear();
             _thresholdOptions = null;
             _thresholdSessionUid = null;
+            _controllerSummaryArtifacts.Clear();
+            _deferToController = false;
         }
     }
 
@@ -215,6 +233,16 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer, I
     {
         switch (value)
         {
+            case SessionFileArtifact artifact when _deferToController
+                && artifact.Kind is string kind
+                && kind.EndsWith("-summary-fragment", StringComparison.Ordinal):
+                lock (_lock)
+                {
+                    _controllerSummaryArtifacts.Add(artifact);
+                }
+
+                return Task.CompletedTask;
+
             case TestCoverageMessage coverage:
                 var measurementKey = new MeasurementKey(
                     coverage.SessionUid.Value,

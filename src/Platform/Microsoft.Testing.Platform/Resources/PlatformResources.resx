@@ -210,7 +210,7 @@
     <comment>{0} is the command-line option name.</comment>
   </data>
   <data name="CoverageThresholdAmbiguous" xml:space="preserve">
-    <value>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements. Enable only one coverage collector.</value>
+    <value>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</value>
     <comment>{0} is the command-line option name.</comment>
   </data>
   <data name="CoverageThresholdNotMet" xml:space="preserve">

@@ -383,8 +383,8 @@
         <note>{0} is the directory path.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdAmbiguous">
-        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements. Enable only one coverage collector.</source>
-        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements. Enable only one coverage collector.</target>
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
+        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdEmptyMeasurement">

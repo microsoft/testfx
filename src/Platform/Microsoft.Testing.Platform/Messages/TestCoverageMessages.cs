@@ -250,6 +250,8 @@ public sealed class TestCoverageMessage : DataWithSessionUid
 /// <summary>Reports the result of a coverage threshold evaluation.</summary>
 public sealed class TestCoverageThresholdMessage : DataWithSessionUid
 {
+    private readonly bool? _countBasedPassed;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCoverageThresholdMessage"/> class.
     /// </summary>
@@ -327,6 +329,26 @@ public sealed class TestCoverageThresholdMessage : DataWithSessionUid
         }
     }
 
+    internal TestCoverageThresholdMessage(
+        SessionUid sessionUid,
+        CoverageMetric metric,
+        decimal actualPercentage,
+        decimal requiredPercentage,
+        bool hasCoverableData,
+        string producerId,
+        bool passed)
+        : this(sessionUid, CoverageScope.Overall, metric, CoverageAggregation.None, (double)actualPercentage,
+            (double)requiredPercentage, hasCoverableData, producerId)
+    {
+        _countBasedPassed = passed;
+        ExactActualPercentage = actualPercentage;
+        ExactRequiredPercentage = requiredPercentage;
+    }
+
+    internal decimal? ExactActualPercentage { get; }
+
+    internal decimal? ExactRequiredPercentage { get; }
+
     /// <summary>Gets the scope the threshold applies to (enables per-scope thresholds).</summary>
     public CoverageScope Scope { get; }
 
@@ -369,11 +391,12 @@ public sealed class TestCoverageThresholdMessage : DataWithSessionUid
 
     /// <summary>
     /// Gets a value indicating whether the threshold is satisfied. With no coverable data the outcome
-    /// follows <see cref="TreatNoDataAsFailure"/>; otherwise it is a plain numeric comparison.
+    /// follows <see cref="TreatNoDataAsFailure"/>. Platform-configured thresholds retain the exact
+    /// count-based comparison rather than comparing rounded percentage representations.
     /// </summary>
-    public bool Passed => HasCoverableData
+    public bool Passed => _countBasedPassed ?? (HasCoverableData
         ? ActualPercentage >= RequiredPercentage
-        : !TreatNoDataAsFailure;
+        : !TreatNoDataAsFailure);
 }
 
 /// <summary>The on-disk format of a coverage report artifact. Append-only.</summary>

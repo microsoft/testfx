@@ -459,6 +459,27 @@ internal sealed partial class TestHostControllersTestHost
         exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
         exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
 
+        if (!_controllerFinalizationTimedOut)
+        {
+            foreach (ITestHostControllerRunCompletionHandler handler in _testHostsInformation.RunCompletionHandlers)
+            {
+                if (!await TryRunControllerExtensionAsync(
+                    token => handler.OnRunCompletedAsync(exitCode, _controllerSummaryArtifacts, token),
+                    finalizationCancellationToken).ConfigureAwait(false))
+                {
+                    _servicesStillRunning.Add(handler);
+                    _controllerFinalizationTimedOut = true;
+                    ScheduleFinalizationTimeoutWarning();
+                    if (exitCode == (int)ExitCode.Success)
+                    {
+                        exitCode = (int)ExitCode.TestSessionAborted;
+                    }
+
+                    break;
+                }
+            }
+        }
+
         await _logger.LogInformationAsync(
             $"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcessExitCode}') in '{consoleRunStarted.Elapsed}'.").ConfigureAwait(false);
 

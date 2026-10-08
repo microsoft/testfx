@@ -1,4 +1,19 @@
 #nullable enable
+Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler
+Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler.OnRunCompletedAsync(int exitCode, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>! artifacts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler![]!
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.set -> void
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddRunCompletionHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler!>! factory) -> void
+static Microsoft.Testing.Platform.Services.CoverageThresholdPolicy.IsDeferredToController(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> bool
+Microsoft.Testing.Platform.Services.TestCoverageResult.ControllerSummaryArtifacts.get -> Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]!
+Microsoft.Testing.Platform.Services.TestCoverageResult.DeferToController() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCoverageResult(Microsoft.Testing.Platform.Services.TestCoverageResult! coverageResult) -> void
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.SummaryArtifacts.get -> Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]!
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.TestHostCompletedRequest(int returnCode, int unfilteredReturnCode, Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]! summaryArtifacts) -> void
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY = "TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY" -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ExactActualPercentage.get -> decimal?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ExactRequiredPercentage.get -> decimal?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.TestCoverageThresholdMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, decimal actualPercentage, decimal requiredPercentage, bool hasCoverableData, string! producerId, bool passed) -> void
 const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.CoverageThresholdBranchOptionKey = "coverage-threshold-branch" -> string!
 const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.CoverageThresholdLineOptionKey = "coverage-threshold-line" -> string!
 Microsoft.Testing.Platform.Services.CoverageThresholdPolicy

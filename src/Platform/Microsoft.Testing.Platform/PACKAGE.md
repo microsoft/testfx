@@ -50,9 +50,10 @@ collector's overall covered/coverable counts, not rounded display percentages or
 percentages. They do not enable collection or change instrumentation filters.
 
 Missing, unsupported, empty, or ambiguous overall coverage data fails the requirement, including for
-a threshold of 0. Enable only one collector that publishes the requested metrics through MTP's
-coverage-message contract. A report file alone is not sufficient. Branch coverage is not inferred from
-line or block coverage.
+a threshold of 0. Each requested metric must have exactly one overall measurement published through
+MTP's coverage-message contract. Collectors reporting different metrics can coexist; measurements
+for the same metric are not silently chosen or combined. A report file alone is not sufficient.
+Branch coverage is not inferred from line or block coverage.
 
 Violations return exit code 14 when the run would otherwise succeed, without changing individual test
 outcomes. Existing test failures, cancellation, and minimum-test policies retain precedence.

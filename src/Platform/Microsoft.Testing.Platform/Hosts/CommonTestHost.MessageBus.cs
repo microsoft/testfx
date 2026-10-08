@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
@@ -25,12 +24,14 @@ internal abstract partial class CommonHost
         TestCoverageResult coverageResult = serviceProvider.GetRequiredService<TestCoverageResult>();
         coverageResult.Reset();
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
-        bool controllerOwnsCoverage = commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, out string[]? controllerPid)
-            && controllerPid is [string pid]
-            && serviceProvider.GetEnvironment().GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY}_{pid}") == "1";
+        bool controllerOwnsCoverage = CoverageThresholdPolicy.IsDeferredToController(commandLineOptions, serviceProvider.GetEnvironment());
         if (!isDiscoveryRequest && !controllerOwnsCoverage)
         {
             coverageResult.ConfigureThresholds(commandLineOptions, testSessionInfo.SessionUid);
+        }
+        else if (controllerOwnsCoverage)
+        {
+            coverageResult.DeferToController();
         }
 
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;

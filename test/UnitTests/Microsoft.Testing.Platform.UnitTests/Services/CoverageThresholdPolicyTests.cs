@@ -34,6 +34,9 @@ public sealed class CoverageThresholdPolicyTests
     [DataRow(0L, 100L, "0", true)]
     [DataRow(100L, 100L, "100", true)]
     [DataRow(0L, 0L, "0", false)]
+    [DataRow(312L, 625L, "49.92", true)]
+    [DataRow(312L, 625L, "49.920000000000000000000000001", false)]
+    [DataRow(long.MaxValue - 1, long.MaxValue, "100", false)]
     public void Evaluate_UsesUnroundedInclusivePercentages(long covered, long coverable, string required, bool passed)
     {
         CoverageScopeSummary summary = new(Session, CoverageScope.Overall, [new(CoverageMetric.Line, covered, coverable, "collector")]);
@@ -73,6 +76,22 @@ public sealed class CoverageThresholdPolicyTests
     }
 
     [TestMethod]
+    public void Evaluate_DifferentMetricsFromDifferentProviders_AreIndependent()
+    {
+        CoverageScopeSummary summary = new(Session, CoverageScope.Overall,
+            [new(CoverageMetric.Line, 8, 10, "line-collector"), new(CoverageMetric.Branch, 7, 10, "branch-collector")]);
+
+        (IReadOnlyList<TestCoverageThresholdMessage> Thresholds, IReadOnlyList<string> Errors) lineOnly = CoverageThresholdPolicy.Evaluate(Options(line: "80"), [summary], Session);
+        (IReadOnlyList<TestCoverageThresholdMessage> Thresholds, IReadOnlyList<string> Errors) both = CoverageThresholdPolicy.Evaluate(Options(line: "80", branch: "70"), [summary], Session);
+
+        Assert.IsTrue(Assert.ContainsSingle(lineOnly.Thresholds).Passed);
+        Assert.IsEmpty(lineOnly.Errors);
+        Assert.HasCount(2, both.Thresholds);
+        Assert.IsTrue(both.Thresholds.All(threshold => threshold.Passed));
+        Assert.IsEmpty(both.Errors);
+    }
+
+    [TestMethod]
     public void Evaluate_MissingMetric_FailsExplicitly()
     {
         CoverageScopeSummary summary = new(Session, CoverageScope.Overall, [new(CoverageMetric.Line, 10, 10, "collector")]);
@@ -93,7 +112,9 @@ public sealed class CoverageThresholdPolicyTests
         (IReadOnlyList<TestCoverageThresholdMessage> Thresholds, IReadOnlyList<string> Errors) result = CoverageThresholdPolicy.Evaluate(Options(line: "80"), [summary], Session);
 
         Assert.IsFalse(Assert.ContainsSingle(result.Thresholds).Passed);
-        Assert.HasCount(1, result.Errors);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.CoverageThresholdMissingMeasurement, PlatformCommandLineProvider.CoverageThresholdLineOptionKey),
+            Assert.ContainsSingle(result.Errors));
     }
 
     [TestMethod]
@@ -104,7 +125,9 @@ public sealed class CoverageThresholdPolicyTests
         (IReadOnlyList<TestCoverageThresholdMessage> Thresholds, IReadOnlyList<string> Errors) result = CoverageThresholdPolicy.Evaluate(Options(line: "80"), [summary], Session);
 
         Assert.IsFalse(Assert.ContainsSingle(result.Thresholds).Passed);
-        Assert.HasCount(1, result.Errors);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.CoverageThresholdMissingMeasurement, PlatformCommandLineProvider.CoverageThresholdLineOptionKey),
+            Assert.ContainsSingle(result.Errors));
     }
 
     [TestMethod]
@@ -130,7 +153,9 @@ public sealed class CoverageThresholdPolicyTests
         (IReadOnlyList<TestCoverageThresholdMessage> Thresholds, IReadOnlyList<string> Errors) result = CoverageThresholdPolicy.Evaluate(Options(line: "80"), [first, second], sessionUid: null);
 
         Assert.IsFalse(Assert.ContainsSingle(result.Thresholds).Passed);
-        Assert.HasCount(1, result.Errors);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.CoverageThresholdAmbiguous, PlatformCommandLineProvider.CoverageThresholdLineOptionKey),
+            Assert.ContainsSingle(result.Errors));
     }
 
     [TestMethod]
