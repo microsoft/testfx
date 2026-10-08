@@ -111,15 +111,20 @@ public sealed class CtrfReportMergerTests
     [TestMethod]
     public void Merge_DuplicateInputs_CountsDocumentsWithoutClaimingCompleteness()
     {
-        string report = BuildReport();
+        string first = BuildReport(testEntries: [Test("TestA", "passed")]);
+        string second = BuildReport(testEntries: [Test("TestB", "passed")]);
+        string firstReportId = JsonNode.Parse(first)!["reportId"]!.GetValue<string>();
+        string secondReportId = JsonNode.Parse(second)!["reportId"]!.GetValue<string>();
 
-        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([report, """{"not":"ctrf"}""", report]))!;
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([first, """{"not":"ctrf"}""", second, first]))!;
         JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
 
-        Assert.AreEqual(2, metadata["inputCount"]!.GetValue<int>());
+        Assert.AreEqual(3, metadata["inputCount"]!.GetValue<int>());
         JsonArray inputs = metadata["inputs"]!.AsArray();
-        Assert.HasCount(2, inputs);
-        Assert.AreEqual((string?)inputs[0]!["reportId"], (string?)inputs[1]!["reportId"]);
+        Assert.AreNotEqual(firstReportId, secondReportId);
+        Assert.AreSequenceEqual(
+            [firstReportId, secondReportId, firstReportId],
+            inputs.Select(input => input!["reportId"]!.GetValue<string>()).ToArray());
         Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
     }
 
@@ -131,8 +136,11 @@ public sealed class CtrfReportMergerTests
         const string legacyReportId = "f3702ec6-010f-93d3-5845-540fb2abe69a";
 
         JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([input]))!;
+        JsonNode mergedAgain = JsonNode.Parse(CtrfReportMerger.Merge([input]))!;
+        string reportId = merged["reportId"]!.GetValue<string>();
 
-        Assert.AreNotEqual(legacyReportId, (string?)merged["reportId"]);
+        Assert.AreNotEqual(legacyReportId, reportId);
+        Assert.AreEqual(reportId, mergedAgain["reportId"]!.GetValue<string>());
     }
 
     [TestMethod]
