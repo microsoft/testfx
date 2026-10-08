@@ -53,12 +53,18 @@ errors remain failures; the targets never silently fall back to another host.
 
 With .NET SDK 10's Microsoft.Testing.Platform runner, project-based `dotnet test`
 uses the same sidecar for packaged **full-trust** .NET applications, including
+<<<<<<< HEAD
 `--no-build`. `ComputeRunArguments` stages the controller under the project's
 intermediate output directory, beside a versioned startup file containing the
 selected executable and extension list. The application's argument tail remains
 unchanged, including an empty tail, so the SDK retains ownership of launch-profile
 selection and explicit-argument precedence. The sidecar also accepts the original
 inline v1 startup prefix. Relative `TestingPlatformPackagedAppTargetPath`
+=======
+`--no-build`. `ComputeRunArguments` selects the controller and passes a versioned
+startup prefix containing the selected executable and extension list; it preserves
+the application's existing argument tail. Relative `TestingPlatformPackagedAppTargetPath`
+>>>>>>> Fix native dotnet test routing for packaged applications
 values are resolved against the project directory. A customized `RunCommand` is
 left unchanged. `UseAppHost=false` requires an explicit staged `.exe` target.
 
@@ -75,16 +81,16 @@ its actual options and tests, never the sidecar's dummy framework. They require
 the same Developer Mode and package registration as execution, but use the host's
 own execution ID rather than the controller-to-host handoff used by test runs. SDK 10 ignores
 launch failures during `--help`: if only SDK options appear, use `--list-tests`
-to surface the launch error. Help lists host options, including MSTest's `--filter`,
-even when the controller has not yet registered them for execution.
+to surface the launch error. Help lists the selected host's options, including MSTest's `--filter`.
 SDK 10 can also forward a zero exit code from a host that exits before connecting,
 producing an empty discovery. Host startup must actually initialize MTP rather
 than exit or redirect activation before entering the test platform.
 Native AppContainer execution is rejected: the SDK pipe does not authorize the
 package SID. Use `InvokeTestingPlatform`
 for AppContainer/modern UWP/classic UAP execution and controller-managed artifacts.
-Framework-specific options such as MSTest's `--filter` require corresponding
-registration in the controller; routing alone does not add that support.
+With `EnableMSTestRunner=true`, the sidecar also accepts MSTest's `--filter` for
+execution and forwards the complete expression to the activated host. The host
+owns filter parsing and evaluation; the sidecar does not load the test assembly.
 Informational activation handles Ctrl+C by terminating its owned host, but an
 external hard kill of the sidecar cannot guarantee teardown of an AUMID-activated
 help/discovery host.
@@ -93,6 +99,7 @@ help/discovery host.
 now starts the sidecar for these same packaged .NET applications rather than
 starting the host without package identity. Unpackaged projects and explicit
 executable overrides retain their original run command.
+<<<<<<< HEAD
 Project launch-profile `commandLineArgs` are used when no explicit application
 arguments are supplied; `--no-launch-profile` and explicit arguments keep the
 SDK's normal precedence. The staged controller is incremental and removed by
@@ -104,6 +111,43 @@ output, the sidecar relays host options and discovered tests over the existing M
 named-pipe protocol. Missing or incomplete help/discovery responses are failures,
 not successful empty output. This informational pipe has the same AppContainer
 restriction as native SDK discovery; use `InvokeTestingPlatform` for those hosts.
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
+
+### Filtering MSTest tests
+
+For the native .NET SDK 10 MTP runner, pass a single expression directly:
+
+```powershell
+dotnet test --project MyTests.csproj --no-build --filter "TestCategory=Fast Lane&(FullyQualifiedName~Identity|Name=Outcome)" --report-trx
+```
+
+For `InvokeTestingPlatform`, a simple filter can be supplied as an MSBuild property:
+
+```powershell
+dotnet msbuild MyTests.csproj -t:InvokeTestingPlatform '-p:TestingPlatformCommandLineArguments=--filter FullyQualifiedName~Identity --report-trx'
+```
+
+Store arguments with spaces in a project property so MSBuild's command-line
+property parsing does not remove the quotes around the expression:
+
+```xml
+<TestingPlatformCommandLineArguments>--filter &quot;TestCategory=Fast Lane&amp;(Name=Identity|Name=Outcome)&quot; --report-trx</TestingPlatformCommandLineArguments>
+```
+
+Both paths preserve argument boundaries, boolean operators, literal quotes and
+ordering. Outer command-line quotes group an expression into one argument and
+are removed before MSTest parses it. Any quote characters remaining in the
+resulting expression are literal characters, not filter-language delimiters.
+Exactly one filter argument is allowed: a missing argument or repeated `--filter`
+fails before host activation. Unknown unrelated options remain errors. Invalid
+filter syntax is diagnosed by the selected host, a filter matching no tests fails
+under the default zero-tests policy, and selected failing tests still fail the run
+and its reports. Other framework-specific options are not enabled by this filter
+registration. In the legacy VSTest-mode `dotnet test` driver, its own `--filter`
+is not forwarded to this sidecar; use `InvokeTestingPlatform` or native MTP mode.
+SDK 10 summarizes host errors without displaying the detailed filter parse message;
+use `InvokeTestingPlatform` with `--diagnostic` to inspect that message.
 
 The legacy executable name `mstest-appmodel-controller.exe` and the
 `MSTEST_APPMODEL_CONTROLLER_EXTENSIONS` and `TESTINGPLATFORM_PACKAGEDAPP_TARGET`

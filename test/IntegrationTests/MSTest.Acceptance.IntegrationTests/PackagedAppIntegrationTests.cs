@@ -13,6 +13,74 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
 {
     public TestContext TestContext { get; set; }
 
+    [TestMethod]
+    [DataRow("--help", false)]
+    [DataRow("--help", true)]
+    [DataRow("--info", false)]
+    [DataRow("--info", true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ShippingController_FilterHelpAndInfoRequireMSTestToken(string option, bool mstest)
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        DotnetMuxerResult restore = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, restore.ExitCode, restore.ToString());
+        string controller = Path.Combine(
+            Environment.GetEnvironmentVariable("NUGET_PACKAGES")!,
+            "microsoft.testing.extensions.packagedapp.msbuild", MicrosoftTestingPlatformVersion,
+            "tools", "AppModelController", "net8.0", "mstest-appmodel-controller.exe");
+        Dictionary<string, string?> environment = new()
+        {
+            ["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"] = mstest ? "msbuild;packagedapp;mstest" : "msbuild;packagedapp",
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US",
+        };
+        BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
+            $"\"{controller}\" {option}", asset.TargetAssetPath, TestContext.CancellationToken, environment);
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+        string output = result.StandardOutput.ReplaceLineEndings();
+        if (!mstest)
+        {
+            Assert.DoesNotContain(
+                option == "--help"
+                    ? """
+                          --filter
+
+                      """.ReplaceLineEndings()
+                    : """
+                            --filter
+                              Arity: 1
+                      """.ReplaceLineEndings(),
+                output);
+            result = await RunWindowsApplicationModelCommandAsync(
+                $"\"{controller}\" --filter Name=Identity", asset.TargetAssetPath, TestContext.CancellationToken, environment);
+            Assert.AreEqual(5, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+            Assert.Contains("Unknown option '--filter'", result.StandardOutput + result.ErrorOutput);
+        }
+        else
+        {
+            Assert.Contains(
+                option == "--help"
+                    ? """
+                          --filter
+                              Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+                      """.ReplaceLineEndings()
+                    : """
+                      Registered command line providers:
+                        ControllerTestFramework
+                          Name: Windows application-model controller
+                          Version: 1.0.0
+                          Description: Controller-only test framework for packaged Windows application test hosts.
+                          Options:
+                            --filter
+                              Arity: 1
+                              Hidden: False
+                              Description: Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+                      """.ReplaceLineEndings(),
+                output);
+        }
+    }
+
     public static IEnumerable<(string Package, string Properties, bool Controller, bool Helper)> ConsumerContracts()
     {
         foreach (string package in new[] { "MSTest", "MSTest.TestAdapter" })
@@ -49,7 +117,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             new[]
             {
                 $"Controller={(selectsController ? "mstest-appmodel-controller.exe" : string.Empty)}",
-                $"Extensions={(selectsController ? "msbuild;packagedapp;trx" : string.Empty)}",
+                $"Extensions={(selectsController ? "msbuild;packagedapp;trx;mstest" : string.Empty)}",
                 $"Helper={helper.ToString().ToLowerInvariant()}",
             },
             lines);
@@ -92,6 +160,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             ? string.Empty
             : OperatingSystem.IsWindows() ? "PackagedConsumer.exe" : "PackagedConsumer";
         Assert.AreEqual($"Command={(selectsController ? "mstest-appmodel-controller.exe" : expectedCommand)}", lines[0]);
+<<<<<<< HEAD
         Assert.AreEqual("Arguments=", lines[1]);
         if (selectsController)
         {
@@ -100,6 +169,17 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             Assert.AreSequenceEqual(
                 ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx"],
                 await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+=======
+        if (selectsController)
+        {
+            Assert.AreEqual(
+                $"Arguments=--internal-packagedapp-controller-v1 \"{executable}\" \"msbuild;packagedapp;trx;mstest\"",
+                lines[1].TrimEnd());
+        }
+        else
+        {
+            Assert.AreEqual("Arguments=", lines[1]);
+>>>>>>> Fix native dotnet test routing for packaged applications
         }
     }
 
@@ -141,6 +221,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             new[]
             {
                 "Command=mstest-appmodel-controller.exe",
+<<<<<<< HEAD
+<<<<<<< HEAD
                 "Arguments= --results-directory \"a b\" --report-trx",
             },
             await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
@@ -149,6 +231,14 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         Assert.AreSequenceEqual(
             ["--internal-packagedapp-controller-v1", Path.Combine(asset.TargetAssetPath, "staged", "host.exe"), "msbuild;packagedapp;trx"],
             await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+=======
+                $"Arguments=--internal-packagedapp-controller-v1 \"{Path.Combine(asset.TargetAssetPath, "staged", "host.exe")}\" \"msbuild;packagedapp;trx\"  --results-directory \"a b\" --report-trx",
+=======
+                $"Arguments=--internal-packagedapp-controller-v1 \"{Path.Combine(asset.TargetAssetPath, "staged", "host.exe")}\" \"msbuild;packagedapp;trx;mstest\"  --results-directory \"a b\" --report-trx",
+>>>>>>> Forward MSTest filters through the packaged-app sidecar
+            },
+            await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
+>>>>>>> Fix native dotnet test routing for packaged applications
     }
 
     [TestMethod]
@@ -165,6 +255,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+<<<<<<< HEAD
     [OSCondition(OperatingSystems.Windows)]
     public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned()
     {
@@ -190,6 +281,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
     [DataRow("MSTest")]
     [DataRow("MSTest.TestAdapter")]
     [OSCondition(OperatingSystems.Windows)]
@@ -464,8 +557,11 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                                   Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt"
                                   Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
+<<<<<<< HEAD
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\bootstrap-file-path.txt" Overwrite="true"
                                   Lines="$(_TestingPlatformPackagedAppBootstrapFile)" />
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
               </Target>
             </Project>
             #file Tests.cs

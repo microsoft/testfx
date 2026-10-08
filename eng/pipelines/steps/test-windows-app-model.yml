@@ -36,8 +36,13 @@ steps:
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+<<<<<<< HEAD
 - script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel|FullyQualifiedName~PackagedAppNativeDotnetTestTests" -p:UsingDotNetTest=true --show-test-results failed
   displayName: 'Test real Modern and classic UWP applications'
+=======
+- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true --show-test-results failed
+  displayName: 'Test real UWP applications and packaged-host filtering'
+>>>>>>> Exercise packaged filter regressions in capable CI and real samples
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
