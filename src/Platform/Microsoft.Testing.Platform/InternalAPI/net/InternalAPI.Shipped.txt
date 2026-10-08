@@ -8,6 +8,8 @@ Microsoft.Testing.Platform.Helpers.SystemFileStream.DisposeAsync() -> System.Thr
 Microsoft.Testing.Platform.Helpers.SystemMainModule.FileName.get -> string?
 Microsoft.Testing.Platform.Helpers.SystemMainModule.SystemMainModule(System.Diagnostics.ProcessModule? processModule) -> void
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationListener.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Hosts.TestHostControllerCancellationServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Logging.FileLogger.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Logging.FileLoggerProvider.DisposeAsync() -> System.Threading.Tasks.ValueTask
@@ -59,7 +61,10 @@ override Microsoft.Testing.Platform.ServerMode.RequestMessage.<Clone>$() -> Micr
 override Microsoft.Testing.Platform.ServerMode.ResponseMessage.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.ResponseMessage!
 override Microsoft.Testing.Platform.ServerMode.RunRequestArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RunRequestArgs!
 override Microsoft.Testing.Platform.ServerMode.RunResponseArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RunResponseArgs!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void

@@ -1,19 +1,1 @@
 #nullable enable
-System.IO.Hashing.XxHashShared.State.Accumulators -> System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
-System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer
-System.IO.Hashing.XxHashShared.State.AccumulatorsBuffer.AccumulatorsBuffer() -> void
-System.IO.Hashing.XxHashShared.State.Buffer -> System.IO.Hashing.XxHashShared.State.InputBuffer
-System.IO.Hashing.XxHashShared.State.InputBuffer
-System.IO.Hashing.XxHashShared.State.InputBuffer.InputBuffer() -> void
-System.IO.Hashing.XxHashShared.State.Secret -> System.IO.Hashing.XxHashShared.State.SecretBuffer
-System.IO.Hashing.XxHashShared.State.SecretBuffer
-System.IO.Hashing.XxHashShared.State.SecretBuffer.SecretBuffer() -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState
-const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MaximumArity = 8 -> ushort
-const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumArity = 7 -> ushort
-const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
-const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
-Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
-static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxLongPathHelper.GetPathForFileSystemAccess(string! path, System.Func<string!, string!>! getFullPath) -> string!

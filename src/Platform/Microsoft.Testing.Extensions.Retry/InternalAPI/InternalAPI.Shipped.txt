@@ -33,6 +33,7 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLA
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER = "TESTINGPLATFORM_NOBANNER" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT = "TESTINGPLATFORM_TELEMETRY_OPTOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME" -> string!
@@ -47,7 +48,10 @@ const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.MessagesSeria
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Description = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsBuiltIn = 4 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsHidden = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MaximumArity = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumArity = 7 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Name = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.MessagesSerializerId = 3 -> int
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.ModulePath = 1 -> ushort
@@ -134,6 +138,7 @@ const Microsoft.Testing.Platform.IPC.VoidResponseFieldsId.MessagesSerializerId =
 const Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId.MessagesSerializerId = 13 -> int
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.Policy.PathContainment
 Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder
 Microsoft.Testing.Extensions.Policy.RetryArtifactProcessor
 Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact
@@ -342,6 +347,7 @@ Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, Sys
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WasConnected.get -> bool
 Microsoft.Testing.Platform.IPC.PipeNameDescription
 Microsoft.Testing.Platform.IPC.PipeNameDescription.Name.get -> string!
@@ -377,12 +383,19 @@ override Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.Test
 override Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer.Id.get -> int
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.Policy.PathContainment.IsUnderDirectory(string! path, string! directory) -> bool
+static Microsoft.Testing.Extensions.Policy.PathContainment.IsUnderNormalizedDirectory(string! path, string! normalizedDirectoryPrefix) -> bool
+static Microsoft.Testing.Extensions.Policy.PathContainment.NormalizeDirectoryPrefix(string! directory) -> string!
+static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.BuildAttemptArgumentsAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string![]! executableArguments, string![]! originalExecutableArguments, System.Collections.Generic.List<int>! indexToCleanup, string! currentTryResultFolder, string! retryRootFolder, string! pipeName, string![]? lastListOfFailedId, int attemptCount) -> System.Threading.Tasks.Task<System.Collections.Generic.List<string!>!>!
 static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.BuildAttemptArgumentsAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string![]! executableArguments, System.Collections.Generic.List<int>! indexToCleanup, string! currentTryResultFolder, string! retryRootFolder, string! pipeName, string![]? lastListOfFailedId, int attemptCount) -> System.Threading.Tasks.Task<System.Collections.Generic.List<string!>!>!
 static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.ComputeIndicesToCleanup(string![]! executableArguments) -> System.Collections.Generic.List<int>!
+static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetArgumentsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
+static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetFilterUidsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
 static Microsoft.Testing.Extensions.Policy.RetryArtifactProcessor.ProcessAsync(System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact!>! artifacts, int attemptCount, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingRunSummary? runSummary, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!
 static Microsoft.Testing.Extensions.Policy.RetryArtifactProcessor.ProcessAsync(System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact!>! artifacts, int attemptCount, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<string!, string!>!>!
 static Microsoft.Testing.Extensions.Policy.RetryArtifactProcessor.PublishExternalArtifacts(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact!>! artifacts, int finalAttempt, System.Collections.Generic.IReadOnlyDictionary<string!, string!>! replacements) -> void
 static Microsoft.Testing.Extensions.Policy.RetryArtifactProcessor.SnapshotAttemptArtifacts(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.ArtifactRequest!>! artifacts, int attempt, string! attemptDirectory, string! retryRootDirectory) -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.Policy.RetryAttemptArtifact!>!
+static Microsoft.Testing.Extensions.Policy.RetryOrchestrator.LogResponseFileFallbackWarningAsync(Microsoft.Testing.Platform.Logging.ILogger! logger, string![]! originalExecutableArguments, System.Collections.Generic.List<string!>! finalArguments, string! generatedResponseFilePath) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Extensions.Policy.RetryOrchestratorHelper.FormatDelay(System.TimeSpan delay) -> string!
 static Microsoft.Testing.Extensions.Policy.RetryOrchestratorHelper.FormatDuration(System.TimeSpan duration) -> string!
 static Microsoft.Testing.Extensions.Policy.RetryOrchestratorHelper.GetOptionArgumentIndex(string! optionName, string![]! executableArgs) -> int
@@ -415,7 +428,10 @@ static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.DebugAssert(boo
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.IsNullOrEmpty<T>(T[]? list) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadBool(System.IO.Stream! stream) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadByte(System.IO.Stream! stream) -> byte
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadInt(System.IO.Stream! stream) -> int
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadLong(System.IO.Stream! stream) -> long
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadString(System.IO.Stream! stream) -> string!
