@@ -118,9 +118,10 @@ internal sealed partial class TestMethodRunner
             : _test.DisplayName;
 
         string? displayNameFromTestDataRow = null;
+        string? argumentsDisplayNameFromTestDataRow = null;
         string? ignoreFromTestDataRow = null;
         if (!actualDataAlreadyHandledDuringDiscovery && data is not null &&
-            TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow))
+            TestDataSourceHelpers.TryHandleITestDataRow(data, _testMethodInfo.ParameterTypes, out data, out ignoreFromTestDataRow, out displayNameFromTestDataRow, out _, out argumentsDisplayNameFromTestDataRow))
         {
             // Handled already.
         }
@@ -145,18 +146,21 @@ internal sealed partial class TestMethodRunner
             data = tupleExpandedToArray;
         }
 
-        // PERF: Extract ReflectionTestMethodInfo to avoid allocating it twice when testDataSource is not null
-        // and both GetDisplayName and ComputeDefaultDisplayName need to be consulted.
-        if (displayNameFromTestDataRow is null && testDataSource is not null)
+        if (displayNameFromTestDataRow is not null)
+        {
+            displayName = displayNameFromTestDataRow;
+        }
+        else if (!StringEx.IsNullOrWhiteSpace(argumentsDisplayNameFromTestDataRow))
+        {
+            ReflectionTestMethodInfo reflectionMethodInfo = _cachedReflectionMethodInfo ??= new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
+            displayName = TestDataSourceUtilities.ComputeDisplayName(reflectionMethodInfo, argumentsDisplayNameFromTestDataRow);
+        }
+        else if (testDataSource is not null)
         {
             ReflectionTestMethodInfo reflectionMethodInfo = _cachedReflectionMethodInfo ??= new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
             displayName = testDataSource.GetDisplayName(reflectionMethodInfo, data)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(reflectionMethodInfo, data)
                 ?? displayName;
-        }
-        else
-        {
-            displayName = displayNameFromTestDataRow ?? displayName;
         }
 
         var stopwatch = Stopwatch.StartNew();

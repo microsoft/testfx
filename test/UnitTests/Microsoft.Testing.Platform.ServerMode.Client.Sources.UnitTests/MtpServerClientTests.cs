@@ -1552,37 +1552,61 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
-    public async Task JsonRpcConnection_Dispose_WaitsForReadLoopUnlessExplicitlyDisabled()
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task JsonRpcConnection_Dispose_WaitsForReadLoopUnlessExplicitlyDisabled(bool waitForReadLoop)
     {
         var readCompletion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var handler = new ControlledMessageHandler
         {
             ReadAsyncCallback = _ => readCompletion.Task,
         };
-        var connection = new MtpJsonRpcConnection(handler);
+        using var connection = new MtpJsonRpcConnection(handler);
         connection.Start();
         await WithTimeoutAsync(handler.ReadStarted).ConfigureAwait(false);
 
-        var dispose = Task.Run(connection.Dispose, TestContext.CancellationToken);
-        Assert.IsFalse(await CompletesQuicklyAsync(dispose).ConfigureAwait(false));
-        readCompletion.TrySetResult(null);
-        await WithTimeoutAsync(dispose).ConfigureAwait(false);
-
-        var secondReadCompletion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        using var secondHandler = new ControlledMessageHandler
+        var disposeCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var disposeThread = new Thread(() =>
         {
-            ReadAsyncCallback = _ => secondReadCompletion.Task,
+            try
+            {
+                if (waitForReadLoop)
+                {
+                    connection.Dispose();
+                }
+                else
+                {
+                    connection.Dispose(waitForReadLoop: false);
+                }
+
+                disposeCompletion.TrySetResult(true);
+            }
+            catch (Exception ex)
+            {
+                disposeCompletion.TrySetException(ex);
+            }
+        })
+        {
+            IsBackground = true,
         };
-        var secondConnection = new MtpJsonRpcConnection(secondHandler);
-        secondConnection.Start();
-        await WithTimeoutAsync(secondHandler.ReadStarted).ConfigureAwait(false);
+        disposeThread.Start();
 
-        var stopwatch = Stopwatch.StartNew();
-        secondConnection.Dispose(waitForReadLoop: false);
-        stopwatch.Stop();
-        secondReadCompletion.TrySetResult(null);
+        try
+        {
+            Assert.IsTrue(handler.Disposed.Wait((int)DefaultTimeout.TotalMilliseconds, TestContext.CancellationToken));
+            // Observe the dedicated disposer, not a pool timer that can lose a race to the bounded shutdown wait.
+            Assert.IsTrue(SpinWait.SpinUntil(
+                () => disposeCompletion.Task.IsCompleted || (disposeThread.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
+                DefaultTimeout));
 
-        Assert.IsLessThan(TimeSpan.FromSeconds(1), stopwatch.Elapsed);
+            Assert.AreEqual(!waitForReadLoop, disposeCompletion.Task.IsCompleted);
+        }
+        finally
+        {
+            readCompletion.TrySetResult(null);
+            await WithTimeoutAsync(disposeCompletion.Task).ConfigureAwait(false);
+            await WithTimeoutAsync(GetReadLoop(connection)).ConfigureAwait(false);
+        }
     }
 
     [TestMethod]

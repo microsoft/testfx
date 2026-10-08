@@ -106,8 +106,8 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             // because a sequence file is not required to survive an OS-level crash or power loss.
             var fileStream = new FileStream(_sequenceFilePath, FileMode.Create, FileAccess.Write, FileShare.Read);
             _writer = new StreamWriter(fileStream, Encoding.UTF8) { AutoFlush = true };
+            // Stryker disable once Boolean: Capturing the current context does not change the header write.
             await _writer.WriteLineAsync(FileHeader).ConfigureAwait(false);
-            await _writer.FlushAsync().ConfigureAwait(false);
         }
         catch (Exception ex) when (IsExpectedFileException(ex))
         {
@@ -120,6 +120,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             // the root cause is not lost.
             try
             {
+                // Stryker disable once Boolean: Capturing the current context does not change the warning display.
                 await _outputDevice.DisplayAsync(
                     this,
                     new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileOpenError, _sequenceFilePath, ex)),
@@ -129,6 +130,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             {
                 // Reporting a best-effort diagnostic must not turn its original file failure into a
                 // session-start failure when the output transport is unavailable or being cancelled.
+                // Stryker disable once Boolean: Capturing the current context does not change best-effort fallback logging.
                 await TryLogWarningAsync(
                     $"Failed to initialize crash sequence file '{_sequenceFilePath}': {ex}{Environment.NewLine}"
                     + $"Additionally, displaying this warning failed: {outputException}").ConfigureAwait(false);
@@ -194,6 +196,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
         // ConsumeAsync may be invoked concurrently from multiple data producers/threads; serialize
         // writes to keep the on-disk record consistent. Writes are tiny (one line each) so contention
         // is negligible.
+        // Stryker disable once Boolean: Capturing the current context does not change semaphore acquisition.
         await _writeSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -206,6 +209,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
 
             try
             {
+                // Stryker disable once Boolean: Capturing the current context does not change the sequence record.
                 await _writer.WriteLineAsync(line).ConfigureAwait(false);
             }
             catch (ObjectDisposedException)
@@ -221,6 +225,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
                 // output for a long test run hitting a persistent I/O problem (e.g. a full disk). The
                 // full exception (ex.ToString()) is preserved so the root cause is not lost even
                 // though only the log file captures it.
+                // Stryker disable once Boolean: Capturing the current context does not change best-effort fallback logging.
                 await TryLogWarningAsync(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileWriteError, _sequenceFilePath, ex)).ConfigureAwait(false);
             }
         }
@@ -286,6 +291,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
     {
         try
         {
+            // Stryker disable once Boolean: Capturing the current context does not change best-effort fallback logging.
             await _logger.LogWarningAsync(message).ConfigureAwait(false);
         }
         catch (Exception)
@@ -302,6 +308,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             return;
         }
 
+        // Stryker disable once Boolean: Capturing the current context does not change semaphore acquisition.
         await _writeSemaphore.WaitAsync().ConfigureAwait(false);
         try
         {
@@ -315,6 +322,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             {
                 try
                 {
+                    // Stryker disable once Boolean: Capturing the current context does not change writer disposal.
                     await _writer.DisposeAsync().ConfigureAwait(false);
                 }
                 catch (IOException)

@@ -126,7 +126,7 @@ An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically c
 
 ### CtrfReport
 
-An MTP extension (`Microsoft.Testing.Extensions.CtrfReport`) that generates a [CTRF](https://github.com/ctrf-io/ctrf) (Common Test Report Format) JSON report at the end of a test run. CTRF is a vendor-neutral open standard for structured test results, consumed by GitHub Actions test-summary tools, Slack/Teams notifiers, dashboards, and other CI tooling. Enable via `--report-ctrf`; override the output filename with `--report-ctrf-filename`. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>`. Currently **experimental** — the CLI options and output format may change without notice.
+An MTP extension (`Microsoft.Testing.Extensions.CtrfReport`) that generates a [CTRF](https://github.com/ctrf-io/ctrf) (Common Test Report Format) JSON report at the end of a test run. CTRF is a vendor-neutral open standard for structured test results, consumed by GitHub Actions test-summary tools, Slack/Teams notifiers, dashboards, and other CI tooling. The reporter emits `specVersion: 0.1.0`, the first internally consistent CTRF schema release (the `v0.0.4` and `v0.1.0` schema files share the same content hash, so this is a metadata-accuracy fix rather than a report-shape change). Enable via `--report-ctrf`; override the output filename with `--report-ctrf-filename`. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>`. Currently **experimental** — the CLI options and output format may change without notice. Aligned with the `v0.1.0` specification in [PR #11731](https://github.com/microsoft/testfx/pull/11731).
 
 ## D
 
@@ -273,6 +273,10 @@ An MSTest analyzer (`RedundantTestMethodAttributeAnalyzer`, informational severi
 ### MSTEST0087 (duplicate DataRow display name)
 
 An MSTest analyzer (`DuplicateDataRowDisplayNameAnalyzer`, warning severity, enabled by default) that flags a `[DataRow(DisplayName = "...")]` argument on a `[TestMethod]` when another `[DataRow]` on the same method already declares the same non-blank `DisplayName`. Duplicate display names produce ambiguous or colliding test-result identities in reports and test explorers. Comparison is ordinal (case-sensitive) and only considers explicit non-blank `DisplayName` values — missing, null, empty, or whitespace-only names are not compared. Introduced in [PR #11409](https://github.com/microsoft/testfx/pull/11409).
+
+### MSTEST0089 (conflicting data-row display names)
+
+An MSTest analyzer (`ConflictingDataRowDisplayNamesAnalyzer`, warning severity, enabled by default) that reports constant `DisplayName` and `ArgumentsDisplayName` values supplied together on `[DataRow]`, `new DataRowAttribute(...)`, or `new TestDataRow<T>(...)` when the full name makes the non-blank argument label ineffective. A blank full name is unset on `DataRowAttribute`, but any non-null full name takes precedence on `TestDataRow<T>`. Null or blank argument labels, values not known at compile time, generated code, and custom derived attributes are not reported. Remove `ArgumentsDisplayName` to preserve the existing full name, or remove `DisplayName` to retain the method name with the argument label. The analyzer does not change runtime precedence.
 
 ### MSTest
 
@@ -607,6 +611,12 @@ The XML-based test result file format used by Visual Studio, Azure DevOps, and `
 ### TreeNodeFilter
 
 An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against test node properties to select which tests to run. Filter expressions support Boolean algebra: `&` (AND), `|` (OR), `!` (NOT), and property comparisons (e.g., `/**[Tag=Smoke]`). Wildcard patterns (`*`) are supported in both path segments and property values. Internally, filter expressions are parsed into a `FilterExpression` tree and evaluated recursively.
+
+## U
+
+### UseUwpTools
+
+An MSBuild property consumed by [MSTest.Sdk](#mstestsdk) to explicitly select the modern UWP application model. The desktop Visual Studio UWP targets set `UseUwpTools=true` automatically, after MSTest.Sdk has already declared its package references and before those packages select their specialized assemblies; MSTest.Sdk preserves the UWP application model during that earlier evaluation while `UseUwpTools` is still unset. Set `<UseUwpTools>false</UseUwpTools>` alongside `<UseUwp>true</UseUwp>` to consume UWP XAML references from a non-UWP MTP test application — this selects the ordinary MSTest assemblies and the direct MTP runner instead of UWP package activation. See [docs/winui-testing.md](winui-testing.md). Adopted as the MSTest.Sdk application-model selector in [PR #11614](https://github.com/microsoft/testfx/pull/11614).
 
 ## V
 

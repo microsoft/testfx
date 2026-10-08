@@ -15,6 +15,7 @@ namespace Microsoft.Testing.Platform.MSBuild;
 public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisposable
 {
     private const string MonoRunnerName = "mono";
+    // Stryker disable once all: The inactive platform branch and its literal are unobservable on the current operating system.
     private static readonly string DotnetRunnerName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
 
     private readonly IFileSystem _fileSystem;
@@ -46,6 +47,7 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     public InvokeTestingPlatformTask()
        : this(new FileSystem())
     {
+        // Stryker disable once String: The opt-in debugger hook cannot be exercised safely by an automated unit test.
         if (Environment.GetEnvironmentVariable("TESTINGPLATFORM_MSBUILD_LAUNCH_ATTACH_DEBUGGER") == "1")
         {
             Debugger.Launch();

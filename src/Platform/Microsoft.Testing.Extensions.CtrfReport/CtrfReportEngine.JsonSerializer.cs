@@ -13,6 +13,18 @@ internal sealed partial class CtrfReportEngine
     private byte[] BuildCtrfJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
         List<ReportTestResult> preparedResults = PrepareResults(results);
+        // Reuse the existing per-orchestration scope, also forwarded to activated packaged hosts.
+        // Only retry children may use it: a standalone host can inherit an unrelated TRX run ID.
+        string? retryExecutionId = _commandLineOptions.IsOptionSet("internal-retry-pipename")
+            ? _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID)
+            : null;
+        var testIdCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (ReportTestResult result in preparedResults)
+        {
+            string testId = GetTestId(result.Final);
+            testIdCounts.TryGetValue(testId, out int count);
+            testIdCounts[testId] = count + 1;
+        }
 
         int passed = 0;
         int failed = 0;
@@ -58,9 +70,6 @@ internal sealed partial class CtrfReportEngine
             writer.WriteStartObject();
 
             writer.WriteString("reportFormat", CtrfReportFormat);
-            // Upstream currently contradicts itself between 0.0.0 and 1.0.0
-            // (ctrf-io/ctrf#69). Preserve the established value until CTRF defines
-            // authoritative revision semantics.
             writer.WriteString("specVersion", CtrfSpecVersion);
             writer.WriteString("reportId", Guid.NewGuid().ToString("D"));
             // CTRF 5.4 (`runId`): identifies the logical run this document belongs to. A logical run can span
@@ -147,7 +156,13 @@ internal sealed partial class CtrfReportEngine
 
             foreach (ReportTestResult result in preparedResults)
             {
-                WriteTest(writer, result);
+                string testId = GetTestId(result.Final);
+                // Only an unambiguous case in a coordinated retry workflow can share a lifecycle across processes.
+                // A runId may span independent executions/modules, and duplicate UIDs cannot establish correlation.
+                string executionId = !RoslynString.IsNullOrEmpty(retryExecutionId) && testIdCounts[testId] == 1
+                    ? CtrfReportMerger.CreateDeterministicId([retryExecutionId!, _testFramework.Uid, testId]).ToString("D")
+                    : Guid.NewGuid().ToString("D");
+                WriteTest(writer, result, executionId);
             }
 
             writer.WriteEndArray();

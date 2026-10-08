@@ -62,6 +62,11 @@
         <target state="translated">Runsettings 記錄器不受 Microsoft.Testing.Platform 支援，將會予以忽略</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
+      <trans-unit id="UnsupportedRunsettingsSection">
+        <source>Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</source>
+        <target state="new">Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</target>
+        <note>{0} is the unsupported section name. Do not localize {Locked="Runsettings"}, {Locked="MSTest"}, {Locked="Microsoft.Testing.Platform"}, {Locked="VSTest"}, or {Locked="ISettingsProvider"}.</note>
+      </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilter">
         <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
         <target state="translated">'{1}' 不支援測試執行篩選條件類型 '{0}'。支援的篩選條件類型為 NopFilter、TestNodeUidListFilter，以及 And CompositeTestExecutionFilter。</target>

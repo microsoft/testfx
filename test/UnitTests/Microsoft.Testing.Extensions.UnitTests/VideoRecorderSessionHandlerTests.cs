@@ -22,6 +22,242 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class VideoRecorderSessionHandlerTests
 {
     [TestMethod]
+    public void VideoRecorderOptions_DefaultValues_AreDocumentedDefaults()
+    {
+        var options = new VideoRecorderOptions();
+
+        Assert.AreEqual("1920x1080", options.X11CaptureSize);
+        Assert.IsTrue(options.IncludeChapters);
+    }
+
+    [TestMethod]
+    public async Task Constructor_WhenEnabled_AppliesAllCommandLineOverridesAndUsesRecorder()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [VideoRecorderCommandLineProvider.ModeAlways],
+            [VideoRecorderCommandLineProvider.SourceOptionName] = [VideoRecorderCommandLineProvider.SourceWindow],
+            [VideoRecorderCommandLineProvider.GranularityOptionName] = [VideoRecorderCommandLineProvider.GranularitySession],
+            [VideoRecorderCommandLineProvider.ArgsOptionName] = ["-b:v 2M"],
+            [VideoRecorderCommandLineProvider.MaxDurationOptionName] = ["42"],
+            [VideoRecorderCommandLineProvider.ChaptersOptionName] = [VideoRecorderCommandLineProvider.ChaptersOff],
+        });
+        var recorder = new Mock<IVideoRecorder>();
+        recorder.SetupGet(instance => instance.IsAvailable).Returns(true);
+        recorder.SetupGet(instance => instance.RecordingStartUtc).Returns((DateTimeOffset?)null);
+        var handler = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            recorder.Object);
+        var testSessionContext = new Mock<ITestSessionContext>();
+        testSessionContext.SetupGet(instance => instance.CancellationToken).Returns(CancellationToken.None);
+        testSessionContext.SetupGet(instance => instance.SessionUid).Returns(new SessionUid("session"));
+
+        bool isEnabled = await handler.IsEnabledAsync();
+        await handler.OnTestSessionStartingAsync(testSessionContext.Object);
+
+        Assert.IsTrue(isEnabled);
+        Assert.AreEqual(VideoRecorderPersistenceMode.Always, options.PersistMode);
+        Assert.AreEqual(VideoCaptureSource.Window, options.Source);
+        Assert.AreEqual(VideoCaptureGranularity.PerSession, options.Granularity);
+        Assert.AreEqual("-b:v 2M", options.ExtraRecorderArguments);
+        Assert.AreEqual(TimeSpan.FromSeconds(42), options.MaxRetainedDuration);
+        Assert.IsFalse(options.IncludeChapters);
+        recorder.Verify(instance => instance.Start(), Times.Once());
+    }
+
+    [TestMethod]
+    public async Task Constructor_WhenEnabled_AppliesFallbackCommandLineValues()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+            PersistMode = VideoRecorderPersistenceMode.Always,
+            Source = VideoCaptureSource.Window,
+            Granularity = VideoCaptureGranularity.PerSession,
+            MaxRetainedDuration = TimeSpan.FromSeconds(42),
+            IncludeChapters = false,
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [VideoRecorderCommandLineProvider.ModeOnFailure],
+            [VideoRecorderCommandLineProvider.SourceOptionName] = [VideoRecorderCommandLineProvider.SourceScreen],
+            [VideoRecorderCommandLineProvider.GranularityOptionName] = [VideoRecorderCommandLineProvider.GranularityTest],
+            [VideoRecorderCommandLineProvider.ArgsOptionName] = ["-an"],
+            [VideoRecorderCommandLineProvider.MaxDurationOptionName] = ["0"],
+            [VideoRecorderCommandLineProvider.ChaptersOptionName] = [VideoRecorderCommandLineProvider.ChaptersOn],
+        });
+        var handler = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            Mock.Of<IVideoRecorder>());
+
+        bool isEnabled = await handler.IsEnabledAsync();
+
+        Assert.IsTrue(isEnabled);
+        Assert.AreEqual(VideoRecorderPersistenceMode.OnFailure, options.PersistMode);
+        Assert.AreEqual(VideoCaptureSource.Screen, options.Source);
+        Assert.AreEqual(VideoCaptureGranularity.PerTest, options.Granularity);
+        Assert.AreEqual("-an", options.ExtraRecorderArguments);
+        Assert.AreEqual(TimeSpan.FromSeconds(42), options.MaxRetainedDuration);
+        Assert.IsTrue(options.IncludeChapters);
+    }
+
+    [TestMethod]
+    public void Constructor_WhenSubOptionArgumentsAreEmpty_LeavesOptionsUnchanged()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+            PersistMode = VideoRecorderPersistenceMode.Always,
+            Source = VideoCaptureSource.Window,
+            Granularity = VideoCaptureGranularity.PerSession,
+            ExtraRecorderArguments = "-an",
+            MaxRetainedDuration = TimeSpan.FromSeconds(42),
+            IncludeChapters = false,
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [],
+            [VideoRecorderCommandLineProvider.SourceOptionName] = [],
+            [VideoRecorderCommandLineProvider.GranularityOptionName] = [],
+            [VideoRecorderCommandLineProvider.ArgsOptionName] = [],
+            [VideoRecorderCommandLineProvider.MaxDurationOptionName] = [],
+            [VideoRecorderCommandLineProvider.ChaptersOptionName] = [],
+        });
+
+        _ = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            Mock.Of<IVideoRecorder>());
+
+        Assert.AreEqual(VideoRecorderPersistenceMode.Always, options.PersistMode);
+        Assert.AreEqual(VideoCaptureSource.Window, options.Source);
+        Assert.AreEqual(VideoCaptureGranularity.PerSession, options.Granularity);
+        Assert.AreEqual("-an", options.ExtraRecorderArguments);
+        Assert.AreEqual(TimeSpan.FromSeconds(42), options.MaxRetainedDuration);
+        Assert.IsFalse(options.IncludeChapters);
+    }
+
+    [TestMethod]
+    public async Task Constructor_WhenDisabled_DoesNotApplyOverridesOrUseRecorder()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.SourceOptionName] = [VideoRecorderCommandLineProvider.SourceWindow],
+        });
+        var recorder = new Mock<IVideoRecorder>();
+        recorder.SetupGet(instance => instance.IsAvailable).Returns(true);
+        var handler = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            recorder.Object);
+        var testSessionContext = new Mock<ITestSessionContext>();
+        testSessionContext.SetupGet(instance => instance.CancellationToken).Returns(CancellationToken.None);
+        testSessionContext.SetupGet(instance => instance.SessionUid).Returns(new SessionUid("session"));
+
+        bool isEnabled = await handler.IsEnabledAsync();
+        await handler.OnTestSessionStartingAsync(testSessionContext.Object);
+
+        Assert.IsFalse(isEnabled);
+        Assert.AreEqual(VideoCaptureSource.Screen, options.Source);
+        recorder.Verify(instance => instance.Start(), Times.Never());
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_WhenCanceled_ThrowsBeforeStartingRecorder()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [],
+        });
+        var recorder = new Mock<IVideoRecorder>();
+        recorder.SetupGet(instance => instance.IsAvailable).Returns(true);
+        var handler = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            recorder.Object);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+        var testSessionContext = new Mock<ITestSessionContext>();
+        testSessionContext.SetupGet(instance => instance.CancellationToken).Returns(cancellationTokenSource.Token);
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => handler.OnTestSessionStartingAsync(testSessionContext.Object));
+
+        recorder.Verify(instance => instance.Start(), Times.Never());
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_WhenCanceled_ThrowsBeforeConsumingUpdate()
+    {
+        var options = new VideoRecorderOptions
+        {
+            OutputDirectory = Path.GetTempPath(),
+        };
+        var commandLineOptions = new TestCommandLineOptions(new()
+        {
+            [VideoRecorderCommandLineProvider.EnableOptionName] = [],
+        });
+        var handler = new VideoRecorderSessionHandler(
+            options,
+            Mock.Of<IConfiguration>(),
+            commandLineOptions,
+            Mock.Of<IMessageBus>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IClock>(),
+            Mock.Of<ILogger<VideoRecorderSessionHandler>>(),
+            Mock.Of<IVideoRecorder>());
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => handler.ConsumeAsync(
+                null!,
+                CreateUpdate(InProgressTestNodeStateProperty.CachedInstance),
+                cancellationTokenSource.Token));
+
+        Assert.AreEqual(0, GetCollectionCount(handler, "_inFlight"));
+    }
+
+    [TestMethod]
     public async Task OnTestSessionStartingAsync_WhenRecorderDoesNotStart_DoesNotDisplayReadyMessage()
     {
         var options = new VideoRecorderOptions

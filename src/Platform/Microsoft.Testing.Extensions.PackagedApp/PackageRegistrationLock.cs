@@ -30,8 +30,10 @@ internal static class PackageRegistrationLock
         // Read sharing permits deployment to read it, but prevents a rebuild from changing or replacing it.
         using FileStream manifest = File.OpenRead(manifestPath);
         var manifestInfo = AppxManifestInfo.ReadFromManifest(manifest);
+        // Stryker disable once Boolean: continuation scheduling does not change ownership of the acquired file lease.
         using FileStream registrationLock = await acquireRegistrationLock(manifestInfo.PackageFamilyName, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
+        // Stryker disable once Boolean: continuation scheduling does not change the action result returned to the caller.
         return await action(manifestInfo).ConfigureAwait(false);
     }
 
@@ -51,7 +53,20 @@ internal static class PackageRegistrationLock
         return AcquireAsync(packageFamilyName, lockDirectory, cancellationToken);
     }
 
-    internal static async Task<FileStream> AcquireAsync(string packageFamilyName, string lockDirectory, CancellationToken cancellationToken)
+    internal static Task<FileStream> AcquireAsync(string packageFamilyName, string lockDirectory, CancellationToken cancellationToken)
+        => AcquireAsync(
+            packageFamilyName,
+            lockDirectory,
+            static lockPath => new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None),
+            static (delay, token) => Task.Delay(delay, token),
+            cancellationToken);
+
+    private static async Task<FileStream> AcquireAsync(
+        string packageFamilyName,
+        string lockDirectory,
+        Func<string, FileStream> openRegistrationLock,
+        Func<TimeSpan, CancellationToken, Task> delayAsync,
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -66,11 +81,12 @@ internal static class PackageRegistrationLock
             {
                 // A file lease is not thread-affine and the OS releases it if the controller exits.
                 // Leave the file in place so every contender continues to lock the same file.
-                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                return openRegistrationLock(lockPath);
             }
             catch (IOException ex) when (ex.HResult == SharingViolationHResult)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(50), cancellationToken).ConfigureAwait(false);
+                // Stryker disable once Boolean: continuation scheduling does not change the bounded retry delay.
+                await delayAsync(TimeSpan.FromMilliseconds(50), cancellationToken).ConfigureAwait(false);
             }
         }
     }

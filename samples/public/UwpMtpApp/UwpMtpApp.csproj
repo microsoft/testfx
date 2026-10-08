@@ -12,5 +12,16 @@
     <UseUwp>true</UseUwp>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <EnableMicrosoftTestingExtensionsPackagedApp Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == ''">false</EnableMicrosoftTestingExtensionsPackagedApp>
+    <DefineConstants Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'">$(DefineConstants);PACKAGED_APP_TESTING</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Remove="MainPage.xaml" />
+    <ApplicationDefinition Include="App.xaml"
+                           Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
+    <Page Include="MainPage.xaml"
+          Condition="'$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true'" />
+  </ItemGroup>
 </Project>

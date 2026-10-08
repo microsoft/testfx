@@ -173,4 +173,8 @@
     <value>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</value>
     <comment>0 is the unsupported {Locked="Runsettings"} attribute name. Do not localize {Locked="Microsoft.Testing.Platform"}.</comment>
   </data>
+  <data name="UnsupportedRunsettingsSection" xml:space="preserve">
+    <value>Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</value>
+    <comment>{0} is the unsupported section name. Do not localize {Locked="Runsettings"}, {Locked="MSTest"}, {Locked="Microsoft.Testing.Platform"}, {Locked="VSTest"}, or {Locked="ISettingsProvider"}.</comment>
+  </data>
 </root>

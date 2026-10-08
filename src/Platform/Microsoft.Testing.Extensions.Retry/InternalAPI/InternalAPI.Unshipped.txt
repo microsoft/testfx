@@ -1,17 +1,1 @@
 #nullable enable
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState
-const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MaximumArity = 8 -> ushort
-const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumArity = 7 -> ushort
-const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
-Microsoft.Testing.Extensions.Policy.PathContainment
-static Microsoft.Testing.Extensions.Policy.PathContainment.IsUnderDirectory(string! path, string! directory) -> bool
-static Microsoft.Testing.Extensions.Policy.PathContainment.IsUnderNormalizedDirectory(string! path, string! normalizedDirectoryPrefix) -> bool
-static Microsoft.Testing.Extensions.Policy.PathContainment.NormalizeDirectoryPrefix(string! directory) -> string!
-static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.BuildAttemptArgumentsAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string![]! executableArguments, string![]! originalExecutableArguments, System.Collections.Generic.List<int>! indexToCleanup, string! currentTryResultFolder, string! retryRootFolder, string! pipeName, string![]? lastListOfFailedId, int attemptCount) -> System.Threading.Tasks.Task<System.Collections.Generic.List<string!>!>!
-static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetArgumentsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
-static Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder.GetFilterUidsResponseFilePath(string! retryRootFolder, int attemptCount) -> string!
-static Microsoft.Testing.Extensions.Policy.RetryOrchestrator.LogResponseFileFallbackWarningAsync(Microsoft.Testing.Platform.Logging.ILogger! logger, string![]! originalExecutableArguments, System.Collections.Generic.List<string!>! finalArguments, string! generatedResponseFilePath) -> System.Threading.Tasks.Task!
-const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
-Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!

@@ -211,9 +211,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         string fileName = Path.GetFileNameWithoutExtension(pattern);
         string extension = Path.GetExtension(pattern);
         string uniqueFileName = $"{fileName}_%p{extension}";
-        return directory is null or ""
-            ? uniqueFileName
-            : Path.Combine(directory, uniqueFileName);
+        return Path.Combine(directory ?? string.Empty, uniqueFileName);
     }
 
     internal static string GetDumpFileNamePattern(string? configuredPattern, string processName, int processId, int rootProcessId)

@@ -24,5 +24,6 @@ internal sealed class OutputDeviceWriter
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task DisplayAsync(IOutputDeviceData data, CancellationToken cancellationToken)
+        // Stryker disable once Boolean: continuation scheduling does not change the forwarded output operation.
         => await _outputDevice.DisplayAsync(_outputDeviceDataProducer, data, cancellationToken).ConfigureAwait(false);
 }

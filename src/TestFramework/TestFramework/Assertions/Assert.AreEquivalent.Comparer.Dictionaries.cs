@@ -136,6 +136,7 @@ public sealed partial class Assert
             }
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The public structural equivalence assertion APIs declare that comparison requires unreferenced code.")]
         private static bool TryCreateDictionaryView(object value, out DictionaryView? view)
         {
             // Non-generic IDictionary takes precedence over IDictionary<,> / IReadOnlyDictionary<,>:

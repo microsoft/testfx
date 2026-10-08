@@ -42,6 +42,16 @@
         <target state="translated">"--report-azdo-groups" требует включения "--report-azdo"</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
+        <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
+        <target state="new">Azure DevOps live publishing could not read attachment '{0}': {1}</target>
+        <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
+        <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
+        <target state="new">Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</target>
+        <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
         <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Динамической публикации Azure DevOps не удалось отправить несколько ({0}) вложений; они будут отсутствовать в тестовом запуске Azure DevOps.</target>
@@ -56,6 +66,11 @@
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps: не удалось выполнить тестовый запуск при публикации в реальном времени.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
+        <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
+        <target state="new">Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</target>
+        <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
         <source>Azure DevOps live publishing failed to create the test run.</source>

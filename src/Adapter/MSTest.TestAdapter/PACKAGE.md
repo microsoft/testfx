@@ -28,6 +28,17 @@ Supported platforms:
 - UWP 10.0.16299
 - UWP 10.0.17763 with .NET 9+
 
+## Runsettings on Microsoft.Testing.Platform
+
+When using the MSTest runner on Microsoft.Testing.Platform, `.runsettings` files can
+configure MSTest through the `MSTest` section (or its `MSTestV2` alias), test parameters
+through `TestRunParameters`, and supported settings through `RunConfiguration`.
+
+VSTest `ISettingsProvider` extensions are not invoked. Other top-level sections, such
+as `Playwright`, produce a warning and are not applied by MSTest. Use the extension's
+native Microsoft.Testing.Platform configuration when available. VSTest loggers,
+data collectors, and unsupported `RunConfiguration` entries retain their own warnings.
+
 ## Documentation
 
 For installation and configuration guidance, see <https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-getting-started>.

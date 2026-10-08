@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 
 		<IsPackable>false</IsPackable>
+		<NoWarn>$(NoWarn);MSTEST0032</NoWarn>
 
 		<OutputType>Exe</OutputType>
 		<EnableMSTestRunner>true</EnableMSTestRunner>

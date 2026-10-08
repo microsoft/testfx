@@ -124,7 +124,29 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void StartActivityWithLink_PreservesExplicitParentAndAddsLink()
+    public void CaptureCurrentActivityContext_WithNoOrNonW3CActivity_ReturnsNull()
+    {
+        Activity? ambient = Activity.Current;
+        try
+        {
+            Activity.Current = null;
+            Assert.IsNull(_service.CaptureCurrentActivityContext());
+
+            using Activity hierarchicalActivity = new Activity(Name("hierarchical"))
+                .SetIdFormat(ActivityIdFormat.Hierarchical)
+                .Start();
+            Assert.IsNull(_service.CaptureCurrentActivityContext());
+        }
+        finally
+        {
+            Activity.Current = ambient;
+        }
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void StartActivityWithLink_PreservesExplicitParentAndAddsLink(bool isRecorded)
     {
         var parentTraceId = ActivityTraceId.CreateRandom();
         var parentSpanId = ActivitySpanId.CreateRandom();
@@ -132,7 +154,7 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         var linkContext = new PlatformActivityContext(
             ActivityTraceId.CreateRandom().ToHexString(),
             ActivitySpanId.CreateRandom().ToHexString(),
-            isRecorded: true,
+            isRecorded,
             traceState: "vendor=value");
 
         using (IPlatformActivity? activity = _service.StartActivityWithLink(
@@ -150,8 +172,9 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         ActivityLink link = stopped.Links.Single();
         Assert.AreEqual(linkContext.TraceId, link.Context.TraceId.ToHexString());
         Assert.AreEqual(linkContext.SpanId, link.Context.SpanId.ToHexString());
-        Assert.AreEqual(ActivityTraceFlags.Recorded, link.Context.TraceFlags);
+        Assert.AreEqual(isRecorded ? ActivityTraceFlags.Recorded : ActivityTraceFlags.None, link.Context.TraceFlags);
         Assert.AreEqual(linkContext.TraceState, link.Context.TraceState);
+        Assert.IsFalse(link.Context.IsRemote);
     }
 
     [TestMethod]
@@ -205,6 +228,31 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
         Assert.IsNotNull(child);
         Assert.AreEqual(parent.TraceId, child.TraceId);
         Assert.AreNotEqual(parent.SpanId, child.SpanId);
+    }
+
+    [TestMethod]
+    public void StartActivity_WithoutExplicitParent_InheritsHierarchicalAmbientActivity()
+    {
+        Activity? ambient = Activity.Current;
+        string? parentId = null;
+        try
+        {
+            Activity.Current = null;
+            using Activity parent = new Activity(Name("hierarchical-parent"))
+                .SetIdFormat(ActivityIdFormat.Hierarchical)
+                .Start();
+            parentId = parent.Id;
+            Assert.IsNotNull(parentId);
+
+            using IPlatformActivity? child = _service.StartActivity(Name("hierarchical-child"));
+            Assert.IsNotNull(child);
+        }
+        finally
+        {
+            Activity.Current = ambient;
+        }
+
+        Assert.AreEqual(parentId, Single().ParentId);
     }
 
     [TestMethod]

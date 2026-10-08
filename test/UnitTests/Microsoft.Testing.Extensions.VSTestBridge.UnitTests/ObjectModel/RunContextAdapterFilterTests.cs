@@ -153,6 +153,18 @@ public sealed class RunContextAdapterFilterTests
     }
 
     [TestMethod]
+    public void GetTestCaseFilter_WhenCommandLineFilterLookupFails_IgnoresReturnedArguments()
+    {
+        RunContextAdapter adapter = CreateAdapter(
+            EmptyRunSettings,
+            new NopFilter(),
+            commandLineFilter: "Category=Ignored",
+            commandLineFilterOptionFound: false);
+
+        Assert.IsNull(adapter.GetTestCaseFilter(null, _ => null));
+    }
+
+    [TestMethod]
     public void GetTestCaseFilter_WithRunSettingsAndNodeFilter_CombinesWithAndOperator()
     {
         string runSettings =
@@ -202,6 +214,36 @@ public sealed class RunContextAdapterFilterTests
         RunContextAdapter adapter = CreateAdapter(runSettings, filter);
 
         Assert.AreEqual("(Category=Fast) & (FullyQualifiedName=A.B.Test)", GetFilterValue(adapter));
+    }
+
+    [TestMethod]
+    public void GetTestCaseFilter_WithCompositeContainingOnlyNopFilters_ReturnsNull()
+    {
+        CompositeTestExecutionFilter filter = new(
+            TestExecutionFilterOperator.And,
+            new NopFilter(),
+            new NopFilter());
+
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, filter);
+
+        Assert.IsNull(adapter.GetTestCaseFilter(null, _ => null));
+    }
+
+    [TestMethod]
+    public void GetTestCaseFilter_DefaultConstructor_WithGuidUid_BuildsIdFilter()
+    {
+        var runSettings = new Mock<IRunSettings>();
+        runSettings.Setup(x => x.SettingsXml).Returns(EmptyRunSettings);
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        string[]? commandLineFilterArguments = null;
+        commandLineOptions
+            .Setup(x => x.TryGetOptionArgumentList(TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName, out commandLineFilterArguments))
+            .Returns(false);
+        var guid = new Guid("12345678-1234-1234-1234-1234567890ab");
+
+        RunContextAdapter adapter = new(commandLineOptions.Object, runSettings.Object, CreateUidFilter(guid.ToString()));
+
+        Assert.AreEqual($"(Id={guid})", GetFilterValue(adapter));
     }
 
     [TestMethod]
@@ -347,7 +389,12 @@ public sealed class RunContextAdapterFilterTests
                 : null);
     }
 
-    private static RunContextAdapter CreateAdapter(string runSettingsXml, ITestExecutionFilter filter, string? commandLineFilter = null, bool useFullyQualifiedNameAsUid = false)
+    private static RunContextAdapter CreateAdapter(
+        string runSettingsXml,
+        ITestExecutionFilter filter,
+        string? commandLineFilter = null,
+        bool useFullyQualifiedNameAsUid = false,
+        bool commandLineFilterOptionFound = true)
     {
         var runSettings = new Mock<IRunSettings>();
         runSettings.Setup(x => x.SettingsXml).Returns(runSettingsXml);
@@ -356,7 +403,7 @@ public sealed class RunContextAdapterFilterTests
         string[]? commandLineFilterArguments = commandLineFilter is null ? null : [commandLineFilter];
         commandLineOptions
             .Setup(x => x.TryGetOptionArgumentList(TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName, out commandLineFilterArguments))
-            .Returns(commandLineFilter is not null);
+            .Returns(commandLineFilter is not null && commandLineFilterOptionFound);
 
         return new RunContextAdapter(commandLineOptions.Object, runSettings.Object, filter, useFullyQualifiedNameAsUid);
     }

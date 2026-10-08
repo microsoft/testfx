@@ -5,6 +5,8 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 
 internal sealed partial class FfmpegVideoRecorder
 {
+    private static IntPtr PerMonitorAwareV2DpiContext => new(-4);
+
     // Resolves the screen rectangle of the window to capture so gdigrab can record just that
     // region. Candidates are tried in order: the process main window (a GUI app under test owns
     // it), then the foreground window (the terminal you launched from — this is what makes
@@ -83,7 +85,7 @@ internal sealed partial class FfmpegVideoRecorder
     {
         try
         {
-            return NativeMethods.SetThreadDpiAwarenessContext(NativeMethods.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+            return NativeMethods.SetThreadDpiAwarenessContext(PerMonitorAwareV2DpiContext);
         }
         catch (Exception)
         {
@@ -112,8 +114,6 @@ internal sealed partial class FfmpegVideoRecorder
     {
         public const int SM_CXSCREEN = 0;
         public const int SM_CYSCREEN = 1;
-
-        public static readonly IntPtr DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = new(-4);
 
         [DllImport("kernel32.dll")]
         public static extern IntPtr GetConsoleWindow();

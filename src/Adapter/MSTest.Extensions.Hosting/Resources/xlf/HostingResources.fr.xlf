@@ -14,17 +14,17 @@
       </trans-unit>
       <trans-unit id="DerivedTestContextParameter">
         <source>MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">MSTest ne peut pas fournir le paramètre de constructeur « {1} » de la classe de test « {0} », car son type découle de TestContext. Utilisez exactement TestContext.</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="MSTest"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="DynamicCodeNotSupported">
         <source>MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</source>
-        <target state="new">MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</target>
+        <target state="translated">L’injection de la classe de test MSTest à partir de Microsoft.Extensions.Hosting nécessite un code dynamique de runtime et ce dernier ne le prend pas en charge.</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.Hosting"}</note>
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">
         <source>MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">MSTest n’a pas pu sélectionner de constructeur pour la classe de test « {0} », car plusieurs constructeurs publics sont marqués de l’attribut ActivatorUtilitiesConstructorAttribute. Marquez exactement un constructeur.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
     </body>

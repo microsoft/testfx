@@ -1123,10 +1123,10 @@ namespace MSTestWebTest
             File.Exists(resolvedAssetsReport),
             $"The resolved MSTest asset report '{resolvedAssetsReport}' was not created. Binlog: '{binlogPath}'.");
         string[] resolvedAssets = await File.ReadAllLinesAsync(resolvedAssetsReport, TestContext.CancellationToken);
-        CollectionAssert.Contains(resolvedAssets, "UseUwp=true");
-        CollectionAssert.Contains(resolvedAssets, "UseUwpTools=false");
-        CollectionAssert.Contains(resolvedAssets, "PackagedApp=false");
-        CollectionAssert.Contains(resolvedAssets, "TestingPlatformExecutablePath=");
+        Assert.Contains("UseUwp=true", resolvedAssets);
+        Assert.Contains("UseUwpTools=false", resolvedAssets);
+        Assert.Contains("PackagedApp=false", resolvedAssets);
+        Assert.Contains("TestingPlatformExecutablePath=", resolvedAssets);
 
         string adapterPath = resolvedAssets.Single(
             path => path.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase));
@@ -1258,18 +1258,23 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    public async Task MSTestSdk_PackagedWinUI_DefaultsToMtpWithPackagedAppLauncher()
+    [DataRow("Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx")]
+    [DataRow("Unix", "", "", "")]
+    public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
+        string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "PackagedWinUISdk",
-            """
+            $$"""
             <UseWinUI>true</UseWinUI>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            <OS>{{operatingSystem}}</OS>
             """);
 
-        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
-        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
-        result.AssertOutputContains("OutputType=Exe");
+        result.AssertOutputContains(
+            "WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true;OutputType=Exe;");
+        result.AssertOutputContains(
+            $";Controller={controller};ControllerTfm={controllerTfm};ControllerExtensions={controllerExtensions}");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
 
@@ -1295,7 +1300,7 @@ namespace MSTestWebTest
             .ToArray();
         string[] expected = expectedCultures.Order(StringComparer.OrdinalIgnoreCase).ToArray();
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             expected,
             actualCultures,
             $"Unexpected cultures for {resourceAssemblyName}. Expected: '{string.Join(";", expected)}'. Actual: '{string.Join(";", actualCultures)}'.");
@@ -1312,6 +1317,7 @@ namespace MSTestWebTest
             <Project Sdk="MSTest.Sdk/$MSTestVersion$">
               <PropertyGroup>
                 <TargetFramework>$TargetFramework$</TargetFramework>
+                <OutputType>Exe</OutputType>
                 <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
                 <NoWarn>$(NoWarn);NETSDK1201;NU1507</NoWarn>
                 $ApplicationModelProperties$
@@ -1322,9 +1328,9 @@ namespace MSTestWebTest
               </ItemGroup>
 
               <Target Name="PrintWindowsTestContract"
-                      DependsOnTargets="_MSTestSDKValidateWindowsApplicationModel;_CalculateGenerateTestingPlatformEntryPoint;_MSTestSDKConfigureAppModelController">
+                      DependsOnTargets="_MSTestSDKValidateWindowsApplicationModel;_CalculateGenerateTestingPlatformEntryPoint">
                 <Message Importance="high"
-                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerTfm=$(_MSTestAppModelControllerTfm);ControllerExtensions=$(_MSTestAppModelControllerExtensions)" />
+                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerTfm=$(_TestingPlatformPackagedAppControllerTfm);ControllerExtensions=$(_TestingPlatformPackagedAppControllerExtensions)" />
                 <Message Importance="high"
                          Text="PackageReferences=@(PackageReference->'%(Identity)')" />
                 <Message Importance="high"

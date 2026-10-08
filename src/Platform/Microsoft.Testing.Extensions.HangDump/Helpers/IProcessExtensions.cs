@@ -108,7 +108,7 @@ internal static class IProcessExtensions
     internal static int ParseParentPidFromProcStat(string stat)
     {
         int commEnd = stat.LastIndexOf(')');
-        if (commEnd < 0 || commEnd + 2 >= stat.Length)
+        if (commEnd < 0 || commEnd == stat.Length - 1)
         {
             return InvalidProcessId;
         }

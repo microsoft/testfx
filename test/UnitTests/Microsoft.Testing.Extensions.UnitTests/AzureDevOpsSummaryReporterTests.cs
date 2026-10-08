@@ -87,14 +87,33 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("## ❌ MyAssembly (net8.0)", md);
-        Assert.Contains("**5 tests** · ✅ **2 passed** · ❌ **2 failed** · ⏭ **1 skipped** · ⏱ **12.35s**", md);
-        Assert.Contains("### Top failing classes", md);
-        Assert.Contains("### Additional failing tests", md);
-        Assert.Contains("### ⏱ Slowest tests", md);
-        Assert.Contains("MyCo.Suite.ClassA", md);
-        Assert.Contains("`Slowpoke`", md);
-        Assert.Contains("`MyCo.Suite.ClassA.Test2`", md);
+        Assert.AreEqual(
+            """
+            ## ❌ MyAssembly (net8.0)
+
+            **5 tests** · ✅ **2 passed** · ❌ **2 failed** · ⏭ **1 skipped** · ⏱ **12.35s**
+
+            ### Top failing classes
+
+            | Class | Failures |
+            | --- | ---: |
+            | MyCo.Suite.ClassA | 2 |
+
+            ### Additional failing tests
+
+            - `MyCo.Suite.ClassA.Test2`
+            - `MyCo.Suite.ClassA.Test3`
+
+            ### ⏱ Slowest tests
+
+            - **12.00s** — `Slowpoke`
+            - **200ms** — `Test2`
+            - **100ms** — `Test1`
+            - **50ms** — `Test3`
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
@@ -109,8 +128,19 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("⏱ **25:07:08**", md);
-        Assert.DoesNotContain("⏱ **01:07:08**", md);
+        Assert.AreEqual(
+            """
+            ## ✅ MyAssembly (net8.0)
+
+            **1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped** · ⏱ **25:07:08**
+
+            ### ⏱ Slowest tests
+
+            - **25:07:08** — `LongTest`
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
@@ -123,7 +153,19 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("⏱ **05:30**", md);
+        Assert.AreEqual(
+            """
+            ## ✅ MyAssembly (net8.0)
+
+            **1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped** · ⏱ **05:30**
+
+            ### ⏱ Slowest tests
+
+            - **05:30** — `MidTest`
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
@@ -141,15 +183,35 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("`Has|Pipe`", md);
-        Assert.Contains("`Has Newline`", md);
-        Assert.Contains("`A&B <T>`", md);
-        Assert.Contains("``Has`Tick``", md);
-        Assert.Contains("`` `Edge` ``", md);
-        Assert.Contains("`  spaced  `", md);
-        Assert.DoesNotContain("A&amp;B", md);
-        Assert.DoesNotContain("&lt;T&gt;", md);
-        Assert.DoesNotContain("Has\nNewline", md);
+        Assert.AreEqual(
+            """
+            ## ❌ MyAssembly (net8.0)
+
+            **6 tests** · ✅ **4 passed** · ❌ **2 failed** · ⏭ **0 skipped** · ⏱ **6ms**
+
+            ### Top failing classes
+
+            | Class | Failures |
+            | --- | ---: |
+            | MyCo.X | 2 |
+
+            ### Additional failing tests
+
+            - `MyCo.X.HasNewline`
+            - `MyCo.X.HasPipe`
+
+            ### ⏱ Slowest tests
+
+            - **1ms** — ``Has`Tick``
+            - **1ms** — `` `Edge` ``
+            - **1ms** — `Has Newline`
+            - **1ms** — `Has|Pipe`
+            - **1ms** — `  spaced  `
+            - **1ms** — `A&B <T>`
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]

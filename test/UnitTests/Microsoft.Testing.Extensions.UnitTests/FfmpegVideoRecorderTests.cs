@@ -22,6 +22,56 @@ public sealed class FfmpegVideoRecorderTests
         typeof(FfmpegVideoRecorder).GetProperty(nameof(FfmpegVideoRecorder.SegmentDirectory))
         ?? throw new InvalidOperationException("Could not resolve FfmpegVideoRecorder.SegmentDirectory.");
 
+    private static readonly PropertyInfo PerMonitorAwareV2DpiContextProperty =
+        typeof(FfmpegVideoRecorder).GetProperty("PerMonitorAwareV2DpiContext", BindingFlags.Static | BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Could not resolve FfmpegVideoRecorder.PerMonitorAwareV2DpiContext.");
+
+    [TestMethod]
+    public void PerMonitorAwareV2DpiContext_HasDocumentedNativeValue()
+        => Assert.AreEqual(new IntPtr(-4), (IntPtr)PerMonitorAwareV2DpiContextProperty.GetValue(null)!);
+
+    [TestMethod]
+    public void Constructor_ExistingConfiguredPath_InitializesRecorder()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string ffmpegPath = Path.Combine(directory, "ffmpeg");
+            File.WriteAllText(ffmpegPath, string.Empty);
+
+            FfmpegVideoRecorder recorder = CreateRecorder(directory, ffmpegPath);
+
+            Assert.AreEqual(ffmpegPath, recorder.FfmpegPath);
+            Assert.IsTrue(recorder.IsAvailable);
+            Assert.AreEqual("mp4", recorder.SegmentExtension);
+            Assert.IsNull(recorder.RecordingStartUtc);
+            Assert.IsNull(recorder.SegmentDirectory);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Constructor_MissingConfiguredPath_IsUnavailable()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string ffmpegPath = Path.Combine(directory, "missing-ffmpeg");
+
+            FfmpegVideoRecorder recorder = CreateRecorder(directory, ffmpegPath);
+
+            Assert.IsNull(recorder.FfmpegPath);
+            Assert.IsFalse(recorder.IsAvailable);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [TestMethod]
     public void ReadSegments_DefaultState_ReturnsEmpty()
     {
@@ -199,11 +249,11 @@ public sealed class FfmpegVideoRecorderTests
         return recorder;
     }
 
-    private static FfmpegVideoRecorder CreateRecorder(string outputDirectory)
+    private static FfmpegVideoRecorder CreateRecorder(string outputDirectory, string? ffmpegPath = null)
         => new(
             new VideoRecorderOptions
             {
-                FfmpegPath = Path.Combine(outputDirectory, "missing-ffmpeg"),
+                FfmpegPath = ffmpegPath ?? Path.Combine(outputDirectory, "missing-ffmpeg"),
                 OutputDirectory = outputDirectory,
             },
             outputDirectory,

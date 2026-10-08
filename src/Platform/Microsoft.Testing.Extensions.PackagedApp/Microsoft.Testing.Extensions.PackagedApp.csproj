@@ -26,7 +26,7 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to start Windows test hosts that cannot simply be Process.Started. In its Windows build (net*-windows) it registers a packaged MSIX app layout with the PackageManager and activates it by Application User Model ID, delivering platform arguments through argv for packagedClassicApp/win32App hosts or a reusable OnLaunched bootstrap for windowsApp/UWP hosts. When the selected application runs in AppContainer, the launcher also authorizes its exact package SID on the controller pipe with minimum client rights. A non-packaged (loose-layout) Windows test host can optionally be deployed to an isolated directory and launched from there. The launcher enables itself only for a packaged layout, so referencing it from an unpackaged app does not change how that app runs. These communication primitives do not change the current SDK/platform routing limitation: true UWP/AppContainer projects are still selected for VSTest rather than started as MTP test hosts.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to start Windows test hosts that cannot simply be Process.Started. In its Windows build (net*-windows) it registers a packaged MSIX app layout with the PackageManager and activates it by Application User Model ID, delivering platform arguments through argv for packagedClassicApp/win32App hosts or a reusable OnLaunched bootstrap for windowsApp/UWP hosts. When the selected application runs in AppContainer, the launcher also authorizes its exact package SID on the controller pipe with minimum client rights. A non-packaged (loose-layout) Windows test host can optionally be deployed to an isolated directory and launched from there. The launcher enables itself only for a packaged layout, so referencing it from an unpackaged app does not change how that app runs. Microsoft.Testing.Extensions.PackagedApp.MSBuild separately supplies the controller and MSBuild integration for packaged WinUI and UWP applications.
 
 $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
@@ -38,6 +38,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
     <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
     <!-- Internal API surface that only exists in the Windows build (register-and-activate path). -->
+    <AdditionalFiles Include="InternalAPI/Windows/InternalAPI.Shipped.txt" Condition="$(TargetFramework.Contains('-windows'))" />
     <AdditionalFiles Include="InternalAPI/Windows/InternalAPI.Unshipped.txt" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
 

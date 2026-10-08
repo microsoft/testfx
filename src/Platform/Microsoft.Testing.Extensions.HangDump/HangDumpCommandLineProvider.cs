@@ -110,12 +110,15 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
             return requested;
         }
 
-        // 'Triage' is only available on .NET Core. On .NET Framework, the closest equivalent
-        // is 'Mini' (both are small, fast dumps suitable for crash analysis).
+        // 'Triage' is only unavailable on .NET Framework. Keep the fallback branch out of
+        // .NET Core builds, where validation guarantees this value returned from the supported
+        // set above and the comparison would therefore be unreachable.
+#if !NETCOREAPP
         if (string.Equals(requested, "Triage", StringComparison.OrdinalIgnoreCase))
         {
             return "Mini";
         }
+#endif
 
         // No specific mapping known; preserve the historical default. New per-value mappings
         // should be added above this line as we learn about additional unsupported values.

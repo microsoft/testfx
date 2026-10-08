@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ActivationFailed">
         <source>MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</source>
-        <target state="new">MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</target>
+        <target state="translated">MSTest не удалось создать тестовый класс "{0}" с помощью поставщика служб узла приложения. Убедитесь, что существует ровно один public конструктор, параметры которого могут быть удовлетворены зарегистрированными службами и TestContext.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="AmbiguousConstructors">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="MultiplePreferredConstructors">
         <source>MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
-        <target state="new">MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</target>
+        <target state="translated">MSTest не удалось выбрать конструктор для тестового класса "{0}", так как несколько public конструкторов помечены атрибутом ActivatorUtilitiesConstructorAttribute. Пометьте ровно один конструктор.</target>
         <note>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
     </body>

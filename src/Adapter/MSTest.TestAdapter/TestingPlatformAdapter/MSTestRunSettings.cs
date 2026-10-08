@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -24,6 +25,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatform
 internal sealed class MSTestRunSettings : IRunSettings
 {
     private static readonly char[] TestRunParameterSeparator = ['='];
+
+    private static readonly string[] RecognizedRunSettingsSections =
+    [
+        RunSettingsUtilities.RunConfigurationSettingsName,
+        RunSettingsUtilities.TestRunParametersName,
+        MSTestSettings.SettingsName,
+        MSTestSettings.SettingsNameAlias,
+        "LoggerRunSettings",
+        "DataCollectionRunSettings",
+    ];
 
     private static readonly string[] UnsupportedRunConfigurationSettings =
     [
@@ -191,14 +202,19 @@ internal sealed class MSTestRunSettings : IRunSettings
     {
         XElement runSettingsElement = document.Element("RunSettings")!;
 
-        if (runSettingsElement.Element("LoggerRunSettings") is not null)
+        if (runSettingsElement.Elements().Any(section => string.Equals(section.Name.ToString(), "LoggerRunSettings", StringComparison.OrdinalIgnoreCase)))
         {
             messageLogger.SendMessage(TestMessageLevel.Warning, PlatformAdapterResources.UnsupportedRunsettingsLoggers);
         }
 
-        if (runSettingsElement.Element("DataCollectionRunSettings") is not null)
+        if (runSettingsElement.Elements().Any(section => string.Equals(section.Name.ToString(), "DataCollectionRunSettings", StringComparison.OrdinalIgnoreCase)))
         {
             messageLogger.SendMessage(TestMessageLevel.Warning, PlatformAdapterResources.UnsupportedRunsettingsDatacollectors);
+        }
+
+        foreach (XElement section in runSettingsElement.Elements().Where(section => !RecognizedRunSettingsSections.Contains(section.Name.ToString(), StringComparer.OrdinalIgnoreCase)))
+        {
+            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.UnsupportedRunsettingsSection, section.Name));
         }
 
         if (runSettingsElement.Element("RunConfiguration") is not { } runConfigurationElement)

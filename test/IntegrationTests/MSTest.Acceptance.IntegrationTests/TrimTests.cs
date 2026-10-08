@@ -23,6 +23,8 @@ public class TrimTests : AcceptanceTestBase<NopAssetFixture>
         <PublishTrimmed>true</PublishTrimmed>
         <!-- Show individual trim warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- Keep input symbols for warning locations, but avoid Mono.Cecil's native PDB writer. -->
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -80,9 +82,6 @@ public class UnitTest1
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
-            // Native PDB writing in Mono.Cecil can intermittently access-violate under server GC.
-            // The test validates linker warnings, so workstation GC preserves the behavior under test.
-            environmentVariables: new() { ["DOTNET_gcServer"] = "0" },
             warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
 
@@ -112,6 +111,8 @@ public class UnitTest1
         <PublishTrimmed>true</PublishTrimmed>
         <!-- Show individual trim warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- Keep input symbols for warning locations, but avoid Mono.Cecil's native PDB writer. -->
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
@@ -173,9 +174,6 @@ public class UnitTest1
         // NETSDK1144 before we get a chance to inspect the warning list.
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
-            // Native PDB writing in Mono.Cecil can intermittently access-violate under server GC.
-            // The test validates linker warnings, so workstation GC preserves the behavior under test.
-            environmentVariables: new() { ["DOTNET_gcServer"] = "0" },
             warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
 

@@ -18,13 +18,31 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class ClassicUwpTests : AcceptanceTestBase
 {
     [TestMethod]
+    [DataRow("MSTest.Sdk")]
+    [DataRow("MSTest")]
+    [DataRow("MSTest.TestAdapter")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Classic UWP execution is supported only on Windows.")]
-    public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp()
+    public async Task ClassicUwp_ConsumesUapAssets_AndRunsPlainAndUiTestsThroughMtp(string package)
     {
         string uniqueSuffix = Guid.NewGuid().ToString("N");
         const string assetName = "CUwp";
         string packageIdentityName = $"MSTestClassicUwp{uniqueSuffix}";
-        string sourceCode = ClassicUwpSourceCode
+        string source = ClassicUwpSourceCode;
+        if (package != "MSTest.Sdk")
+        {
+            string references = package == "MSTest"
+                ? $"<PackageReference Include=\"MSTest\" Version=\"{MSTestVersion}\" />"
+                : $"<PackageReference Include=\"MSTest.TestAdapter\" Version=\"{MSTestVersion}\" /><PackageReference Include=\"MSTest.TestFramework\" Version=\"{MSTestVersion}\" />";
+            source = source
+                .Replace("  <Import Project=\"Sdk.props\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
+                .Replace("  <Import Project=\"Sdk.targets\" Sdk=\"MSTest.Sdk\" Version=\"$MSTestVersion$\" />", string.Empty, StringComparison.Ordinal)
+                .Replace(
+                    "<PackageReference Include=\"Microsoft.NETCore.UniversalWindowsPlatform\"",
+                    $"{references}<PackageReference Include=\"Microsoft.Testing.Extensions.PackagedApp.MSBuild\" Version=\"{MicrosoftTestingPlatformVersion}\" /><PackageReference Include=\"Microsoft.NETCore.UniversalWindowsPlatform\"",
+                    StringComparison.Ordinal);
+        }
+
+        string sourceCode = source
             .PatchCodeWithReplace("$AssetName$", assetName)
             .PatchCodeWithReplace("$PackageIdentityName$", packageIdentityName)
             .PatchCodeWithReplace("$MSBuildSdkExtrasVersion$", MSBuildSdkExtrasVersion)
@@ -134,7 +152,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             await using FileStream stream = File.OpenRead(path);
             int bytesRead = await stream.ReadAsync(actualPreamble, cancellationToken);
             Assert.AreEqual(utf8Preamble.Length, bytesRead, $"Generated C# file '{path}' is shorter than the UTF-8 BOM.");
-            CollectionAssert.AreEqual(utf8Preamble, actualPreamble, $"Generated C# file '{path}' is not UTF-8 with BOM.");
+            Assert.AreSequenceEqual(utf8Preamble, actualPreamble, $"Generated C# file '{path}' is not UTF-8 with BOM.");
         }
     }
 
@@ -188,7 +206,7 @@ public sealed class ClassicUwpTests : AcceptanceTestBase
             "PlainTestMethod_RunsInClassicUwpPackage",
             "UITestMethod_RunsOnCoreWindowDispatcher",
         ];
-        CollectionAssert.AreEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
+        Assert.AreSequenceEqual(expectedTestNames, actualTestNames, $"Unexpected test results were written to '{trxPath}'.");
         Assert.IsTrue(
             results.All(result => (string?)result.Attribute("outcome") == "Passed"),
             $"Every classic UWP result must pass. TRX: '{trxPath}'.");

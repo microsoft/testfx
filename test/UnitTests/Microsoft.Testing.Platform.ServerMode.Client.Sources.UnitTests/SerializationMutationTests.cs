@@ -35,8 +35,13 @@ using TestNodeUpdateMessage = serverclient::Microsoft.Testing.Platform.Extension
 
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
+/// <remarks>
+/// Only <see cref="RegisterClientSerializers_WhenUnregistered_PopulatesTablesAndPublishesRegistration"/> changes
+/// the process-global serializer registry and registration flag. Its method-level
+/// <see cref="DoNotParallelizeAttribute"/> keeps those changes isolated from parallel readers.
+/// The already-registered probe holds the registration lock without changing the registry.
+/// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class SerializationMutationTests
 {
     public TestContext TestContext { get; set; } = null!;
@@ -46,20 +51,18 @@ public sealed class SerializationMutationTests
     {
         SerializerUtilities.RegisterClientSerializers();
         object registrationLock = GetStaticField<object>(typeof(SerializerUtilities), "ClientSerializersLock");
+        Task? registration = null;
 
         Monitor.Enter(registrationLock);
         try
         {
-            using ManualResetEventSlim started = new();
-            var registration = Task.Run(
-                () =>
-                {
-                    started.Set();
-                    SerializerUtilities.RegisterClientSerializers();
-                },
-                TestContext.CancellationToken);
+            // A pool-backed probe can starve while this test blocks a parallel worker holding the lock.
+            registration = Task.Factory.StartNew(
+                SerializerUtilities.RegisterClientSerializers,
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
 
-            Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
             Assert.IsTrue(
                 registration.Wait(5_000, TestContext.CancellationToken),
                 "Registration should return before the held lock is released.");
@@ -67,10 +70,18 @@ public sealed class SerializationMutationTests
         finally
         {
             Monitor.Exit(registrationLock);
+            if (registration is not null)
+            {
+                // Drain the probe even if the test was canceled while waiting with the lock held.
+                Assert.IsTrue(
+                    registration.Wait(5_000, CancellationToken.None),
+                    "Registration should complete after the lock is released.");
+            }
         }
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public void RegisterClientSerializers_WhenUnregistered_PopulatesTablesAndPublishesRegistration()
     {
         FieldInfo registeredField = GetStaticField(typeof(SerializerUtilities), "s_clientSerializersRegistered");
@@ -411,17 +422,24 @@ public sealed class SerializationMutationTests
     [TestMethod]
     public void Json_DeserializeInitializeRequest_ValidatesProtocolVersionEntries()
     {
-        var json = new PlatformJson();
         byte[] payload = Encoding.UTF8.GetBytes(
             """{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"debuggerProvider":false}},"protocolVersions":["1.0",null]}""");
 
-        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
-            () => json.Deserialize<InitializeRequestArgs>(payload));
-        Assert.AreEqual($"'{JsonRpcStrings.ProtocolVersions}' entries must be strings", exception.Message);
+        TargetInvocationException exception = Assert.ThrowsExactly<TargetInvocationException>(
+            () => DeserializeClientJson<InitializeRequestArgs>(payload));
+        Assert.IsNotNull(exception.InnerException);
+        Assert.AreEqual(
+            "Microsoft.Testing.Platform.ServerMode.MessageFormatException",
+            exception.InnerException.GetType().FullName);
+        Assert.AreEqual(
+            $"'{JsonRpcStrings.ProtocolVersions}' entries must be strings",
+            exception.InnerException.Message);
 
-        InitializeRequestArgs valid = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(
+        object valid = DeserializeClientJson<InitializeRequestArgs>(Encoding.UTF8.GetBytes(
             """{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"debuggerProvider":false}},"protocolVersions":["1.0"]}"""));
-        Assert.AreSequenceEqual(["1.0"], valid.ProtocolVersions);
+        Assert.AreSequenceEqual(
+            ["1.0"],
+            (string[]?)valid.GetType().GetProperty(nameof(InitializeRequestArgs.ProtocolVersions))!.GetValue(valid));
     }
 
     [TestMethod]
@@ -704,6 +722,22 @@ public sealed class SerializationMutationTests
     private static MethodInfo GetStaticMethod(Type type, string name)
         => type.GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException($"Could not find static method '{name}' on '{type}'.");
+
+#if NETCOREAPP
+    private static object DeserializeClientJson<T>(byte[] payload)
+    {
+        Assembly clientAssembly = typeof(TestNode).Assembly;
+        Type jsonType = clientAssembly.GetType(
+            "Microsoft.Testing.Platform.ServerMode.Json.Json",
+            throwOnError: true)!;
+        Type targetType = clientAssembly.GetType(typeof(T).FullName!, throwOnError: true)!;
+        MethodInfo deserialize = jsonType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Single(method => method.Name == "Deserialize" && method.IsGenericMethodDefinition);
+        object json = Activator.CreateInstance(jsonType, [null, null])!;
+
+        return deserialize.MakeGenericMethod(targetType).Invoke(json, [new ReadOnlyMemory<byte>(payload)])!;
+    }
+#endif
 
     private sealed record Marker(int Value);
 

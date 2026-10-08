@@ -49,6 +49,7 @@ public sealed partial class Assert
             }
         }
 
+        [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The public structural equivalence assertion APIs declare that comparison requires dynamic code.")]
         private static MethodInfo? GetIEquatableEqualsMethod(Type declaredType)
         {
             if (declaredType == typeof(object) || declaredType == typeof(string))
@@ -98,6 +99,7 @@ public sealed partial class Assert
                 ?? TryGetEnumerableElementType(actualRuntimeType)
                 ?? typeof(object);
 
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "The public structural equivalence assertion APIs declare that comparison requires unreferenced code.")]
         private static Type? TryGetEnumerableElementType(Type type)
             => EnumerableElementTypeCache.GetOrAdd(type, static t =>
             {
@@ -135,6 +137,7 @@ public sealed partial class Assert
                 ?? TryGetDictionaryValueType(actualRuntimeType)
                 ?? typeof(object);
 
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "The public structural equivalence assertion APIs declare that comparison requires unreferenced code.")]
         private static Type? TryGetDictionaryValueType(Type type)
             => DictionaryValueTypeCache.GetOrAdd(type, static t =>
             {

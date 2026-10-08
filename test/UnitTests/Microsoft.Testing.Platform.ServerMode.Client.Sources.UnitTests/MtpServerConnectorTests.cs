@@ -16,12 +16,13 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// by every teardown path that must never block indefinitely on a task it does not own.
 /// </summary>
 [TestClass]
-[DoNotParallelize]
 public sealed class MtpServerConnectorTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    // Mutates the process-global serializer registry and registration flag.
     [TestMethod]
+    [DoNotParallelize]
     public async Task CreateFormatterRegistersClientSerializersBeforeCreatingFormatter()
     {
         FieldInfo serializersField = typeof(SerializerUtilities).GetField("Serializers", BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -376,6 +377,7 @@ public sealed class MtpServerConnectorTests
     }
 
     [TestMethod]
+    [DoNotParallelize] // The released port must remain available until the replacement listener binds it.
     public void SafeStopStopsListener()
     {
         TcpListener listener = MtpServerConnector.StartLoopbackListener(out int port);

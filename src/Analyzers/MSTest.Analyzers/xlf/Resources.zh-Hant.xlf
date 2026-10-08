@@ -325,6 +325,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">使用 'Assert' 而不是 'CollectionAssert'</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesDescription">
+        <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
+        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
+        <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
+        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesTitle">
+        <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
+        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
         <target state="translated">'CultureInfo.DefaultThreadCurrentCulture' 和 'DefaultThreadCurrentUICulture' 會設定整個處理序的預設文化特性，因此每個同時執行的測試都會發現變更，且在組件內平行處理之下的格式化或剖析可能會毀損。故意未標記每個執行緒和環境表單: 在新式 .NET 上， 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' 和 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setter 全都會指派隨著執行內容流動的 'AsyncLocal' 支援值，因此不會毀損同層級測試或外洩至稍後集合的執行緒。因為已標記的 setter 為全處理序 setter，所以還原 'finally' 中的前一個值沒有幫助 - 同時執行的測試仍會在變更期間發現已變更的文化特性; 在測試上宣告 '[DoNotParallelize]', 或避免改變全處理序文化特性。</target>
@@ -452,17 +467,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedDescription">
         <source>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</source>
-        <target state="new">Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</target>
+        <target state="translated">由主機管理的 MSTest 測試類別注入會使用以反射為基礎的 Microsoft.Extensions.DependencyInjection 啟動機制。請移除 AddMSTestTestClassInjection，或停用不支援的組建模式。</target>
         <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</note>
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedMessageFormat">
         <source>AddMSTestTestClassInjection is not supported when '{0}' is enabled</source>
-        <target state="new">AddMSTestTestClassInjection is not supported when '{0}' is enabled</target>
+        <target state="translated">啟用 '{0}' 時不支援 AddMSTestTestClassInjection</target>
         <note>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</note>
       </trans-unit>
       <trans-unit id="MSTestHostTestClassInjectionNotSupportedTitle">
         <source>MSTest host test-class injection is not supported by the selected build mode</source>
-        <target state="new">MSTest host test-class injection is not supported by the selected build mode</target>
+        <target state="translated">所選的組建模式不支援 MSTest 主機的測試類別注入</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -790,6 +805,11 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">請勿忽略字串方法的傳回值</target>
         <note />
       </trans-unit>
+      <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
+        <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
+        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <note>{Locked="TestContext"}</note>
+      </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
         <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
         <target state="translated">'SupportedOSPlatformAttribute' 和 'UnsupportedOSPlatformAttribute' 會提供平台相容性分析，但不會控制 MSTest 執行。使用這些屬性的測試方法和測試類別也應宣告相容的 '[OSCondition]'，讓測試在執行階段於不支援的作業系統系列上略過。'[OSCondition]' 不會強制執行平台版本限制。</target>
@@ -1047,7 +1067,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorHasDerivedTestContextMessageFormat">
         <source>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</source>
-        <target state="new">Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</target>
+        <target state="translated">測試類別 '{0}' 的建構函式參數 '{1}' 繼承自 TestContext。請直接使用 TestContext。</target>
         <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">

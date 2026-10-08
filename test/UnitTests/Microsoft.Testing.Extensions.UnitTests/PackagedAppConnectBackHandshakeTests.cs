@@ -32,6 +32,7 @@ public sealed class PackagedAppConnectBackHandshakeTests
             };
 
             PackagedAppConnectBackHandshake.Write(filePath, entries);
+            Assert.HasCount(entries.Count, File.ReadAllLines(filePath));
 
             IReadOnlyDictionary<string, string?>? read = PackagedAppConnectBackHandshake.ReadAndDelete(filePath);
 
@@ -61,6 +62,38 @@ public sealed class PackagedAppConnectBackHandshakeTests
         string filePath = Path.Combine(Path.GetTempPath(), "PackagedAppHandshakeTests", Guid.NewGuid().ToString("N"), "missing.handshake");
 
         Assert.IsNull(PackagedAppConnectBackHandshake.ReadAndDelete(filePath));
+    }
+
+    [TestMethod]
+    public void ReadAndDelete_IgnoresLinesWithoutCompleteKeyValueEnvelope()
+    {
+        string filePath = Path.Combine(Path.GetTempPath(), nameof(PackagedAppConnectBackHandshakeTests), Guid.NewGuid().ToString("N"), "malformed.handshake");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        try
+        {
+            File.WriteAllLines(
+                filePath,
+                [
+                    "NO_SEPARATOR",
+                    "=VdmFsdWU=",
+                    "MISSING_VALUE=",
+                    "VALID=VdmFsdWU=",
+                ]);
+
+            IReadOnlyDictionary<string, string?>? read = PackagedAppConnectBackHandshake.ReadAndDelete(filePath);
+
+            Assert.IsNotNull(read);
+            Assert.HasCount(1, read);
+            Assert.AreEqual("value", read["VALID"]);
+        }
+        finally
+        {
+            string? directory = Path.GetDirectoryName(filePath);
+            if (directory is not null && Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
     }
 
     [TestMethod]
@@ -185,6 +218,62 @@ public sealed class PackagedAppConnectBackHandshakeTests
     }
 
     [TestMethod]
+    public async Task AddPackagedAppDeployment_Controller_RegistersLauncher()
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+        List<string> operations = [];
+
+        AddPackagedAppDeploymentForTest(
+            builder,
+            [],
+            _ => operations.Add("apply"),
+            _ =>
+            {
+                operations.Add("handshake");
+                return null;
+            },
+            () =>
+            {
+                operations.Add("launcher");
+                return new PackagedAppTestHostLauncher(Path.GetTempPath(), static _ => null);
+            });
+
+        _ = await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        string[] expectedOperations = ["apply", "handshake", "launcher"];
+        Assert.AreSequenceEqual(expectedOperations, operations);
+    }
+
+    [TestMethod]
+    public async Task AddPackagedAppDeployment_ActivatedChild_AppliesEnvironmentBeforeSkippingLauncher()
+    {
+        string[] arguments = ["--internal-testhostcontroller-pid", "1234"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(arguments);
+        List<string> operations = [];
+
+        AddPackagedAppDeploymentForTest(
+            builder,
+            arguments,
+            receivedArguments =>
+            {
+                Assert.AreSame(arguments, receivedArguments);
+                operations.Add("apply");
+            },
+            receivedArguments =>
+            {
+                Assert.AreSame(arguments, receivedArguments);
+                operations.Add("handshake");
+                return "1234";
+            },
+            () => throw new InvalidOperationException("An activated child must not create another launcher."));
+
+        ITestHostLauncher? launcher =
+            await ((TestHostControllersManager)builder.TestHostControllers).BuildTestHostLauncherAsync(new ServiceProvider());
+        string[] expectedOperations = ["apply", "handshake"];
+        Assert.AreSequenceEqual(expectedOperations, operations);
+        Assert.IsNull(launcher);
+    }
+
+    [TestMethod]
     public void GetConnectBackEnvironment_RetryChild_AddsControllerSkipMarker()
     {
         var context = new TestHostLaunchContext(
@@ -261,6 +350,51 @@ public sealed class PackagedAppConnectBackHandshakeTests
             RedirectedManifestPath,
             environment["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"]);
     }
+
+    [TestMethod]
+    public void GetConnectBackEnvironment_WithDuplicateSkipMarkers_DoesNotAppendAnotherMarker()
+    {
+        var context = new TestHostLaunchContext(
+            "testhost.exe",
+            ["--internal-retry-pipename", @"LOCAL\retry-pipe"],
+            new Dictionary<string, string?>
+            {
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION"] = "first",
+                ["testingplatform_testhostcontroller_skipextension"] = "second",
+            },
+            workingDirectory: null);
+
+        KeyValuePair<string, string?>[] environment =
+            [.. PackagedAppTestHostLauncher.GetConnectBackEnvironment(context)];
+
+        Assert.HasCount(2, environment);
+        Assert.Contains("first", environment.Select(static entry => entry.Value));
+        Assert.Contains("second", environment.Select(static entry => entry.Value));
+    }
+
+    private static void AddPackagedAppDeploymentForTest(
+        ITestApplicationBuilder builder,
+        IReadOnlyList<string> processArguments,
+        Action<IReadOnlyList<string>> applyConnectBackEnvironment,
+        Func<IReadOnlyList<string>, string?> getHandshakeId,
+        Func<ITestHostLauncher> createLauncher)
+        => typeof(PackagedAppExtensions)
+            .GetMethod(
+                "AddPackagedAppDeployment",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
+                binder: null,
+                types:
+                [
+                    typeof(ITestApplicationBuilder),
+                    typeof(IReadOnlyList<string>),
+                    typeof(Action<IReadOnlyList<string>>),
+                    typeof(Func<IReadOnlyList<string>, string>),
+                    typeof(Func<ITestHostLauncher>),
+                ],
+                modifiers: null)!
+            .Invoke(
+                null,
+                [builder, processArguments, applyConnectBackEnvironment, getHandshakeId, createLauncher]);
 }
 
 #endif

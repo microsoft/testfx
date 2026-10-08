@@ -11,6 +11,30 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class PackagedAppScratchArtifactRecoveryTests
 {
     [TestMethod]
+    public void Recover_EmptyScratchDirectory_CreatesRecoveryDirectory()
+    {
+        string testDirectory = Path.Combine(
+            Path.GetTempPath(),
+            nameof(PackagedAppScratchArtifactRecoveryTests),
+            Guid.NewGuid().ToString("N"));
+        string scratchDirectory = Path.Combine(testDirectory, "scratch");
+        string recoveryDirectory = Path.Combine(testDirectory, "recovery");
+        Directory.CreateDirectory(scratchDirectory);
+
+        try
+        {
+            PackagedAppScratchArtifactRecovery.Recover(scratchDirectory, recoveryDirectory);
+
+            Assert.IsTrue(Directory.Exists(recoveryDirectory));
+            Assert.IsEmpty(Directory.EnumerateFileSystemEntries(recoveryDirectory));
+        }
+        finally
+        {
+            Directory.Delete(testDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void Recover_DiagnosticFile_PreservesRelativePathWithinRequestedRecoveryDirectory()
     {
         string testDirectory = Path.Combine(
@@ -85,6 +109,35 @@ public sealed class PackagedAppScratchArtifactRecoveryTests
             {
                 Directory.Delete(testDirectory, recursive: true);
             }
+        }
+    }
+
+    [TestMethod]
+    public void Recover_ExistingArtifact_OverwritesDestination()
+    {
+        string testDirectory = Path.Combine(
+            Path.GetTempPath(),
+            nameof(PackagedAppScratchArtifactRecoveryTests),
+            Guid.NewGuid().ToString("N"));
+        string scratchDirectory = Path.Combine(testDirectory, "scratch");
+        string recoveryDirectory = Path.Combine(testDirectory, "recovery");
+        Directory.CreateDirectory(scratchDirectory);
+        Directory.CreateDirectory(recoveryDirectory);
+
+        try
+        {
+            string sourcePath = Path.Combine(scratchDirectory, "result.txt");
+            string destinationPath = Path.Combine(recoveryDirectory, "result.txt");
+            File.WriteAllText(sourcePath, "new");
+            File.WriteAllText(destinationPath, "old");
+
+            PackagedAppScratchArtifactRecovery.Recover(scratchDirectory, recoveryDirectory);
+
+            Assert.AreEqual("new", File.ReadAllText(destinationPath));
+        }
+        finally
+        {
+            Directory.Delete(testDirectory, recursive: true);
         }
     }
 }

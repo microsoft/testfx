@@ -80,6 +80,15 @@ public sealed class RetryArgumentsBuilderTests
     }
 
     [TestMethod]
+    public void ComputeIndicesToCleanup_WithoutRequiredRetryOption_Throws()
+    {
+        Exception exception = Assert.Throws<Exception>(
+            () => RetryArgumentsBuilder.ComputeIndicesToCleanup(["test.dll", "--keep", "value"]));
+
+        Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
+    }
+
+    [TestMethod]
     public void ComputeIndicesToCleanup_WithAllOptionalOptions_ReturnsEveryOptionAndValueIndex()
     {
         string[] executableArguments =
@@ -291,6 +300,101 @@ public sealed class RetryArgumentsBuilderTests
     }
 
     [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_ResponseFileSuffixContainingQuoteAtIndexZero_RemainsExpanded()
+    {
+        string[] executableArguments = ["safe", "\"quoted"];
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+
+        List<string> actual = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            executableArguments,
+            ["@original.rsp"],
+            [],
+            "retry-root-1",
+            "retry-root",
+            "pipe-name",
+            lastListOfFailedId: null,
+            attemptCount: 1);
+
+        Assert.AreEqual("safe", actual[0]);
+        Assert.AreEqual("\"quoted", actual[1]);
+        Assert.DoesNotContain(argument => argument.StartsWith("@retry-", StringComparison.Ordinal), actual);
+        fileSystem.Verify(
+            fs => fs.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_ResponseFileAtIndexZero_RegeneratesExpandedArguments()
+    {
+        string retryRoot = Path.Combine("results", "Retries", "run");
+        string responseFilePath = RetryArgumentsBuilder.GetArgumentsResponseFilePath(retryRoot, attemptCount: 1);
+        using var memoryStream = new MemoryStream();
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        fileStream.SetupGet(stream => stream.Stream).Returns(memoryStream);
+        fileStream.Setup(stream => stream.Dispose());
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem
+            .Setup(fs => fs.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            .Returns(fileStream.Object);
+
+        List<string> actual = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            ["--keep", "value"],
+            ["@original.rsp"],
+            [],
+            Path.Combine(retryRoot, "1"),
+            retryRoot,
+            "pipe-name",
+            lastListOfFailedId: null,
+            attemptCount: 1);
+
+        Assert.AreEqual($"@{responseFilePath}", actual[0]);
+        Assert.AreEqual(
+            $"\"--keep\"{Environment.NewLine}\"value\"{Environment.NewLine}",
+            Encoding.UTF8.GetString(memoryStream.ToArray()));
+    }
+
+    [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_RetryFilterInDirectResponseFilePrefix_IsRemoved()
+    {
+        string retryRoot = Path.Combine("results", "Retries", "run");
+        string responseFilePath = Path.Combine(retryRoot, "retry-arguments-2.rsp");
+        string[] executableArguments =
+        [
+            $"--{PlatformCommandLineProvider.FilterUidOptionKey}",
+            "old",
+            "--keep",
+            "value",
+        ];
+        using var memoryStream = new MemoryStream();
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        fileStream.SetupGet(stream => stream.Stream).Returns(memoryStream);
+        fileStream.Setup(stream => stream.Dispose());
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem
+            .Setup(fs => fs.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            .Returns(fileStream.Object);
+
+        List<string> actual = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            executableArguments,
+            [$"--{PlatformCommandLineProvider.FilterUidOptionKey}", "old", "@original.rsp"],
+            [],
+            Path.Combine(retryRoot, "2"),
+            retryRoot,
+            "pipe-name",
+            lastListOfFailedId: ["failed"],
+            attemptCount: 2);
+
+        Assert.AreEqual($"@{responseFilePath}", actual[0]);
+        Assert.DoesNotContain("old", actual);
+        Assert.AreEqual(
+            $"\"--keep\"{Environment.NewLine}\"value\"{Environment.NewLine}",
+            Encoding.UTF8.GetString(memoryStream.ToArray()));
+    }
+
+    [TestMethod]
     public async Task BuildAttemptArgumentsAsync_WithMultipleOriginalResponseFiles_WritesEntireExpandedSuffix()
     {
         string retryRoot = Path.Combine("results", "Retries", "run");
@@ -380,7 +484,7 @@ public sealed class RetryArgumentsBuilderTests
     {
         // ResponseFileHelper.SplitCommandLine strips '"' from tokens, so a UID containing a literal quote
         // cannot round-trip through a response file and must stay inline even when the payload is over length.
-        const string QuotedUid = "uid with a \"quoted\" value";
+        const string QuotedUid = "\"uid with a quoted value";
         string[] executableArguments = ["test.dll"];
         string[] failedIds = CreateOverLengthFailedIds(QuotedUid);
         AssertOnlyFailedIdsExceedLengthLimit(executableArguments, failedIds);
@@ -405,6 +509,62 @@ public sealed class RetryArgumentsBuilderTests
         fileSystem.Verify(
             fs => fs.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>()),
             Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BuildAttemptArgumentsAsync_CommandLineLengthBoundaryUsesResponseFileOnlyAboveLimit()
+    {
+        string[] executableArguments = ["test.dll"];
+        string currentTryResultFolder = "try";
+        string retryRoot = "retry";
+        string pipeName = "pipe";
+        int fixedLength =
+            executableArguments.Sum(argument => argument.Length + PerArgumentOverhead)
+            + ($"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}".Length + PerArgumentOverhead)
+            + currentTryResultFolder.Length + PerArgumentOverhead
+            + ($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}".Length + PerArgumentOverhead)
+            + pipeName.Length + PerArgumentOverhead
+            + 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1
+            + PerArgumentOverhead;
+        string boundaryUid = new('a', CommandLineLengthLimit - fixedLength);
+        var noFileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+
+        List<string> boundaryArguments = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            noFileSystem.Object,
+            executableArguments,
+            [],
+            currentTryResultFolder,
+            retryRoot,
+            pipeName,
+            [boundaryUid],
+            attemptCount: 1);
+
+        Assert.Contains($"--{PlatformCommandLineProvider.FilterUidOptionKey}", boundaryArguments);
+        Assert.Contains(boundaryUid, boundaryArguments);
+
+        string responseFilePath = RetryArgumentsBuilder.GetFilterUidsResponseFilePath(retryRoot, attemptCount: 2);
+        using var memoryStream = new MemoryStream();
+        var fileStream = new Mock<IFileStream>(MockBehavior.Strict);
+        fileStream.SetupGet(stream => stream.Stream).Returns(memoryStream);
+        fileStream.Setup(stream => stream.Dispose());
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem
+            .Setup(fs => fs.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
+            .Returns(fileStream.Object);
+        string overBoundaryUid = boundaryUid + "x";
+
+        List<string> overBoundaryArguments = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+            fileSystem.Object,
+            executableArguments,
+            [],
+            currentTryResultFolder,
+            retryRoot,
+            pipeName,
+            [overBoundaryUid],
+            attemptCount: 2);
+
+        Assert.Contains($"@{responseFilePath}", overBoundaryArguments);
+        Assert.DoesNotContain($"--{PlatformCommandLineProvider.FilterUidOptionKey}", overBoundaryArguments);
     }
 
     private static async Task AssertFirstAttemptKeepsOriginalFiltersAsync(string[]? lastListOfFailedId)

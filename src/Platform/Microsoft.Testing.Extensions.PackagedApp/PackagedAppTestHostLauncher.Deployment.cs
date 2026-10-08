@@ -121,7 +121,7 @@ internal sealed partial class PackagedAppTestHostLauncher
 
         string normalizedTargetPackagePath = targetPackagePath.Replace('\\', Path.DirectorySeparatorChar);
         string materializedTargetPath = Path.Combine(layoutDirectory, normalizedTargetPackagePath);
-        bool targetIsManifestExecutable = manifestInfo.Applications.Any(application =>
+        bool manifestDeclaresMaterializedTarget = manifestInfo.Applications.Any(application =>
             application.Executable is not null
             && string.Equals(
                 application.Executable.Replace('\\', Path.DirectorySeparatorChar),
@@ -133,11 +133,9 @@ internal sealed partial class PackagedAppTestHostLauncher
             StringComparison.OrdinalIgnoreCase);
         // Classic UWP recipes package the managed target below entrypoint but activate a generated
         // root bootstrap with the same file name so the framework package runtime is initialized.
-        AppxApplicationInfo application = (targetIsManifestExecutable
-            ? manifestInfo.ResolveApplication(layoutDirectory, materializedTargetPath)
-            : targetIsClassicUwpEntrypoint
-                ? manifestInfo.ResolveApplication(Path.GetFileName(materializedTargetPath))
-                : manifestInfo.ResolveApplication(layoutDirectory, materializedTargetPath))
+        AppxApplicationInfo application = (targetIsClassicUwpEntrypoint && !manifestDeclaresMaterializedTarget
+            ? manifestInfo.ResolveApplication(Path.GetFileName(materializedTargetPath))
+            : manifestInfo.ResolveApplication(layoutDirectory, materializedTargetPath))
             ?? throw new InvalidOperationException($"The AppX recipe layout '{layoutDirectory}' declares no application.");
         return application.Executable is { Length: > 0 } executable
             ? Path.Combine(layoutDirectory, executable.Replace('\\', Path.DirectorySeparatorChar))

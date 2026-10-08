@@ -4,7 +4,9 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+#if PACKAGED_APP_TESTING
 using Microsoft.Testing.Extensions;
+#endif
 
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
@@ -15,7 +17,9 @@ namespace UwpMtpApp;
 
 public sealed partial class App : Application
 {
+#if PACKAGED_APP_TESTING
     public App() => InitializeComponent();
+#endif
 
     [SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "The continuation must resume on the UWP dispatcher.")]
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
@@ -36,7 +40,12 @@ public sealed partial class App : Application
         Window.Current.Activate();
         try
         {
-            string[] testArguments = PackagedAppExtensions.GetTestApplicationArguments(args.Arguments);
+            string[] testArguments =
+#if PACKAGED_APP_TESTING
+                PackagedAppExtensions.GetTestApplicationArguments(args.Arguments);
+#else
+                [];
+#endif
             Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(testArguments);
         }
         finally

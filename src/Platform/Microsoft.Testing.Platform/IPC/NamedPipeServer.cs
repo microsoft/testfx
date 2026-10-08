@@ -138,7 +138,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             throw new ArgumentNullException(nameof(pipeNameDescription));
         }
 
-        PipeName = authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported
+        PipeName = RequiresExplicitSecurity(authorizedSecurityIdentities)
             ? new PipeNameDescription(NamedPipeServerSecurity.GetPipeNameForSandboxedApplication(pipeNameDescription.Name))
             : pipeNameDescription;
         _namedPipeServerStream = CreateServerStream(PipeName.Name, maxNumberOfServerInstances, authorizedSecurityIdentities);
@@ -149,6 +149,10 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         _cancellationToken = cancellationToken;
     }
 
+    [SupportedOSPlatformGuard("windows")]
+    private static bool RequiresExplicitSecurity(IReadOnlyList<string>? authorizedSecurityIdentities)
+        => authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported;
+
     /// <summary>
     /// Creates the underlying server stream, using the hardened Windows path only when a caller actually
     /// asked for extra authorization. Every other run — including every run on a non-Windows
@@ -156,14 +160,14 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     /// </summary>
     private static NamedPipeServerStream CreateServerStream(string name, int maxNumberOfServerInstances, IReadOnlyList<string>? authorizedSecurityIdentities)
     {
-        if (authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported)
+        if (RequiresExplicitSecurity(authorizedSecurityIdentities))
         {
             // Snapshot before validating. The sequence comes from an extension, so re-enumerating it is not
             // guaranteed to yield the same values; validating one enumeration and composing the descriptor
             // from another would let a value that was never checked reach the SDDL. Everything downstream
             // works off this copy, and NamedPipeServerSecurity.BuildSecurityDescriptor re-validates at the
             // point of concatenation as well.
-            string[] securityIdentities = [.. authorizedSecurityIdentities];
+            string[] securityIdentities = [.. authorizedSecurityIdentities!];
 
             foreach (string securityIdentity in securityIdentities)
             {
@@ -226,7 +230,9 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         // parameter for Task.Run creates a race where cancellation between acceptance and scheduling leaves a
         // canceled loop task, and disposal then mistakes that for a loop failure. InternalLoopAsync observes the
         // server lifetime token for its whole lifetime.
+        // Stryker disable once Boolean: continuation scheduling does not change the connection handshake.
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
+        // Stryker disable once Boolean: continuation scheduling does not change connection acceptance.
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
         lock (_lifecycleSync)
         {
@@ -240,6 +246,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
                 {
                     try
                     {
+                        // Stryker disable once Boolean: continuation scheduling does not change loop completion.
                         await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
                     }
                     catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
@@ -263,6 +270,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             WasConnected = true;
         }
 
+        // Stryker disable once Boolean: continuation scheduling does not change the connection diagnostic.
         await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
     }
 
@@ -277,14 +285,17 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         while (true)
         {
             // Read the next request; null means the client disconnected
+            // Stryker disable once Boolean: continuation scheduling does not change the received request.
             object? requestObject = await ReadNextMessageAsync(_namedPipeServerStream, cancellationToken).ConfigureAwait(false);
             if (requestObject is null)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the disconnect diagnostic.
                 await _logger.LogDebugAsync($"Client disconnected from pipe '{PipeName.Name}', exiting read loop").ConfigureAwait(false);
                 return;
             }
 
             // Dispatch the request and obtain the response
+            // Stryker disable once Boolean: continuation scheduling does not change the callback response.
             IResponse response = await _callback((IRequest)requestObject).ConfigureAwait(false);
 
             // Serialize and send the response
@@ -292,6 +303,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             bool transportClosed = false;
             try
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the response bytes.
                 await WriteMessageAsync(_namedPipeServerStream, responseNamedPipeSerializer, response, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException or ObjectDisposedException)
@@ -311,17 +323,19 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     private async Task TryLogDebugAsync(string message)
     {
-        var loggingTask = Task.Run(async () =>
-        {
-            try
+        Task loggingTask = _task.Run(
+            async () =>
             {
-                await _logger.LogDebugAsync(message).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                // A graceful disconnect must remain graceful even when a logging provider fails.
-            }
-        });
+                try
+                {
+                    await _logger.LogDebugAsync(message).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // A graceful disconnect must remain graceful even when a logging provider fails.
+                }
+            },
+            CancellationToken.None);
 
         await Task.WhenAny(loggingTask, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false);
     }
@@ -460,8 +474,10 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         bool wasConnected;
         lock (_lifecycleSync)
         {
+            // Stryker disable once Block: every owned resource below has idempotent disposal.
             if (_disposed)
             {
+                // Stryker disable once Statement: every owned resource below also has idempotent disposal.
                 return;
             }
 

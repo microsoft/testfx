@@ -14,7 +14,9 @@ namespace Microsoft.Testing.Extensions;
 /// the MSTest adapter's native Microsoft.Testing.Platform integration so both surface an identical
 /// <c>--test-parameter</c> option.
 /// </summary>
-[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into projects that are allowed to use MTP APIs")]
+#if MSTEST_TESTADAPTER
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into the MSTest adapter, which is allowed to use MTP APIs")]
+#endif
 internal abstract class TestRunParametersCommandLineOptionsProviderBase : CommandLineOptionsProviderBase
 {
     public const string TestRunParameterOptionName = "test-parameter";

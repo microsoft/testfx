@@ -65,9 +65,10 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
             results.Length,
             results.Select(result => result.TestCase.Id).Distinct().Count(),
             "Every executed parameterized test case should retain a unique adapter TestCase.Id.");
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             allIdentityCases.Select(testCase => testCase.Id).ToArray(),
             results.Select(result => result.TestCase.Id).ToArray(),
+            SequenceOrder.InAnyOrder,
             "Execution should preserve every TestCase.Id produced during discovery.");
     }
 
@@ -136,7 +137,7 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
         ImmutableArray<TestCase> clsTests = [.. DiscoverTests().Where(testCase => testCase.FullyQualifiedName.Contains("ClsTests.", StringComparison.Ordinal))];
 
         Assert.HasCount(5, clsTests);
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "TestMethod",
@@ -145,7 +146,8 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
                 "StringDataRow2 (\"some string\")",
                 "StringDataRow2 (\"some other string\")",
             },
-            clsTests.Select(testCase => testCase.DisplayName).ToArray());
+            clsTests.Select(testCase => testCase.DisplayName).ToArray(),
+            SequenceOrder.InAnyOrder);
 
         TestHostResult result = await AssetFixture.GetTestHost().ExecuteAsync(
             "--filter FullyQualifiedName~ClsTests --output Detailed",
@@ -213,7 +215,7 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
             : (testCase.GetPropertyValue(categoryProperty) as string[] ?? []);
 
         categories = [.. categories.OrderBy(category => category, StringComparer.Ordinal)];
-        CollectionAssert.AreEqual(expectedCategories, categories, $"Unexpected categories for '{displayName}'.");
+        Assert.AreSequenceEqual(expectedCategories, categories, $"Unexpected categories for '{displayName}'.");
     }
 
     public sealed class TestAssetFixture : TestAssetFixtureBase

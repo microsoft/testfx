@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <remarks>
 /// To use this type from a custom <see cref="ITestDataSource"/>, wrap each instance in a single-element <see cref="object"/> array,
 /// for example <c>new object[] { new TestDataRow&lt;int&gt;(42) { DisplayName = "my row" } }</c>. MSTest unwraps the
-/// <see cref="Value"/> to obtain the test method arguments and applies the <see cref="DisplayName"/>,
+/// <see cref="Value"/> to obtain the test method arguments and applies the <see cref="DisplayName"/>, <see cref="ArgumentsDisplayName"/>,
 /// <see cref="IgnoreMessage"/>, and <see cref="TestCategories"/> metadata to the generated test case.
 /// </remarks>
 /// <typeparam name="T">The type parameter corresponding to the type of the value held by this type. It can be a tuple for test methods with more than one parameter.</typeparam>
@@ -43,6 +43,19 @@ public sealed class TestDataRow<T> : ITestDataRow
     /// </summary>
     [DataMember]
     public string? DisplayName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the text displayed in place of the test arguments, while retaining the test method display name.
+    /// </summary>
+    /// <remarks>
+    /// A null, empty, or whitespace-only value leaves the data source's display name customization unchanged.
+    /// Otherwise, the value is displayed verbatim using the default data-driven test name format and takes
+    /// precedence over the data source's display name customization.
+    /// Any non-null <see cref="DisplayName"/> takes precedence over this property.
+    /// Requires an MSTest.TestAdapter version that supports this property.
+    /// </remarks>
+    [DataMember]
+    public string? ArgumentsDisplayName { get; set; }
 
     /// <summary>
     /// Gets or sets the test categories for the test case.
