@@ -62,6 +62,106 @@ namespace MSTestSdkTest
     public TestContext TestContext { get; set; }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DotnetRun_WithCoverageSettings_PreservesInvocationWorkingDirectory(bool absoluteSettingsPath)
+    {
+        const string directoryTestSource = """
+
+#file DirectoryTests.cs
+using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestSdkTest
+{
+    public static class StartupDirectory
+    {
+        // MSTest switches directories for test execution; capture the process startup directory first.
+        [ModuleInitializer]
+        public static void CaptureChildWorkingDirectory()
+        {
+            if (Array.IndexOf(Environment.GetCommandLineArgs(), "--internal-testhostcontroller-pid") >= 0)
+            {
+                File.WriteAllText(Environment.GetEnvironmentVariable("WORKING_DIRECTORY_MARKER")!, Environment.CurrentDirectory);
+            }
+        }
+    }
+
+    [TestClass]
+    public class DirectoryTests
+    {
+        [TestMethod]
+        public void ControllerChildWorkingDirectory()
+        {
+            Assert.Contains("--internal-testhostcontroller-pid", Environment.GetCommandLineArgs());
+            Assert.IsNull(Environment.GetEnvironmentVariable("DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY"));
+        }
+    }
+}
+
+#file test.runsettings
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <IncludeTestAssembly>True</IncludeTestAssembly>
+          <CodeCoverage>
+            <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+            <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
+""";
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            (SingleTestSourceCode + directoryTestSource)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ExtraProperties$", "<EnableMicrosoftTestingExtensionsCodeCoverage>true</EnableMicrosoftTestingExtensionsCodeCoverage>"));
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string settingsPath = absoluteSettingsPath ? Path.Combine(testAsset.TargetAssetPath, "test.runsettings") : "test.runsettings";
+        string markerPath = Path.Combine(testAsset.TargetAssetPath, "working-directory.txt");
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
+        DotnetMuxerResult runResult = await DotnetCli.RunAsync(
+            $"run --no-build -c Release -f {TargetFrameworks.NetCurrent} -- --coverage --coverage-settings \"{settingsPath}\" --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --results-directory \"{resultsDirectory}\" --no-ansi --progress off",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new()
+            {
+                ["DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY"] = null,
+                ["WORKING_DIRECTORY_MARKER"] = markerPath,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        runResult.AssertExitCodeIs(0);
+        const string expectedSummary = """
+              total: 2
+              failed: 0
+              succeeded: 2
+              skipped: 0
+            """;
+        Assert.Contains(expectedSummary.ReplaceLineEndings(), runResult.StandardOutput.ReplaceLineEndings(), runResult.ToString());
+        Assert.AreEqual(testAsset.TargetAssetPath, await File.ReadAllTextAsync(markerPath, TestContext.CancellationToken));
+
+        var coverage = System.Xml.Linq.XDocument.Load(Path.Combine(resultsDirectory, "coverage.cobertura.xml"));
+        Assert.AreEqual("coverage", coverage.Root?.Name.LocalName);
+        Assert.IsTrue(coverage.Descendants("class").Any(element =>
+            element.Attribute("name")?.Value == "MSTestSdkTest.DirectoryTests"
+            && element.Descendants("line").Any(line => int.Parse(line.Attribute("hits")!.Value, CultureInfo.InvariantCulture) > 0)));
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
