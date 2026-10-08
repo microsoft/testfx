@@ -128,6 +128,9 @@ registration. In the legacy VSTest-mode `dotnet test` driver, its own `--filter`
 is not forwarded to this sidecar; use `InvokeTestingPlatform` or native MTP mode.
 SDK 10 summarizes host errors without displaying the detailed filter parse message;
 use `InvokeTestingPlatform` with `--diagnostic` to inspect that message.
+
+### Launch profiles and informational output
+
 Project launch-profile `commandLineArgs` are used when no explicit application
 arguments are supplied; `--no-launch-profile` and explicit arguments keep the
 SDK's normal precedence. The staged controller is incremental and removed by
