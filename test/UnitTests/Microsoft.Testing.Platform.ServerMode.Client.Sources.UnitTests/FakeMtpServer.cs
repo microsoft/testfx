@@ -233,10 +233,10 @@ internal sealed class FakeMtpServer : IDisposable
             new TestNodeStateChangedEventArgs(runId, null)));
 
     /// <summary>Pushes a <c>client/log</c> notification at <see cref="LogLevel.Information"/>.</summary>
-    public Task SendLogAsync(string message)
+    public Task SendLogAsync(string message, string method = JsonRpcMethods.ClientLog, LogLevel level = LogLevel.Information)
         => WriteAsync(new NotificationMessage(
-            JsonRpcMethods.ClientLog,
-            new LogEventArgs(new ServerLogMessage(LogLevel.Information, message))));
+            method,
+            new LogEventArgs(new ServerLogMessage(level, message))));
 
     /// <summary>Pushes a <c>telemetry/update</c> notification.</summary>
     public Task SendTelemetryAsync(string eventName, IDictionary<string, object> metrics)

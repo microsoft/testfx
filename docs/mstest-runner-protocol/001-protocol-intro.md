@@ -46,7 +46,7 @@ Here's the current list of APIs that supported by the client.
   - [testing/testUpdates/tests](#discovery-of-tests) - Notifies client about test updates (test cases and test results)
   - [testing/testUpdates/attachments](#execution-of-tests) - Notifies client about additional attachments (trx/coverage)
 - Client notifications updates
-  - [client/log](#logging-of-messages) - Notifies a client to logs a message to the output window
+  - [client/log and client/showMessage](#logging-of-messages) - Notifies a client of output-device messages
 - Miscellaneous requests
   - [telemetry/update](#telemetry) - Sends telemetry data to the client
   - [exit](#exit) - Notifies the server to stop the server process
@@ -251,6 +251,10 @@ interface InitializeParams {
         // As such, we put all of them under a single testing namespace.
         // This reduces collisions with other LSP capabilities.
         testing: {
+            // Opt in to client/showMessage notifications instead of client/log.
+            // The server must acknowledge true before the client relies on this behavior.
+            showMessage?: boolean | null,
+
             // Reserved for future debugger callbacks. Protocol 1.0 accepts this field
             // for compatibility but does not send debugger requests.
             debuggerProvider: boolean,
@@ -290,6 +294,10 @@ interface InitializeResponse {
 
     capabilities: {
         testing: {
+            // Acknowledges client/showMessage routing, not exclusive RPC rendering.
+            // Missing/null is not an acknowledgement; false means legacy routing remains.
+            showMessage?: boolean | null,
+
             // If true, the server supports test discovery.
             supportsDiscovery: boolean;
 
@@ -322,6 +330,9 @@ interface InitializeResponse {
     }
 }
 ```
+
+For `capabilities.testing.showMessage` semantics, see
+[Negotiated output](#negotiated-clientshowmessage-output) under the output notifications.
 
 #### Versioning capabilities
 
@@ -841,7 +852,7 @@ Messages are logged to the output window.
 
 Notification:
 
-- method: `client/log`
+- method: `client/log` (legacy) or `client/showMessage` (negotiated)
 - params: `LogMessageParams` defined as follows:
 
 ```typescript
@@ -859,3 +870,36 @@ type TestingPlatformLogLevel =
     | 'Critical'
     | 'None';
 ```
+
+#### Negotiated `client/showMessage` output
+
+Both methods carry the identical `{level, message}` payload above. This is an MTP protocol, not LSP's
+`window/showMessage` or `window/logMessage` wire format. It does not request a popup.
+To select `client/showMessage`, request
+`capabilities.testing.showMessage: true`.
+Only the same nested field set to `true` in the response acknowledges that the
+routing was applied. Missing, null, false, or an ignored top-level field does not.
+Without a true acknowledgment, retain existing log handling.
+Absent, null, or false requests MUST use legacy `client/log`; only requested and
+acknowledged true selects `client/showMessage`. The server MUST send the
+acknowledgement before the first new-method notification and MUST NOT dual-send.
+Clients accept both methods through the same output handler so older servers
+remain supported. An absent or false acknowledgement MUST preserve legacy log handling.
+
+RPC forwarding starts at discovery/run for every client, using the existing
+startup buffer. Subscribe to output notifications before discovery/run.
+The source client exposes negotiated capabilities after awaiting `InitializeAsync`;
+both notification methods use its existing `LogReceived` event.
+Each connection negotiates independently.
+
+The capability changes only the notification method. Local rendering, message
+levels, diagnostic mirrors, connection notices, and progress behavior remain unchanged.
+Messages can therefore appear both locally and through RPC; clients presenting
+both routes may show duplicates. Both methods remain plain text: colors and
+in-place progress are not preserved. Normal console execution and the native
+`dotnet test` pipe are unchanged.
+Passive attachment nodes do not provide output-device forwarding and explicitly
+decline this capability.
+
+Always drain stdout and stderr independently; use `--no-banner`
+to suppress the startup banner.

@@ -403,6 +403,10 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             }
         }
 
+        // Let the explicitly selected .NET 10 muxer resolve its own SDK and MSBuild installation.
+        // The outer repository test process exports these paths for the repository's .NET SDK.
+        environment.Remove("MSBuildSDKsPath");
+        environment.Remove("MSBuildExtensionsPath");
         environment["DOTNET_ROOT"] = Path.GetDirectoryName(dotnet);
         environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
         environment["MSBUILDUSESERVER"] = "0";

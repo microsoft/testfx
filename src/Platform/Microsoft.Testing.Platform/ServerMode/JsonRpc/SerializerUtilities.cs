@@ -66,6 +66,14 @@ internal static partial class SerializerUtilities
     private static object? GetOptionalPropertyFromJson(IDictionary<string, object?> properties, string propertyName)
         => properties.TryGetValue(propertyName, out object? propObj) ? propObj : null;
 
+    private static bool? GetOptionalBoolean(IDictionary<string, object?> properties, string propertyName)
+        => GetOptionalPropertyFromJson(properties, propertyName) switch
+        {
+            null => null,
+            bool value => value,
+            _ => throw new MessageFormatException($"'{propertyName}' field has wrong type (expected {nameof(Boolean)})"),
+        };
+
     private static T GetRequiredPropertyFromJson<T>(IDictionary<string, object?> properties, string propertyName)
     {
         object? value = GetOptionalPropertyFromJson(properties, propertyName)
