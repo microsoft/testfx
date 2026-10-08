@@ -160,15 +160,14 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             ? string.Empty
             : OperatingSystem.IsWindows() ? "PackagedConsumer.exe" : "PackagedConsumer";
         Assert.AreEqual($"Command={(selectsController ? "mstest-appmodel-controller.exe" : expectedCommand)}", lines[0]);
+        Assert.AreEqual("Arguments=", lines[1]);
         if (selectsController)
         {
-            Assert.AreEqual(
-                $"Arguments=--internal-packagedapp-controller-v1 \"{executable}\" \"msbuild;packagedapp;trx;mstest\"",
-                lines[1].TrimEnd());
-        }
-        else
-        {
-            Assert.AreEqual("Arguments=", lines[1]);
+            string bootstrapFile = (await File.ReadAllTextAsync(
+                Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+            Assert.AreSequenceEqual(
+                ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx;mstest"],
+                await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
         }
     }
 
@@ -210,9 +209,14 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             new[]
             {
                 "Command=mstest-appmodel-controller.exe",
-                $"Arguments=--internal-packagedapp-controller-v1 \"{Path.Combine(asset.TargetAssetPath, "staged", "host.exe")}\" \"msbuild;packagedapp;trx;mstest\"  --results-directory \"a b\" --report-trx",
+                "Arguments= --results-directory \"a b\" --report-trx",
             },
             await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        Assert.AreSequenceEqual(
+            ["--internal-packagedapp-controller-v1", Path.Combine(asset.TargetAssetPath, "staged", "host.exe"), "msbuild;packagedapp;trx;mstest"],
+            await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -226,6 +230,31 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             cancellationToken: TestContext.CancellationToken);
         Assert.AreNotEqual(0, result.ExitCode);
         result.AssertOutputContains("Enable UseAppHost or set TestingPlatformPackagedAppTargetPath");
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned()
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
+        DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, first.ExitCode, first.ToString());
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
+        DateTime bootstrapTimestamp = File.GetLastWriteTimeUtc(bootstrapFile);
+        DateTime controllerTimestamp = File.GetLastWriteTimeUtc(controller);
+        DotnetMuxerResult second = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, second.ExitCode, second.ToString());
+        Assert.AreEqual(bootstrapTimestamp, File.GetLastWriteTimeUtc(bootstrapFile));
+        Assert.AreEqual(controllerTimestamp, File.GetLastWriteTimeUtc(controller));
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        Assert.IsFalse(File.Exists(bootstrapFile));
+        Assert.IsFalse(File.Exists(controller));
     }
 
     [TestMethod]
@@ -503,6 +532,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                                   Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt"
                                   Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\bootstrap-file-path.txt" Overwrite="true"
+                                  Lines="$(_TestingPlatformPackagedAppBootstrapFile)" />
               </Target>
             </Project>
             #file Tests.cs

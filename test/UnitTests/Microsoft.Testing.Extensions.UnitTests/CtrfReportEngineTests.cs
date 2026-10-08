@@ -70,6 +70,7 @@ public class CtrfReportEngineTests
         Assert.IsGreaterThan(0, root.GetProperty("reportId").GetString()!.Length);
         Assert.IsGreaterThan(0, root.GetProperty("timestamp").GetString()!.Length);
         Assert.IsTrue(root.GetProperty("generatedBy").GetString()!.StartsWith("Microsoft.Testing.Extensions.CtrfReport", StringComparison.Ordinal));
+        Assert.AreEqual("execution", root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString());
 
         JsonElement results = root.GetProperty("results");
 
@@ -459,6 +460,8 @@ public class CtrfReportEngineTests
     {
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns("coordinated-retry");
         CapturedTestResult[] tests =
         [
             Captured("dup", "Row A", "failed", errorMessage: "first failure"),
@@ -492,6 +495,34 @@ public class CtrfReportEngineTests
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retries", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("retryAttempts", out _)));
         Assert.IsTrue(testArray.EnumerateArray().All(t => !t.TryGetProperty("flaky", out _)));
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RetryMerge_PreservesAmbiguousDuplicateUids()
+    {
+        async Task<string> GenerateAsync(CapturedTestResult[] tests)
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns("retry-workflow");
+            await engine.GenerateReportAsync(tests);
+            return memoryStream.GetUtf8Content();
+        }
+
+        string firstReport = await GenerateAsync(
+            [Captured("same", "First", "failed"), Captured("same", "Second", "passed")]);
+        string retryReport = await GenerateAsync([Captured("same", "First", "passed")]);
+        using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([firstReport, retryReport], CtrfMergeMode.CollapseRetryAttempts));
+        JsonElement results = merged.RootElement.GetProperty("results");
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+
+        Assert.HasCount(3, tests);
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(["First", "Second", "First"], tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.AreSequenceEqual(["failed", "passed", "passed"], tests.Select(test => test.GetProperty("status").GetString()!).ToArray());
+        Assert.HasCount(3, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
+        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
     }
 
     [TestMethod]
@@ -1269,21 +1300,21 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
+    [DataRow(null)]
+    [DataRow("")]
+    public async Task GenerateReportAsync_RunId_IsOmitted_WhenOnlyTheModuleExecutionIdIsKnown(string? logicalRunId)
     {
-        // The execution id identifies this test application's own process tree. It is per root test application,
-        // not per 'dotnet test' invocation, so it correlates a module with its child processes — not with the
-        // sibling modules of a multi-project run, which legitimately report different logical runs.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns(logicalRunId);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
-        Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+        Assert.IsFalse(document.RootElement.TryGetProperty("runId", out _));
         Assert.AreNotEqual("execution-7", document.RootElement.GetProperty("reportId").GetString());
+        Assert.AreEqual("execution-7", _environmentMock.Object.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"));
     }
 
     [TestMethod]
@@ -1301,6 +1332,77 @@ public class CtrfReportEngineTests
         string runId = document.RootElement.GetProperty("runId").GetString()!;
         Assert.IsTrue(Guid.TryParse(runId, out _), $"Expected a generated id, got '{runId}'.");
         Assert.AreNotEqual(document.RootElement.GetProperty("reportId").GetString(), runId);
+    }
+
+    [TestMethod]
+    [DataRow(null, true)]
+    [DataRow("", true)]
+    [DataRow("retry-workflow", true)]
+    [DataRow("inherited-trx-run", false)]
+    public async Task GenerateReportAsync_ExecutionIdentity_UsesOnlyCoordinatedRetryScope(string? retryScope, bool isRetryChild)
+    {
+        async Task<string> GenerateAsync(string status)
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("shared-ci-run");
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(isRetryChild);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns(retryScope);
+            await engine.GenerateReportAsync([Captured("case-1", "First", status), Captured("case-2", "Second", "passed")]);
+            return memoryStream.GetUtf8Content();
+        }
+
+        string firstReport = await GenerateAsync("failed");
+        string secondReport = await GenerateAsync("passed");
+        using var first = JsonDocument.Parse(firstReport);
+        using var second = JsonDocument.Parse(secondReport);
+        JsonElement firstCase = first.RootElement.GetProperty("results").GetProperty("tests")[0];
+        JsonElement secondCase = second.RootElement.GetProperty("results").GetProperty("tests")[0];
+        string firstExecutionId = firstCase.GetProperty("executionId").GetString()!;
+        string secondExecutionId = secondCase.GetProperty("executionId").GetString()!;
+        string firstAttemptId = firstCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!;
+        string secondAttemptId = secondCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!;
+
+        Assert.IsTrue(Guid.TryParse(firstExecutionId, out _));
+        Assert.IsTrue(Guid.TryParse(firstAttemptId, out _));
+        Assert.IsTrue(Guid.TryParse(secondAttemptId, out _));
+        Assert.AreNotEqual(firstAttemptId, secondAttemptId);
+        Assert.AreNotEqual(firstExecutionId, firstAttemptId);
+        Assert.IsFalse(firstCase.TryGetProperty("attemptId", out _), "CTRF 0.1.0 forbids top-level attemptId.");
+        Assert.AreNotEqual(first.RootElement.GetProperty("reportId").GetString(), second.RootElement.GetProperty("reportId").GetString());
+        Assert.AreNotEqual(firstExecutionId, first.RootElement.GetProperty("results").GetProperty("tests")[1].GetProperty("executionId").GetString());
+        if (!isRetryChild || string.IsNullOrEmpty(retryScope))
+        {
+            Assert.AreNotEqual(firstExecutionId, secondExecutionId, "A shared CI runId does not establish a retry relationship.");
+        }
+        else
+        {
+            Assert.AreEqual(firstExecutionId, secondExecutionId);
+            using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([firstReport, secondReport], CtrfMergeMode.CollapseRetryAttempts));
+            JsonElement mergedCase = merged.RootElement.GetProperty("results").GetProperty("tests")[0];
+            Assert.AreEqual(firstExecutionId, mergedCase.GetProperty("executionId").GetString());
+            Assert.AreEqual(secondAttemptId, mergedCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString());
+            Assert.AreEqual(firstAttemptId, mergedCase.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString());
+        }
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_ExecutionIdentity_DistinguishesRetryWorkflowsWithinOneRun()
+    {
+        var executionIds = new List<string>();
+        foreach (string scope in new[] { "module-workflow-1", "module-workflow-2" })
+        {
+            using var memoryStream = new MemoryFileStream();
+            CtrfReportEngine engine = CreateEngine(memoryStream);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("shared-ci-run");
+            _ = _commandLineOptionsMock.Setup(x => x.IsOptionSet("internal-retry-pipename")).Returns(true);
+            _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID")).Returns(scope);
+            await engine.GenerateReportAsync([Captured("case-1", "Same case UID", "passed")]);
+            using var report = JsonDocument.Parse(memoryStream.GetUtf8Content());
+            executionIds.Add(report.RootElement.GetProperty("results").GetProperty("tests")[0].GetProperty("executionId").GetString()!);
+        }
+
+        Assert.HasCount(2, executionIds.Distinct(StringComparer.Ordinal));
     }
 
     private CtrfReportEngine CreateEngine(MemoryFileStream stream, bool isIncomplete = false)

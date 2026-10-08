@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 namespace MSTest.Acceptance.IntegrationTests;
@@ -333,6 +335,155 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             });
     }
 
+    [TestMethod]
+    [DataRow(false, false, false)]
+    [DataRow(true, false, false)]
+    [DataRow(true, true, false)]
+    [DataRow(true, false, true)]
+    public async Task DotnetRun_PreservesLaunchProfileArgumentPrecedence(bool noBuild, bool explicitArguments, bool noLaunchProfile)
+    {
+        string dotnet = GetDotnet10();
+        string identity = $"MSTest.Native.{Guid.NewGuid():N}";
+        string executionId = Guid.NewGuid().ToString("N");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
+        Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
+        string profileResults = Path.Combine(asset.TargetAssetPath, "profile results");
+        string explicitResults = Path.Combine(asset.TargetAssetPath, "explicit results");
+        string profiles = Path.Combine(asset.TargetAssetPath, "Properties");
+        Directory.CreateDirectory(profiles);
+        await File.WriteAllTextAsync(
+            Path.Combine(profiles, "launchSettings.json"),
+            JsonSerializer.Serialize(new
+            {
+                profiles = new
+                {
+                    Threshold = new
+                    {
+                        commandName = "Project",
+                        commandLineArgs = $"--minimum-expected-tests 3 --report-trx --report-trx-filename \"profile report.trx\" --results-directory \"{profileResults}\"",
+                    },
+                },
+            }),
+            TestContext.CancellationToken);
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                if (noBuild)
+                {
+                    BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                    Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                }
+
+                string tail = explicitArguments
+                    ? $"-- --minimum-expected-tests 1 --report-trx --report-trx-filename \"explicit report.trx\" --results-directory \"{explicitResults}\""
+                    : string.Empty;
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet,
+                    $"run --project NativeSidecar.csproj -c Release {(noBuild ? "--no-build" : "-bl:run-build.binlog")} " +
+                    $"{(noLaunchProfile ? "--no-launch-profile" : "--launch-profile Threshold")} {tail}",
+                    asset,
+                    environment);
+                Assert.AreEqual(!explicitArguments && !noLaunchProfile ? 9 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
+                Assert.AreEqual(!explicitArguments && !noLaunchProfile, File.Exists(Path.Combine(profileResults, "profile_report.trx")));
+                Assert.AreEqual(explicitArguments, File.Exists(Path.Combine(explicitResults, "explicit_report.trx")));
+                if (explicitArguments || !noLaunchProfile)
+                {
+                    string report = explicitArguments
+                        ? Path.Combine(explicitResults, "explicit_report.trx")
+                        : Path.Combine(profileResults, "profile_report.trx");
+                    XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                    Assert.HasCount(2, XDocument.Load(report).Descendants(ns + "UnitTestResult"));
+                }
+            });
+    }
+
+    [TestMethod]
+    [DataRow("--help")]
+    [DataRow("--list-tests")]
+    [DataRow("--list-tests json")]
+    [DataRow("@informational.rsp")]
+    public async Task DotnetRun_HelpAndDiscoveryDescribeActivatedHost(string option)
+    {
+        string dotnet = GetDotnet10();
+        string identity = $"MSTest.Native.{Guid.NewGuid():N}";
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "informational.rsp"), "--list-tests", TestContext.CancellationToken);
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet, $"run --project NativeSidecar.csproj -c Release --no-build --no-launch-profile -- {option}", asset, environment);
+                Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
+                Assert.DoesNotContain("mstest-appmodel-controller.exe", result.StandardOutput);
+                if (option == "--help")
+                {
+                    // The process helper removes empty stdout lines; the unit test checks their formatting.
+                    Assert.Contains(
+                        """
+                        Usage NativeSidecar.exe [option providers] [extension option providers]
+                        Execute a .NET Test Application.
+                        """.ReplaceLineEndings(),
+                        result.StandardOutput.ReplaceLineEndings());
+                    Assert.Contains("--filter", result.StandardOutput);
+                }
+                else if (option == "--list-tests json")
+                {
+                    using var document = JsonDocument.Parse(result.StandardOutput);
+                    Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
+                    Assert.AreSequenceEqual(
+                        ["Identity", "Outcome"],
+                        document.RootElement.GetProperty("tests").EnumerateArray()
+                            .Select(test => test.GetProperty("displayName").GetString()));
+                }
+                else
+                {
+                    Assert.Contains(
+                        """
+                          Identity
+                          Outcome
+                        Discovered 2 test(s) in assembly
+                        """.ReplaceLineEndings(),
+                        result.StandardOutput.ReplaceLineEndings());
+                }
+            });
+    }
+
+    [TestMethod]
+    [DataRow("--help")]
+    [DataRow("--list-tests")]
+    public async Task DotnetRun_InformationalZeroExitWithoutHandshakeIsFailure(string option)
+    {
+        string dotnet = GetDotnet10();
+        string identity = $"MSTest.Native.{Guid.NewGuid():N}";
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "EarlyExit");
+        Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet, $"run --project NativeSidecar.csproj -c Release --no-build --no-launch-profile -- {option}", asset, environment);
+                Assert.AreEqual(4, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.Contains("No complete informational result was received.", result.ErrorOutput);
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
+            });
+    }
+
     private Task<BoundedCommandLineResult> RunAsync(
         string dotnet, string arguments, TestAsset asset, IDictionary<string, string?> environment)
         => RunWindowsApplicationModelCommandAsync(
@@ -390,6 +541,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <NoWarn>$(NoWarn);NU1507</NoWarn>
+                {{(outcome == "EarlyExit" ? "<GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>" : string.Empty)}}
                 <TestingPlatformCommandLineArguments>{{System.Security.SecurityElement.Escape(commandLineArguments)}}</TestingPlatformCommandLineArguments>
                 <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
               </PropertyGroup>
@@ -438,6 +590,16 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                     Assert.IsFalse(fail, "expected host failure");
                 }
             }
+            #file Main.cs
+            {{(outcome == "EarlyExit" ? """
+            public static class Program
+            {
+                public static int Main(string[] args)
+                {
+                    return 0;
+                }
+            }
+            """ : string.Empty)}}
             #file AppxManifest.xml
             <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
                      xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"

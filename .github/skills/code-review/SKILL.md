@@ -22,7 +22,8 @@ tests to understand the changed behavior before commenting.
    - `src/Analyzers`: Roslyn analyzers and code fixes.
    - `src/Package/MSTest.Sdk`, `eng`, and MSBuild files: build and packaging.
 2. Trace each behavior change through its callers, tests, target frameworks,
-   shipped packages, and linked source files.
+   shipped packages, and linked source files. Apply the context checks below
+   before treating a checklist match as a finding.
 3. Compare the PR title and description with the actual diff. Verify that the
    stated motivation, behavior change, compatibility impact, and validation
    match what the code does.
@@ -30,6 +31,37 @@ tests to understand the changed behavior before commenting.
 5. Report only actionable findings caused by the PR. Prefer a small number of
    high-confidence findings over broad summaries or praise.
 6. If the change is correct, do not invent a finding merely to leave feedback.
+
+## Context checks before a finding
+
+Keep comprehensive analysis separate from publication. Check every applicable
+dimension, but treat checklist matches and test grades as investigation inputs,
+not automatic instructions to comment.
+
+- Read the whole type, including other partial declarations, inherited
+  behavior, helpers, and callers. Before calling a member or P/Invoke unused,
+  search references across that context and every linked-source consumer;
+  absence of a call in the changed file is not evidence of dead code.
+- Compare merge-base and HEAD behavior, not just added lines. A moved or
+  extracted block that preserves behavior does not introduce its old defects.
+  Report it only if the move changes a concrete contract, caller, ordering,
+  or compilation context.
+- Derive supported TFMs, conditional compilation, polyfills, and language
+  versions from the owning projects and linked consumers. A proposed edit
+  must work on the oldest relevant target, not just the reviewer's runtime.
+- Verify asserted BCL semantics against official documentation, versioned
+  implementation source, or a focused repro on the relevant target. Do not
+  infer a concrete type's disposal, cancellation, buffering, or thread-safety
+  behavior from a base type or a familiar API name. If verification is
+  unavailable, record the uncertainty rather than asserting a defect.
+- For races and lifetime defects, trace ownership, all reads/writes, and
+  happens-before relationships (locks, task completion, channels, publication,
+  and serial lifecycle phases). A mutable field, ordinary collection, or
+  missing `using` is not itself proof of a race or leak.
+- Preserve trusted internal invariants unless a concrete external trigger or
+  failing test disproves them. Put validation at the actual trust boundary;
+  do not suggest silent recovery just because an invariant could hypothetically
+  be violated.
 
 ## Review publication
 
@@ -48,9 +80,27 @@ tests to understand the changed behavior before commenting.
 - Do not duplicate a finding already covered by another live review thread.
   Reference the existing thread from the review body when it remains the only
   actionable item.
+- Group findings by root cause, observable consequence, and correction, not by
+  file, locale, test, or review dimension. Use one representative changed-line
+  anchor and list other affected locations compactly. Separate findings only
+  when they require different corrections or have materially different impact.
+- Before publishing, read existing review threads and replies, including
+  human and other-bot findings. Match the root cause even if the line moved,
+  the wording differs, or no workflow marker exists. A new HEAD or outdated
+  anchor alone does not justify repeating an unresolved, still-applicable
+  finding. Reopen a resolved or declined concern only with new evidence that
+  addresses the earlier disposition.
+- Keep per-test grades and rubric-only improvements in the combined review
+  summary. A below-A grade is not a defect or an inline-publication threshold;
+  do not add assertions, churn, or unsupported modernizations just to raise it.
 - For automatic specialist checks that are fully clean, prefer `noop` when the
   main review already covers that dimension. Explicit slash-command reviews may
   still publish an informational `COMMENT` review.
+
+These instructions govern reviewers that load this repository guidance.
+Separate code-quality-service findings may not consume it; identify the
+producer before attributing its output to this skill or claiming a policy
+change will affect that service.
 
 ## PR scope and review depth
 
@@ -260,8 +310,35 @@ Every finding must:
   overall review summary and identify the specific unsupported claim,
   unexplained change group, or high-risk boundary.
 - Recommend the smallest safe correction.
+- Establish that the correction improves observable correctness, reliability,
+  diagnostics, compatibility, or maintainability in this context, rather than
+  merely satisfying a rubric or replacing valid code with a preferred idiom.
+- Distinguish a verified defect from a material evidence gap. Put unresolved
+  validation questions in the summary with the exact missing evidence; do not
+  present them as proven bugs or apply-ready inline fixes.
 - Use severity proportional to impact; do not elevate maintainability or style
   suggestions into correctness findings.
 
 Do not submit an approval on behalf of repository maintainers. A clean review
 may recommend approval in its summary while remaining a comment review.
+
+## Calibration regression examples
+
+Use these bounded cases when changing reviewer guidance. Evaluate the expected
+publication decision as well as coverage; these are examples, not findings to
+post on their originating PRs.
+
+| Context | Expected decision |
+|---------|-------------------|
+| A P/Invoke in one partial has callers in another partial or linked consumer. | No unused-member finding; retain the reference trace. |
+| A new private P/Invoke has no references in the whole type or any consumer, and removing it safely eliminates a redundant declaration. | One maintainability finding with the verified search scope and safe deletion. |
+| A proposed modern API is unavailable on the oldest compiled TFM. | Reject the suggestion; retain the compatibility check and use supported prior art if a real defect remains. |
+| Identical code moves to a helper with unchanged callers, ordering, and target context. | No newly introduced behavior finding. |
+| A move causes cleanup to precede the last read from a stream whose read API rejects disposal. | Publish the lifetime defect with the call sequence and verified API contract. |
+| `MemoryStream.ToArray()` is called after disposal. | No disposal finding: the [official contract](https://learn.microsoft.com/dotnet/api/system.io.memorystream.toarray#remarks) explicitly permits a closed stream. |
+| A `Dictionary` is built before task publication, then only read by workers; a mutable field is handed off through awaited task completion. | No race finding without an overlapping unsafe access; verify the ordering. |
+| Two concurrent callbacks mutate the same `Dictionary` without coordination. | Publish one race finding with the reachable interleaving and a correction that preserves compound operations. |
+| An internal guard enforces a trusted synchronous protocol; no external trigger can violate it. | Preserve the guard; do not invent tolerant recovery. |
+| Ten locale files or tests share one defective generator/helper. A live thread already explains that defect. | One root-cause finding if novel; otherwise reference the live thread, not ten new comments. |
+| A B-grade test has one exact assertion that completely protects its narrow contract. | Keep the grade in the scorecard; no inline demand for redundant assertions. |
+| A changed test only asserts non-null; returning the wrong contents survives and contradicts its stated contract. | Keep the grade and publish one actionable assertion improvement with the specific surviving mutation and expected contents. |
