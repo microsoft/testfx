@@ -124,6 +124,10 @@
   <data name="PackagedAppExtensionDisplayName" xml:space="preserve">
     <value>Packaged app test host launcher</value>
   </data>
+  <data name="TestCaseFilterOptionDescription" xml:space="preserve">
+    <value>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</value>
+    <comment>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</comment>
+  </data>
   <data name="AmbiguousAppxManifestApplication" xml:space="preserve">
     <value>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</value>
   </data>

@@ -48,6 +48,7 @@ $(CommonProductDescription)]]></PackageDescription>
          diverge from the rest of the product (same helper the Retry extension source-links). -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs" Link="Helpers\PasteArguments.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RetryArtifactManifest.cs" Link="Helpers\RetryArtifactManifest.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestCaseFilterCommandLineOptionsProviderBase.cs" Link="Helpers\TestCaseFilterCommandLineOptionsProviderBase.cs" />
   </ItemGroup>
 
   <!-- NuGet package layout -->
