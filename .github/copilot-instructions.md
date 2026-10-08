@@ -52,6 +52,10 @@ dotnet run --project test\UnitTests\Microsoft.Testing.Platform.UnitTests -f net8
 
 For acceptance tests that drive generated assets, prefer running them through the test explorer or `dotnet test --filter "FullyQualifiedName~MyTest"` on the specific project, after `-pack`.
 
+### Repository scripting
+
+For repository-local scripting, prefer PowerShell over Python only when functionality (including supported platforms), security, and performance are preserved. Keep Python where that parity is not established; do not force migrations with regressions or rewrite unrelated existing tools.
+
 ## Code Standards
 
 You MUST follow all code-formatting and naming conventions defined in [`.editorconfig`](../.editorconfig).
