@@ -273,6 +273,7 @@ public sealed class SynchronizedSingleSessionLifecycleTests
                 }
                 catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
                 {
+                    // Expected during cleanup after we explicitly cancel; intentionally ignored.
                 }
                 catch (Exception cleanupFailure) when (testFailure is not null)
                 {

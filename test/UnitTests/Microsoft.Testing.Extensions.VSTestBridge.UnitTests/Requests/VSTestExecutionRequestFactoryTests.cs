@@ -132,16 +132,11 @@ public sealed class VSTestExecutionRequestFactoryTests
 
         ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() =>
         {
-            if (discovery)
-            {
-                _ = VSTestDiscoverTestExecutionRequestFactory.CreateRequest(
-                    new DiscoverTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None);
-            }
-            else
-            {
-                _ = VSTestRunTestExecutionRequestFactory.CreateRequest(
+            _ = discovery
+                ? VSTestDiscoverTestExecutionRequestFactory.CreateRequest(
+                    new DiscoverTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None)
+                : VSTestRunTestExecutionRequestFactory.CreateRequest(
                     new RunTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None);
-            }
         });
 
         Assert.AreEqual("testAssemblyPaths should contain at least one test assembly.", exception.Message);
