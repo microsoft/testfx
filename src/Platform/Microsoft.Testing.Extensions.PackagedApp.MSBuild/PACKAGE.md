@@ -94,6 +94,20 @@ now starts the sidecar for these same packaged .NET applications rather than
 starting the host without package identity. Unpackaged projects and explicit
 executable overrides retain their original run command.
 
+### Launch profiles and informational output
+
+Project launch-profile `commandLineArgs` are used when no explicit application
+arguments are supplied; `--no-launch-profile` and explicit arguments keep the
+SDK's normal precedence. The staged controller is incremental and removed by
+`dotnet clean`, including when it was created by a no-build launch query.
+
+`dotnet run -- --help` and `dotnet run -- --list-tests` also activate the actual
+full-trust host. Since AUMID activation does not inherit the caller's standard
+output, the sidecar relays host options and discovered tests over the existing MTP
+named-pipe protocol. Missing or incomplete help/discovery responses are failures,
+not successful empty output. This informational pipe has the same AppContainer
+restriction as native SDK discovery; use `InvokeTestingPlatform` for those hosts.
+
 ### Filtering MSTest tests
 
 For the native .NET SDK 10 MTP runner, pass a single expression directly:
@@ -128,20 +142,6 @@ registration. In the legacy VSTest-mode `dotnet test` driver, its own `--filter`
 is not forwarded to this sidecar; use `InvokeTestingPlatform` or native MTP mode.
 SDK 10 summarizes host errors without displaying the detailed filter parse message;
 use `InvokeTestingPlatform` with `--diagnostic` to inspect that message.
-
-### Launch profiles and informational output
-
-Project launch-profile `commandLineArgs` are used when no explicit application
-arguments are supplied; `--no-launch-profile` and explicit arguments keep the
-SDK's normal precedence. The staged controller is incremental and removed by
-`dotnet clean`, including when it was created by a no-build launch query.
-
-`dotnet run -- --help` and `dotnet run -- --list-tests` also activate the actual
-full-trust host. Since AUMID activation does not inherit the caller's standard
-output, the sidecar relays host options and discovered tests over the existing MTP
-named-pipe protocol. Missing or incomplete help/discovery responses are failures,
-not successful empty output. This informational pipe has the same AppContainer
-restriction as native SDK discovery; use `InvokeTestingPlatform` for those hosts.
 
 The legacy executable name `mstest-appmodel-controller.exe` and the
 `MSTEST_APPMODEL_CONTROLLER_EXTENSIONS` and `TESTINGPLATFORM_PACKAGEDAPP_TARGET`
