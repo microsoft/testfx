@@ -189,12 +189,42 @@ Requirements and limitations:
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
 - The controller named pipe additionally authorizes the exact package SID of an AppContainer host, which a restricted AppContainer token needs in order to connect at all; see [Controller pipe access for AppContainer hosts](#controller-pipe-access-for-appcontainer-hosts).
 - Native .NET SDK 10 project-based `dotnet test` (including `--no-build`) starts the sidecar for packaged full-trust WinUI. Only the activated host connects to the SDK pipe, reporting its actual runtime, architecture, execution ID and test results. Controller-generated TRX and other reports remain on disk in the requested results directory; they are not advertised to the native SDK.
-- Native `--help` and `--list-tests` activate the selected host to report its own options and tests, not the sidecar's dummy framework. Both require Developer Mode and register the package. SDK 10 can hide a help launch failure behind its built-in help and exit zero; use `--list-tests` to surface that failure. Help lists host options (including MSTest's `--filter`), while registration of those options for controller-backed execution is separate from routing.
+- Native `--help` and `--list-tests` activate the selected host to report its own options and tests, not the sidecar's dummy framework. Both require Developer Mode and register the package. SDK 10 can hide a help launch failure behind its built-in help and exit zero; use `--list-tests` to surface that failure. With `EnableMSTestRunner=true`, MSTest's `--filter` is also accepted for controller-backed execution and evaluated only by the activated host.
 - Native AppContainer execution is explicitly rejected. Use the `InvokeTestingPlatform` MSBuild target for AppContainer-hosted WinUI and UWP projects so the sidecar can recover sandbox-owned result artifacts. Ctrl+C tears down the owned informational host, but externally hard-killing the sidecar can leave an AUMID-activated help/discovery host running.
 - Project-based `dotnet run` uses the same SDK launch properties and therefore also starts the sidecar for packaged applications. Startup metadata lives beside a project-local controller in the intermediate output directory, leaving application arguments empty when needed so SDK launch-profile arguments and explicit-argument precedence are preserved. The staged files are incremental and cleaned by `dotnet clean`. Customized `RunCommand` and `TestingPlatformExecutablePath` values are not replaced. A relative `TestingPlatformPackagedAppTargetPath` is resolved against the project directory; `UseAppHost=false` requires a staged packaged executable override.
 - `dotnet run -- --help` and `dotnet run -- --list-tests` activate the actual full-trust host and relay its options or test names to the caller. An incomplete informational response is an error rather than successful empty output. AppContainer informational launches still require the `InvokeTestingPlatform` path.
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
+
+### Filtering packaged MSTest tests
+
+Use a single quoted filter expression with the native .NET SDK 10 MTP runner:
+
+```powershell
+dotnet test --project MyTests.csproj --no-build --filter "TestCategory=Fast Lane&(Name=Identity|Name=Outcome)" --report-trx
+```
+
+The MSBuild target accepts the same option through `TestingPlatformCommandLineArguments`:
+
+```powershell
+dotnet msbuild MyTests.csproj -t:InvokeTestingPlatform '-p:TestingPlatformCommandLineArguments=--filter FullyQualifiedName~Identity --report-trx'
+```
+
+For an expression containing spaces, put the quoted value in the project rather
+than relying on MSBuild command-line property quoting:
+
+```xml
+<TestingPlatformCommandLineArguments>--filter &quot;TestCategory=Fast Lane&amp;(Name=Identity|Name=Outcome)&quot; --report-trx</TestingPlatformCommandLineArguments>
+```
+
+The sidecar preserves the logical arguments, including boolean expressions and
+literal quotes; the selected MSTest host owns grammar and selection. Missing or
+repeated filter arguments and unknown options fail before activation. Invalid
+syntax, no matches under the default zero-tests policy, and selected test failures
+remain non-successful runs; reports contain only selected tests. This registration
+does not enable arbitrary framework options or native AppContainer execution.
+The legacy VSTest-mode `dotnet test --filter` is not forwarded to the sidecar;
+use the MSBuild target or native MTP mode above.
 
 ### Launch activation
 

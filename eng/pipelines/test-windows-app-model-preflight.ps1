@@ -19,11 +19,12 @@ param(
 Set-StrictMode -Version 3.0
 $ErrorActionPreference = 'Stop'
 
-# These prefixes are reserved by the three real application-model acceptance assets. Never broaden
+# These prefixes are reserved by the real application-model acceptance assets. Never broaden
 # package discovery or cleanup beyond this list: package registration is per-user machine state.
 $reservedPackageIdentityPrefixes = @(
     'MSTestClassicUwp',
     'MSTestModernUwp',
+    'MSTest.Native.',
     'MTPWinUI'
 )
 
