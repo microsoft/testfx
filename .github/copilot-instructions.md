@@ -19,6 +19,10 @@ The codebase ships several distinct (but related) products. Knowing which produc
 
 Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Testing.Platform.slnf`, and `NonWindowsTests.slnf` are filtered views.
 
+## Session delivery gate
+
+Use [session-delivery-hygiene](skills/session-delivery-hygiene/SKILL.md) for guidance-change requests, before editing or pushing PR-linked work, when diagnosing package/output provenance or cleaning task resources, and before implementation handoff. Apply only its relevant risk gates; it does not authorize review publication, GitHub mutation, or changes outside the requested scope.
+
 ## Build, test, and debug commands
 
 Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
