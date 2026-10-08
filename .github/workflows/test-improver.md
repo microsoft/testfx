@@ -158,7 +158,7 @@ source: githubnext/agentics/workflows/test-improver.md@main
 
 Take heed of **instructions**: "${{ steps.sanitized.outputs.text }}"
 
-If these are non-empty (not ""), then you have been triggered via `/test-assist <instructions>`. Follow the user's instructions instead of the normal scheduled workflow. Focus exclusively on those instructions. Apply all the same guidelines (read AGENTS.md, run formatters/linters/tests, measure coverage impact). Skip the round-robin task workflow below and the reporting and instead directly do what the user requested. If no specific instructions were provided (empty or blank), proceed with the normal scheduled workflow below.
+If these are non-empty (not ""), then you have been triggered via `/test-assist <instructions>`. Follow the user's instructions instead of the normal scheduled workflow. Focus exclusively on those instructions. Apply all the same guidelines (read AGENTS.md, run formatters/linters/tests, measure coverage impact), including the **Test Effectiveness Checkpoint** for any added or changed tests. Skip the round-robin task workflow below and the reporting and instead directly do what the user requested. If no specific instructions were provided (empty or blank), proceed with the normal scheduled workflow below.
 
 Then exit - do not run the normal workflow after completing the instructions.
 
@@ -255,7 +255,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 
    b. **Analyze complexity before testing**: Before writing any tests, thoroughly read and understand the implementation. Evaluate function complexity - is this trivial code or complex logic? See "What NOT to Test" in Guidelines. Exception: only test trivial code if the repo has an explicit policy requiring very high coverage.
 
-   c. **Before implementing**: Run existing tests, generate coverage baseline if relevant (using existing coverage pipeline when available).
+   c. **Before implementing**: Run existing tests, generate coverage baseline if relevant (using existing coverage pipeline when available). Define the selected behavior, inputs, independent expected result, and a specific plausible wrong implementation to distinguish, as required by the Test Effectiveness Checkpoint below.
 
    d. Implement the testing improvement. Consider approaches like:
       - **New tests for complex untested code**: Focus on meaningful coverage for code with real logic
@@ -265,7 +265,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
       - **Test refactoring**: Improve clarity, reduce brittleness, add helpers
       - **Flaky test fixes**: Stabilize unreliable tests
 
-   e. **Run all tests**: Ensure new tests pass and existing tests still pass.
+   e. **Run all tests**: Ensure new tests pass and existing tests still pass. Complete the **Test Effectiveness Checkpoint** below before calling the new or changed tests effective.
 
    f. **Measure impact**: Generate coverage report if relevant. Document before/after numbers.
 
@@ -283,6 +283,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - **Trade-offs**: Test complexity, maintenance burden
    - **Reproducibility**: Commands to run tests and generate coverage
    - **Test Status**: Build/test outcome
+   - **Effectiveness evidence**: The compact checkpoint record below, separating executed red/green evidence from static reasoning or blocked checks
 
 8. Update memory with:
    - Work completed and PR created
@@ -433,6 +434,23 @@ The following constraints are **hard rules** for this repository. They override 
 - **Constants and static values**: Do not create tests that just verify constants equal themselves.
 - **Trivial functions**: Simple getters/setters, one-liner wrappers, pass-through functions, obvious one-liners.
 - **Code you don't understand**: If you cannot explain what the function does and why, do not write tests for it. Misunderstood tests are worse than no tests.
+
+### Test Effectiveness Checkpoint
+
+This is a completion gate for any added or changed tests, including command mode, PR maintenance, and test infrastructure work. Passing tests or increased coverage alone do not establish effectiveness.
+
+1. **Use bounded gap analysis**: Read and follow `.agents/skills/test-gap-analysis/SKILL.md` and its matching language reference for the selected production behavior and covering tests only. Use its mutation reasoning to identify a relevant gap; do not expand into a project-wide audit or require a full mutation-tool run such as Stryker.
+2. **Establish an independent oracle**: Derive the expected result from the intended contract, specification, or independently worked example before writing the assertion. Do not compute it by calling or copying the production algorithm, formatter, or resource accessor under test, or by comparing a mock's configured value to itself. For arithmetic, work out the exact result; for resource wiring, identify the intended key/value independently rather than merely requiring nonempty strings.
+3. **Name a distinguishing fault**: Identify the original bug or one specific plausible wrong implementation and the exact input, expected result, and assertion that distinguish it from correct behavior. Examples include an off-by-one calculation, swapped resource accessors, a missing registration, or invalid generated source. If that implementation would still pass, strengthen the test or choose a more valuable goal.
+4. **Exercise relevant inputs and real paths**: Include boundary inputs relevant to the chosen fault (at/below/above a threshold, zero/empty, or error paths as applicable) and distinct, non-default values that expose swaps or dropped data. Trace the assertion through the actual registration, writer, or consumer path being claimed; mocks may isolate unrelated dependencies but must not supply the result being verified. If the claim is that generated VB/F# or other source works, compile and run a representative generated consumer for each claimed language/path rather than only searching its text. Account for locale and line endings where relevant: fix or explicitly vary culture, and normalize both expected and actual text only for permitted platform-newline differences, without masking formatting or content bugs.
+5. **Collect focused evidence**: Run the smallest relevant test selection on the correct implementation. When feasible, run the same selection against the original bug or a temporary, narrowly scoped production fault and require failure at the intended assertion, not an unrelated build/setup error; undo only the deliberate fault and rerun green. Never stage the temporary fault. If executing the red case is unsafe or unavailable, record why and give the concrete static reasoning instead; do not label a reasoned mutation as executed or killed. If the green run or required real consumer path is blocked, mark it unverified, not effective.
+6. **Record the result before publication**: Include one compact row per selected behavior in a new PR's description, a maintenance comment on the existing PR via `safe-outputs.add-comment`, or the command-mode result, using this shape. For PR maintenance, use the comment rather than updating the PR description so the single `safe-outputs.update-issue` call remains available for Task 7's monthly activity update.
+
+   | Behavior and inputs | Independent expectation and source | Wrong implementation and distinguishing assertion | Real path and boundary/locale coverage | Evidence |
+   | --- | --- | --- | --- | --- |
+   | Concrete selected case | Contract or worked expected value | Specific fault and assertion that rejects it | Observed path and relevant cases, or why not applicable | Exact commands and outcomes; executed red/green, reasoned only with reason, or blocked |
+
+Do not publish a test improvement that lacks an independent oracle or a distinguishing fault. Investigate or select another goal instead. Infrastructure-blocked drafts may follow the existing Test Status exception, but must expose the missing evidence and must not claim the checkpoint passed.
 
 ### Test Failures Mean Potential Bugs
 
