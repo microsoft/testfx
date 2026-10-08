@@ -75,8 +75,13 @@ internal static class PackagedAppControllerArguments
         // architecture/runtime, which older SDKs reject when comparing every process handshake.
         string[] controllerArguments = [.. remaining[..transportIndex], .. remaining[(transportIndex + 4)..]];
         bool informationalRequest = controllerArguments.Any(
-            argument => argument.StartsWith("-", StringComparison.Ordinal)
-                && argument.TrimStart('-') is "help" or "?" or "list-tests");
+            argument =>
+            {
+                string option = argument.StartsWith("-", StringComparison.Ordinal) ? argument.TrimStart('-') : string.Empty;
+                return option.Equals("help", StringComparison.OrdinalIgnoreCase)
+                    || option == "?"
+                    || option.Equals("list-tests", StringComparison.OrdinalIgnoreCase);
+            });
         return (controllerArguments, informationalRequest);
     }
 

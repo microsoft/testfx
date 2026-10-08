@@ -110,7 +110,13 @@ public sealed class PackagedAppControllerArgumentsTests
 
     [TestMethod]
     [DataRow("--help")]
+    [DataRow("--HELP")]
+    [DataRow("--Help")]
+    [DataRow("-HeLp")]
     [DataRow("--list-tests")]
+    [DataRow("--LIST-TESTS")]
+    [DataRow("--List-Tests")]
+    [DataRow("-LiSt-TeStS")]
     [DataRow("-help")]
     [DataRow("-?")]
     [DataRow("--?")]
