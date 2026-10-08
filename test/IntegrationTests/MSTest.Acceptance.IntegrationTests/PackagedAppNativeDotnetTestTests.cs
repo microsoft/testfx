@@ -62,6 +62,11 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 Assert.AreEqual(outcome == "Failed" ? 2 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
                 Assert.Contains("total: 2", result.StandardOutput);
                 Assert.Contains(outcome == "Failed" ? "failed: 1" : "failed: 0", result.StandardOutput);
+                string sdkDirectory = Path.Combine(Path.GetDirectoryName(dotnet)!, "sdk", SdkVersion);
+                Assert.AreSequenceEqual(
+                    [SdkVersion, sdkDirectory, sdkDirectory, Path.Combine(sdkDirectory, "Sdks")],
+                    (await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "sdk-provenance.txt"), TestContext.CancellationToken))
+                        .Select(Path.TrimEndingDirectorySeparator));
                 Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
                 Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
 
@@ -511,9 +516,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             }
         }
 
-        environment["DOTNET_ROOT"] = Path.GetDirectoryName(dotnet);
-        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
-        environment["MSBUILDUSESERVER"] = "0";
+        ConfigureDotnetSdkEnvironment(environment, dotnet, SdkVersion);
         return environment;
     }
 
@@ -549,6 +552,11 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 <None Update="AppxManifest.xml" CopyToOutputDirectory="PreserveNewest" />
                 <None Update="Logo.png" CopyToOutputDirectory="PreserveNewest" />
               </ItemGroup>
+              <Target Name="CaptureSdkProvenance" BeforeTargets="PrepareForBuild">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\sdk-provenance.txt"
+                                  Lines="$(NETCoreSdkVersion);$(MSBuildToolsPath);$(MSBuildExtensionsPath);$(MSBuildSDKsPath)"
+                                  Overwrite="true" />
+              </Target>
             </Project>
             #file Tests.cs
             using System.Runtime.CompilerServices;

@@ -44,8 +44,26 @@ $baseArguments = @(
 function Invoke-ProbeCommand {
     param([string[]] $Arguments)
 
+    $dotnetRoot = Split-Path -Parent $DotnetPath
+    $sdkDirectory = Split-Path -Parent $sdk
+    $nativeEnvironment = @{
+        MSBuildSDKsPath = Join-Path $sdkDirectory 'Sdks'
+        MSBuildExtensionsPath = $sdkDirectory
+        DOTNET_ROOT = $dotnetRoot
+        DOTNET_ROOT_X64 = $dotnetRoot
+        DOTNET_INSTALL_DIR = $dotnetRoot
+        DOTNET_MULTILEVEL_LOOKUP = '0'
+        MSBUILDUSESERVER = '0'
+    }
+    $previousEnvironment = @{}
     $previousPreference = $ErrorActionPreference
     try {
+        # A parent dotnet test can export a different SDK's targets even when exec pins the CLI.
+        foreach ($name in $nativeEnvironment.Keys) {
+            $previousEnvironment[$name] = [Environment]::GetEnvironmentVariable($name)
+            [Environment]::SetEnvironmentVariable($name, $nativeEnvironment[$name])
+        }
+
         # Windows PowerShell turns redirected native stderr into error records. Keep it in the
         # diagnostic log, then classify the actual process exit code instead of losing the report.
         $ErrorActionPreference = 'Continue'
@@ -54,6 +72,10 @@ function Invoke-ProbeCommand {
         $exitCode = $LASTEXITCODE
     }
     finally {
+        foreach ($name in $previousEnvironment.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $previousEnvironment[$name])
+        }
+
         $ErrorActionPreference = $previousPreference
     }
 
