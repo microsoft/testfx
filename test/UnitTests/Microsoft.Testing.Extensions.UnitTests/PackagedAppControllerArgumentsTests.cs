@@ -115,7 +115,7 @@ public sealed class PackagedAppControllerArgumentsTests
     [DataRow("-?")]
     [DataRow("--?")]
     [DataRow("-list-tests")]
-    public void Configure_NativeHelpAndDiscoverySelectActualHost(string option)
+    public void Configure_HelpAndDiscoverySelectActualHostWithOrWithoutNativeTransport(string option)
     {
         Dictionary<string, string?> environment = [];
         (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
@@ -129,7 +129,71 @@ public sealed class PackagedAppControllerArgumentsTests
             [PackagedAppControllerArguments.Prefix, Target, "packagedapp", option],
             name => environment.GetValueOrDefault(name),
             (name, value) => environment[name] = value);
+        Assert.IsTrue(informational);
+    }
+
+    [TestMethod]
+    public void Configure_BootstrapFilePreservesArgumentTailAndRestartTransport()
+    {
+        Dictionary<string, string?> environment = [];
+        string[] bootstrap = [PackagedAppControllerArguments.Prefix, Target, "packagedapp;retry"];
+        (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
+            ["--retry-failed-tests", "2", "--server", "dotnettestcli", "--dotnet-test-pipe", "pipe"],
+            name => environment.GetValueOrDefault(name),
+            (name, value) => environment[name] = value,
+            bootstrap);
         Assert.IsFalse(informational);
+        Assert.AreSequenceEqual(["--retry-failed-tests", "2"], arguments);
+        Assert.AreEqual(Target, environment[PackagedAppControllerArguments.TargetEnvironmentVariable]);
+        Assert.AreEqual("pipe", environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        (arguments, informational) = PackagedAppControllerArguments.Configure(
+            ["--internal-retry-pipename", "retry", "--results-directory", "a b"],
+            name => environment.GetValueOrDefault(name),
+            (name, value) => environment[name] = value,
+            bootstrap);
+        Assert.AreSequenceEqual(["--internal-retry-pipename", "retry", "--results-directory", "a b"], arguments);
+        Assert.IsFalse(informational);
+        Assert.AreEqual("pipe", environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+    }
+
+    [TestMethod]
+    [DataRow(new string[0])]
+    [DataRow(new[] { "--internal-packagedapp-controller-v2", "target", "packagedapp" })]
+    [DataRow(new[] { "--internal-packagedapp-controller-v1", "target" })]
+    [DataRow(new[] { "--internal-packagedapp-controller-v1", "target", "packagedapp", "extra" })]
+    public void Configure_RejectsMalformedBootstrapFile(string[] bootstrap)
+    {
+        Dictionary<string, string?> environment = [];
+        _ = Assert.ThrowsExactly<FormatException>(() => PackagedAppControllerArguments.Configure(
+            [],
+            name => environment.GetValueOrDefault(name),
+            (name, value) => environment[name] = value,
+            bootstrap));
+        Assert.IsEmpty(environment);
+    }
+
+    [TestMethod]
+    [DataRow("--help")]
+    [DataRow("--list-tests")]
+    public void Configure_ResponseFileInformationalRequestSelectsActualHost(string option)
+    {
+        string responseFile = Path.Combine(Path.GetTempPath(), $"packagedapp-{Guid.NewGuid():N}.rsp");
+        try
+        {
+            File.WriteAllText(responseFile, option);
+            Dictionary<string, string?> environment = [];
+            (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
+                [$"@{responseFile}"],
+                name => environment.GetValueOrDefault(name),
+                (name, value) => environment[name] = value,
+                [PackagedAppControllerArguments.Prefix, Target, "packagedapp"]);
+            Assert.IsTrue(informational);
+            Assert.AreSequenceEqual([$"@{responseFile}"], arguments);
+        }
+        finally
+        {
+            File.Delete(responseFile);
+        }
     }
 
     [TestMethod]

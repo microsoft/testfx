@@ -1,1 +1,11 @@
 #nullable enable
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.CommandLineInformationalOutput(string! fileName, string![]! arguments, System.IO.TextWriter! output) -> void
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.PipeName.get -> string!
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.CompleteAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.AcceptHandshake(Microsoft.Testing.Platform.IPC.Models.HandshakeMessage! handshake) -> Microsoft.Testing.Platform.IPC.Models.HandshakeMessage!
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.ObserveSession(Microsoft.Testing.Platform.IPC.Models.TestSessionEvent! session) -> void
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.WriteDiscoveredTestsAsync(Microsoft.Testing.Platform.IPC.Models.DiscoveredTestMessages! discovered) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.WriteHelpAsync(Microsoft.Testing.Platform.IPC.Models.CommandLineOptionMessage![]! options) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.ValidateCompletion() -> void
+Microsoft.Testing.Platform.CommandLine.CommandLineInformationalOutput.DisposeAsync() -> System.Threading.Tasks.ValueTask
