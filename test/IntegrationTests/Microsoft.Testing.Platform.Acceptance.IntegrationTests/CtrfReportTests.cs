@@ -289,6 +289,41 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         testHostResult.AssertOutputContains("'--report-ctrf-filename' requires '--report-ctrf' to be enabled");
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Ctrf_RetryConsolidation_PreservesDuplicateUidsAndIndependentExecutions(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        for (int attempt = 1; attempt <= 2; attempt++)
+        {
+            string fileName = $"attempt-{attempt}.ctrf.json";
+            TestHostResult result = await testHost.ExecuteAsync(
+                $"--report-ctrf --report-ctrf-filename {fileName} --results-directory \"{resultDirectory}\"",
+                cancellationToken: TestContext.CancellationToken);
+            result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        }
+
+        // Invoke the package consumer, not an assembly already loaded by the acceptance host.
+        string mergedPath = Path.Combine(resultDirectory, "merged.ctrf.json");
+        TestHostResult mergeResult = await testHost.ExecuteAsync(
+            $"--merge-ctrf \"{resultDirectory}\" \"{mergedPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+        mergeResult.AssertExitCodeIs(ExitCode.Success);
+        mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
+        using var document = JsonDocument.Parse(File.ReadAllText(mergedPath));
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+
+        Assert.HasCount(8, tests);
+        Assert.AreEqual(8, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(
+            ["PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass", "PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass"],
+            tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.HasCount(8, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
+        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+    }
+
     private static void AssertCtrfReportShape(string filePath)
     {
         // Snapshot the full CTRF JSON against an exact expected document. Runtime-variable
@@ -370,7 +405,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-1"
+          "uid": "test-1",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -391,7 +427,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
           }
         ],
         "extra": {
-          "uid": "test-2"
+          "uid": "test-2",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -402,7 +439,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "duration": <DURATION_MS>,
         "message": "Transient failure",
         "extra": {
-          "uid": "test-3"
+          "uid": "test-3",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -412,7 +450,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-3"
+          "uid": "test-3",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       }
     ]
@@ -434,6 +473,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
         normalized = Regex.Replace(normalized, @"""runId"": ""[^""]+""", @"""runId"": ""<RUN_ID>""");
         normalized = Regex.Replace(normalized, @"""executionId"": ""[^""]+""", @"""executionId"": ""<EXECUTION_ID>""");
+        normalized = Regex.Replace(normalized, @"""mtpAttemptId"": ""[^""]+""", @"""mtpAttemptId"": ""<ATTEMPT_ID>""");
         normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
         normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
         normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");
@@ -471,6 +511,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 </Project>
 
 #file Program.cs
+using System.Reflection;
+
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -481,6 +523,31 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        // Acceptance-only entry point for the merger in the consumed shipping package.
+        int mergeOptionIndex = Array.IndexOf(args, "--merge-ctrf");
+        if (mergeOptionIndex >= 0 && args.Length == mergeOptionIndex + 3)
+        {
+            string sourceDirectory = args[mergeOptionIndex + 1];
+            string outputPath = args[mergeOptionIndex + 2];
+            var reporter = Assembly.Load("Microsoft.Testing.Extensions.CtrfReport");
+            Type merger = reporter.GetType("Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger", throwOnError: true)!;
+            Type mergeMode = reporter.GetType("Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode", throwOnError: true)!;
+            MethodInfo merge = merger.GetMethod(
+                "Merge",
+                BindingFlags.NonPublic | BindingFlags.Static,
+                binder: null,
+                types: [typeof(IReadOnlyList<string>), mergeMode],
+                modifiers: null)!;
+            string[] reports = Directory.GetFiles(sourceDirectory, "attempt-*.ctrf.json")
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(path => File.ReadAllText(path))
+                .ToArray();
+            string merged = (string)merge.Invoke(null, [reports, Enum.Parse(mergeMode, "CollapseRetryAttempts")])!;
+            File.WriteAllText(outputPath, merged);
+            Console.WriteLine($"MERGER_LOCATION={reporter.Location}");
+            return 0;
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),

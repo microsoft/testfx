@@ -72,6 +72,7 @@ internal static partial class CtrfReportMerger
 
         JsonObject? first = null;
         var mergedTests = new JsonArray();
+        var retryReports = new List<IReadOnlyList<JsonObject>>();
 
         // Accumulate the raw JSON of every ACCEPTED CTRF input so the deterministic reportId is derived only
         // from the payloads that actually contributed to the merge. Hashing the unfiltered inputs would let a
@@ -156,6 +157,7 @@ internal static partial class CtrfReportMerger
             }
 
             JsonNode? results = root["results"];
+            var reportTests = new List<JsonObject>();
             if (results?["tests"] is JsonArray testArray)
             {
                 foreach (JsonNode? test in testArray)
@@ -170,7 +172,12 @@ internal static partial class CtrfReportMerger
                         continue;
                     }
 
-                    mergedTests.Add(testObject.DeepClone());
+                    var clonedTest = (JsonObject)testObject.DeepClone();
+                    mergedTests.Add((JsonNode)clonedTest);
+                    if (mode == CtrfMergeMode.CollapseRetryAttempts)
+                    {
+                        reportTests.Add(clonedTest);
+                    }
 
                     // Fall back to per-test timing so a summary-less input (which the merger explicitly
                     // supports) still contributes to the merged min/max instead of being dropped or
@@ -185,6 +192,11 @@ internal static partial class CtrfReportMerger
                         latestStop = Max(latestStop, testStop);
                     }
                 }
+            }
+
+            if (mode == CtrfMergeMode.CollapseRetryAttempts)
+            {
+                retryReports.Add(reportTests);
             }
 
             if (results?["tool"] is JsonNode toolNode)
@@ -229,7 +241,7 @@ internal static partial class CtrfReportMerger
         // appear in several of them. Collapse those repeats into one row before counting, otherwise the same
         // test would be reported (and counted) several times.
         JsonArray tests = mode == CtrfMergeMode.CollapseRetryAttempts
-            ? CollapseRetryAttempts(mergedTests)
+            ? CollapseRetryAttempts(retryReports)
             : mergedTests;
 
         // Counters are derived from the merged tests[] rather than trusting each input's summary, so
