@@ -59,6 +59,26 @@ public class RetryTests
     }
 
     [TestMethod]
+    public void RetryOrchestrator_InitializesFreshExecutionScopeWithoutReplacingLogicalRun()
+    {
+        ServiceProvider serviceProvider = CreateRetryServiceProvider();
+        var environment = Mock.Get(serviceProvider.GetEnvironment());
+        environment.Setup(value => value.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("shared-ci-run");
+        var executionIds = new List<string>();
+        environment.Setup(value => value.SetEnvironmentVariable("TESTINGPLATFORM_TRX_TESTRUN_ID", It.IsAny<string>()))
+            .Callback<string, string?>((_, value) => executionIds.Add(value!));
+        MethodInfo initialize = typeof(RetryOrchestrator).GetMethod("InitializeEnvironment", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        initialize.Invoke(new RetryOrchestrator(serviceProvider), []);
+        initialize.Invoke(new RetryOrchestrator(serviceProvider), []);
+
+        Assert.HasCount(2, executionIds);
+        Assert.IsTrue(executionIds.All(value => Guid.TryParse(value, out _)));
+        Assert.HasCount(2, executionIds.Distinct(StringComparer.Ordinal));
+        environment.Verify(value => value.SetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID", It.IsAny<string>()), Times.Never);
+    }
+
+    [TestMethod]
     [DataRow(null, null)]
     [DataRow(null, "")]
     [DataRow("", null)]
