@@ -19,6 +19,29 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
     private const string AssetName = "CoverageThresholdControllerExitCode";
 
     [TestMethod]
+    public async Task ConfiguredThreshold_AzureSummaryOutsidePipelines_DoesNotInvokeDisabledProcessor()
+    {
+        using TempDirectory results = new();
+        string summaryPath = Path.Combine(results.Path, "summary.md");
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--coverage-threshold-line 81 --report-azdo --report-azdo-summary \"{summaryPath}\" --results-directory \"{results.Path}\"",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_MEASUREMENTS"] = "normal",
+                ["CI_SUMMARY_PROVIDER"] = "azure",
+                ["TF_BUILD"] = null,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.CoverageThresholdFailed);
+        result.AssertOutputContains("TF_BUILD is not set to 'true'; skipping summary emission.");
+        Assert.IsFalse(File.Exists(summaryPath));
+        Assert.IsFalse(Directory.Exists(Path.Combine(results.Path, ".ci-summary-fragments")));
+    }
+
+    [TestMethod]
     [DataRow("github", "80", (int)ExitCode.Success)]
     [DataRow("github", "81", (int)ExitCode.CoverageThresholdFailed)]
     [DataRow("azure", "80", (int)ExitCode.Success)]

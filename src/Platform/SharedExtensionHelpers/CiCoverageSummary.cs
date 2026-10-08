@@ -230,6 +230,9 @@ internal static class CiCoverageSummary
                         ? exactActual + "%"
                         : FormatPercentage(threshold.ActualPercentage, threshold.RequiredPercentage, threshold.Passed)
                     : "No data";
+                string required = needsExactPercentages && threshold.ExactRequiredPercentage is { } exactRequired
+                    ? exactRequired
+                    : threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture);
                 string thresholdLabel = GetThresholdLabel(threshold);
                 if (thresholdCounts[(threshold.Source, threshold.ScopeLevel, threshold.ScopeName, threshold.Metric, threshold.CustomMetricName, threshold.Aggregation, threshold.AggregatedOver)] > 1)
                 {
@@ -238,10 +241,8 @@ internal static class CiCoverageSummary
 
                 builder.Append("| ").Append(EscapeCell(scope))
                     .Append(" | ").Append(EscapeCell(thresholdLabel))
-                    .Append(" | ").Append(actual)
-                    .Append(" | ").Append(needsExactPercentages && threshold.ExactRequiredPercentage is { } exactRequired
-                        ? exactRequired
-                        : threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture)).Append("%")
+                    .Append(" | ").Append(EscapeCell(actual))
+                    .Append(" | ").Append(EscapeCell(required)).Append("%")
                     .Append(" | ").Append(threshold.Passed ? "✅ Passed" : "❌ Failed")
                     .Append(" |\n");
             }
