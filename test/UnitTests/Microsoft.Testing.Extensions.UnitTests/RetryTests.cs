@@ -61,42 +61,24 @@ public class RetryTests
     [TestMethod]
     [DataRow(null, null)]
     [DataRow("", "")]
-    [DataRow(null, "module-execution")]
-    [DataRow("", "module-execution")]
-    [DataRow("logical-run", null)]
-    [DataRow("logical-run", "module-execution")]
-    public void RetryOrchestrator_InitializeEnvironment_UsesOnlyLogicalRunContext(string? logicalRunId, string? executionId)
+    public void RetryOrchestrator_InitializeEnvironment_StandaloneRunGeneratesLogicalRunId(string? logicalRunId, string? executionId)
     {
-        ServiceProvider serviceProvider = CreateRetryServiceProvider();
-        var environment = Mock.Get(serviceProvider.GetEnvironment());
-        var values = new Dictionary<string, string?>
-        {
-            ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = logicalRunId,
-            ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = executionId,
-        };
-        environment.Setup(value => value.GetEnvironmentVariable(It.IsAny<string>()))
-            .Returns((string name) => values.TryGetValue(name, out string? value) ? value : null);
-        environment.Setup(value => value.SetEnvironmentVariable(It.IsAny<string>(), It.IsAny<string?>()))
-            .Callback((string name, string? value) => values[name] = value);
-        var orchestrator = new RetryOrchestrator(serviceProvider);
+        Dictionary<string, string?> values = InitializeRetryEnvironment(logicalRunId, executionId);
 
-        typeof(RetryOrchestrator).GetMethod("InitializeEnvironment", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .Invoke(orchestrator, null);
+        Assert.IsTrue(Guid.TryParse(values["TESTINGPLATFORM_LOGICAL_RUN_ID"], out _));
+        Assert.AreEqual(executionId, values["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"]);
+    }
 
-        string? actual = values["TESTINGPLATFORM_LOGICAL_RUN_ID"];
-        if (!string.IsNullOrEmpty(logicalRunId))
-        {
-            Assert.AreEqual(logicalRunId, actual);
-        }
-        else if (!string.IsNullOrEmpty(executionId))
-        {
-            Assert.AreEqual(logicalRunId, actual);
-        }
-        else
-        {
-            Assert.IsTrue(Guid.TryParse(actual, out _));
-        }
+    [TestMethod]
+    [DataRow(null, "module-execution", null)]
+    [DataRow("", "module-execution", "")]
+    [DataRow("logical-run", null, "logical-run")]
+    [DataRow("logical-run", "module-execution", "logical-run")]
+    public void RetryOrchestrator_InitializeEnvironment_UsesOnlyLogicalRunContext(string? logicalRunId, string? executionId, string? expectedLogicalRunId)
+    {
+        Dictionary<string, string?> values = InitializeRetryEnvironment(logicalRunId, executionId);
 
+        Assert.AreEqual(expectedLogicalRunId, values["TESTINGPLATFORM_LOGICAL_RUN_ID"]);
         Assert.AreEqual(executionId, values["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"]);
     }
 
@@ -2171,6 +2153,27 @@ public class RetryTests
         loggerFactory.Setup(factory => factory.CreateLogger(It.IsAny<string>())).Returns(logger ?? Mock.Of<ILogger>());
         serviceProvider.AddService(loggerFactory.Object);
         return serviceProvider;
+    }
+
+    private static Dictionary<string, string?> InitializeRetryEnvironment(string? logicalRunId, string? executionId)
+    {
+        ServiceProvider serviceProvider = CreateRetryServiceProvider();
+        var environment = Mock.Get(serviceProvider.GetEnvironment());
+        var values = new Dictionary<string, string?>
+        {
+            ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = logicalRunId,
+            ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = executionId,
+        };
+        environment.Setup(value => value.GetEnvironmentVariable(It.IsAny<string>()))
+            .Returns((string name) => values.TryGetValue(name, out string? value) ? value : null);
+        environment.Setup(value => value.SetEnvironmentVariable(It.IsAny<string>(), It.IsAny<string?>()))
+            .Callback((string name, string? value) => values[name] = value);
+        var orchestrator = new RetryOrchestrator(serviceProvider);
+
+        typeof(RetryOrchestrator).GetMethod("InitializeEnvironment", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(orchestrator, null);
+
+        return values;
     }
 
     private static string CreateManifestLine(string path, string? kind)
