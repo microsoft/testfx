@@ -183,5 +183,8 @@ internal partial class TestExecutionManager
         => PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, deploymentContext, messageLogger);
 #endif
 
-    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
+    internal Func<ITestSourceHandler, UnitTestDiscoverer>? UnitTestDiscovererFactory { get; set; }
+
+    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler)
+        => UnitTestDiscovererFactory?.Invoke(testSourceHandler) ?? new(testSourceHandler);
 }
