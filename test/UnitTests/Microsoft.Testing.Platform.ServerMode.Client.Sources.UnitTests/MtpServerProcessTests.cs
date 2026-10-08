@@ -24,6 +24,8 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 [DoNotParallelize]
 public sealed class MtpServerProcessTests
 {
+    internal const string StandardOutputFloodEnvironmentVariable = "TESTFX_FLOOD_SERVER_STDOUT";
+
     // Any value works: BuildLaunch only formats the port into the argument string, it never binds it.
     private const int Port = 12345;
 
@@ -99,26 +101,15 @@ public sealed class MtpServerProcessTests
 #endif
 
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file to fill redirected stdout.")]
     public async Task StartAsyncDrainsStandardOutputBeforeItCanBlockServerConnection()
     {
-        using var temp = TempDirectory.Create();
-        string source = temp.CreateFile(
-            "WritesOutputAndConnects.cmd",
-            "@echo off\r\n"
-            + "set port=\r\n"
-            + ":parse\r\n"
-            + "if \"%~1\"==\"\" exit /b 2\r\n"
-            + "if \"%~1\"==\"--client-port\" (\r\n"
-            + "  set port=%~2\r\n"
-            + "  goto found\r\n"
-            + ")\r\n"
-            + "shift\r\n"
-            + "goto parse\r\n"
-            + ":found\r\n"
-            + "for /L %%i in (1,1,2000) do echo 01234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n"
-            + "powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); try { Start-Sleep -Seconds 30 } finally { $client.Dispose() }\"\r\n");
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(15) };
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        // The timeout bounds a blocked stdout pipe, not startup performance on loaded CI agents.
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromMinutes(1),
+            EnvironmentVariables = { [StandardOutputFloodEnvironmentVariable] = "1" },
+        };
 
         using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken);
         Process launchedProcess = GetPrivateInstanceField<Process>(process, "_process");
