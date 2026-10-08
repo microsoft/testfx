@@ -1222,6 +1222,27 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void AppendCoverageSummary_WhenExactFailureCannotBeRepresentedAsDouble_ExplainsRounding()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = new(
+            new SessionUid("session"), CoverageMetric.Line, 49.92m, 49.920000000000000000000000001m,
+            hasCoverableData: true, producerId: "platform", passed: false);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.AreEqual(
+            """
+
+              Coverage Threshold Results:
+                Total - Line: Coverage is below the required threshold (the percentages round to the same value).
+
+            """.Replace("\r\n", "\n"),
+            console.Output.Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
     [DataRow(true, false, "No coverable data (failed by policy)")]
     [DataRow(false, true, "No coverable data (passed by policy)")]
     public void AppendCoverageSummary_WhenThresholdHasNoData_RendersPolicyResult(

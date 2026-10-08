@@ -2,11 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport;
+using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -96,6 +100,21 @@ public static class GitHubActionsExtensions
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
 
+        if (builder.TestHostControllers is TestHostControllersManager controllers)
+        {
+            controllers.AddRunCompletionHandler(serviceProvider => new CiCoverageSummaryControllerHandler(
+                GitHubActionsSummaryArtifactPostProcessor.Provider,
+                GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind,
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetConfiguration(),
+                serviceProvider.GetRequiredService<ITestCoverageResult>(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory().CreateLogger<GitHubActionsSummaryArtifactPostProcessor>(),
+                () => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<GitHubActionsSummaryArtifactPostProcessor>().Single(),
+                () => ShouldDeferToArtifactPostProcessing(serviceProvider),
+                (path, exception) => string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, exception.Message)));
+        }
+
         if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
             artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
@@ -130,6 +149,7 @@ public static class GitHubActionsExtensions
             serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection connection
             && connection.IsRequiredArtifactPostProcessingSupported;
         return dotnetTestRequiresPostProcessing
-            || serviceProvider.GetCommandLineOptions().IsOptionSet(RetryPipeOptionName);
+            || serviceProvider.GetCommandLineOptions().IsOptionSet(RetryPipeOptionName)
+            || CoverageThresholdPolicy.IsDeferredToController(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment());
     }
 }

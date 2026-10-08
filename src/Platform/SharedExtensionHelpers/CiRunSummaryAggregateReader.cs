@@ -158,7 +158,9 @@ internal static partial class CiRunSummaryAggregation
                 || threshold.ActualPercentage < 0
                 || threshold.ActualPercentage > 100
                 || threshold.RequiredPercentage < 0
-                || threshold.RequiredPercentage > 100))
+                || threshold.RequiredPercentage > 100
+                || !IsValidExactPercentage(threshold.ExactActualPercentage, threshold.ActualPercentage)
+                || !IsValidExactPercentage(threshold.ExactRequiredPercentage, threshold.RequiredPercentage)))
         {
             throw new FormatException($"Invalid CI summary module in '{input.Path}'.");
         }
@@ -223,6 +225,12 @@ internal static partial class CiRunSummaryAggregation
             && !RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
             && test.DurationTicks >= 0
             && test.LineNumber is null or >= 0;
+
+    private static bool IsValidExactPercentage(string? value, double percentage)
+        => value is null
+            || (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal exact)
+                && exact is >= 0 and <= 100
+                && (double)exact == percentage);
 
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {

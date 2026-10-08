@@ -192,6 +192,12 @@ internal sealed class CiCoverageThreshold
     public bool HasCoverableData { get; set; }
 
     public bool Passed { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ExactActualPercentage { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ExactRequiredPercentage { get; set; }
 }
 
 internal sealed class CiRunSummaryAggregate

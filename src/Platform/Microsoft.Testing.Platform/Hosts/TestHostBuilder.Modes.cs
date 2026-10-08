@@ -325,6 +325,7 @@ internal sealed partial class TestHostBuilder
                 serverTestHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
                 context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCoverageResult(context.ServiceProvider.GetRequiredService<TestCoverageResult>());
             controlledHost.SetCancellationListener(testHostControllerCancellationListener);
             actualTestHost = controlledHost;
         }
@@ -392,6 +393,7 @@ internal sealed partial class TestHostBuilder
                 consoleHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
                 context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCoverageResult(context.ServiceProvider.GetRequiredService<TestCoverageResult>());
             controlledHost.SetCancellationListener(testHostControllerCancellationListener);
             actualTestHost = controlledHost;
         }
