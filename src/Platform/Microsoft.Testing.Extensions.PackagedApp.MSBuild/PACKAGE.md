@@ -94,6 +94,8 @@ now starts the sidecar for these same packaged .NET applications rather than
 starting the host without package identity. Unpackaged projects and explicit
 executable overrides retain their original run command.
 
+### Launch profiles and informational output
+
 Project launch-profile `commandLineArgs` are used when no explicit application
 arguments are supplied; `--no-launch-profile` and explicit arguments keep the
 SDK's normal precedence. The staged controller is incremental and removed by

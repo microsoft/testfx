@@ -130,14 +130,11 @@ public sealed class VSTestExecutionRequestFactoryTests
     {
         var fixture = new BridgeTestFixture();
 
-        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(() =>
-        {
-            _ = discovery
-                ? VSTestDiscoverTestExecutionRequestFactory.CreateRequest(
-                    new DiscoverTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None)
-                : VSTestRunTestExecutionRequestFactory.CreateRequest(
-                    new RunTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None);
-        });
+        ArgumentException exception = discovery
+            ? Assert.ThrowsExactly<ArgumentException>(() => VSTestDiscoverTestExecutionRequestFactory.CreateRequest(
+                new DiscoverTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None))
+            : Assert.ThrowsExactly<ArgumentException>(() => VSTestRunTestExecutionRequestFactory.CreateRequest(
+                new RunTestExecutionRequest(fixture.Session), fixture.Framework, [], CancellationToken.None));
 
         Assert.AreEqual("testAssemblyPaths should contain at least one test assembly.", exception.Message);
         Assert.IsEmpty(fixture.PublishedMessages);
