@@ -142,6 +142,11 @@
         <target state="translated">パッケージ '{0}' を '{1}' から '{2}' に切り替えられません: Windows は削除要求を完了しましたが、パッケージは登録されたままです。パッケージの実行中のインスタンスをすべて閉じて、もう一度お試しください。置換登録もテスト ホストのアクティブ化も試行されませんでした。</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
+      <trans-unit id="TestCaseFilterOptionDescription">
+        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
+        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

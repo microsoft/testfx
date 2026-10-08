@@ -68,6 +68,11 @@ internal static class Program
 
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args).ConfigureAwait(false);
 
+        if (enabledExtensions.Contains("mstest"))
+        {
+            builder.CommandLine.AddProvider(() => new PackagedAppControllerFilterCommandLineOptionsProvider(ControllerTestFramework.Instance));
+        }
+
         if (enabledExtensions.Contains("msbuild"))
         {
             MSBuildBuilderHook.AddExtensions(builder, args);

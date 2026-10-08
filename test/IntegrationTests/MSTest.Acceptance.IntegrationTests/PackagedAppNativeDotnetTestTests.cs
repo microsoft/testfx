@@ -45,7 +45,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             BoundedCommandLineResult result = await RunAsync(
                 dotnet,
                 $"test {(positional ? string.Empty : "--project ")}\"{project}\" -c Release {(noBuild ? "--no-build" : string.Empty)} " +
-                $"-bl:native.binlog --report-trx --report-trx-filename \"native report.trx\" --results-directory \"{results}\" {retry}",
+                $"-bl:native.binlog --report-trx --report-trx-filename \"native report.trx\" --results-directory \"{results}\" " +
+                $"--filter \"Name=Identity|Name=Outcome\" {retry}",
                 asset,
                 environment);
             Assert.AreEqual(outcome == "Failed" ? 2 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
@@ -71,6 +72,119 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 Assert.HasCount(1, firstAttempt.Where(test => (string?)test.Attribute("outcome") == "Failed"));
                 Assert.HasCount(1, secondAttempt);
                 Assert.AreEqual("Passed", (string?)secondAttempt[0].Attribute("outcome"));
+            }
+        }
+        finally
+        {
+            await RemovePackageAsync(identity);
+        }
+    }
+
+    public static IEnumerable<(bool Native, string Arguments, string Outcome, string[] Selected, bool Launched, string? Error)> FilterCases()
+    {
+        foreach (bool native in new[] { false, true })
+        {
+            yield return (native, "--filter FullyQualifiedName~Identity", "Passed", ["Identity"], true, null);
+            yield return (native, "--filter \"TestCategory=Fast Lane&(Name=Identity|Name=Missing)\"", "Passed", ["Identity"], true, null);
+            yield return (native, "--filter \"TestCategory=Quoted \\\"Lane\\\"|Name=Missing\"", "Passed", ["Outcome"], true, null);
+            yield return (native, "--filter Name=Outcome", "Failed", ["Outcome"], true, null);
+            yield return (native, "--filter Name=Missing", "Passed", [], true, null);
+            yield return (native, "--filter \"(Name=Identity\"", "Passed", [], true, null);
+            yield return (native, "--filter", "Passed", [], false,
+                "Option '--filter' from provider 'Windows application-model controller' (UID: ControllerTestFramework) expects at least 1 arguments");
+            yield return (native, "--filter Name=Identity --filter Name=Outcome", "Passed", [], false,
+                "Option '--filter' from provider 'Windows application-model controller' (UID: ControllerTestFramework) expects at most 1 arguments");
+            yield return (native, "--unrelated-invalid-option", "Passed", [], false, "Unknown option '--unrelated-invalid-option'");
+        }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(FilterCases))]
+    public async Task FrameworkFilter_ActivatesSelectedHostAndPreservesSelectionAndFailures(
+        bool native, string arguments, string outcome, string[] selected, bool launched, string? error)
+    {
+        string dotnet = GetDotnet10();
+        string identity = $"MSTest.Native.{Guid.NewGuid():N}";
+        string executionId = Guid.NewGuid().ToString("N");
+        string platformArguments = "--report-trx --report-trx-filename \"filtered report.trx\" " +
+            "--results-directory \"$(MSBuildProjectDirectory)\\filtered results\" " +
+            "--diagnostic --diagnostic-output-directory \"$(MSBuildProjectDirectory)\\diagnostics\" " + arguments;
+        using TestAsset asset = await GenerateAssetAsync(
+            native ? "net10.0" : "net8.0", identity, executionId, outcome,
+            commandLineArguments: native ? string.Empty : platformArguments);
+        Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
+        try
+        {
+            BoundedCommandLineResult version = await RunAsync(dotnet, "--version", asset, environment);
+            Assert.AreEqual(SdkVersion, version.StandardOutput.Trim());
+            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+            string results = Path.Combine(asset.TargetAssetPath, "filtered results");
+            string diagnostics = Path.Combine(asset.TargetAssetPath, "diagnostics");
+            BoundedCommandLineResult result = await RunAsync(
+                dotnet,
+                native
+                    ? $"test NativeSidecar.csproj -c Release --no-build -bl:filtered.binlog " +
+                        $"--report-trx --report-trx-filename \"filtered report.trx\" --results-directory \"{results}\" " +
+                        $"--diagnostic --diagnostic-output-directory \"{diagnostics}\" {arguments}"
+                    : "msbuild NativeSidecar.csproj -t:InvokeTestingPlatform -p:Configuration=Release -bl:filtered.binlog",
+                asset, environment);
+            string output = result.StandardOutput + result.ErrorOutput;
+            if (selected.Length > 0)
+            {
+                Assert.AreEqual(outcome == "Failed" ? native ? 2 : 1 : 0, result.ExitCode, output);
+                XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                XElement[] tests = XDocument.Load(Path.Combine(results, "filtered_report.trx")).Descendants(ns + "UnitTestResult").ToArray();
+                Assert.AreSequenceEqual(selected.Order(StringComparer.Ordinal), tests.Select(test => (string)test.Attribute("testName")!).Order(StringComparer.Ordinal));
+                Assert.AreSequenceEqual(Enumerable.Repeat(outcome, selected.Length), tests.Select(test => (string)test.Attribute("outcome")!));
+            }
+            else
+            {
+                Assert.AreNotEqual(0, result.ExitCode, output);
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "execution-id.txt")));
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
+                if (error is not null)
+                {
+                    Assert.Contains(error, output);
+                }
+                else if (arguments.Contains("Missing", StringComparison.Ordinal))
+                {
+                    Assert.AreEqual(native ? 8 : 1, result.ExitCode, output);
+                    XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                    Assert.IsEmpty(XDocument.Load(Path.Combine(results, "filtered_report.trx")).Descendants(ns + "UnitTestResult"));
+                }
+                else
+                {
+                    Assert.AreEqual(native ? 8 : 1, result.ExitCode, output);
+                    if (native)
+                    {
+                        // SDK 10 reports the host's error count but does not display its filter parse message.
+                        Assert.Contains(
+                            """
+                            Test run summary: Zero tests ran
+                              error: 1
+                              total: 0
+                              failed: 0
+                              succeeded: 0
+                              skipped: 0
+                            """.ReplaceLineEndings(),
+                            output.ReplaceLineEndings());
+                    }
+                    else
+                    {
+                        string[] logs = Directory.GetFiles(diagnostics, "*.diag", SearchOption.AllDirectories);
+                        string diagnosticOutput = string.Join(Environment.NewLine, logs.Select(File.ReadAllText));
+                        Assert.Contains("Incorrect format for TestCaseFilter", diagnosticOutput);
+                        Assert.DoesNotContain("Unknown option '--filter'", diagnosticOutput);
+                    }
+                }
+            }
+
+            string marker = Path.Combine(asset.TargetAssetPath, "identity.txt");
+            Assert.AreEqual(launched, File.Exists(marker), output);
+            if (launched)
+            {
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(marker, TestContext.CancellationToken));
             }
         }
         finally
@@ -266,7 +380,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
     }
 
-    private static async Task<TestAsset> GenerateAssetAsync(string framework, string identity, string executionId, string outcome, bool appContainer = false)
+    private static async Task<TestAsset> GenerateAssetAsync(
+        string framework, string identity, string executionId, string outcome, bool appContainer = false, string commandLineArguments = "")
     {
         TestAsset asset = await TestAsset.GenerateAssetAsync(
             "NativeSidecar",
@@ -289,6 +404,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <NoWarn>$(NoWarn);NU1507</NoWarn>
+                <TestingPlatformCommandLineArguments>{{System.Security.SecurityElement.Escape(commandLineArguments)}}</TestingPlatformCommandLineArguments>
+                <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
               </PropertyGroup>
               <ItemGroup>
                 <None Update="AppxManifest.xml" CopyToOutputDirectory="PreserveNewest" />
@@ -316,6 +433,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 private static string Root => Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
 
                 [TestMethod]
+                [TestCategory("Fast Lane")]
                 public void Identity()
                 {
                     Assert.AreEqual("{{identity}}", Package.Current.Id.Name);
@@ -325,6 +443,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 }
 
                 [TestMethod]
+                [TestCategory("Quoted \"Lane\"")]
                 public void Outcome()
                 {
                     string marker = Path.Combine(Root, "first-attempt.txt");

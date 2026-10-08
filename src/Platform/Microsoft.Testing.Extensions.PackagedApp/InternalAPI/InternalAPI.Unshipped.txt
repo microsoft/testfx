@@ -1,4 +1,9 @@
 #nullable enable
+const Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterOptionName = "filter" -> string!
+Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase
+Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription) -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerFilterCommandLineOptionsProvider
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerFilterCommandLineOptionsProvider.PackagedAppControllerFilterCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.ExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID" -> string!
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.ExtensionsEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" -> string!
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.NativePipeEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_DOTNETTEST_PIPE" -> string!
