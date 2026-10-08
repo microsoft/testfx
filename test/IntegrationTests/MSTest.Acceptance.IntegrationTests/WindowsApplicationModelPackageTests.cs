@@ -13,6 +13,19 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class WindowsApplicationModelPackageTests
 {
+    [TestMethod]
+    public void PackagedHostFilterTests_AreSelectedByApplicationModelJob()
+    {
+        string[] categories = typeof(PackagedAppNativeDotnetTestTests)
+            .GetCustomAttributes(typeof(TestCategoryAttribute), inherit: false)
+            .Cast<TestCategoryAttribute>()
+            .SelectMany(attribute => attribute.TestCategories)
+            .ToArray();
+
+        Assert.AreSequenceEqual(["WindowsApplicationModel"], categories);
+        Assert.ContainsSingle(typeof(PackagedAppNativeDotnetTestTests).GetCustomAttributes(typeof(MemberConditionAttribute), inherit: false));
+    }
+
     private static readonly string[] RequiredTestAdapterEntries =
     [
         // Classic UWP.

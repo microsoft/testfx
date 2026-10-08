@@ -52,6 +52,7 @@
       <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsHangDump)' == 'true'">$(_TestingPlatformPackagedAppControllerExtensions);hangdump</_TestingPlatformPackagedAppControllerExtensions>
       <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsRetry)' == 'true'">$(_TestingPlatformPackagedAppControllerExtensions);retry</_TestingPlatformPackagedAppControllerExtensions>
       <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' OR $(TargetFramework.StartsWith('uap'))">$(_TestingPlatformPackagedAppControllerExtensions);trx</_TestingPlatformPackagedAppControllerExtensions>
+      <_TestingPlatformPackagedAppControllerExtensions Condition="'$(EnableMSTestRunner)' == 'true'">$(_TestingPlatformPackagedAppControllerExtensions);mstest</_TestingPlatformPackagedAppControllerExtensions>
     </PropertyGroup>
   </Target>
 
