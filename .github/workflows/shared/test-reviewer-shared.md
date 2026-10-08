@@ -95,8 +95,9 @@ safe-outputs:
     max: 1
     allowed-events: [COMMENT]
     footer: "always"
-  # Inline improvement comments for below-A tests, anchored on lines that the
-  # PR actually changed. Each comment carries an apply-ready suggestion when a
+  # Inline comments for verified, actionable improvements, anchored on lines
+  # the PR actually changed. Grades alone do not trigger comments.
+  # Each comment carries an apply-ready suggestion when a
   # complete edit can be expressed; otherwise it still preserves the concrete
   # improvement next to the test. The cap is deliberately well above the
   # 10 comments the prompt asks for: Copilot CLI retries can amplify a single
@@ -279,9 +280,10 @@ Produce two kinds of output:
 
 1. **One** COMMENT review holding a concise combined summary, parallel-safety
    findings when applicable, and the per-test letter-grade scorecard.
-2. **Inline improvement comments** for tests graded below A, anchored on a line
-   the PR changed and carrying a complete GitHub `suggestion` block whenever
-   the improvement can be expressed as a concrete edit.
+2. **Inline improvement comments** only for verified, actionable findings,
+   grouped by root cause, anchored on a line the PR changed, and carrying a
+   complete GitHub `suggestion` block when the edit is safe and directly
+   applicable. A below-A grade alone does not require an inline comment.
 
 You are **read-only and advisory**. Do not edit any files. Do not push.
 Do not request changes — your role is to inform, not to block. Inline
@@ -327,6 +329,28 @@ to grade and continue to Step 4B. Parallelization configuration can make an
 entire assembly newly concurrent without changing a test method.
 
 ## Instructions
+
+### Publication contract — applies to every analysis
+
+Read `.github/skills/code-review/SKILL.md`, especially **Context checks before a
+finding**, **Finding quality**, and **Review publication**. Apply that same
+publication gate to grading-derived candidates, separate code-review findings,
+and the returned parallel-safety findings. Keep comprehensive analysis and
+grades; do not turn every rubric deduction into author attention.
+
+Before publishing a candidate, verify the changed behavior, concrete trigger,
+observable consequence or improvement, and smallest safe correction. Trace
+whole types/partials, helpers, linked consumers, actual oldest TFMs, BCL
+semantics, ownership, and synchronization. Compare merge-base and HEAD:
+moved-but-unchanged behavior is not a newly introduced defect. Preserve trusted
+internal invariants without a concrete external trigger or failing test.
+
+Keep rubric-only improvements in the scorecard, not inline threads. If context
+is unavailable, state the evidence gap instead of inventing a defect or a fix.
+Group the same root cause across tests/files, and read existing threads and
+replies before publishing. A grade, valid anchor, or suggested replacement is
+not sufficient evidence on its own. This workflow controls only reviewers
+that load its guidance, not separate code-quality-service findings.
 
 ### Step 1 — Identify changed test methods
 
@@ -434,10 +458,9 @@ not replacements for — the synced skill's rubric:
 - Do **not** flag missing `init` accessors, license headers, or other
   repo-stylistic concerns — those are out of scope for this rubric.
 
-In addition to the deterministic below-A improvement required by the grading
-skill, perform a focused code review of each changed test. Report separate
-correctness or reliability findings only when they are both observable and
-high-confidence:
+Retain the grading skill's below-A improvement in the scorecard, then perform a
+focused code review of each changed test. Apply the publication contract to
+all inline candidates, including those derived from grading:
 
 - **Correctness** — the test compiles, executes the intended path, and asserts
   expected values that agree with the production contract.
@@ -454,11 +477,12 @@ high-confidence:
   project's `BannedSymbols.txt`, and apply testfx's conventions for shared
   assets, durations, derived test attributes, and `[DoNotParallelize]`.
 
-Do not manufacture a defect to accompany every grade. However, every grade
-below A already represents an observable improvement opportunity under the
-grading rubric and therefore requires the inline improvement workflow in
-Step 4. Do not apply a second "high-confidence finding" threshold that suppresses
-those comments.
+Do not manufacture a defect to accompany every grade or inflate a grade to
+avoid feedback. Grading and publication are different decisions: a test may
+earn B under the rubric yet fully protect its narrow contract. Keep that grade
+and rubric rationale in the summary without requesting redundant assertions
+or idiomatic churn inline. Conversely, publish a verified defect even when its
+test's overall grade is A.
 
 Report the **letter grade** and the **score band** only — no
 fake-precise 0–100 number.
@@ -473,15 +497,20 @@ separate:
   resolved.
 - **Notes** is one short sentence (≤ 120 chars) stating the most important
   observable reason for the grade.
-- **How to improve** is one short, concrete sentence (≤ 120 chars) for every
-  grade below A. Name the exact input, assertion, expected value, split, or
-  deterministic replacement needed. Use `—` for A-grade tests.
+- **How to improve** is one short sentence (≤ 120 chars). For a supported
+  improvement, name the exact input, assertion, expected value, split, or
+  deterministic replacement needed. For a rubric-only deduction with no
+  demonstrated contract improvement, use `No demonstrated contract gap.`;
+  when evidence is missing, name what must be verified instead of inventing
+  an edit. Use `—` for A-grade tests. This presentation rule does not change
+  the skill's grade or score band.
 
 Do not merge the improvement into Notes, give vague advice such as `Add more
 assertions`, or invent weaknesses for an A-grade test.
 
-For every test graded **below A**, also capture the two extra fields the
-inline suggestion in Step 4 needs:
+For each candidate that passes the publication contract, capture a **Finding
+key** (root cause, consequence, and correction), its **Evidence** (trigger and
+observable improvement), and the two fields an inline suggestion needs:
 
 - **Anchor** — `<filepath>` plus the HEAD-side line number the suggestion
   replaces, and (for a multi-line replacement) the first line of the span.
@@ -502,24 +531,36 @@ inline suggestion in Step 4 needs:
   line with that original line plus the inserted lines. The replacement size
   does not determine whether GitHub can apply it; the anchor range and
   replacement content must describe the same edit. Exhaust these options before
-  recording `Replacement: none`; use `none` only when no complete mechanical
-  edit can be anchored to the diff.
+  recording `Replacement: none`; use `none` when no complete safe mechanical
+  edit can be anchored to the diff. Verify the assertion/API semantics and
+  oldest affected TFM before declaring a replacement compiling; if not checked
+  by a build, do not claim it was compiled.
 
-### Step 4 — Post inline improvement suggestions
+### Step 4 — Prepare inline improvement suggestions
 
-For every test graded **below A** with a valid changed-line **Anchor**, post one
-inline review comment with the `create_pull_request_review_comment` safe-output
-tool, subject to the 10-comment cap below. Use `path` + `line` (and `start_line`
-when the replacement spans several lines) from the recorded **Anchor**; `side`
-is always `RIGHT`.
+Prepare candidates using the rules below, but do not call any publication tool
+yet. Complete Step 4B first so grading and parallel-safety candidates can be
+reconciled and deduplicated together before Step 5 publishes anything.
 
-This is deterministic: a below-A grade plus a valid anchor is sufficient to
-post the inline improvement comment. Do not reclassify it through a separate
-"high-confidence finding" gate. When the Step 3 record has a concrete
-**Replacement**, include the apply-ready `suggestion` block. When it has
-`Replacement: none`, post the same concrete improvement as a text-only inline
-comment. If at least one below-A test has a valid anchor, making zero
-`create_pull_request_review_comment` calls is incorrect.
+Group candidates that pass the publication contract by **Finding key**, even
+when they affect several tests or files. Read existing PR review threads and
+replies from every reviewer and compare the root cause and correction, not just
+markers or line numbers. Skip a still-applicable live finding and reference its
+thread in the summary. A moved/outdated anchor or new HEAD alone does not make
+the defect novel; revisit a resolved or declined concern only with new evidence
+that addresses its disposition.
+
+For each remaining novel group with a valid changed-line **Anchor**, post at
+most one inline comment with the `create_pull_request_review_comment` safe-output
+tool, subject to the 10-comment cap below. Choose a representative anchor and
+list other affected tests/locations compactly. Use `path` + `line` (and
+`start_line` for multi-line replacements); `side` is always `RIGHT`.
+
+When the Step 3 record has a safe concrete **Replacement**, include the
+apply-ready `suggestion` block. Otherwise use a text-only comment that still
+identifies the verified consequence and correction. Zero inline calls is
+correct when no novel actionable candidate passes the gate, even if every
+test is below A. Keep all grades in Step 5.
 
 Body format — the marker comment must be the first line so re-runs can
 recognize the workflow's own comments (the outer fence below is four
@@ -527,9 +568,9 @@ backticks so the inner `suggestion` fence survives verbatim):
 
 ````markdown
 <!-- test-reviewer-suggestion -->
-🧪 **Test review · Grade C (70–79)** — <the Notes sentence from Step 3>
+🧪 **Test review · Grade C (70–79)** — <verified consequence for the representative test>
 
-<the How to improve sentence from Step 3>
+<concrete trigger, correction, and any other affected tests/locations>
 
 ```suggestion
 <complete compiling replacement for the exact anchored span>
@@ -538,16 +579,15 @@ backticks so the inner `suggestion` fence survives verbatim):
 
 Rules:
 
-- **Only below-A improvements.** The grading skill already requires a concrete
-  improvement for every grade below A, so do not suppress the inline comment as
-  "not actionable." Never post an inline comment praising an A-grade test,
-  restating a grade with no concrete improvement, or merely repeating the
-  scorecard.
-- **One comment per test**, at most. Do not fan out several comments over
-  the same test method.
-- **Cap at 10 inline comments per run.** When more than 10 below-A tests have
-  valid anchors, post suggestions for the worst grades first (F → D → C → B;
-  ties broken by fully-qualified name) and leave the rest to the Step 5 table.
+- **Only verified, actionable improvements.** Do not post praise, rubric-only
+  deductions, a grade with no observable improvement, or a repeated scorecard.
+  A separate verified defect may receive a comment regardless of letter grade.
+- **One comment per root cause**, and at most one per test. Do not fan out
+  identical findings across test methods, files, or review dimensions.
+- **Cap at 10 inline comments per run.** Prioritize observable impact and
+  confidence first, then the worst representative grade (F → D → C → B → A;
+  ties broken by fully-qualified name). Keep qualifying overflow findings in
+  the Step 5 summary and all grades in the table.
   The safe-output cap is higher only to absorb Copilot CLI retry amplification
   — do not treat it as the target.
 - **The suggestion must be a directly applicable GitHub suggested change.**
@@ -569,12 +609,11 @@ Rules:
   block: marker, grade line, and the concrete improvement sentence. Do not
   post a `csharp` sketch; it cannot be applied and is easily mistaken for a
   complete fix. Never emit a `suggestion` block you are not confident applies.
-- **Do not duplicate on re-run.** This workflow re-runs on every push. Before
-  posting, list the PR's existing review comments with the github
-  `pull_requests` toolset and skip any suggestion whose marker, path, and
-  anchored line already match a live comment that is still applicable to the
-  current HEAD. If the anchored code has changed since that comment was
-  posted, the old comment is outdated — post the refreshed one.
+- **Do not duplicate on re-run.** Use the github `pull_requests` toolset to
+  read existing threads and replies with pagination. Match the finding even
+  without this workflow's marker and even when its path/anchor changed. If
+  existing-thread context cannot be obtained, withhold inline publication and
+  state that deduplication could not be completed in the combined summary.
 - **Anchor validity is on you.** If you cannot map an improvement to a line
   inside the TSV's changed ranges for that file, skip the inline comment and
   rely on the Step 5 table row. Do not guess a line number.
@@ -632,6 +671,12 @@ The specialist is read-only and must return its structured result to you. It
 must not call any safe output. Preserve its assembly rows, counts, top actions,
 findings, and notes for Step 5.
 
+Include the publication contract above in its task prompt. Before publication,
+reconcile returned candidates with the same evidence and deduplication gate
+without repeating the full audit. Retain the original result internally; if a
+candidate is rejected or grouped, explain that disposition in the summary and
+keep published finding counts/top actions consistent with the reconciled list.
+
 Validate the returned envelope before using it:
 
 - It must start with `PARALLEL-SAFETY RESULT`, end with
@@ -646,12 +691,19 @@ Validate the returned envelope before using it:
 
 ### Step 5 — Submit one combined test-quality review
 
+First reconcile both analyses under the publication contract. Group candidates
+across their scopes, retain one representative inline edit per root cause, and
+refresh the existing-thread check before posting. Then publish qualifying
+prepared inline comments under Step 4's format and cap. Never publish a
+grading-derived comment before the parallel-safety result has been considered.
+
 For an automatic `pull_request` run, call `noop` and stop without publishing
 only when **all** of these are true:
 
 - every graded test earned A;
 - no separate correctness/reliability finding requires attention;
 - the parallel-safety status is `CLEAN` or `NOT_APPLICABLE`;
+- no material grading, evidence, or deduplication limitation remains;
 - no inline suggestion was posted.
 
 For slash-command runs, always publish the requested combined result. A
@@ -667,13 +719,17 @@ review. Structure the body as follows:
 
 <!-- 2–4 sentences covering: tests graded and grade distribution; the most
 important correctness/effectiveness signal; parallel-safety status and highest
-severity; the top combined recommendation. When Step 4 posted suggestions,
+severity; the top combined recommendation or unresolved evidence gap. Include
+novel actionable findings without an inline anchor and qualifying overflow.
+Distinguish rubric-only improvements from findings requiring author action.
+When prepared inline suggestions were posted,
 state how many can be applied from the Files changed tab. -->
 
 #### 🧵 Parallel safety
 
-<!-- FINDINGS: include the specialist's assembly table, counts, top actions,
-and severity-ranked findings verbatim, without its envelope markers.
+<!-- FINDINGS: include the specialist's assembly table and the reconciled
+counts, top actions, and severity-ranked findings, without envelope markers.
+Reference existing live threads instead of repeating their full findings.
 CLEAN: include the assembly table and one sentence saying no parallel-safety
 findings were confirmed.
 PARTIAL: start with a warning that coverage was incomplete, then include only
@@ -721,8 +777,10 @@ Parallel-safety publication rules:
   `ClassLevel`, and `MethodLevel`; do not collapse multiple assemblies.
 - Preserve readiness-only caveats when parallelization is off.
 - Order Critical → High → Warning → Info, then by expected value and confidence.
-- Every finding keeps its category, confidence, file/line, scope-aware reason,
-  and concrete fix.
+- Every published finding keeps its category, confidence, file/line,
+  scope-aware reason, and concrete fix. Group same-root-cause findings and
+  reference duplicate live threads; disclose any rejected candidate or
+  adjusted count without claiming incomplete coverage is clean.
 - When there are more than 25 findings, show every Critical/High finding and
   collapse Warning/Info into `<details>`.
 - Do not translate a parallel-safety finding into a per-test grade. Cross-test
@@ -746,16 +804,35 @@ Per-test table rules:
   drop the namespace, and insert `<br>` after the class separator and each `_`
   so long MSTest names wrap without changing their copyable text.
 - Mutation is `killed/total killed`, `0/0 (no meaningful points)`, or `N/A`.
-- Keep Notes and How to improve separate. Every grade below A has a concrete
-  improvement; A uses `—`.
+- Keep Notes and How to improve separate. Below-A rows retain either a supported
+  improvement, the rubric-only disposition, or the exact evidence limitation
+  from Step 3; do not invent an improvement to fill the cell. A uses `—`.
 
 Emit only one `submit-pull-request-review` call per visible run. Before posting,
 ensure the body includes every applicable specialist result and does not claim
 clean parallel-safety when the specialist returned `PARTIAL`.
 
+### Calibration cases — check before publishing
+
+- A B-grade test's single exact assertion kills every meaningful mutation in
+  its narrow contract: retain the grade/notes in the table, zero inline demands
+  for additional assertions.
+- A changed test asserts only non-null while wrong contents survive: retain
+  its grade and publish one exact-content improvement with the surviving
+  mutation, expected value, and a supported assertion API.
+- Several tests expose one helper defect: all tests remain in the scorecard,
+  one representative inline finding at most, with other locations listed.
+- A human or bot already has a live thread for that defect, even on an older
+  anchor: reference it, zero duplicate inline comments.
+- A disposal claim about `MemoryStream.ToArray()`, a member used by another
+  partial, an unsupported modern API suggestion, or a safely synchronized field:
+  investigate the context and reject the contradicted claim, not the analysis.
+- Unavailable production or thread context: state the precise limitation;
+  do not invent a fix or claim complete coverage.
+
 ### Step 6 — Stop
 
-After the Step 4 inline comments and the single review submission, call `noop`
+After the Step 5 inline comments and the single review submission, call `noop`
 with a brief status such as:
 
 `"Posted test quality review for PR #N (M tests graded, parallel-safety=<status>, S inline suggestions)."`
