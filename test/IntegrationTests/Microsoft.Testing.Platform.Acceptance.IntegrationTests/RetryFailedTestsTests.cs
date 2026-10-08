@@ -680,9 +680,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     {
         foreach (string tfm in TargetFrameworks.Net)
         {
-            // The orchestrator resolves the logical run id as: an explicitly set id wins, else the dotnet test
-            // execution id (which already identifies this test application's process tree), else a fresh one.
-            // Exercise all three branches.
+            // Explicit logical-run ids are preserved, module-local execution ids are not substituted,
+            // and standalone runs generate a shared id.
             yield return (tfm, null);
             yield return (tfm, EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
             yield return (tfm, EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
@@ -691,7 +690,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
     [TestMethod]
     [DynamicData(nameof(GetRunIdMatrix))]
-    public async Task RetryFailedTests_CtrfReports_ShareRunIdButNotReportId(string tfm, string? seededVariable)
+    public async Task RetryFailedTests_CtrfReports_UseLogicalRunIdentityAndRecordLineage(string tfm, string? seededVariable)
     {
         // Each attempt is a separate process that writes its own CTRF document, but together they are one
         // logical run. Per ctrf-io/ctrf#58 those documents SHOULD share a `runId` while each stays a distinct
@@ -709,8 +708,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             { "RESULTDIR", resultDirectory },
         };
 
-        // When a correlation id is supplied from outside, the attempts must adopt THAT id rather than minting
-        // their own — that is what lets a CI job tie several modules or machines into one logical run.
+        // Only an explicitly supplied logical-run id correlates modules. A module execution id must not
+        // become a logical-run id, but must still survive as IPC execution identity.
         string? expectedRunId = null;
         if (seededVariable is not null)
         {
@@ -720,7 +719,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--retry-failed-tests 3 --report-ctrf --results-directory {resultDirectory}",
-            environmentVariables,
+            environmentVariables.ToDictionary(),
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -733,22 +732,58 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         ];
         Assert.HasCount(3, ctrfFiles, $"Expected two per-attempt reports and one consolidated report.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
 
-        string[] runIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "runId"))];
         string[] reportIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "reportId"))];
 
-        Assert.HasCount(1, runIds.Distinct(StringComparer.Ordinal));
         Assert.HasCount(3, reportIds.Distinct(StringComparer.Ordinal));
-        Assert.AreNotEqual(runIds[0], reportIds[0], "runId and reportId identify different things and must not be the same value.");
+        foreach (string file in ctrfFiles)
+        {
+            using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
+            if (seededVariable == EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)
+            {
+                Assert.IsFalse(report.RootElement.TryGetProperty("runId", out _));
+            }
+            else
+            {
+                string runId = report.RootElement.GetProperty("runId").GetString()!;
+                if (expectedRunId is not null)
+                {
+                    Assert.AreEqual(expectedRunId, runId);
+                }
+                else
+                {
+                    Assert.IsTrue(Guid.TryParse(runId, out _));
+                }
+
+                Assert.AreEqual(ReadRequiredStringProperty(ctrfFiles[0], "runId"), runId);
+                Assert.DoesNotContain(runId, reportIds);
+            }
+        }
 
         string consolidatedPath = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly).Single();
         using var consolidated = System.Text.Json.JsonDocument.Parse(File.ReadAllText(consolidatedPath));
+        System.Text.Json.JsonElement metadata = consolidated.RootElement.GetProperty("extra").GetProperty("microsoft.testingplatform");
+        Assert.AreEqual("merged", metadata.GetProperty("documentRole").GetString());
+        Assert.AreEqual("collapseRetryAttempts", metadata.GetProperty("mergeMode").GetString());
+        Assert.AreEqual("unknown", metadata.GetProperty("inputCompleteness").GetString());
+        Assert.AreEqual(2, metadata.GetProperty("inputCount").GetInt32());
+        string[] physicalReportIds =
+        [
+            .. ctrfFiles.Where(file => file != consolidatedPath).Select(file => ReadRequiredStringProperty(file, "reportId")),
+        ];
+        string[] inputReportIds =
+        [
+            .. metadata.GetProperty("inputs").EnumerateArray().Select(input => input.GetProperty("reportId").GetString()!),
+        ];
+        Assert.AreSequenceEqual(
+            physicalReportIds.OrderBy(id => id, StringComparer.Ordinal).ToArray(),
+            inputReportIds.OrderBy(id => id, StringComparer.Ordinal).ToArray());
         System.Text.Json.JsonElement results = consolidated.RootElement.GetProperty("results");
         Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
         Assert.AreEqual(1, results.GetProperty("summary").GetProperty("flaky").GetInt32());
         System.Text.Json.JsonElement flakyTest = results.GetProperty("tests")
             .EnumerateArray()
             .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
-        var physicalExecutions = new List<(string Status, string TestId, string ExecutionId)>();
+        var physicalExecutions = new List<(string Status, string TestId, string ExecutionId, string AttemptId)>();
         foreach (string attemptPath in Directory.GetFiles(
             Path.Combine(resultDirectory, "Retries"),
             "*.ctrf.json",
@@ -761,34 +796,113 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             physicalExecutions.Add((
                 attemptTest.GetProperty("status").GetString()!,
                 attemptTest.GetProperty("testId").GetString()!,
-                attemptTest.GetProperty("executionId").GetString()!));
+                attemptTest.GetProperty("executionId").GetString()!,
+                attemptTest.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!));
+            Assert.IsFalse(attemptTest.TryGetProperty("attemptId", out _), "The pinned 0.1.0 schema forbids this field on Test.");
         }
 
         Assert.HasCount(2, physicalExecutions);
         Assert.HasCount(1, physicalExecutions.Select(execution => execution.TestId).Distinct(StringComparer.Ordinal));
-        Assert.HasCount(2, physicalExecutions.Select(execution => execution.ExecutionId).Distinct(StringComparer.Ordinal));
+        Assert.HasCount(1, physicalExecutions.Select(execution => execution.ExecutionId).Distinct(StringComparer.Ordinal));
+        Assert.HasCount(2, physicalExecutions.Select(execution => execution.AttemptId).Distinct(StringComparer.Ordinal));
         Assert.IsTrue(physicalExecutions.All(execution => Guid.TryParse(execution.ExecutionId, out _)));
+        Assert.IsTrue(physicalExecutions.All(execution => Guid.TryParse(execution.AttemptId, out _)));
+        Assert.HasCount(
+            3,
+            results.GetProperty("tests").EnumerateArray().Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
 
         Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
         Assert.AreEqual(physicalExecutions[0].TestId, flakyTest.GetProperty("testId").GetString());
         Assert.AreEqual(
             physicalExecutions.Single(execution => execution.Status == "passed").ExecutionId,
             flakyTest.GetProperty("executionId").GetString());
+        Assert.AreEqual(
+            physicalExecutions.Single(execution => execution.Status == "passed").AttemptId,
+            flakyTest.GetProperty("extra").GetProperty("mtpAttemptId").GetString());
         Assert.AreEqual(1, flakyTest.GetProperty("retries").GetInt32());
         System.Text.Json.JsonElement retryAttempt = flakyTest.GetProperty("retryAttempts")[0];
         Assert.AreEqual("failed", retryAttempt.GetProperty("status").GetString());
         Assert.AreEqual(
-            physicalExecutions.Single(execution => execution.Status == "failed").ExecutionId,
+            physicalExecutions.Single(execution => execution.Status == "failed").AttemptId,
             retryAttempt.GetProperty("attemptId").GetString());
 
         if (expectedRunId is not null)
         {
-            Assert.AreEqual(expectedRunId, runIds[0], $"'{seededVariable}' must be honored instead of minting a new run id.");
+            string independentResultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+            environmentVariables["RESULTDIR"] = independentResultDirectory;
+            TestHostResult independentRun = await testHost.ExecuteAsync(
+                $"--retry-failed-tests 3 --report-ctrf --results-directory {independentResultDirectory}",
+                environmentVariables.ToDictionary(),
+                cancellationToken: TestContext.CancellationToken);
+            independentRun.AssertExitCodeIs(ExitCode.Success);
+            string independentPath = Directory.GetFiles(independentResultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly).Single();
+            using var independentReport = System.Text.Json.JsonDocument.Parse(File.ReadAllText(independentPath));
+            if (seededVariable == EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)
+            {
+                Assert.IsFalse(independentReport.RootElement.TryGetProperty("runId", out _));
+            }
+            else
+            {
+                Assert.AreEqual(expectedRunId, independentReport.RootElement.GetProperty("runId").GetString());
+            }
+
+            System.Text.Json.JsonElement independentCase = independentReport.RootElement.GetProperty("results").GetProperty("tests")
+                .EnumerateArray()
+                .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+            Assert.AreEqual(flakyTest.GetProperty("testId").GetString(), independentCase.GetProperty("testId").GetString());
+            Assert.AreNotEqual(flakyTest.GetProperty("executionId").GetString(), independentCase.GetProperty("executionId").GetString());
         }
-        else
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_CtrfReports_ExhaustedRetriesPreserveIdentities(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 2 --report-ctrf --results-directory {resultDirectory}",
+            new()
+            {
+                ["METHOD1"] = "1",
+                ["FAIL"] = "1",
+                ["RESULTDIR"] = resultDirectory,
+            },
+            cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        string consolidatedPath = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly).Single();
+        using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(consolidatedPath));
+        System.Text.Json.JsonElement results = report.RootElement.GetProperty("results");
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("failed").GetInt32());
+        System.Text.Json.JsonElement failedCase = results.GetProperty("tests").EnumerateArray()
+            .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+        Assert.AreEqual("failed", failedCase.GetProperty("status").GetString());
+        Assert.AreEqual(2, failedCase.GetProperty("retries").GetInt32());
+        Assert.IsFalse(failedCase.TryGetProperty("flaky", out _));
+        string executionId = failedCase.GetProperty("executionId").GetString()!;
+        var attemptIds = new List<string>();
+        foreach (string path in Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.ctrf.json", SearchOption.AllDirectories))
         {
-            Assert.IsTrue(Guid.TryParse(runIds[0], out _), $"An uncorrelated run must mint a GUID run id, got '{runIds[0]}'.");
+            using var attemptReport = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+            System.Text.Json.JsonElement attempt = attemptReport.RootElement.GetProperty("results").GetProperty("tests")
+                .EnumerateArray()
+                .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+            Assert.AreEqual(executionId, attempt.GetProperty("executionId").GetString());
+            attemptIds.Add(attempt.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!);
         }
+
+        Assert.HasCount(3, attemptIds);
+        Assert.HasCount(3, attemptIds.Distinct(StringComparer.Ordinal));
+        string[] mergedAttemptIds =
+        [
+            failedCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!,
+            .. failedCase.GetProperty("retryAttempts").EnumerateArray().Select(attempt => attempt.GetProperty("attemptId").GetString()!),
+        ];
+        Assert.AreSequenceEqual(
+            attemptIds.OrderBy(id => id, StringComparer.Ordinal).ToArray(),
+            mergedAttemptIds.OrderBy(id => id, StringComparer.Ordinal).ToArray());
     }
 
     [TestMethod]

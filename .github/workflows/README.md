@@ -43,6 +43,10 @@ For deeper guidance — creating, updating, debugging, upgrading, or wrapping MC
 
 The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
 
+This update retains gh-aw v0.89.21 because [v0.89.22](https://github.com/github/gh-aw/releases/tag/v0.89.22) is marked as a prerelease as of October 8, 2026. `gh aw upgrade` selects stable releases by default; this update does not opt into `--pre-releases`.
+
+[`aw.json`](./aw.json) redirects gh-aw v0.89.21's embedded `actions/upload-artifact@v7.0.1` references to v7.0.2. The daily-credit guardrail otherwise retains the embedded version while other generated steps use the newer action cache entry, producing mixed pins. Keep this redirect until the compiler's embedded version catches up, and align handwritten workflows whenever updating a shared action pin.
+
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
 ```bash

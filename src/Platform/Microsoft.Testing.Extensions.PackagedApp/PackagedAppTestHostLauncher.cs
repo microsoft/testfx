@@ -236,6 +236,14 @@ internal sealed partial class PackagedAppTestHostLauncher : ITestHostLauncher, I
                 context.WorkingDirectory);
         }
 
+        context = new TestHostLaunchContext(
+            context.FileName,
+            PackagedAppControllerArguments.AddNativeTransport(
+                context.Arguments,
+                _getEnvironmentVariable(PackagedAppControllerArguments.NativePipeEnvironmentVariable)),
+            context.EnvironmentVariables,
+            context.WorkingDirectory);
+
         // A packaged (MSIX) app is detected by a matching AppxManifest.xml. The manifest lives at the
         // package layout root, which may be an ancestor of the executable's directory
         // (Application/@Executable can point into a subdirectory), so search upward rather than only the
