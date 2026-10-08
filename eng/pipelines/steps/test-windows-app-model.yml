@@ -36,11 +36,12 @@ steps:
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel" -p:UsingDotNetTest=true --show-test-results failed
+- script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel|FullyQualifiedName~PackagedAppNativeDotnetTestTests" -p:UsingDotNetTest=true --show-test-results failed
   displayName: 'Test real Modern and classic UWP applications'
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1
+    TESTFX_DOTNET_10_PATH: $(Agent.TempDirectory)\dotnet10\dotnet.exe
 
 - pwsh: |
     $version = 'v0.6.0'
