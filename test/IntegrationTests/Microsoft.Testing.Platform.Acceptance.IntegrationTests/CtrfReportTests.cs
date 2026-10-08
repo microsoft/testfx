@@ -9,6 +9,91 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixture>
 {
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public async Task Ctrf_DotnetTestModuleReports_UseOnlyInvocationWideRunId(bool supplyLogicalRunId, bool hasFailures)
+    {
+        using TempDirectory directory = new();
+        string code = TestAssetFixture.CreateSourceCode([TargetFrameworks.NetCurrent]);
+        using TestAsset first = await TestAsset.GenerateAssetAsync(
+            "CtrfModuleOne",
+            code.Replace(TestAssetFixture.AssetName, "CtrfModuleOne", StringComparison.Ordinal),
+            directory);
+        using TestAsset second = await TestAsset.GenerateAssetAsync(
+            "CtrfModuleTwo",
+            code.Replace(TestAssetFixture.AssetName, "CtrfModuleTwo", StringComparison.Ordinal),
+            directory);
+        await Task.WhenAll(
+            DotnetCli.RunAsync(
+                $"build \"{first.TargetAssetPath}\" -c Release",
+                cancellationToken: TestContext.CancellationToken),
+            DotnetCli.RunAsync(
+                $"build \"{second.TargetAssetPath}\" -c Release",
+                cancellationToken: TestContext.CancellationToken));
+
+        string resultDirectory = Path.Combine(directory.Path, "results");
+        string? logicalRunId = supplyLogicalRunId ? Guid.NewGuid().ToString("D") : null;
+        Dictionary<string, string?> environment = new()
+        {
+            ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = logicalRunId,
+            ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = null,
+            ["ONLYPASSINGTESTS"] = hasFailures ? null : "1",
+        };
+        string modulePattern = Path.Combine("**", "bin", "Release", TargetFrameworks.NetCurrent, "CtrfModule*.dll");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test --test-modules \"{modulePattern}\""
+            + $" --root-directory \"{directory.Path}\" --results-directory \"{resultDirectory}\" --report-ctrf",
+            environmentVariables: environment,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual((int)(hasFailures ? ExitCode.AtLeastOneTestFailed : ExitCode.Success), result.ExitCode);
+        string[] reports = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories);
+        int physicalReportCount = 0;
+        foreach (var reportData in reports.Select(path =>
+        {
+            using var report = JsonDocument.Parse(File.ReadAllText(path));
+            JsonElement root = report.RootElement;
+            bool hasRunId = root.TryGetProperty("runId", out JsonElement runId);
+            return new
+            {
+                HasRunId = hasRunId,
+                RunId = hasRunId ? runId.GetString() : null,
+                Role = root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString(),
+                TestsCount = root.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32(),
+            };
+        }))
+        {
+            if (supplyLogicalRunId)
+            {
+                Assert.AreEqual(logicalRunId, reportData.RunId);
+            }
+            else
+            {
+                Assert.IsFalse(reportData.HasRunId);
+            }
+
+            if (reportData.Role == "execution")
+            {
+                physicalReportCount++;
+                Assert.AreEqual(hasFailures ? 4 : 1, reportData.TestsCount);
+            }
+        }
+
+        Assert.AreEqual(2, physicalReportCount);
+        string[] reportIds = [.. reports.Select(ReadReportId)];
+        Assert.HasCount(reports.Length, reportIds.Distinct(StringComparer.Ordinal));
+    }
+
+    private static string ReadReportId(string path)
+    {
+        using var report = JsonDocument.Parse(File.ReadAllText(path));
+        return report.RootElement.GetProperty("reportId").GetString()!;
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Ctrf_WhenReportCtrfIsNotSpecified_CtrfReportIsNotGenerated(string tfm)
@@ -204,6 +289,41 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         testHostResult.AssertOutputContains("'--report-ctrf-filename' requires '--report-ctrf' to be enabled");
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Ctrf_RetryConsolidation_PreservesDuplicateUidsAndIndependentExecutions(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        for (int attempt = 1; attempt <= 2; attempt++)
+        {
+            string fileName = $"attempt-{attempt}.ctrf.json";
+            TestHostResult result = await testHost.ExecuteAsync(
+                $"--report-ctrf --report-ctrf-filename {fileName} --results-directory \"{resultDirectory}\"",
+                cancellationToken: TestContext.CancellationToken);
+            result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        }
+
+        // Invoke the package consumer, not an assembly already loaded by the acceptance host.
+        string mergedPath = Path.Combine(resultDirectory, "merged.ctrf.json");
+        TestHostResult mergeResult = await testHost.ExecuteAsync(
+            $"--merge-ctrf \"{resultDirectory}\" \"{mergedPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+        mergeResult.AssertExitCodeIs(ExitCode.Success);
+        mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
+        using var document = JsonDocument.Parse(File.ReadAllText(mergedPath));
+        JsonElement results = document.RootElement.GetProperty("results");
+        JsonElement[] tests = [.. results.GetProperty("tests").EnumerateArray()];
+
+        Assert.HasCount(8, tests);
+        Assert.AreEqual(8, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreSequenceEqual(
+            ["PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass", "PassingTest", "FailingTest", "DuplicateUidFailure", "DuplicateUidPass"],
+            tests.Select(test => test.GetProperty("name").GetString()!).ToArray());
+        Assert.HasCount(8, tests.Select(test => test.GetProperty("executionId").GetString()).Distinct(StringComparer.Ordinal));
+        Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
+    }
+
     private static void AssertCtrfReportShape(string filePath)
     {
         // Snapshot the full CTRF JSON against an exact expected document. Runtime-variable
@@ -242,6 +362,11 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
   "runId": "<RUN_ID>",
   "timestamp": "<TIMESTAMP>",
   "generatedBy": "Microsoft.Testing.Extensions.CtrfReport@<VERSION>",
+  "extra": {
+    "microsoft.testingplatform": {
+      "documentRole": "execution"
+    }
+  },
   "results": {
     "tool": {
       "name": "DummyTestFramework",
@@ -280,7 +405,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-1"
+          "uid": "test-1",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -301,7 +427,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
           }
         ],
         "extra": {
-          "uid": "test-2"
+          "uid": "test-2",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -312,7 +439,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "duration": <DURATION_MS>,
         "message": "Transient failure",
         "extra": {
-          "uid": "test-3"
+          "uid": "test-3",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -322,7 +450,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-3"
+          "uid": "test-3",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       }
     ]
@@ -344,6 +473,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
         normalized = Regex.Replace(normalized, @"""runId"": ""[^""]+""", @"""runId"": ""<RUN_ID>""");
         normalized = Regex.Replace(normalized, @"""executionId"": ""[^""]+""", @"""executionId"": ""<EXECUTION_ID>""");
+        normalized = Regex.Replace(normalized, @"""mtpAttemptId"": ""[^""]+""", @"""mtpAttemptId"": ""<ATTEMPT_ID>""");
         normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
         normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
         normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");
@@ -381,6 +511,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
 </Project>
 
 #file Program.cs
+using System.Reflection;
+
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -391,6 +523,31 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        // Acceptance-only entry point for the merger in the consumed shipping package.
+        int mergeOptionIndex = Array.IndexOf(args, "--merge-ctrf");
+        if (mergeOptionIndex >= 0 && args.Length == mergeOptionIndex + 3)
+        {
+            string sourceDirectory = args[mergeOptionIndex + 1];
+            string outputPath = args[mergeOptionIndex + 2];
+            var reporter = Assembly.Load("Microsoft.Testing.Extensions.CtrfReport");
+            Type merger = reporter.GetType("Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger", throwOnError: true)!;
+            Type mergeMode = reporter.GetType("Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode", throwOnError: true)!;
+            MethodInfo merge = merger.GetMethod(
+                "Merge",
+                BindingFlags.NonPublic | BindingFlags.Static,
+                binder: null,
+                types: [typeof(IReadOnlyList<string>), mergeMode],
+                modifiers: null)!;
+            string[] reports = Directory.GetFiles(sourceDirectory, "attempt-*.ctrf.json")
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .Select(path => File.ReadAllText(path))
+                .ToArray();
+            string merged = (string)merge.Invoke(null, [reports, Enum.Parse(mergeMode, "CollapseRetryAttempts")])!;
+            File.WriteAllText(outputPath, merged);
+            Console.WriteLine($"MERGER_LOCATION={reporter.Location}");
+            return 0;
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(
             sp => new TestFrameworkCapabilities(),
@@ -433,6 +590,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 DisplayName = "PassingTest",
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }));
+
+        if (Environment.GetEnvironmentVariable("ONLYPASSINGTESTS") == "1")
+        {
+            context.Complete();
+            return;
+        }
 
         // 2) A plain failing test (no Exception object so no stack trace / exception type
         //    are emitted; only the explanation propagates as CTRF `message`).
@@ -506,11 +669,14 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
-            TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
+            => (AssetName, AssetName, CreateSourceCode(TargetFrameworks.All));
+
+        internal static string CreateSourceCode(string[] targetFrameworks)
+            => TestCode
+                .PatchTargetFrameworks(targetFrameworks)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion);
     }
 
     public TestContext TestContext { get; set; }

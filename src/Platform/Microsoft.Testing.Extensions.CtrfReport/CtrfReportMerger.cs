@@ -72,6 +72,7 @@ internal static partial class CtrfReportMerger
 
         JsonObject? first = null;
         var mergedTests = new JsonArray();
+        var retryReports = new List<IReadOnlyList<JsonObject>>();
 
         // Accumulate the raw JSON of every ACCEPTED CTRF input so the deterministic reportId is derived only
         // from the payloads that actually contributed to the merge. Hashing the unfiltered inputs would let a
@@ -93,6 +94,7 @@ internal static partial class CtrfReportMerger
         // The merged document belongs to the same logical run as its inputs only when they all belong to the
         // same one, so a run id is carried over only when every input reported the very same value.
         var distinctRunIds = new HashSet<string>(StringComparer.Ordinal);
+        var lineageInputs = new JsonArray();
 
         // Collect each input's environment so shared fields can be retained and module- or agent-specific
         // ones (values that differ across inputs) dropped, rather than attributing the first report's
@@ -136,6 +138,13 @@ internal static partial class CtrfReportMerger
             reportCount++;
             acceptedReports.Add(reportJson);
 
+            JsonNode lineageInput = new JsonObject();
+            if (ReadString(root, "reportId") is { Length: > 0 } inputReportId)
+            {
+                lineageInput["reportId"] = inputReportId;
+            }
+
+            lineageInputs.Add(lineageInput);
             distinctRunIds.Add(ReadString(root, "runId") is { Length: > 0 } runIdText ? runIdText : string.Empty);
 
             if (root["results"]?["environment"] is JsonObject environment)
@@ -148,6 +157,7 @@ internal static partial class CtrfReportMerger
             }
 
             JsonNode? results = root["results"];
+            var reportTests = new List<JsonObject>();
             if (results?["tests"] is JsonArray testArray)
             {
                 foreach (JsonNode? test in testArray)
@@ -162,7 +172,12 @@ internal static partial class CtrfReportMerger
                         continue;
                     }
 
-                    mergedTests.Add(testObject.DeepClone());
+                    var clonedTest = (JsonObject)testObject.DeepClone();
+                    mergedTests.Add((JsonNode)clonedTest);
+                    if (mode == CtrfMergeMode.CollapseRetryAttempts)
+                    {
+                        reportTests.Add(clonedTest);
+                    }
 
                     // Fall back to per-test timing so a summary-less input (which the merger explicitly
                     // supports) still contributes to the merged min/max instead of being dropped or
@@ -177,6 +192,11 @@ internal static partial class CtrfReportMerger
                         latestStop = Max(latestStop, testStop);
                     }
                 }
+            }
+
+            if (mode == CtrfMergeMode.CollapseRetryAttempts)
+            {
+                retryReports.Add(reportTests);
             }
 
             if (results?["tool"] is JsonNode toolNode)
@@ -221,7 +241,7 @@ internal static partial class CtrfReportMerger
         // appear in several of them. Collapse those repeats into one row before counting, otherwise the same
         // test would be reported (and counted) several times.
         JsonArray tests = mode == CtrfMergeMode.CollapseRetryAttempts
-            ? CollapseRetryAttempts(mergedTests)
+            ? CollapseRetryAttempts(retryReports)
             : mergedTests;
 
         // Counters are derived from the merged tests[] rather than trusting each input's summary, so
@@ -322,6 +342,19 @@ internal static partial class CtrfReportMerger
         // rather than carrying the first input's 'generatedBy' (which could report a different producer
         // or version when merging reports from different tool versions).
         merged["generatedBy"] = GeneratedByName;
+        // Immediate input lineage does not establish that all executions of the logical run were supplied.
+        // Even strict mode only checks the supplied documents, not the orchestrator's expected input set.
+        merged["extra"] = new JsonObject
+        {
+            ["microsoft.testingplatform"] = new JsonObject
+            {
+                ["documentRole"] = "merged",
+                ["mergeMode"] = mode == CtrfMergeMode.CollapseRetryAttempts ? "collapseRetryAttempts" : "concatenate",
+                ["inputCount"] = reportCount,
+                ["inputs"] = lineageInputs,
+                ["inputCompleteness"] = "unknown",
+            },
+        };
         merged["results"] = resultsObject;
 
         return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
