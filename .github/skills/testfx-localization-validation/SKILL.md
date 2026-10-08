@@ -36,9 +36,13 @@ ordinal IDs. It implemented only a subset of validation, **not feature parity**;
 it already exceeded the complete guard's runtime. Python is retained rather than
 accepting that regression or weakening the checks. These measurements are not a
 claim about every possible PowerShell implementation or other operating systems.
-A future port must demonstrate no performance regression and retain all 39
-regression scenarios, including explicit XML-reader security settings,
-case-sensitive IDs/tokens and literal/escaped placeholder semantics.
+A future port must demonstrate no performance regression and pass the committed
+regression suite, including case-sensitive IDs/tokens and literal/escaped
+placeholder semantics. Explicit .NET XML-reader security settings and DTD
+handling were independently exercised in the feasibility probe, not by the
+Python regression suite. A port must separately verify those settings and
+compare accepted XML-input profiles; passing the suite alone does not prove
+XML security parity.
 
 ## Rules and limits
 
@@ -51,7 +55,8 @@ case-sensitive IDs/tokens and literal/escaped placeholder semantics.
   are alternatives, not duplicates. Groups are legal. Unit IDs are unique
   within a `file` across `trans-unit` and `bin-unit`, not globally across files.
 - Generated units must correspond to neutral string resource IDs, and their
-  source text and comment note must match the neutral value/comment exactly.
+  source text must match the neutral value exactly. When the neutral comment
+  is nonempty, a note must match it exactly.
   Match [XliffTasks' RESX exclusions](https://github.com/dotnet/xliff-tasks/blob/main/src/Microsoft.DotNet.XliffTasks/Model/ResxDocument.cs):
   typed/binary entries, designer names (`>>...`, `*.LayoutSettings`), whole-value
   `{Locked}` comments, and empty/whitespace values do not require units.
@@ -77,9 +82,11 @@ case-sensitive IDs/tokens and literal/escaped placeholder semantics.
 
 ## Diagnose and repair at the authoritative source
 
-Findings are grouped by neutral file, resource ID and defect, with every
-affected catalog path listed. Treat one bad resource copied across 13 locales
-as one root cause, not 13 independent review requests.
+Catalog-derived findings are grouped by neutral file, resource ID and defect,
+with every affected catalog path listed. Findings about the neutral RESX itself
+(XML/root/ID/value/locked-source errors) are emitted once for that file without
+listing its referencing catalogs. Treat one bad resource copied across 13
+locales as one root cause, not 13 independent review requests.
 
 The default command audits the entire current checkout, including tracked and
 non-ignored new catalogs. A finding is **not automatically introduced by the

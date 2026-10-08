@@ -130,8 +130,14 @@ def validate(repository: pathlib.Path, catalogs: list[pathlib.Path]) -> list[Fin
             findings.append(Finding("xliff-file", catalog, "", "expected at least one file element"))
         for file in files:
             original = file.get("original", "")
+            windows_path = pathlib.PureWindowsPath(original)
+            if not original or windows_path.drive or windows_path.root:
+                findings.append(Finding(
+                    "original", catalog, "", "file original must be a relative RESX path",
+                ))
+                continue
             neutral = (path.parent / original.replace("\\", "/")).resolve()
-            if not original or not neutral.is_relative_to(repository) or neutral.suffix != ".resx":
+            if not neutral.is_relative_to(repository) or neutral.suffix != ".resx":
                 findings.append(Finding(
                     "original", catalog, "", "file original must resolve to a RESX inside the repository",
                 ))
@@ -183,7 +189,7 @@ def validate(repository: pathlib.Path, catalogs: list[pathlib.Path]) -> list[Fin
                 if (source.text or "") != value:
                     report("stale-source", name, "source differs from the neutral value; regenerate with UpdateXlf")
                 # Multiple notes are legal. OneLoc/UpdateXlf emits the RESX comment in one note.
-                if not any((note.text or "") == comment for note in notes) and (comment or notes):
+                if comment and not any((note.text or "") == comment for note in notes):
                     report("stale-note", name, "no note matches the neutral comment; regenerate with UpdateXlf")
                 if len(targets) != 1:
                     continue

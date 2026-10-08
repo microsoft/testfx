@@ -105,6 +105,12 @@ class LocalizationTests(unittest.TestCase):
     def test_additional_notes_are_legal(self) -> None:
         self.write_catalog(self.unit().replace("</trans-unit>", "<note>Extra context</note></trans-unit>"))
         self.assertEqual([], self.findings())
+        self.neutral.write_text(
+            '<root><data name="Message"><value>Hello {0}, MSTest.</value></data></root>',
+            encoding="utf-8",
+        )
+        self.write_catalog(self.unit(note="Extra context"))
+        self.assertEqual([], self.findings())
 
     def test_missing_and_duplicate_sources(self) -> None:
         for body in (
@@ -154,6 +160,14 @@ class LocalizationTests(unittest.TestCase):
         self.write_catalog(self.unit(target="bonjour {0}."))
         self.assertEqual({"locked-target"}, self.codes())
 
+    def test_locked_tokens_are_case_sensitive(self) -> None:
+        self.write_catalog(self.unit(target="mstest {0}"))
+        self.assertEqual({"locked-target"}, self.codes())
+
+    def test_resource_ids_are_case_sensitive(self) -> None:
+        self.write_catalog(self.unit(name="message"))
+        self.assertEqual({"missing-unit", "orphan-unit"}, self.codes())
+
     def test_invalid_neutral_lock_is_reported_once(self) -> None:
         self.neutral.write_text(
             '<root><data name="Message"><value>Hello {0}, MSTest.</value>'
@@ -186,7 +200,12 @@ class LocalizationTests(unittest.TestCase):
                 self.assertEqual({code}, self.codes())
 
     def test_original_must_be_an_in_repository_resx(self) -> None:
-        for original in ("", "../../Outside.resx", "../Other.txt"):
+        for original in (
+            "", "../../Outside.resx", "../Other.txt", str(self.neutral), self.neutral.as_posix(),
+            "/workspace/testfx/Resources.resx", r"C:\checkout\Resources.resx",
+            "C:/checkout/Resources.resx", r"\\server\share\Resources.resx",
+            "//server/share/Resources.resx", r"\Resources.resx", "C:Resources.resx",
+        ):
             with self.subTest(original=original):
                 self.write_catalog(self.unit(), original=original)
                 self.assertEqual({"original"}, self.codes())
