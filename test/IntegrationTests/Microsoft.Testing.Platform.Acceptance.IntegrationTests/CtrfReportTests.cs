@@ -42,8 +42,9 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = null,
             ["ONLYPASSINGTESTS"] = hasFailures ? null : "1",
         };
+        string modulePattern = Path.Combine("**", "bin", "Release", TargetFrameworks.NetCurrent, "CtrfModule*.dll");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"test --test-modules \"**\\bin\\Release\\{TargetFrameworks.NetCurrent}\\CtrfModule*.dll\""
+            $"test --test-modules \"{modulePattern}\""
             + $" --root-directory \"{directory.Path}\" --results-directory \"{resultDirectory}\" --report-ctrf",
             environmentVariables: environment,
             failIfReturnValueIsNotZero: false,
