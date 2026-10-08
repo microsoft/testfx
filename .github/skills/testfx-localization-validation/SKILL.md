@@ -18,6 +18,28 @@ On Linux/macOS use `/` in command paths. The standalone
 The guard is read-only. Exit codes are `0` for clean, `1` for catalog findings,
 and `2` for invocation/discovery errors (including no catalogs).
 
+## Runtime choice
+
+Python is a measured exception to the preference for PowerShell when there is
+no performance, feature or security impact. On Windows with Python 3.12.10 and
+PowerShell 7.6.6, nine interleaved warm-cache runs (including process startup)
+gave these medians:
+
+| Workload | Complete Python guard | PowerShell feasibility probe |
+| --- | ---: | ---: |
+| All 364 catalogs / 19,695 units | 1.830 s | 3.686 s |
+| Clean 13-locale fixture | 0.272 s | 0.825 s |
+| Empty runtime startup | 0.063 s | 0.468 s |
+
+The dependency-free probe used .NET XML readers, cached neutral resources and
+ordinal IDs. It implemented only a subset of validation, **not feature parity**;
+it already exceeded the complete guard's runtime. Python is retained rather than
+accepting that regression or weakening the checks. These measurements are not a
+claim about every possible PowerShell implementation or other operating systems.
+A future port must demonstrate no performance regression and retain all 39
+regression scenarios, including explicit XML-reader security settings,
+case-sensitive IDs/tokens and literal/escaped placeholder semantics.
+
 ## Rules and limits
 
 - TestFx uses XLIFF 1.2 with the OASIS namespace and a relative `file original`
