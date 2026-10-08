@@ -51,7 +51,7 @@ internal class TestMethodValidator
 
         bool isAccessible = testMethodInfo.IsPublic
             || (_discoverInternals && testMethodInfo.IsAssembly);
-        bool hasValidInstanceKind = !testMethodInfo.IsStatic || type.IsFSharpModule();
+        bool hasValidInstanceKind = testMethodInfo.IsStatic == type.IsFSharpModule();
 
         // Todo: Decide whether parameter count matters.
         bool isValidTestMethod = isAccessible &&

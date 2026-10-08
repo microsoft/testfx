@@ -62,7 +62,7 @@ internal static class MethodInfoExtensions
 
         return
             method.IsPublic &&
-            (!method.IsStatic || method.DeclaringType!.IsFSharpModule()) &&
+            (method.IsStatic == method.DeclaringType!.IsFSharpModule()) &&
             (method.GetParameters().Length == 0) &&
             method.IsValidReturnType();
     }
@@ -81,7 +81,7 @@ internal static class MethodInfoExtensions
 
         return
             !method.IsAbstract &&
-            (!method.IsStatic || method.DeclaringType!.IsFSharpModule()) &&
+            (method.IsStatic == method.DeclaringType!.IsFSharpModule()) &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
