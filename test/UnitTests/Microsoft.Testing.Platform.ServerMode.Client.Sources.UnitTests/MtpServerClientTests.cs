@@ -1,11 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias serverclient;
+
 using System.Diagnostics;
 using System.Reflection;
 
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Client;
+
+using LogLevel = serverclient::Microsoft.Testing.Platform.Logging.LogLevel;
 
 namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
@@ -24,6 +28,75 @@ public sealed class MtpServerClientTests
     private const string ClientAttachDebuggerMethod = "client/attachDebugger";
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(null, null)]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    [DataRow(true, false)]
+    [DataRow(true, null)]
+    public async Task InitializeAsync_ShowMessage_PreservesRequestAndAcknowledgmentWithoutSubscriber(bool? requested, bool? applied)
+    {
+        using FakeMtpServer server = new();
+        server.InitializeResponse = server.InitializeResponse with
+        {
+            Capabilities = new ServerCapabilities(server.InitializeResponse.Capabilities.TestingCapabilities with { ShowMessage = applied }),
+        };
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = requested });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+
+        Assert.AreEqual(applied, capabilities.ShowMessage);
+        Assert.AreSame(capabilities, client.Capabilities);
+        InitializeRequestArgs request = GetSingleRequestParams<InitializeRequestArgs>(server, JsonRpcMethods.Initialize);
+        Assert.AreEqual(requested, request.Capabilities.ShowMessage);
+        IDictionary<string, object?> serialized = SerializerUtilities.Serialize(request.Capabilities);
+        var testing = (IDictionary<string, object?>)serialized[JsonRpcStrings.Testing]!;
+        Assert.AreEqual(requested.HasValue, testing.ContainsKey(JsonRpcStrings.ShowMessage));
+        if (requested.HasValue)
+        {
+            Assert.AreEqual(requested.Value, testing[JsonRpcStrings.ShowMessage]);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task InitializeAsync_ShowMessageTopLevelFieldDoesNotAcknowledgeRouting(bool nestedFalse)
+    {
+        using FakeMtpServer server = new();
+        IDictionary<string, object?> response = SerializerUtilities.Serialize(server.InitializeResponse);
+        response[JsonRpcStrings.ShowMessage] = true;
+        if (nestedFalse)
+        {
+            var serializedCapabilities = (IDictionary<string, object?>)response[JsonRpcStrings.Capabilities]!;
+            var testing = (IDictionary<string, object?>)serializedCapabilities[JsonRpcStrings.Testing]!;
+            testing[JsonRpcStrings.ShowMessage] = false;
+        }
+
+        server.InitializeResponseOverride = response;
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = true });
+
+        MtpServerCapabilities capabilities = await WithTimeoutAsync(client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        Assert.AreEqual(nestedFalse ? false : null, capabilities.ShowMessage);
+    }
+
+    [TestMethod]
+    [DataRow("true")]
+    [DataRow(1)]
+    public async Task InitializeAsync_InvalidShowMessageAcknowledgmentIsRejected(object value)
+    {
+        using FakeMtpServer server = new();
+        IDictionary<string, object?> response = SerializerUtilities.Serialize(server.InitializeResponse);
+        var capabilities = (IDictionary<string, object?>)response[JsonRpcStrings.Capabilities]!;
+        var testing = (IDictionary<string, object?>)capabilities[JsonRpcStrings.Testing]!;
+        testing[JsonRpcStrings.ShowMessage] = value;
+        server.InitializeResponseOverride = response;
+        using MtpServerClient client = server.ConnectClient(new MtpServerClientOptions { ShowMessage = true });
+
+        await Assert.ThrowsExactlyAsync<MtpServerClientException>(() => client.InitializeAsync(TestContext.CancellationToken)).ConfigureAwait(false);
+        Assert.IsNull(client.Capabilities);
+    }
 
     [TestMethod]
     public void Options_DefaultValues_AreStable()
@@ -734,18 +807,26 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
-    public async Task LogReceived_DecodesLevelAndMessage()
+    [DataRow(JsonRpcMethods.ClientLog, "Information")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Trace")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Debug")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Information")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Warning")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Error")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "Critical")]
+    [DataRow(JsonRpcMethods.ClientShowMessage, "None")]
+    public async Task LogReceived_DecodesLevelAndMessage(string method, string level)
     {
         using FakeMtpServer server = new();
         using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
 
         Task<MtpLogEventArgs> logTask = WaitForEventAsync<MtpLogEventArgs>(h => client.LogReceived += h);
-        await server.SendLogAsync("hello from the server").ConfigureAwait(false);
+        await server.SendLogAsync("hello from the server μ", method, (LogLevel)Enum.Parse(typeof(LogLevel), level)).ConfigureAwait(false);
 
         MtpLogEventArgs args = await WithTimeoutAsync(logTask).ConfigureAwait(false);
 
-        Assert.AreEqual("Information", args.Level);
-        Assert.AreEqual("hello from the server", args.Message);
+        Assert.AreEqual(level, args.Level);
+        Assert.AreEqual("hello from the server μ", args.Message);
     }
 
     [TestMethod]

@@ -1,1 +1,7 @@
 #nullable enable
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ShowMessage = "showMessage" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcMethods.ClientShowMessage = "client/showMessage" -> string!
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.init -> void
+Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.init -> void

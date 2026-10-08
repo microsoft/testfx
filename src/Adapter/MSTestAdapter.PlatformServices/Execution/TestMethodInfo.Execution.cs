@@ -109,7 +109,12 @@ internal partial class TestMethodInfo
 
                 // This duplicates logic in TestMethodRunner (DRY violation).
                 bool setTestContextSucessful = false;
-                if (_executionContext is null)
+                if (Parent.IsFSharpModule)
+                {
+                    setTestContextSucessful = true;
+                    invocationState.CompleteTestContextSetup(true);
+                }
+                else if (_executionContext is null)
                 {
                     classInstance = CreateTestClassInstance(out ITestClassInstanceLease? classInstanceLease);
                     invocationState.PublishActivation(classInstance, classInstanceLease);
@@ -158,7 +163,7 @@ internal partial class TestMethodInfo
                 {
                     // Intentionally using ConfigureAwait(true) here to ensure the continuation is posted to the synchronization context.
                     // In case of WinUI's default synchronization context, this will ensure that the test method runs on the UI thread.
-                    if (await RunTestInitializeMethodAsync(classInstance!, result, timeoutTokenSource).ConfigureAwait(true))
+                    if (await RunTestInitializeMethodAsync(classInstance, result, timeoutTokenSource).ConfigureAwait(true))
                     {
                         if (_executionContext is null)
                         {
@@ -236,7 +241,7 @@ internal partial class TestMethodInfo
                         realException,
                         TestClassName,
                         TestMethodName,
-                        classInstance is not null);
+                        classInstance is not null || Parent.IsFSharpModule);
                 }
 
                 if (result.TestFailureException is TestFailedException testFailedException)
@@ -317,7 +322,7 @@ internal partial class TestMethodInfo
         Func<object?[]?, object>? sourceGeneratedInvoker = PlatformServiceProvider.Instance.ReflectionOperations.GetConstructorInvoker(Parent.ClassType);
         object instance = sourceGeneratedInvoker is not null
             ? sourceGeneratedInvoker(arguments)
-            : Parent.Constructor.Invoke(arguments);
+            : Parent.Constructor!.Invoke(arguments);
 
         bool requiresCleanup = instance is IDisposable;
 #if NET6_0_OR_GREATER
@@ -464,7 +469,7 @@ internal partial class TestMethodInfo
         public bool TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot)
         {
             int testContextSetupState = Volatile.Read(ref _testContextSetupState);
-            if (testContextSetupState == TestContextSetupIncomplete || _classInstance is null)
+            if (testContextSetupState == TestContextSetupIncomplete)
             {
                 snapshot = default;
                 return false;
@@ -482,7 +487,7 @@ internal partial class TestMethodInfo
     }
 
     private readonly record struct TestInvocationCleanupSnapshot(
-        object ClassInstance,
+        object? ClassInstance,
         ITestClassInstanceLease? ClassInstanceLease,
         bool IsTestContextSet);
 }

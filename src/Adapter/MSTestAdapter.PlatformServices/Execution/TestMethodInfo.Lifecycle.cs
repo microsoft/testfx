@@ -198,9 +198,9 @@ internal partial class TestMethodInfo
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object? classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
-        DebugEx.Assert(classInstance != null, "classInstance != null");
+        DebugEx.Assert(classInstance is not null || Parent.IsFSharpModule, "classInstance is null for a non-module test");
         DebugEx.Assert(result != null, "result != null");
 
         MethodInfo? testInitializeMethod = null;
@@ -276,7 +276,7 @@ internal partial class TestMethodInfo
         return false;
     }
 
-    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo methodInfo, object? classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -319,7 +319,7 @@ internal partial class TestMethodInfo
             Resource.GlobalTestInitializeWasCancelled,
             Resource.GlobalTestInitializeTimedOut).ConfigureAwait(false);
 
-    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object? classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
