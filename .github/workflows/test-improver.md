@@ -71,6 +71,7 @@ network:
   allowed:
   - defaults
   - dotnet
+  - github.com
   - node
   - python
   - rust

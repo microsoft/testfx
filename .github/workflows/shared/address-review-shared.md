@@ -15,6 +15,7 @@ network:
   allowed:
     - defaults
     - dotnet
+    - github.com
 
 imports:
   - shared/repo-build-setup.md

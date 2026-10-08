@@ -24,12 +24,13 @@ permissions:
   copilot-requests: write
 
 env:
-  DOTNET_CLI_TELEMETRY_SESSIONID: gha-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
 
 network:
   allowed:
     - defaults
     - dotnet
+    - github.com
     - data.nuget.org
 
 tools:
@@ -272,9 +273,9 @@ record the exact command and limitation in the pull request; never claim an
 unrun check passed. If the change does not compile or its focused tests fail,
 revert the attempted edits, call `noop` with the reason, and stop.
 
-The `DOTNET_CLI_TELEMETRY_SESSIONID` environment value correlates build and test
-telemetry to this workflow run. Preserve it in validation commands and include
-the workflow run URL in the pull request's validation section.
+Preserve `DOTNET_CLI_TELEMETRY_OPTOUT=1` in validation commands so .NET, MTP, and
+MSTest do not send nonessential telemetry from the sandbox. Include the workflow
+run URL in the pull request's validation section.
 
 ## Open the draft pull request
 
