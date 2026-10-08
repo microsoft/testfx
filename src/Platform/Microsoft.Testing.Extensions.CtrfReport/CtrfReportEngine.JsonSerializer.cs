@@ -199,10 +199,12 @@ internal sealed partial class CtrfReportEngine
     private string? ResolveRunId()
     {
         string? runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
-        return !RoslynString.IsNullOrEmpty(runId)
-            ? runId
-            : RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID))
-                ? Guid.NewGuid().ToString("D")
-                : null;
+        if (!RoslynString.IsNullOrEmpty(runId))
+        {
+            return runId;
+        }
+
+        string? executionId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+        return RoslynString.IsNullOrEmpty(executionId) ? Guid.NewGuid().ToString("D") : null;
     }
 }
