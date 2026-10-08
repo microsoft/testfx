@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
@@ -15,7 +16,7 @@ internal static partial class CtrfReportMerger
 {
     // Fields a CTRF retry attempt object (section 11) shares with a test object and that carry over verbatim when
     // a non-final attempt is folded into 'retryAttempts[]'. 'attempt', 'status', and identity are handled
-    // separately because a promoted test's `executionId` becomes the prior attempt's `attemptId`.
+    // separately: executionId identifies the lifecycle, never an individual attempt.
     private static readonly string[] RetryAttemptFields =
     [
         "duration",
@@ -261,7 +262,12 @@ internal static partial class CtrfReportMerger
             ["status"] = ReadStatus(test),
         };
 
-        string? attemptId = ReadString(test, "attemptId") ?? ReadString(test, "executionId");
+        string? attemptId = ReadString(test, "attemptId");
+        if (RoslynString.IsNullOrEmpty(attemptId) && test["extra"] is JsonObject identityExtra)
+        {
+            attemptId = ReadString(identityExtra, "mtpAttemptId");
+        }
+
         if (attemptId is { Length: > 0 })
         {
             attempt["attemptId"] = attemptId;

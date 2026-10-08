@@ -800,6 +800,7 @@ public sealed class CtrfReportMergerTests
         // retryAttempts[] and must keep their place in the merged history instead of being dropped.
         JsonObject firstAttempt = Attempt("t", "failed", uid: "u1", message: "second execution");
         firstAttempt["executionId"] = "second-execution";
+        ((JsonObject)firstAttempt["extra"]!)["mtpAttemptId"] = "second-attempt";
         firstAttempt["retryAttempts"] = new JsonArray(new JsonObject
         {
             ["attemptId"] = "first-attempt",
@@ -822,7 +823,7 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual(1, (long)retryAttempts[0]!["attempt"]!);
         Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
         Assert.AreEqual("first-attempt", (string?)retryAttempts[0]!["attemptId"]);
-        Assert.AreEqual("second-execution", (string?)retryAttempts[1]!["attemptId"]);
+        Assert.AreEqual("second-attempt", (string?)retryAttempts[1]!["attemptId"]);
     }
 
     [TestMethod]
@@ -855,14 +856,16 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
-    public void Merge_CollapseRetryAttempts_MapsExecutionIdentityToAttemptIdentity()
+    public void Merge_CollapseRetryAttempts_PreservesLifecycleAndAttemptIdentities()
     {
         JsonObject failing = Attempt("t", "failed", uid: "u1");
         failing["testId"] = "stable-test";
-        failing["executionId"] = "failed-execution";
+        failing["executionId"] = "shared-execution";
+        ((JsonObject)failing["extra"]!)["mtpAttemptId"] = "failed-attempt";
         JsonObject passing = Attempt("t", "passed", uid: "u1");
         passing["testId"] = "stable-test";
-        passing["executionId"] = "passed-execution";
+        passing["executionId"] = "shared-execution";
+        ((JsonObject)passing["extra"]!)["mtpAttemptId"] = "passed-attempt";
 
         JsonNode test = ((JsonArray)JsonNode.Parse(
             CtrfReportMerger.Merge(
@@ -870,9 +873,44 @@ public sealed class CtrfReportMergerTests
                 CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
 
         Assert.AreEqual("stable-test", (string?)test["testId"]);
-        Assert.AreEqual("passed-execution", (string?)test["executionId"]);
-        Assert.AreEqual("failed-execution", (string?)test["retryAttempts"]![0]!["attemptId"]);
+        Assert.AreEqual("shared-execution", (string?)test["executionId"]);
+        Assert.AreEqual("passed-attempt", (string?)test["extra"]!["mtpAttemptId"]);
+        Assert.AreEqual("failed-attempt", (string?)test["retryAttempts"]![0]!["attemptId"]);
         Assert.IsNull(test["retryAttempts"]![0]!["executionId"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotInventAttemptIdentityForLegacyExecutions()
+    {
+        JsonObject failing = Attempt("t", "failed", uid: "u1");
+        failing["executionId"] = "legacy-execution";
+        JsonObject passing = Attempt("t", "passed", uid: "u1");
+        passing["executionId"] = "legacy-execution";
+        JsonNode test = JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(testEntries: [failing]), BuildReport(testEntries: [passing])],
+            CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]![0]!;
+
+        Assert.AreEqual("legacy-execution", (string?)test["executionId"]);
+        Assert.IsNull(test["retryAttempts"]![0]!["attemptId"]);
+        Assert.AreEqual("failed", (string?)test["retryAttempts"]![0]!["status"]);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("")]
+    [DataRow("standard-attempt")]
+    public void Merge_CollapseRetryAttempts_PrefersStandardAttemptIdentityWhenAvailable(string? attemptId)
+    {
+        JsonObject failing = Attempt("t", "failed", uid: "u1");
+        failing["attemptId"] = attemptId;
+        ((JsonObject)failing["extra"]!)["mtpAttemptId"] = "compatibility-attempt";
+        JsonNode test = JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(testEntries: [failing]), BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")])],
+            CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]![0]!;
+
+        Assert.AreEqual(
+            string.IsNullOrEmpty(attemptId) ? "compatibility-attempt" : attemptId,
+            (string?)test["retryAttempts"]![0]!["attemptId"]);
     }
 
     [TestMethod]

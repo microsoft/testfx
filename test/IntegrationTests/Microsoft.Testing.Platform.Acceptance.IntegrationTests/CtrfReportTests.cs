@@ -280,7 +280,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-1"
+          "uid": "test-1",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -301,7 +302,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
           }
         ],
         "extra": {
-          "uid": "test-2"
+          "uid": "test-2",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -312,7 +314,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "duration": <DURATION_MS>,
         "message": "Transient failure",
         "extra": {
-          "uid": "test-3"
+          "uid": "test-3",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       },
       {
@@ -322,7 +325,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-3"
+          "uid": "test-3",
+          "mtpAttemptId": "<ATTEMPT_ID>"
         }
       }
     ]
@@ -344,6 +348,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
         normalized = Regex.Replace(normalized, @"""runId"": ""[^""]+""", @"""runId"": ""<RUN_ID>""");
         normalized = Regex.Replace(normalized, @"""executionId"": ""[^""]+""", @"""executionId"": ""<EXECUTION_ID>""");
+        normalized = Regex.Replace(normalized, @"""mtpAttemptId"": ""[^""]+""", @"""mtpAttemptId"": ""<ATTEMPT_ID>""");
         normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
         normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
         normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");
