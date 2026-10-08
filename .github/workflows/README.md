@@ -36,12 +36,46 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+### Firewall access for repository work
+
+`network: defaults` covers infrastructure, not package feeds or Git transport.
+Workflows that restore, build, test, or query .NET package metadata need the
+`dotnet` ecosystem. It includes the repository's Azure DevOps feeds and their
+`*.vsblob.vsassets.io` package-download redirects. Workflows that fetch Git history
+or PR branches also allow `github.com` explicitly; GitHub MCP/CLI proxy access does
+not grant direct Git HTTPS access. Keep GitHub API calls on the existing proxies
+rather than adding `api.github.com` to bypass them.
+
+Build/test workflows set `DOTNET_CLI_TELEMETRY_OPTOUT=1` at workflow scope so both
+setup steps and agent-launched child processes inherit it. MTP and MSTest honor
+the same opt-out; do not add Application Insights destinations just to silence
+blocked telemetry requests.
+
+This is client-side suppression, not a blanket firewall ban on telemetry:
+gh-aw v0.89.21's maintained `dotnet` bundle also permits the Application Insights
+ingestion host `dc.services.visualstudio.com`. Adding `dotnet` therefore permits
+that host as well as package and SDK downloads. The removed regional
+`*.in.applicationinsights.azure.com` exception stays denied. The local firewall
+replay verified denial of `southcentralus-0.in.applicationinsights.azure.com`,
+not every telemetry endpoint. Keep the maintained SDK/feed bundle for restore
+compatibility rather than treating the opt-out as an egress-enforcement control.
+
+When investigating a blocked request, inspect the downloaded raw firewall
+`access.log` as well as the gh-aw summary. A `TCP_DENIED` entry remains a denial
+even when its HTTP status is `200`; some gh-aw summaries count those entries as
+allowed. Add only destinations required by the workflow's task, or eliminate
+unnecessary requests instead of broadening the firewall.
+
 ### Compile on the pinned toolchain, and check the pins afterwards
 
 > [!WARNING]
 > A locally installed `gh aw` extension can silently rewrite action pins in **every** `.lock.yml` it touches, even when its `compiler_version` header matches CI. Observed corruptions include `actions/checkout` being downgraded (v7.0.1 → v7.0.0) and `github/gh-aw-actions/setup` losing its immutable SHA in favour of a mutable `@v0.83.1` tag. See [#10258](https://github.com/microsoft/testfx/issues/10258).
 
 The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
+
+This update retains gh-aw v0.89.21 because [v0.89.22](https://github.com/github/gh-aw/releases/tag/v0.89.22) is marked as a prerelease as of October 8, 2026. `gh aw upgrade` selects stable releases by default; this update does not opt into `--pre-releases`.
+
+[`aw.json`](./aw.json) redirects gh-aw v0.89.21's embedded `actions/upload-artifact@v7.0.1` references to v7.0.2. The daily-credit guardrail otherwise retains the embedded version while other generated steps use the newer action cache entry, producing mixed pins. Keep this redirect until the compiler's embedded version catches up, and align handwritten workflows whenever updating a shared action pin.
 
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 

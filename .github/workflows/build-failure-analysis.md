@@ -255,7 +255,7 @@ mcp-servers:
 # binlogs have been retrieved from the failed Azure DevOps build.
 steps:
   - name: Download analysis artifact
-    uses: actions/download-artifact@v8.0.1
+    uses: actions/download-artifact@v8.0.2
     with:
       name: build-failure-analysis-data
       path: /tmp/binlogs

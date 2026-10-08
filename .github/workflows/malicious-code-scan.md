@@ -13,6 +13,11 @@ permissions:
 
 tracker-id: malicious-code-scan
 
+network:
+  allowed:
+    - defaults
+    - github.com
+
 tools:
   github:
     toolsets: [repos, code_security]

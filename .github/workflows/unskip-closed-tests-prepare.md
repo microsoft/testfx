@@ -18,14 +18,14 @@ jobs:
       manifest-digest: ${{ steps.collect.outputs.manifest-digest }}
     steps:
       - name: Checkout trusted source revision
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: "8.0.x"
 
@@ -84,7 +84,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload trusted candidate manifest
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
           path: manifest.json
@@ -107,21 +107,21 @@ jobs:
       pull-requests: read
     steps:
       - name: Download agent output artifact
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           pattern: "{agent,agent-output-fallback}"
           merge-multiple: true
           path: ${{ runner.temp }}/gh-aw/verify-job
 
       - name: Checkout exact analyzed revision without credentials
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: "8.0.x"
 
@@ -130,7 +130,7 @@ jobs:
         run: dotnet restore UnskipClosedTests.Tool.csproj --locked-mode
 
       - name: Download original trusted manifest
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@v8.0.2
         with:
           name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/unskip-closed-tests-manifest
@@ -238,7 +238,7 @@ jobs:
           cp "$RESULT_PATH" "$PACKAGE_DIRECTORY/result.json"
 
       - name: Upload verified unskip package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: unskip-closed-tests-verification-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/unskip-closed-tests-verification
@@ -274,19 +274,19 @@ safe-outputs:
           type: string
       steps:
         - name: Download original trusted manifest
-          uses: actions/download-artifact@v8.0.1
+          uses: actions/download-artifact@v8.0.2
           with:
             name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
             path: ${{ runner.temp }}/unskip-closed-tests-manifest
 
         - name: Download verified unskip package
-          uses: actions/download-artifact@v8.0.1
+          uses: actions/download-artifact@v8.0.2
           with:
             name: unskip-closed-tests-verification-${{ github.run_id }}-${{ github.run_attempt }}
             path: ${{ runner.temp }}/unskip-closed-tests-verification
 
         - name: Checkout exact analyzed revision with publisher credentials
-          uses: actions/checkout@v7
+          uses: actions/checkout@v7.0.1
           with:
             ref: ${{ github.sha }}
             fetch-depth: 0
