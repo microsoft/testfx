@@ -153,6 +153,14 @@ Read these files before selecting a candidate:
 - the owning test project's `.csproj` and `BannedSymbols.txt`, when present
 - `.github/workflows/shared/parallel-safety-audit-shared.md`, especially Step 0,
   the finding taxonomy in Step 1, and declaration reconciliation in category C
+- `.github/skills/testfx-parallel-safety-preflight/SKILL.md`
+
+Apply the preflight before choosing declarations and again against the final
+diff. It reuses the shared rubric and adds implementation-time checks for global
+listeners and their producers, inherited CI environment values, deterministic
+rendezvous, and bounded cleanup that awaits the original workers' termination.
+Use it within this workflow's existing one-project scope and edit allowlist;
+it does not authorize changing assembly scheduling or shared infrastructure.
 
 Re-check the repository at HEAD instead of trusting a fixed list of projects or
 attributes in this prompt. Distinguish MSTest projects from
@@ -238,7 +246,8 @@ sample-input changes.
 
 ## Validate the selected change
 
-Before running tests, perform a declaration-reconciliation self-review using
+Before running tests, repeat the implementation preflight and perform a
+declaration-reconciliation self-review using
 category C of `.github/workflows/shared/parallel-safety-audit-shared.md`. Rebuild
 the resource coverage matrix from the final diff and verify that:
 
@@ -253,6 +262,13 @@ the resource coverage matrix from the final diff and verify that:
 If this self-review finds an uncovered observer, fix the declarations or revert
 the attempted replacement and call `noop`. A passing test run is not evidence
 that a scheduling race is impossible.
+
+For affected asynchronous or environment-dependent tests, include the preflight's
+worker-termination and exact state-restoration evidence in the working notes.
+If a failed assertion, cancellation, or inherited CI gate can leave cleanup
+incomplete or change the expected result, fix it within the bounded patch or
+retain the existing exclusion and select another candidate. Do not accept a
+release signal or timeout-wrapper completion as proof that workers have stopped.
 
 Use the repository-pinned SDK and the smallest build and focused tests that cover
 the edited class or methods. Follow `.github/copilot-instructions.md` exactly:

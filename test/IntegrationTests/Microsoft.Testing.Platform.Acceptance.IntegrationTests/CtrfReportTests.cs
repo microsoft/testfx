@@ -9,6 +9,91 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixture>
 {
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(true, true)]
+    public async Task Ctrf_DotnetTestModuleReports_UseOnlyInvocationWideRunId(bool supplyLogicalRunId, bool hasFailures)
+    {
+        using TempDirectory directory = new();
+        string code = TestAssetFixture.CreateSourceCode([TargetFrameworks.NetCurrent]);
+        using TestAsset first = await TestAsset.GenerateAssetAsync(
+            "CtrfModuleOne",
+            code.Replace(TestAssetFixture.AssetName, "CtrfModuleOne", StringComparison.Ordinal),
+            directory);
+        using TestAsset second = await TestAsset.GenerateAssetAsync(
+            "CtrfModuleTwo",
+            code.Replace(TestAssetFixture.AssetName, "CtrfModuleTwo", StringComparison.Ordinal),
+            directory);
+        await Task.WhenAll(
+            DotnetCli.RunAsync(
+                $"build \"{first.TargetAssetPath}\" -c Release",
+                cancellationToken: TestContext.CancellationToken),
+            DotnetCli.RunAsync(
+                $"build \"{second.TargetAssetPath}\" -c Release",
+                cancellationToken: TestContext.CancellationToken));
+
+        string resultDirectory = Path.Combine(directory.Path, "results");
+        string? logicalRunId = supplyLogicalRunId ? Guid.NewGuid().ToString("D") : null;
+        Dictionary<string, string?> environment = new()
+        {
+            ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = logicalRunId,
+            ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = null,
+            ["ONLYPASSINGTESTS"] = hasFailures ? null : "1",
+        };
+        string modulePattern = Path.Combine("**", "bin", "Release", TargetFrameworks.NetCurrent, "CtrfModule*.dll");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"test --test-modules \"{modulePattern}\""
+            + $" --root-directory \"{directory.Path}\" --results-directory \"{resultDirectory}\" --report-ctrf",
+            environmentVariables: environment,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual((int)(hasFailures ? ExitCode.AtLeastOneTestFailed : ExitCode.Success), result.ExitCode);
+        string[] reports = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories);
+        int physicalReportCount = 0;
+        foreach (var reportData in reports.Select(path =>
+        {
+            using var report = JsonDocument.Parse(File.ReadAllText(path));
+            JsonElement root = report.RootElement;
+            bool hasRunId = root.TryGetProperty("runId", out JsonElement runId);
+            return new
+            {
+                HasRunId = hasRunId,
+                RunId = hasRunId ? runId.GetString() : null,
+                Role = root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString(),
+                TestsCount = root.GetProperty("results").GetProperty("summary").GetProperty("tests").GetInt32(),
+            };
+        }))
+        {
+            if (supplyLogicalRunId)
+            {
+                Assert.AreEqual(logicalRunId, reportData.RunId);
+            }
+            else
+            {
+                Assert.IsFalse(reportData.HasRunId);
+            }
+
+            if (reportData.Role == "execution")
+            {
+                physicalReportCount++;
+                Assert.AreEqual(hasFailures ? 4 : 1, reportData.TestsCount);
+            }
+        }
+
+        Assert.AreEqual(2, physicalReportCount);
+        string[] reportIds = [.. reports.Select(ReadReportId)];
+        Assert.HasCount(reports.Length, reportIds.Distinct(StringComparer.Ordinal));
+    }
+
+    private static string ReadReportId(string path)
+    {
+        using var report = JsonDocument.Parse(File.ReadAllText(path));
+        return report.RootElement.GetProperty("reportId").GetString()!;
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Ctrf_WhenReportCtrfIsNotSpecified_CtrfReportIsNotGenerated(string tfm)
@@ -277,6 +362,11 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
   "runId": "<RUN_ID>",
   "timestamp": "<TIMESTAMP>",
   "generatedBy": "Microsoft.Testing.Extensions.CtrfReport@<VERSION>",
+  "extra": {
+    "microsoft.testingplatform": {
+      "documentRole": "execution"
+    }
+  },
   "results": {
     "tool": {
       "name": "DummyTestFramework",
@@ -501,6 +591,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
             }));
 
+        if (Environment.GetEnvironmentVariable("ONLYPASSINGTESTS") == "1")
+        {
+            context.Complete();
+            return;
+        }
+
         // 2) A plain failing test (no Exception object so no stack trace / exception type
         //    are emitted; only the explanation propagates as CTRF `message`).
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
@@ -573,11 +669,14 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
-            TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
+        public override (string ID, string Name, string Code) GetAssetsToGenerate()
+            => (AssetName, AssetName, CreateSourceCode(TargetFrameworks.All));
+
+        internal static string CreateSourceCode(string[] targetFrameworks)
+            => TestCode
+                .PatchTargetFrameworks(targetFrameworks)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion);
     }
 
     public TestContext TestContext { get; set; }
