@@ -59,6 +59,48 @@ public class RetryTests
     }
 
     [TestMethod]
+    [DataRow(null, null)]
+    [DataRow("", "")]
+    [DataRow(null, "module-execution")]
+    [DataRow("", "module-execution")]
+    [DataRow("logical-run", null)]
+    [DataRow("logical-run", "module-execution")]
+    public void RetryOrchestrator_InitializeEnvironment_UsesOnlyLogicalRunContext(string? logicalRunId, string? executionId)
+    {
+        ServiceProvider serviceProvider = CreateRetryServiceProvider();
+        var environment = Mock.Get(serviceProvider.GetEnvironment());
+        var values = new Dictionary<string, string?>
+        {
+            ["TESTINGPLATFORM_LOGICAL_RUN_ID"] = logicalRunId,
+            ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = executionId,
+        };
+        environment.Setup(value => value.GetEnvironmentVariable(It.IsAny<string>()))
+            .Returns((string name) => values.TryGetValue(name, out string? value) ? value : null);
+        environment.Setup(value => value.SetEnvironmentVariable(It.IsAny<string>(), It.IsAny<string?>()))
+            .Callback((string name, string? value) => values[name] = value);
+        var orchestrator = new RetryOrchestrator(serviceProvider);
+
+        typeof(RetryOrchestrator).GetMethod("InitializeEnvironment", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(orchestrator, null);
+
+        string? actual = values["TESTINGPLATFORM_LOGICAL_RUN_ID"];
+        if (!string.IsNullOrEmpty(logicalRunId))
+        {
+            Assert.AreEqual(logicalRunId, actual);
+        }
+        else if (!string.IsNullOrEmpty(executionId))
+        {
+            Assert.AreEqual(logicalRunId, actual);
+        }
+        else
+        {
+            Assert.IsTrue(Guid.TryParse(actual, out _));
+        }
+
+        Assert.AreEqual(executionId, values["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"]);
+    }
+
+    [TestMethod]
     public void RetryPipeServer_UsesCompactUniqueNameAndLogsIt()
     {
         ServiceProvider serviceProvider = CreateRetryServiceProvider();

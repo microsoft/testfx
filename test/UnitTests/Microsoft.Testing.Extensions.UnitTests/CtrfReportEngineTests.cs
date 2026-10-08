@@ -70,6 +70,7 @@ public class CtrfReportEngineTests
         Assert.IsGreaterThan(0, root.GetProperty("reportId").GetString()!.Length);
         Assert.IsGreaterThan(0, root.GetProperty("timestamp").GetString()!.Length);
         Assert.IsTrue(root.GetProperty("generatedBy").GetString()!.StartsWith("Microsoft.Testing.Extensions.CtrfReport", StringComparison.Ordinal));
+        Assert.AreEqual("execution", root.GetProperty("extra").GetProperty("microsoft.testingplatform").GetProperty("documentRole").GetString());
 
         JsonElement results = root.GetProperty("results");
 
@@ -1269,21 +1270,21 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
+    [DataRow(null)]
+    [DataRow("")]
+    public async Task GenerateReportAsync_RunId_IsOmitted_WhenOnlyTheModuleExecutionIdIsKnown(string? logicalRunId)
     {
-        // The execution id identifies this test application's own process tree. It is per root test application,
-        // not per 'dotnet test' invocation, so it correlates a module with its child processes — not with the
-        // sibling modules of a multi-project run, which legitimately report different logical runs.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns(logicalRunId);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
-        Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+        Assert.IsFalse(document.RootElement.TryGetProperty("runId", out _));
         Assert.AreNotEqual("execution-7", document.RootElement.GetProperty("reportId").GetString());
+        Assert.AreEqual("execution-7", _environmentMock.Object.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"));
     }
 
     [TestMethod]

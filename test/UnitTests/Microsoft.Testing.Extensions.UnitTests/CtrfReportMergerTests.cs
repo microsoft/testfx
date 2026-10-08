@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -53,6 +54,85 @@ public sealed class CtrfReportMergerTests
         List<string> names = [.. testArray.Select(t => t!["name"]!.GetValue<string>())];
         Assert.Contains("TestA", names);
         Assert.Contains("TestC", names);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_RecordsImmediateInputLineageWithoutClaimingCompleteness(bool collapseRetryAttempts)
+    {
+        JsonObject identified = JsonNode.Parse(BuildReport())!.AsObject();
+        identified["reportId"] = "12345678-1234-4234-8234-123456789abc";
+        JsonObject legacy = JsonNode.Parse(BuildReport())!.AsObject();
+        legacy.Remove("reportId");
+        CtrfMergeMode mode = collapseRetryAttempts ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([identified.ToJsonString(), legacy.ToJsonString()], mode))!;
+        JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+
+        string mergeMode = collapseRetryAttempts ? "collapseRetryAttempts" : "concatenate";
+        string expected = $$"""
+{
+  "documentRole": "merged",
+  "mergeMode": "{{mergeMode}}",
+  "inputCount": 2,
+  "inputs": [
+    {
+      "reportId": "12345678-1234-4234-8234-123456789abc"
+    },
+    {}
+  ],
+  "inputCompleteness": "unknown"
+}
+""";
+        Assert.AreEqual(
+            expected.Replace("\r\n", "\n"),
+            metadata.ToJsonString(new JsonSerializerOptions { WriteIndented = true }).Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void Merge_NestedMerge_RecordsImmediateParentRatherThanFlatteningItsInputs()
+    {
+        string first = BuildReport();
+        string second = BuildReport();
+        string parent = CtrfReportMerger.Merge([first, second], CtrfMergeMode.CollapseRetryAttempts);
+        string parentReportId = (string)JsonNode.Parse(parent)!["reportId"]!;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([parent]))!;
+        JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+
+        Assert.AreEqual(1, metadata["inputCount"]!.GetValue<int>());
+        JsonNode input = Assert.ContainsSingle(metadata["inputs"]!.AsArray())!;
+        Assert.AreEqual(parentReportId, (string?)input["reportId"]);
+        Assert.IsNull(input["inputs"]);
+        Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
+    }
+
+    [TestMethod]
+    public void Merge_DuplicateInputs_CountsDocumentsWithoutClaimingCompleteness()
+    {
+        string report = BuildReport();
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([report, """{"not":"ctrf"}""", report]))!;
+        JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+
+        Assert.AreEqual(2, metadata["inputCount"]!.GetValue<int>());
+        JsonArray inputs = metadata["inputs"]!.AsArray();
+        Assert.HasCount(2, inputs);
+        Assert.AreEqual((string?)inputs[0]!["reportId"], (string?)inputs[1]!["reportId"]);
+        Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
+    }
+
+    [TestMethod]
+    public void Merge_LineageMetadata_DoesNotReuseThePreLineageReportId()
+    {
+        const string input = """{"reportFormat":"CTRF","specVersion":"0.1.0","results":{"tests":[]}}""";
+        // The pre-lineage merger produced this id for the same input and concatenate mode.
+        const string legacyReportId = "f3702ec6-010f-93d3-5845-540fb2abe69a";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([input]))!;
+
+        Assert.AreNotEqual(legacyReportId, (string?)merged["reportId"]);
     }
 
     [TestMethod]
