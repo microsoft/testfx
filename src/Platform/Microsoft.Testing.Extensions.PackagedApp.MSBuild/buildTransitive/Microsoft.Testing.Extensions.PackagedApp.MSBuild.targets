@@ -78,7 +78,11 @@
        It consumes RunCommand/RunArguments, not TestingPlatformEnvironmentVariable. -->
   <Target Name="_ConfigureTestingPlatformPackagedAppRunArguments"
           AfterTargets="ComputeRunArguments"
+<<<<<<< HEAD
           DependsOnTargets="_PrepareTestingPlatformPackagedAppRunController">
+=======
+          DependsOnTargets="_ConfigureTestingPlatformPackagedAppEnvironment">
+>>>>>>> Fix native dotnet test routing for packaged applications
     <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(StartAction)' != 'Program'">
       <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' == 'true'">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_TestingPlatformPackagedAppDefaultRunCommand>
       <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' != 'true'">dotnet</_TestingPlatformPackagedAppDefaultRunCommand>
@@ -91,14 +95,20 @@
     <Error Condition="'$(_TestingPlatformPackagedAppConfigureRun)' == 'true' AND '$(_TestingPlatformPackagedAppTargetExtension)' != '.exe'"
            Text="The packaged test host must be an executable. Enable UseAppHost or set TestingPlatformPackagedAppTargetPath to the staged packaged executable." />
     <PropertyGroup Condition="'$(_TestingPlatformPackagedAppConfigureRun)' == 'true'">
+<<<<<<< HEAD
       <RunCommand>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe</RunCommand>
       <!-- An empty argument tail must stay empty: dotnet run only applies launch-profile arguments
            when RunArguments is empty. Keep startup metadata beside the project-local sidecar. -->
       <RunArguments>$(_TestingPlatformPackagedAppRunArguments)</RunArguments>
+=======
+      <RunCommand>$(_TestingPlatformPackagedAppControllerPath)</RunCommand>
+      <RunArguments>--internal-packagedapp-controller-v1 &quot;$(_TestingPlatformPackagedAppTarget)&quot; &quot;$(_TestingPlatformPackagedAppControllerExtensions)&quot; $(_TestingPlatformPackagedAppRunArguments)</RunArguments>
+>>>>>>> Fix native dotnet test routing for packaged applications
       <_TestingPlatformPackagedAppConfigureRun>false</_TestingPlatformPackagedAppConfigureRun>
     </PropertyGroup>
   </Target>
 
+<<<<<<< HEAD
   <Target Name="_PrepareTestingPlatformPackagedAppRunController"
           AfterTargets="CopyFilesToOutputDirectory"
           DependsOnTargets="_ConfigureTestingPlatformPackagedAppEnvironment"
@@ -134,4 +144,6 @@
           DependsOnTargets="_CleanRecordFileWrites"
           Condition="'$(_TestingPlatformPackagedAppBootstrapFile)' != ''" />
 
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
 </Project>

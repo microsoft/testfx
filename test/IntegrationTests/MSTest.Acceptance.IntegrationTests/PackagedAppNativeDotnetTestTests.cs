@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+<<<<<<< HEAD
 using System.Text.Json;
 
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 namespace MSTest.Acceptance.IntegrationTests;
@@ -224,6 +227,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         }
     }
 
+<<<<<<< HEAD
     [TestMethod]
     [DataRow(false, false, false)]
     [DataRow(true, false, false)]
@@ -376,6 +380,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         }
     }
 
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
     private Task<BoundedCommandLineResult> RunAsync(
         string dotnet, string arguments, TestAsset asset, IDictionary<string, string?> environment)
         => RunWindowsApplicationModelCommandAsync(
@@ -443,7 +449,10 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <NoWarn>$(NoWarn);NU1507</NoWarn>
+<<<<<<< HEAD
                 {{(outcome == "EarlyExit" ? "<GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>" : string.Empty)}}
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
               </PropertyGroup>
               <ItemGroup>
                 <None Update="AppxManifest.xml" CopyToOutputDirectory="PreserveNewest" />
@@ -488,6 +497,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                     Assert.IsFalse(fail, "expected host failure");
                 }
             }
+<<<<<<< HEAD
             #file Main.cs
             {{(outcome == "EarlyExit" ? """
             public static class Program
@@ -498,6 +508,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 }
             }
             """ : string.Empty)}}
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
             #file AppxManifest.xml
             <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
                      xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"

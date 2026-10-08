@@ -92,6 +92,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             ? string.Empty
             : OperatingSystem.IsWindows() ? "PackagedConsumer.exe" : "PackagedConsumer";
         Assert.AreEqual($"Command={(selectsController ? "mstest-appmodel-controller.exe" : expectedCommand)}", lines[0]);
+<<<<<<< HEAD
         Assert.AreEqual("Arguments=", lines[1]);
         if (selectsController)
         {
@@ -100,6 +101,17 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             Assert.AreSequenceEqual(
                 ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx"],
                 await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+=======
+        if (selectsController)
+        {
+            Assert.AreEqual(
+                $"Arguments=--internal-packagedapp-controller-v1 \"{executable}\" \"msbuild;packagedapp;trx\"",
+                lines[1].TrimEnd());
+        }
+        else
+        {
+            Assert.AreEqual("Arguments=", lines[1]);
+>>>>>>> Fix native dotnet test routing for packaged applications
         }
     }
 
@@ -141,6 +153,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             new[]
             {
                 "Command=mstest-appmodel-controller.exe",
+<<<<<<< HEAD
                 "Arguments= --results-directory \"a b\" --report-trx",
             },
             await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
@@ -149,6 +162,11 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         Assert.AreSequenceEqual(
             ["--internal-packagedapp-controller-v1", Path.Combine(asset.TargetAssetPath, "staged", "host.exe"), "msbuild;packagedapp;trx"],
             await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+=======
+                $"Arguments=--internal-packagedapp-controller-v1 \"{Path.Combine(asset.TargetAssetPath, "staged", "host.exe")}\" \"msbuild;packagedapp;trx\"  --results-directory \"a b\" --report-trx",
+            },
+            await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken));
+>>>>>>> Fix native dotnet test routing for packaged applications
     }
 
     [TestMethod]
@@ -165,6 +183,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+<<<<<<< HEAD
     [OSCondition(OperatingSystems.Windows)]
     public async Task ComputeRunArguments_StagedControllerIsIncrementalAndCleaned()
     {
@@ -190,6 +209,8 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
     [DataRow("MSTest")]
     [DataRow("MSTest.TestAdapter")]
     [OSCondition(OperatingSystems.Windows)]
@@ -464,8 +485,11 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                                   Lines="Command=$([System.IO.Path]::GetFileName('$(RunCommand)'))" />
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\run-contract.txt"
                                   Lines="$([MSBuild]::Escape('Arguments=$(RunArguments)'))" />
+<<<<<<< HEAD
                 <WriteLinesToFile File="$(MSBuildProjectDirectory)\bootstrap-file-path.txt" Overwrite="true"
                                   Lines="$(_TestingPlatformPackagedAppBootstrapFile)" />
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
               </Target>
             </Project>
             #file Tests.cs

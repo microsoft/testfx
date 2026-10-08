@@ -1,5 +1,8 @@
 #nullable enable
+<<<<<<< HEAD
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.BootstrapFileName = "mstest-appmodel-controller.bootstrap" -> string!
+=======
+>>>>>>> Fix native dotnet test routing for packaged applications
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.ExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID" -> string!
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.ExtensionsEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_EXTENSIONS" -> string!
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.NativePipeEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_DOTNETTEST_PIPE" -> string!
@@ -7,7 +10,11 @@ const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.Pr
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.TargetEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_TARGET" -> string!
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.AddNativeTransport(System.Collections.Generic.IReadOnlyList<string!>! arguments, string? pipeName) -> System.Collections.Generic.IReadOnlyList<string!>!
+<<<<<<< HEAD
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.Configure(string![]! arguments, System.Func<string!, string?>! getEnvironmentVariable, System.Action<string!, string?>! setEnvironmentVariable, string![]? bootstrapArguments = null) -> (string![]! Arguments, bool IsInformationalRequest)
+=======
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.Configure(string![]! arguments, System.Func<string!, string?>! getEnvironmentVariable, System.Action<string!, string?>! setEnvironmentVariable) -> (string![]! Arguments, bool IsNativeInformationalRequest)
+>>>>>>> Fix native dotnet test routing for packaged applications
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppControllerArguments.ValidateNativeApplication(bool runsInAppContainer, System.Collections.Generic.IReadOnlyList<string!>! arguments) -> void
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppNativeInformationalLaunch
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppNativeInformationalLaunch.RunAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher! launcher, Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, bool isPackagedAppEnabled, System.IO.TextWriter! errorOutput, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
