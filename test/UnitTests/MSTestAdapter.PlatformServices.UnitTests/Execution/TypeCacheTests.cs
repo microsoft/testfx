@@ -652,7 +652,7 @@ public class TypeCacheTests : TestContainer
         string expectedMessage =
             string.Format(
                 CultureInfo.InvariantCulture,
-                "Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.",
+                "Method {0}.{1} has wrong signature. The method must be non-static (or static in an F# module), public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.",
                 methodInfo.DeclaringType!.FullName!,
                 methodInfo.Name);
 

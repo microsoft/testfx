@@ -51,10 +51,11 @@ internal class TestMethodValidator
 
         bool isAccessible = testMethodInfo.IsPublic
             || (_discoverInternals && testMethodInfo.IsAssembly);
+        bool hasValidInstanceKind = !testMethodInfo.IsStatic || type.IsFSharpModule();
 
         // Todo: Decide whether parameter count matters.
         bool isValidTestMethod = isAccessible &&
-                                 testMethodInfo is { IsAbstract: false, IsStatic: false } &&
+                                 !testMethodInfo.IsAbstract && hasValidInstanceKind &&
                                  testMethodInfo.IsValidReturnType(_reflectHelper);
 
         if (!isValidTestMethod)
@@ -63,7 +64,7 @@ internal class TestMethodValidator
             // is invalid. If the method is also inaccessible/static/abstract, the generic signature message is
             // more accurate, otherwise the user could "fix" the return type and still have an invalid method.
             bool isInvalidOnlyBecauseOfReturnType = isAccessible
-                && testMethodInfo is { IsAbstract: false, IsStatic: false }
+                && !testMethodInfo.IsAbstract && hasValidInstanceKind
                 && IsGenericValueTaskReturnType(testMethodInfo);
 
             string message = isInvalidOnlyBecauseOfReturnType

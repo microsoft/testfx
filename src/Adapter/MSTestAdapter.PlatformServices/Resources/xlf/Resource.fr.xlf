@@ -499,9 +499,9 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note>{0} is the test class name. {Locked="UTA031"}{Locked="TestContext"}{Locked="non-static"}{Locked="public"}{Locked="public TestContext TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
-        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
-        <target state="translated">UTA007 : la méthode {1} définie dans la classe {0} ne dispose pas d'une signature correcte. Une méthode de test marquée avec l'attribut [TestMethod] doit être non-static, public, void pour return-type et ne doit accepter aucun paramètre. Exemple : public void Test.Class1.Test(). En outre, si vous utilisez async-await dans la méthode test, return-type doit être « Task » ou « ValueTask ». Exemple : public async Task Test.Class1.Test2()</target>
-        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="ValueTask"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</note>
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static (or static in an F# module), public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
+        <target state="needs-review-translation">UTA007 : la méthode {1} définie dans la classe {0} ne dispose pas d'une signature correcte. Une méthode de test marquée avec l'attribut [TestMethod] doit être non-static, public, void pour return-type et ne doit accepter aucun paramètre. Exemple : public void Test.Class1.Test(). En outre, si vous utilisez async-await dans la méthode test, return-type doit être « Task » ou « ValueTask ». Exemple : public async Task Test.Class1.Test2()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="F#"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="ValueTask"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
@@ -646,9 +646,9 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note>{0} is the type name. {Locked="UTA075"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="translated">La méthode {0}.{1} présente une signature incorrecte. La méthode doit être non-static, public et ne doit retourner aucune valeur ni accepter aucun paramètre. En outre, si vous utilisez async-await dans la méthode, return-type doit être « Task » ou « ValueTask ».</target>
-        <note>{0} is the declaring type name. {1} is the method name. {Locked="non-static"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</note>
+        <source>Method {0}.{1} has wrong signature. The method must be non-static (or static in an F# module), public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="needs-review-translation">La méthode {0}.{1} présente une signature incorrecte. La méthode doit être non-static, public et ne doit retourner aucune valeur ni accepter aucun paramètre. En outre, si vous utilisez async-await dans la méthode, return-type doit être « Task » ou « ValueTask ».</target>
+        <note>{0} is the declaring type name. {1} is the method name. {Locked="non-static"}{Locked="F#"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
