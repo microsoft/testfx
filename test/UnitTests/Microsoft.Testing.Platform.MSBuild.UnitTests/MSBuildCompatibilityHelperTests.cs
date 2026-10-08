@@ -10,9 +10,18 @@ using Moq;
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
 [TestClass]
-[DoNotParallelize] // Tests temporarily replace the helper's process-wide caches.
+// All six tests in this class read or write MSBuildCompatibilityHelper's process-wide static caches
+// (s_msBuildVersion, s_supportsMultiline, s_supportsTerminalLoggerWithExtendedMessages), either directly
+// through the public SupportsMultiLine/SupportsTerminalLoggerWithExtendedMessages/TryWriteExtendedMessage
+// methods or by replacing the backing fields via reflection in WithMSBuildVersion. No other test class in
+// this assembly calls MSBuildCompatibilityHelper, so a class-level lock on a dedicated key fully covers the
+// resource while letting this class run concurrently with the rest of the assembly (narrower than the
+// previous assembly-wide-relative [DoNotParallelize] deferral).
+[ResourceLock(MSBuildCompatibilityHelperCacheResource)]
 public sealed class MSBuildCompatibilityHelperTests
 {
+    private const string MSBuildCompatibilityHelperCacheResource = nameof(MSBuildCompatibilityHelperCacheResource);
+
     // The pinned MSBuild package is newer than the 17.10 feature thresholds.
     [TestMethod]
     public void SupportsMultiLine_WithCurrentMSBuildVersion_ReturnsTrue()
