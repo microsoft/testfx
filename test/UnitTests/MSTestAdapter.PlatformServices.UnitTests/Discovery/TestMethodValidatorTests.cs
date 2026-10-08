@@ -4,7 +4,9 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
 
@@ -88,6 +90,51 @@ public class TestMethodValidatorTests : TestContainer
             BindingFlags.Static | BindingFlags.Public)!;
 
         _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
+    }
+
+    public void IsValidTestMethodShouldReturnFalseForInstanceMethodsOnFSharpModules()
+    {
+        SetupTestMethod();
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceMethod")!;
+        _mockReflectHelper
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns(default(AsyncStateMachineAttribute?));
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, moduleType, _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().Be(string.Format(
+            CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectFSharpTestMethodSignature, moduleType.FullName, methodInfo.Name));
+    }
+
+    public void IsValidTestMethodShouldReturnTrueForStaticMethodsOnFSharpModules()
+    {
+        SetupTestMethod();
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("StaticMethod")!;
+        _mockReflectHelper
+            .Setup(x => x.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(methodInfo))
+            .Returns(default(AsyncStateMachineAttribute?));
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, moduleType, _warnings).Should().BeTrue();
+        _warnings.Should().BeEmpty();
+    }
+
+    public void IsValidTestMethodShouldReportFSharpSignatureWarningForInstanceGenericValueTaskMethodsOnModules()
+    {
+        SetupTestMethod();
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceGenericValueTaskMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        // Changing only the return type cannot fix an instance method on an F# module.
+        _testMethodValidator.IsValidTestMethod(methodInfo, moduleType, _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().Be(string.Format(
+            CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectFSharpTestMethodSignature, moduleType.FullName, methodInfo.Name));
+        _warnings[0].Should().NotContain("ValueTask<T>");
     }
 
     public void IsValidTestMethodShouldReturnFalseForGenericTestMethods()

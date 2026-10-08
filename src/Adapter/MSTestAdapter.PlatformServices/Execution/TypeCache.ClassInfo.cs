@@ -126,7 +126,8 @@ internal sealed partial class TypeCache
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType)
     {
-        ConstructorInfo[] constructors = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
+        bool isFSharpModule = classType.IsFSharpModule();
+        ConstructorInfo[] constructors = isFSharpModule ? [] : PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredConstructors(classType);
         (ConstructorInfo CtorInfo, bool IsParameterless)? selectedConstructor = null;
         ConstructorInfo? firstPublicConstructor = null;
 
@@ -165,17 +166,22 @@ internal sealed partial class TypeCache
             selectedConstructor = (firstPublicConstructor, IsParameterless: firstPublicConstructor.GetParameters().Length == 0);
         }
 
-        if (selectedConstructor is null)
+        if (selectedConstructor is null && !isFSharpModule)
         {
             throw new TypeInspectionException(string.Format(CultureInfo.CurrentCulture, Resource.UTA_NoValidConstructor, classType.FullName));
         }
 
-        ConstructorInfo constructor = selectedConstructor.Value.CtorInfo;
-        bool isParameterLessConstructor = selectedConstructor.Value.IsParameterless;
+        ConstructorInfo? constructor = selectedConstructor?.CtorInfo;
+        bool isParameterLessConstructor = selectedConstructor?.IsParameterless ?? true;
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType.Assembly);
 
         TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetSingleAttributeOrDefault<TestClassAttribute>(classType);
+        if (testClassAttribute is null && isFSharpModule)
+        {
+            testClassAttribute = new TestClassAttribute();
+        }
+
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, isParameterLessConstructor, testClassAttribute, assemblyInfo);
 
@@ -330,7 +336,10 @@ internal sealed partial class TypeCache
 
         if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature())
         {
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+            string signatureMessage = classInfo.IsFSharpModule
+                ? Resource.UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature
+                : Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature;
+            string message = string.Format(CultureInfo.CurrentCulture, signatureMessage, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
         }
 
