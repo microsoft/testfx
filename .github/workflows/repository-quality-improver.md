@@ -11,6 +11,15 @@ permissions:
   pull-requests: read
   copilot-requests: write
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+network:
+  allowed:
+    - defaults
+    - dotnet
+    - github.com
+
 tools:
   bash: ["*"]
   cache-memory:

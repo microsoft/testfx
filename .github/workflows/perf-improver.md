@@ -62,10 +62,14 @@ permissions:
   statuses: read
   vulnerability-alerts: read
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
   - defaults
   - dotnet
+  - github.com
   - node
   - python
   - rust
