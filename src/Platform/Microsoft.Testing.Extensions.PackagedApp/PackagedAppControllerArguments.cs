@@ -122,9 +122,19 @@ internal static class PackagedAppControllerArguments
 =======
         string[] controllerArguments = [.. remaining[..transportIndex], .. remaining[(transportIndex + 4)..]];
         bool informationalRequest = controllerArguments.Any(
+<<<<<<< HEAD
             argument => argument.StartsWith("-", StringComparison.Ordinal)
                 && argument.TrimStart('-') is "help" or "?" or "list-tests");
 >>>>>>> Fix native dotnet test routing for packaged applications
+=======
+            argument =>
+            {
+                string option = argument.StartsWith("-", StringComparison.Ordinal) ? argument.TrimStart('-') : string.Empty;
+                return option.Equals("help", StringComparison.OrdinalIgnoreCase)
+                    || option == "?"
+                    || option.Equals("list-tests", StringComparison.OrdinalIgnoreCase);
+            });
+>>>>>>> Match native informational switches case-insensitively
         return (controllerArguments, informationalRequest);
     }
 
