@@ -1,1 +1,7 @@
 #nullable enable
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.CoverageThresholdBranchOptionKey = "coverage-threshold-branch" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.CoverageThresholdLineOptionKey = "coverage-threshold-line" -> string!
+Microsoft.Testing.Platform.Services.CoverageThresholdPolicy
+Microsoft.Testing.Platform.Services.TestCoverageResult.ConfigureThresholds(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.TestHost.SessionUid? sessionUid) -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.GetThresholdErrors() -> System.Collections.Generic.IReadOnlyList<string!>!
+static Microsoft.Testing.Platform.Services.CoverageThresholdPolicy.Evaluate(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>! scopes, Microsoft.Testing.Platform.TestHost.SessionUid? sessionUid) -> (System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! Thresholds, System.Collections.Generic.IReadOnlyList<string!>! Errors)

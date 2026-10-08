@@ -27,6 +27,10 @@ Options:
         When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
+    --coverage-threshold-branch
+        Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
+    --coverage-threshold-line
+        Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
     --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
@@ -190,6 +194,14 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig\.json file\.
+      --coverage-threshold-branch
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall branch coverage percentage, from 0 to 100\. Requires non-empty coverage data from a compatible collector\.
+      --coverage-threshold-line
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall line coverage percentage, from 0 to 100\. Requires non-empty coverage data from a compatible collector\.
       --debug
         Arity: 0
         Hidden: False

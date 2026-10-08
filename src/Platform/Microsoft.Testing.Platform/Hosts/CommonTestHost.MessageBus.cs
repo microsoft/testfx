@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
@@ -20,7 +22,16 @@ internal abstract partial class CommonHost
         // common host/request lifecycle, so it happens for all output modes (terminal, pipe, server, custom)
         // rather than only when the terminal device renders. Without this a prior session's coverage rows and
         // thresholds would be reprinted and its threshold-failure verdict could poison a later session.
-        serviceProvider.GetRequiredService<TestCoverageResult>().Reset();
+        TestCoverageResult coverageResult = serviceProvider.GetRequiredService<TestCoverageResult>();
+        coverageResult.Reset();
+        ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
+        bool controllerOwnsCoverage = commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, out string[]? controllerPid)
+            && controllerPid is [string pid]
+            && serviceProvider.GetEnvironment().GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY}_{pid}") == "1";
+        if (!isDiscoveryRequest && !controllerOwnsCoverage)
+        {
+            coverageResult.ConfigureThresholds(commandLineOptions, testSessionInfo.SessionUid);
+        }
 
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
         bool executionCompletedNotified = false;
@@ -92,6 +103,14 @@ internal abstract partial class CommonHost
 
             // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
             // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                foreach (string error in coverageResult.GetThresholdErrors())
+                {
+                    await outputDevice.DisplayAsync(coverageResult, new ErrorMessageOutputDeviceData(error), CancellationToken.None).ConfigureAwait(false);
+                }
+            }
+
             await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         }
         finally

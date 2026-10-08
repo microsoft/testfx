@@ -347,6 +347,23 @@ internal sealed partial class TestHostControllersTestHost
 
         bool outputConsumerStillRunning = messageBusProxy.ConsumersStillRunning.Any(
             consumer => ReferenceEquals(consumer, outputDevice.OriginalOutputDevice));
+        if (!_controllerFinalizationTimedOut && !testExecutionCanceled && !outputConsumerStillRunning)
+        {
+            TestCoverageResult coverageResult = ServiceProvider.GetRequiredService<TestCoverageResult>();
+            foreach (string error in coverageResult.GetThresholdErrors())
+            {
+                bool displayed = await TryRunControllerExtensionAsync(
+                    token => outputDevice.DisplayAsync(coverageResult, new ErrorMessageOutputDeviceData(error), token),
+                    finalizationCancellationToken).ConfigureAwait(false);
+                if (!displayed)
+                {
+                    MarkOutputDeviceStillRunning(_servicesStillRunning, outputDevice);
+                    _controllerFinalizationTimedOut = true;
+                    break;
+                }
+            }
+        }
+
         if (!_controllerFinalizationTimedOut && !outputConsumerStillRunning)
         {
             bool outputFinalized = await TryRunControllerExtensionAsync(

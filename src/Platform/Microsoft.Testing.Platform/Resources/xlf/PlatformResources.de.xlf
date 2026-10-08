@@ -382,6 +382,26 @@
         <target state="translated">Das Verzeichnis "{0}" konnte nicht gefunden werden</target>
         <note>{0} is the directory path.</note>
       </trans-unit>
+      <trans-unit id="CoverageThresholdAmbiguous">
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements. Enable only one coverage collector.</source>
+        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements. Enable only one coverage collector.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdEmptyMeasurement">
+        <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
+        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdMissingMeasurement">
+        <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
+        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNotMet">
+        <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
+        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
+      </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
         <target state="translated">Warnung: Die Umgebungsvariable „{0}“ ist veraltet und wird in einer zukünftigen Hauptversion entfernt. Verwenden Sie stattdessen „{1}“.</target>
@@ -793,6 +813,31 @@
         <source>Specifies a testconfig.json file.</source>
         <target state="translated">Gibt eine testconfig.json-Datei an.</target>
         <note>{Locked="testconfig.json"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
+        <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
+        <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
+        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <note>{Locked="--list-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
+        <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
+        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <note>{Locked="--retry-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
+        <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
+        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
+        <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>

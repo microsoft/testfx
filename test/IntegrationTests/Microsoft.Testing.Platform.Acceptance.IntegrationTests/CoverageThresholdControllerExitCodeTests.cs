@@ -18,6 +18,36 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
 {
     private const string AssetName = "CoverageThresholdControllerExitCode";
 
+    [TestMethod]
+    [DataRow("--coverage-threshold-line 80 --coverage-threshold-branch 70", "normal", false, (int)ExitCode.Success)]
+    [DataRow("--coverage-threshold-line 81", "normal", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-branch 71", "normal", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-line 80", "missing", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-line 0", "empty", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-line 81", "normal", true, (int)ExitCode.AtLeastOneTestFailed)]
+    [DataRow("--coverage-threshold-line 81 --ignore-exit-code 14", "normal", false, (int)ExitCode.Success)]
+    [DataRow("--coverage-threshold-line 81 --ignore-exit-code 2", "normal", true, (int)ExitCode.Success)]
+    [DataRow("--coverage-threshold-line 80", "testhost", false, (int)ExitCode.Success)]
+    public async Task ConfiguredThreshold_WaitsForControllerCollection(string command, string mode, bool failTest, int expectedExitCode)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            command,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_MEASUREMENTS"] = mode,
+                ["FAIL_TEST"] = failTest ? "1" : "0",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs((ExitCode)expectedExitCode);
+        result.AssertOutputContains("Coverage Threshold Results:");
+        if (mode != "missing")
+        {
+            Assert.DoesNotContain("Enable a compatible coverage collector", result.StandardOutput);
+        }
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task FailedThreshold_InController_ReturnsCoverageThresholdFailedExitCode(string currentTfm)
@@ -154,7 +184,9 @@ public class CoverageThresholdLifetimeHandler : ITestHostProcessLifetimeHandler,
 
     public string Description => nameof(CoverageThresholdLifetimeHandler);
 
-    public Type[] DataTypesProduced => new[] { typeof(TestCoverageThresholdMessage) };
+    public Type[] DataTypesProduced => Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS") == "testhost"
+        ? Array.Empty<Type>()
+        : new[] { typeof(TestCoverageThresholdMessage), typeof(TestCoverageMessage) };
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -166,6 +198,16 @@ public class CoverageThresholdLifetimeHandler : ITestHostProcessLifetimeHandler,
     {
         string? thresholdStatus = Environment.GetEnvironmentVariable("COVERAGE_THRESHOLD_STATUS");
         var sessionUid = new SessionUid("controller");
+        string? measurements = Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS");
+        if (measurements is "normal" or "empty")
+        {
+            await _messageBus.PublishAsync(this, new TestCoverageMessage(
+                sessionUid, CoverageScope.Overall, CoverageMetric.Line,
+                measurements == "empty" ? 0 : 80, measurements == "empty" ? 0 : 100, Uid));
+            await _messageBus.PublishAsync(this, new TestCoverageMessage(
+                sessionUid, CoverageScope.Overall, CoverageMetric.Branch, 70, 100, Uid));
+        }
+
         if (thresholdStatus == "Failed")
         {
             await _messageBus.PublishAsync(this, new TestCoverageThresholdMessage(
@@ -195,7 +237,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage), typeof(TestCoverageMessage) };
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
@@ -214,6 +256,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             DisplayName = "Test1",
             Properties = new PropertyBag(state),
         }));
+
+        if (Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS") == "testhost")
+        {
+            await context.MessageBus.PublishAsync(this, new TestCoverageMessage(
+                context.Request.Session.SessionUid, CoverageScope.Overall, CoverageMetric.Line, 80, 100, Uid));
+        }
 
         context.Complete();
     }

@@ -183,6 +183,40 @@
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>
+  <data name="PlatformCommandLineCoverageThresholdLineDescription" xml:space="preserve">
+    <value>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</value>
+  </data>
+  <data name="PlatformCommandLineCoverageThresholdBranchDescription" xml:space="preserve">
+    <value>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</value>
+  </data>
+  <data name="PlatformCommandLineCoverageThresholdInvalid" xml:space="preserve">
+    <value>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</value>
+    <comment>{0} is the command-line option name.</comment>
+  </data>
+  <data name="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests" xml:space="preserve">
+    <value>Coverage thresholds cannot be combined with '--list-tests'.</value>
+    <comment>{Locked="--list-tests"}</comment>
+  </data>
+  <data name="PlatformCommandLineCoverageThresholdIncompatibleRetries" xml:space="preserve">
+    <value>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</value>
+    <comment>{Locked="--retry-failed-tests"}</comment>
+  </data>
+  <data name="CoverageThresholdMissingMeasurement" xml:space="preserve">
+    <value>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</value>
+    <comment>{0} is the command-line option name.</comment>
+  </data>
+  <data name="CoverageThresholdEmptyMeasurement" xml:space="preserve">
+    <value>'--{0}' requires non-empty overall coverage data for the requested metric.</value>
+    <comment>{0} is the command-line option name.</comment>
+  </data>
+  <data name="CoverageThresholdAmbiguous" xml:space="preserve">
+    <value>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements. Enable only one coverage collector.</value>
+    <comment>{0} is the command-line option name.</comment>
+  </data>
+  <data name="CoverageThresholdNotMet" xml:space="preserve">
+    <value>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</value>
+    <comment>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</comment>
+  </data>
   <data name="CompositeTestExecutionFilterCannotContainNull" xml:space="preserve">
     <value>A composite test execution filter cannot contain a null child filter.</value>
   </data>
