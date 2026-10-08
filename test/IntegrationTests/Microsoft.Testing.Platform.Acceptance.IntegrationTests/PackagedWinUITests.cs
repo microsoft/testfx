@@ -371,14 +371,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                     project.Save(projectPath);
                 }
 
-                DotnetMuxerResult build = await DotnetCli.RunAsync(
-                    $"build \"{projectPath}\" -c Release -p:Platform=x64 -p:RuntimeIdentifier={RuntimeIdentifier} " +
-                    "-p:AppxPackageSigningEnabled=false -p:GenerateAppxPackageOnBuild=false",
-                    workingDirectory: asset.TargetAssetPath,
-                    failIfReturnValueIsNotZero: false,
-                    warnAsError: false,
-                    cancellationToken: TestContext.CancellationToken);
-                Assert.AreEqual(0, build.ExitCode, build.ToString());
+                await BuildPublicSampleAsync(asset, projectName);
 
                 if (native)
                 {
@@ -397,26 +390,12 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                         }
                         """,
                         TestContext.CancellationToken);
-                    var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-                    foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-                    {
-                        string name = entry.Key.ToString()!;
-                        if (!WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(name, StringComparer.OrdinalIgnoreCase)
-                            && !IsOuterRunCorrelationEnvironmentVariable(name))
-                        {
-                            environment[name] = entry.Value?.ToString();
-                        }
-                    }
-
-                    environment["DOTNET_ROOT"] = dotnetRoot;
-                    environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
-                    environment[LauncherModeEnvironmentVariable] = "auto";
                     BoundedCommandLineResult run = await RunWindowsApplicationModelCommandAsync(
                         $"\"{dotnet}\" test --project \"{projectPath}\" --no-build -c Release -a x64 " +
                         $"-p:Platform=x64 -p:RuntimeIdentifier={RuntimeIdentifier} {arguments}",
                         asset.TargetAssetPath,
                         TestContext.CancellationToken,
-                        environment,
+                        CreateNativeEnvironment(dotnet),
                         cleanEnvironment: true);
                     Assert.AreEqual(0, run.ExitCode, run.StandardOutput + run.ErrorOutput);
                 }
@@ -436,6 +415,92 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                 Assert.AreEqual(selectedTest, (string?)result.Attribute("testName"));
                 Assert.AreEqual("Passed", (string?)result.Attribute("outcome"));
             });
+    }
+
+    [TestMethod]
+    public async Task PublicPackagedWinUISample_AllExtensions_ExposeControllerSupport()
+    {
+        (TestAsset asset, string identity, string projectName, string _) = await GeneratePublicSampleAsync(appContainer: false);
+        await ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                await BuildPublicSampleAsync(asset, projectName);
+                string dotnet = Environment.GetEnvironmentVariable(Dotnet10PathEnvironmentVariable)
+                    ?? throw new InvalidOperationException($"{Dotnet10PathEnvironmentVariable} must point to the CI-installed .NET 10 SDK.");
+                string results = Path.Combine(asset.TargetAssetPath, "TestResults", "Extensions");
+                string evidence = Path.Combine(Constants.Root, "artifacts", "log", Constants.BuildConfiguration, "PackagedWinUI", identity, "extension-probes");
+                BoundedCommandLineResult run = await RunWindowsApplicationModelCommandAsync(
+                    $"powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"{Path.Combine(asset.TargetAssetPath, "Probe-Extensions.ps1")}\" " +
+                    $"-DotnetPath \"{dotnet}\" -Configuration Release",
+                    asset.TargetAssetPath,
+                    TestContext.CancellationToken,
+                    CreateNativeEnvironment(dotnet),
+                    cleanEnvironment: true);
+                Assert.AreEqual(1, run.ExitCode, run.StandardOutput + run.ErrorOutput);
+                Directory.CreateDirectory(Path.GetDirectoryName(evidence)!);
+                Directory.Move(results, evidence);
+                using var report = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(evidence, "extensions.json"), TestContext.CancellationToken));
+                JsonElement[] probes = report.RootElement.EnumerateArray().ToArray();
+                Assert.HasCount(14, probes);
+                Assert.IsTrue(probes.Where(probe => probe.GetProperty("Advertised").ValueKind != JsonValueKind.Null)
+                    .All(probe => probe.GetProperty("Advertised").GetBoolean()));
+                Assert.AreSequenceEqual(
+                    new[] { "filter-trx", "hangdump", "packagedapp", "retry" },
+                    probes.Where(probe => probe.GetProperty("Status").GetString() == "Verified")
+                        .Select(probe => probe.GetProperty("Extension").GetString()!)
+                        .Order(StringComparer.Ordinal));
+                JsonElement coverage = Assert.ContainsSingle(probes.Where(probe => probe.GetProperty("Status").GetString() == "Partial"));
+                Assert.AreEqual("coverage", coverage.GetProperty("Extension").GetString());
+                Assert.AreEqual(0, coverage.GetProperty("ExitCode").GetInt32());
+                Assert.AreEqual(0, coverage.GetProperty("CoveredSampleLines").GetInt32());
+                Assert.AreSequenceEqual(
+                    new[] { "fakes", "hotreload", "opentelemetry" },
+                    probes.Where(probe => probe.GetProperty("Status").GetString() == "NotExercised")
+                        .Select(probe => probe.GetProperty("Extension").GetString()!)
+                        .Order(StringComparer.Ordinal));
+                Assert.AreSequenceEqual(
+                    new[] { "azdo", "crashdump", "ctrf", "github", "html", "junit" },
+                    probes.Where(probe => probe.GetProperty("Status").GetString() == "Unavailable")
+                        .Select(probe => probe.GetProperty("Extension").GetString()!)
+                        .Order(StringComparer.Ordinal));
+                Assert.IsTrue(probes.Where(probe => probe.GetProperty("Status").GetString() == "Verified")
+                    .All(probe => probe.GetProperty("ExitCode").GetInt32() == 0));
+                Assert.IsTrue(probes.Where(probe => probe.GetProperty("Status").GetString() == "Unavailable")
+                    .All(probe => probe.GetProperty("ExitCode").GetInt32() != 0));
+            });
+    }
+
+    private async Task BuildPublicSampleAsync(TestAsset asset, string projectName)
+    {
+        DotnetMuxerResult build = await DotnetCli.RunAsync(
+            $"build \"{Path.Combine(asset.TargetAssetPath, $"{projectName}.csproj")}\" -c Release -p:Platform=x64 -p:RuntimeIdentifier={RuntimeIdentifier} " +
+            "-p:AppxPackageSigningEnabled=false -p:GenerateAppxPackageOnBuild=false",
+            workingDirectory: asset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, build.ExitCode, build.ToString());
+    }
+
+    private static Dictionary<string, string?> CreateNativeEnvironment(string dotnet)
+    {
+        var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            string name = entry.Key.ToString()!;
+            if (!WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(name, StringComparer.OrdinalIgnoreCase)
+                && !IsOuterRunCorrelationEnvironmentVariable(name))
+            {
+                environment[name] = entry.Value?.ToString();
+            }
+        }
+
+        environment["DOTNET_ROOT"] = Path.GetDirectoryName(dotnet);
+        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        environment[LauncherModeEnvironmentVariable] = "auto";
+        return environment;
     }
 
     private static async Task<(TestAsset Asset, string Identity, string ProjectName, string SelectedTest)> GeneratePublicSampleAsync(bool appContainer)
@@ -467,7 +532,13 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             source.Append("#file ").AppendLine(relativePath).AppendLine(content);
         }
 
-        TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, source.ToString());
+        if (!appContainer)
+        {
+            source.AppendLine("#file Probe-Extensions.ps1")
+                .AppendLine(File.ReadAllText(Path.Combine(sampleDirectory, "Probe-Extensions.ps1")));
+        }
+
+        TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, source.ToString(), addPublicFeeds: !appContainer);
         try
         {
             string assetsDirectory = Path.Combine(asset.TargetAssetPath, "Assets");
