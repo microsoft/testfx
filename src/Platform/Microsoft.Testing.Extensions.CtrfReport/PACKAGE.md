@@ -25,6 +25,10 @@ Enable the report via the `--report-ctrf` command line option. The report file n
 
 ## Identity and attachment semantics
 
+- `reportId` identifies one report document. Each physical report has its own UUID.
+- `runId` identifies the logical run that can span several modules or retry attempts. A non-empty `TESTINGPLATFORM_LOGICAL_RUN_ID` supplied by the launcher or CI job is preserved unchanged. Standalone executions generate a UUID; standalone retry workflows generate one shared UUID for all attempts and their consolidated report.
+- Generate a fresh logical-run ID for each coordinated invocation and share it only among that invocation's modules, shards, and retries. Do not reuse a CI job ID across separate test commands: one job can contain several distinct logical runs.
+- `TESTINGPLATFORM_DOTNETTEST_EXECUTIONID` is module-local, not invocation-wide, and is never substituted for `runId`. When a `dotnet test` module has only that execution ID and no logical-run context, the optional `runId` is omitted from both physical and consolidated CTRF reports. Set `TESTINGPLATFORM_LOGICAL_RUN_ID` before launching multiple modules or shards to correlate them.
 - `testId` is derived from the producing framework's full Microsoft.Testing.Platform `TestNode.Uid`. Most UIDs within the capture bound are emitted unchanged; values in the reserved `uid:`/`sha256:` namespaces are escaped, and longer UIDs use a deterministic SHA-256 identity, so neither truncation nor a hash-shaped raw UID can merge distinct tests. The CTRF extension does not add cross-run or cross-module stability guarantees beyond the framework's UID contract.
 - `executionId` is a new UUID for each reported CTRF execution lifecycle. Earlier attempts represented in `retryAttempts` receive their own `attemptId`.
 - `extra.uid` continues to carry the Microsoft.Testing.Platform UID for compatibility with reports produced before first-class CTRF identity fields were available.
