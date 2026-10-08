@@ -73,7 +73,7 @@ steps:
     sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- update -qq
     sudo apt-get -o "Dir::Etc::sourcelist=$ubuntu_sources" -o Dir::Etc::sourceparts=- install -y -qq ripgrep
 - name: Download markdownlint log
-  uses: actions/download-artifact@v8.0.1
+  uses: actions/download-artifact@v8.0.2
   with:
     name: markdownlint-log
     path: /tmp/gh-aw/
@@ -179,7 +179,7 @@ jobs:
         fi
     - if: always()
       name: Upload markdownlint log
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: markdownlint-log
         path: markdownlint.log

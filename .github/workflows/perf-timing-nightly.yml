@@ -72,7 +72,7 @@ jobs:
 
       - name: Upload Result.json
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: perf-timing-result-json-windows
           path: artifacts\perf-results\
@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload Result.json
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: perf-timing-result-json-linux
           path: artifacts/perf-results/
@@ -207,7 +207,7 @@ jobs:
           cat artifacts/perf-baseline/Summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload rolling baseline
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: perf-timing-baseline-linux
           path: artifacts/perf-baseline/
@@ -294,7 +294,7 @@ jobs:
 
       - name: Upload allocation benchmark rolling baseline
         if: ${{ always() && steps.previous-benchmark-baseline.outcome == 'success' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: perf-benchmark-baseline-linux
           path: artifacts/perf-benchmark-baseline/
@@ -303,7 +303,7 @@ jobs:
 
       - name: Upload allocation microbenchmarks
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: perf-microbenchmarks-linux
           path: artifacts/perf-microbenchmarks/
