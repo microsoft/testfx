@@ -9,6 +9,32 @@ Produce evidence that the changed product ships correctly **and that the intende
 regressions execute**. A successful build, discovered tests, published TRX, or green
 job alone is not proof. Keep the work bounded to the changed contract.
 
+## Runtime choice
+
+The Python execution gate is a measured exception to the repository's conditional
+PowerShell preference. A native PowerShell candidate did not meet the
+no-performance-regression condition for the documented standalone CLI path.
+On Windows with Python 3.12.10 and PowerShell 7.6.6, three warmups followed by
+15 interleaved fresh-process samples per workload produced these medians,
+including process startup:
+
+| Workload | Python median, ms | PowerShell candidate median, ms |
+| --- | ---: | ---: |
+| Empty runtime startup | 76 | 528 |
+| One passed case | 208 | 898 |
+| 29 skipped cases | 200 | 819 |
+| 1,000 passed cases | 222 | 1,330 |
+| 10,000 passed cases | 222 | 3,882 |
+| 10,000 failed cases | 305 | 3,983 |
+
+Retain the existing gate and all 16 regression scenarios rather than accepting
+that slowdown or weakening validation. This feasibility assessment does not
+establish complete feature/security parity, compare a warmed persistent host,
+or prove that every PowerShell implementation or other OS is slower.
+A future port must preserve the same input-validation and failure contracts,
+demonstrate feature/security parity, and avoid a performance regression on the
+supported invocation paths, including startup where applicable.
+
 ## 1. Choose the smallest shipping contract
 
 Before implementation, record the following in the session or existing PR evidence,
