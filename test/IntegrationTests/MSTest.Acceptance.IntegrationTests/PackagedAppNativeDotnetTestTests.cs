@@ -37,57 +37,56 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
         string executionId = Guid.NewGuid().ToString("N");
-        using TestAsset asset = await GenerateAssetAsync(framework, identity, executionId, outcome);
-        try
-        {
-            string project = Path.Combine(asset.TargetAssetPath, "NativeSidecar.csproj");
-            Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
-            if (noBuild)
+        TestAsset asset = await GenerateAssetAsync(framework, identity, executionId, outcome);
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
             {
-                BoundedCommandLineResult build = await RunAsync(dotnet, $"build \"{project}\" -c Release -bl:build.binlog", asset, environment);
-                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            }
+                string project = Path.Combine(asset.TargetAssetPath, "NativeSidecar.csproj");
+                Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
+                if (noBuild)
+                {
+                    BoundedCommandLineResult build = await RunAsync(dotnet, $"build \"{project}\" -c Release -bl:build.binlog", asset, environment);
+                    Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                }
 
-            BoundedCommandLineResult version = await RunAsync(dotnet, "--version", asset, environment);
-            Assert.AreEqual(SdkVersion, version.StandardOutput.Trim());
-            string results = Path.Combine(asset.TargetAssetPath, "results with spaces");
-            string retry = outcome == "Retry" ? "--retry-failed-tests 2" : string.Empty;
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet,
-                $"test {(positional ? string.Empty : "--project ")}\"{project}\" -c Release {(noBuild ? "--no-build" : string.Empty)} " +
-                $"-bl:native.binlog --report-trx --report-trx-filename \"native report.trx\" --results-directory \"{results}\" " +
-                $"--filter \"Name=Identity|Name=Outcome\" {retry}",
-                asset,
-                environment);
-            Assert.AreEqual(outcome == "Failed" ? 2 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.Contains("total: 2", result.StandardOutput);
-            Assert.Contains(outcome == "Failed" ? "failed: 1" : "failed: 0", result.StandardOutput);
-            Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
-            Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
+                BoundedCommandLineResult version = await RunAsync(dotnet, "--version", asset, environment);
+                Assert.AreEqual(SdkVersion, version.StandardOutput.Trim());
+                string results = Path.Combine(asset.TargetAssetPath, "results with spaces");
+                string retry = outcome == "Retry" ? "--retry-failed-tests 2" : string.Empty;
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet,
+                    $"test {(positional ? string.Empty : "--project ")}\"{project}\" -c Release {(noBuild ? "--no-build" : string.Empty)} " +
+                    $"-bl:native.binlog --report-trx --report-trx-filename \"native report.trx\" --results-directory \"{results}\" " +
+                    $"--filter \"Name=Identity|Name=Outcome\" {retry}",
+                    asset,
+                    environment);
+                Assert.AreEqual(outcome == "Failed" ? 2 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.Contains("total: 2", result.StandardOutput);
+                Assert.Contains(outcome == "Failed" ? "failed: 1" : "failed: 0", result.StandardOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
 
-            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
-            string report = Path.Combine(results, "native_report.trx");
-            Assert.IsTrue(File.Exists(report), result.StandardOutput + result.ErrorOutput);
-            XElement[] tests = XDocument.Load(report).Descendants(ns + "UnitTestResult").ToArray();
-            Assert.HasCount(outcome == "Retry" ? 1 : 2, tests);
-            Assert.HasCount(outcome == "Failed" ? 1 : 0, tests.Where(test => (string?)test.Attribute("outcome") == "Failed"));
-            if (outcome == "Retry")
-            {
-                string[] attempts = Directory.GetFiles(Path.Combine(results, "Retries"), "native_report.trx", SearchOption.AllDirectories)
-                    .Order(StringComparer.Ordinal).ToArray();
-                Assert.HasCount(2, attempts);
-                XElement[] firstAttempt = XDocument.Load(attempts[0]).Descendants(ns + "UnitTestResult").ToArray();
-                XElement[] secondAttempt = XDocument.Load(attempts[1]).Descendants(ns + "UnitTestResult").ToArray();
-                Assert.HasCount(2, firstAttempt);
-                Assert.HasCount(1, firstAttempt.Where(test => (string?)test.Attribute("outcome") == "Failed"));
-                Assert.HasCount(1, secondAttempt);
-                Assert.AreEqual("Passed", (string?)secondAttempt[0].Attribute("outcome"));
-            }
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+                XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                string report = Path.Combine(results, "native_report.trx");
+                Assert.IsTrue(File.Exists(report), result.StandardOutput + result.ErrorOutput);
+                XElement[] tests = XDocument.Load(report).Descendants(ns + "UnitTestResult").ToArray();
+                Assert.HasCount(outcome == "Retry" ? 1 : 2, tests);
+                Assert.HasCount(outcome == "Failed" ? 1 : 0, tests.Where(test => (string?)test.Attribute("outcome") == "Failed"));
+                if (outcome == "Retry")
+                {
+                    string[] attempts = Directory.GetFiles(Path.Combine(results, "Retries"), "native_report.trx", SearchOption.AllDirectories)
+                        .Order(StringComparer.Ordinal).ToArray();
+                    Assert.HasCount(2, attempts);
+                    XElement[] firstAttempt = XDocument.Load(attempts[0]).Descendants(ns + "UnitTestResult").ToArray();
+                    XElement[] secondAttempt = XDocument.Load(attempts[1]).Descendants(ns + "UnitTestResult").ToArray();
+                    Assert.HasCount(2, firstAttempt);
+                    Assert.HasCount(1, firstAttempt.Where(test => (string?)test.Attribute("outcome") == "Failed"));
+                    Assert.HasCount(1, secondAttempt);
+                    Assert.AreEqual("Passed", (string?)secondAttempt[0].Attribute("outcome"));
+                }
+            });
     }
 
     public static IEnumerable<(bool Native, string Arguments, string Outcome, string[] Selected, bool Launched, string? Error)> FilterCases()
@@ -119,88 +118,87 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         string platformArguments = "--report-trx --report-trx-filename \"filtered report.trx\" " +
             "--results-directory \"$(MSBuildProjectDirectory)\\filtered results\" " +
             "--diagnostic --diagnostic-output-directory \"$(MSBuildProjectDirectory)\\diagnostics\" " + arguments;
-        using TestAsset asset = await GenerateAssetAsync(
+        TestAsset asset = await GenerateAssetAsync(
             native ? "net10.0" : "net8.0", identity, executionId, outcome,
             commandLineArguments: native ? string.Empty : platformArguments);
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
-        try
-        {
-            BoundedCommandLineResult version = await RunAsync(dotnet, "--version", asset, environment);
-            Assert.AreEqual(SdkVersion, version.StandardOutput.Trim());
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            string results = Path.Combine(asset.TargetAssetPath, "filtered results");
-            string diagnostics = Path.Combine(asset.TargetAssetPath, "diagnostics");
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet,
-                native
-                    ? $"test NativeSidecar.csproj -c Release --no-build -bl:filtered.binlog " +
-                        $"--report-trx --report-trx-filename \"filtered report.trx\" --results-directory \"{results}\" " +
-                        $"--diagnostic --diagnostic-output-directory \"{diagnostics}\" {arguments}"
-                    : "msbuild NativeSidecar.csproj -t:InvokeTestingPlatform -p:Configuration=Release -bl:filtered.binlog",
-                asset, environment);
-            string output = result.StandardOutput + result.ErrorOutput;
-            if (selected.Length > 0)
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
             {
-                Assert.AreEqual(outcome == "Failed" ? native ? 2 : 1 : 0, result.ExitCode, output);
-                XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
-                XElement[] tests = XDocument.Load(Path.Combine(results, "filtered_report.trx")).Descendants(ns + "UnitTestResult").ToArray();
-                Assert.AreSequenceEqual(selected.Order(StringComparer.Ordinal), tests.Select(test => (string)test.Attribute("testName")!).Order(StringComparer.Ordinal));
-                Assert.AreSequenceEqual(Enumerable.Repeat(outcome, selected.Length), tests.Select(test => (string)test.Attribute("outcome")!));
-            }
-            else
-            {
-                Assert.AreNotEqual(0, result.ExitCode, output);
-                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "execution-id.txt")));
-                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
-                if (error is not null)
+                BoundedCommandLineResult version = await RunAsync(dotnet, "--version", asset, environment);
+                Assert.AreEqual(SdkVersion, version.StandardOutput.Trim());
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                string results = Path.Combine(asset.TargetAssetPath, "filtered results");
+                string diagnostics = Path.Combine(asset.TargetAssetPath, "diagnostics");
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet,
+                    native
+                        ? $"test NativeSidecar.csproj -c Release --no-build -bl:filtered.binlog " +
+                            $"--report-trx --report-trx-filename \"filtered report.trx\" --results-directory \"{results}\" " +
+                            $"--diagnostic --diagnostic-output-directory \"{diagnostics}\" {arguments}"
+                        : "msbuild NativeSidecar.csproj -t:InvokeTestingPlatform -p:Configuration=Release -bl:filtered.binlog",
+                    asset, environment);
+                string output = result.StandardOutput + result.ErrorOutput;
+                if (selected.Length > 0)
                 {
-                    Assert.Contains(error, output);
-                }
-                else if (arguments.Contains("Missing", StringComparison.Ordinal))
-                {
-                    Assert.AreEqual(native ? 8 : 1, result.ExitCode, output);
+                    Assert.AreEqual(outcome == "Failed" ? native ? 2 : 1 : 0, result.ExitCode, output);
                     XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
-                    Assert.IsEmpty(XDocument.Load(Path.Combine(results, "filtered_report.trx")).Descendants(ns + "UnitTestResult"));
+                    XElement[] tests = XDocument.Load(Path.Combine(results, "filtered_report.trx")).Descendants(ns + "UnitTestResult").ToArray();
+                    Assert.AreSequenceEqual(selected.Order(StringComparer.Ordinal), tests.Select(test => (string)test.Attribute("testName")!).Order(StringComparer.Ordinal));
+                    Assert.AreSequenceEqual(Enumerable.Repeat(outcome, selected.Length), tests.Select(test => (string)test.Attribute("outcome")!));
                 }
                 else
                 {
-                    Assert.AreEqual(native ? 8 : 1, result.ExitCode, output);
-                    if (native)
+                    Assert.AreNotEqual(0, result.ExitCode, output);
+                    Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "execution-id.txt")));
+                    Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
+                    if (error is not null)
                     {
-                        // SDK 10 reports the host's error count but does not display its filter parse message.
-                        Assert.Contains(
-                            """
-                            Test run summary: Zero tests ran
-                              error: 1
-                              total: 0
-                              failed: 0
-                              succeeded: 0
-                              skipped: 0
-                            """.ReplaceLineEndings(),
-                            output.ReplaceLineEndings());
+                        Assert.Contains(error, output);
+                    }
+                    else if (arguments.Contains("Missing", StringComparison.Ordinal))
+                    {
+                        Assert.AreEqual(native ? 8 : 1, result.ExitCode, output);
+                        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                        Assert.IsEmpty(XDocument.Load(Path.Combine(results, "filtered_report.trx")).Descendants(ns + "UnitTestResult"));
                     }
                     else
                     {
-                        string[] logs = Directory.GetFiles(diagnostics, "*.diag", SearchOption.AllDirectories);
-                        string diagnosticOutput = string.Join(Environment.NewLine, logs.Select(File.ReadAllText));
-                        Assert.Contains("Incorrect format for TestCaseFilter", diagnosticOutput);
-                        Assert.DoesNotContain("Unknown option '--filter'", diagnosticOutput);
+                        Assert.AreEqual(native ? 8 : 1, result.ExitCode, output);
+                        if (native)
+                        {
+                            // SDK 10 reports the host's error count but does not display its filter parse message.
+                            Assert.Contains(
+                                """
+                                Test run summary: Zero tests ran
+                                  error: 1
+                                  total: 0
+                                  failed: 0
+                                  succeeded: 0
+                                  skipped: 0
+                                """.ReplaceLineEndings(),
+                                output.ReplaceLineEndings());
+                        }
+                        else
+                        {
+                            string[] logs = Directory.GetFiles(diagnostics, "*.diag", SearchOption.AllDirectories);
+                            string diagnosticOutput = string.Join(Environment.NewLine, logs.Select(File.ReadAllText));
+                            Assert.Contains("Incorrect format for TestCaseFilter", diagnosticOutput);
+                            Assert.DoesNotContain("Unknown option '--filter'", diagnosticOutput);
+                        }
                     }
                 }
-            }
 
-            string marker = Path.Combine(asset.TargetAssetPath, "identity.txt");
-            Assert.AreEqual(launched, File.Exists(marker), output);
-            if (launched)
-            {
-                Assert.AreEqual(identity, await File.ReadAllTextAsync(marker, TestContext.CancellationToken));
-            }
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+                string marker = Path.Combine(asset.TargetAssetPath, "identity.txt");
+                Assert.AreEqual(launched, File.Exists(marker), output);
+                if (launched)
+                {
+                    Assert.AreEqual(identity, await File.ReadAllTextAsync(marker, TestContext.CancellationToken));
+                }
+            });
     }
 
     [TestMethod]
@@ -210,35 +208,34 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
-        try
-        {
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            BoundedCommandLineResult result = await RunAsync(dotnet, $"test --project NativeSidecar.csproj -c Release --no-build {option} -bl:native.binlog", asset, environment);
-            Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
-            Assert.DoesNotContain("Windows application-model controller", result.StandardOutput);
-            if (option == "--help")
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
             {
-                Assert.Contains("--filter ", result.StandardOutput);
-            }
-            else
-            {
-                Assert.Contains(
-                    """
-                      Identity
-                      Outcome
-                    Discovered 2 tests.
-                    """.ReplaceLineEndings(),
-                    result.StandardOutput.ReplaceLineEndings());
-            }
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(dotnet, $"test --project NativeSidecar.csproj -c Release --no-build {option} -bl:native.binlog", asset, environment);
+                Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.DoesNotContain("Windows application-model controller", result.StandardOutput);
+                if (option == "--help")
+                {
+                    Assert.Contains("--filter ", result.StandardOutput);
+                }
+                else
+                {
+                    Assert.Contains(
+                        """
+                          Identity
+                          Outcome
+                        Discovered 2 tests.
+                        """.ReplaceLineEndings(),
+                        result.StandardOutput.ReplaceLineEndings());
+                }
+            });
     }
 
     private static string GetDotnet10()
@@ -265,29 +262,28 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed", appContainer);
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed", appContainer);
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         if (!appContainer)
         {
             environment["TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"] = "never";
         }
 
-        try
-        {
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet, "test --project NativeSidecar.csproj -c Release --no-build --list-tests -bl:native.binlog", asset, environment);
-            Assert.AreEqual(4, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.Contains(
-                appContainer ? "Use the InvokeTestingPlatform MSBuild target" : "require an enabled packaged-app launcher",
-                result.StandardOutput + result.ErrorOutput);
-            Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "identity.txt")));
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet, "test --project NativeSidecar.csproj -c Release --no-build --list-tests -bl:native.binlog", asset, environment);
+                Assert.AreEqual(4, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.Contains(
+                    appContainer ? "Use the InvokeTestingPlatform MSBuild target" : "require an enabled packaged-app launcher",
+                    result.StandardOutput + result.ErrorOutput);
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "identity.txt")));
+            });
     }
 
     [TestMethod]
@@ -295,25 +291,24 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
-        try
-        {
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet,
-                "test --project NativeSidecar.csproj -c Release --no-build -p:EnableMicrosoftTestingExtensionsPackagedApp=false -bl:direct.binlog",
-                asset, environment);
-            Assert.AreNotEqual(0, result.ExitCode);
-            Assert.Contains("Startup.Initialize", result.StandardOutput + result.ErrorOutput);
-            Assert.Contains("Zero tests ran", result.StandardOutput);
-            Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "identity.txt")));
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet,
+                    "test --project NativeSidecar.csproj -c Release --no-build -p:EnableMicrosoftTestingExtensionsPackagedApp=false -bl:direct.binlog",
+                    asset, environment);
+                Assert.AreNotEqual(0, result.ExitCode);
+                Assert.Contains("Startup.Initialize", result.StandardOutput + result.ErrorOutput);
+                Assert.Contains("Zero tests ran", result.StandardOutput);
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "identity.txt")));
+            });
     }
 
     [TestMethod]
@@ -322,26 +317,25 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
         string executionId = Guid.NewGuid().ToString("N");
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
-        try
-        {
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            string results = Path.Combine(asset.TargetAssetPath, "results");
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet,
-                $"run --project NativeSidecar.csproj -c Release --no-build -- --report-trx --report-trx-filename run.trx --results-directory \"{results}\"",
-                asset, environment);
-            Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
-            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
-            Assert.HasCount(2, XDocument.Load(Path.Combine(results, "run.trx")).Descendants(ns + "UnitTestResult"));
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                string results = Path.Combine(asset.TargetAssetPath, "results");
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet,
+                    $"run --project NativeSidecar.csproj -c Release --no-build -- --report-trx --report-trx-filename run.trx --results-directory \"{results}\"",
+                    asset, environment);
+                Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                Assert.HasCount(2, XDocument.Load(Path.Combine(results, "run.trx")).Descendants(ns + "UnitTestResult"));
+            });
     }
 
 <<<<<<< HEAD
@@ -530,17 +524,6 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
         environment["MSBUILDUSESERVER"] = "0";
         return environment;
-    }
-
-    private static async Task RemovePackageAsync(string identity)
-    {
-        string script = $"$ErrorActionPreference='Stop'; Get-AppxPackage -Name '{identity}' | " +
-            $"Where-Object {{ $_.Name -ceq '{identity}' }} | Remove-AppxPackage; " +
-            $"if (Get-AppxPackage -Name '{identity}') {{ throw 'Package registration remains' }}";
-        string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
-        BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
-            $"powershell.exe -NoProfile -NonInteractive -EncodedCommand {encoded}", null, CancellationToken.None);
-        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
     }
 
     private static async Task<TestAsset> GenerateAssetAsync(

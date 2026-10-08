@@ -292,10 +292,17 @@ internal static class WindowsApplicationModelTestTools
         }
     }
 
-    public static async Task ExecuteWithPackageCleanupAsync(
+    public static Task ExecuteWithPackageCleanupAsync(
         TestAsset testAsset,
         string packageIdentityName,
         Func<Task> testAction)
+        => ExecuteWithPackageCleanupAsync(testAsset, packageIdentityName, testAction, () => RemoveAndVerifyPackageRegistrationAsync(packageIdentityName));
+
+    internal static async Task ExecuteWithPackageCleanupAsync(
+        TestAsset testAsset,
+        string packageIdentityName,
+        Func<Task> testAction,
+        Func<Task> removeAndVerifyPackage)
     {
         Exception? testFailure = null;
         Exception? cleanupFailure = null;
@@ -311,7 +318,7 @@ internal static class WindowsApplicationModelTestTools
 
         try
         {
-            await RemoveAndVerifyPackageRegistrationAsync(packageIdentityName);
+            await removeAndVerifyPackage();
         }
         catch (Exception ex)
         {
@@ -326,7 +333,7 @@ internal static class WindowsApplicationModelTestTools
         if (testFailure is not null && cleanupFailure is not null)
         {
             throw new AggregateException(
-                $"The UWP acceptance test failed and cleanup also failed for identity '{packageIdentityName}'. The package layout was retained.",
+                $"The application-model acceptance test failed and cleanup also failed for identity '{packageIdentityName}'. The package layout was retained.",
                 testFailure,
                 cleanupFailure);
         }
@@ -334,7 +341,7 @@ internal static class WindowsApplicationModelTestTools
         if (cleanupFailure is not null)
         {
             throw new AggregateException(
-                $"Cleanup failed for UWP identity '{packageIdentityName}'. The package layout was retained.",
+                $"Cleanup failed for package identity '{packageIdentityName}'. The package layout was retained.",
                 cleanupFailure);
         }
 
