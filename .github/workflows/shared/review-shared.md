@@ -11,10 +11,14 @@ permissions:
   contents: read
   pull-requests: read
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
     - defaults
     - dotnet
+    - github.com
 
 tools:
   cache-memory:

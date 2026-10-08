@@ -36,6 +36,7 @@ internal sealed partial class PackagedAppTestHostLauncher
         // The deployed child is the retry attempt itself. Prevent it from enabling this launcher again and
         // recursively creating another controller/deployment layer when the parent was opted in with "always".
         startInfo.Environment[LauncherModeEnvironmentVariable] = NeverMode;
+        startInfo.Environment.Remove(PackagedAppControllerArguments.NativePipeEnvironmentVariable);
 
         Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");

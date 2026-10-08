@@ -41,7 +41,7 @@ imports:
 
 steps:
   - name: Download trusted candidate manifest
-    uses: actions/download-artifact@v8.0.1
+    uses: actions/download-artifact@v8.0.2
     with:
       name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
       path: .gh-aw/unskip-closed-tests

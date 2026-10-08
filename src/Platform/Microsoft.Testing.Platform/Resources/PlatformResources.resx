@@ -1233,4 +1233,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</value>
     <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked=&quot;false&quot;}</comment>
   </data>
+  <data name="IncompleteInformationalResponse" xml:space="preserve">
+    <value>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</value>
+  </data>
 </root>

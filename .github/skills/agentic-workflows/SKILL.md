@@ -1,6 +1,6 @@
 ---
 name: agentic-workflows
-description: Route gh-aw workflow design/create/debug/upgrade requests to the right prompts.
+description: Route gh-aw workflow design/create/debug/upgrade requests and check runtime execution contracts.
 ---
 
 # Agentic Workflows Router
@@ -10,11 +10,29 @@ Use this skill when a user asks to design, create, update, debug, or upgrade Git
 This skill is a dispatcher: identify the task type, load the matching workflow prompt/skill file, and follow it directly. Keep responses concise and ask a clarifying question if the correct prompt is unclear.
 
 Repository overlay (optional):
+
 - If `.github/aw/instructions.md` exists, load it with `@.github/aw/instructions.md` after loading the matched prompt/skill.
 - Precedence: repository overlay instructions override upstream defaults when they conflict.
 
+## Repository runtime contracts
+
+For workflow design, creation, updates, or runtime debugging, also load
+[references/runtime-contracts.md](references/runtime-contracts.md). Before editing,
+map each trigger through trusted pre-agent work, agent sandbox execution, queued
+safe-output application, and later reconciliation. Check the actual tool,
+credential, network, source/artifact identity, and output timing in each phase.
+
+Strict compilation and action-pin auditing remain required for workflow source
+changes; neither proves runtime semantics. Use the reference's path matrix to
+check normal, empty, partial, failure, and manual-trigger behavior. Keep changes
+scoped to the requested workflow; do not expand privileges or upgrade the
+toolchain to paper over a runtime failure.
+
+## Upstream routing
+
 Read only the files you need:
 Load these files from `github/gh-aw` (they are not available locally).
+
 - `.github/aw/action-container-substitutions.md`
 - `.github/aw/agent-runtime-instructions.md`
 - `.github/aw/agentic-chat.md`
@@ -87,11 +105,13 @@ Load these files from `github/gh-aw` (they are not available locally).
 - `.github/aw/update-agentic-workflow.md`
 - `.github/aw/upgrade-agentic-workflows.md`
 - `.github/aw/visual-regression.md`
+- `.github/aw/work-queue.md`
 - `.github/aw/workflow-constraints.md`
 - `.github/aw/workflow-editing.md`
 - `.github/aw/workflow-patterns.md`
 
 After loading the matching workflow prompt or skill, follow it directly:
+
 - Design workflows from scratch via interview: `.github/aw/designer.md`
 - Create new workflows: `.github/aw/create-agentic-workflow.md`
 - Configure or add declarative engines: `.github/aw/configure-agentic-engine.md`

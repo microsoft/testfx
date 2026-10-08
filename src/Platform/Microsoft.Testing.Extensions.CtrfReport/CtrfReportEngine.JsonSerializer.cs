@@ -13,6 +13,18 @@ internal sealed partial class CtrfReportEngine
     private byte[] BuildCtrfJson(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
         List<ReportTestResult> preparedResults = PrepareResults(results);
+        // Reuse the existing per-orchestration scope, also forwarded to activated packaged hosts.
+        // Only retry children may use it: a standalone host can inherit an unrelated TRX run ID.
+        string? retryExecutionId = _commandLineOptions.IsOptionSet("internal-retry-pipename")
+            ? _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID)
+            : null;
+        var testIdCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (ReportTestResult result in preparedResults)
+        {
+            string testId = GetTestId(result.Final);
+            testIdCounts.TryGetValue(testId, out int count);
+            testIdCounts[testId] = count + 1;
+        }
 
         int passed = 0;
         int failed = 0;
@@ -64,11 +76,23 @@ internal sealed partial class CtrfReportEngine
             // several documents — most notably the successive processes of `--retry-failed-tests`, where each
             // attempt writes its own document. ctrf-io/ctrf#58 confirmed that those per-execution documents (and
             // any document merged from them) SHOULD share a `runId` while each keeps its own `reportId`.
-            writer.WriteString("runId", ResolveRunId());
+            if (ResolveRunId() is { } runId)
+            {
+                writer.WriteString("runId", runId);
+            }
+
             writer.WriteString("timestamp", finishTime.ToString("O", CultureInfo.InvariantCulture));
             writer.WriteString(
                 "generatedBy",
                 $"Microsoft.Testing.Extensions.CtrfReport@{ExtensionVersion.DefaultSemVer}");
+
+            writer.WritePropertyName("extra");
+            writer.WriteStartObject();
+            writer.WritePropertyName("microsoft.testingplatform");
+            writer.WriteStartObject();
+            writer.WriteString("documentRole", "execution");
+            writer.WriteEndObject();
+            writer.WriteEndObject();
 
             writer.WritePropertyName("results");
             writer.WriteStartObject();
@@ -144,7 +168,13 @@ internal sealed partial class CtrfReportEngine
 
             foreach (ReportTestResult result in preparedResults)
             {
-                WriteTest(writer, result);
+                string testId = GetTestId(result.Final);
+                // Only an unambiguous case in a coordinated retry workflow can share a lifecycle across processes.
+                // A runId may span independent executions/modules, and duplicate UIDs cannot establish correlation.
+                string executionId = !RoslynString.IsNullOrEmpty(retryExecutionId) && testIdCounts[testId] == 1
+                    ? CtrfReportMerger.CreateDeterministicId([retryExecutionId!, _testFramework.Uid, testId]).ToString("D")
+                    : Guid.NewGuid().ToString("D");
+                WriteTest(writer, result, executionId);
             }
 
             writer.WriteEndArray();
@@ -160,22 +190,21 @@ internal sealed partial class CtrfReportEngine
     /// Resolves the CTRF <c>runId</c>: the id of the logical run this document belongs to.
     /// </summary>
     /// <remarks>
-    /// The retry orchestrator sets <c>TESTINGPLATFORM_LOGICAL_RUN_ID</c> before launching its attempts, so every
-    /// attempt process stamps the same value; a CI job can set it too, to correlate documents this process cannot
-    /// know about (the modules of a multi-project run, or shards on different machines). Failing that, the
-    /// <c>dotnet test</c> execution id identifies this test application's own process tree — note it is per root
-    /// test application, NOT per <c>dotnet test</c> invocation, so sibling modules legitimately get distinct ids
-    /// (see <c>docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md</c>). A fresh id is the last resort:
-    /// an uncorrelated run is a logical run of its own, and CTRF requires the field to be a non-empty string.
+    /// The outer launcher can set <c>TESTINGPLATFORM_LOGICAL_RUN_ID</c> once per coordinated invocation,
+    /// including its modules and retry processes. Without that context, a <c>dotnet test</c> module's
+    /// execution id cannot identify the invocation's logical run, so the optional <c>runId</c> is omitted.
+    /// A standalone execution is its own logical run; the retry orchestrator establishes its shared id
+    /// before launching attempts, and an unretried standalone execution receives a fresh id here.
     /// </remarks>
-    private string ResolveRunId()
+    private string? ResolveRunId()
     {
         string? runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
-        if (RoslynString.IsNullOrEmpty(runId))
+        if (!RoslynString.IsNullOrEmpty(runId))
         {
-            runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+            return runId;
         }
 
-        return RoslynString.IsNullOrEmpty(runId) ? Guid.NewGuid().ToString("D") : runId!;
+        string? executionId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+        return RoslynString.IsNullOrEmpty(executionId) ? Guid.NewGuid().ToString("D") : null;
     }
 }

@@ -204,7 +204,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful))
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { ShowMessage = _options.ShowMessage })
         {
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };
@@ -312,6 +312,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
+        bool? showMessage = null;
         string? protocolVersion = null;
         if (result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj))
         {
@@ -334,6 +335,14 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport = AsBool(testing, JsonRpcStrings.VSTestProviderSupport);
             supportsAttachments = AsBool(testing, JsonRpcStrings.AttachmentsSupport);
             multiConnectionProvider = AsBool(testing, JsonRpcStrings.MultiConnectionProvider);
+            showMessage = testing.TryGetValue(JsonRpcStrings.ShowMessage, out object? showMessageValue)
+                ? showMessageValue switch
+                {
+                    null => null,
+                    bool value => value,
+                    _ => throw new MtpServerClientException($"Expected '{JsonRpcStrings.ShowMessage}' to be a boolean."),
+                }
+                : null;
         }
 
         return new MtpServerCapabilities(
@@ -345,7 +354,10 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport,
             supportsAttachments,
             multiConnectionProvider,
-            protocolVersion);
+            protocolVersion)
+        {
+            ShowMessage = showMessage,
+        };
     }
 
     private bool IsSupportedProtocolVersion(string negotiatedProtocolVersion)
@@ -448,6 +460,7 @@ internal sealed class MtpServerClient : IMtpServerClient
                 break;
 
             case JsonRpcMethods.ClientLog:
+            case JsonRpcMethods.ClientShowMessage:
                 RaiseLog(notification.Params as IDictionary<string, object?>);
                 break;
 

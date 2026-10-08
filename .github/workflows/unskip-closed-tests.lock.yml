@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"00e472b5dd004b0c8979cd063264259625f227f3c49e3af62477c26baae570e7","body_hash":"1de573c9bf1109cfd88d9d55ea0b60931795655ec398306d4dc13841a2ccd09b","compiler_version":"v0.89.21","strict":true,"agent_id":"copilot","engine_versions":{"copilot":"1.0.87"}}
-# gh-aw-manifest: {"version":1,"secrets":["GH_AW_DEFAULT_OTLP_ENDPOINT","GH_AW_DEFAULT_OTLP_HEADERS","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-dotnet","sha":"a98b56852c35b8e3190ac28c8c2271da59106c68","version":"v6.0.0 (source v6)"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"924af5fdc64061cfbf66fb584c8b07e2ac230c60","version":"v0.89.21"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23","digest":"sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23","digest":"sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23","digest":"sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.25","digest":"sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196","pinned_image":"ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196"}],"mcp_servers":[{"name":"safeoutputs","tools":["apply_verified_unskips","missing_data","missing_tool","noop"]}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"7ed88fad95bddde26e9ef53ff61ae732e333d93f0f08f65083866c61d6711de9","body_hash":"1de573c9bf1109cfd88d9d55ea0b60931795655ec398306d4dc13841a2ccd09b","compiler_version":"v0.89.21","strict":true,"agent_id":"copilot","engine_versions":{"copilot":"1.0.87"}}
+# gh-aw-manifest: {"version":1,"secrets":["GH_AW_DEFAULT_OTLP_ENDPOINT","GH_AW_DEFAULT_OTLP_HEADERS","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"9000827ccba6bdab643e8b6fd33ac0654aef8333","version":"v8.0.2"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-dotnet","sha":"a98b56852c35b8e3190ac28c8c2271da59106c68","version":"v6.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"cf430e030ddbb5b0abf93d22962f4752f3646cd9","version":"v7.0.2"},{"repo":"github/gh-aw-actions/setup","sha":"924af5fdc64061cfbf66fb584c8b07e2ac230c60","version":"v0.89.21"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23","digest":"sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23","digest":"sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23","digest":"sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.25","digest":"sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:11c2c544876cdbaffefe0f7f1283b74838c209654b4934a78e23ed11f750490f","pinned_image":"ghcr.io/github/gh-aw-node@sha256:11c2c544876cdbaffefe0f7f1283b74838c209654b4934a78e23ed11f750490f"}],"mcp_servers":[{"name":"safeoutputs","tools":["apply_verified_unskips","missing_data","missing_tool","noop"]}]}
 # This file was automatically generated by gh-aw (v0.89.21). DO NOT EDIT. To debug this workflow, load the skill at https://github.com/github/gh-aw/blob/main/debug.md
 #
 #    ___                   _   _
@@ -41,13 +41,11 @@
 #
 # Custom actions used:
 #   - actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-#   - actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (source v7)
-#   - actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+#   - actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-#   - actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0 (source v6)
+#   - actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
 #   - actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-#   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-#   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (source v7)
+#   - actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
 #   - github/gh-aw-actions/setup@924af5fdc64061cfbf66fb584c8b07e2ac230c60 # v0.89.21
 #
 # Container images used:
@@ -55,7 +53,7 @@
 #   - ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64
 #   - ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0
 #   - ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086
-#   - ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196
+#   - ghcr.io/github/gh-aw-node@sha256:11c2c544876cdbaffefe0f7f1283b74838c209654b4934a78e23ed11f750490f
 
 name: "Unskip Closed Tests"
 on:
@@ -205,7 +203,7 @@ jobs:
       - name: Publish daily AIC scan observations
         if: always() && env.GH_AW_MAX_DAILY_AI_CREDITS != ''
         continue-on-error: true
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: aic-usage-scan-v2
           path: /tmp/gh-aw/agentic-workflow-usage-scan-v2.jsonl
@@ -336,7 +334,7 @@ jobs:
           bash "${RUNNER_TEMP}/gh-aw/actions/print_prompt_summary.sh"
       - name: Upload info artifact
         if: success() || failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: info
           path: /tmp/gh-aw/aw_info.json
@@ -347,7 +345,7 @@ jobs:
           cp -a "${RUNNER_TEMP}/gh-aw/aw-prompts/." /tmp/gh-aw/aw-prompts/
       - name: Upload activation artifact
         if: success() || failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: activation
           include-hidden-files: true
@@ -467,12 +465,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Download activation artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: activation
           path: /tmp/gh-aw
       - name: Download trusted candidate manifest
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
           path: .gh-aw/unskip-closed-tests
@@ -529,7 +527,7 @@ jobs:
           GH_AW_SKILL_DIR: ".github/skills"
         run: bash "${RUNNER_TEMP}/gh-aw/actions/restore_inline_skills.sh"
       - name: Download container images
-        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2 ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64 ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0 ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086 ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.28.23@sha256:2c78aaba1c108e130e2d6d01e4f2cca334ea04c53e6f258913ac34173fe7e3b2 ghcr.io/github/gh-aw-firewall/api-proxy:0.28.23@sha256:c15c3d1208df10c5b588a3657be53742aa982ae0909d1eb1812525268794ca64 ghcr.io/github/gh-aw-firewall/squid:0.28.23@sha256:02ffc56dd40158223064ef03a78c2d9717473c93723b4e403d455ea6f0b09ae0 ghcr.io/github/gh-aw-mcpg:v0.4.25@sha256:9be0a86220e807a0ecc89e53d7453468f7a53fbc6b3d1efd2299025ffe01d086 ghcr.io/github/gh-aw-node@sha256:11c2c544876cdbaffefe0f7f1283b74838c209654b4934a78e23ed11f750490f
       - name: Prepare Safe Outputs Directories
         run: |
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
@@ -1050,7 +1048,7 @@ jobs:
       - name: Upload agent output fallback artifact
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: agent-output-fallback
           path: |
@@ -1066,7 +1064,7 @@ jobs:
       - name: Upload agent artifacts
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: agent
           path: |
@@ -1109,27 +1107,27 @@ jobs:
     steps:
       - name: Download agent output artifact
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: "{agent,agent-output-fallback}"
           merge-multiple: true
           path: ${{ runner.temp }}/gh-aw/safe-jobs/
       - name: Download original trusted manifest
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         env:
           GH_AW_AGENT_OUTPUT: ${{ runner.temp }}/gh-aw/safe-jobs/agent_output.json
         with:
           name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/unskip-closed-tests-manifest
       - name: Download verified unskip package
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         env:
           GH_AW_AGENT_OUTPUT: ${{ runner.temp }}/gh-aw/safe-jobs/agent_output.json
         with:
           name: unskip-closed-tests-verification-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/unskip-closed-tests-verification
       - name: Checkout exact analyzed revision with publisher credentials
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (source v7)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         env:
           GH_AW_AGENT_OUTPUT: ${{ runner.temp }}/gh-aw/safe-jobs/agent_output.json
         with:
@@ -1351,13 +1349,13 @@ jobs:
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
       - name: Checkout trusted source revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (source v7)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1.0
           persist-credentials: false
           ref: ${{ github.sha }}
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0 (source v6)
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 8.0.x
       - name: Restore trusted inventory tool
@@ -1413,7 +1411,7 @@ jobs:
         shell: bash
         working-directory: .github/workflows/unskip-closed-tests-tool
       - name: Upload trusted candidate manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (source v7)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           if-no-files-found: error
           name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
@@ -1468,7 +1466,7 @@ jobs:
       - name: Download agent output artifact
         id: download-agent-output
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: "{agent,agent-output-fallback}"
           merge-multiple: true
@@ -1485,7 +1483,7 @@ jobs:
       - name: Download detection artifact
         id: download-detection-artifact
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: detection
           path: /tmp/gh-aw/threat-detection/
@@ -1493,7 +1491,7 @@ jobs:
         id: download-safe-outputs-manifest
         if: always()
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: safe-outputs-items
           merge-multiple: true
@@ -1506,7 +1504,7 @@ jobs:
         id: upload-usage-artifact
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: usage
           path: |
@@ -1534,7 +1532,7 @@ jobs:
         id: upload-usage-artifact-retry
         if: always() && steps.upload-usage-artifact.outcome == 'failure'
         continue-on-error: true
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: usage
           path: |
@@ -1753,14 +1751,14 @@ jobs:
           GH_AW_INFO_ENGINE_ID: "copilot"
       - name: Download activation artifact
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: activation
           path: /tmp/gh-aw
       - name: Download agent output artifact
         id: download-agent-output
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: "{agent,agent-output-fallback}"
           merge-multiple: true
@@ -1982,7 +1980,7 @@ jobs:
             await main();
       - name: Upload threat detection artifact
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: detection
           path: |
@@ -2122,7 +2120,7 @@ jobs:
       - name: Download agent output artifact
         id: download-agent-output
         continue-on-error: true
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: "{agent,agent-output-fallback}"
           merge-multiple: true
@@ -2167,7 +2165,7 @@ jobs:
             await main();
       - name: Upload Safe Outputs Items
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: safe-outputs-items
           path: |
@@ -2201,26 +2199,26 @@ jobs:
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
       - name: Download agent output artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           merge-multiple: true
           path: ${{ runner.temp }}/gh-aw/verify-job
           pattern: "{agent,agent-output-fallback}"
       - name: Checkout exact analyzed revision without credentials
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (source v7)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0.0
           persist-credentials: false
           ref: ${{ github.sha }}
       - name: Set up .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0 (source v6)
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 8.0.x
       - name: Restore trusted apply tool
         run: dotnet restore UnskipClosedTests.Tool.csproj --locked-mode
         working-directory: .github/workflows/unskip-closed-tests-tool
       - name: Download original trusted manifest
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: unskip-closed-tests-manifest-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/unskip-closed-tests-manifest
@@ -2326,7 +2324,7 @@ jobs:
         shell: bash
         working-directory: .github/workflows/unskip-closed-tests-tool
       - name: Upload verified unskip package
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (source v7)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           if-no-files-found: error
           name: unskip-closed-tests-verification-${{ github.run_id }}-${{ github.run_attempt }}
