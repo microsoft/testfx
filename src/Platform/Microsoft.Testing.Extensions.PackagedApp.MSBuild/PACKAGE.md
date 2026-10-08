@@ -49,6 +49,62 @@ override is preserved and receives no controller-specific environment values.
 Missing or incomplete controller layouts fail explicitly. Runtime and protocol
 errors remain failures; the targets never silently fall back to another host.
 
+### Native `dotnet test`
+
+With .NET SDK 10's Microsoft.Testing.Platform runner, project-based `dotnet test`
+uses the same sidecar for packaged **full-trust** .NET applications, including
+`--no-build`. `ComputeRunArguments` stages the controller under the project's
+intermediate output directory, beside a versioned startup file containing the
+selected executable and extension list. The application's argument tail remains
+unchanged, including an empty tail, so the SDK retains ownership of launch-profile
+selection and explicit-argument precedence. The sidecar also accepts the original
+inline v1 startup prefix. Relative `TestingPlatformPackagedAppTargetPath`
+values are resolved against the project directory. A customized `RunCommand` is
+left unchanged. `UseAppHost=false` requires an explicit staged `.exe` target.
+
+Only the activated test host connects to the native SDK pipe. Its real runtime,
+architecture, tests and shared execution ID are reported for test runs, while the sidecar's exit
+code reflects host failures and controller finalization. This avoids SDK 10's
+requirement that all connected processes use the same runtime and architecture.
+Retries retain that pipe and execution ID. Controller-generated reports such as
+TRX are written to the requested results directory but are **not advertised as
+artifacts to the native SDK**.
+
+Native `--help` and `--list-tests` activate the selected host directly to describe
+its actual options and tests, never the sidecar's dummy framework. They require
+the same Developer Mode and package registration as execution, but use the host's
+own execution ID rather than the controller-to-host handoff used by test runs. SDK 10 ignores
+launch failures during `--help`: if only SDK options appear, use `--list-tests`
+to surface the launch error. Help lists host options, including MSTest's `--filter`,
+even when the controller has not yet registered them for execution.
+SDK 10 can also forward a zero exit code from a host that exits before connecting,
+producing an empty discovery. Host startup must actually initialize MTP rather
+than exit or redirect activation before entering the test platform.
+Native AppContainer execution is rejected: the SDK pipe does not authorize the
+package SID. Use `InvokeTestingPlatform`
+for AppContainer/modern UWP/classic UAP execution and controller-managed artifacts.
+Framework-specific options such as MSTest's `--filter` require corresponding
+registration in the controller; routing alone does not add that support.
+Informational activation handles Ctrl+C by terminating its owned host, but an
+external hard kill of the sidecar cannot guarantee teardown of an AUMID-activated
+help/discovery host.
+
+`ComputeRunArguments` is also used by `dotnet run`, so project-based `dotnet run`
+now starts the sidecar for these same packaged .NET applications rather than
+starting the host without package identity. Unpackaged projects and explicit
+executable overrides retain their original run command.
+Project launch-profile `commandLineArgs` are used when no explicit application
+arguments are supplied; `--no-launch-profile` and explicit arguments keep the
+SDK's normal precedence. The staged controller is incremental and removed by
+`dotnet clean`, including when it was created by a no-build launch query.
+
+`dotnet run -- --help` and `dotnet run -- --list-tests` also activate the actual
+full-trust host. Since AUMID activation does not inherit the caller's standard
+output, the sidecar relays host options and discovered tests over the existing MTP
+named-pipe protocol. Missing or incomplete help/discovery responses are failures,
+not successful empty output. This informational pipe has the same AppContainer
+restriction as native SDK discovery; use `InvokeTestingPlatform` for those hosts.
+
 The legacy executable name `mstest-appmodel-controller.exe` and the
 `MSTEST_APPMODEL_CONTROLLER_EXTENSIONS` and `TESTINGPLATFORM_PACKAGEDAPP_TARGET`
 environment identifiers are intentionally preserved for compatibility.
