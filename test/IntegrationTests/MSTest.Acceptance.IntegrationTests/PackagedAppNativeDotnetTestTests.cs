@@ -23,6 +23,29 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     public TestContext TestContext { get; set; }
 
     [TestMethod]
+    public void NormalizeConsoleOutput_PreservesSdkDiagnosticsAndHostPayload()
+    {
+        const string Escape = "\u001b";
+        string output = $"""
+            Telemetry is: Enabled
+            > mstest-appmodel-controller.exe --list-tests
+            {Escape}[32m  Identity
+              Outcome
+            {Escape}[m
+            {Escape}[32mDiscovered 2 tests.{Escape}[m
+            """;
+        const string expected = """
+            Telemetry is: Enabled
+            > mstest-appmodel-controller.exe --list-tests
+              Identity
+              Outcome
+            Discovered 2 tests.
+            """;
+
+        Assert.AreEqual(expected.ReplaceLineEndings(), NormalizeConsoleOutput(output).ReplaceLineEndings());
+    }
+
+    [TestMethod]
     [DataRow("net8.0", false, false, "Passed")]
     [DataRow("net8.0", true, true, "Passed")]
     [DataRow("net10.0", false, true, "Passed")]
@@ -430,7 +453,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
                 Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
                 Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
-                Assert.DoesNotContain("mstest-appmodel-controller.exe", result.StandardOutput);
+                Assert.DoesNotContain("Usage mstest-appmodel-controller.exe", result.StandardOutput);
                 if (option == "--help")
                 {
                     // The process helper removes empty stdout lines; the unit test checks their formatting.
@@ -444,7 +467,11 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 }
                 else if (option == "--list-tests json")
                 {
-                    using var document = JsonDocument.Parse(result.StandardOutput);
+                    int jsonStart = result.StandardOutput.IndexOf('{');
+                    int jsonEnd = result.StandardOutput.LastIndexOf('}');
+                    Assert.IsGreaterThanOrEqualTo(0, jsonStart, result.StandardOutput);
+                    Assert.IsGreaterThan(jsonStart, jsonEnd, result.StandardOutput);
+                    using var document = JsonDocument.Parse(result.StandardOutput[jsonStart..(jsonEnd + 1)]);
                     Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
                     Assert.AreSequenceEqual(
                         ["Identity", "Outcome"],
@@ -489,14 +516,28 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             });
     }
 
-    private Task<BoundedCommandLineResult> RunAsync(
+    private async Task<BoundedCommandLineResult> RunAsync(
         string dotnet, string arguments, TestAsset asset, IDictionary<string, string?> environment)
-        => RunWindowsApplicationModelCommandAsync(
+    {
+        BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
             $"\"{dotnet}\" {arguments}",
             asset.TargetAssetPath,
             TestContext.CancellationToken,
             environment,
             cleanEnvironment: true);
+        return result with
+        {
+            StandardOutput = NormalizeConsoleOutput(result.StandardOutput),
+            ErrorOutput = NormalizeConsoleOutput(result.ErrorOutput),
+        };
+    }
+
+    private static string NormalizeConsoleOutput(string output)
+    {
+        string withoutAnsi = Regex.Replace(output, "\u001b\\[[0-9;]*m", string.Empty);
+        // The process helper already drops empty lines; ANSI reset-only lines need the same treatment.
+        return string.Join(Environment.NewLine, withoutAnsi.Split(["\r\n", "\n", "\r"], StringSplitOptions.RemoveEmptyEntries));
+    }
 
     private static Dictionary<string, string?> GetNativeEnvironment(string dotnet, string executionId)
     {
@@ -517,6 +558,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         }
 
         ConfigureDotnetSdkEnvironment(environment, dotnet, SdkVersion);
+        environment["DOTNET_CLI_CONTEXT_VERBOSE"] = "1";
         return environment;
     }
 

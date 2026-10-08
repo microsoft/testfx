@@ -125,6 +125,13 @@ SDK, preserving shared cache/tooling settings. Verify actual build provenance
 (`NETCoreSdkVersion`, `MSBuildToolsPath`, extensions and SDK paths) alongside the
 real packaged-host results.
 
+Keep CI's `DOTNET_CLI_CONTEXT_VERBOSE=1` enabled during native CLI validation.
+SDK tracing can name the sidecar executable even when help/discovery correctly
+comes from the activated host, and ANSI color/reset-only lines can interrupt an
+otherwise deterministic block. Normalize presentation only, preserve the
+diagnostics, and assert host usage or the delimited JSON payload rather than
+requiring the entire mixed CLI output to be a payload.
+
 ## 3. Run a focused regression and verify execution
 
 This Windows example runs one existing packed-package regression. It is a package
