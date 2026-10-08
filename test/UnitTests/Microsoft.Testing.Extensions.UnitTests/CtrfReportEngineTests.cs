@@ -1249,7 +1249,10 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_RunId_UsesTheSharedLogicalRunId()
+    [DataRow(null)]
+    [DataRow("")]
+    [DataRow("execution-7")]
+    public async Task GenerateReportAsync_RunId_UsesTheSharedLogicalRunId(string? executionId)
     {
         // ctrf-io/ctrf#58: every process of one logical run — notably the successive attempts of
         // --retry-failed-tests — must stamp the same runId so consumers can tie those documents back
@@ -1257,7 +1260,7 @@ public class CtrfReportEngineTests
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("run-42");
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns(executionId);
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 
@@ -1269,31 +1272,34 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
+    [DataRow(null)]
+    [DataRow("")]
+    public async Task GenerateReportAsync_RunId_IsOmitted_WhenOnlyModuleExecutionContextIsKnown(string? logicalRunId)
     {
-        // The execution id identifies this test application's own process tree. It is per root test application,
-        // not per 'dotnet test' invocation, so it correlates a module with its child processes — not with the
-        // sibling modules of a multi-project run, which legitimately report different logical runs.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns(logicalRunId);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
-        Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+        Assert.IsFalse(document.RootElement.TryGetProperty("runId", out _));
         Assert.AreNotEqual("execution-7", document.RootElement.GetProperty("reportId").GetString());
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_RunId_IsGenerated_WhenNothingCorrelatedTheProcess()
+    [DataRow(null, null)]
+    [DataRow(null, "")]
+    [DataRow("", null)]
+    [DataRow("", "")]
+    public async Task GenerateReportAsync_RunId_IsGenerated_WhenNothingCorrelatedTheProcess(string? logicalRunId, string? executionId)
     {
         // A standalone run is its own logical run, and CTRF requires runId to be a non-empty string when present.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
-        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns(logicalRunId);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns(executionId);
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 

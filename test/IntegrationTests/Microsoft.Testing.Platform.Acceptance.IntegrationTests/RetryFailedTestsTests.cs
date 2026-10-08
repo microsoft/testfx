@@ -676,27 +676,24 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputDoesNotContain("Minimum expected tests policy violation");
     }
 
-    internal static IEnumerable<(string Tfm, string? SeededVariable)> GetRunIdMatrix()
+    internal static IEnumerable<(string Tfm, string? LogicalRunId, string? ExecutionId, string? ExpectedRunId)> GetRunIdMatrix()
     {
         foreach (string tfm in TargetFrameworks.Net)
         {
-            // The orchestrator resolves the logical run id as: an explicitly set id wins, else the dotnet test
-            // execution id (which already identifies this test application's process tree), else a fresh one.
-            // Exercise all three branches.
-            yield return (tfm, null);
-            yield return (tfm, EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
-            yield return (tfm, EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+            yield return (tfm, null, null, null);
+            yield return (tfm, "invocation-run", null, "invocation-run");
+            yield return (tfm, "invocation-run", "module-execution", "invocation-run");
+            yield return (tfm, null, "module-execution", null);
+            yield return (tfm, string.Empty, "module-execution", null);
         }
     }
 
     [TestMethod]
     [DynamicData(nameof(GetRunIdMatrix))]
-    public async Task RetryFailedTests_CtrfReports_ShareRunIdButNotReportId(string tfm, string? seededVariable)
+    public async Task RetryFailedTests_CtrfReports_UseOnlyLogicalRunContext(string tfm, string? logicalRunId, string? executionId, string? expectedRunId)
     {
-        // Each attempt is a separate process that writes its own CTRF document, but together they are one
-        // logical run. Per ctrf-io/ctrf#58 those documents SHOULD share a `runId` while each stays a distinct
-        // artifact with its own `reportId`. This is the only test that exercises the cross-process contract:
-        // the engine unit tests mock IEnvironment, so they cannot observe the orchestrator's seeding.
+        // Exercise inheritance across real retry processes: invocation-wide context is shared, but a
+        // module-local execution id must never be promoted to a logical run id.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
 
@@ -707,16 +704,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             { "METHOD1", "1" },
             { "RESULTDIR", resultDirectory },
+            { EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID, logicalRunId },
+            { EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, executionId },
         };
-
-        // When a correlation id is supplied from outside, the attempts must adopt THAT id rather than minting
-        // their own — that is what lets a CI job tie several modules or machines into one logical run.
-        string? expectedRunId = null;
-        if (seededVariable is not null)
-        {
-            expectedRunId = $"seeded-{Guid.NewGuid():N}";
-            environmentVariables[seededVariable] = expectedRunId;
-        }
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--retry-failed-tests 3 --report-ctrf --results-directory {resultDirectory}",
@@ -733,12 +723,31 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         ];
         Assert.HasCount(3, ctrfFiles, $"Expected two per-attempt reports and one consolidated report.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
 
-        string[] runIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "runId"))];
         string[] reportIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "reportId"))];
 
-        Assert.HasCount(1, runIds.Distinct(StringComparer.Ordinal));
         Assert.HasCount(3, reportIds.Distinct(StringComparer.Ordinal));
-        Assert.AreNotEqual(runIds[0], reportIds[0], "runId and reportId identify different things and must not be the same value.");
+        if (expectedRunId is null && !string.IsNullOrEmpty(executionId))
+        {
+            foreach (string path in ctrfFiles)
+            {
+                using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+                Assert.IsFalse(report.RootElement.TryGetProperty("runId", out _), path);
+            }
+        }
+        else
+        {
+            string[] runIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "runId"))];
+            Assert.HasCount(1, runIds.Distinct(StringComparer.Ordinal));
+            Assert.DoesNotContain(runIds[0], reportIds);
+            if (expectedRunId is not null)
+            {
+                Assert.AreEqual(expectedRunId, runIds[0]);
+            }
+            else
+            {
+                Assert.IsTrue(Guid.TryParse(runIds[0], out _), $"A standalone retry run must mint a shared GUID, got '{runIds[0]}'.");
+            }
+        }
 
         string consolidatedPath = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly).Single();
         using var consolidated = System.Text.Json.JsonDocument.Parse(File.ReadAllText(consolidatedPath));
@@ -780,15 +789,6 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.AreEqual(
             physicalExecutions.Single(execution => execution.Status == "failed").ExecutionId,
             retryAttempt.GetProperty("attemptId").GetString());
-
-        if (expectedRunId is not null)
-        {
-            Assert.AreEqual(expectedRunId, runIds[0], $"'{seededVariable}' must be honored instead of minting a new run id.");
-        }
-        else
-        {
-            Assert.IsTrue(Guid.TryParse(runIds[0], out _), $"An uncorrelated run must mint a GUID run id, got '{runIds[0]}'.");
-        }
     }
 
     [TestMethod]

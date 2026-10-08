@@ -64,7 +64,12 @@ internal sealed partial class CtrfReportEngine
             // several documents — most notably the successive processes of `--retry-failed-tests`, where each
             // attempt writes its own document. ctrf-io/ctrf#58 confirmed that those per-execution documents (and
             // any document merged from them) SHOULD share a `runId` while each keeps its own `reportId`.
-            writer.WriteString("runId", ResolveRunId());
+            string? runId = ResolveRunId();
+            if (runId is not null)
+            {
+                writer.WriteString("runId", runId);
+            }
+
             writer.WriteString("timestamp", finishTime.ToString("O", CultureInfo.InvariantCulture));
             writer.WriteString(
                 "generatedBy",
@@ -162,20 +167,18 @@ internal sealed partial class CtrfReportEngine
     /// <remarks>
     /// The retry orchestrator sets <c>TESTINGPLATFORM_LOGICAL_RUN_ID</c> before launching its attempts, so every
     /// attempt process stamps the same value; a CI job can set it too, to correlate documents this process cannot
-    /// know about (the modules of a multi-project run, or shards on different machines). Failing that, the
-    /// <c>dotnet test</c> execution id identifies this test application's own process tree — note it is per root
-    /// test application, NOT per <c>dotnet test</c> invocation, so sibling modules legitimately get distinct ids
-    /// (see <c>docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md</c>). A fresh id is the last resort:
-    /// an uncorrelated run is a logical run of its own, and CTRF requires the field to be a non-empty string.
+    /// know about (the modules of a multi-project run, or shards on different machines). The
+    /// <c>dotnet test</c> execution id is module-local, not invocation-wide, so it cannot identify that logical
+    /// run. Without invocation context, omit the optional field rather than claim each module is a separate
+    /// run. A standalone execution is its own logical run and can generate a fresh id.
     /// </remarks>
-    private string ResolveRunId()
+    private string? ResolveRunId()
     {
         string? runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
-        if (RoslynString.IsNullOrEmpty(runId))
-        {
-            runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
-        }
-
-        return RoslynString.IsNullOrEmpty(runId) ? Guid.NewGuid().ToString("D") : runId!;
+        return !RoslynString.IsNullOrEmpty(runId)
+            ? runId
+            : RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID))
+                ? Guid.NewGuid().ToString("D")
+                : null;
     }
 }
