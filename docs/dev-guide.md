@@ -162,6 +162,12 @@ For Linux and macOS:
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
+### Code coverage
+
+Code coverage is enabled by default for repository tests. Each test project's generated `coverage.config` includes only its directly referenced production assemblies, excluding shared test-host infrastructure, NuGet package sources, and generated artifacts. `Microsoft.Testing.TestInfrastructure` is explicitly excluded at both the assembly and source levels.
+
+Compatibility shims in `Polyfills` directories are excluded from coverage. `Ensure.cs` and `ProcessExtensions.cs` remain included because their argument validation and process-lifetime behavior are repository-owned logic worth testing. Coverage exclusions do not change which tests execute.
+
 ### Mutation testing
 
 The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) for mutation testing. The checked-in `MutationTesting.slnx` provides a focused local run for the server-mode client sources, while the weekly workflow generates isolated solutions for every module in `eng/mutation-testing/modules.json`, including all Microsoft.Testing.Platform extensions. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
