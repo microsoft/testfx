@@ -54,3 +54,13 @@ plugins:
       ref: main
       install:
         mode: summary
+    - id: dotnet
+      source: dotnet/skills
+      ref: main
+      include:
+        - skills/csharp-expert
+        - skills/csharp-refactoring
+        - skills/msbuild
+        - skills/setup-local-sdk
+      install:
+        mode: summary

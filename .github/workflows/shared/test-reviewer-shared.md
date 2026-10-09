@@ -385,12 +385,12 @@ lifecycle/helpers still receive the parallel-safety analysis.
 
 ### Step 2 — Review and grade each test method
 
-This repository is C# / MSTest. Use the **`grade-tests` skill** (synced
-into this repo at `.agents/skills/grade-tests/SKILL.md` from
-`dotnet/skills`) as one input to the review of each kept method. Invoke it via the `skill`
-tool and follow its rubric exactly — do not re-derive or restate the
-rubric here; the synced skill is the single source of truth and will
-evolve over time.
+This repository is C# / MSTest. Use the curator-managed **`grade-tests`
+skill** at `.agents/skills/grade-tests/SKILL.md` as one input to the review
+of each kept method. Invoke it via the `skill` tool and follow its rubric
+exactly — do not re-derive or restate the rubric here. The skill is the
+single source of truth and tracks the pinned upstream `dotnet-test` revision
+in `.copilot/curate/manifest.yml`.
 
 Supply `.agents/skills/test-analysis-extensions/extensions/dotnet.md` as the
 matching bundled language-reference path and read it before scoring. This
@@ -439,7 +439,7 @@ lowers the grade nor changes a decisive body-level result to `Uncertain`.
 
 A small number of repo-local conventions adjust how the standard rubric
 should be interpreted in this codebase. Use these as **additions** to —
-not replacements for — the synced skill's rubric:
+not replacements for — the curated skill's rubric:
 
 - **Internal framework tests** (under `test/UnitTests/TestFramework.UnitTests/`
   and adjacent projects) use the internal test framework from
