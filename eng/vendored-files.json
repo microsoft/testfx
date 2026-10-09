@@ -2,6 +2,21 @@
   "$comment": "Manifest of source files copied (verbatim or adapted) from other repositories. See eng/vendored-files.md.",
   "entries": [
     {
+      "id": "test-value-evidence",
+      "local_path": ".agents/skills/test-value-evidence/SKILL.md",
+      "notes": "Verbatim canonical skill from dotnet/skills, pinned independently of the curated plugin snapshots. TestFx-specific rules are in .github/skills/testfx-test-value-evidence/SKILL.md. Update ref and both baseline SHAs together when selecting another upstream revision; do not edit the imported core.",
+      "sources": [
+        {
+          "repo": "dotnet/skills",
+          "ref": "75981c7204d152ef59cf566390d11cd3f670fe62",
+          "path": "plugins/dotnet-test/skills/test-value-evidence/SKILL.md",
+          "baseline_ref_sha": "75981c7204d152ef59cf566390d11cd3f670fe62",
+          "baseline_blob_sha": "46565454d5c058b8d8811598cc019c98a0b8acab",
+          "scope": "entire file, unchanged"
+        }
+      ]
+    },
+    {
       "id": "polyfill-nullable-attributes",
       "local_path": "src/Polyfills/NullableAttribtues.cs",
       "notes": "Polyfill for downlevel TFMs; scope changed to internal.",

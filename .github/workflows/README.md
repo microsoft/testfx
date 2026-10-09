@@ -367,9 +367,32 @@ the cause.
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`pipeline-test-triage.md`](./pipeline-test-triage.md) | Failed `microsoft.testfx (Build ...)` child checks; completed aggregate `microsoft.testfx` check; manual | Posts deduplicated preliminary PR feedback from failed build legs, then analyzes the completed build for failures, retries/flakiness, crash or hang diagnostics, and historically abnormal durations. The final PR comment supersedes preliminary feedback; Bug issues are created only when recurrence and actionability thresholds are met. |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
-| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` or repository-root test configuration | Runs one consolidated test-quality review: grades changed test methods, delegates assembly-wide parallel-safety analysis, bundles both results with apply-ready suggestions into one COMMENT review when findings exist, and stays silent when clean. |
-| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the consolidated test-quality review on demand and submits one COMMENT review. |
+| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | Non-draft, same-repository PR opened/reopened/synchronize/ready_for_review (except OneLocBuild check-ins) | Reports SHA-bound test-value evidence, including source-only changes and explicit not-applicable outcomes, grades changed tests, and audits parallel safety in one advisory COMMENT review. Clean evidence is reported; duplicate reports for the same head are suppressed. |
+| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the consolidated test-value/quality/parallel-safety review on demand and submits one COMMENT review. |
 | [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand and submits one COMMENT review. |
+
+The test reviewer uses the vendored upstream
+[test-value-evidence](../../.agents/skills/test-value-evidence/SKILL.md) through
+the [TestFx adapter](../skills/testfx-test-value-evidence/SKILL.md)
+to ask whether a test detects the pre-fix behavior or a buildable missing/wrong
+feature. It is read-only: static predictions are not executed red-green or
+mutation proof, and green CI alone does not establish that proof. Implementation
+sessions gather paired execution evidence using the same skill; reviews expose
+missing evidence rather than manufacturing it. Reports describe the current PR
+head, not all intermediate commits or standalone pushes. Existing draft,
+localization, fork, stacked-PR, and budget activation gates remain in effect;
+maintainers can request a review with `/review-tests`.
+
+The canonical skill comes from `dotnet/skills` and is copied verbatim, with its
+immutable revision and blob recorded in
+[the vendoring manifest](../../eng/vendored-files.json). TestFx-specific
+toolchain, assertion, parallel-safety, and packed-consumer rules belong only in
+the local adapter. This single-file import does not refresh or overwrite the
+independently pinned `gh-copilot-curate` plugin inventory.
+
+Validate the deterministic review inputs and reporting contract with
+`python .github/workflows/tests/test_test_value_evidence.py`. This checks local
+fixtures, not live model output or safe-output publication.
 
 #### Continuous quality improvers (scheduled)
 
