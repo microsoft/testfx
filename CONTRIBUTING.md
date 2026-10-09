@@ -74,13 +74,18 @@ Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, b
 
 ## AI Coding Tools
 
-The `csharp-expert` and `csharp-refactoring` skills are imported from
+The `csharp-expert`, `csharp-refactoring`, `msbuild`, and `setup-local-sdk`
+skills are imported from
 [`dotnet/skills`](https://github.com/dotnet/skills/tree/main/plugins/dotnet) through
 `gh copilot-curate`. Their supporting references, source commit, and file hashes are
 tracked in `.copilot/curate/manifest.lock.yml`. Run `gh copilot-curate update` to
 refresh curated skills; the existing weekly workflow also refreshes them.
 Repository-specific instructions and the `behavior-preserving-refactor` skill
 continue to apply.
+
+The MSBuild and local-SDK siblings satisfy the expert skill's build and SDK
+routing assumptions. The existing `dotnet-msbuild` specialists remain available
+as alternative entry points; one task does not require both workflows.
 
 The customized [`grade-tests` skill](./.agents/skills/grade-tests/SKILL.md) is
 repository-owned, not curator-managed. The `dotnet-test` manifest explicitly

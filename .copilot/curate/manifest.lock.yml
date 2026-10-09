@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-09T14:50:01.7678643Z
-manifestHash: sha256:506404eddd3cbc30fac00f315767eee5323e158960f6eac0c11b406acfd55ebb
+generatedAt: 2026-10-09T15:21:40.8824701Z
+manifestHash: sha256:660711bd8df0db6c9c1e90d1d644790dc4be4b6bb61dc32b5cc78c51848af3ca
 plugins:
     - id: dotnet
       source:
@@ -37,6 +37,76 @@ plugins:
           upstreamPath: plugins/dotnet/skills/csharp-refactoring/references/operation-catalog.md
           upstreamHash: sha256:94311ac23ea1098c130942084ceb07969f73790d59072c90b87967cbdc3b8dfa
           localHash: sha256:94311ac23ea1098c130942084ceb07969f73790d59072c90b87967cbdc3b8dfa
+          mode: "0666"
+        - path: .agents/skills/msbuild/SKILL.md
+          upstreamPath: plugins/dotnet/skills/msbuild/SKILL.md
+          upstreamHash: sha256:671a9b2c77be4a6758dba4b013a50a29b2b3c5c6c77a10c2c81c11042f785c55
+          localHash: sha256:671a9b2c77be4a6758dba4b013a50a29b2b3c5c6c77a10c2c81c11042f785c55
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/antipatterns/additional-antipatterns.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/antipatterns/additional-antipatterns.md
+          upstreamHash: sha256:02955e8765404cd792d6c29a6574c5261afa55bcf37766998499d5b3077a10b5
+          localHash: sha256:02955e8765404cd792d6c29a6574c5261afa55bcf37766998499d5b3077a10b5
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/antipatterns/incremental-build-inputs-outputs.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/antipatterns/incremental-build-inputs-outputs.md
+          upstreamHash: sha256:361f23ef4cd84da9f8bf875151b2b1df27e0a2ab3354b8b6728d88b94db131ad
+          localHash: sha256:361f23ef4cd84da9f8bf875151b2b1df27e0a2ab3354b8b6728d88b94db131ad
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/antipatterns/private-assets.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/antipatterns/private-assets.md
+          upstreamHash: sha256:76ff2c88d729494b21fe3f12078b10e10ffcbc41857161defeb79487b97d829c
+          localHash: sha256:76ff2c88d729494b21fe3f12078b10e10ffcbc41857161defeb79487b97d829c
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/binlog-failure-analysis.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/binlog-failure-analysis.md
+          upstreamHash: sha256:11b3962a232ef18ac184be8a52c86de8b35f05e10a3bfc7d5f5b3396f707e5ca
+          localHash: sha256:11b3962a232ef18ac184be8a52c86de8b35f05e10a3bfc7d5f5b3396f707e5ca
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/binlog-generation.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/binlog-generation.md
+          upstreamHash: sha256:f6fc3dfbcb895b3cf5cc4c98dcacd76c3eaaab9d3b1a6e714a3bd596557df512
+          localHash: sha256:f6fc3dfbcb895b3cf5cc4c98dcacd76c3eaaab9d3b1a6e714a3bd596557df512
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/build-perf-baseline.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/build-perf-baseline.md
+          upstreamHash: sha256:4be937e36d2e60eb549a50b58f1eeb1ac2f74d419d3bcee5132f97699e3c2871
+          localHash: sha256:4be937e36d2e60eb549a50b58f1eeb1ac2f74d419d3bcee5132f97699e3c2871
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/build-perf-diagnostics.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/build-perf-diagnostics.md
+          upstreamHash: sha256:c715b1dfa297f898b45e893937e40d96e02f6f44c9c3f508dc4442c6dc7cc2f8
+          localHash: sha256:c715b1dfa297f898b45e893937e40d96e02f6f44c9c3f508dc4442c6dc7cc2f8
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/copy-to-output-directory.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/copy-to-output-directory.md
+          upstreamHash: sha256:01409f41fd8df30189d544d82dd20556690e5b2c0f16993625f1492d7bff09b2
+          localHash: sha256:01409f41fd8df30189d544d82dd20556690e5b2c0f16993625f1492d7bff09b2
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/eval-performance.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/eval-performance.md
+          upstreamHash: sha256:8a4eeb553ab4e43c9b2b19252fee41bd7a275fca4a8536920e99f9826cb00bdd
+          localHash: sha256:8a4eeb553ab4e43c9b2b19252fee41bd7a275fca4a8536920e99f9826cb00bdd
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/extension-points.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/extension-points.md
+          upstreamHash: sha256:d474bccb8069449ceca4fc0ecff7493a8f701b3eb189bcffd0b85c7612d9b766
+          localHash: sha256:d474bccb8069449ceca4fc0ecff7493a8f701b3eb189bcffd0b85c7612d9b766
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/incremental-build.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/incremental-build.md
+          upstreamHash: sha256:8e5d4c4871c2c44fd49b7be64b040e074363b7c9bbacee7cd226d48d5ff4798d
+          localHash: sha256:8e5d4c4871c2c44fd49b7be64b040e074363b7c9bbacee7cd226d48d5ff4798d
+          mode: "0666"
+        - path: .agents/skills/msbuild/references/msbuild-antipatterns.md
+          upstreamPath: plugins/dotnet/skills/msbuild/references/msbuild-antipatterns.md
+          upstreamHash: sha256:b470f187400c3e6a5620e75cccaf448a09a0207a0a4202b3e18d2dd65296f8f9
+          localHash: sha256:b470f187400c3e6a5620e75cccaf448a09a0207a0a4202b3e18d2dd65296f8f9
+          mode: "0666"
+        - path: .agents/skills/setup-local-sdk/SKILL.md
+          upstreamPath: plugins/dotnet/skills/setup-local-sdk/SKILL.md
+          upstreamHash: sha256:6b4904db9ae950da582f85dc2f4cf2adf586776d84ce805a273edb4045f1a74e
+          localHash: sha256:6b4904db9ae950da582f85dc2f4cf2adf586776d84ce805a273edb4045f1a74e
           mode: "0666"
     - id: dotnet-msbuild
       source:

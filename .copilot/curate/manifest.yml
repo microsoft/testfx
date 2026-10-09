@@ -44,5 +44,7 @@ plugins:
       include:
         - skills/csharp-expert
         - skills/csharp-refactoring
+        - skills/msbuild
+        - skills/setup-local-sdk
       install:
         mode: summary

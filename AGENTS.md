@@ -7,6 +7,8 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 
 - [C# Expert](.agents/skills/csharp-expert/SKILL.md) — _skill_ — Act as the front door for C# and .NET work. Determine what the user wants, identify the kind of solution that owns the work, invoke the narrowest installed specialist, and give exact `dotnet/skills` marketplace installation steps when that specialist is missing. Keep direct C# language guidance as the fallback, not the default.
 - [C# Refactoring (behavior-preserving)](.agents/skills/csharp-refactoring/SKILL.md) — _skill_ — A refactor changes **structure**, never observable **behavior**. Do the edit with binding-aware tools, then confirm behavior held with a build + the relevant tests. Keep the effort proportional to the change: a one-line local rename does not need the ceremony a public multi-targeted change does.
+- [MSBuild troubleshooting](.agents/skills/msbuild/SKILL.md) — _skill_ — This is the entry skill. Choose **troubleshooting**, **performance**, or **authoring review**, then read only the relevant local references. The references retain the content and identities of the original MSBuild skills, with correctness fixes; they are not separate skills to activate.
+- [setup-local-sdk](.agents/skills/setup-local-sdk/SKILL.md) — _skill_ — Guide the user through installing a .NET SDK into a project-local `.dotnet/` directory and wiring it up via the `global.json` `paths` feature (.NET 10+). The examples use .NET 11, but this works with any version — prerelease or stable.
 
 ### dotnet-msbuild
 
