@@ -67,7 +67,10 @@ internal sealed partial class TestHostControllersTestHost
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME}_{currentPid}", testHostControllerCancellationServer.PipeName },
             },
             UseShellExecute = false,
-            WorkingDirectory = ServiceProvider.GetConfiguration().GetCurrentWorkingDirectory(),
+            // Ordinary processes inherit the controller's working directory, not the artifact directory.
+            WorkingDirectory = _testHostsInformation.TestHostLauncher is null
+                ? string.Empty
+                : ServiceProvider.GetConfiguration().GetCurrentWorkingDirectory(),
         };
 
         List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
