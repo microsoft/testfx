@@ -53,6 +53,12 @@ refresh curated skills; the existing weekly workflow also refreshes them.
 Repository-specific instructions and the `behavior-preserving-refactor` skill
 continue to apply.
 
+The customized [`grade-tests` skill](./.agents/skills/grade-tests/SKILL.md) is
+repository-owned, not curator-managed. The `dotnet-test` manifest explicitly
+selects its other skills and agents so weekly updates preserve the local grading
+rubric without reporting managed-file drift. Keep that selection up to date when
+adopting additional upstream test skills.
+
 Copilot CLI uses [`.github/lsp.json`](./.github/lsp.json) for C# code intelligence.
 This configuration is adapted from the upstream
 [Roslyn LSP declaration](https://github.com/dotnet/skills/blob/3d38ac343faf65054f7e8d45ca06925273e867e2/plugins/dotnet/lsp.json):
@@ -68,7 +74,9 @@ CLI from the repository root with that SDK's directory on `PATH` (`.dotnet` by
 default, or the matching `DOTNET_INSTALL_DIR`). The launcher requires .NET 10 or
 later and downloads `roslyn-language-server` on first use, so it also needs access
 to the package feed. No global tool installation or user-level LSP settings are
-required.
+required. The language-server package is pinned to `5.13.0-1.26509.1`; change
+that version deliberately and repeat startup, navigation, and shutdown checks
+before updating the pin.
 
 In an existing Copilot CLI session, run `/skills reload` and `/lsp reload`, then
 use `/lsp test csharp` to check server startup. Other hosts may discover the skills

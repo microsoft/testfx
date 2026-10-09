@@ -4,9 +4,8 @@
       "command": "dotnet",
       "args": [
         "dnx",
-        "roslyn-language-server",
+        "roslyn-language-server@5.13.0-1.26509.1",
         "--yes",
-        "--prerelease",
         "--",
         "--stdio",
         "--autoLoadProjects"

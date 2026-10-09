@@ -42,7 +42,6 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [Coverage Analysis](.agents/skills/coverage-analysis/SKILL.md) — _skill_ — Raw coverage percentages answer "what code was executed?" — they don't answer what you actually need to know:
 - [Detect Static Dependencies](.agents/skills/detect-static-dependencies/SKILL.md) — _skill_ — Scan a C# codebase for calls to hard-to-test static APIs and produce a ranked report showing which statics appear most frequently, which files are most affected, and which abstractions already exist in the .NET ecosystem to replace them.
 - [Generate Testability Wrappers](.agents/skills/generate-testability-wrappers/SKILL.md) — _skill_ — Generate wrapper interfaces, default implementations, and DI service registration code for untestable static dependencies. For statics that already have .NET built-in abstractions (`TimeProvider`, `IHttpClientFactory`), guide adoption of the built-in. For statics without built-in alternatives, generate custom minimal wrappers.
-- [Grade Tests](.agents/skills/grade-tests/SKILL.md) — _skill_ — Grade a curated list of test methods and produce a compact, PR-comment-friendly report: one row per test method with a letter grade, a score band, pseudo-mutation resilience, a one-line note explaining the grade, and a concrete improvement for every grade below A. The skill **does not discover tests on its own** — the caller (typically a PR automation workflow or a human reviewer holding a specific list) provides the test methods to grade.
 - [MSTest v1/v2 -> v3 Migration](.agents/skills/migrate-mstest-v1v2-to-v3/SKILL.md) — _skill_ — Migrate a test project from MSTest v1 (assembly references) or MSTest v2 (NuGet 1.x-2.x) to MSTest v3. MSTest v3 is **not binary compatible** with v1/v2 -- libraries compiled against v1/v2 must be recompiled.
 - [MSTest v3 -> v4 Migration](.agents/skills/migrate-mstest-v3-to-v4/SKILL.md) — _skill_ — Migrate a test project from MSTest v3 to MSTest v4. The outcome is a project using MSTest v4 that builds cleanly, passes tests, and accounts for every source-incompatible and behavioral change. MSTest v4 is **not binary compatible** with MSTest v3 -- any library compiled against v3 must be recompiled against v4.
 - [MTP Hot Reload for Iterative Test Fixing](.agents/skills/mtp-hot-reload/SKILL.md) — _skill_ — Set up and use Microsoft Testing Platform hot reload to rapidly iterate fixes on failing tests without rebuilding between each change.
@@ -73,4 +72,8 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 
 <!-- END gh-copilot-curate managed -->
 
+## Repository-owned skills
 
+- [Grade Tests](.agents/skills/grade-tests/SKILL.md) retains this repository's
+  per-test grading rubric, pseudo-mutation analysis, and concrete improvements.
+  It is intentionally excluded from the curator's `dotnet-test` selection.

@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-09T12:37:34.707776Z
-manifestHash: sha256:679eed45d393a02f0ff61f9946de14103ee419c26cd9cdce4b4d095902aa7e42
+generatedAt: 2026-10-09T13:04:59.0765831Z
+manifestHash: sha256:b17a84d79dc619c0b05caf8bb0332bf2434300387f17d204f8c134577bda98f7
 plugins:
     - id: dotnet
       source:
@@ -346,11 +346,6 @@ plugins:
           upstreamPath: plugins/dotnet-test/skills/generate-testability-wrappers/SKILL.md
           upstreamHash: sha256:4f384af7dcfaf1b9ac1eda1df8bc708db703734636bbc58f5f3f33bbbf8c29b6
           localHash: sha256:4f384af7dcfaf1b9ac1eda1df8bc708db703734636bbc58f5f3f33bbbf8c29b6
-          mode: "0666"
-        - path: .agents/skills/grade-tests/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/grade-tests/SKILL.md
-          upstreamHash: sha256:fc357339ee5b1ab62974e18ab6c76abbbc64f1818f637e0a1594f2adc12524d6
-          localHash: sha256:fc357339ee5b1ab62974e18ab6c76abbbc64f1818f637e0a1594f2adc12524d6
           mode: "0666"
         - path: .agents/skills/migrate-mstest-v1v2-to-v3/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/migrate-mstest-v1v2-to-v3/SKILL.md
