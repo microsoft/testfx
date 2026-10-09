@@ -33,7 +33,7 @@ Detect the test platform and framework, run tests, and apply filters using `dotn
 ## When Not to Use
 
 - User needs to write or generate test code (use `writing-mstest-tests` for MSTest, or general coding assistance for other frameworks)
-- User needs to migrate from VSTest to MTP (use `migrate-vstest-to-mtp`)
+- User needs to switch test platforms rather than run tests on the current platform
 - User wants to iterate on failing tests without rebuilding (use `mtp-hot-reload`)
 - User needs CI/CD pipeline configuration (use CI-specific skills)
 - User needs to debug a test (use debugging skills)
