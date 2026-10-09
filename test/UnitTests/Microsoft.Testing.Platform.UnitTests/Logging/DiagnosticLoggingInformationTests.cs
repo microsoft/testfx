@@ -356,6 +356,69 @@ public sealed class DiagnosticLoggingInformationTests
         logger.LogDebug("Written after relocation.");
     }
 
+    [TestMethod]
+    public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync_CustomDirectory_SkipsRelocation()
+    {
+        string initialDirectory = Path.Combine("initial", "diagnostics");
+        string resultsDirectory = Path.Combine("final", "results");
+        const string FileName = "test.diag";
+
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+
+        using FileLoggerProvider provider = new(
+            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
+            LogLevel.Debug,
+            customDirectory: true,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        FileLogger originalLogger = provider.FileLogger;
+
+        await provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory);
+
+        Assert.AreSame(originalLogger, provider.FileLogger);
+        fileSystem.Verify(x => x.MoveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync_AlreadyInTargetDirectory_SkipsRelocation()
+    {
+        string initialDirectory = Path.Combine("initial", "diagnostics");
+        const string FileName = "test.diag";
+
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+
+        using FileLoggerProvider provider = new(
+            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
+            LogLevel.Debug,
+            customDirectory: false,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
+        FileLogger originalLogger = provider.FileLogger;
+
+        await provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(initialDirectory);
+
+        Assert.AreSame(originalLogger, provider.FileLogger);
+        fileSystem.Verify(x => x.MoveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
     private static IFileStream CreateFileStream(
         string path,
         Func<Task>? disposeAsync = null,
