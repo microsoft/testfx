@@ -1,5 +1,16 @@
 # RFC 012 - Structured Assertion Messages
 
+> **Current implementation note (2026-10-09):** This proposal is partially implemented.
+> The structured formatter and typed expected/actual text exist, but the
+> `AssertMessageMaxValueLength`/`AssertMessageMaxCollectionElements` configuration and
+> collection truncation/120-character multiline rendering below are not implemented by the
+> current settings parsers or `AssertionValueRenderer`; its built-in collections render inline.
+> `Assert.That` still uses its expression-specific legacy reporting path rather than the proposed
+> universal structured layout. Modern collection assertion families have also grown beyond this catalog.
+> See [MSTEST-019](../specifications/mstest.md#mstest-019--structured-messages-carry-separate-machine-readable-values)
+> and [AssertionValueRenderer](../../src/TestFramework/TestFramework/Assertions/AssertionValueRenderer.cs).
+> The audit compared layout/rendering topics and existing tests, not every catalog example or protocol consumer.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

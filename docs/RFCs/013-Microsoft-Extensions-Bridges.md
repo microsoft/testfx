@@ -1,5 +1,12 @@
 # RFC 013 - Microsoft.Extensions.* Bridges for Microsoft.Testing.Platform
 
+> **Current implementation note (2026-10-09):** This RFC is design history, not release verification.
+> The [logging bridge](../../src/Platform/Microsoft.Testing.Extensions.Logging/MicrosoftExtensionsLoggingBuilderExtensions.cs)
+> now skips factory/delegate creation when the effective MTP level is `None`; process-local ownership
+> and hosting cancellation are summarized in [MTP-014](../specifications/mtp.md#mtp-014--microsoftextensions-ownership-remains-explicit).
+> The generated-language, OpenTelemetry and MSTest activation details below have not all been
+> traced by this scoped MTP audit and are not certified by API existence.
+
 - [x] Approved in principle
 - [ ] Under discussion
 - [x] Implementation (Logging and Configuration bridges)

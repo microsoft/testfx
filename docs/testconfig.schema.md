@@ -1,5 +1,14 @@
 # testconfig.json JSON schema
 
+> **Current implementation note (2026-10-09):** The scoped MSTest source audit found that
+> `mstest:execution:treatDiscoveryWarningsAsErrors` defaults to **true**; the JSON schema description
+> has been corrected accordingly. Timeout and diagnostic-capture topics were compared with current
+> parsers/writer and existing tests; MTP-owned configuration sections are outside this MSTest audit.
+> See [MSTEST-013](specifications/mstest.md#mstest-013--mstest-settings-have-an-explicit-format-boundary),
+> [MSTEST-015](specifications/mstest.md#mstest-015--outcome-defaults-are-not-discovery-inclusion-rules)
+> and [MSTEST-020](specifications/mstest.md#mstest-020--assertion-diagnostic-snapshots-are-opt-in-and-bounded).
+> Editor schema validation is not proof of runtime execution; no tests were executed.
+
 [`testconfig.schema.json`](./testconfig.schema.json) is the JSON Schema (draft-07) for the
 `testconfig.json` configuration file consumed by Microsoft.Testing.Platform (MTP) and MSTest.
 
