@@ -104,7 +104,7 @@ Absent/empty declarations do not themselves force a child; `--list-tests` skips 
 
 Console selection is no-op, UID-list or tree-query selection. Enabled providers may add known
 constraints: null/no-op opts out, UID lists intersect with ordinal equality, nested ANDs flatten,
-and disjoint UID selections remain match-none. No contributions preserves the original filter.
+and disjoint UID selections remain match-none. No contributions preserve the original filter.
 JSON-RPC `tests` (including an empty array) takes precedence over `filter`; omitted selection
 means no-op. Server providers are called but non-no-op contributions fail.
 Frameworks own evaluation and must not silently discard unsupported representations.
