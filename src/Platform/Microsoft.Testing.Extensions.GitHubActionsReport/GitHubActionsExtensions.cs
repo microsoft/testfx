@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -100,20 +99,14 @@ public static class GitHubActionsExtensions
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
 
-        if (builder.TestHostControllers is TestHostControllersManager controllers)
-        {
-            controllers.AddRunCompletionHandler(serviceProvider => new CiCoverageSummaryControllerHandler(
-                GitHubActionsSummaryArtifactPostProcessor.Provider,
-                GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind,
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetConfiguration(),
-                serviceProvider.GetRequiredService<ITestCoverageResult>(),
-                serviceProvider.GetOutputDevice(),
-                serviceProvider.GetLoggerFactory().CreateLogger<GitHubActionsSummaryArtifactPostProcessor>(),
-                () => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<GitHubActionsSummaryArtifactPostProcessor>().Single(),
-                () => ShouldDeferToArtifactPostProcessing(serviceProvider),
-                (path, exception) => string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, exception.Message)));
-        }
+        CiCoverageSummaryControllerHandlerRegistration.Register(
+            builder.TestHostControllers,
+            GitHubActionsSummaryArtifactPostProcessor.Provider,
+            GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind,
+            serviceProvider => serviceProvider.GetLoggerFactory().CreateLogger<GitHubActionsSummaryArtifactPostProcessor>(),
+            serviceProvider => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<GitHubActionsSummaryArtifactPostProcessor>().Single(),
+            ShouldDeferToArtifactPostProcessing,
+            (path, exception) => string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, exception.Message));
 
         if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
