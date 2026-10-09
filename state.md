@@ -11,13 +11,13 @@
 ```
 
 ## Task Schedule (last run dates)
-- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-28, 2026-09-30, 2026-10-02, 2026-10-03, 2026-10-05, 2026-10-06, 2026-10-07, 2026-10-08: SDK .NET 12 per #11710)
-- Task 2 (Identify Opportunities): 2026-10-08 (explore-agent scan of 4 areas touched by recent commits: XxHashShared split #11800 (mechanical, clean), SynchronousAwaiter.cs blocking-wait fix #11786 (correct, no regression), AzureDevOpsRunIdCoordinator.cs race fix #11774/#11796 (cold path), CTRF retry/merge-lineage #11812/#11813 (linear not O(n^2), cold path) - no new findings, 17th consecutive clean cycle)
+- Task 1 (Discover Commands): 2026-07-30 (still valid; confirmed 2026-09-28 through 2026-10-09: SDK .NET 12 per #11710)
+- Task 2 (Identify Opportunities): 2026-10-09 (explore-agent scan of commits since 2026-10-08: showMessage negotiation #11712, packaged-app sidecar/controller #11805/#11828/#11831, F# module support #11830, Jsonite JsonReader split #11850 (verified pure mechanical move via diff), MTP coverage thresholds #11814/#11838 - all cold/opt-in/already-cached, no new findings, 18th consecutive clean cycle)
 - Task 3 (Implement): 2026-09-27 (PR #11561 merged; no new work since - nothing to implement, backlog exhausted)
-- Task 4 (Maintain PRs): 2026-10-08 (confirmed no open perf-improver PRs via search)
-- Task 5 (Comment Issues): 2026-10-08 (no open performance-labeled issues found via list_issues label:performance; reviewed #3495 again - no new human comments since 2026-07-30, skipped per anti-spam policy)
-- Task 6 (Infrastructure): 2026-10-08 (confirmed perf-timing-nightly.yml run #108 (2026-10-08, commit 7c7d590) completed with conclusion=success, 4th consecutive clean nightly run since PR #11743 merged - infra remains solid, no further action needed)
-- Task 7 (Monthly Summary): 2026-10-08 (updated October issue #11691, no duplication bug observed, condensed Run History)
+- Task 4 (Maintain PRs): 2026-10-09 (confirmed no open perf-improver PRs via search_pull_requests)
+- Task 5 (Comment Issues): 2026-10-09 (no open performance-labeled issues found; reviewed #3495 again via get_comments - no new human comments since 2026-07-30, skipped per anti-spam policy)
+- Task 6 (Infrastructure): 2026-10-09 (confirmed perf-timing-nightly.yml run #109 (2026-10-09, commit 06c10b0) completed with conclusion=success - infra remains solid, no further action needed)
+- Task 7 (Monthly Summary): 2026-10-09 (updated October issue #11691 via full replace, no duplication bug observed, condensed Run History to ~8 entries)
 
 Full history of individual PRs/fixes from July-August 2026 and early September 2026 is condensed in the "September 2026 Runs" and "August 2026 Runs Summary" sections below (all cross-referenced by PR number).
 
