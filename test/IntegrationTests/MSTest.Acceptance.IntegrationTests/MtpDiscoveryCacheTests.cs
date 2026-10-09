@@ -304,7 +304,8 @@ internal static class Program
         await Run(new[] { uids["A"] }, "passed");
         await client.ExitAsync(token);
         await serverProcess.WaitForExitAsync(token);
-        Assert.AreEqual(0, serverProcess.ExitCode);
+        // On Unix, an observer opened by PID cannot retrieve the child's exit code.
+        Assert.AreEqual(0, server.ExitCode);
         await client.ShutdownAsync();
         string diagnostics = string.Join(Environment.NewLine, Directory.GetFiles(directory)
             .Where(path => path.EndsWith(".log", StringComparison.Ordinal) || path.EndsWith(".diag", StringComparison.Ordinal))
