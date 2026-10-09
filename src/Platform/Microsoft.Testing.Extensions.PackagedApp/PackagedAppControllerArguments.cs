@@ -2,27 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
-<<<<<<< HEAD
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 internal static class PackagedAppControllerArguments
 {
     internal const string Prefix = "--internal-packagedapp-controller-v1";
-<<<<<<< HEAD
     internal const string BootstrapFileName = "mstest-appmodel-controller.bootstrap";
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
     internal const string TargetEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_TARGET";
     internal const string ExtensionsEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_EXTENSIONS";
     internal const string NativePipeEnvironmentVariable = "MSTEST_APPMODEL_CONTROLLER_DOTNETTEST_PIPE";
     internal const string ExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID";
 
-<<<<<<< HEAD
     internal static (string[] Arguments, bool IsInformationalRequest) Configure(
         string[] arguments,
         Func<string, string?> getEnvironmentVariable,
@@ -39,13 +32,6 @@ internal static class PackagedAppControllerArguments
             arguments = [.. bootstrapArguments, .. arguments];
         }
 
-=======
-    internal static (string[] Arguments, bool IsNativeInformationalRequest) Configure(
-        string[] arguments,
-        Func<string, string?> getEnvironmentVariable,
-        Action<string, string?> setEnvironmentVariable)
-    {
->>>>>>> Fix native dotnet test routing for packaged applications
         if (arguments.Length == 0 || !arguments[0].StartsWith("--internal-packagedapp-controller", StringComparison.Ordinal))
         {
             // Retry can relaunch a controller using its already-consumed argument array.
@@ -88,7 +74,6 @@ internal static class PackagedAppControllerArguments
 
         setEnvironmentVariable(TargetEnvironmentVariable, Path.GetFullPath(arguments[1]));
         setEnvironmentVariable(ExtensionsEnvironmentVariable, arguments[2]);
-<<<<<<< HEAD
         bool isRestart = PackagedAppConnectBackHandshake.TryGetHandshakeId(remaining) is not null;
         if (transportIndex >= 0 || !isRestart)
         {
@@ -96,22 +81,12 @@ internal static class PackagedAppControllerArguments
         }
 
         if (transportIndex >= 0 && getEnvironmentVariable(ExecutionIdEnvironmentVariable) is null or "")
-=======
-        setEnvironmentVariable(NativePipeEnvironmentVariable, transportIndex < 0 ? null : remaining[transportIndex + 3]);
-        if (transportIndex < 0)
-        {
-            return (remaining, false);
-        }
-
-        if (getEnvironmentVariable(ExecutionIdEnvironmentVariable) is null or "")
->>>>>>> Fix native dotnet test routing for packaged applications
         {
             setEnvironmentVariable(ExecutionIdEnvironmentVariable, Guid.NewGuid().ToString("N"));
         }
 
         // Only the activated host connects to the SDK: an external controller may run on a different
         // architecture/runtime, which older SDKs reject when comparing every process handshake.
-<<<<<<< HEAD
         string[] controllerArguments = transportIndex < 0
             ? remaining
             : [.. remaining[..transportIndex], .. remaining[(transportIndex + 4)..]];
@@ -119,22 +94,6 @@ internal static class PackagedAppControllerArguments
         bool informationalRequest = parseResult.IsOptionSet("help")
             || parseResult.IsOptionSet("?")
             || parseResult.IsOptionSet("list-tests");
-=======
-        string[] controllerArguments = [.. remaining[..transportIndex], .. remaining[(transportIndex + 4)..]];
-        bool informationalRequest = controllerArguments.Any(
-<<<<<<< HEAD
-            argument => argument.StartsWith("-", StringComparison.Ordinal)
-                && argument.TrimStart('-') is "help" or "?" or "list-tests");
->>>>>>> Fix native dotnet test routing for packaged applications
-=======
-            argument =>
-            {
-                string option = argument.StartsWith("-", StringComparison.Ordinal) ? argument.TrimStart('-') : string.Empty;
-                return option.Equals("help", StringComparison.OrdinalIgnoreCase)
-                    || option == "?"
-                    || option.Equals("list-tests", StringComparison.OrdinalIgnoreCase);
-            });
->>>>>>> Match native informational switches case-insensitively
         return (controllerArguments, informationalRequest);
     }
 

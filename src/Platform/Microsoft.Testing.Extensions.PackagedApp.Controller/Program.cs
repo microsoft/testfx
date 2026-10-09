@@ -23,7 +23,6 @@ internal static class Program
 
     public static async Task<int> Main(string[] args)
     {
-<<<<<<< HEAD
         bool isInformationalRequest;
         try
         {
@@ -33,19 +32,12 @@ internal static class Program
                 : null;
             (args, isInformationalRequest) = PackagedAppControllerArguments.Configure(
                 args, Environment.GetEnvironmentVariable, Environment.SetEnvironmentVariable, bootstrapArguments);
-=======
-        bool isNativeInformationalRequest;
-        try
-        {
-            (args, isNativeInformationalRequest) = PackagedAppControllerArguments.Configure(args, Environment.GetEnvironmentVariable, Environment.SetEnvironmentVariable);
->>>>>>> Fix native dotnet test routing for packaged applications
         }
         catch (FormatException exception)
         {
             await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
             return 5;
         }
-<<<<<<< HEAD
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
@@ -54,11 +46,6 @@ internal static class Program
 
         HashSet<string> enabledExtensions = GetEnabledExtensions();
         if (isInformationalRequest)
-=======
-
-        HashSet<string> enabledExtensions = GetEnabledExtensions();
-        if (isNativeInformationalRequest)
->>>>>>> Fix native dotnet test routing for packaged applications
         {
             using CancellationTokenSource cancellation = new();
             ConsoleCancelEventHandler cancelHandler = (_, eventArgs) =>
@@ -77,7 +64,6 @@ internal static class Program
                     args,
                     environment,
                     Environment.CurrentDirectory);
-<<<<<<< HEAD
                 CommandLineInformationalOutput? output =
                     Environment.GetEnvironmentVariable(PackagedAppControllerArguments.NativePipeEnvironmentVariable) is null or ""
                         ? new(context.FileName, args, Console.Out)
@@ -118,14 +104,6 @@ internal static class Program
             {
                 await Console.Error.WriteLineAsync(exception.Message).ConfigureAwait(false);
                 return 4;
-=======
-                return await PackagedAppNativeInformationalLaunch.RunAsync(
-                    new PackagedAppTestHostLauncher(),
-                    context,
-                    enabledExtensions.Contains("packagedapp"),
-                    Console.Error,
-                    cancellation.Token).ConfigureAwait(false);
->>>>>>> Fix native dotnet test routing for packaged applications
             }
             finally
             {
