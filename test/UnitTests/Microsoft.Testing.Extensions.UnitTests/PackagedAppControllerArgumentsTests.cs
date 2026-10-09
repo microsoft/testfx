@@ -121,11 +121,7 @@ public sealed class PackagedAppControllerArgumentsTests
     [DataRow("-?")]
     [DataRow("--?")]
     [DataRow("-list-tests")]
-<<<<<<< HEAD
     public void Configure_HelpAndDiscoverySelectActualHostWithOrWithoutNativeTransport(string option)
-=======
-    public void Configure_NativeHelpAndDiscoverySelectActualHost(string option)
->>>>>>> Fix native dotnet test routing for packaged applications
     {
         Dictionary<string, string?> environment = [];
         (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
@@ -139,7 +135,6 @@ public sealed class PackagedAppControllerArgumentsTests
             [PackagedAppControllerArguments.Prefix, Target, "packagedapp", option],
             name => environment.GetValueOrDefault(name),
             (name, value) => environment[name] = value);
-<<<<<<< HEAD
         Assert.IsTrue(informational);
     }
 
@@ -205,9 +200,6 @@ public sealed class PackagedAppControllerArgumentsTests
         {
             File.Delete(responseFile);
         }
-=======
-        Assert.IsFalse(informational);
->>>>>>> Fix native dotnet test routing for packaged applications
     }
 
     [TestMethod]

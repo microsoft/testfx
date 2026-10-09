@@ -268,9 +268,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                     }
                 }
 
-                environmentVariables["DOTNET_INSTALL_DIR"] = dotnetRoot;
-                environmentVariables["DOTNET_MULTILEVEL_LOOKUP"] = "0";
-                environmentVariables["DOTNET_ROOT"] = dotnetRoot;
+                ConfigureDotnetSdkEnvironment(environmentVariables, dotnetPath, sdkVersion);
                 environmentVariables[DotnetTestExecutionIdEnvironmentVariable] = executionId;
                 environmentVariables[LauncherModeEnvironmentVariable] = "auto";
 
@@ -431,12 +429,17 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                     ?? throw new InvalidOperationException($"{Dotnet10PathEnvironmentVariable} must point to the CI-installed .NET 10 SDK.");
                 string results = Path.Combine(asset.TargetAssetPath, "TestResults", "Extensions");
                 string evidence = Path.Combine(Constants.Root, "artifacts", "log", Constants.BuildConfiguration, "PackagedWinUI", identity, "extension-probes");
+                Dictionary<string, string?> probeEnvironment = CreateNativeEnvironment(dotnet);
+                // The standalone script must correct inherited SDK paths without relying on this test's helper.
+                probeEnvironment["MSBuildSDKsPath"] = Path.Combine(asset.TargetAssetPath, "parent-sdk", "Sdks");
+                probeEnvironment["MSBuildExtensionsPath"] = Path.Combine(asset.TargetAssetPath, "parent-sdk");
+                probeEnvironment["DOTNET_ROOT_X64"] = Path.Combine(asset.TargetAssetPath, "parent-dotnet");
                 BoundedCommandLineResult run = await RunWindowsApplicationModelCommandAsync(
                     $"powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"{Path.Combine(asset.TargetAssetPath, "Probe-Extensions.ps1")}\" " +
                     $"-DotnetPath \"{dotnet}\" -Configuration Release",
                     asset.TargetAssetPath,
                     TestContext.CancellationToken,
-                    CreateNativeEnvironment(dotnet),
+                    probeEnvironment,
                     cleanEnvironment: true);
                 Assert.AreEqual(1, run.ExitCode, run.StandardOutput + run.ErrorOutput);
                 Directory.CreateDirectory(Path.GetDirectoryName(evidence)!);
@@ -497,8 +500,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             }
         }
 
-        environment["DOTNET_ROOT"] = Path.GetDirectoryName(dotnet);
-        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        ConfigureDotnetSdkEnvironment(environment, dotnet, "10.0.401");
         environment[LauncherModeEnvironmentVariable] = "auto";
         return environment;
     }

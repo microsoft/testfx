@@ -53,18 +53,12 @@ errors remain failures; the targets never silently fall back to another host.
 
 With .NET SDK 10's Microsoft.Testing.Platform runner, project-based `dotnet test`
 uses the same sidecar for packaged **full-trust** .NET applications, including
-<<<<<<< HEAD
 `--no-build`. `ComputeRunArguments` stages the controller under the project's
 intermediate output directory, beside a versioned startup file containing the
 selected executable and extension list. The application's argument tail remains
 unchanged, including an empty tail, so the SDK retains ownership of launch-profile
 selection and explicit-argument precedence. The sidecar also accepts the original
 inline v1 startup prefix. Relative `TestingPlatformPackagedAppTargetPath`
-=======
-`--no-build`. `ComputeRunArguments` selects the controller and passes a versioned
-startup prefix containing the selected executable and extension list; it preserves
-the application's existing argument tail. Relative `TestingPlatformPackagedAppTargetPath`
->>>>>>> Fix native dotnet test routing for packaged applications
 values are resolved against the project directory. A customized `RunCommand` is
 left unchanged. `UseAppHost=false` requires an explicit staged `.exe` target.
 
@@ -99,7 +93,6 @@ help/discovery host.
 now starts the sidecar for these same packaged .NET applications rather than
 starting the host without package identity. Unpackaged projects and explicit
 executable overrides retain their original run command.
-<<<<<<< HEAD
 Project launch-profile `commandLineArgs` are used when no explicit application
 arguments are supplied; `--no-launch-profile` and explicit arguments keep the
 SDK's normal precedence. The staged controller is incremental and removed by
@@ -111,8 +104,6 @@ output, the sidecar relays host options and discovered tests over the existing M
 named-pipe protocol. Missing or incomplete help/discovery responses are failures,
 not successful empty output. This informational pipe has the same AppContainer
 restriction as native SDK discovery; use `InvokeTestingPlatform` for those hosts.
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
 
 ### Filtering MSTest tests
 

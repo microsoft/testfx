@@ -97,7 +97,8 @@ run the current-package acceptance check from the repository root:
 $env:DOTNET_ROLL_FORWARD = 'Major'
 $env:TESTFX_RUN_WINDOWS_APP_MODEL_TESTS = '1'
 $env:TESTFX_DOTNET_10_PATH = 'C:\Program Files\dotnet\dotnet.exe' # Includes SDK 10.0.401
-.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Debug\net11.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter "FullyQualifiedName~PublicPackagedWinUISample_AllExtensions_ExposeControllerSupport" --progress off
+$env:DOTNET_CLI_CONTEXT_VERBOSE = '1'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug --no-build -p:UsingDotNetTest=true --filter "FullyQualifiedName~PublicPackagedWinUISample_AllExtensions_ExposeControllerSupport" -bl:{{}} --show-test-results failed
 ```
 
 That check builds an isolated copy of this sample against the freshly packed
@@ -106,6 +107,10 @@ packages, runs the default probe invocation, asserts the current `Partial` and
 The acceptance check passes when those results are correctly surfaced, even though
 the probe itself exits nonzero for the known coverage gap. Reports, logs, binlogs,
 and evidence are retained under `artifacts\log\Debug\PackagedWinUI\...\extension-probes`.
+Run it through the repository's pinned `dotnet test` toolchain so it also covers the
+SDK environment inherited in CI; the project selects the servicing outer TFM.
+The probe pins the SDK's MSBuild paths and x64 runtime root as well as its CLI,
+without changing the parent shell's environment or the shared NuGet cache.
 
 The development package registration is intentionally retained so repeated runs can reuse the same
 layout. To remove it manually:

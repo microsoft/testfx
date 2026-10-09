@@ -1,11 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-<<<<<<< HEAD
 using System.Text.Json;
 
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 namespace MSTest.Acceptance.IntegrationTests;
@@ -24,6 +21,29 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     private const string ExecutionIdEnvironmentVariable = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID";
 
     public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    public void NormalizeConsoleOutput_PreservesSdkDiagnosticsAndHostPayload()
+    {
+        const string Escape = "\u001b";
+        string output = $"""
+            Telemetry is: Enabled
+            > mstest-appmodel-controller.exe --list-tests
+            {Escape}[32m  Identity
+              Outcome
+            {Escape}[m
+            {Escape}[32mDiscovered 2 tests.{Escape}[m
+            """;
+        const string expected = """
+            Telemetry is: Enabled
+            > mstest-appmodel-controller.exe --list-tests
+              Identity
+              Outcome
+            Discovered 2 tests.
+            """;
+
+        Assert.AreEqual(expected.ReplaceLineEndings(), NormalizeConsoleOutput(output).ReplaceLineEndings());
+    }
 
     [TestMethod]
     [DataRow("net8.0", false, false, "Passed")]
@@ -65,6 +85,11 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 Assert.AreEqual(outcome == "Failed" ? 2 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
                 Assert.Contains("total: 2", result.StandardOutput);
                 Assert.Contains(outcome == "Failed" ? "failed: 1" : "failed: 0", result.StandardOutput);
+                string sdkDirectory = Path.Combine(Path.GetDirectoryName(dotnet)!, "sdk", SdkVersion);
+                Assert.AreSequenceEqual(
+                    [SdkVersion, sdkDirectory, sdkDirectory, Path.Combine(sdkDirectory, "Sdks")],
+                    (await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "sdk-provenance.txt"), TestContext.CancellationToken))
+                        .Select(Path.TrimEndingDirectorySeparator));
                 Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
                 Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
 
@@ -338,7 +363,6 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             });
     }
 
-<<<<<<< HEAD
     [TestMethod]
     [DataRow(false, false, false)]
     [DataRow(true, false, false)]
@@ -349,7 +373,7 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
         string executionId = Guid.NewGuid().ToString("N");
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, executionId, "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, executionId);
         string profileResults = Path.Combine(asset.TargetAssetPath, "profile results");
         string explicitResults = Path.Combine(asset.TargetAssetPath, "explicit results");
@@ -369,41 +393,40 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 },
             }),
             TestContext.CancellationToken);
-        try
-        {
-            if (noBuild)
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
             {
-                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            }
+                if (noBuild)
+                {
+                    BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                    Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                }
 
-            string tail = explicitArguments
-                ? $"-- --minimum-expected-tests 1 --report-trx --report-trx-filename \"explicit report.trx\" --results-directory \"{explicitResults}\""
-                : string.Empty;
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet,
-                $"run --project NativeSidecar.csproj -c Release {(noBuild ? "--no-build" : "-bl:run-build.binlog")} " +
-                $"{(noLaunchProfile ? "--no-launch-profile" : "--launch-profile Threshold")} {tail}",
-                asset,
-                environment);
-            Assert.AreEqual(!explicitArguments && !noLaunchProfile ? 9 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
-            Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
-            Assert.AreEqual(!explicitArguments && !noLaunchProfile, File.Exists(Path.Combine(profileResults, "profile_report.trx")));
-            Assert.AreEqual(explicitArguments, File.Exists(Path.Combine(explicitResults, "explicit_report.trx")));
-            if (explicitArguments || !noLaunchProfile)
-            {
-                string report = explicitArguments
-                    ? Path.Combine(explicitResults, "explicit_report.trx")
-                    : Path.Combine(profileResults, "profile_report.trx");
-                XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
-                Assert.HasCount(2, XDocument.Load(report).Descendants(ns + "UnitTestResult"));
-            }
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+                string tail = explicitArguments
+                    ? $"-- --minimum-expected-tests 1 --report-trx --report-trx-filename \"explicit report.trx\" --results-directory \"{explicitResults}\""
+                    : string.Empty;
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet,
+                    $"run --project NativeSidecar.csproj -c Release {(noBuild ? "--no-build" : "-bl:run-build.binlog")} " +
+                    $"{(noLaunchProfile ? "--no-launch-profile" : "--launch-profile Threshold")} {tail}",
+                    asset,
+                    environment);
+                Assert.AreEqual(!explicitArguments && !noLaunchProfile ? 9 : 0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.AreEqual(executionId, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "execution-id.txt"), TestContext.CancellationToken));
+                Assert.AreEqual(!explicitArguments && !noLaunchProfile, File.Exists(Path.Combine(profileResults, "profile_report.trx")));
+                Assert.AreEqual(explicitArguments, File.Exists(Path.Combine(explicitResults, "explicit_report.trx")));
+                if (explicitArguments || !noLaunchProfile)
+                {
+                    string report = explicitArguments
+                        ? Path.Combine(explicitResults, "explicit_report.trx")
+                        : Path.Combine(profileResults, "profile_report.trx");
+                    XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+                    Assert.HasCount(2, XDocument.Load(report).Descendants(ns + "UnitTestResult"));
+                }
+            });
     }
 
     [TestMethod]
@@ -415,54 +438,57 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "Passed");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
         await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "informational.rsp"), "--list-tests", TestContext.CancellationToken);
-        try
-        {
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet, $"run --project NativeSidecar.csproj -c Release --no-build --no-launch-profile -- {option}", asset, environment);
-            Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
-            Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
-            Assert.DoesNotContain("mstest-appmodel-controller.exe", result.StandardOutput);
-            if (option == "--help")
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
             {
-                // The process helper removes empty stdout lines; the unit test checks their formatting.
-                Assert.Contains(
-                    """
-                    Usage NativeSidecar.exe [option providers] [extension option providers]
-                    Execute a .NET Test Application.
-                    """.ReplaceLineEndings(),
-                    result.StandardOutput.ReplaceLineEndings());
-                Assert.Contains("--filter", result.StandardOutput);
-            }
-            else if (option == "--list-tests json")
-            {
-                using var document = JsonDocument.Parse(result.StandardOutput);
-                Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
-                Assert.AreSequenceEqual(
-                    ["Identity", "Outcome"],
-                    document.RootElement.GetProperty("tests").EnumerateArray()
-                        .Select(test => test.GetProperty("displayName").GetString()));
-            }
-            else
-            {
-                Assert.Contains(
-                    """
-                      Identity
-                      Outcome
-                    Discovered 2 test(s) in assembly
-                    """.ReplaceLineEndings(),
-                    result.StandardOutput.ReplaceLineEndings());
-            }
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet, $"run --project NativeSidecar.csproj -c Release --no-build --no-launch-profile -- {option}", asset, environment);
+                Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
+                Assert.DoesNotContain("Usage mstest-appmodel-controller.exe", result.StandardOutput);
+                if (option == "--help")
+                {
+                    // The process helper removes empty stdout lines; the unit test checks their formatting.
+                    Assert.Contains(
+                        """
+                        Usage NativeSidecar.exe [option providers] [extension option providers]
+                        Execute a .NET Test Application.
+                        """.ReplaceLineEndings(),
+                        result.StandardOutput.ReplaceLineEndings());
+                    Assert.Contains("--filter", result.StandardOutput);
+                }
+                else if (option == "--list-tests json")
+                {
+                    int jsonStart = result.StandardOutput.IndexOf('{');
+                    int jsonEnd = result.StandardOutput.LastIndexOf('}');
+                    Assert.IsGreaterThanOrEqualTo(0, jsonStart, result.StandardOutput);
+                    Assert.IsGreaterThan(jsonStart, jsonEnd, result.StandardOutput);
+                    using var document = JsonDocument.Parse(result.StandardOutput[jsonStart..(jsonEnd + 1)]);
+                    Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
+                    Assert.AreSequenceEqual(
+                        ["Identity", "Outcome"],
+                        document.RootElement.GetProperty("tests").EnumerateArray()
+                            .Select(test => test.GetProperty("displayName").GetString()));
+                }
+                else
+                {
+                    Assert.Contains(
+                        """
+                          Identity
+                          Outcome
+                        Discovered 2 test(s) in assembly
+                        """.ReplaceLineEndings(),
+                        result.StandardOutput.ReplaceLineEndings());
+                }
+            });
     }
 
     [TestMethod]
@@ -472,35 +498,46 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
     {
         string dotnet = GetDotnet10();
         string identity = $"MSTest.Native.{Guid.NewGuid():N}";
-        using TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "EarlyExit");
+        TestAsset asset = await GenerateAssetAsync("net8.0", identity, Guid.NewGuid().ToString("N"), "EarlyExit");
         Dictionary<string, string?> environment = GetNativeEnvironment(dotnet, Guid.NewGuid().ToString("N"));
-        try
-        {
-            BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
-            Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
-            BoundedCommandLineResult result = await RunAsync(
-                dotnet, $"run --project NativeSidecar.csproj -c Release --no-build --no-launch-profile -- {option}", asset, environment);
-            Assert.AreEqual(4, result.ExitCode, result.StandardOutput + result.ErrorOutput);
-            Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
-            Assert.Contains("No complete informational result was received.", result.ErrorOutput);
-            Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
-        }
-        finally
-        {
-            await RemovePackageAsync(identity);
-        }
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            asset,
+            identity,
+            async () =>
+            {
+                BoundedCommandLineResult build = await RunAsync(dotnet, "build -c Release -bl:build.binlog", asset, environment);
+                Assert.AreEqual(0, build.ExitCode, build.StandardOutput + build.ErrorOutput);
+                BoundedCommandLineResult result = await RunAsync(
+                    dotnet, $"run --project NativeSidecar.csproj -c Release --no-build --no-launch-profile -- {option}", asset, environment);
+                Assert.AreEqual(4, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+                Assert.AreEqual(identity, await File.ReadAllTextAsync(Path.Combine(asset.TargetAssetPath, "identity.txt"), TestContext.CancellationToken));
+                Assert.Contains("No complete informational result was received.", result.ErrorOutput);
+                Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "first-attempt.txt")));
+            });
     }
 
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
-    private Task<BoundedCommandLineResult> RunAsync(
+    private async Task<BoundedCommandLineResult> RunAsync(
         string dotnet, string arguments, TestAsset asset, IDictionary<string, string?> environment)
-        => RunWindowsApplicationModelCommandAsync(
+    {
+        BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
             $"\"{dotnet}\" {arguments}",
             asset.TargetAssetPath,
             TestContext.CancellationToken,
             environment,
             cleanEnvironment: true);
+        return result with
+        {
+            StandardOutput = NormalizeConsoleOutput(result.StandardOutput),
+            ErrorOutput = NormalizeConsoleOutput(result.ErrorOutput),
+        };
+    }
+
+    private static string NormalizeConsoleOutput(string output)
+    {
+        string withoutAnsi = Regex.Replace(output, "\u001b\\[[0-9;]*m", string.Empty);
+        // The process helper already drops empty lines; ANSI reset-only lines need the same treatment.
+        return string.Join(Environment.NewLine, withoutAnsi.Split(["\r\n", "\n", "\r"], StringSplitOptions.RemoveEmptyEntries));
+    }
 
     private static Dictionary<string, string?> GetNativeEnvironment(string dotnet, string executionId)
     {
@@ -520,9 +557,8 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
             }
         }
 
-        environment["DOTNET_ROOT"] = Path.GetDirectoryName(dotnet);
-        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
-        environment["MSBUILDUSESERVER"] = "0";
+        ConfigureDotnetSdkEnvironment(environment, dotnet, SdkVersion);
+        environment["DOTNET_CLI_CONTEXT_VERBOSE"] = "1";
         return environment;
     }
 
@@ -550,20 +586,19 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <NoWarn>$(NoWarn);NU1507</NoWarn>
-<<<<<<< HEAD
-<<<<<<< HEAD
                 {{(outcome == "EarlyExit" ? "<GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>" : string.Empty)}}
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
-=======
                 <TestingPlatformCommandLineArguments>{{System.Security.SecurityElement.Escape(commandLineArguments)}}</TestingPlatformCommandLineArguments>
                 <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
->>>>>>> Forward MSTest filters through the packaged-app sidecar
               </PropertyGroup>
               <ItemGroup>
                 <None Update="AppxManifest.xml" CopyToOutputDirectory="PreserveNewest" />
                 <None Update="Logo.png" CopyToOutputDirectory="PreserveNewest" />
               </ItemGroup>
+              <Target Name="CaptureSdkProvenance" BeforeTargets="PrepareForBuild">
+                <WriteLinesToFile File="$(MSBuildProjectDirectory)\sdk-provenance.txt"
+                                  Lines="$(NETCoreSdkVersion);$(MSBuildToolsPath);$(MSBuildExtensionsPath);$(MSBuildSDKsPath)"
+                                  Overwrite="true" />
+              </Target>
             </Project>
             #file Tests.cs
             using System.Runtime.CompilerServices;
@@ -605,7 +640,6 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                     Assert.IsFalse(fail, "expected host failure");
                 }
             }
-<<<<<<< HEAD
             #file Main.cs
             {{(outcome == "EarlyExit" ? """
             public static class Program
@@ -616,8 +650,6 @@ public sealed class PackagedAppNativeDotnetTestTests : AcceptanceTestBase<NopAss
                 }
             }
             """ : string.Empty)}}
-=======
->>>>>>> Fix native dotnet test routing for packaged applications
             #file AppxManifest.xml
             <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
                      xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
