@@ -117,15 +117,29 @@ Then:
    behavior-named test file rather than repurposing the template filename; and
 4. omit package versions when central package management supplies them.
 
-For xUnit v3 projects that run through `dotnet test`, preserve or add:
+For xUnit v3 projects using the MTP runner, preserve or add executable output
+in both command modes, and retain the repository's framework runner opt-in:
 
 ```xml
 <OutputType>Exe</OutputType>
+```
+
+Only when `dotnet test` uses VSTest command mode to bridge to MTP (SDK 8/9,
+or SDK 10+ without native MTP mode), preserve or add:
+
+```xml
 <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
 ```
 
+For SDK 10+ native MTP mode selected by `global.json` `test.runner`, do not add
+the compatibility property; remove an explicit bridge setting when configuring
+native mode. Keep executable output and the MTP runner enabled.
+
 `OutputType=Exe` alone proves only the self-hosted runner path, not discovery by
-the repository's `dotnet test` command.
+the repository's `dotnet test` command. Verify the exact command mode and
+entry-point execution as described in `run-tests`: native MTP uses `--project`
+or `--solution` with direct MTP arguments; VSTest-mode MTP uses a positional
+path and passes MTP arguments after `--`.
 
 ### 3. Repair only the missing edge when the project exists
 

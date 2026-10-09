@@ -11,8 +11,30 @@ plugins:
         - skills/assertion-quality
         - skills/code-testing
         - skills/code-testing-agent
-        - skills/code-testing-extensions
-        - skills/coverage-analysis
+        - skills/code-testing-extensions/extensions/cpp-examples.md
+        - skills/code-testing-extensions/extensions/cpp.md
+        - skills/code-testing-extensions/extensions/dotnet-examples.md
+        - skills/code-testing-extensions/extensions/go-examples.md
+        - skills/code-testing-extensions/extensions/go.md
+        - skills/code-testing-extensions/extensions/java-examples.md
+        - skills/code-testing-extensions/extensions/java.md
+        - skills/code-testing-extensions/extensions/kotlin-examples.md
+        - skills/code-testing-extensions/extensions/kotlin.md
+        - skills/code-testing-extensions/extensions/powershell-examples.md
+        - skills/code-testing-extensions/extensions/powershell.md
+        - skills/code-testing-extensions/extensions/python-examples.md
+        - skills/code-testing-extensions/extensions/ruby-examples.md
+        - skills/code-testing-extensions/extensions/ruby.md
+        - skills/code-testing-extensions/extensions/rust-examples.md
+        - skills/code-testing-extensions/extensions/rust.md
+        - skills/code-testing-extensions/extensions/swift.md
+        - skills/code-testing-extensions/extensions/typescript-examples.md
+        - skills/code-testing-extensions/extensions/typescript.md
+        - skills/coverage-analysis/SKILL.md
+        - skills/coverage-analysis/references/guidelines.md
+        - skills/coverage-analysis/references/output-format.md
+        - skills/coverage-analysis/references/report-generation.md
+        - skills/coverage-analysis/scripts
         - skills/crap-score
         - skills/detect-static-dependencies
         - skills/filter-syntax
@@ -24,8 +46,7 @@ plugins:
         - skills/mtp-hot-reload
         - skills/platform-detection
         - skills/run-tests
-        - skills/scaffold-dotnet-test-project
-        - skills/test-analysis-extensions
+        - skills/test-analysis-extensions/extensions
         - skills/test-anti-patterns
         - skills/test-gap-analysis
         - skills/test-smell-detection

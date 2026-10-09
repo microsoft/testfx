@@ -109,14 +109,24 @@ A new `.csproj` is **invisible** to `dotnet test <solution>`, to `dotnet test` r
 
 ### Harness Discovery Check
 
-Before reporting success, run the **harness-equivalent** discovery command from the repo root and confirm the test count went up by at least the number of tests you generated. The harness (CI, msbench, coverage tools) does not know which `.csproj` you targeted — it runs the solution-level command, so a test that passes via `dotnet test MyProject.Tests.csproj` is still worthless if `dotnet test <solution> --list-tests` doesn't enumerate it.
+Before reporting success, run the **harness-equivalent** discovery command from the repo root and confirm the test count went up by at least the number of tests you generated. The harness (CI, msbench, coverage tools) does not know which `.csproj` you targeted — it runs the solution-level command, so a test that passes directly is still worthless if the harness's solution discovery command doesn't enumerate it. Select the command form using the repository's `global.json` and runner/bridge settings, not the SDK version alone:
 
 ```bash
 # From repo root, against the solution identified in <TESTAGENT_DIR>/research.md
-dotnet test <solution> --list-tests --no-build 2>&1 | grep -c '^    [A-Za-z]'
+
+# VSTest command mode, executing VSTest
+dotnet test <solution> --no-build --list-tests
+
+# VSTest command mode, bridging to an executable MTP application (including SDK 10)
+dotnet test <solution> --no-build -- --list-tests
+
+# SDK 10+ native MTP command mode
+dotnet test --solution <solution> --no-build --list-tests
 ```
 
-If the delta is `0`, the new project isn't in the solution. Run `dotnet sln <solution> add <test-project.csproj>` and re-run the check. Do **not** report success until the harness command sees your new tests.
+Require a successful discovery exit before comparing counts; do not mask a failed command with a counting pipeline. Count the actual discovered tests using the runner's output format rather than a VSTest-specific indentation pattern.
+
+If discovery succeeds but the delta is `0`, check registration in the exact solution or filter. Add the missing project to that entry point as described above, then re-run the check. Do **not** report success until the harness command sees your new tests.
 
 For a classic non-SDK project, use the repository's normal build and discovery
 command instead of the example above. The minimum acceptable check is:

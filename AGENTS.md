@@ -5,7 +5,29 @@ including its result states, concrete improvement suggestions, and read-only
 per-test pseudo-mutation assessment. TestFx-specific review conventions live
 in `.github/workflows/shared/test-reviewer-shared.md`, not a fork of the skill.
 
-The installation deliberately excludes
+The installation deliberately excludes the repository-owned review corrections
+below so a refresh cannot silently overwrite them:
+
+- [Code testing reference helper](.agents/skills/code-testing-extensions/SKILL.md)
+  and [test analysis reference helper](.agents/skills/test-analysis-extensions/SKILL.md)
+  keep internal language guidance callable by the model while hidden from the
+  user menu.
+- [Python generation guidance](.agents/skills/code-testing-extensions/extensions/python.md)
+  preserves requested regression tests and reports production or tooling blockers.
+- [.NET generation guidance](.agents/skills/code-testing-extensions/extensions/dotnet.md)
+  distinguishes VSTest command mode from native MTP command mode.
+- [Coverage setup discovery](.agents/skills/coverage-analysis/references/setup-discovery.md)
+  recognizes `.slnx` and preserves the selected repository/user entry point.
+- [Test project scaffolding](.agents/skills/scaffold-dotnet-test-project/SKILL.md)
+  adds bridge properties only for VSTest command mode.
+
+These corrections are relative to upstream commit
+`e468462d8a0900f5278331c1ae12f45e015bb656`. Compare each excluded file explicitly
+on refresh and remove its exception once upstream carries the correction.
+These excluded files are not checked by `gh copilot-curate verify`; that check
+still verifies the remaining imported files. They do not fork the grading rubric.
+
+The installation also excludes
 [Find-UntestedSources.cs](.agents/skills/find-untested-sources/scripts/Find-UntestedSources.cs).
 It matches upstream commit `0608d8924cd3173411e36650a7a01b4063e1f55a` except
 for the UTF-8 BOM required by `.editorconfig`.
@@ -53,7 +75,6 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 
 - [Assertion Diversity Analysis](.agents/skills/assertion-quality/SKILL.md) — _skill_ — Analyze test code in any supported language to measure how varied and meaningful the assertions are. Produce a metrics report that reveals whether tests verify different facets of correctness — not just "output equals X" but also structure, exceptions, state transitions, side effects, and invariants.
 - [CRAP Score Analysis](.agents/skills/crap-score/SKILL.md) — _skill_ — Calculate CRAP (Change Risk Anti-Patterns) scores for .NET methods to identify code that is both complex and undertested.
-- [Code Testing Extensions](.agents/skills/code-testing-extensions/SKILL.md) — _skill_ — This skill provides access to language-specific guidance files used by the code-testing pipeline. Call this skill to get the file paths, then read the relevant file for your target language.
 - [Code Testing Skill](.agents/skills/code-testing/SKILL.md) — _skill_ — The reliable implicit entry point for generating, repairing, and strengthening tests. It handles focused work directly and invokes the public `test-engineer` agent for broad or multi-stage requests.
 - [Coverage Analysis](.agents/skills/coverage-analysis/SKILL.md) — _skill_ — Explain what .NET coverage evidence proves, reconcile target arithmetic, and identify the code blocking progress. Add complexity/CRAP ranking only when the user explicitly asks for risk hotspots, CRAP, priorities by risk, or refactoring safety.
 - [Detect Static Dependencies](.agents/skills/detect-static-dependencies/SKILL.md) — _skill_ — Scan a C# codebase for calls to hard-to-test static APIs and produce a ranked report showing which statics appear most frequently, which files are most affected, and which abstractions already exist in the .NET ecosystem to replace them.
@@ -65,8 +86,6 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [Migrate Static to Wrapper](.agents/skills/migrate-static-to-wrapper/SKILL.md) — _skill_ — Perform mechanical, codemod-style replacement of static dependency call sites with calls to injected wrapper interfaces or built-in abstractions. Operates on a bounded scope (single file, project, or namespace) so migrations can be done incrementally.
 - [Resolve a Testability Obstacle](.agents/skills/testability-obstacle/SKILL.md) — _skill_ — Introduce the smallest behavior-preserving seam needed to test a specific C# behavior, then add deterministic tests that prove both the behavior and the seam. The production edit is a means to the requested test, not an invitation to redesign adjacent code.
 - [Run .NET Tests](.agents/skills/run-tests/SKILL.md) — _skill_ — Return or execute the command or command sequence that matches the repository's project system, test platform, framework, and SDK mode.
-- [Scaffold or Repair a .NET Test Project](.agents/skills/scaffold-dotnet-test-project/SKILL.md) — _skill_ — Create the smallest missing test container or repair only the missing wiring. The goal is test discovery through the repository's real build entry point, not a preferred solution layout.
-- [Test Analysis Extensions](.agents/skills/test-analysis-extensions/SKILL.md) — _skill_ — This skill provides access to per-language reference files used by the polyglot test analysis skills. Call this skill to get the list of available extension files, then read the one matching the target codebase's language and test framework.
 - [Test Anti-Pattern Detection](.agents/skills/test-anti-patterns/SKILL.md) — _skill_ — Quick, pragmatic analysis of test code in any supported language for anti-patterns and quality issues that undermine test reliability, maintainability, and diagnostic value.
 - [Test Filter Syntax Reference](.agents/skills/filter-syntax/SKILL.md) — _skill_ — Filter syntax depends on the **platform** and **test framework**.
 - [Test Gap Analysis](.agents/skills/test-gap-analysis/SKILL.md) — _skill_ — Answer one question: **which caller-visible production behaviors could change without an existing test failing?** Mutation reasoning is a probe, not the goal. Inventory public outcomes first, then verify only credible gaps.
@@ -96,4 +115,3 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [Test Migration Agent](.github/agents/test-migration.agent.md) — _agent_ — You are a .NET test migration agent. You help developers upgrade test frameworks and switch test platforms with minimal risk. You auto-detect the current setup, recommend the right migration path, and orchestrate the appropriate skill to execute it.
 
 <!-- END gh-copilot-curate managed -->
-

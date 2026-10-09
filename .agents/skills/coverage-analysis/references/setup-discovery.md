@@ -6,24 +6,54 @@ these probes for a supplied excerpt or valid Cobertura path.
 
 ## Step 1: Locate the solution or project
 
-Given the user's path (default: current directory), find the entry point:
+Given the user's path (default: current directory), find the entry point.
+Honor an explicit solution/project file first. For a directory containing
+multiple candidates, use the exact entry point named by the user or established
+by repository scripts/CI/docs; never choose the first match or fall back to an
+arbitrary project when solutions are ambiguous.
 
 ```powershell
 $root = "<user-provided-path-or-current-directory>"
+$entryPath = "" # Optional exact user/repository entry point, absolute or relative to $root
 
-# Prefer solution file; fall back to project file
-$sln = Get-ChildItem -Path $root -Filter "*.sln" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-    Select-Object -First 1
-if ($sln) {
-    Write-Host "ENTRY_TYPE:Solution"; Write-Host "ENTRY:$($sln.FullName)"
+$requestedPath = Get-Item -LiteralPath $root -ErrorAction Stop
+$entry = $null
+$candidates = @()
+if (-not $requestedPath.PSIsContainer) {
+    $entry = $requestedPath
+    $root = $entry.DirectoryName
 } else {
-    $project = Get-ChildItem -Path $root -Filter "*.csproj" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    if ($project) {
-        Write-Host "ENTRY_TYPE:Project"; Write-Host "ENTRY:$($project.FullName)"
+    $root = $requestedPath.FullName
+    if ($entryPath) {
+        if (-not [System.IO.Path]::IsPathRooted($entryPath)) {
+            $entryPath = Join-Path $root $entryPath
+        }
+        $entry = Get-Item -LiteralPath $entryPath -ErrorAction Stop
     } else {
-        Write-Host "ENTRY_TYPE:NotFound"
+        # Prefer .sln/.slnx solutions; consider projects only when no solutions exist.
+        $candidates = @(Get-ChildItem -LiteralPath $root -File -Recurse -Depth 2 -ErrorAction Stop |
+            Where-Object { $_.Extension -in ".sln", ".slnx" -and $_.FullName -notmatch '([/\\]obj[/\\]|[/\\]bin[/\\])' } |
+            Sort-Object FullName)
+        if ($candidates.Count -eq 0) {
+            $candidates = @(Get-ChildItem -LiteralPath $root -Filter "*.csproj" -File -Recurse -Depth 2 -ErrorAction Stop |
+                Where-Object { $_.FullName -notmatch '([/\\]obj[/\\]|[/\\]bin[/\\])' } |
+                Sort-Object FullName)
+        }
+        if ($candidates.Count -eq 1) { $entry = $candidates[0] }
     }
+}
+
+if ($entry) {
+    if ($entry.PSIsContainer -or $entry.Extension -notin ".sln", ".slnx", ".slnf", ".csproj") {
+        throw "Entry point must be a .sln, .slnx, .slnf, or .csproj file."
+    }
+    $entryType = if ($entry.Extension -eq ".csproj") { "Project" } else { "Solution" }
+    Write-Host "ENTRY_TYPE:$entryType"; Write-Host "ENTRY:$($entry.FullName)"
+} elseif ($candidates.Count -gt 1) {
+    Write-Host "ENTRY_TYPE:Ambiguous"
+    $candidates | ForEach-Object { Write-Host "ENTRY_CANDIDATE:$($_.FullName)" }
+} else {
+    Write-Host "ENTRY_TYPE:NotFound"
 }
 
 # Test projects: search path first, then git root, then parent
@@ -117,9 +147,10 @@ if ($testProjects.Count -eq 0) {
 Write-Host "TEST_OUTPUT_ROOT:$testOutputRoot"
 ```
 
+- If `ENTRY_TYPE:Ambiguous` → do not collect coverage. Resolve the exact user/repository entry point from the listed candidates, set `$entryPath`, and rerun discovery. If no authoritative entry point is available, request one instead of silently selecting a solution or project.
 - If `ENTRY_TYPE:NotFound` and SDK-style test projects were found → use the test projects directly as `dotnet test` entry points.
 - If `ENTRY_TYPE:NotFound` and classic test projects were found → use only the repository's documented coverage command; do not infer `dotnet test`.
-- If `ENTRY_TYPE:NotFound` and no test projects found → stop: `No .sln or test projects found under <path>. Provide the path to your .NET solution or project.`
+- If `ENTRY_TYPE:NotFound` and no test projects found → stop: `No .sln, .slnx, or test projects found under <path>. Provide the path to your .NET solution or project.`
 - If `TEST_PROJECTS:0` and `EXISTING_COBERTURA_COUNT` > 0 (Step 2b) → continue with existing Cobertura XML analysis (no `dotnet test` run).
 - If `TEST_PROJECTS:0` and `EXISTING_COBERTURA_COUNT` == 0 → stop: `No test projects found (expected projects with 'Test' or 'Spec' in the name), and no existing Cobertura XML was provided. Add a test project or provide a Cobertura file path.`
 - If `CLASSIC_TEST_PROJECTS` is nonzero and no existing Cobertura XML is found,
