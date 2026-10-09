@@ -1,5 +1,11 @@
 # RFC 003 - Framework Extensibility for Custom Test Execution
 
+> **Current implementation note (2026-10-09):** The extension model remains, but the
+> synchronous `Execute`/`Invoke` signatures below are historical. Current overrides use
+> `Task<TestResult[]> ExecuteAsync(ITestMethod)` and `InvokeAsync`; class-level selection
+> still uses `GetTestMethodAttribute`. See [MSTEST-005](../specifications/mstest.md#mstest-005--custom-execution-is-asynchronous)
+> for source inspection and existing-test mapping. The original examples are retained as V2 design history.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

@@ -169,7 +169,7 @@
             },
             "treatDiscoveryWarningsAsErrors": {
               "type": "boolean",
-              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to false."
+              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to true."
             },
             "considerEmptyDataSourceAsInconclusive": {
               "type": "boolean",

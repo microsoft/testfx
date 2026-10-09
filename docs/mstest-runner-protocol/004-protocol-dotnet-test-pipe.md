@@ -1,5 +1,12 @@
 # 004 - `dotnet test` Binary Protocol
 
+> **Current implementation note (2026-10-09):** [Host handshake/capability parsing](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+> pipe/HTTP transport and local fake-SDK fixtures support the host-side protocol topics.
+> See [MTP-011](../specifications/mtp.md#mtp-011--native-binary-channel-versus-legacy-msbuild) and
+> [MTP-016](../specifications/mtp.md#mtp-016--no-handshake-and-undeclared-capability-fallback).
+> The external SDK comparisons, gateway/browser deployment requirements, vendored-file alignment
+> and full wire-field catalog below were not independently validated in this scoped audit.
+
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
 `dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy

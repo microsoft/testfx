@@ -1,5 +1,12 @@
 # HangDump extension design and implementation details
 
+> **Current implementation note (2026-10-09):** [HangDumpActivityIndicator](HangDumpActivityIndicator.cs)
+> sends activity on non-`InProgress` updates, not on an independent periodic heartbeat.
+> [HangDumpProcessLifetimeHandler](HangDumpProcessLifetimeHandler.cs) now also honors an absolute
+> deadline and bounds its optional in-progress-test query; the original two-pipe flow remains.
+> See [MTP-009](../../../docs/specifications/mtp.md#mtp-009--controller-launcher-and-process-isolation).
+> This topic audit is source/test mapping, not execution of platform-specific dump collection.
+
 This document explains how this extension works.
 
 ## Flow
@@ -16,11 +23,11 @@ This document explains how this extension works.
     - NOTE: For the first named pipe that is pointed to by the environment variable, the server is the test host controller. But for the second named pipe, the server is the test host.
     - The second pipe handles one request which is `GetInProgressTestsRequest`.
 6. The test host controller receives `ConsumerPipeNameRequest` and connects to that pipe.
-7. The test host keeps sending `ActivitySignalRequest` as long as tests are progressing.
+7. The test host sends `ActivitySignalRequest` when consuming non-`InProgress` test-node updates (progress notifications, not timer-based heartbeats).
 8. The test host controller detects if `ActivitySignalRequest` isn't received for a period longer than the hang timeout, it dumps the process and kills it.
 
 The pipe communication can be visualized as follows:
 
 1. TestHost -----pipe1-----> TestHostController: `ConsumerPipeNameRequest`
-2. TestHost -----pipe1-----> TestHostController: Repeatedly sends heartbeat messages (`ActivitySignalRequest`)
-3. TestHostController -----pipe2-----> TestHost: On timeout, sends `GetInProgressTestsRequest`. We print these tests to show what tests might be blamed for the hang. Also this request causes the testhost to stop sending heartbeat. We are already about to take a dump and kill the process.
+2. TestHost -----pipe1-----> TestHostController: Sends progress messages (`ActivitySignalRequest`)
+3. TestHostController -----pipe2-----> TestHost: On timeout, sends `GetInProgressTestsRequest`. We print these tests to show what tests might be blamed for the hang. Also this request causes the test host to stop sending activity/progress notifications. We are already about to take a dump and kill the process.

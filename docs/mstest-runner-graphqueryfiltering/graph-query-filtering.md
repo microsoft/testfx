@@ -1,5 +1,12 @@
 # Graph Query Filtering
 
+> **Current implementation note (2026-10-09):** [Property matching](../../src/Platform/Microsoft.Testing.Platform/Requests/TreeNodeFilter/TreeNodeFilter.Matching.cs)
+> and `TreeNodeFilterTests.Parameters_NegatedPropertyCheck` show that `Key!=Value` also matches a
+> node with no matching metadata key. The examples below now reflect that behavior, use unescaped
+> wildcard `*`, and treat `true`/`false` as literal metadata values rather than existence operators.
+> [MTP-007](../specifications/mtp.md#mtp-007--selection-and-filter-composition) separates this grammar
+> from framework support and extension-provider AND composition.
+
 **Authors:** [Marco Rossignoli](https://github.com/MarcoRossignoli) | [Amaury Levé](https://github.com/Evangelink)
 
 When filtering nodes, we can filter by path and/or properties.
@@ -12,7 +19,7 @@ Available operators
 - `()`   -> order, mandatory when defining multiple conditions
 - `=`    -> equals
 - `!=`   -> not equal
-- `\*`   -> wildcard
+- `*`    -> wildcard (`\*` matches a literal asterisk)
 
 ## Filtering by path
 
@@ -70,15 +77,17 @@ C-->G;
 ```
 
 - `/**[P2=A]`                   -> All nodes where there is property with key `P2` -and value `A`
-- `/**[P2=A\*]`                 -> All nodes where there is property with key `P2` -and value starts with `A`
-- `/**[P2=\*A]`                 -> All nodes where there is property with key `P2` -and value ends with `A`
-- `/**[P2=\*A\*]`               -> All nodes where there is property with key `P2` -and value contains `A`
-- `/**[P2!=A]`                  -> All nodes where there is property with key `P2` -and value not `A`
-- `/**[P2!=A\*]`                -> All nodes where there is property with key `P2` -and value does not start with `A`
-- `/**[P2!=\*A]`                -> All nodes where there is property with key `P2` -and value does not end with `A`
-- `/**[P2!=\*A\*]`              -> All nodes where there is property with key `P2` -and value does not contain `A`
-- `/**[FunctionalTest=true]`    -> All nodes where there is property `FunctionalTest`
-- `/**[FunctionalTest=false]`   -> All nodes where there is not property `FunctionalTest`
+- `/**[P2=A*]`                  -> All nodes where there is property with key `P2` -and value starts with `A`
+- `/**[P2=*A]`                  -> All nodes where there is property with key `P2` -and value ends with `A`
+- `/**[P2=*A*]`                 -> All nodes where there is property with key `P2` -and value contains `A`
+- `/**[P2!=A]`                  -> All nodes with no `P2` metadata value equal to `A` (including nodes without `P2`)
+- `/**[P2!=A*]`                 -> All nodes with no `P2` metadata value starting with `A` (including nodes without `P2`)
+- `/**[P2!=*A]`                 -> All nodes with no `P2` metadata value ending with `A` (including nodes without `P2`)
+- `/**[P2!=*A*]`                -> All nodes with no `P2` metadata value containing `A` (including nodes without `P2`)
+- `/**[FunctionalTest=true]`    -> All nodes with a `FunctionalTest` metadata value equal to `true`
+- `/**[FunctionalTest=false]`   -> All nodes with a `FunctionalTest` metadata value equal to `false`
+- `/**[FunctionalTest=*]`       -> All nodes with `FunctionalTest` metadata, regardless of its value
+- `/**[FunctionalTest!=*]`      -> All nodes without `FunctionalTest` metadata
 
 You can combine operators:
 

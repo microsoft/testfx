@@ -1,4 +1,16 @@
-# MSTest Documentation
+# MSTest and Microsoft.Testing.Platform documentation
+
+## Architecture and specifications
+
+Start with the [product architecture index](architecture/README.md) for component boundaries and runtime flows, then use the [specification guide](specifications/README.md) for current behavioral contracts and the documentation maintenance model.
+
+- [MSTest architecture](architecture/mstest.md) and [behavioral contracts](specifications/mstest.md).
+- [Microsoft.Testing.Platform architecture](architecture/mtp.md) and [behavioral contracts](specifications/mtp.md).
+- [Documentation audit](specifications/audit.md): source-inspected baseline, existing-document dispositions, and remaining coverage gaps.
+
+Current specifications describe a scoped implementation baseline and link to code and existing tests. RFCs preserve proposal and decision history; they are not automatically statements of current behavior. Consult the audit before treating an older design as a verified contract.
+
+## Consumer documentation
 
 The following official [learn.microsoft.com website](https://learn.microsoft.com/visualstudio/test/unit-test-basics) contains all the information about writing unit tests, unit test frameworks, integration with CLI and Visual Studio.
 
@@ -24,7 +36,7 @@ You can find detailed examples and explanations of MSTest features at
 - [Using a configuration file to define a data source](https://learn.microsoft.com/visualstudio/test/walkthrough-using-a-configuration-file-to-define-a-data-source)
 - [MSTest Runner](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-runner-intro)
 
-For technical reasoning and implementation details, you can refer to the list of RFCs:
+For historical technical reasoning and proposed designs, see the RFCs below. The [audit](specifications/audit.md) indexes the complete RFC set and records the scope of its comparison with current code:
 
 - [Framework Extensibility Trait Attributes](RFCs/001-Framework-Extensibility-Trait-Attributes.md)
 - [Framework Extensibility for Custom Assertions](RFCs/002-Framework-Extensibility-Custom-Assertions.md)
@@ -34,6 +46,8 @@ For technical reasoning and implementation details, you can refer to the list of
 - [DynamicData Attribute for Data Driven Tests](RFCs/006-DynamicData-Attribute.md)
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
+
+For current MTP consumer guidance, see the [Microsoft.Testing.Platform overview](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro).
 
 ## Guides
 
@@ -47,4 +61,4 @@ For technical reasoning and implementation details, you can refer to the list of
 
 ## Releases
 
-You can find all features and bugs fixed in all our releases by looking at [Changelog.md](Changelog.md).
+See [Changelog.md](Changelog.md) for MSTest releases and [Changelog-Platform.md](Changelog-Platform.md) for Microsoft.Testing.Platform releases.
