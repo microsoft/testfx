@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-06-26T10:28:55.6942446Z
-manifestHash: sha256:d581232103ed9c5333a650139c40120d14a97432097484bd2c697227e194c057
+generatedAt: 2026-10-09T12:37:46.0951799Z
+manifestHash: sha256:3d26af253d4779d92fac7d33e30f0a27035c9821e7d77b89b46591c0de3398e5
 plugins:
     - id: dotnet-msbuild
       source:
@@ -320,40 +320,10 @@ plugins:
           upstreamHash: sha256:fc357339ee5b1ab62974e18ab6c76abbbc64f1818f637e0a1594f2adc12524d6
           localHash: sha256:fc357339ee5b1ab62974e18ab6c76abbbc64f1818f637e0a1594f2adc12524d6
           mode: "0666"
-        - path: .agents/skills/migrate-mstest-v1v2-to-v3/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-mstest-v1v2-to-v3/SKILL.md
-          upstreamHash: sha256:2b5ea0af701b37366ee478367c47844f95dd9631c95dcf82bdb58db1fc87f404
-          localHash: sha256:2b5ea0af701b37366ee478367c47844f95dd9631c95dcf82bdb58db1fc87f404
-          mode: "0666"
-        - path: .agents/skills/migrate-mstest-v3-to-v4/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-mstest-v3-to-v4/SKILL.md
-          upstreamHash: sha256:20efaa1256c5aae30ee03e810f7f5ac328c94b20b0853773ee928ce8493ab25c
-          localHash: sha256:20efaa1256c5aae30ee03e810f7f5ac328c94b20b0853773ee928ce8493ab25c
-          mode: "0666"
         - path: .agents/skills/migrate-static-to-wrapper/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/migrate-static-to-wrapper/SKILL.md
           upstreamHash: sha256:834186d6278f9c17befa52e0369569742bde3ce1fe6cab5146fc2cefbdceca01
           localHash: sha256:834186d6278f9c17befa52e0369569742bde3ce1fe6cab5146fc2cefbdceca01
-          mode: "0666"
-        - path: .agents/skills/migrate-vstest-to-mtp/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-vstest-to-mtp/SKILL.md
-          upstreamHash: sha256:e859b7b42a5515d0503f0708ef36a0ebb8102ddcb4ac57684e30ac5b5740bc1b
-          localHash: sha256:e859b7b42a5515d0503f0708ef36a0ebb8102ddcb4ac57684e30ac5b5740bc1b
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-mstest/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-xunit-to-mstest/SKILL.md
-          upstreamHash: sha256:4faae6ad15a9a0a7660fcfc7a1fdfc2737e576f74807fbd28113c566e3491bac
-          localHash: sha256:4faae6ad15a9a0a7660fcfc7a1fdfc2737e576f74807fbd28113c566e3491bac
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
-          upstreamHash: sha256:ff1452e621bc93c713310d38a80c9d2a8540d4d4668a88b6baec2649129a437b
-          localHash: sha256:ff1452e621bc93c713310d38a80c9d2a8540d4d4668a88b6baec2649129a437b
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-xunit-v3/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-xunit-to-xunit-v3/SKILL.md
-          upstreamHash: sha256:0481be42764236a4bf8aa67d1e8ff75f7000913dbdcb80312b0d612c2ceaeb34
-          localHash: sha256:0481be42764236a4bf8aa67d1e8ff75f7000913dbdcb80312b0d612c2ceaeb34
           mode: "0666"
         - path: .agents/skills/mtp-hot-reload/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/mtp-hot-reload/SKILL.md
@@ -499,11 +469,6 @@ plugins:
           upstreamPath: plugins/dotnet-test/agents/code-testing-tester.agent.md
           upstreamHash: sha256:41efd087a3f742ff64bf7a2181548430c2662f3a2b3bef92aa906e7e6ec24313
           localHash: sha256:41efd087a3f742ff64bf7a2181548430c2662f3a2b3bef92aa906e7e6ec24313
-          mode: "0666"
-        - path: .github/agents/test-migration.agent.md
-          upstreamPath: plugins/dotnet-test/agents/test-migration.agent.md
-          upstreamHash: sha256:e6ad811429bb33306bc803ba52b87308160d0a8e972e6e0574bb514f1169fc18
-          localHash: sha256:e6ad811429bb33306bc803ba52b87308160d0a8e972e6e0574bb514f1169fc18
           mode: "0666"
         - path: .github/agents/test-quality-auditor.agent.md
           upstreamPath: plugins/dotnet-test/agents/test-quality-auditor.agent.md
