@@ -196,6 +196,13 @@ class ReviewInputTests(unittest.TestCase):
 
 
 class ReportingContractTests(unittest.TestCase):
+    def test_canonical_description_preserves_identified_test_change_guard(self):
+        canonical = REPO / ".agents" / "skills" / "test-value-evidence" / "SKILL.md"
+        frontmatter = canonical.read_text(encoding="utf-8").split("---", 2)[1]
+        description = " ".join(frontmatter.split())
+        self.assertIn("identified code or test change", description)
+        self.assertIn("DO NOT USE without an identified change", description)
+
     def test_upstream_skill_is_revision_pinned_and_matches_its_blob(self):
         manifest = json.loads((REPO / "eng" / "vendored-files.json").read_text(encoding="utf-8"))
         entries = [entry for entry in manifest["entries"] if entry["id"] == "test-value-evidence"]

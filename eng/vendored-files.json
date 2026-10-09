@@ -8,10 +8,10 @@
       "sources": [
         {
           "repo": "dotnet/skills",
-          "ref": "75981c7204d152ef59cf566390d11cd3f670fe62",
+          "ref": "7020b1dfdbf119949f19d6999231b3d9a6968649",
           "path": "plugins/dotnet-test/skills/test-value-evidence/SKILL.md",
-          "baseline_ref_sha": "75981c7204d152ef59cf566390d11cd3f670fe62",
-          "baseline_blob_sha": "46565454d5c058b8d8811598cc019c98a0b8acab",
+          "baseline_ref_sha": "7020b1dfdbf119949f19d6999231b3d9a6968649",
+          "baseline_blob_sha": "7b62a12aa26b754ddb3b330cfe9abdcbeae0a911",
           "scope": "entire file, unchanged"
         }
       ]
