@@ -327,17 +327,17 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesDescription">
         <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
-        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <target state="translated">Geben Sie entweder „DisplayName“ für einen vollständigen Testfallnamen oder „ArgumentsDisplayName“ für eine Argumentbezeichnung an, die den Anzeigenamen der Methode beibehält, aber nicht beides. Entfernen Sie den ignorierten „ArgumentsDisplayName“, um den aktuellen Namen beizubehalten, oder entfernen Sie „DisplayName“, um die Argumentbezeichnung zu verwenden.</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
         <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
-        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <target state="translated">„ArgumentsDisplayName“ wird ignoriert, weil „DisplayName“ den gesamten Testfallnamen überschreibt.</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesTitle">
         <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
-        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <target state="translated">„DisplayName“ und „ArgumentsDisplayName“ nicht kombinieren</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
@@ -807,7 +807,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
         <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
-        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <target state="translated">MSTest initialisiert die schreibbare TestContext-Eigenschaft einer Testklasse, sodass sie nicht im Konstruktor initialisiert werden muss.</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">

@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
         <source>Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</source>
-        <target state="new">Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</target>
+        <target state="translated">本机 dotnet test 无法将 AppContainer 测试主机连接到 SDK 命名管道。为此应用程序使用 InvokeTestingPlatform MSBuild 目标。未激活任何测试主机。</target>
         <note>{Locked="dotnet test"}{Locked="AppContainer"}{Locked="InvokeTestingPlatform"}{Locked="MSBuild"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
