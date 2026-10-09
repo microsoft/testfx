@@ -38,17 +38,12 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [Detect Static Dependencies](.agents/skills/detect-static-dependencies/SKILL.md) — _skill_ — Scan a C# codebase for calls to hard-to-test static APIs and produce a ranked report showing which statics appear most frequently, which files are most affected, and which abstractions already exist in the .NET ecosystem to replace them.
 - [Generate Testability Wrappers](.agents/skills/generate-testability-wrappers/SKILL.md) — _skill_ — Generate wrapper interfaces, default implementations, and DI service registration code for untestable static dependencies. For statics that already have .NET built-in abstractions (`TimeProvider`, `IHttpClientFactory`), guide adoption of the built-in. For statics without built-in alternatives, generate custom minimal wrappers.
 - [Grade Tests](.agents/skills/grade-tests/SKILL.md) — _skill_ — Grade a curated list of test methods and produce a compact, PR-comment-friendly report: one row per test method with a letter grade, a score band, and a one-line note explaining the grade. The skill **does not discover tests on its own** — the caller (typically a PR automation workflow or a human reviewer holding a specific list) provides the test methods to grade.
-- [MTP Hot Reload for Iterative Test Fixing](.agents/skills/mtp-hot-reload/SKILL.md) — _skill_ — Set up and use Microsoft Testing Platform hot reload to rapidly iterate fixes on failing tests without rebuilding between each change.
 - [Migrate Static to Wrapper](.agents/skills/migrate-static-to-wrapper/SKILL.md) — _skill_ — Perform mechanical, codemod-style replacement of static dependency call sites with calls to injected wrapper interfaces or built-in abstractions. Operates on a bounded scope (single file, project, or namespace) so migrations can be done incrementally.
-- [Run .NET Tests](.agents/skills/run-tests/SKILL.md) — _skill_ — Detect the test platform and framework, run tests, and apply filters using `dotnet test`.
 - [Test Analysis Extensions](.agents/skills/test-analysis-extensions/SKILL.md) — _skill_ — This skill provides access to per-language reference files used by the polyglot test analysis skills. Call this skill to get the list of available extension files, then read the one matching the target codebase's language and test framework.
 - [Test Anti-Pattern Detection](.agents/skills/test-anti-patterns/SKILL.md) — _skill_ — Quick, pragmatic analysis of test code in any supported language for anti-patterns and quality issues that undermine test reliability, maintainability, and diagnostic value.
-- [Test Filter Syntax Reference](.agents/skills/filter-syntax/SKILL.md) — _skill_ — Filter syntax depends on the **platform** and **test framework**.
 - [Test Gap Analysis via Pseudo-Mutation](.agents/skills/test-gap-analysis/SKILL.md) — _skill_ — Analyze production code in any supported language by reasoning about hypothetical mutations and checking whether existing tests would catch them. This reveals blind spots where tests pass but would continue to pass even if the code were broken.
-- [Test Platform and Framework Detection](.agents/skills/platform-detection/SKILL.md) — _skill_ — Determine **which test platform** (VSTest or Microsoft.Testing.Platform) and **which test framework** (MSTest, xUnit, NUnit, TUnit) a project uses.
 - [Test Smell Detection](.agents/skills/test-smell-detection/SKILL.md) — _skill_ — Deep formal audit of test code in any supported language using an academic test smell taxonomy. Detects symptoms of bad design or implementation decisions that make tests harder to understand, more fragile, less effective at catching bugs, or more expensive to maintain. Produces a severity-ranked report with specific locations and actionable fixes.
 - [Test Trait Tagging](.agents/skills/test-tagging/SKILL.md) — _skill_ — Analyze an existing test suite in any supported language and apply a standardized set of trait tags to each test method, giving teams visibility into their test distribution (positive vs. negative, critical-path coverage, smoke tests, etc.).
-- [Writing MSTest Tests](.agents/skills/writing-mstest-tests/SKILL.md) — _skill_ — Help users write effective, modern unit tests with MSTest 3.x/4.x using current APIs and best practices.
 - [Builder Agent](.github/agents/code-testing-builder.agent.md) — _agent_ — You build/compile projects and report the results. You are polyglot — you work with any programming language.
 - [Fixer Agent](.github/agents/code-testing-fixer.agent.md) — _agent_ — You fix compilation errors in code files. You are polyglot — you work with any programming language.
 - [Linter Agent](.github/agents/code-testing-linter.agent.md) — _agent_ — You format code and fix style issues. You are polyglot — you work with any programming language.
@@ -61,3 +56,14 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [Tester Agent](.github/agents/code-testing-tester.agent.md) — _agent_ — You run tests and report the results. You are polyglot — you work with any programming language.
 
 <!-- END gh-copilot-curate managed -->
+
+## Repository-maintained testing skills
+
+These skills retain their testing functionality without referrals to removed migration skills.
+They are excluded from upstream curation updates to preserve that routing.
+
+- [MTP hot reload](.agents/skills/mtp-hot-reload/SKILL.md) - Iterate on test fixes without rebuilding.
+- [Running .NET tests](.agents/skills/run-tests/SKILL.md) - Detect the current runner and select compatible commands.
+- [Test filter syntax](.agents/skills/filter-syntax/SKILL.md) - Reference filter syntax by platform and framework.
+- [Test platform detection](.agents/skills/platform-detection/SKILL.md) - Reference runner and framework detection.
+- [Writing MSTest tests](.agents/skills/writing-mstest-tests/SKILL.md) - Write and modernize MSTest tests without major-version migrations.

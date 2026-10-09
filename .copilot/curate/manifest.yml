@@ -7,6 +7,8 @@ plugins:
       source: dotnet/skills
       ref: 998ae280637d9a0c7f9ae414d853525c4aea069b
       # Keep framework/platform migration skills and their dispatcher out of updates.
+      # The repository-maintained testing skills in AGENTS.md are also excluded
+      # so updates cannot restore their references to removed migration skills.
       include:
         - skills/assertion-quality/
         - skills/code-testing-agent/
@@ -15,19 +17,14 @@ plugins:
         - skills/crap-score/
         - skills/detect-static-dependencies/
         - skills/dotnet-test-frameworks/
-        - skills/filter-syntax/
         - skills/generate-testability-wrappers/
         - skills/grade-tests/
         - skills/migrate-static-to-wrapper/
-        - skills/mtp-hot-reload/
-        - skills/platform-detection/
-        - skills/run-tests/
         - skills/test-analysis-extensions/
         - skills/test-anti-patterns/
         - skills/test-gap-analysis/
         - skills/test-smell-detection/
         - skills/test-tagging/
-        - skills/writing-mstest-tests/
         - agents/code-testing-builder.agent.md
         - agents/code-testing-fixer.agent.md
         - agents/code-testing-generator.agent.md
