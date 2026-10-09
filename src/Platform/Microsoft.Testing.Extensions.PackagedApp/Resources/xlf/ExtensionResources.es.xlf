@@ -142,6 +142,11 @@
         <target state="translated">No se puede cambiar el paquete '{0}' de '{1}' a '{2}': Windows completó la solicitud de eliminación, pero el paquete sigue registrado. Cierre todas las instancias en ejecución del paquete e inténtelo de nuevo. No se intentó el registro de reemplazo ni la activación del host de prueba.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
+      <trans-unit id="TestCaseFilterOptionDescription">
+        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
+        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
