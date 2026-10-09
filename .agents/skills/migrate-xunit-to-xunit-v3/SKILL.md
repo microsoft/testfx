@@ -39,9 +39,15 @@ Migrate .NET test projects from xUnit.net v2 to xUnit.net v3. The outcome is a s
 - Skill activation is not completion. For migrate/fix/update requests, inspect
   the staged files, edit them, and run tests in the same task.
 - The skill base directory contains only guidance. Search the current working
-  directory and open paths exactly as returned. If a tool rejects a path just
-  found by search, retry with another available reader/editor instead of
-  concluding that files are missing.
+  directory and open paths exactly as returned. Classify a tool rejection
+  before retrying: use another permitted reader/editor only for a confirmed
+  reader or path-normalization failure when access is authorized. A permission,
+  policy, or content-exclusion denial is a boundary: stop accessing that path,
+  report the blocker, and never retry through another tool, shell, alias, or
+  agent or infer/reconstruct its contents. If the rejection reason is unclear,
+  report the path as unavailable rather than assuming it is missing or trying
+  alternative access. Continue only independently permitted work and disclose
+  any resulting incomplete migration.
 - Do not ask the user to provide a path while workspace discovery can find it.
 - Inventory project/central package files and all affected source in one pass.
   A package-only migration is incomplete when v2-only APIs remain.

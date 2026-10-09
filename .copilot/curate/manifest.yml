@@ -63,6 +63,5 @@ plugins:
         - skills/migrate-nunit-to-mstest
         - skills/migrate-vstest-to-mtp
         - skills/migrate-xunit-to-mstest/SKILL.md
-        - skills/migrate-xunit-to-xunit-v3
       install:
         mode: summary

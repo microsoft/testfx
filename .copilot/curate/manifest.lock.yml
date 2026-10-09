@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-09T12:48:59.1418638Z
-manifestHash: sha256:6f5a3b8d5de7e71b160a5990ba681ac7a7095948f7bcafb122d965742779e050
+generatedAt: 2026-10-09T13:20:58.2550855Z
+manifestHash: sha256:028a69b5cf1cbce2969b8b7a3cee940e465966ac6549c4af97c21b1f55abaf93
 plugins:
     - id: dotnet-msbuild
       source:
@@ -536,9 +536,4 @@ plugins:
           upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-mstest/SKILL.md
           upstreamHash: sha256:e43e9a0be7389e1baa2260e6f42fd51b3fd2310ee7d090988429247e6e1cf9ec
           localHash: sha256:e43e9a0be7389e1baa2260e6f42fd51b3fd2310ee7d090988429247e6e1cf9ec
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-xunit-v3/SKILL.md
-          upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-xunit-v3/SKILL.md
-          upstreamHash: sha256:265995747a72b49ff37589779935e812f1970b8e0ed8e7be8da0c540a20c198f
-          localHash: sha256:265995747a72b49ff37589779935e812f1970b8e0ed8e7be8da0c540a20c198f
           mode: "0666"

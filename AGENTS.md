@@ -37,6 +37,9 @@ below so a refresh cannot silently overwrite them:
   and expands broader owner traits only onto valid method-level attributes.
 - [Migration agent](.github/agents/test-migration.agent.md) validates between
   phases and commits only when explicitly requested.
+- [xUnit v3 migration](.agents/skills/migrate-xunit-to-xunit-v3/SKILL.md) permits
+  reader fallback only for confirmed technical failures, never policy or
+  permission denials.
 
 These corrections are relative to upstream commit
 `e468462d8a0900f5278331c1ae12f45e015bb656`. Compare each excluded file explicitly
@@ -129,6 +132,5 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [NUnit -> MSTest Migration](.agents/skills/migrate-nunit-to-mstest/SKILL.md) — _skill_ — Convert NUnit 3 or 4 tests to MSTest v4 without changing the target framework or test platform. A successful migration builds, discovers the same test cases, and preserves pass/fail, lifecycle, data, filtering, and concurrency semantics.
 - [VSTest -> Microsoft.Testing.Platform Migration](.agents/skills/migrate-vstest-to-mtp/SKILL.md) — _skill_ — Migrate a .NET test solution from VSTest to Microsoft.Testing.Platform (MTP). The outcome is a solution where all test projects run on MTP, `dotnet test` works correctly, and CI/CD pipelines are updated.
 - [xUnit -> MSTest Migration](.agents/skills/migrate-xunit-to-mstest/SKILL.md) — _skill_ — Convert xUnit.net v2 or v3 tests to MSTest v4 without changing the target framework or test platform. A successful migration builds, discovers the same tests, and preserves pass/fail results and execution semantics.
-- [xunit.v3 Migration](.agents/skills/migrate-xunit-to-xunit-v3/SKILL.md) — _skill_ — Migrate .NET test projects from xUnit.net v2 to xUnit.net v3. The outcome is a solution where all test projects reference `xunit.v3.*` packages, compiles cleanly, and all tests pass with the same results as before migration.
 
 <!-- END gh-copilot-curate managed -->
