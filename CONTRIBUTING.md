@@ -25,6 +25,35 @@ There are many ways to contribute:
 - **DO NOT** submit Pull Requests without having an approved feature request or enhancement.
 - **DO NOT** submit large code formatting changes without discussing them with the team first.
 
+### Feature evidence and design decisions
+
+Use a descriptive title that tells users what changes. Category prefixes such as
+`[feat]` are not required; the [title research and decision](docs/decisions/feature-delivery-guidance.md#pr-title-research)
+explains the tradeoffs. Preserve prefixes required by existing automation.
+
+For new features, keep a concise, versioned decision record in an existing design
+document/RFC or `docs/decisions/<feature-name>.md`. Start before implementation and
+update it with research sources, approaches actually tried and their outcomes,
+alternatives, assumptions, and the reasons for changing or choosing a direction.
+Challenge material design decisions, especially when requirements or rationale
+are missing; compare the existing approach and simpler alternatives rather than
+assuming the first proposal is right.
+
+Whenever practical, show the feature working with screenshots or a short GIF/video
+in the PR description, including terminal and report changes. Provide captions
+and reproduction commands; use a text transcript or result artifact when clearer,
+and explain unavailable or inapplicable media. Do not expose sensitive data.
+
+For regression coverage, keep the tests while removing the production change in
+an isolated comparison: they must execute and fail for the intended behavioral
+reason without it and pass with it. Include exact commands, source states, exits,
+test identities/counts, and the relevant assertion failure. A build failure or
+skipped test is not proof. Behavior-preserving changes instead need focused
+green-before/green-after evidence. The [feature-delivery skill](.github/skills/feature-delivery/SKILL.md)
+describes safe comparisons, new-API limitations, and the decision-record format.
+Link this evidence using the [PR template](.github/PULL_REQUEST_TEMPLATE.md);
+screenshots do not replace executable tests.
+
 ## Coding Style
 
 The MSTest project follows the same rules as the runtime repository [developer guide](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md).

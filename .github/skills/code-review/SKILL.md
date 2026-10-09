@@ -26,7 +26,8 @@ tests to understand the changed behavior before commenting.
    before treating a checklist match as a finding.
 3. Compare the PR title and description with the actual diff. Verify that the
    stated motivation, behavior change, compatibility impact, and validation
-   match what the code does.
+   match what the code does. Apply **Feature decisions and delivery evidence**
+   below, including when the PR provides no design rationale.
 4. Check changed tests against the test-review guidance below.
 5. Report only actionable findings caused by the PR. Prefer a small number of
    high-confidence findings over broad summaries or praise.
@@ -141,6 +142,49 @@ must meet the concrete-scenario and observable-consequence bar in
   request in the review summary and name the exact failure mode, compatibility
   concern, race, or attack surface the additional models should examine.
 
+## Feature decisions and delivery evidence
+
+Use [feature-delivery](../feature-delivery/SKILL.md) as the evidence contract,
+not permission to implement, run untrusted PR code, upload media, or publish
+additional comments. Read linked decision records and available run artifacts;
+author claims and a checked template box are not execution proof.
+
+- For new features, check that the versioned design/RFC/decision record captures
+  sources, approaches actually tried and results, alternatives, assumptions,
+  and why the chosen direction won. Compare it with the diff and revision history.
+  Do not assume an absent rationale means the design is wrong.
+- Challenge material design choices even when no explanation was provided:
+  trace consumers and constraints, compare the existing/no-change design and
+  a simpler alternative, and examine ownership/lifecycle, failure/cancellation,
+  compatibility, observability, and unnecessary public APIs/abstractions.
+  Ask for the specific missing contract or evidence when a consequential
+  assumption cannot be established. Do not demand an arbitrary redesign.
+- Check demonstrations for user-visible features, including terminal/report
+  changes: actual screenshots or short GIF/video where practical, captions,
+  reproduction steps, source/package provenance, and accessible text.
+  Accept a clearer transcript/artifact or an explained unavailable/inapplicable
+  capture. A diagram alone is not a running-feature demonstration; media is not
+  test execution or shipping-product proof. Never request public sensitive data.
+- For behavioral regression coverage, verify the same tests/assertions/selection
+  were retained without the production change, executed, and failed at the
+  intended assertion, then executed and passed with it. Check source states,
+  commands, exits, identities/counts, and artifacts; repack/provenance matters
+  for package consumers. Build/restore/launch failures, skips, and zero tests
+  are not red-phase proof. A compiling behavior-removal/mutation check is valid
+  when accurately labeled; a new API's baseline compilation failure alone is not.
+- Accept green/green equivalence for behavior-preserving changes. For a test-only
+  safety net protecting correct behavior, look for a relevant compiling mutation
+  demonstrating sensitivity. Documentation-only changes need no product red/green
+  or media. Mark infeasible behavioral comparisons as sensitivity unproven.
+- Judge titles by descriptive accuracy, not `[feat]` or other category prefixes.
+  Preserve existing automation prefixes; do not infer compatibility from a tag.
+
+Put material missing decision, demonstration, or regression evidence in the
+review summary with the exact gap and smallest useful follow-up. Missing evidence
+is not a proven code defect, does not justify an apply-ready inline suggestion,
+and must not trigger `REQUEST_CHANGES` solely because a record or media is absent.
+Avoid ceremonial documentation demands when evidence is already available.
+
 ## Core TestFx checks
 
 - Preserve backward compatibility for public APIs, protocols, command-line
@@ -239,6 +283,8 @@ In particular, verify:
 
 - Tests would fail if the production behavior were wrong; reject missing,
   tautological, self-comparing, or only-trivial assertions.
+- Check actual red/green or deliberate-mutation evidence under **Feature decisions
+  and delivery evidence**, not only a hypothetical claim that the test would fail.
 - Async assertions and operations are awaited.
 - Deterministic multiline output is checked with one exact raw-string
   (`"""..."""`) expectation, not multiple substring assertions or escaped
@@ -316,6 +362,10 @@ Every finding must:
 - Distinguish a verified defect from a material evidence gap. Put unresolved
   validation questions in the summary with the exact missing evidence; do not
   present them as proven bugs or apply-ready inline fixes.
+- Apply **Feature decisions and delivery evidence** to relevant candidates:
+  missing rationale/media/red-phase proof is an evidence gap, not an automatic
+  correctness finding. Do not claim a demonstration, baseline failure, or passing
+  execution that the available artifacts do not establish.
 - Use severity proportional to impact; do not elevate maintainability or style
   suggestions into correctness findings.
 
@@ -342,3 +392,11 @@ post on their originating PRs.
 | Ten locale files or tests share one defective generator/helper. A live thread already explains that defect. | One root-cause finding if novel; otherwise reference the live thread, not ten new comments. |
 | A B-grade test has one exact assertion that completely protects its narrow contract. | Keep the grade in the scorecard; no inline demand for redundant assertions. |
 | A changed test only asserts non-null; returning the wrong contents survives and contradicts its stated contract. | Keep the grade and publish one actionable assertion improvement with the specific surviving mutation and expected contents. |
+| A feature has a maintained decision record, a captioned terminal recording/transcript with provenance, and the same behavioral tests fail without the production change and pass with it. | Evidence contract satisfied; no ceremonial request for a different title prefix, another document, or more media. |
+| A feature has no design rationale and introduces a lifetime assumption the consumers do not establish. | Investigate the contract and simpler alternatives; put the exact unresolved assumption in the summary. Publish a defect only if a concrete failing lifetime is established. |
+| A PR claims regression proof, but the baseline cannot compile a newly added API. | Baseline red-phase proof is unproven; request a compiling behavior-removal/mutation check in the summary, not an inline fix or a claimed test failure. |
+| Red-phase artifacts show the intended assertion failure, but the package consumer resolved the modified package in both runs. | Comparison provenance is insufficient; request distinct rebuilt/repacked source-state evidence. |
+| A baseline command exits nonzero because restore failed, or reports only skipped/zero selected tests. | No behavioral red-phase proof; identify the execution gap in the summary without inventing a code defect. |
+| A behavior-preserving refactor has focused green-before/green-after runs and no useful visual surface. | Accept equivalence and explained inapplicable media; do not require a fabricated red run or screenshot. |
+| A test-only safety net passes before and after, and a relevant compiling mutation fails its intended assertion. | Accept green/green plus labeled mutation sensitivity; do not claim the old production state was defective. |
+| A new user-visible feature lacks media or a decision record, but correctness is otherwise established. | Identify useful missing evidence proportionately in the summary; do not block solely for absent media/record or create an inline code finding. |
