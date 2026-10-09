@@ -385,12 +385,12 @@ lifecycle/helpers still receive the parallel-safety analysis.
 
 ### Step 2 — Review and grade each test method
 
-This repository is C# / MSTest. Use the **`grade-tests` skill** (synced
-into this repo at `.agents/skills/grade-tests/SKILL.md` from
-`dotnet/skills`) as one input to the review of each kept method. Invoke it via the `skill`
-tool and follow its rubric exactly — do not re-derive or restate the
-rubric here; the synced skill is the single source of truth and will
-evolve over time.
+This repository is C# / MSTest. Use the repository-owned **`grade-tests`
+skill** at `.agents/skills/grade-tests/SKILL.md` as one input to the review
+of each kept method. Invoke it via the `skill` tool and follow its rubric
+exactly — do not re-derive or restate the rubric here. The skill is the
+single source of truth and is maintained separately from curator-managed
+upstream skills.
 
 When the skill asks for the language extension, follow its own Step 1
 guidance: invoke the **`test-analysis-extensions`** skill to discover
@@ -420,7 +420,7 @@ refusal branch:
 
 A small number of repo-local conventions adjust how the standard rubric
 should be interpreted in this codebase. Use these as **additions** to —
-not replacements for — the synced skill's rubric:
+not replacements for — the repository-owned skill's rubric:
 
 - **Internal framework tests** (under `test/UnitTests/TestFramework.UnitTests/`
   and adjacent projects) use the internal test framework from
