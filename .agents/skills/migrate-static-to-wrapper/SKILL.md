@@ -36,7 +36,8 @@ Perform mechanical, codemod-style replacement of static dependency call sites wi
 - No wrapper or abstraction exists yet and one must be designed from scratch (use `generate-testability-wrappers` first).
   A built-in abstraction such as `TimeProvider` or `IFileSystem` always counts as existing.
 - The user wants to detect statics, not migrate them (use `detect-static-dependencies`)
-- Migrating between test frameworks (use the appropriate migration skill)
+- Migrating between test frameworks (report that framework migration workflows
+  are not installed in this repository; do not route to removed skills)
 - The user primarily asks for a deterministic behavior test and has not selected
   the production seam (use `testability-obstacle`)
 

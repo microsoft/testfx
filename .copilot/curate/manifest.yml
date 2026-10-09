@@ -17,7 +17,7 @@ plugins:
         - agents/test-quality-auditor.agent.md
         - agents/testability-migration.agent.md
         - skills/assertion-quality
-        - skills/code-testing
+        - skills/code-testing/unit-test-generation.prompt.md
         - skills/code-testing-agent
         - skills/code-testing-extensions/extensions/cpp.md
         - skills/code-testing-extensions/extensions/dotnet-examples.md
@@ -28,7 +28,6 @@ plugins:
         - skills/code-testing-extensions/extensions/kotlin.md
         - skills/code-testing-extensions/extensions/powershell.md
         - skills/code-testing-extensions/extensions/python-examples.md
-        - skills/code-testing-extensions/extensions/ruby.md
         - skills/code-testing-extensions/extensions/rust.md
         - skills/code-testing-extensions/extensions/swift.md
         - skills/code-testing-extensions/extensions/typescript-examples.md
@@ -44,12 +43,9 @@ plugins:
         - skills/find-untested-sources/scripts/find_untested_sources.py
         - skills/generate-testability-wrappers
         - skills/grade-tests
-        - skills/migrate-static-to-wrapper
         - skills/test-analysis-extensions/extensions
-        - skills/test-anti-patterns
         - skills/test-gap-analysis
         - skills/test-smell-detection
-        - skills/test-tagging
         - skills/testability-obstacle
       install:
         mode: summary

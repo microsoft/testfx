@@ -39,7 +39,9 @@ Quick, pragmatic analysis of test code in any supported language for anti-patter
 - User asks to fix swapped `Assert.AreEqual` argument order in MSTest (use `writing-mstest-tests`)
 - User asks to convert MSTest `DynamicData` from `IEnumerable<object[]>` to `ValueTuple` (use `writing-mstest-tests`)
 - User wants to run or execute tests (use `run-tests` for .NET)
-- User wants to migrate between test frameworks or versions (use migration skills)
+- User wants to migrate between test frameworks or versions (report that the
+  migration workflow is not installed in this repository; do not redirect to
+  removed skills or perform a migration during the audit)
 - User wants raw .NET coverage collection (use `run-tests`), non-.NET coverage collection or analysis (use native tooling), project-wide .NET coverage/CRAP metrics (use `coverage-analysis`), or named-target .NET CRAP (use `crap-score`)
 - User asks whether tests would catch a bug or wants behavioral/pseudo-mutation gaps (use `test-gap-analysis`)
 - User wants test-mix or happy-vs-error-path classification, standardized tagging, or trait/category distributions (use `test-tagging`)

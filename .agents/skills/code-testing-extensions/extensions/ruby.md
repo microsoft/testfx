@@ -59,16 +59,25 @@ This catches placement and load-path mistakes on turn 1 instead of after dozens 
 Before reporting success, run the **harness-equivalent** discovery command from the repo root and confirm the example count went up by at least the number of tests you generated. CI/msbench/coverage harnesses do not know which file or sub-gem dir you targeted; they run the framework's default discovery from the repo root, so a spec that passes via `bundle exec rspec fastlane_core/spec/foo_spec.rb` is still worthless if `bundle exec rspec --dry-run` from the repo root doesn't enumerate it.
 
 ```bash
+set -euo pipefail
+
 # RSpec — from repo root
 bundle exec rspec --dry-run 2>&1 | grep -E '^[0-9]+ example'
 
-# Minitest (Rails)
-{ bundle exec rake test --dry-run 2>/dev/null || bin/rails test --list-tests; } | wc -l
+# Minitest — run the configured test task and inspect its actual result summary
+bundle exec rake test 2>&1 | grep -E '^[[:space:]]*[0-9]+ runs, [0-9]+ assertions'
 
 # Custom runner (Homebrew, ruby/ruby, etc.)
 # Use the repo's own runner — `./bin/brew tests --list`, `make test-all`, etc.
 # If no `--list`/`--dry-run` mode exists, run a single matching test by name and confirm exit 0.
 ```
+
+Choose only the command for the repository's configured runner, and execute it
+in the same Bash process as `set -euo pipefail`. Require the runner's successful
+exit before treating the reported count as evidence. Do not switch runners
+after a failure or hide stderr. Rake `--dry-run` lists tasks, not discovered test
+cases; where Minitest has no repository-supported discovery mode, use the real
+test command and its executed-test summary instead.
 
 If the count did not increase, your spec is invisible to the harness. Move it into `./spec/`, extend `.rspec`/`Rakefile` so the harness picks up the sub-gem dir, or switch to a `require_relative` strategy from a root-level spec. Do **not** report success until the harness-equivalent command sees your new tests.
 

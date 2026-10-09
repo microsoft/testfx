@@ -15,6 +15,9 @@ below so a refresh cannot silently overwrite them:
   user menu.
 - [Python generation guidance](.agents/skills/code-testing-extensions/extensions/python.md)
   preserves requested regression tests and reports production or tooling blockers.
+- [Ruby generation guidance](.agents/skills/code-testing-extensions/extensions/ruby.md)
+  preserves the selected runner's exit status and uses real test counts rather
+  than counting Rake tasks or falling back after a failure.
 - [.NET generation guidance](.agents/skills/code-testing-extensions/extensions/dotnet.md)
   distinguishes VSTest command mode from native MTP command mode.
 - [Coverage setup discovery](.agents/skills/coverage-analysis/references/setup-discovery.md)
@@ -71,6 +74,10 @@ dispatcher. Framework/platform migration plugins remain intentionally absent.
 - [Test filter syntax](.agents/skills/filter-syntax/SKILL.md) - Reference filter syntax by platform and framework.
 - [Test platform detection](.agents/skills/platform-detection/SKILL.md) - Reference runner and framework detection.
 - [Writing MSTest tests](.agents/skills/writing-mstest-tests/SKILL.md) - Write and modernize MSTest tests without major-version migrations.
+- [Code testing](.agents/skills/code-testing/SKILL.md) - Generate and repair tests without referrals to removed framework/platform migration workflows.
+- [Test anti-patterns](.agents/skills/test-anti-patterns/SKILL.md) - Diagnose test quality without offering an unavailable framework/version migration workflow.
+- [Test tagging](.agents/skills/test-tagging/SKILL.md) - Classify/tag tests while keeping framework/platform migrations out of scope.
+- [Static dependency migration](.agents/skills/migrate-static-to-wrapper/SKILL.md) - Replace static dependencies with testable abstractions, not test frameworks.
 
 <!-- BEGIN gh-copilot-curate managed -->
 ## Available skills (managed by gh-copilot-curate — do not edit by hand)
@@ -105,19 +112,15 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 
 - [Assertion Diversity Analysis](.agents/skills/assertion-quality/SKILL.md) — _skill_ — Analyze test code in any supported language to measure how varied and meaningful the assertions are. Produce a metrics report that reveals whether tests verify different facets of correctness — not just "output equals X" but also structure, exceptions, state transitions, side effects, and invariants.
 - [CRAP Score Analysis](.agents/skills/crap-score/SKILL.md) — _skill_ — Calculate CRAP (Change Risk Anti-Patterns) scores for .NET methods to identify code that is both complex and undertested.
-- [Code Testing Skill](.agents/skills/code-testing/SKILL.md) — _skill_ — The reliable implicit entry point for generating, repairing, and strengthening tests. It handles focused work directly and invokes the public `test-engineer` agent for broad or multi-stage requests.
 - [Coverage Analysis](.agents/skills/coverage-analysis/SKILL.md) — _skill_ — Explain what .NET coverage evidence proves, reconcile target arithmetic, and identify the code blocking progress. Add complexity/CRAP ranking only when the user explicitly asks for risk hotspots, CRAP, priorities by risk, or refactoring safety.
 - [Detect Static Dependencies](.agents/skills/detect-static-dependencies/SKILL.md) — _skill_ — Scan a C# codebase for calls to hard-to-test static APIs and produce a ranked report showing which statics appear most frequently, which files are most affected, and which abstractions already exist in the .NET ecosystem to replace them.
 - [Find Untested Sources](.agents/skills/find-untested-sources/SKILL.md) — _skill_ — Coverage tools answer "which lines were executed?" — they require a green build and a passing test run, which is minutes-to-tens-of-minutes on a real repo. The question this skill answers is different and much cheaper:
 - [Generate Testability Wrappers](.agents/skills/generate-testability-wrappers/SKILL.md) — _skill_ — Generate wrapper interfaces, default implementations, and DI service registration code for untestable static dependencies. For statics that already have .NET built-in abstractions (`TimeProvider`, `IHttpClientFactory`), guide adoption of the built-in. For statics without built-in alternatives, generate custom minimal wrappers.
 - [Grade Tests](.agents/skills/grade-tests/SKILL.md) — _skill_ — Assess a curated list of test methods and produce a compact, PR-comment-friendly report. The primary result is one of **Pass**, **Failed**, **Uncertain**, or **Not applicable**; an A-F quality grade remains secondary diagnostic information. The skill **does not discover tests on its own** — the caller (typically a PR automation workflow or a human reviewer holding a specific list) provides the tests or a bounded diff to assess.
 - [Legacy Code Testing Alias](.agents/skills/code-testing-agent/SKILL.md) — _skill_ — This skill preserves explicit calls that still use the former `code-testing-agent` name. The public custom agent is `test-engineer`; the model-facing implicit skill is `code-testing`.
-- [Migrate Static to Wrapper](.agents/skills/migrate-static-to-wrapper/SKILL.md) — _skill_ — Perform mechanical, codemod-style replacement of static dependency call sites with calls to injected wrapper interfaces or built-in abstractions. Operates on a bounded scope (single file, project, or namespace) so migrations can be done incrementally.
 - [Resolve a Testability Obstacle](.agents/skills/testability-obstacle/SKILL.md) — _skill_ — Introduce the smallest behavior-preserving seam needed to test a specific C# behavior, then add deterministic tests that prove both the behavior and the seam. The production edit is a means to the requested test, not an invitation to redesign adjacent code.
-- [Test Anti-Pattern Detection](.agents/skills/test-anti-patterns/SKILL.md) — _skill_ — Quick, pragmatic analysis of test code in any supported language for anti-patterns and quality issues that undermine test reliability, maintainability, and diagnostic value.
 - [Test Gap Analysis](.agents/skills/test-gap-analysis/SKILL.md) — _skill_ — Answer one question: **which caller-visible production behaviors could change without an existing test failing?** Mutation reasoning is a probe, not the goal. Inventory public outcomes first, then verify only credible gaps.
 - [Test Smell Detection](.agents/skills/test-smell-detection/SKILL.md) — _skill_ — Audit test code with the academic taxonomy, code evidence, calibrated framework idioms, and fixes native to the codebase.
-- [Test Trait Tagging](.agents/skills/test-tagging/SKILL.md) — _skill_ — Analyze an existing test suite in any supported language and apply a standardized set of trait tags to each test method, giving teams visibility into their test distribution (positive vs. negative, critical-path coverage, smoke tests, etc.).
 - [Builder Agent](.github/agents/code-testing-builder.agent.md) — _agent_ — You build/compile projects and report the results. You are polyglot — you work with any programming language.
 - [Fixer Agent](.github/agents/code-testing-fixer.agent.md) — _agent_ — You fix compilation errors in code files. You are polyglot — you work with any programming language.
 - [Linter Agent](.github/agents/code-testing-linter.agent.md) — _agent_ — You format code and fix style issues. You are polyglot — you work with any programming language.

@@ -118,7 +118,9 @@ Use this skill when you need to:
 ## When Not to Use
 
 - Running or executing existing tests (use the `run-tests` skill)
-- Migrating between test frameworks (use migration skills)
+- Migrating between test frameworks or platforms (report that migration
+  workflows are not installed in this repository; do not delegate to removed
+  skills)
 - Answering an MSTest API/pattern or modernization question that does not ask to
   generate tests (use `writing-mstest-tests`)
 - Analysis-only diagnosis of failing tests when no code or test changes are

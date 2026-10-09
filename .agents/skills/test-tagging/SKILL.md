@@ -8,7 +8,8 @@ description: >
   by test type, or tag then verify the project builds. Read bodies when names
   mislead. Apply canonical attributes; otherwise report only. DO NOT USE FOR:
   requests owned by test-anti-patterns, coverage-analysis, crap-score,
-  test-gap-analysis, code-testing, or migration skills.
+  test-gap-analysis or code-testing. Framework/platform migration workflows
+  are not installed in this repository and are outside this skill's scope.
 license: MIT
 ---
 

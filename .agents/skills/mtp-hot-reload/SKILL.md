@@ -210,7 +210,7 @@ Once all tests pass:
 | Pitfall | Solution |
 |---------|----------|
 | Using `dotnet test` instead of `dotnet run` | Hot reload requires `dotnet run --project <path>` to run the test host directly in console mode |
-| Project uses VSTest, not MTP | Do not mutate it. Offer `dotnet watch --project <path> test` as a rebuild/rerun fallback or a separate explicit migration |
+| Project uses VSTest, not MTP | Do not mutate it. Offer `dotnet watch --project <path> test` as a rebuild/rerun fallback; platform migration workflows are not installed in this repository |
 | Forgetting to set the environment variable | Set `TESTINGPLATFORM_HOTRELOAD_ENABLED=1` before running |
 | Expecting Test Explorer integration | Console mode only -- no VS/VS Code Test Explorer support |
 | Making unsupported code changes (rude edits) | Stop, rebuild, and rerun the same host invocation, or use `dotnet watch` with restart-on-rude-edit behavior |
