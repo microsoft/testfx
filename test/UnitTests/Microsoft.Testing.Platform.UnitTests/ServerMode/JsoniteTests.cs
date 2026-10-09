@@ -54,7 +54,7 @@ public sealed class JsoniteTests
         Assert.HasCount(1, result);
         Jsonite.JsonArray values = Assert.IsInstanceOfType<Jsonite.JsonArray>(result["value"]);
         Assert.HasCount(3, values);
-        Assert.AreEqual(false, values[0]);
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(values[0]));
         Assert.IsNull(values[1]);
         Jsonite.JsonObject nested = Assert.IsInstanceOfType<Jsonite.JsonObject>(values[2]);
         Assert.AreEqual(2, nested["value"]);
@@ -96,7 +96,7 @@ public sealed class JsoniteTests
         Assert.IsNull(Jsonite.Json.Deserialize(" \r\n\t"));
         Assert.IsEmpty(Assert.IsInstanceOfType<Jsonite.JsonObject>(Jsonite.Json.Deserialize("{}")));
         Assert.IsEmpty(Assert.IsInstanceOfType<Jsonite.JsonArray>(Jsonite.Json.Deserialize("[]")));
-        Assert.AreEqual(true, Jsonite.Json.Deserialize("true false"));
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(Jsonite.Json.Deserialize("true false")));
     }
 
     [TestMethod]
