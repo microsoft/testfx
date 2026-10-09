@@ -116,6 +116,22 @@ fixture already isolates generated-consumer restores. CI's outer runner uses
 `eng\pipelines\variables\test-env-vars.yml` (`DOTNET_ROOT=.dotnet`,
 `NUGET_PACKAGES=.packages`); distinguish that cache from the inner fixture's cache.
 
+When a consumer uses a different SDK, invoke the outer acceptance project through
+`dotnet test`, not only its apphost. The CLI exports `MSBuildSDKsPath`,
+`MSBuildExtensionsPath`, and `DOTNET_ROOT_X64` to the test host. A child `global.json`
+and a successful `dotnet --version` do not prevent mixed-SDK targets/task loading.
+Use `AcceptanceTestBase.ConfigureDotnetSdkEnvironment` for the isolated native
+SDK, preserving shared cache/tooling settings. Verify actual build provenance
+(`NETCoreSdkVersion`, `MSBuildToolsPath`, extensions and SDK paths) alongside the
+real packaged-host results.
+
+Keep CI's `DOTNET_CLI_CONTEXT_VERBOSE=1` enabled during native CLI validation.
+SDK tracing can name the sidecar executable even when help/discovery correctly
+comes from the activated host, and ANSI color/reset-only lines can interrupt an
+otherwise deterministic block. Normalize presentation only, preserve the
+diagnostics, and assert host usage or the delimited JSON payload rather than
+requiring the entire mixed CLI output to be a payload.
+
 ## 3. Run a focused regression and verify execution
 
 This Windows example runs one existing packed-package regression. It is a package

@@ -34,13 +34,15 @@ permissions:
   models: read
   pull-requests: read
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
   - defaults
   - dotnet
   - "*.blob.core.windows.net"
   - github
-  - "*.in.applicationinsights.azure.com"
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced

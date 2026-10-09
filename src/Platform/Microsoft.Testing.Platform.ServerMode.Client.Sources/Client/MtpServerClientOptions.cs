@@ -48,6 +48,17 @@ internal sealed class MtpServerClientOptions
     public bool? IsStateful { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to request <c>client/showMessage</c> notifications (<c>capabilities.testing.showMessage</c>).
+    /// A null value omits the request. The client must check the server's applied acknowledgement.
+    /// </summary>
+    /// <remarks>
+    /// Both methods use <see cref="IMtpServerClient.LogReceived"/>. False or absent acknowledgment
+    /// retains <c>client/log</c>. Forwarding still activates at discovery/run, and local rendering
+    /// is unchanged. Both stdout and stderr must still be drained independently.
+    /// </remarks>
+    public bool? ShowMessage { get; set; }
+
+    /// <summary>
     /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback
     /// listener. Overridable by callers per the <c>VSTEST_CONNECTION_TIMEOUT</c> convention (seconds).
     /// Defaults to 90 seconds.

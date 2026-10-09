@@ -139,6 +139,24 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         Assert.Contains("MinimumExpectedTestsPolicyViolation", summary);
     }
 
+    [TestMethod]
+    public async Task WhenCoverageThresholdViolated_SummaryUsesPlatformVerdict()
+    {
+        (TestHostResult result, string summary) = await RunAsync(
+            TargetFrameworks.NetCurrent, testMode: "coverage", extraArgs: "--coverage-threshold-line 80");
+
+        result.AssertExitCodeIs(ExitCode.CoverageThresholdFailed);
+        result.AssertOutputContains("CoverageThresholdFailed");
+        Assert.Contains("CoverageThresholdFailed", summary);
+        Assert.Contains(
+            """
+            | Scope | Metric | Actual | Required | Result |
+            | --- | --- | ---: | ---: | --- |
+            | Overall | Line | 79.0% | 80.0% | ❌ Failed |
+            """.ReplaceLineEndings("\n"),
+            summary.ReplaceLineEndings("\n"));
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task WhenTestNodesCarryAFileLocation_AnnotationsArePinnedToTheDeclaredSource(string tfm)
@@ -326,7 +344,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public string Version => "2.0.0";
     public string DisplayName => nameof(DummyTestFramework);
     public string Description => nameof(DummyTestFramework);
-    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
+    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage), typeof(TestCoverageMessage)];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -434,7 +452,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     }));
             }
         }
-        else if (mode == "pass")
+        else if (mode is "pass" or "coverage")
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
                 context.Request.Session.SessionUid,
@@ -444,6 +462,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     DisplayName = "PassingTest",
                     Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
                 }));
+
+            if (mode == "coverage")
+            {
+                await context.MessageBus.PublishAsync(this, new TestCoverageMessage(
+                    context.Request.Session.SessionUid, CoverageScope.Overall, CoverageMetric.Line, 79, 100, Uid));
+            }
         }
 
         // mode == "zero": publish nothing.

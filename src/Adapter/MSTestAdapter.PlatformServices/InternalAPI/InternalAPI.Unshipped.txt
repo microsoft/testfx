@@ -1,1 +1,8 @@
 #nullable enable
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.Constructor.get -> System.Reflection.ConstructorInfo!
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestClassInfo(System.Type! type, System.Reflection.ConstructorInfo! constructor, bool isParameterlessConstructor, Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute! classAttribute, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo! parent) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.Constructor.get -> System.Reflection.ConstructorInfo?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.IsFSharpModule.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestClassInfo(System.Type! type, System.Reflection.ConstructorInfo? constructor, bool isParameterlessConstructor, Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute! classAttribute, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo! parent) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TypeExtensions
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TypeExtensions.IsFSharpModule(this System.Type! type) -> bool

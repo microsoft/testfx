@@ -60,6 +60,36 @@ original/mutant observations, not empirical kill ratios. Unavailable production
 context is disclosed without a deduction. Existing changed-line anchoring,
 deduplication, parallel-safety, and safe-output publication gates still apply.
 
+### Firewall access for repository work
+
+`network: defaults` covers infrastructure, not package feeds or Git transport.
+Workflows that restore, build, test, or query .NET package metadata need the
+`dotnet` ecosystem. It includes the repository's Azure DevOps feeds and their
+`*.vsblob.vsassets.io` package-download redirects. Workflows that fetch Git history
+or PR branches also allow `github.com` explicitly; GitHub MCP/CLI proxy access does
+not grant direct Git HTTPS access. Keep GitHub API calls on the existing proxies
+rather than adding `api.github.com` to bypass them.
+
+Build/test workflows set `DOTNET_CLI_TELEMETRY_OPTOUT=1` at workflow scope so both
+setup steps and agent-launched child processes inherit it. MTP and MSTest honor
+the same opt-out; do not add Application Insights destinations just to silence
+blocked telemetry requests.
+
+This is client-side suppression, not a blanket firewall ban on telemetry:
+gh-aw v0.89.21's maintained `dotnet` bundle also permits the Application Insights
+ingestion host `dc.services.visualstudio.com`. Adding `dotnet` therefore permits
+that host as well as package and SDK downloads. The removed regional
+`*.in.applicationinsights.azure.com` exception stays denied. The local firewall
+replay verified denial of `southcentralus-0.in.applicationinsights.azure.com`,
+not every telemetry endpoint. Keep the maintained SDK/feed bundle for restore
+compatibility rather than treating the opt-out as an egress-enforcement control.
+
+When investigating a blocked request, inspect the downloaded raw firewall
+`access.log` as well as the gh-aw summary. A `TCP_DENIED` entry remains a denial
+even when its HTTP status is `200`; some gh-aw summaries count those entries as
+allowed. Add only destinations required by the workflow's task, or eliminate
+unnecessary requests instead of broadening the firewall.
+
 ### Compile on the pinned toolchain, and check the pins afterwards
 
 > [!WARNING]

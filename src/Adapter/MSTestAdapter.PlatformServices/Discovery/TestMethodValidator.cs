@@ -51,10 +51,11 @@ internal class TestMethodValidator
 
         bool isAccessible = testMethodInfo.IsPublic
             || (_discoverInternals && testMethodInfo.IsAssembly);
+        bool hasValidInstanceKind = testMethodInfo.IsStatic == type.IsFSharpModule();
 
         // Todo: Decide whether parameter count matters.
         bool isValidTestMethod = isAccessible &&
-                                 testMethodInfo is { IsAbstract: false, IsStatic: false } &&
+                                 !testMethodInfo.IsAbstract && hasValidInstanceKind &&
                                  testMethodInfo.IsValidReturnType(_reflectHelper);
 
         if (!isValidTestMethod)
@@ -63,12 +64,15 @@ internal class TestMethodValidator
             // is invalid. If the method is also inaccessible/static/abstract, the generic signature message is
             // more accurate, otherwise the user could "fix" the return type and still have an invalid method.
             bool isInvalidOnlyBecauseOfReturnType = isAccessible
-                && testMethodInfo is { IsAbstract: false, IsStatic: false }
+                && !testMethodInfo.IsAbstract && hasValidInstanceKind
                 && IsGenericValueTaskReturnType(testMethodInfo);
 
+            string signatureMessage = type.IsFSharpModule()
+                ? Resource.UTA_ErrorIncorrectFSharpTestMethodSignature
+                : Resource.UTA_ErrorIncorrectTestMethodSignature;
             string message = isInvalidOnlyBecauseOfReturnType
                 ? string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericValueTaskReturnType, type.FullName, testMethodInfo.Name)
-                : string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectTestMethodSignature, type.FullName, testMethodInfo.Name);
+                : string.Format(CultureInfo.CurrentCulture, signatureMessage, type.FullName, testMethodInfo.Name);
             warnings.Add(message);
             return false;
         }

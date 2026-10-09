@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.TestHost;
 
 using static Microsoft.Testing.Platform.UnitTests.ProtocolSerializerTestHelper;
 
@@ -50,6 +52,27 @@ public sealed class ProtocolTests
 
         Assert.AreEqual(0, actual.ExitCode);
         Assert.AreEqual(2, actual.UnfilteredExitCode);
+        Assert.IsEmpty(actual.SummaryArtifacts);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("summary description")]
+    public void TestHostCompletedRequestSerializeDeserialize_PreservesSummaryArtifact(string? description)
+    {
+        SessionFileArtifact artifact = new(new SessionUid("session"), new FileInfo("summary.json"), "CI summary", description, "microsoft.testing.github-actions-summary-fragment");
+        TestHostCompletedRequest message = new(0, 2, [artifact]);
+
+        TestHostCompletedRequest actual = RoundTrip(new TestHostCompletedRequestSerializer(), message);
+
+        Assert.AreEqual(0, actual.ExitCode);
+        Assert.AreEqual(2, actual.UnfilteredExitCode);
+        SessionFileArtifact restored = Assert.ContainsSingle(actual.SummaryArtifacts);
+        Assert.AreEqual(artifact.SessionUid, restored.SessionUid);
+        Assert.AreEqual(artifact.FileInfo.FullName, restored.FileInfo.FullName);
+        Assert.AreEqual(artifact.DisplayName, restored.DisplayName);
+        Assert.AreEqual(description, restored.Description);
+        Assert.AreEqual(artifact.Kind, restored.Kind);
     }
 
     [TestMethod]

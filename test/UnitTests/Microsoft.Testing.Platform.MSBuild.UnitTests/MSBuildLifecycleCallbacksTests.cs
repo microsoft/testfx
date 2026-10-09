@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Reflection;
 
 using Microsoft.Testing.Extensions.MSBuild;
@@ -114,7 +115,116 @@ public sealed class MSBuildLifecycleCallbacksTests
         Assert.Contains($"missing argument for {MSBuildNodeOptionKey}", exception.Message);
     }
 
+    [TestMethod]
+    [DataRow(true, true)]
+    [DataRow(true, false)]
+    [DataRow(false, true)]
+    [DataRow(false, false)]
+    public async Task Lifecycle_IsEnabledAndAfterRun_DependOnlyOnOptionAndDoNotOpenPipe(bool testApplication, bool optionSet)
+    {
+        Mock<ICommandLineOptions> options = new(MockBehavior.Strict);
+        options.Setup(x => x.IsOptionSet(MSBuildNodeOptionKey)).Returns(optionSet);
+        using MSBuildTestApplicationLifecycleCallbacks host = new(CreateConfiguration(), options.Object);
+        MSBuildLifecycleCallbacksBase lifecycle = testApplication
+            ? host
+            : new MSBuildOrchestratorLifetime(CreateConfiguration(), options.Object);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        Assert.AreEqual(optionSet, await lifecycle.IsEnabledAsync());
+        await lifecycle.AfterRunAsync(exitCode: 1, cancellation.Token);
+        await lifecycle.AfterRunAsync(exitCode: 0, CancellationToken.None);
+
+        Assert.IsNull(host.PipeClient);
+        options.VerifyAll();
+        options.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    [DataRow(true, "null")]
+    [DataRow(true, "empty")]
+    [DataRow(true, "null-element")]
+    [DataRow(true, "multiple")]
+    [DataRow(false, "null")]
+    [DataRow(false, "empty")]
+    [DataRow(false, "null-element")]
+    [DataRow(false, "multiple")]
+    public async Task Lifecycle_BeforeRunAsync_InvalidArgumentCardinality_RejectsBeforeCreatingPipe(bool testApplication, string argumentShape)
+    {
+        string[]? arguments = argumentShape switch
+        {
+            "null" => null,
+            "empty" => [],
+            "null-element" => [null!],
+            "multiple" => ["first-pipe", "second-pipe"],
+            _ => throw new ArgumentOutOfRangeException(nameof(argumentShape)),
+        };
+        ICommandLineOptions options = CreateOptions(arguments);
+        using MSBuildTestApplicationLifecycleCallbacks host = new(CreateConfiguration(), options);
+        Task beforeRun = testApplication
+            ? host.BeforeRunAsync(CancellationToken.None)
+            : new MSBuildOrchestratorLifetime(CreateConfiguration(), options).BeforeRunAsync(CancellationToken.None);
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => beforeRun);
+
+        Assert.AreEqual($"MSBuild pipe name not found in the command line, missing argument for {MSBuildNodeOptionKey}", exception.Message);
+        Assert.IsNull(host.PipeClient);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void Lifecycle_CreatePipeClient_RegistersExactlyTheSerializersNeededByItsRole(bool testApplication)
+    {
+        string pipeName = $"testfx-msbuild-unit-{Guid.NewGuid():N}";
+        using MSBuildTestApplicationLifecycleCallbacks host = new(CreateConfiguration(), CreateOptions([pipeName]));
+        MSBuildLifecycleCallbacksBase lifecycle = testApplication
+            ? host
+            : new MSBuildOrchestratorLifetime(CreateConfiguration(), CreateOptions([pipeName]));
+        MethodInfo createPipe = typeof(MSBuildLifecycleCallbacksBase).GetMethod("CreatePipeClient", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        // The IPC implementation is source-linked into multiple assemblies; inspect this extension's copy.
+        using var client = (IDisposable)createPipe.Invoke(lifecycle, null)!;
+
+        Assert.AreEqual(pipeName, client.GetType().GetProperty("PipeName")!.GetValue(client));
+        Assert.IsFalse((bool)client.GetType().GetProperty("IsConnected")!.GetValue(client)!);
+        Type registryType = typeof(MSBuildCommandLineProvider).Assembly.GetType("Microsoft.Testing.Platform.IPC.NamedPipeBase", throwOnError: true)!;
+        var serializers = (IDictionary)registryType.GetField("_typeSerializer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(client)!;
+        string[] registeredTypes = serializers.Keys.Cast<Type>().Select(type => type.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        string[] expectedTypes = testApplication
+            ? ["FailedTestInfoRequest", "ModuleInfoRequest", "RunSummaryInfoRequest", "VoidResponse"]
+            : ["ModuleInfoRequest", "VoidResponse"];
+
+        Assert.AreSequenceEqual(expectedTypes, registeredTypes);
+        foreach (DictionaryEntry entry in serializers)
+        {
+            string serializerName = entry.Value!.GetType().Name;
+            string expectedSerializerName = $"{((Type)entry.Key).Name}Serializer";
+            Assert.AreEqual(expectedSerializerName, serializerName);
+        }
+
+        Assert.IsNull(host.PipeClient, "Creating a client alone must not publish it as an initialized lifecycle connection.");
+    }
+
+    [TestMethod]
+    public void TestApplicationLifecycle_DisposeBeforeInitialization_IsIdempotent()
+    {
+        using MSBuildTestApplicationLifecycleCallbacks lifecycle = new(CreateConfiguration(), CreateOptionsMissingPipeName());
+
+        lifecycle.Dispose();
+        lifecycle.Dispose();
+
+        Assert.IsNull(lifecycle.PipeClient);
+    }
+
     private static IConfiguration CreateConfiguration() => Mock.Of<IConfiguration>();
+
+    private static ICommandLineOptions CreateOptions(string[]? arguments)
+    {
+        Mock<ICommandLineOptions> options = new(MockBehavior.Strict);
+        options.Setup(x => x.TryGetOptionArgumentList(MSBuildNodeOptionKey, out arguments)).Returns(true);
+        return options.Object;
+    }
 
     private static ICommandLineOptions CreateOptionsMissingPipeName()
     {

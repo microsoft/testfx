@@ -31,6 +31,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContains("--coverage-threshold-line");
+        testHostResult.AssertOutputContains("--coverage-threshold-branch");
         testHostResult.AssertOutputContains("--crashdump");
         testHostResult.AssertOutputContains("--hangdump");
         testHostResult.AssertOutputContains("--publish-azdo-run-name");
