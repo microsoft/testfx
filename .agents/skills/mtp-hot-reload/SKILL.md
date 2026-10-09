@@ -80,9 +80,9 @@ dotnet watch --project <project-path> test
 ```
 
 This rebuilds and reruns the existing VSTest project when files change; it is
-not MTP hot reload. Offer an explicit migration as a separate option, but do not
-perform it unless the user asks. Exact one-shot test commands remain owned by
-`run-tests`.
+not MTP hot reload. Changing the runner is a separate task, not implicit setup;
+this repository does not install framework/platform migration skills. Exact
+one-shot test commands remain owned by `run-tests`.
 
 ### Step 2: Add the hot reload NuGet package
 

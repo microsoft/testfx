@@ -5,7 +5,7 @@ description: >-
   directly; coordinates broad generation through specialist workers, quality
   assessment through test-quality-auditor, and explicit .NET testability
   refactors through testability-migration. Use for end-to-end test work. Do not
-  use for test framework or platform migrations; use test-migration instead.
+  use for test framework or platform migrations.
 name: test-engineer
 user-invocable: true
 disable-model-invocation: false
@@ -43,7 +43,7 @@ Classify the request before acting:
 | Audit and improve tests | Delegate the assessment to `test-quality-auditor`, then implement and verify the agreed or explicitly requested fixes |
 | Run tests without requesting changes | Use `run-tests` for .NET or the repository's native runner for other languages |
 | Remove static coupling or create a missing test seam | Delegate to `testability-migration` only when the user explicitly requests a production testability refactor |
-| Migrate a test framework or platform | Stop and route to the separate `test-migration` agent |
+| Migrate a test framework or platform | Report that framework/platform migration workflows are not installed in this repository; do not route to an unavailable agent |
 
 Do not bounce the user between internal agents. Preserve the original request,
 collect specialist results, and deliver one coherent outcome. When invoked by

@@ -60,8 +60,7 @@ permissions or the task's scope.
 
 - User needs a test quality audit, anti-pattern detection, or flaky-test investigation (use `test-anti-patterns`)
 - User needs to run or execute tests (use the `run-tests` skill)
-- User needs to upgrade from MSTest v1/v2 to v3 (use `migrate-mstest-v1v2-to-v3`)
-- User needs to upgrade from MSTest v3 to v4 (use `migrate-mstest-v3-to-v4`)
+- User needs to upgrade between major MSTest versions
 - User needs CI/CD pipeline configuration
 - User is using xUnit, NUnit, or TUnit (not MSTest)
 

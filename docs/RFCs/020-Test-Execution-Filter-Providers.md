@@ -1,5 +1,11 @@
 # RFC 020 - Composable test execution filter providers
 
+> **Current implementation note (2026-10-09):** The [composer](../../src/Platform/Microsoft.Testing.Platform/Requests/TestExecutionFilterComposer.cs)
+> implements console AND/intersection and rejects non-no-op server contributions, matching this
+> RFC's core selection boundary. See [MTP-007](../specifications/mtp.md#mtp-007--selection-and-filter-composition).
+> The native MSTest translation and affected-test migration examples are outside this scoped MTP
+> audit; not every adapter/planning claim below has been traced.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation

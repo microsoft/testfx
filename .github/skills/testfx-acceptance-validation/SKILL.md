@@ -37,8 +37,10 @@ supported invocation paths, including startup where applicable.
 
 ## 1. Choose the smallest shipping contract
 
-Before implementation, record the following in the session or existing PR evidence,
-not a new repository planning file:
+Before implementation, record the following in the maintained feature decision
+record required by [feature-delivery](../feature-delivery/SKILL.md). For non-feature
+fixes, use the session or existing issue/PR evidence rather than creating an
+additional planning file:
 
 | Decision | Required detail |
 | --- | --- |
@@ -200,6 +202,24 @@ module's expected names; aggregate success only after every gate passes. Legitim
 unrelated skips belong in a separate selection/report, not a lowered proof bar.
 For negative/discovery/help-only product commands, assert their contractual exits
 and output inside passing acceptance cases; do not pass their child TRX to this gate.
+
+### Regression sensitivity across production states
+
+Apply [feature-delivery](../feature-delivery/SKILL.md)'s red/green evidence contract
+to new behavioral regressions. Retain the same outer acceptance tests and their
+assertions while removing the relevant production behavior in an isolated
+comparison. Rebuild/repack **each** state and establish separate package/cache/
+consumer provenance before execution. An outer test can pass while its child
+fails intentionally; the red phase must fail the intended **outer assertion**,
+not merely observe that expected child failure.
+
+The execution verifier above is a **green-phase** gate: it requires all planned
+outer cases to pass and exit zero. Do not use it as a red-phase validator or
+weaken it to accept failures. Preserve red-phase reports/logs separately and
+verify the planned tests actually executed and failed at the intended assertions.
+Compilation, restore/launch failures, skips, zero tests, and stale packages are
+not regression proof. Record labeled behavior-removal/mutation comparisons for
+new APIs, or an explicit sensitivity gap when no safe comparison is feasible.
 
 ## 4. Prove the capable CI job will run the cases
 

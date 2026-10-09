@@ -11,7 +11,6 @@ using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -136,20 +135,14 @@ public static class AzureDevOpsExtensions
 
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
 
-        if (builder.TestHostControllers is TestHostControllersManager controllers)
-        {
-            controllers.AddRunCompletionHandler(serviceProvider => new CiCoverageSummaryControllerHandler(
-                AzureDevOpsSummaryArtifactPostProcessor.Provider,
-                AzureDevOpsSummaryArtifactPostProcessor.FragmentArtifactKind,
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetConfiguration(),
-                serviceProvider.GetRequiredService<ITestCoverageResult>(),
-                serviceProvider.GetOutputDevice(),
-                serviceProvider.GetLoggerFactory().CreateLogger<AzureDevOpsSummaryArtifactPostProcessor>(),
-                () => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<AzureDevOpsSummaryArtifactPostProcessor>().Single(),
-                () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsRequiredArtifactPostProcessingSupported: true },
-                (path, exception) => string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SummaryWriteFailedWarning, path, exception.Message)));
-        }
+        CiCoverageSummaryControllerHandlerRegistration.Register(
+            builder.TestHostControllers,
+            AzureDevOpsSummaryArtifactPostProcessor.Provider,
+            AzureDevOpsSummaryArtifactPostProcessor.FragmentArtifactKind,
+            serviceProvider => serviceProvider.GetLoggerFactory().CreateLogger<AzureDevOpsSummaryArtifactPostProcessor>(),
+            serviceProvider => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<AzureDevOpsSummaryArtifactPostProcessor>().Single(),
+            serviceProvider => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsRequiredArtifactPostProcessingSupported: true },
+            (path, exception) => string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SummaryWriteFailedWarning, path, exception.Message));
 
         if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {

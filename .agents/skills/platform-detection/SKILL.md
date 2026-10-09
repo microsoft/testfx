@@ -12,6 +12,7 @@ description: >-
   errors; use run-tests directly.
   Do not route hot-reload or migration requests here as the entry skill;
   mtp-hot-reload may use this skill internally for platform detection.
+user-invocable: false
 license: MIT
 ---
 

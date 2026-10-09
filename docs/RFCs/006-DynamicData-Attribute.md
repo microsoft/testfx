@@ -1,5 +1,11 @@
 # RFC 006 - DynamicData Attribute for Data Driven Tests
 
+> **Current implementation note (2026-10-09):** The name-only constructor now uses
+> `DynamicDataSourceType.AutoDetect`, not property-only lookup, and static fields are also supported.
+> Property/method sources, external declaring types and display-name callbacks remain supported.
+> See [MSTEST-008](../specifications/mstest.md#mstest-008--dynamic-data-supports-more-than-properties)
+> for the inspected implementation and mapped tests. The examples below preserve the original proposal.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

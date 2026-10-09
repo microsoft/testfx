@@ -1,5 +1,18 @@
 # MSTest source generator — design
 
+> **Current implementation note (2026-10-09):** This design is complemented by
+> [MSTEST-022](../specifications/mstest.md#mstest-022--generated-metadata-has-explicit-fallback-boundaries).
+> Native MTP now has a bounded generated-descriptor discovery path; incomplete descriptor registrations
+> retain per-method runtime enumeration. Several unsupported reflection-free shapes emit `AOTSG0001`–`AOTSG0005`
+> warnings rather than always being silent. Generated dynamic-data accessors also cover resolvable supported
+> properties, parameterless methods, fields and display-name callbacks.
+> `TrimmerRootAssembly` preserves members but does not add omitted classes to a nonempty generated type registry:
+> the fallback recommendation below is not a universal discovery remedy.
+> See [TypeEnumerator](../../src/Adapter/MSTestAdapter.PlatformServices/Discovery/TypeEnumerator.cs),
+> [runtime operations](../../src/Adapter/MSTestAdapter.PlatformServices/SourceGeneration/SourceGeneratedReflectionOperations.cs)
+> and [generator tests](../../test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTestReflectionMetadataGeneratorTests.cs).
+> This audit maps source/tests, not executed AOT/trim conformance or every provider-field claim.
+
 This document describes the design, scope and current limitations of the MSTest source
 generator that ships in the `MSTest.SourceGeneration` package. It is intentionally
 opinionated: where there is a deliberate gap, the gap and its rationale are documented so

@@ -1,5 +1,14 @@
 # RFC 021 - Per-test temporary directory (`TestContext.TestTempDirectory`)
 
+> **Current implementation note (2026-10-09):** Lazy creation, per-test/row ownership,
+> fixture exclusion, fallback and pass/fail/attachment retention have implementation/test evidence.
+> Unix creation now explicitly sets owner-only `0700` permissions, including a restrictive-umask path,
+> and cleanup prevents first-time directory creation after disposal starts.
+> Diagnostic retention adds rules beyond ordinary result attachments.
+> See [MSTEST-016](../specifications/mstest.md#mstest-016--per-test-scratch-directories-are-lazy-and-outcome-aware)
+> and [MSTEST-020](../specifications/mstest.md#mstest-020--assertion-diagnostic-snapshots-are-opt-in-and-bounded).
+> “Shipped constants” below is proposal-era wording, not a release-status finding from this source-only audit.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation (included in this change set, behind the proposed API)

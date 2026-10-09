@@ -1,1 +1,11 @@
 #nullable enable
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.DisableEnvironmentVariable = "MSTEST_DISABLE_DISCOVERY_CACHE" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.EnableEnvironmentVariable = "MSTEST_EXPERIMENTAL_DISCOVERY_CACHE" -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.CreateDiscoverer(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler! sourceHandler, System.Reflection.Assembly![]! assemblies, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]! selectedUids, System.Threading.CancellationToken cancellationToken) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.Dispose() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.MSTestDiscoveryCache() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.SetSources(string![]! sources) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.DiscoveryCache.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache?
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestFramework.DiscoveryCache.set -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestDiscoveryCache.IsSupported(System.Reflection.Assembly! assembly) -> bool

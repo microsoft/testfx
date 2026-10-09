@@ -1,5 +1,12 @@
 # RFC 016 - JUnit XML report extension
 
+> **Current implementation note (2026-10-09):** A JUnit implementation now exists; the unchecked
+> implementation/shipping boxes below are historical, not a release-status assertion.
+> Unlike the uncapped-key proposal below, [JUnitReportGenerator](../../src/Platform/Microsoft.Testing.Extensions.JUnitReport/JUnitReportGenerator.cs)
+> truncates parent-chain UID keys to the shared identity budget and excludes superseded retry attempts.
+> See [MTP-012](../specifications/mtp.md#mtp-012--report-artifacts-and-post-processing).
+> XML-consumer interoperability and every schema/memory-bound claim have not been revalidated.
+
 - [x] Approved in principle
 - [ ] Under discussion
 - [ ] Implementation
