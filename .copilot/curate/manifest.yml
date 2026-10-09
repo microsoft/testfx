@@ -5,29 +5,10 @@ version: 1
 plugins:
     - id: dotnet-test
       source: dotnet/skills
-      ref: 998ae280637d9a0c7f9ae414d853525c4aea069b
-      # Keep framework/platform migration skills and their dispatcher out of updates.
-      # The repository-maintained testing skills in AGENTS.md are also excluded
-      # so updates cannot restore their references to removed migration skills.
+      ref: e468462d8a0900f5278331c1ae12f45e015bb656
       include:
-        - skills/assertion-quality/
-        - skills/code-testing-agent/
-        - skills/code-testing-extensions/
-        - skills/coverage-analysis/
-        - skills/crap-score/
-        - skills/detect-static-dependencies/
-        - skills/dotnet-test-frameworks/
-        - skills/generate-testability-wrappers/
-        - skills/grade-tests/
-        - skills/migrate-static-to-wrapper/
-        - skills/test-analysis-extensions/
-        - skills/test-anti-patterns/
-        - skills/test-gap-analysis/
-        - skills/test-smell-detection/
-        - skills/test-tagging/
         - agents/code-testing-builder.agent.md
         - agents/code-testing-fixer.agent.md
-        - agents/code-testing-generator.agent.md
         - agents/code-testing-implementer.agent.md
         - agents/code-testing-linter.agent.md
         - agents/code-testing-planner.agent.md
@@ -35,6 +16,37 @@ plugins:
         - agents/code-testing-tester.agent.md
         - agents/test-quality-auditor.agent.md
         - agents/testability-migration.agent.md
+        - skills/assertion-quality
+        - skills/code-testing/unit-test-generation.prompt.md
+        - skills/code-testing-agent
+        - skills/code-testing-extensions/extensions/cpp.md
+        - skills/code-testing-extensions/extensions/dotnet-examples.md
+        - skills/code-testing-extensions/extensions/go-examples.md
+        - skills/code-testing-extensions/extensions/go.md
+        - skills/code-testing-extensions/extensions/java-examples.md
+        - skills/code-testing-extensions/extensions/java.md
+        - skills/code-testing-extensions/extensions/kotlin.md
+        - skills/code-testing-extensions/extensions/powershell.md
+        - skills/code-testing-extensions/extensions/python-examples.md
+        - skills/code-testing-extensions/extensions/rust.md
+        - skills/code-testing-extensions/extensions/swift.md
+        - skills/code-testing-extensions/extensions/typescript-examples.md
+        - skills/code-testing-extensions/extensions/typescript.md
+        - skills/coverage-analysis/SKILL.md
+        - skills/coverage-analysis/references/guidelines.md
+        - skills/coverage-analysis/references/output-format.md
+        - skills/coverage-analysis/references/report-generation.md
+        - skills/coverage-analysis/scripts
+        - skills/crap-score
+        - skills/detect-static-dependencies
+        - skills/find-untested-sources/SKILL.md
+        - skills/find-untested-sources/scripts/find_untested_sources.py
+        - skills/generate-testability-wrappers
+        - skills/grade-tests
+        - skills/test-analysis-extensions/extensions
+        - skills/test-gap-analysis
+        - skills/test-smell-detection
+        - skills/testability-obstacle
       install:
         mode: summary
     - id: dotnet-msbuild
