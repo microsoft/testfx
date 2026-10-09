@@ -95,9 +95,11 @@ data-source results are never cached.
 
 Types with data sources (including `DataRow`), custom attributes, conditional tests
 or deployment attributes are rediscovered on every request, even when unselected.
-Sources with discovery warnings are not cached. Settings, culture, loaded assembly
-and file identity changes invalidate retained metadata. Retention is limited to one
-catalog per current source and ends when the application closes.
+Discovery warnings prevent initial catalog publication. Warnings from live types
+on later requests are still reported but do not discard an existing catalog.
+Settings, culture, loaded assembly and file identity changes invalidate retained
+metadata. Retention is limited to one catalog per current source and ends when the
+application closes.
 
 Discovery-only requests, non-GUID selections, console and dotnet-test pipe execution,
 VSTest, .NET Framework/AppDomain isolation, WinUI/UWP, hot reload, custom test-class
