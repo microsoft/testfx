@@ -43,6 +43,37 @@ To keep technical debt visible and tracked, the project enforces the following p
 
 Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.
 
+## AI Coding Tools
+
+The `csharp-expert` and `csharp-refactoring` skills are imported from
+[`dotnet/skills`](https://github.com/dotnet/skills/tree/main/plugins/dotnet) through
+`gh copilot-curate`. Their supporting references, source commit, and file hashes are
+tracked in `.copilot/curate/manifest.lock.yml`. Run `gh copilot-curate update` to
+refresh curated skills; the existing weekly workflow also refreshes them.
+Repository-specific instructions and the `behavior-preserving-refactor` skill
+continue to apply.
+
+Copilot CLI uses [`.github/lsp.json`](./.github/lsp.json) for C# code intelligence.
+This configuration is adapted from the upstream
+[Roslyn LSP declaration](https://github.com/dotnet/skills/blob/3d38ac343faf65054f7e8d45ca06925273e867e2/plugins/dotnet/lsp.json):
+it uses `dotnet dnx`, omits the plugin-only working directory so the server runs
+in the current checkout, and sets the CLI's initialization timeout to two minutes.
+It uses plain stdio rather than daemon mode so the CLI owns the server's lifetime
+and the server can shut down cleanly with its session.
+The curator does not import LSP declarations, so this configuration is maintained
+separately from the managed skill files.
+
+First bootstrap the pinned SDK with the repository build scripts. Start Copilot
+CLI from the repository root with that SDK's directory on `PATH` (`.dotnet` by
+default, or the matching `DOTNET_INSTALL_DIR`). The launcher requires .NET 10 or
+later and downloads `roslyn-language-server` on first use, so it also needs access
+to the package feed. No global tool installation or user-level LSP settings are
+required.
+
+In an existing Copilot CLI session, run `/skills reload` and `/lsp reload`, then
+use `/lsp test csharp` to check server startup. Other hosts may discover the skills
+but do not necessarily consume Copilot CLI's LSP configuration.
+
 ## Agentic Workflows
 
 This repository ships a large number of AI-powered GitHub Actions workflows authored with [GitHub Agentic Workflows (`gh aw`)](https://github.com/github/gh-aw). The full catalog, conventions, and quick-start commands live in [`.github/workflows/README.md`](./.github/workflows/README.md).

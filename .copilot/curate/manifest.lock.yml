@@ -3,9 +3,41 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-06-26T10:28:55.6942446Z
-manifestHash: sha256:d581232103ed9c5333a650139c40120d14a97432097484bd2c697227e194c057
+generatedAt: 2026-10-09T12:37:34.707776Z
+manifestHash: sha256:679eed45d393a02f0ff61f9946de14103ee419c26cd9cdce4b4d095902aa7e42
 plugins:
+    - id: dotnet
+      source:
+        type: github
+        host: github.com
+        owner: dotnet
+        repo: skills
+      requestedRef: main
+      resolvedRef: 3d38ac343faf65054f7e8d45ca06925273e867e2
+      layout: dotnet-skills
+      install:
+        mode: summary
+      files:
+        - path: .agents/skills/csharp-expert/SKILL.md
+          upstreamPath: plugins/dotnet/skills/csharp-expert/SKILL.md
+          upstreamHash: sha256:b3a86c6cd037996237fc3cf12de41d4938cdae92ed8be1ff132a315524dd39e9
+          localHash: sha256:b3a86c6cd037996237fc3cf12de41d4938cdae92ed8be1ff132a315524dd39e9
+          mode: "0666"
+        - path: .agents/skills/csharp-expert/references/dotnet-skills-marketplace.md
+          upstreamPath: plugins/dotnet/skills/csharp-expert/references/dotnet-skills-marketplace.md
+          upstreamHash: sha256:e41fa64545d59b6c51fe91edcd2f5bbe20fc0e5d92edba79c792fac8540aad19
+          localHash: sha256:e41fa64545d59b6c51fe91edcd2f5bbe20fc0e5d92edba79c792fac8540aad19
+          mode: "0666"
+        - path: .agents/skills/csharp-refactoring/SKILL.md
+          upstreamPath: plugins/dotnet/skills/csharp-refactoring/SKILL.md
+          upstreamHash: sha256:a5516d690bc0713665870e31b7db6c6d09089c0d1a524482a156e01377ef0d72
+          localHash: sha256:a5516d690bc0713665870e31b7db6c6d09089c0d1a524482a156e01377ef0d72
+          mode: "0666"
+        - path: .agents/skills/csharp-refactoring/references/operation-catalog.md
+          upstreamPath: plugins/dotnet/skills/csharp-refactoring/references/operation-catalog.md
+          upstreamHash: sha256:94311ac23ea1098c130942084ceb07969f73790d59072c90b87967cbdc3b8dfa
+          localHash: sha256:94311ac23ea1098c130942084ceb07969f73790d59072c90b87967cbdc3b8dfa
+          mode: "0666"
     - id: dotnet-msbuild
       source:
         type: github

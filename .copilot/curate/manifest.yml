@@ -13,3 +13,11 @@ plugins:
       ref: main
       install:
         mode: summary
+    - id: dotnet
+      source: dotnet/skills
+      ref: main
+      include:
+        - skills/csharp-expert
+        - skills/csharp-refactoring
+      install:
+        mode: summary
