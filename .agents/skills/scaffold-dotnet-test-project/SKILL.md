@@ -172,13 +172,35 @@ and test authoring are separate operations.
 
 ### 5. Verify the repaired path
 
+Select direct-project and entry-point commands using
+[`run-tests`](../run-tests/SKILL.md) and
+[`platform-detection`](../platform-detection/SKILL.md). Resolve the project
+system, `global.json` `test.runner`, and final imported runner, `UseVSTest`,
+`TestingPlatformDotnetTestSupport`, and `OutputType` values; do not select
+syntax from the SDK version alone.
+
+| Detected mode / platform | Direct-project command | Solution entry-point command |
+|---|---|---|
+| Classic non-SDK | Repository's documented build and test-runner command for the test project | Exact repository/CI build and test-runner command; do not substitute `dotnet test` |
+| VSTest mode / VSTest | `dotnet test <test-project>` | `dotnet test <entry-point>` |
+| VSTest mode / executable MTP bridge, including SDK 10+ | `dotnet test <test-project> -- <MTP_OPTIONS>` | `dotnet test <entry-point> -- <MTP_OPTIONS>` |
+| SDK 10+ native MTP mode selected by `test.runner=Microsoft.Testing.Platform` | `dotnet test --project <test-project> <MTP_OPTIONS>` | `dotnet test --solution <entry-point> <MTP_OPTIONS>` |
+
+MTP options are optional; when none are needed, omit both `<MTP_OPTIONS>` and
+the bridge separator. Keep dotnet/MSBuild options before `--` in bridge mode;
+native MTP options are direct arguments, never after `--`. These are command
+shapes, not replacements for a repository script or a project-oriented CI
+entry point. Preserve the exact configured entry point and report incompatible
+runner/bridge/output wiring rather than switching runners to obtain a green
+result.
+
 Run the narrowest commands that prove the chosen route:
 
 | Route | Required evidence |
 |---|---|
-| Newly created project | `dotnet test <test-project>`, the exact entry-point command CI uses, and registration listing. If the entry point is a `.slnf`/`.slnx` containing tests, run `dotnet test` on that artifact rather than proving only that it builds. |
+| Newly created project | Mode-appropriate direct-project test command, the exact entry-point command CI uses, and registration listing. If the entry point is a `.slnf`/`.slnx` containing tests, run the mode-appropriate test command on that artifact rather than proving only that it builds. |
 | Missing reference | Targeted project test plus the exact solution/root test command requested |
-| Missing `.sln`/`.slnx` registration | Listing and `dotnet test` for that exact artifact; never use another solution as a fallback |
+| Missing `.sln`/`.slnx` registration | Listing and the mode-appropriate test command for that exact artifact; never use another solution as a fallback |
 | Missing `.slnf` entry | Inspect the filter entry and run the exact CI filter build command; do not prepend a deliberately failing alternate command |
 | Already correct/no-op | Structural inspection of the existing reference and registration. Unless execution was requested, do not run tests merely to prove a no-op because that creates `bin`/`obj` and weakens byte-for-byte cleanliness evidence. |
 

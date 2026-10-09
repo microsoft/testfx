@@ -26,7 +26,8 @@ below so a refresh cannot silently overwrite them:
 - [C++ pipeline example](.agents/skills/code-testing-extensions/extensions/cpp-examples.md)
   includes the planned missing-invoice case and its required Catch2 header.
 - [xUnit migration mapping](.agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md)
-  preserves the existing assertion package/namespace unless a swap is requested.
+  preserves the existing assertion package/namespace unless a swap is requested,
+  and expands broader owner traits only onto valid method-level attributes.
 - [Migration agent](.github/agents/test-migration.agent.md) validates between
   phases and commits only when explicitly requested.
 
@@ -49,7 +50,9 @@ The manifest's include list keeps updates from overwriting it.
 adapts upstream agents' relative links to the `.agents/skills` installation
 layout. The legacy [code-testing-generator](.github/agents/code-testing-generator.agent.md)
 agent remains available for existing workflows; new upstream guidance uses
-[test-engineer](.github/agents/test-engineer.agent.md).
+[test-engineer](.github/agents/test-engineer.agent.md). The retained generator
+resolves one absolute non-stageable state directory for phased work and passes
+its canonical artifact paths through each worker, retry, and iteration.
 
 <!-- BEGIN gh-copilot-curate managed -->
 ## Available skills (managed by gh-copilot-curate — do not edit by hand)
