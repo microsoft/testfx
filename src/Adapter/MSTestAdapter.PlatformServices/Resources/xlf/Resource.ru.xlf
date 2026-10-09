@@ -562,7 +562,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature">
         <source>Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</source>
-        <target state="new">Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</target>
+        <target state="translated">Функция {0}.{1} имеет неправильную сигнатуру. Функция инициализации или очистки теста F# должна быть static и public, не принимать параметров и возвращать void, Task или неуниверсальное значение ValueTask.</target>
         <note>{0} is the F# module full name. {1} is the function name. {Locked="F#"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">
