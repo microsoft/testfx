@@ -142,11 +142,6 @@
         <target state="translated">無法將套件 '{0}' 從 '{1}' 切換到 '{2}'： Windows 已完成移除要求，但套件仍保持登錄狀態。請關閉封裝的任何執行中執行個體，然後重試。未嘗試取代註冊或測試主機啟用。</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
-      <trans-unit id="TestCaseFilterOptionDescription">
-        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
-        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
-      </trans-unit>
     </body>
   </file>
 </xliff>
