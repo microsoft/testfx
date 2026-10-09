@@ -142,6 +142,11 @@
         <target state="translated">Nie można przełączyć pakietu „{0}” z „{1}” na „{2}”: system Windows zakończył żądanie usunięcia, ale pakiet nadal jest zarejestrowany. Zamknij wszystkie uruchomione wystąpienia pakietu i spróbuj ponownie. Nie podjęto próby rejestracji zastępczej ani aktywacji hosta testowego.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
+      <trans-unit id="TestCaseFilterOptionDescription">
+        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
+        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
