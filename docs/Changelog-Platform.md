@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.5.2" />[2.5.2] - Unreleased
+
+### Fixed
+
+* Preserve the invocation working directory for ordinary controller-launched test hosts so relative paths such as `--coverage-settings test.runsettings` keep working under `dotnet run`, while retaining the configured working directory for custom test host launchers.
+
 ## <a name="2.5.1" />[2.5.1] - Unreleased
 
 ## <a name="2.5.0" />[2.5.0] - 2026-10-05
