@@ -14,6 +14,24 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class PassiveNodeTests
 {
     [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ConnectAsync_AttachmentPeerDoesNotAcknowledgeShowMessageAsApplied(bool? requested)
+    {
+        InitializeRequestArgs arguments = Assert.IsInstanceOfType<InitializeRequestArgs>(
+            CreateInitializeRequest([JsonRpcProtocolVersions.Current]).Params);
+        TestMessageHandler handler = new(new RequestMessage(
+            1, JsonRpcMethods.Initialize, arguments with { Capabilities = arguments.Capabilities with { ShowMessage = requested } }));
+        using PassiveNode node = CreatePassiveNode(handler);
+
+        Assert.IsTrue(await node.ConnectAsync());
+        InitializeResponseArgs response = Assert.IsInstanceOfType<InitializeResponseArgs>(
+            Assert.IsInstanceOfType<ResponseMessage>(handler.WrittenMessage).Result);
+        Assert.AreEqual(requested.HasValue ? false : null, response.Capabilities.TestingCapabilities.ShowMessage);
+    }
+
+    [TestMethod]
     public async Task ConnectAsync_NegotiatesSupportedProtocolVersion()
     {
         RequestMessage request = CreateInitializeRequest([JsonRpcProtocolVersions.Current]) with { StringId = "1" };

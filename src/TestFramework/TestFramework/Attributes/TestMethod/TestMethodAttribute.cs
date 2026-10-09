@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Test methods must be:
 /// <list type="bullet">
 /// <item><description>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</description></item>
-/// <item><description>not static</description></item>
+/// <item><description>not static, unless declared in an F# module</description></item>
 /// <item><description>not generic</description></item>
 /// <item><description>not abstract</description></item>
 /// <item><description>return type is either <see langword="void"/>, <see cref="Task"/>, or <see cref="ValueTask"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</description></item>

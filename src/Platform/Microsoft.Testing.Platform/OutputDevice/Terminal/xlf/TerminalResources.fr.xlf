@@ -157,6 +157,11 @@
         <target state="translated">Seuil : {0} % &lt; {1} %</target>
         <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
       </trans-unit>
+      <trans-unit id="CoverageThresholdFailedRoundedValues">
+        <source>Coverage is below the required threshold (the percentages round to the same value).</source>
+        <target state="new">Coverage is below the required threshold (the percentages round to the same value).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">
         <source>No coverable data (failed by policy)</source>
         <target state="translated">Aucune donnée pouvant être couverte (échec par stratégie)</target>

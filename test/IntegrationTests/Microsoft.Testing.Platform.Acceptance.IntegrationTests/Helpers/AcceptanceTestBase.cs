@@ -281,6 +281,24 @@ public abstract class AcceptanceTestBase
             cancellationToken);
     }
 
+    internal static void ConfigureDotnetSdkEnvironment(
+        IDictionary<string, string?> environment, string dotnetPath, string sdkVersion)
+    {
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new ArgumentException("The dotnet executable must include its installation directory.", nameof(dotnetPath));
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk", sdkVersion);
+
+        // dotnet test exports its own SDK paths to the test host. A nested CLI's global.json
+        // does not override those paths, so its targets and tasks must match the selected SDK.
+        environment["MSBuildSDKsPath"] = Path.Combine(sdkDirectory, "Sdks");
+        environment["MSBuildExtensionsPath"] = sdkDirectory;
+        environment["DOTNET_ROOT"] = dotnetRoot;
+        environment["DOTNET_ROOT_X64"] = dotnetRoot;
+        environment["DOTNET_INSTALL_DIR"] = dotnetRoot;
+        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        environment["MSBUILDUSESERVER"] = "0";
+    }
+
     internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
         string command,
         string? workingDirectory,

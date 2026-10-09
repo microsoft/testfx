@@ -12,6 +12,69 @@ namespace Microsoft.Testing.Platform.UnitTests.CommandLine;
 public sealed class PlatformCommandLineProviderTests
 {
     [TestMethod]
+    [DataRow("0", true)]
+    [DataRow("80", true)]
+    [DataRow("79.995", true)]
+    [DataRow("100", true)]
+    [DataRow("-1", false)]
+    [DataRow("100.01", false)]
+    [DataRow("80,5", false)]
+    [DataRow("NaN", false)]
+    [DataRow("Infinity", false)]
+    [DataRow("1e2", false)]
+    [DataRow("", false)]
+    public async Task CoverageThreshold_ValidatesPercentageForBothMetrics(string argument, bool isValid)
+    {
+        PlatformCommandLineProvider provider = new();
+        foreach (string optionName in new[] { PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.CoverageThresholdBranchOptionKey })
+        {
+            CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+            Assert.AreEqual(isValid, result.IsValid);
+            if (!isValid)
+            {
+                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCoverageThresholdInvalid, optionName), result.ErrorMessage);
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey)]
+    public async Task CoverageThreshold_RequiresExactlyOneArgument(string optionName)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, [])).IsValid);
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, ["80", "90"])).IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, "retry-failed-tests")]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, "retry-failed-tests")]
+    public async Task CoverageThreshold_RejectsDiscoveryAndProcessRetries(string thresholdOption, string incompatibleOption)
+    {
+        TestCommandLineOptions options = new(new()
+        {
+            [thresholdOption] = ["80"],
+            [incompatibleOption] = [],
+        });
+
+        ValidationResult result = await new PlatformCommandLineProvider().ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            incompatibleOption == PlatformCommandLineProvider.DiscoverTestsOptionKey
+                ? PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests
+                : PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries,
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("Trace")]
     [DataRow("Debug")]
     [DataRow("Information")]

@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Resource-independent base for the command-line provider that supports the VSTest <c>--filter</c> (test case filter)
 /// option. It owns the option registration; the concrete providers only supply the localized option description.
-/// Shared by the VSTest bridge and the MSTest adapter's native Microsoft.Testing.Platform integration so both surface
+/// Shared by the VSTest bridge, the MSTest adapter's native integration, and its packaged-app controller so all surface
 /// an identical <c>--filter</c> option.
 /// </summary>
 #if MSTEST_TESTADAPTER

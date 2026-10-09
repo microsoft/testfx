@@ -18,6 +18,96 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
 {
     private const string AssetName = "CoverageThresholdControllerExitCode";
 
+    [TestMethod]
+    public async Task ConfiguredThreshold_AzureSummaryOutsidePipelines_DoesNotInvokeDisabledProcessor()
+    {
+        using TempDirectory results = new();
+        string summaryPath = Path.Combine(results.Path, "summary.md");
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--coverage-threshold-line 81 --report-azdo --report-azdo-summary \"{summaryPath}\" --results-directory \"{results.Path}\"",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_MEASUREMENTS"] = "normal",
+                ["CI_SUMMARY_PROVIDER"] = "azure",
+                ["TF_BUILD"] = null,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.CoverageThresholdFailed);
+        result.AssertOutputContains("TF_BUILD is not set to 'true'; skipping summary emission.");
+        Assert.IsFalse(File.Exists(summaryPath));
+        Assert.IsFalse(Directory.Exists(Path.Combine(results.Path, ".ci-summary-fragments")));
+    }
+
+    [TestMethod]
+    [DataRow("github", "80", (int)ExitCode.Success)]
+    [DataRow("github", "81", (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("azure", "80", (int)ExitCode.Success)]
+    [DataRow("azure", "81", (int)ExitCode.CoverageThresholdFailed)]
+    public async Task ConfiguredThreshold_InController_ReachesCiSummary(string provider, string threshold, int expectedExitCode)
+    {
+        using TempDirectory results = new();
+        string summaryPath = Path.Combine(results.Path, "summary.md");
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        string reportingOptions = provider == "github" ? "--report-gh" : $"--report-azdo --report-azdo-summary \"{summaryPath}\"";
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--coverage-threshold-line {threshold} {reportingOptions} --results-directory \"{results.Path}\"",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_MEASUREMENTS"] = "normal",
+                ["CI_SUMMARY_PROVIDER"] = provider,
+                ["GITHUB_ACTIONS"] = provider == "github" ? "true" : null,
+                ["GITHUB_STEP_SUMMARY"] = summaryPath,
+                ["TF_BUILD"] = provider == "azure" ? "true" : null,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs((ExitCode)expectedExitCode);
+        Assert.IsTrue(File.Exists(summaryPath), result.ToString());
+        string summary = File.ReadAllText(summaryPath).ReplaceLineEndings("\n");
+        string verdict = expectedExitCode == 0 ? "✅ Passed" : "❌ Failed";
+        Assert.Contains(
+            $"""
+            | Scope | Metric | Actual | Required | Result |
+            | --- | --- | ---: | ---: | --- |
+            | {AssetName} ({TargetFrameworks.NetCurrent}) — Overall | Line | 80.0% | {threshold}.0% | {verdict} |
+            """.ReplaceLineEndings("\n"),
+            summary);
+    }
+
+    [TestMethod]
+    [DataRow("--coverage-threshold-line 80 --coverage-threshold-branch 70", "normal", false, (int)ExitCode.Success)]
+    [DataRow("--coverage-threshold-line 81", "normal", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-branch 71", "normal", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-line 80", "missing", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-line 0", "empty", false, (int)ExitCode.CoverageThresholdFailed)]
+    [DataRow("--coverage-threshold-line 81", "normal", true, (int)ExitCode.AtLeastOneTestFailed)]
+    [DataRow("--coverage-threshold-line 81 --ignore-exit-code 14", "normal", false, (int)ExitCode.Success)]
+    [DataRow("--coverage-threshold-line 81 --ignore-exit-code 2", "normal", true, (int)ExitCode.Success)]
+    [DataRow("--coverage-threshold-line 80", "testhost", false, (int)ExitCode.Success)]
+    public async Task ConfiguredThreshold_WaitsForControllerCollection(string command, string mode, bool failTest, int expectedExitCode)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            command,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_MEASUREMENTS"] = mode,
+                ["FAIL_TEST"] = failTest ? "1" : "0",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs((ExitCode)expectedExitCode);
+        result.AssertOutputContains("Coverage Threshold Results:");
+        if (mode != "missing")
+        {
+            Assert.DoesNotContain("Enable a compatible coverage collector", result.StandardOutput);
+        }
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task FailedThreshold_InController_ReturnsCoverageThresholdFailedExitCode(string currentTfm)
@@ -104,6 +194,8 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
@@ -111,6 +203,7 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
@@ -127,6 +220,15 @@ public class Startup
     {
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
+        string? summaryProvider = Environment.GetEnvironmentVariable("CI_SUMMARY_PROVIDER");
+        if (summaryProvider == "github")
+        {
+            testApplicationBuilder.AddGitHubActionsProvider();
+        }
+        else if (summaryProvider == "azure")
+        {
+            testApplicationBuilder.AddAzureDevOpsProvider();
+        }
 
         // Registering a test host controller extension makes the platform run in controller mode:
         // a separate test host process runs the tests and this (controller) process publishes the
@@ -154,7 +256,9 @@ public class CoverageThresholdLifetimeHandler : ITestHostProcessLifetimeHandler,
 
     public string Description => nameof(CoverageThresholdLifetimeHandler);
 
-    public Type[] DataTypesProduced => new[] { typeof(TestCoverageThresholdMessage) };
+    public Type[] DataTypesProduced => Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS") == "testhost"
+        ? Array.Empty<Type>()
+        : new[] { typeof(TestCoverageThresholdMessage), typeof(TestCoverageMessage) };
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -166,6 +270,16 @@ public class CoverageThresholdLifetimeHandler : ITestHostProcessLifetimeHandler,
     {
         string? thresholdStatus = Environment.GetEnvironmentVariable("COVERAGE_THRESHOLD_STATUS");
         var sessionUid = new SessionUid("controller");
+        string? measurements = Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS");
+        if (measurements is "normal" or "empty")
+        {
+            await _messageBus.PublishAsync(this, new TestCoverageMessage(
+                sessionUid, CoverageScope.Overall, CoverageMetric.Line,
+                measurements == "empty" ? 0 : 80, measurements == "empty" ? 0 : 100, Uid));
+            await _messageBus.PublishAsync(this, new TestCoverageMessage(
+                sessionUid, CoverageScope.Overall, CoverageMetric.Branch, 70, 100, Uid));
+        }
+
         if (thresholdStatus == "Failed")
         {
             await _messageBus.PublishAsync(this, new TestCoverageThresholdMessage(
@@ -195,7 +309,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage), typeof(TestCoverageMessage) };
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
@@ -215,6 +329,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             Properties = new PropertyBag(state),
         }));
 
+        if (Environment.GetEnvironmentVariable("COVERAGE_MEASUREMENTS") == "testhost")
+        {
+            await context.MessageBus.PublishAsync(this, new TestCoverageMessage(
+                context.Request.Session.SessionUid, CoverageScope.Overall, CoverageMetric.Line, 80, 100, Uid));
+        }
+
         context.Complete();
     }
 }
@@ -225,6 +345,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
     }
 

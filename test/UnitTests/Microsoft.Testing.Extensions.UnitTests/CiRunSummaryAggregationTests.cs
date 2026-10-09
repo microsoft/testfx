@@ -22,6 +22,7 @@ using GitHubActionsStepSummarySections = ghactions::Microsoft.Testing.Extensions
 using GitHubActionsStepSummarySectionsParser = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySectionsParser;
 using GitHubCiCoverageMetric = ghactions::Microsoft.Testing.Extensions.CiCoverageMetric;
 using GitHubCiCoverageSummaryData = ghactions::Microsoft.Testing.Extensions.CiCoverageSummaryData;
+using GitHubCiCoverageThreshold = ghactions::Microsoft.Testing.Extensions.CiCoverageThreshold;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
 using GitHubCiRunSummaryAggregation = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregation;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
@@ -35,6 +36,127 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class CiRunSummaryAggregationTests
 {
+    [TestMethod]
+    [DataRow("")]
+    [DataRow(" ")]
+    [DataRow("not-a-number")]
+    [DataRow("49|92")]
+    [DataRow("49\n.92")]
+    [DataRow("49,92")]
+    [DataRow("NaN")]
+    [DataRow("Infinity")]
+    [DataRow("-1")]
+    [DataRow("100.01")]
+    [DataRow("1e1")]
+    [DataRow("49.93")]
+    public async Task ReadAndAggregate_InvalidExactPercentage_RejectsBothProvidersAsync(string value)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            foreach (bool required in new[] { false, true })
+            {
+                CiRunSummaryModule azure = CreateModule("Azure", passed: 1, failed: 0);
+                azure.Coverage = CreateThresholdOnlyCoverage();
+                CiCoverageThreshold azureThreshold = azure.Coverage.Thresholds[0];
+                azureThreshold.ActualPercentage = 49.92d;
+                azureThreshold.RequiredPercentage = 49.92d;
+                azureThreshold.ExactActualPercentage = required ? null : value;
+                azureThreshold.ExactRequiredPercentage = required ? value : null;
+                string azurePath = await CiRunSummaryAggregation.WriteFragmentAsync(directory, "azure-devops", "azure-devops", azure);
+
+                Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                    [CreateInput(azurePath, azure)], "azure-devops",
+                    new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+
+                GitHubCiRunSummaryModule github = CreateGitHubModule("GitHub");
+                github.Coverage.Thresholds =
+                [
+                    new GitHubCiCoverageThreshold
+                    {
+                        ProducerId = "collector",
+                        ActualPercentage = 49.92d,
+                        RequiredPercentage = 49.92d,
+                        ExactActualPercentage = required ? null : value,
+                        ExactRequiredPercentage = required ? value : null,
+                    },
+                ];
+                string githubPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(directory, "github-actions", "github-actions", github);
+
+                Assert.ThrowsExactly<FormatException>(() => GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                    [CreateGitHubInput(githubPath, github)], "github-actions",
+                    new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(null, null)]
+    [DataRow("0", "100")]
+    [DataRow("100.00", "100.0")]
+    [DataRow("49.92", "49.920000000000000000000000001")]
+    public async Task ReadAndAggregate_ValidOrLegacyExactPercentage_PreservesPrecisionAsync(string? expectedActual, string? expectedRequired)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("Valid", passed: 1, failed: 0);
+            module.Coverage = CreateThresholdOnlyCoverage();
+            CiCoverageThreshold threshold = module.Coverage.Thresholds[0];
+            threshold.ActualPercentage = expectedActual is null ? 0 : (double)decimal.Parse(expectedActual, CultureInfo.InvariantCulture);
+            threshold.RequiredPercentage = expectedRequired is null ? 80 : (double)decimal.Parse(expectedRequired, CultureInfo.InvariantCulture);
+            threshold.ExactActualPercentage = expectedActual;
+            threshold.ExactRequiredPercentage = expectedRequired;
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(directory, "azure-devops", "azure-devops", module);
+
+            CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)], "azure-devops",
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+            CiCoverageThreshold restored = Assert.ContainsSingle(Assert.ContainsSingle(aggregate.Modules).Coverage.Thresholds);
+            Assert.AreEqual(expectedActual, restored.ExactActualPercentage);
+            Assert.AreEqual(expectedRequired, restored.ExactRequiredPercentage);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void AppendMarkdown_ExactPercentageText_EscapesTableCells()
+    {
+        CiCoverageSummaryData coverage = CreateThresholdOnlyCoverage();
+        CiCoverageThreshold threshold = coverage.Thresholds[0];
+        threshold.Aggregation = CoverageAggregation.None;
+        threshold.HasCoverableData = true;
+        threshold.ActualPercentage = 80;
+        threshold.RequiredPercentage = 80;
+        threshold.ExactActualPercentage = "79|<b>\n.99";
+        threshold.ExactRequiredPercentage = "80|<b>\n";
+        StringBuilder builder = new();
+
+        CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 2);
+
+        Assert.AreEqual(
+            """
+            ## Code coverage
+
+            ### Coverage thresholds
+
+            | Scope | Metric | Actual | Required | Result |
+            | --- | --- | ---: | ---: | --- |
+            | Overall | Branch | 79\|&lt;b&gt;<br>.99% | 80\|&lt;b&gt;<br>% | ❌ Failed |
+
+
+            """.Replace("\r\n", "\n"),
+            builder.ToString().Replace("\r\n", "\n"));
+    }
+
     [TestMethod]
     public async Task ReadAndAggregate_UsesAuthoritativeSummaryAndSortsModulesAsync()
     {
