@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-09T10:34:21.4345132Z
-manifestHash: sha256:115abfee50062c6556a877ec1c7b5ed14c8d0566c8d103a74569ded3a544eb37
+generatedAt: 2026-10-09T11:01:06.266808Z
+manifestHash: sha256:5273b45ec3b9f73d1b5ab47ea2cfc2856b4e0591d992aea36c5675bfad49ca1b
 plugins:
     - id: dotnet-msbuild
       source:
@@ -175,11 +175,6 @@ plugins:
           upstreamHash: sha256:76f48e19182a147c02d8e8ab87f8cb1492ade20bd118b48ebf2d65f799682dbd
           localHash: sha256:76f48e19182a147c02d8e8ab87f8cb1492ade20bd118b48ebf2d65f799682dbd
           mode: "0666"
-        - path: .agents/skills/code-testing-extensions/extensions/cpp-examples.md
-          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/cpp-examples.md
-          upstreamHash: sha256:a685f7b660bd6cdb345469224e6dbb534602def108df1a4e03958cfcfd1cd873
-          localHash: sha256:a685f7b660bd6cdb345469224e6dbb534602def108df1a4e03958cfcfd1cd873
-          mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/cpp.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/cpp.md
           upstreamHash: sha256:9a2d89347ab8c5a02a32ae2feb60d7e9cf0094f7417d129f676c8e0933090f2a
@@ -219,11 +214,6 @@ plugins:
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/kotlin.md
           upstreamHash: sha256:7553070dbf0254c1bb91c293ae8ce4313a68450cf1a451975d9f92d5367eb906
           localHash: sha256:7553070dbf0254c1bb91c293ae8ce4313a68450cf1a451975d9f92d5367eb906
-          mode: "0666"
-        - path: .agents/skills/code-testing-extensions/extensions/powershell-examples.md
-          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/powershell-examples.md
-          upstreamHash: sha256:a3476eb18bb64f3cf4b89cff74ee5bafb7d53564c8eabec48a341ee96d5af339
-          localHash: sha256:a3476eb18bb64f3cf4b89cff74ee5bafb7d53564c8eabec48a341ee96d5af339
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/powershell.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/powershell.md
@@ -567,18 +557,8 @@ plugins:
           upstreamHash: sha256:e43e9a0be7389e1baa2260e6f42fd51b3fd2310ee7d090988429247e6e1cf9ec
           localHash: sha256:e43e9a0be7389e1baa2260e6f42fd51b3fd2310ee7d090988429247e6e1cf9ec
           mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
-          upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
-          upstreamHash: sha256:7cfe3e9202f7510bc9a51f097c2b553a7c193279eebc277df469f97cf7abdcdb
-          localHash: sha256:7cfe3e9202f7510bc9a51f097c2b553a7c193279eebc277df469f97cf7abdcdb
-          mode: "0666"
         - path: .agents/skills/migrate-xunit-to-xunit-v3/SKILL.md
           upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-xunit-v3/SKILL.md
           upstreamHash: sha256:265995747a72b49ff37589779935e812f1970b8e0ed8e7be8da0c540a20c198f
           localHash: sha256:265995747a72b49ff37589779935e812f1970b8e0ed8e7be8da0c540a20c198f
-          mode: "0666"
-        - path: .github/agents/test-migration.agent.md
-          upstreamPath: plugins/dotnet-test-migration/agents/test-migration.agent.md
-          upstreamHash: sha256:252698c3a24e585cc4cf4acc63f896fe039101663ef136ebc43d0c8d52271a56
-          localHash: sha256:252698c3a24e585cc4cf4acc63f896fe039101663ef136ebc43d0c8d52271a56
           mode: "0666"

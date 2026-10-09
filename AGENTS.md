@@ -17,9 +17,18 @@ below so a refresh cannot silently overwrite them:
 - [.NET generation guidance](.agents/skills/code-testing-extensions/extensions/dotnet.md)
   distinguishes VSTest command mode from native MTP command mode.
 - [Coverage setup discovery](.agents/skills/coverage-analysis/references/setup-discovery.md)
-  recognizes `.slnx` and preserves the selected repository/user entry point.
+  recognizes `.slnx`, preserves the selected repository/user entry point, and
+  bounds test-project discovery to that root and its containing Git repository.
 - [Test project scaffolding](.agents/skills/scaffold-dotnet-test-project/SKILL.md)
   adds bridge properties only for VSTest command mode.
+- [PowerShell pipeline example](.agents/skills/code-testing-extensions/extensions/powershell-examples.md)
+  loads module-defined types at parse time and uses valid Pester identity checks.
+- [C++ pipeline example](.agents/skills/code-testing-extensions/extensions/cpp-examples.md)
+  includes the planned missing-invoice case and its required Catch2 header.
+- [xUnit migration mapping](.agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md)
+  preserves the existing assertion package/namespace unless a swap is requested.
+- [Migration agent](.github/agents/test-migration.agent.md) validates between
+  phases and commits only when explicitly requested.
 
 These corrections are relative to upstream commit
 `e468462d8a0900f5278331c1ae12f45e015bb656`. Compare each excluded file explicitly
@@ -112,6 +121,5 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [VSTest -> Microsoft.Testing.Platform Migration](.agents/skills/migrate-vstest-to-mtp/SKILL.md) — _skill_ — Migrate a .NET test solution from VSTest to Microsoft.Testing.Platform (MTP). The outcome is a solution where all test projects run on MTP, `dotnet test` works correctly, and CI/CD pipelines are updated.
 - [xUnit -> MSTest Migration](.agents/skills/migrate-xunit-to-mstest/SKILL.md) — _skill_ — Convert xUnit.net v2 or v3 tests to MSTest v4 without changing the target framework or test platform. A successful migration builds, discovers the same tests, and preserves pass/fail results and execution semantics.
 - [xunit.v3 Migration](.agents/skills/migrate-xunit-to-xunit-v3/SKILL.md) — _skill_ — Migrate .NET test projects from xUnit.net v2 to xUnit.net v3. The outcome is a solution where all test projects reference `xunit.v3.*` packages, compiles cleanly, and all tests pass with the same results as before migration.
-- [Test Migration Agent](.github/agents/test-migration.agent.md) — _agent_ — You are a .NET test migration agent. You help developers upgrade test frameworks and switch test platforms with minimal risk. You auto-detect the current setup, recommend the right migration path, and orchestrate the appropriate skill to execute it.
 
 <!-- END gh-copilot-curate managed -->

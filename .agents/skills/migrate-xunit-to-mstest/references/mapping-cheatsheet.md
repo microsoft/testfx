@@ -408,6 +408,6 @@ With the pin in `global.json`, the project line simplifies to `<Project Sdk="MST
 | `Xunit.StaFact` (`[StaFact]`, `[WpfFact]`) | No equivalent -- manual STA thread or flag for review |
 | `Xunit.Priority` (`[TestCaseOrderer]`) | MSTest ordering is different -- flag for manual |
 | `Verify.Xunit` | `Verify.MSTest` (swap the package; same usage) |
-| `FluentAssertions` / `Shouldly` / `AwesomeAssertions` | Keep -- assertion libraries are framework-agnostic. (`AwesomeAssertions` is a fork of `FluentAssertions` and ships in the `FluentAssertions` namespace for API compat -- no source changes needed.) |
+| `FluentAssertions` / `Shouldly` / `AwesomeAssertions` | Keep the existing package and namespace -- assertion libraries are framework-agnostic. If replacing FluentAssertions with AwesomeAssertions is explicitly requested, replace `using FluentAssertions;` with `using AwesomeAssertions;` (including global or project-level imports); the namespace is not interchangeable. |
 | `Moq` / `NSubstitute` / `FakeItEasy` | Keep -- mocking libraries are framework-agnostic |
 | `AutoFixture.Xunit2` (`[AutoData]`) | `AutoFixture` core works, but the auto-data attribute integration requires the xUnit-specific package -- flag for manual |

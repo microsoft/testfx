@@ -56,18 +56,16 @@ if ($entry) {
     Write-Host "ENTRY_TYPE:NotFound"
 }
 
-# Test projects: search path first, then git root, then parent
+# Test projects: search the requested root, then its containing Git root only.
 $searchRoots = @($root)
 $gitRoot = (git -C $root rev-parse --show-toplevel 2>$null)
 if ($gitRoot) { $gitRoot = [System.IO.Path]::GetFullPath($gitRoot) }
 if ($gitRoot -and $gitRoot -ne $root) { $searchRoots += $gitRoot }
-$parentPath = Split-Path $root -Parent
-if ($parentPath -and $parentPath -ne $root -and $parentPath -ne $gitRoot) { $searchRoots += $parentPath }
 
 $testProjects = @()
 foreach ($sr in $searchRoots) {
     # Primary: match by .csproj content (test framework references)
-    $testProjects = @(Get-ChildItem -Path $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction SilentlyContinue |
+    $testProjects = @(Get-ChildItem -LiteralPath $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction Stop |
         Where-Object { $_.FullName -notmatch '([/\\]obj[/\\]|[/\\]bin[/\\])' } |
         Where-Object { (Select-String -Path $_.FullName -Pattern 'Microsoft\.NET\.Test\.Sdk|xunit|nunit|MSTest\.TestAdapter|"MSTest"|MSTest\.TestFramework|TUnit' -Quiet) })
     if ($testProjects.Count -gt 0) {
@@ -79,8 +77,8 @@ foreach ($sr in $searchRoots) {
 # Fallback: match by file name convention
 if ($testProjects.Count -eq 0) {
     foreach ($sr in $searchRoots) {
-        $testProjects = @(Get-ChildItem -Path $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -match '(?i)(test|spec)' })
+        $testProjects = @(Get-ChildItem -LiteralPath $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction Stop |
+            Where-Object { $_.FullName -notmatch '([/\\]obj[/\\]|[/\\]bin[/\\])' -and $_.Name -match '(?i)(test|spec)' })
         if ($testProjects.Count -gt 0) {
             if ($sr -ne $root) { Write-Host "SEARCHED:$sr" }
             break
