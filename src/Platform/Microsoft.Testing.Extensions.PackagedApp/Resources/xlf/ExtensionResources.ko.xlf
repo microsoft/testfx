@@ -142,11 +142,6 @@
         <target state="translated">패키지 '{0}' '{1}'에서 '{2}'로 전환할 수 없습니다. Windows에서 제거 요청을 완료했지만 패키지가 등록된 상태로 유지됩니다. 실행 중인 패키지 인스턴스를 모두 닫고 다시 시도하세요. 대체 등록 또는 테스트 호스트 활성화가 시도되지 않았습니다.</target>
         <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
       </trans-unit>
-      <trans-unit id="TestCaseFilterOptionDescription">
-        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
-        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
-      </trans-unit>
     </body>
   </file>
 </xliff>
