@@ -23,6 +23,12 @@ Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Te
 
 Use [session-delivery-hygiene](skills/session-delivery-hygiene/SKILL.md) for guidance-change requests, before editing or pushing PR-linked work, when diagnosing package/output provenance or cleaning task resources, and before implementation handoff. Apply only its relevant risk gates; it does not authorize review publication, GitHub mutation, or changes outside the requested scope.
 
+## Feature delivery and decision evidence
+
+Use [feature-delivery](skills/feature-delivery/SKILL.md) before implementing a new feature or making a material design/architecture decision, when adding regression coverage, and when preparing feature PR evidence. Keep a versioned decision record with the feature: research and sources, approaches actually tried and their outcomes, alternatives, assumptions, and why the chosen direction won. Update it as the work changes; a final summary reconstructed from memory is not a substitute.
+
+Challenge material design choices before coding, especially when the request gives no rationale or constraints. Compare the existing design and simpler alternatives, make compatibility/lifecycle/failure contracts explicit, and distinguish confirmed requirements from assumptions. Missing rationale is a reason to investigate, not permission to invent requirements.
+
 ## Build, test, and debug commands
 
 Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
@@ -131,6 +137,7 @@ When making change to resource files, you MUST:
 - When asserting on test-host output that contains a rendered test **duration** (e.g. `failed MyTest (040ms)`), NEVER hard-code `\(\d+ms\)`. The duration format grows leading parts (`(1s 040ms)`, `(2m 03s 040ms)`, …) on slower machines (often macOS, sometimes Windows), so a `\d+ms`-only pattern is a classic source of timing flakiness. Use the shared `AcceptanceAssert.DurationPattern` constant (or, where a duration only ever applies to skipped tests, the deterministic `(0ms)`) instead.
 - Prefer deterministic output, marker, or rendezvous assertions over wall-clock timing. When an acceptance test must assert an upper bound on `Stopwatch.Elapsed` around a real process launch, use a named limit with a generous allowance for process startup, JIT, and teardown on loaded CI agents, and add a comment explaining its relationship to the configured timeout or expected operation.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
+- Keep regression tests present while removing the relevant production change in an isolated, task-owned comparison. Show that the same tests execute and fail for the intended behavioral reason without the change, then pass with it. Record source states, exact commands, exits, test identities/counts, and assertion failures using [feature-delivery](skills/feature-delivery/SKILL.md). Compilation, restore, launch failures, and skipped/zero tests are not red-phase proof. For behavior-preserving changes, record focused green-before/green-after evidence instead.
 
 ## CLI options guidelines
 
@@ -186,6 +193,9 @@ How to set the Issue Type from each surface:
 
 ## Pull Request guidelines
 
+- Use a descriptive, user-facing title naming the behavior and product area when useful. Do not require `[feat]` or other category prefixes; see the [PR-title research and decision](../docs/decisions/feature-delivery-guidance.md#pr-title-research). Preserve existing bot/automation prefixes that consumers depend on. A title category is not proof of scope, compatibility, or correctness.
+- Whenever practical, include screenshots or a short GIF/video showing the changed feature working in the PR description. Terminal/CLI and report changes can be demonstrated too. Prefer before/after evidence for changed behavior; include captions, reproduction commands, and source/package provenance. Use a readable text transcript or artifact when it communicates the result better, and explain unavailable or inapplicable media. Never fabricate a demonstration or expose sensitive data.
+- Preserve the [PR template](PULL_REQUEST_TEMPLATE.md) and link the maintained decision record and red/green evidence. Media supplements, never replaces, executable assertions and shipping-product validation. Upload or publish only when authorized, use `github-pr-media` when available for authorized uploads, and read back any published body to verify its content.
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
 - Do the changes when you are specifically tagged or mentioned as copilot.
 - If you are unsure, comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.
