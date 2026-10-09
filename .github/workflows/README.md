@@ -36,6 +36,30 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+### Test-quality skill contract
+
+The [automatic test reviewer](./test-reviewer-on-pr.agent.md) and
+[`/review-tests` reviewer](./test-reviewer.agent.md) share
+[one prompt](./shared/test-reviewer-shared.md). They consume the upstream
+`grade-tests` and `test-gap-analysis` skills pinned by
+[the curated manifest](../../.copilot/curate/manifest.yml), without a local
+grading-weight fork.
+
+The primary per-test result is `Pass`, `Failed`, or `Uncertain`; a valid empty
+scope is `Not applicable`. Quality bands are secondary: a focused `B / Pass`
+needs no invented improvement, while `A / Failed` still requires a concrete
+action. Clean automatic runs are silent regardless of letter grade; command
+runs always return the requested result, including incomplete evidence and
+applicable parallel-safety analysis.
+
+Grading reads the bundled .NET language reference directly and composes
+`test-gap-analysis` in read-only per-test context before scoring. It does not
+execute tests or mutations. Mutation evidence uses `Likely killed (inferred)`
+or `Candidate survivor (unverified)`, with a distinguishing input and
+original/mutant observations, not empirical kill ratios. Unavailable production
+context is disclosed without a deduction. Existing changed-line anchoring,
+deduplication, parallel-safety, and safe-output publication gates still apply.
+
 ### Compile on the pinned toolchain, and check the pins afterwards
 
 > [!WARNING]

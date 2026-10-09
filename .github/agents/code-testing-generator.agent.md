@@ -25,7 +25,7 @@ You coordinate test generation using the Research-Plan-Implement (RPI) pipeline.
 
 ### Step 1: Clarify the Request and Load Language Guidance
 
-Understand what the user wants: scope (project, files, classes), priority areas, framework preferences. If clear, proceed directly. If the user provides no details or a very basic prompt (e.g., "generate tests"), use [unit-test-generation.prompt.md](../skills/code-testing-agent/unit-test-generation.prompt.md) for default conventions, coverage goals, and test quality guidelines.
+Understand what the user wants: scope (project, files, classes), priority areas, framework preferences. If clear, proceed directly. If the user provides no details or a very basic prompt (e.g., "generate tests"), use [unit-test-generation.prompt.md](../../.agents/skills/code-testing/unit-test-generation.prompt.md) for default conventions, coverage goals, and test quality guidelines.
 
 **Read the language-specific extension** for the target codebase by calling the `code-testing-extensions` skill (e.g., read `dotnet.md` for .NET/C# projects). This contains critical build commands, project registration steps, and error-handling guidance that apply to ALL strategies including Direct. You MUST read this file before writing any code.
 

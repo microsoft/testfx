@@ -6,14 +6,15 @@ description: >-
   and guides users through end-to-end upgrades. Use when asked to upgrade
   MSTest, migrate to xUnit v3, switch to Microsoft.Testing.Platform, modernize
   test infrastructure, or when the user says "migrate my tests".
-user-invokable: true
+user-invocable: true
 disable-model-invocation: false
 handoffs:
   - label: Audit Test Quality
-    agent: test-quality-auditor
+    agent: test-engineer
     prompt: >-
       The test framework migration is complete. Please audit the migrated
-      test suite for quality issues, anti-patterns, and coverage gaps.
+      test suite for quality issues, anti-patterns, and coverage gaps, then
+      propose or implement fixes according to the user's request.
     send: false
 license: MIT
 ---
@@ -46,12 +47,14 @@ Classify the user's request and route to the appropriate skill or agent:
 | User Intent | Route To |
 |---|---|
 | "Upgrade MSTest" / "migrate MSTest" (v1/v2 detected) | `migrate-mstest-v1v2-to-v3` skill |
-| "Upgrade MSTest" / "latest MSTest" (v3 detected) | `migrate-mstest-v3-to-v4` skill |
+| "Upgrade MSTest" / "latest MSTest" (v3 detected, project otherwise clean) | `migrate-mstest-v3-to-v4` skill |
+| Build/test errors or leftover `.testsettings` after a 2.x-to-3.x package bump (packages already read 3.x) | `migrate-mstest-v1v2-to-v3` skill |
 | "Upgrade MSTest" (v1/v2 detected, user wants v4) | `migrate-mstest-v1v2-to-v3` first, then `migrate-mstest-v3-to-v4` |
 | "Migrate to xUnit v3" / "upgrade xUnit" | `migrate-xunit-to-xunit-v3` skill |
 | "Convert xUnit to MSTest" / "switch from xUnit to MSTest" / "port xUnit tests to MSTest" (xUnit v2 or v3 detected) | `migrate-xunit-to-mstest` skill |
+| "Convert NUnit to MSTest" / "switch from NUnit to MSTest" / "port NUnit tests to MSTest" (NUnit 3 or 4 detected) | `migrate-nunit-to-mstest` skill |
 | "Migrate to MTP" / "switch from VSTest" / "modern test runner" | `migrate-vstest-to-mtp` skill |
-| "Make code testable" / "remove static dependencies" | Hand off to `testability-migration` agent |
+| "Make code testable" / "remove static dependencies" | Hand off to the `test-engineer` agent |
 | "Migrate my tests" (no specifics) | Run detection, then recommend and confirm the migration path |
 
 ## Detection Workflow
@@ -109,6 +112,8 @@ Some migrations must happen in sequence:
 | xUnit v2 | xUnit v3 | `migrate-xunit-to-xunit-v3` (single step; v3 has native MTP support) |
 | xUnit v2 or v3 | MSTest v4 | `migrate-xunit-to-mstest` (single step; preserves current test platform — VSTest stays VSTest, MTP stays MTP) |
 | xUnit v2 or v3 | MSTest v4 + MTP | `migrate-xunit-to-mstest` → `migrate-vstest-to-mtp` (only if the project was on VSTest before; commit between) |
+| NUnit 3 or 4 | MSTest v4 | `migrate-nunit-to-mstest` (single step; preserves current test platform — VSTest stays VSTest, MTP stays MTP) |
+| NUnit 3 or 4 | MSTest v4 + MTP | `migrate-nunit-to-mstest` → `migrate-vstest-to-mtp` (only if the project was on VSTest before; commit between) |
 | Any framework | MTP only | `migrate-vstest-to-mtp` (single step) |
 
 **Always commit between migration steps.** Each step should leave the project in a buildable, test-passing state.

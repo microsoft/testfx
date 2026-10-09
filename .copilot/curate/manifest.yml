@@ -5,11 +5,42 @@ version: 1
 plugins:
     - id: dotnet-test
       source: dotnet/skills
-      ref: 998ae280637d9a0c7f9ae414d853525c4aea069b
+      ref: e468462d8a0900f5278331c1ae12f45e015bb656
+      include:
+        - agents
+        - skills/assertion-quality
+        - skills/code-testing
+        - skills/code-testing-agent
+        - skills/code-testing-extensions
+        - skills/coverage-analysis
+        - skills/crap-score
+        - skills/detect-static-dependencies
+        - skills/filter-syntax
+        - skills/find-untested-sources/SKILL.md
+        - skills/find-untested-sources/scripts/find_untested_sources.py
+        - skills/generate-testability-wrappers
+        - skills/grade-tests
+        - skills/migrate-static-to-wrapper
+        - skills/mtp-hot-reload
+        - skills/platform-detection
+        - skills/run-tests
+        - skills/scaffold-dotnet-test-project
+        - skills/test-analysis-extensions
+        - skills/test-anti-patterns
+        - skills/test-gap-analysis
+        - skills/test-smell-detection
+        - skills/test-tagging
+        - skills/testability-obstacle
+        - skills/writing-mstest-tests
       install:
         mode: summary
     - id: dotnet-msbuild
       source: dotnet/skills
       ref: main
+      install:
+        mode: summary
+    - id: dotnet-test-migration
+      source: dotnet/skills
+      ref: e468462d8a0900f5278331c1ae12f45e015bb656
       install:
         mode: summary

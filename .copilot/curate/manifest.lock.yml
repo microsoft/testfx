@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-06-26T10:28:55.6942446Z
-manifestHash: sha256:d581232103ed9c5333a650139c40120d14a97432097484bd2c697227e194c057
+generatedAt: 2026-10-09T08:22:07.2500422Z
+manifestHash: sha256:6b42ce9d62f86a971243413cac795741aa1f4ab66f127e9ebc343eb37bb61173
 plugins:
     - id: dotnet-msbuild
       source:
@@ -159,51 +159,51 @@ plugins:
         host: github.com
         owner: dotnet
         repo: skills
-      requestedRef: 998ae280637d9a0c7f9ae414d853525c4aea069b
-      resolvedRef: 998ae280637d9a0c7f9ae414d853525c4aea069b
+      requestedRef: e468462d8a0900f5278331c1ae12f45e015bb656
+      resolvedRef: e468462d8a0900f5278331c1ae12f45e015bb656
       layout: dotnet-skills
       install:
         mode: summary
       files:
         - path: .agents/skills/assertion-quality/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/assertion-quality/SKILL.md
-          upstreamHash: sha256:27738ca0405ef50dea4776a67a86873e962caa7ebc828a0b6e539f8b077b7077
-          localHash: sha256:27738ca0405ef50dea4776a67a86873e962caa7ebc828a0b6e539f8b077b7077
+          upstreamHash: sha256:e2be84298f30bf6888d51991539c51f01ea08b4bc57cf8fa66629ee7b80ec502
+          localHash: sha256:e2be84298f30bf6888d51991539c51f01ea08b4bc57cf8fa66629ee7b80ec502
           mode: "0666"
         - path: .agents/skills/code-testing-agent/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-agent/SKILL.md
-          upstreamHash: sha256:9c0a2817e4ba17de91614b2cbef883f1a9ab49acf5bb32744bd7238030d9a676
-          localHash: sha256:9c0a2817e4ba17de91614b2cbef883f1a9ab49acf5bb32744bd7238030d9a676
-          mode: "0666"
-        - path: .agents/skills/code-testing-agent/unit-test-generation.prompt.md
-          upstreamPath: plugins/dotnet-test/skills/code-testing-agent/unit-test-generation.prompt.md
-          upstreamHash: sha256:1286995fd221c61b422b21d6b8c9c914b34a50db7fa2fadec7806d7fffa10789
-          localHash: sha256:1286995fd221c61b422b21d6b8c9c914b34a50db7fa2fadec7806d7fffa10789
+          upstreamHash: sha256:76f48e19182a147c02d8e8ab87f8cb1492ade20bd118b48ebf2d65f799682dbd
+          localHash: sha256:76f48e19182a147c02d8e8ab87f8cb1492ade20bd118b48ebf2d65f799682dbd
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/SKILL.md
-          upstreamHash: sha256:9ea451fd4f7507d02e4ffcf49ddd38dd71506389dfae004cbfaf961649324e4a
-          localHash: sha256:9ea451fd4f7507d02e4ffcf49ddd38dd71506389dfae004cbfaf961649324e4a
+          upstreamHash: sha256:cfd93a7b31cfa128f5b511324cbe96805c97ef124c56c13df6c71d23ce449ca5
+          localHash: sha256:cfd93a7b31cfa128f5b511324cbe96805c97ef124c56c13df6c71d23ce449ca5
+          mode: "0666"
+        - path: .agents/skills/code-testing-extensions/extensions/cpp-examples.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/cpp-examples.md
+          upstreamHash: sha256:a685f7b660bd6cdb345469224e6dbb534602def108df1a4e03958cfcfd1cd873
+          localHash: sha256:a685f7b660bd6cdb345469224e6dbb534602def108df1a4e03958cfcfd1cd873
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/cpp.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/cpp.md
-          upstreamHash: sha256:619ab325514dfcb31e27f2ef6c97f7f7d3ce54a93f863401a3d887c1be47632f
-          localHash: sha256:619ab325514dfcb31e27f2ef6c97f7f7d3ce54a93f863401a3d887c1be47632f
+          upstreamHash: sha256:9a2d89347ab8c5a02a32ae2feb60d7e9cf0094f7417d129f676c8e0933090f2a
+          localHash: sha256:9a2d89347ab8c5a02a32ae2feb60d7e9cf0094f7417d129f676c8e0933090f2a
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/dotnet-examples.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/dotnet-examples.md
-          upstreamHash: sha256:034c4683312db43fbd4c6355c2006af054f740015b1483815b74cbfa07d82c11
-          localHash: sha256:034c4683312db43fbd4c6355c2006af054f740015b1483815b74cbfa07d82c11
+          upstreamHash: sha256:8316cc012852868b6dd99c6fd3384893919cd9359e4cff04941f0bec381be820
+          localHash: sha256:8316cc012852868b6dd99c6fd3384893919cd9359e4cff04941f0bec381be820
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/dotnet.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/dotnet.md
-          upstreamHash: sha256:829b7e89cc29ce71f97d25db0b0c44826916a04786dbc1f00305969cf6f377f7
-          localHash: sha256:829b7e89cc29ce71f97d25db0b0c44826916a04786dbc1f00305969cf6f377f7
+          upstreamHash: sha256:c0b8fdd2342ca12969ddf0f50260e97c9c89c9a62761f8b3a860a99dae0b27ae
+          localHash: sha256:c0b8fdd2342ca12969ddf0f50260e97c9c89c9a62761f8b3a860a99dae0b27ae
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/go-examples.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/go-examples.md
-          upstreamHash: sha256:4815e383e0b068e63bcbacc88cc6a6b5ee19823843da973e232e44596335e629
-          localHash: sha256:4815e383e0b068e63bcbacc88cc6a6b5ee19823843da973e232e44596335e629
+          upstreamHash: sha256:e3f2ba1c40c0f1bde5cb62aec46aaad6674de0fc9813038f7845d1512658bf71
+          localHash: sha256:e3f2ba1c40c0f1bde5cb62aec46aaad6674de0fc9813038f7845d1512658bf71
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/go.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/go.md
@@ -212,38 +212,58 @@ plugins:
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/java-examples.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/java-examples.md
-          upstreamHash: sha256:cdfcc33e33c21d0c1bee85c032f06065edb002e6e24992cd4c29078263645b47
-          localHash: sha256:cdfcc33e33c21d0c1bee85c032f06065edb002e6e24992cd4c29078263645b47
+          upstreamHash: sha256:c6b0f5662b6a1c1526fd1315d77ab07539e688abeb64e6ccce747ff8b70ae492
+          localHash: sha256:c6b0f5662b6a1c1526fd1315d77ab07539e688abeb64e6ccce747ff8b70ae492
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/java.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/java.md
           upstreamHash: sha256:25b32c779b49e17dff4cbb44fa3003cd33edba27592a9f1d0ab28c135eb04125
           localHash: sha256:25b32c779b49e17dff4cbb44fa3003cd33edba27592a9f1d0ab28c135eb04125
           mode: "0666"
+        - path: .agents/skills/code-testing-extensions/extensions/kotlin-examples.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/kotlin-examples.md
+          upstreamHash: sha256:1d09702b3d6b06bb36b965788c7e8013dfb2fce6014aba29de97f356910c32e4
+          localHash: sha256:1d09702b3d6b06bb36b965788c7e8013dfb2fce6014aba29de97f356910c32e4
+          mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/kotlin.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/kotlin.md
           upstreamHash: sha256:7553070dbf0254c1bb91c293ae8ce4313a68450cf1a451975d9f92d5367eb906
           localHash: sha256:7553070dbf0254c1bb91c293ae8ce4313a68450cf1a451975d9f92d5367eb906
           mode: "0666"
+        - path: .agents/skills/code-testing-extensions/extensions/powershell-examples.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/powershell-examples.md
+          upstreamHash: sha256:a3476eb18bb64f3cf4b89cff74ee5bafb7d53564c8eabec48a341ee96d5af339
+          localHash: sha256:a3476eb18bb64f3cf4b89cff74ee5bafb7d53564c8eabec48a341ee96d5af339
+          mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/powershell.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/powershell.md
-          upstreamHash: sha256:585c228e2391c8b2291701a800d77fcf95dfadd6fe5cad409c32d7cee975358d
-          localHash: sha256:585c228e2391c8b2291701a800d77fcf95dfadd6fe5cad409c32d7cee975358d
+          upstreamHash: sha256:f34c954bf4b5816347767370011abd8c9b1dacf1c614f1d159437f02456d9dc9
+          localHash: sha256:f34c954bf4b5816347767370011abd8c9b1dacf1c614f1d159437f02456d9dc9
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/python-examples.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/python-examples.md
-          upstreamHash: sha256:93301c314fc5ea903d42fd6a697d0e0fa9e1469460ff8581f5a787ee6bce5746
-          localHash: sha256:93301c314fc5ea903d42fd6a697d0e0fa9e1469460ff8581f5a787ee6bce5746
+          upstreamHash: sha256:d142728fb8fcd5e0977e317cf52b14bbaa2efb403d8a3dd341470b1fa2f5f238
+          localHash: sha256:d142728fb8fcd5e0977e317cf52b14bbaa2efb403d8a3dd341470b1fa2f5f238
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/python.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/python.md
-          upstreamHash: sha256:6d078db341f936c8362f2f6cfac677e4fb343e83421574855061b352f60beb6c
-          localHash: sha256:6d078db341f936c8362f2f6cfac677e4fb343e83421574855061b352f60beb6c
+          upstreamHash: sha256:299b75668830dbe88747bff89355d825d7508f82937a87a3ed8d6953032efa96
+          localHash: sha256:299b75668830dbe88747bff89355d825d7508f82937a87a3ed8d6953032efa96
+          mode: "0666"
+        - path: .agents/skills/code-testing-extensions/extensions/ruby-examples.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/ruby-examples.md
+          upstreamHash: sha256:cc138ba9250b0b1c3d7ad712227c4d2988e12279e4686aaf6107aeed8b50349e
+          localHash: sha256:cc138ba9250b0b1c3d7ad712227c4d2988e12279e4686aaf6107aeed8b50349e
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/ruby.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/ruby.md
-          upstreamHash: sha256:228f83854306079894920e83fd84bf89a3bccbf6d3dc891430e0b77af93adfcb
-          localHash: sha256:228f83854306079894920e83fd84bf89a3bccbf6d3dc891430e0b77af93adfcb
+          upstreamHash: sha256:9d6cc5ed7ba9269d259c39fa9754cfc93d496b5fd3abcf81bd91833a27268bbe
+          localHash: sha256:9d6cc5ed7ba9269d259c39fa9754cfc93d496b5fd3abcf81bd91833a27268bbe
+          mode: "0666"
+        - path: .agents/skills/code-testing-extensions/extensions/rust-examples.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/rust-examples.md
+          upstreamHash: sha256:18c0483fcc3af9d8ddc4d8bf0878b2244991423c7c5890bac95cda8c065838a9
+          localHash: sha256:18c0483fcc3af9d8ddc4d8bf0878b2244991423c7c5890bac95cda8c065838a9
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/rust.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/rust.md
@@ -257,28 +277,48 @@ plugins:
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/typescript-examples.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/typescript-examples.md
-          upstreamHash: sha256:b2178b3c89a456ef06d9dbb317602b4a266a0fd93300c07647eb4eb9fd3ea0c5
-          localHash: sha256:b2178b3c89a456ef06d9dbb317602b4a266a0fd93300c07647eb4eb9fd3ea0c5
+          upstreamHash: sha256:0f95defcae997f2e15d71f379e08e043987f5fb9892a82669505bfdfd3767b16
+          localHash: sha256:0f95defcae997f2e15d71f379e08e043987f5fb9892a82669505bfdfd3767b16
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/typescript.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/typescript.md
-          upstreamHash: sha256:011f96ef5cfc6d9d334ac1e8d32f322d1b31de9e716e6ec8e0400dd228020d49
-          localHash: sha256:011f96ef5cfc6d9d334ac1e8d32f322d1b31de9e716e6ec8e0400dd228020d49
+          upstreamHash: sha256:c6662430a1e0f04658d210f0031bd7fcc4de362bb64660a924d4fa5842012dbb
+          localHash: sha256:c6662430a1e0f04658d210f0031bd7fcc4de362bb64660a924d4fa5842012dbb
+          mode: "0666"
+        - path: .agents/skills/code-testing/SKILL.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing/SKILL.md
+          upstreamHash: sha256:bb4b0b2aae65c3c25444a5271473ba9d0bc2c203924a138fa2592ea828ec00d4
+          localHash: sha256:bb4b0b2aae65c3c25444a5271473ba9d0bc2c203924a138fa2592ea828ec00d4
+          mode: "0666"
+        - path: .agents/skills/code-testing/unit-test-generation.prompt.md
+          upstreamPath: plugins/dotnet-test/skills/code-testing/unit-test-generation.prompt.md
+          upstreamHash: sha256:039fe5ef980518aa7909d39a9beb38dae79520b5c6abf13d8ca585c1540f3a8c
+          localHash: sha256:039fe5ef980518aa7909d39a9beb38dae79520b5c6abf13d8ca585c1540f3a8c
           mode: "0666"
         - path: .agents/skills/coverage-analysis/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/coverage-analysis/SKILL.md
-          upstreamHash: sha256:482026b48d52b70199bf9075295772d061285a2acdf12d91e37a7a1ac5ff2493
-          localHash: sha256:482026b48d52b70199bf9075295772d061285a2acdf12d91e37a7a1ac5ff2493
+          upstreamHash: sha256:ce960ce57da398846d219bd4e952fd9ad6b9772f3b17d544d9fb59bfd41603f4
+          localHash: sha256:ce960ce57da398846d219bd4e952fd9ad6b9772f3b17d544d9fb59bfd41603f4
           mode: "0666"
         - path: .agents/skills/coverage-analysis/references/guidelines.md
           upstreamPath: plugins/dotnet-test/skills/coverage-analysis/references/guidelines.md
-          upstreamHash: sha256:8e7bced5e4deb5e11b008f1d6f8ee69bd5f9a2bb743c9ccceb75f54a7f2790f1
-          localHash: sha256:8e7bced5e4deb5e11b008f1d6f8ee69bd5f9a2bb743c9ccceb75f54a7f2790f1
+          upstreamHash: sha256:1482e2cd12389047c7f1aa6e1c4420967aafc430b25156d9246b1147fedfe071
+          localHash: sha256:1482e2cd12389047c7f1aa6e1c4420967aafc430b25156d9246b1147fedfe071
           mode: "0666"
         - path: .agents/skills/coverage-analysis/references/output-format.md
           upstreamPath: plugins/dotnet-test/skills/coverage-analysis/references/output-format.md
-          upstreamHash: sha256:f2328f0250002c25276f51373ab3b935b15b41be09c161db02d3e22316ad78c4
-          localHash: sha256:f2328f0250002c25276f51373ab3b935b15b41be09c161db02d3e22316ad78c4
+          upstreamHash: sha256:6731a634c278988f9b9c0c83defb3dfe8574176b9ad34a74ce9207069db8ce75
+          localHash: sha256:6731a634c278988f9b9c0c83defb3dfe8574176b9ad34a74ce9207069db8ce75
+          mode: "0666"
+        - path: .agents/skills/coverage-analysis/references/report-generation.md
+          upstreamPath: plugins/dotnet-test/skills/coverage-analysis/references/report-generation.md
+          upstreamHash: sha256:f2583a688de77f950bc18446913531f603ca528839b35c3c394a77981eafd7bb
+          localHash: sha256:f2583a688de77f950bc18446913531f603ca528839b35c3c394a77981eafd7bb
+          mode: "0666"
+        - path: .agents/skills/coverage-analysis/references/setup-discovery.md
+          upstreamPath: plugins/dotnet-test/skills/coverage-analysis/references/setup-discovery.md
+          upstreamHash: sha256:4be180fb9f969a40a171df710ef6ba9918c6d6b4cbb2bd2066b36d5ef82bf091
+          localHash: sha256:4be180fb9f969a40a171df710ef6ba9918c6d6b4cbb2bd2066b36d5ef82bf091
           mode: "0666"
         - path: .agents/skills/coverage-analysis/scripts/Compute-CrapScores.ps1
           upstreamPath: plugins/dotnet-test/skills/coverage-analysis/scripts/Compute-CrapScores.ps1
@@ -292,88 +332,73 @@ plugins:
           mode: "0666"
         - path: .agents/skills/crap-score/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/crap-score/SKILL.md
-          upstreamHash: sha256:0be501bff5042394d5b8388ce3cff8582d429ba83009d81bba5d6799df12ad45
-          localHash: sha256:0be501bff5042394d5b8388ce3cff8582d429ba83009d81bba5d6799df12ad45
+          upstreamHash: sha256:dd5a49f1a9a3a10e3d41a4e9552573c5d0a076120bcd00dd8225d1013b2f6fba
+          localHash: sha256:dd5a49f1a9a3a10e3d41a4e9552573c5d0a076120bcd00dd8225d1013b2f6fba
           mode: "0666"
         - path: .agents/skills/detect-static-dependencies/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/detect-static-dependencies/SKILL.md
-          upstreamHash: sha256:eefe4323542ea7c73d9d0ae6a650d095d546881eb3b0a8c56c99a8477f536ed8
-          localHash: sha256:eefe4323542ea7c73d9d0ae6a650d095d546881eb3b0a8c56c99a8477f536ed8
-          mode: "0666"
-        - path: .agents/skills/dotnet-test-frameworks/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/dotnet-test-frameworks/SKILL.md
-          upstreamHash: sha256:921b364eae24d219941fdc02fdce20ac34a9e4d77a7989c90bfeebd0853a1482
-          localHash: sha256:921b364eae24d219941fdc02fdce20ac34a9e4d77a7989c90bfeebd0853a1482
+          upstreamHash: sha256:f7f6edd9b24b4fb9286a5e8a2228aa2c38cb05e2216a3bd57dd62c365086d796
+          localHash: sha256:f7f6edd9b24b4fb9286a5e8a2228aa2c38cb05e2216a3bd57dd62c365086d796
           mode: "0666"
         - path: .agents/skills/filter-syntax/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/filter-syntax/SKILL.md
-          upstreamHash: sha256:b846ae8d1fdeeee9cbb6b1f3289fba8bf3588b76619bdbfe1e85a2f09afc198b
-          localHash: sha256:b846ae8d1fdeeee9cbb6b1f3289fba8bf3588b76619bdbfe1e85a2f09afc198b
+          upstreamHash: sha256:64c294d0fc2d0c4d5887d391c6684429fc4d7a66b6b9f99a475e6abe390c5d19
+          localHash: sha256:64c294d0fc2d0c4d5887d391c6684429fc4d7a66b6b9f99a475e6abe390c5d19
+          mode: "0666"
+        - path: .agents/skills/find-untested-sources/SKILL.md
+          upstreamPath: plugins/dotnet-test/skills/find-untested-sources/SKILL.md
+          upstreamHash: sha256:c1777c1c9a19e9855e87b4db5e1b9b9df349983e16dba2ba9e761fcac52cb83e
+          localHash: sha256:c1777c1c9a19e9855e87b4db5e1b9b9df349983e16dba2ba9e761fcac52cb83e
+          mode: "0666"
+        - path: .agents/skills/find-untested-sources/scripts/find_untested_sources.py
+          upstreamPath: plugins/dotnet-test/skills/find-untested-sources/scripts/find_untested_sources.py
+          upstreamHash: sha256:16fbc14403cbc29f97bcf70bbfed6ad711bea3ee42e0a5bc3e91a723525408ed
+          localHash: sha256:16fbc14403cbc29f97bcf70bbfed6ad711bea3ee42e0a5bc3e91a723525408ed
           mode: "0666"
         - path: .agents/skills/generate-testability-wrappers/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/generate-testability-wrappers/SKILL.md
-          upstreamHash: sha256:4f384af7dcfaf1b9ac1eda1df8bc708db703734636bbc58f5f3f33bbbf8c29b6
-          localHash: sha256:4f384af7dcfaf1b9ac1eda1df8bc708db703734636bbc58f5f3f33bbbf8c29b6
+          upstreamHash: sha256:58aac0affca5c0a56dab9e8e751f52ac4014533150355b734d6b5597ac8acec1
+          localHash: sha256:58aac0affca5c0a56dab9e8e751f52ac4014533150355b734d6b5597ac8acec1
           mode: "0666"
         - path: .agents/skills/grade-tests/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/grade-tests/SKILL.md
-          upstreamHash: sha256:fc357339ee5b1ab62974e18ab6c76abbbc64f1818f637e0a1594f2adc12524d6
-          localHash: sha256:fc357339ee5b1ab62974e18ab6c76abbbc64f1818f637e0a1594f2adc12524d6
-          mode: "0666"
-        - path: .agents/skills/migrate-mstest-v1v2-to-v3/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-mstest-v1v2-to-v3/SKILL.md
-          upstreamHash: sha256:2b5ea0af701b37366ee478367c47844f95dd9631c95dcf82bdb58db1fc87f404
-          localHash: sha256:2b5ea0af701b37366ee478367c47844f95dd9631c95dcf82bdb58db1fc87f404
-          mode: "0666"
-        - path: .agents/skills/migrate-mstest-v3-to-v4/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-mstest-v3-to-v4/SKILL.md
-          upstreamHash: sha256:20efaa1256c5aae30ee03e810f7f5ac328c94b20b0853773ee928ce8493ab25c
-          localHash: sha256:20efaa1256c5aae30ee03e810f7f5ac328c94b20b0853773ee928ce8493ab25c
+          upstreamHash: sha256:5cddf0692f4ed5f33137b1a0b8ff9de71bb0cc1f08c5a860d2dc1218c9f85b7a
+          localHash: sha256:5cddf0692f4ed5f33137b1a0b8ff9de71bb0cc1f08c5a860d2dc1218c9f85b7a
           mode: "0666"
         - path: .agents/skills/migrate-static-to-wrapper/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/migrate-static-to-wrapper/SKILL.md
-          upstreamHash: sha256:834186d6278f9c17befa52e0369569742bde3ce1fe6cab5146fc2cefbdceca01
-          localHash: sha256:834186d6278f9c17befa52e0369569742bde3ce1fe6cab5146fc2cefbdceca01
-          mode: "0666"
-        - path: .agents/skills/migrate-vstest-to-mtp/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-vstest-to-mtp/SKILL.md
-          upstreamHash: sha256:e859b7b42a5515d0503f0708ef36a0ebb8102ddcb4ac57684e30ac5b5740bc1b
-          localHash: sha256:e859b7b42a5515d0503f0708ef36a0ebb8102ddcb4ac57684e30ac5b5740bc1b
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-mstest/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-xunit-to-mstest/SKILL.md
-          upstreamHash: sha256:4faae6ad15a9a0a7660fcfc7a1fdfc2737e576f74807fbd28113c566e3491bac
-          localHash: sha256:4faae6ad15a9a0a7660fcfc7a1fdfc2737e576f74807fbd28113c566e3491bac
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
-          upstreamHash: sha256:ff1452e621bc93c713310d38a80c9d2a8540d4d4668a88b6baec2649129a437b
-          localHash: sha256:ff1452e621bc93c713310d38a80c9d2a8540d4d4668a88b6baec2649129a437b
-          mode: "0666"
-        - path: .agents/skills/migrate-xunit-to-xunit-v3/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/migrate-xunit-to-xunit-v3/SKILL.md
-          upstreamHash: sha256:0481be42764236a4bf8aa67d1e8ff75f7000913dbdcb80312b0d612c2ceaeb34
-          localHash: sha256:0481be42764236a4bf8aa67d1e8ff75f7000913dbdcb80312b0d612c2ceaeb34
+          upstreamHash: sha256:509f9060b541af3dd4702f2c334be927bd5f7c9cce413fa23c51ae970e88f471
+          localHash: sha256:509f9060b541af3dd4702f2c334be927bd5f7c9cce413fa23c51ae970e88f471
           mode: "0666"
         - path: .agents/skills/mtp-hot-reload/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/mtp-hot-reload/SKILL.md
-          upstreamHash: sha256:2779894f8761a1b465f57b3fd81f13db5fab5516765ef8df246a99df151203a3
-          localHash: sha256:2779894f8761a1b465f57b3fd81f13db5fab5516765ef8df246a99df151203a3
+          upstreamHash: sha256:0057050d168fc95817ed375915f0428a688e81b491c6f9a749ca02cffdd9c1c5
+          localHash: sha256:0057050d168fc95817ed375915f0428a688e81b491c6f9a749ca02cffdd9c1c5
           mode: "0666"
         - path: .agents/skills/platform-detection/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/platform-detection/SKILL.md
-          upstreamHash: sha256:289727e88d936428dbe5b515fdd78c26f5f195e4e312ee38f90849fc02b8efbf
-          localHash: sha256:289727e88d936428dbe5b515fdd78c26f5f195e4e312ee38f90849fc02b8efbf
+          upstreamHash: sha256:c824bf8f8cbf1233b8b0dbc6e38fae6ac2486c42a6a1f6553a6335daa6838c1a
+          localHash: sha256:c824bf8f8cbf1233b8b0dbc6e38fae6ac2486c42a6a1f6553a6335daa6838c1a
+          mode: "0666"
+        - path: .agents/skills/platform-detection/references/command-mode.md
+          upstreamPath: plugins/dotnet-test/skills/platform-detection/references/command-mode.md
+          upstreamHash: sha256:08e276dcafe6bd5bfbaab435065ca24a5800a4eae3ffd7fc15daa1e81354bbc4
+          localHash: sha256:08e276dcafe6bd5bfbaab435065ca24a5800a4eae3ffd7fc15daa1e81354bbc4
           mode: "0666"
         - path: .agents/skills/run-tests/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/run-tests/SKILL.md
-          upstreamHash: sha256:f75ee57fba21fe3d8c8989384913d4243a92281fd3189f8813897bd5b04e2a67
-          localHash: sha256:f75ee57fba21fe3d8c8989384913d4243a92281fd3189f8813897bd5b04e2a67
+          upstreamHash: sha256:971e4d888a4435eb4c050079adfb6cb91fc73e3c756fa7a622b059c72fad7e3c
+          localHash: sha256:971e4d888a4435eb4c050079adfb6cb91fc73e3c756fa7a622b059c72fad7e3c
+          mode: "0666"
+        - path: .agents/skills/scaffold-dotnet-test-project/SKILL.md
+          upstreamPath: plugins/dotnet-test/skills/scaffold-dotnet-test-project/SKILL.md
+          upstreamHash: sha256:3208aad74768770a25cc681218c77dce1260d666d4eba5c5ecdc8c8b9e02cfad
+          localHash: sha256:3208aad74768770a25cc681218c77dce1260d666d4eba5c5ecdc8c8b9e02cfad
           mode: "0666"
         - path: .agents/skills/test-analysis-extensions/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/test-analysis-extensions/SKILL.md
-          upstreamHash: sha256:6e543453e8e940fc78e33fc583e89e086d226f1670aa14c7d3434d1bcd388e66
-          localHash: sha256:6e543453e8e940fc78e33fc583e89e086d226f1670aa14c7d3434d1bcd388e66
+          upstreamHash: sha256:ec6f69ed00a627c0319a2bbdcfd71fcfab84eaae28900b2f814af3b27e44bd70
+          localHash: sha256:ec6f69ed00a627c0319a2bbdcfd71fcfab84eaae28900b2f814af3b27e44bd70
           mode: "0666"
         - path: .agents/skills/test-analysis-extensions/extensions/cpp.md
           upstreamPath: plugins/dotnet-test/skills/test-analysis-extensions/extensions/cpp.md
@@ -382,8 +407,8 @@ plugins:
           mode: "0666"
         - path: .agents/skills/test-analysis-extensions/extensions/dotnet.md
           upstreamPath: plugins/dotnet-test/skills/test-analysis-extensions/extensions/dotnet.md
-          upstreamHash: sha256:596126bbb9757d75827710ed7a3125e10122cf81a0ea079ac9a278706d2dfdf5
-          localHash: sha256:596126bbb9757d75827710ed7a3125e10122cf81a0ea079ac9a278706d2dfdf5
+          upstreamHash: sha256:ef257a931a25501697fde8a36e027ba9195ff624ff701dd5fd276d746c0d25be
+          localHash: sha256:ef257a931a25501697fde8a36e027ba9195ff624ff701dd5fd276d746c0d25be
           mode: "0666"
         - path: .agents/skills/test-analysis-extensions/extensions/go.md
           upstreamPath: plugins/dotnet-test/skills/test-analysis-extensions/extensions/go.md
@@ -432,86 +457,158 @@ plugins:
           mode: "0666"
         - path: .agents/skills/test-anti-patterns/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/test-anti-patterns/SKILL.md
-          upstreamHash: sha256:b42ad5ed9023d374f9859be716142a0b944513df3c80133984dc74e74ebfe023
-          localHash: sha256:b42ad5ed9023d374f9859be716142a0b944513df3c80133984dc74e74ebfe023
+          upstreamHash: sha256:33e33a82bf2f2db59e2f957101a9d9a3984bcdf6ce58387f1e65b2d7cb533671
+          localHash: sha256:33e33a82bf2f2db59e2f957101a9d9a3984bcdf6ce58387f1e65b2d7cb533671
           mode: "0666"
         - path: .agents/skills/test-gap-analysis/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/test-gap-analysis/SKILL.md
-          upstreamHash: sha256:b9aa6f8d94f0045165cdd2d97bb7f034eff8bdcc9a5aaeb263bec0d905b51775
-          localHash: sha256:b9aa6f8d94f0045165cdd2d97bb7f034eff8bdcc9a5aaeb263bec0d905b51775
+          upstreamHash: sha256:d86ce42c940d005a97dc2b513d759727fea1157f0a611cfd4594c7d888720d95
+          localHash: sha256:d86ce42c940d005a97dc2b513d759727fea1157f0a611cfd4594c7d888720d95
+          mode: "0666"
+        - path: .agents/skills/test-gap-analysis/references/mutation-catalog.md
+          upstreamPath: plugins/dotnet-test/skills/test-gap-analysis/references/mutation-catalog.md
+          upstreamHash: sha256:9c487fe728863965013bbfc6f629b0f777ed7702e5ee1e1284e782d209b81b26
+          localHash: sha256:9c487fe728863965013bbfc6f629b0f777ed7702e5ee1e1284e782d209b81b26
+          mode: "0666"
+        - path: .agents/skills/test-gap-analysis/references/per-test-read-only.md
+          upstreamPath: plugins/dotnet-test/skills/test-gap-analysis/references/per-test-read-only.md
+          upstreamHash: sha256:ce9582d6dccc52847c51f717818f049a831e6eed4e9cda6b1931f3bc21421bea
+          localHash: sha256:ce9582d6dccc52847c51f717818f049a831e6eed4e9cda6b1931f3bc21421bea
           mode: "0666"
         - path: .agents/skills/test-smell-detection/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/test-smell-detection/SKILL.md
-          upstreamHash: sha256:d5597861bb37d83743d2e97a6909139429524cccf37aabd61988f9d5a9840733
-          localHash: sha256:d5597861bb37d83743d2e97a6909139429524cccf37aabd61988f9d5a9840733
+          upstreamHash: sha256:4aa11579a99181fc15c0421a43d435e42e2bcd1363463780a4e85e22ade64402
+          localHash: sha256:4aa11579a99181fc15c0421a43d435e42e2bcd1363463780a4e85e22ade64402
           mode: "0666"
         - path: .agents/skills/test-smell-detection/references/test-smell-catalog.md
           upstreamPath: plugins/dotnet-test/skills/test-smell-detection/references/test-smell-catalog.md
-          upstreamHash: sha256:001e04c54d73940df65090c6915e87b07aac8cddcc26be139c7d9770dc0a8b99
-          localHash: sha256:001e04c54d73940df65090c6915e87b07aac8cddcc26be139c7d9770dc0a8b99
+          upstreamHash: sha256:974791cc1338c2c9d72556df47e3a7efec878aa90b28e72282018a3309a37a80
+          localHash: sha256:974791cc1338c2c9d72556df47e3a7efec878aa90b28e72282018a3309a37a80
           mode: "0666"
         - path: .agents/skills/test-tagging/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/test-tagging/SKILL.md
-          upstreamHash: sha256:dcf69b50bf5d5ce7643fa9aacaa6128de72b3374dd54896a1e3ced81d3cbc626
-          localHash: sha256:dcf69b50bf5d5ce7643fa9aacaa6128de72b3374dd54896a1e3ced81d3cbc626
+          upstreamHash: sha256:6a25aabdd718d1cd60aee2c52ec339b25682a4fec24b25f07803389894103998
+          localHash: sha256:6a25aabdd718d1cd60aee2c52ec339b25682a4fec24b25f07803389894103998
+          mode: "0666"
+        - path: .agents/skills/testability-obstacle/SKILL.md
+          upstreamPath: plugins/dotnet-test/skills/testability-obstacle/SKILL.md
+          upstreamHash: sha256:e5edc5a1cf9ed9e56a44133e857349a3a41fed51f2e4162473ae59977e391956
+          localHash: sha256:e5edc5a1cf9ed9e56a44133e857349a3a41fed51f2e4162473ae59977e391956
           mode: "0666"
         - path: .agents/skills/writing-mstest-tests/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/writing-mstest-tests/SKILL.md
-          upstreamHash: sha256:c5903b09aaf930ef1ec0b78b637717e126f8d905b2691306601d32280a6b01a8
-          localHash: sha256:c5903b09aaf930ef1ec0b78b637717e126f8d905b2691306601d32280a6b01a8
+          upstreamHash: sha256:0b279db26d24af215a18cbca8db05b70cce7f6f4a9f1541a2f2c7ade23321354
+          localHash: sha256:0b279db26d24af215a18cbca8db05b70cce7f6f4a9f1541a2f2c7ade23321354
+          mode: "0666"
+        - path: .agents/skills/writing-mstest-tests/references/advanced-mstest-patterns.md
+          upstreamPath: plugins/dotnet-test/skills/writing-mstest-tests/references/advanced-mstest-patterns.md
+          upstreamHash: sha256:a892712356463c2fc5d01e191862a1317790f603bec2beb72ca081ab74168b68
+          localHash: sha256:a892712356463c2fc5d01e191862a1317790f603bec2beb72ca081ab74168b68
           mode: "0666"
         - path: .github/agents/code-testing-builder.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-builder.agent.md
-          upstreamHash: sha256:4caf996507502b260afddee4b36062691c00cb6111ccf1cedb12b0ca8ac9681e
-          localHash: sha256:4caf996507502b260afddee4b36062691c00cb6111ccf1cedb12b0ca8ac9681e
+          upstreamHash: sha256:df4f5484650d68da3b1b99ffb3c3807b6d3d11b8ecf73e44814caedbce737b20
+          localHash: sha256:df4f5484650d68da3b1b99ffb3c3807b6d3d11b8ecf73e44814caedbce737b20
           mode: "0666"
         - path: .github/agents/code-testing-fixer.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-fixer.agent.md
-          upstreamHash: sha256:63f6b83e5affdc405db369663e6da5245ec502d6d93826bd1263919e7b3d4374
-          localHash: sha256:63f6b83e5affdc405db369663e6da5245ec502d6d93826bd1263919e7b3d4374
-          mode: "0666"
-        - path: .github/agents/code-testing-generator.agent.md
-          upstreamPath: plugins/dotnet-test/agents/code-testing-generator.agent.md
-          upstreamHash: sha256:5aeea606648ea270c88f291b91743249246e65adf8181918dfe0e4d1191d7f43
-          localHash: sha256:5aeea606648ea270c88f291b91743249246e65adf8181918dfe0e4d1191d7f43
+          upstreamHash: sha256:d98efb62ee6ebf08ab2327d166979e7c31541e74153a548e490359c6ddda6c73
+          localHash: sha256:d98efb62ee6ebf08ab2327d166979e7c31541e74153a548e490359c6ddda6c73
           mode: "0666"
         - path: .github/agents/code-testing-implementer.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-implementer.agent.md
-          upstreamHash: sha256:7ea2e890a3954178176ec92a7d9be6c7e28b7589ec2b80986bdef2cadd2b071e
-          localHash: sha256:7ea2e890a3954178176ec92a7d9be6c7e28b7589ec2b80986bdef2cadd2b071e
+          upstreamHash: sha256:5056da4b7876a6663664ebcaecce6b5c331336b02a2839b1bd24eae4c4e8b308
+          localHash: sha256:5056da4b7876a6663664ebcaecce6b5c331336b02a2839b1bd24eae4c4e8b308
           mode: "0666"
         - path: .github/agents/code-testing-linter.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-linter.agent.md
-          upstreamHash: sha256:81ce088dce035d6314e3447c423fe9798144ae612bac0cba7bcf5bee90baa1c5
-          localHash: sha256:81ce088dce035d6314e3447c423fe9798144ae612bac0cba7bcf5bee90baa1c5
+          upstreamHash: sha256:d80d6a50369b1003e3edb8d5119ac43a04b7dde8cc7aa50222cb8fe983ebc1c9
+          localHash: sha256:d80d6a50369b1003e3edb8d5119ac43a04b7dde8cc7aa50222cb8fe983ebc1c9
           mode: "0666"
         - path: .github/agents/code-testing-planner.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-planner.agent.md
-          upstreamHash: sha256:a4dd6bd81c08fc662cab8e1a755d6fde3b11a1de95d3af5e0bc6a7677aeb92b1
-          localHash: sha256:a4dd6bd81c08fc662cab8e1a755d6fde3b11a1de95d3af5e0bc6a7677aeb92b1
+          upstreamHash: sha256:e79b58a1e97368fdcec5498004252e5040854ace184c3471209c0b99bce5f1b3
+          localHash: sha256:e79b58a1e97368fdcec5498004252e5040854ace184c3471209c0b99bce5f1b3
           mode: "0666"
         - path: .github/agents/code-testing-researcher.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-researcher.agent.md
-          upstreamHash: sha256:83abd8536ef6ec9d1691aabe42a1a392e77d2e9fd7f5d4096ffee5d771ff4f66
-          localHash: sha256:83abd8536ef6ec9d1691aabe42a1a392e77d2e9fd7f5d4096ffee5d771ff4f66
+          upstreamHash: sha256:1e530d4d2ad07a1d727b5eb12e6f55e036a086e9dd1fd1f11cdc4b1480de67aa
+          localHash: sha256:1e530d4d2ad07a1d727b5eb12e6f55e036a086e9dd1fd1f11cdc4b1480de67aa
           mode: "0666"
         - path: .github/agents/code-testing-tester.agent.md
           upstreamPath: plugins/dotnet-test/agents/code-testing-tester.agent.md
-          upstreamHash: sha256:41efd087a3f742ff64bf7a2181548430c2662f3a2b3bef92aa906e7e6ec24313
-          localHash: sha256:41efd087a3f742ff64bf7a2181548430c2662f3a2b3bef92aa906e7e6ec24313
+          upstreamHash: sha256:7967ec5f3e115d2cad89061ea31fa8dc7145f916cba802b23f12155ea47a780f
+          localHash: sha256:7967ec5f3e115d2cad89061ea31fa8dc7145f916cba802b23f12155ea47a780f
           mode: "0666"
-        - path: .github/agents/test-migration.agent.md
-          upstreamPath: plugins/dotnet-test/agents/test-migration.agent.md
-          upstreamHash: sha256:e6ad811429bb33306bc803ba52b87308160d0a8e972e6e0574bb514f1169fc18
-          localHash: sha256:e6ad811429bb33306bc803ba52b87308160d0a8e972e6e0574bb514f1169fc18
+        - path: .github/agents/test-engineer.agent.md
+          upstreamPath: plugins/dotnet-test/agents/test-engineer.agent.md
+          upstreamHash: sha256:f281c96ba1f9e6924ae54aef13aeb5a80dfa1e8e541776188a37600436a233cf
+          localHash: sha256:f281c96ba1f9e6924ae54aef13aeb5a80dfa1e8e541776188a37600436a233cf
           mode: "0666"
         - path: .github/agents/test-quality-auditor.agent.md
           upstreamPath: plugins/dotnet-test/agents/test-quality-auditor.agent.md
-          upstreamHash: sha256:180b6f070f73dd87bbbc233e7c08bb6e8a164a85c3494016ecca025df71ff312
-          localHash: sha256:180b6f070f73dd87bbbc233e7c08bb6e8a164a85c3494016ecca025df71ff312
+          upstreamHash: sha256:3956058a22b4a038acb801af513a07df51fccedbe193f5930158cfb1742a1992
+          localHash: sha256:3956058a22b4a038acb801af513a07df51fccedbe193f5930158cfb1742a1992
           mode: "0666"
         - path: .github/agents/testability-migration.agent.md
           upstreamPath: plugins/dotnet-test/agents/testability-migration.agent.md
-          upstreamHash: sha256:cad6dd9a0ef2ee4a3062e33c428a8fa42e6442999f1e107b9e3c9a4a228bbfe6
-          localHash: sha256:cad6dd9a0ef2ee4a3062e33c428a8fa42e6442999f1e107b9e3c9a4a228bbfe6
+          upstreamHash: sha256:13c9f6db08d25ff6c1303793aadd3ba1dfc5daa672c3cb1b933763d7f3444759
+          localHash: sha256:13c9f6db08d25ff6c1303793aadd3ba1dfc5daa672c3cb1b933763d7f3444759
+          mode: "0666"
+    - id: dotnet-test-migration
+      source:
+        type: github
+        host: github.com
+        owner: dotnet
+        repo: skills
+      requestedRef: e468462d8a0900f5278331c1ae12f45e015bb656
+      resolvedRef: e468462d8a0900f5278331c1ae12f45e015bb656
+      layout: dotnet-skills
+      install:
+        mode: summary
+      files:
+        - path: .agents/skills/migrate-mstest-v1v2-to-v3/SKILL.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-mstest-v1v2-to-v3/SKILL.md
+          upstreamHash: sha256:8e92f2523295d15eaa1874f5edd8a8e455bddab9c7b967fa4dc9833051a053be
+          localHash: sha256:8e92f2523295d15eaa1874f5edd8a8e455bddab9c7b967fa4dc9833051a053be
+          mode: "0666"
+        - path: .agents/skills/migrate-mstest-v3-to-v4/SKILL.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-mstest-v3-to-v4/SKILL.md
+          upstreamHash: sha256:bc76f25ee3b91a65ea0a63d4b3c183b1e3857156ac0cbb4246d225705c0c4305
+          localHash: sha256:bc76f25ee3b91a65ea0a63d4b3c183b1e3857156ac0cbb4246d225705c0c4305
+          mode: "0666"
+        - path: .agents/skills/migrate-nunit-to-mstest/SKILL.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-nunit-to-mstest/SKILL.md
+          upstreamHash: sha256:8325e081033a26e9457332e0fce388ffc043972062cffb5cbe7bf920a1274c36
+          localHash: sha256:8325e081033a26e9457332e0fce388ffc043972062cffb5cbe7bf920a1274c36
+          mode: "0666"
+        - path: .agents/skills/migrate-nunit-to-mstest/references/mapping-cheatsheet.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-nunit-to-mstest/references/mapping-cheatsheet.md
+          upstreamHash: sha256:1602563c58f9009b2034f3018710fc5064fd3d7603e96e99d97f786b58cdd6e8
+          localHash: sha256:1602563c58f9009b2034f3018710fc5064fd3d7603e96e99d97f786b58cdd6e8
+          mode: "0666"
+        - path: .agents/skills/migrate-vstest-to-mtp/SKILL.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-vstest-to-mtp/SKILL.md
+          upstreamHash: sha256:e4984767f47f06b9cdebdc14f001deb7116e0df2113f034c87d13fe30221a40d
+          localHash: sha256:e4984767f47f06b9cdebdc14f001deb7116e0df2113f034c87d13fe30221a40d
+          mode: "0666"
+        - path: .agents/skills/migrate-xunit-to-mstest/SKILL.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-mstest/SKILL.md
+          upstreamHash: sha256:e43e9a0be7389e1baa2260e6f42fd51b3fd2310ee7d090988429247e6e1cf9ec
+          localHash: sha256:e43e9a0be7389e1baa2260e6f42fd51b3fd2310ee7d090988429247e6e1cf9ec
+          mode: "0666"
+        - path: .agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md
+          upstreamHash: sha256:7cfe3e9202f7510bc9a51f097c2b553a7c193279eebc277df469f97cf7abdcdb
+          localHash: sha256:7cfe3e9202f7510bc9a51f097c2b553a7c193279eebc277df469f97cf7abdcdb
+          mode: "0666"
+        - path: .agents/skills/migrate-xunit-to-xunit-v3/SKILL.md
+          upstreamPath: plugins/dotnet-test-migration/skills/migrate-xunit-to-xunit-v3/SKILL.md
+          upstreamHash: sha256:265995747a72b49ff37589779935e812f1970b8e0ed8e7be8da0c540a20c198f
+          localHash: sha256:265995747a72b49ff37589779935e812f1970b8e0ed8e7be8da0c540a20c198f
+          mode: "0666"
+        - path: .github/agents/test-migration.agent.md
+          upstreamPath: plugins/dotnet-test-migration/agents/test-migration.agent.md
+          upstreamHash: sha256:252698c3a24e585cc4cf4acc63f896fe039101663ef136ebc43d0c8d52271a56
+          localHash: sha256:252698c3a24e585cc4cf4acc63f896fe039101663ef136ebc43d0c8d52271a56
           mode: "0666"
