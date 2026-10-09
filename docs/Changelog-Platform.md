@@ -10,7 +10,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 * Preserve the invocation working directory for ordinary controller-launched test hosts so relative paths such as `--coverage-settings test.runsettings` keep working under `dotnet run`, while retaining the configured working directory for custom test host launchers.
 
-## <a name="2.5.1" />[2.5.1] - Unreleased
+## <a name="2.5.1" />[2.5.1] - 2026-10-07
+
+See full log [of v4.5.0...v4.5.1](https://github.com/microsoft/testfx/compare/v4.5.0...v4.5.1)
+
+### Added
+
+* Add `Microsoft.Testing.Extensions.PackagedApp.MSBuild`, an MTP-versioned package containing shared MSBuild targets, a classic UWP bootstrap, and complete .NET 8 and .NET 9 `win-x64` out-of-process controller layouts for packaged Windows test applications. The integration is shared by `MSTest.Sdk` and explicit MSTest metapackage/adapter consumers without adding a Windows controller dependency to ordinary adapter projects, by @Evangelink in [#11777](https://github.com/microsoft/testfx/pull/11777)
+
+### Changed
+
+* Use a blocking wait instead of CPU-spinning by default when the VSTest bridge synchronously waits for discovery and result publication, by @Evangelink in [#11786](https://github.com/microsoft/testfx/pull/11786)
+* Update the Code Coverage extension dependency to stable 18.12.0, by @Evangelink in [#11789](https://github.com/microsoft/testfx/pull/11789)
+* Synchronize TRX reporting's vendored xxHash implementation with dotnet/runtime, using inline-array state buffers on modern .NET while preserving hash output and test-ID generation, by @Evangelink in [#11771](https://github.com/microsoft/testfx/pull/11771)
+
+### Fixed
+
+* Resolve controller-backed test result paths once at startup so tests that change the current directory cannot redirect or orphan TRX recovery sidecars, while preserving controller ownership of result directories, by @Evangelink in [#11772](https://github.com/microsoft/testfx/pull/11772)
+* Serialize shared Azure DevOps run admission, owner election, completion and cleanup so late modules cannot join a closing run or lose their successor's run-id file. Report oversized, missing and unreadable attachment upload failures explicitly while continuing subsequent uploads, by @Evangelink in [#11774](https://github.com/microsoft/testfx/pull/11774)
+* Allow in-process server-mode cancellation callbacks to finish within the remaining shutdown grace period before abandoning their cancellation source, by @dotnet-maestro in [#11751](https://github.com/microsoft/testfx/pull/11751)
 
 ## <a name="2.5.0" />[2.5.0] - 2026-10-05
 
@@ -26,7 +44,6 @@ See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4
 * Add the experimental `ITestingPlatformBuilderConfigurator` extension point so caller-owned host services can configure the Microsoft.Testing.Platform application builder before execution, by @Evangelink in [#11635](https://github.com/microsoft/testfx/pull/11635)
 * Add the experimental `ExecuteRequestContext.StartTestExecutionAsync` and `TestExecution` APIs so test frameworks can publish a canonical test lifecycle without depending on internal activity, reservation or message-bus types, by @Evangelink in [#11630](https://github.com/microsoft/testfx/pull/11630)
 * Expose experimental `IDiagnosticLoggingInformation` to extensions, providing the active diagnostic log file, minimum level and synchronous-write mode while preserving relocation and disabled-logging semantics, by @Evangelink in [#11653](https://github.com/microsoft/testfx/pull/11653)
-* Add `Microsoft.Testing.Extensions.PackagedApp.MSBuild`, an MTP-versioned package containing shared MSBuild targets, a classic UWP bootstrap, and complete .NET 8 and .NET 9 `win-x64` out-of-process controller layouts for packaged Windows test applications. The integration is shared by `MSTest.Sdk` and explicit MSTest metapackage/adapter consumers without adding a Windows controller dependency to ordinary adapter projects, by @Evangelink in [#11777](https://github.com/microsoft/testfx/pull/11777)
 
 ### Changed
 
@@ -38,9 +55,6 @@ See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4
 * Enrich and redesign Azure DevOps job summaries with pass rates, flaky-test history, duration comparisons, dependency edges, focused failure diagnostics and compact deterministic multi-module presentation, by @Evangelink in [#11337](https://github.com/microsoft/testfx/pull/11337) and [#11335](https://github.com/microsoft/testfx/pull/11335)
 * Reuse a static Jsonite type-dispatch table for .NET Framework and `netstandard2.0` server-mode serialization, avoiding a dictionary and captured delegates on every JSON message, by @Evangelink in [#11522](https://github.com/microsoft/testfx/pull/11522)
 * Normalize Retry artifact-recovery containment prefixes once per directory instead of recomputing them for every recovered record and artifact, by @Evangelink in [#11671](https://github.com/microsoft/testfx/pull/11671)
-* Use a blocking wait instead of CPU-spinning by default when the VSTest bridge synchronously waits for discovery and result publication, by @Evangelink in [#11786](https://github.com/microsoft/testfx/pull/11786)
-* Update the Code Coverage extension dependency to stable 18.12.0, by @Evangelink in [#11789](https://github.com/microsoft/testfx/pull/11789)
-* Synchronize TRX reporting's vendored xxHash implementation with dotnet/runtime, using inline-array state buffers on modern .NET while preserving hash output and test-ID generation, by @Evangelink in [#11771](https://github.com/microsoft/testfx/pull/11771)
 
 ### Fixed
 
@@ -53,9 +67,6 @@ See full log [of v4.4.1...v4.5.0](https://github.com/microsoft/testfx/compare/v4
 * Launch .NET 10 modern UWP tests when the AppX recipe names the published executable differently from its source path, while preserving exact-path matching and package manifest validation, by @Evangelink in [#11609](https://github.com/microsoft/testfx/pull/11609)
 * Reject negative, truncated, undersized and malformed nested `dotnet test` IPC payloads without consuming later fields or allocating from invalid collection counts, by @Evangelink in [#11649](https://github.com/microsoft/testfx/pull/11649)
 * Stop publishing additional test results after cancellation and preserve both the original framework exception and any canonical execution-scope cleanup failure, by @Evangelink in [#11666](https://github.com/microsoft/testfx/pull/11666)
-* Resolve controller-backed test result paths once at startup so tests that change the current directory cannot redirect or orphan TRX recovery sidecars, while preserving controller ownership of result directories, by @Evangelink in [#11772](https://github.com/microsoft/testfx/pull/11772)
-* Serialize shared Azure DevOps run admission, owner election, completion and cleanup so late modules cannot join a closing run or lose their successor's run-id file. Report oversized, missing and unreadable attachment upload failures explicitly while continuing subsequent uploads, by @Evangelink in [#11774](https://github.com/microsoft/testfx/pull/11774)
-* Allow in-process server-mode cancellation callbacks to finish within the remaining shutdown grace period before abandoning their cancellation source, by @dotnet-maestro in [#11751](https://github.com/microsoft/testfx/pull/11751)
 
 ## <a name="2.4.1" />[2.4.1] - 2026-09-15
 
