@@ -87,11 +87,11 @@ The MSBuild and local-SDK siblings satisfy the expert skill's build and SDK
 routing assumptions. The existing `dotnet-msbuild` specialists remain available
 as alternative entry points; one task does not require both workflows.
 
-The customized [`grade-tests` skill](./.agents/skills/grade-tests/SKILL.md) is
-repository-owned, not curator-managed. The `dotnet-test` manifest explicitly
-selects upstream-managed skills and agents so weekly updates preserve the local grading
-rubric without reporting managed-file drift. Keep that selection up to date when
-adopting additional upstream test skills.
+The `dotnet-test` plugin, including the
+[`grade-tests` skill](./.agents/skills/grade-tests/SKILL.md), tracks the pinned
+upstream revision in the curator manifest. TestFx-specific testing guidance
+outside the selected paths remains separately maintained. Preserve that
+ownership split when adopting additional upstream test skills.
 
 Copilot CLI uses [`.github/lsp.json`](./.github/lsp.json) for C# code intelligence.
 This configuration is adapted from the upstream

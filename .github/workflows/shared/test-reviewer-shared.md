@@ -385,19 +385,19 @@ lifecycle/helpers still receive the parallel-safety analysis.
 
 ### Step 2 — Review and grade each test method
 
-This repository is C# / MSTest. Use the repository-owned **`grade-tests`
+This repository is C# / MSTest. Use the curator-managed **`grade-tests`
 skill** at `.agents/skills/grade-tests/SKILL.md` as one input to the review
 of each kept method. Invoke it via the `skill` tool and follow its rubric
 exactly — do not re-derive or restate the rubric here. The skill is the
-single source of truth and is maintained separately from curator-managed
-upstream skills.
+single source of truth and tracks the pinned upstream `dotnet-test` revision
+in `.copilot/curate/manifest.yml`.
 
-When the skill asks for the language extension, follow its own Step 1
-guidance: invoke the **`test-analysis-extensions`** skill to discover
-the available per-language reference files and read the one matching
-this codebase (C# / MSTest). Do not hard-code a path to a specific
-extension file — the discovery step is what keeps this workflow
-resilient to future reshuffles in the extensions layout.
+Supply `.agents/skills/test-analysis-extensions/extensions/dotnet.md` as the
+matching bundled language-reference path and read it before scoring. This
+repository-scoped path is part of the curated installation contract; it avoids
+requiring the host to expose a reference-only skill loader. If the file is
+missing or unreadable, report that limitation rather than inventing framework
+guidance.
 
 **Pass these inputs to the skill** so it does not fall into its Step 0
 refusal branch:
@@ -415,12 +415,31 @@ refusal branch:
 4. The diff context for this PR — the
    `${{ steps.extract.outputs.test_regions_path }}` rows already give the changed
    line ranges per file.
+5. The bundled language-reference path above and the TestFx-specific
+   conventions below.
+
+With production context, require the skill's composition checkpoint before
+scoring: load **`test-gap-analysis`** by name once for the batch in
+`per-test-read-only` assessment context and read its owned
+`.agents/skills/test-gap-analysis/references/per-test-read-only.md` reference.
+The mode is caller context, not an extra skill-tool argument. Do not substitute
+a local mutation explanation or enter the standalone baseline/verification
+workflow. Grading must not run tests, build, execute production code, apply
+mutations, edit files, or delegate a grading/audit task. Step 4B's separate
+read-only parallel-safety task remains required when applicable.
+
+Assess each test's claimed behavior independently, using only its own
+assertions and executed helpers/fixtures. Do not borrow sibling assertions,
+demand unrelated branches, or add a mutation scoring dimension or deduction.
+Record an unavailable dependency/reference or production context as
+`N/A / unverified` with its reason; missing production context alone neither
+lowers the grade nor changes a decisive body-level result to `Uncertain`.
 
 #### testfx-specific deviations (apply on top of the skill rubric)
 
 A small number of repo-local conventions adjust how the standard rubric
 should be interpreted in this codebase. Use these as **additions** to —
-not replacements for — the repository-owned skill's rubric:
+not replacements for — the curated skill's rubric:
 
 - **Internal framework tests** (under `test/UnitTests/TestFramework.UnitTests/`
   and adjacent projects) use the internal test framework from
@@ -458,7 +477,7 @@ not replacements for — the repository-owned skill's rubric:
 - Do **not** flag missing `init` accessors, license headers, or other
   repo-stylistic concerns — those are out of scope for this rubric.
 
-Retain the grading skill's below-A improvement in the scorecard, then perform a
+Retain the grading skill's result and concrete improvement in the scorecard, then perform a
 focused code review of each changed test. Apply the publication contract to
 all inline candidates, including those derived from grading:
 
@@ -489,24 +508,34 @@ fake-precise 0–100 number.
 
 ### Step 3 — Preserve the review details
 
-Keep the skill's **Mutation**, **Notes**, and **How to improve** fields
-separate:
+Keep the skill's **Result**, **Quality**, **Notes**, and **How to improve**
+fields and its optional **Pseudo-mutation evidence** separate:
 
-- **Mutation** is `killed/total killed` (for example, `3/4 killed`),
-  `0/0 (no meaningful points)`, or `N/A` when production code could not be
-  resolved.
+- **Result** is `Pass`, `Failed`, or `Uncertain` for a requested test.
+  `Not applicable` describes a valid scope with no eligible tests, not an
+  invented row. Missing requested methods remain `Uncertain`.
+- **Quality** combines the letter grade and score band for resolved tests;
+  unresolved tests use `—`. Do not derive the result from the grade:
+  `B / Pass` and `A / Failed` are both valid.
+- **Pseudo-mutation evidence** records the exact change, distinguishing
+  input/sequence, original versus mutant observations, and this test's
+  relevant assertion. Static classifications are `Likely killed (inferred)`
+  or `Candidate survivor (unverified)`, never executed results or empirical
+  kill counts, percentages, or mutation scores. Exclude equivalent or
+  non-observable edits. When no meaningful change remains, say so without
+  inventing a denominator; unavailable context is `N/A / unverified`.
 - **Notes** is one short sentence (≤ 120 chars) stating the most important
-  observable reason for the grade.
+  observable reason for the result and quality.
 - **How to improve** is one short sentence (≤ 120 chars). For a supported
   improvement, name the exact input, assertion, expected value, split, or
-  deterministic replacement needed. For a rubric-only deduction with no
-  demonstrated contract improvement, use `No demonstrated contract gap.`;
-  when evidence is missing, name what must be verified instead of inventing
-  an edit. Use `—` for A-grade tests. This presentation rule does not change
-  the skill's grade or score band.
+  deterministic replacement needed. Every `Failed` row requires a concrete,
+  evidence-backed action, even when its quality is A. `Pass` uses `None`,
+  even below A; `Uncertain` names the evidence needed instead of inventing
+  an edit or expected value. This presentation rule does not change the
+  skill's result, grade, or score band.
 
 Do not merge the improvement into Notes, give vague advice such as `Add more
-assertions`, or invent weaknesses for an A-grade test.
+assertions`, or invent weaknesses from a letter grade alone.
 
 For each candidate that passes the publication contract, capture a **Finding
 key** (root cause, consequence, and correction), its **Evidence** (trigger and
@@ -703,7 +732,8 @@ considered.
 For an automatic `pull_request` run, call `noop` and stop without publishing
 only when **all** of these are true:
 
-- every graded test earned A;
+- every requested test has result `Pass`, or the grading scope is
+  `Not applicable`;
 - no separate correctness/reliability finding requires attention;
 - the parallel-safety status is `CLEAN` or `NOT_APPLICABLE`;
 - no material grading, evidence, or deduplication limitation remains;
@@ -720,11 +750,13 @@ review. Structure the body as follows:
 ```markdown
 ### 🧪 Test quality review — PR #${{ steps.resolve.outputs.pr_number }}
 
-<!-- 2–4 sentences covering: tests graded and grade distribution; the most
+<!-- 2–4 sentences covering: tests assessed, result counts and quality distribution; the most
 important correctness/effectiveness signal; parallel-safety status and highest
 severity; the top combined recommendation or unresolved evidence gap. Include
 novel actionable findings without an inline anchor and qualifying overflow.
 Distinguish rubric-only improvements from findings requiring author action.
+Aggregate grading results using Failed -> Uncertain -> Pass -> Not applicable;
+keep this distinct from parallel-safety status and publication decisions.
 When prepared inline suggestions were posted,
 state how many can be applied from the Files changed tab. -->
 
@@ -739,7 +771,7 @@ PARTIAL: start with a warning that coverage was incomplete, then include only
 the evidence returned by the specialist.
 NOT_APPLICABLE: omit this section entirely. -->
 
-#### Per-test grades
+#### Per-test assessment
 
 <!-- If no test methods were graded, say:
 No new or modified test methods were identified in the changed regions.
@@ -747,25 +779,40 @@ Do not emit an empty table. Otherwise emit the table below. -->
 
 <table>
   <thead>
-    <tr><th>Grade</th><th>Test</th><th>Mutation</th><th>Notes</th><th>How to improve</th></tr>
+    <tr><th>Result</th><th>Quality</th><th>Test</th><th>Notes</th><th>How to improve</th></tr>
   </thead>
   <tbody>
     <tr>
-      <td>A (90–100)</td>
+      <td>Pass</td>
+      <td>B (80–89)</td>
       <td>new <code>ClassName.<br>Method_<br>WhenSomething_<br>ReturnsValue</code></td>
-      <td>4/4 killed</td>
-      <td>Assertions protect every meaningful mutation in the claimed behavior.</td>
-      <td>—</td>
+      <td>One exact assertion protects the claimed result.</td>
+      <td>None</td>
     </tr>
     <tr>
+      <td>Failed</td>
       <td>C (70–79)</td>
       <td>mod <code>ClassName.<br>OtherMethod</code></td>
-      <td>1/3 killed</td>
-      <td>Only non-null is checked; default-return mutations survive.</td>
-      <td>Assert the exact value and collection contents.</td>
+      <td>The test only checks non-null, not the claimed order total.</td>
+      <td>Assert Total is 10 for the arranged 50-unit order.</td>
+    </tr>
+    <tr>
+      <td>Uncertain</td>
+      <td>—</td>
+      <td>mod <code>ClassName.<br>MissingMethod</code></td>
+      <td>The requested method body could not be resolved.</td>
+      <td>Supply the method body and its referenced fixture.</td>
     </tr>
   </tbody>
 </table>
+
+<!-- When it explains a finding or detail was requested, add a compact
+Pseudo-mutation evidence block keyed by test: exact change, witness,
+original/mutant observations, relevant assertion, and honest classification.
+For example: Candidate survivor (unverified) — changing the fee from 10 to 12
+for the arranged 50-unit order leaves IsNotNull passing while Total changes
+from 10 to 12. This is source reasoning, not an executed mutation.
+Do not repeat the improvement table in prose. -->
 
 <sub>This advisory review is heuristic and non-blocking.
 <!-- Only when Step 5 posted at least one inline suggestion, add:
@@ -794,22 +841,24 @@ Parallel-safety publication rules:
 
 Per-test table rules:
 
-- Order F → D → C → B → A; within a grade, order by fully-qualified name.
-- If there are more than 50 rows, show every row below B first, sample the best
-  rows, and collapse overflow into `<details>`.
+- Order `Failed` → `Uncertain` → `Pass`; within a result, order quality
+  F → D → C → B → A, then fully-qualified name. Unresolved quality is `—`.
+- If there are more than 50 rows, show Failed and Uncertain rows first, sample
+  Pass rows, and collapse overflow into `<details>`.
 - Use raw HTML `<table>`, not a Markdown pipe table. The sanitizer allows
   `table`, `thead`, `tbody`, `tr`, `th`, `td`, `code`, `span`, `sub`, `sup`,
   `br`, `details`, and `summary`. Do not use `<colgroup>`, `<col>`, `<wbr>`, or
   invisible Unicode wrap characters.
-- Render grade and score band together, for example `B (80–89)`; never emit a
-  fake-precise numeric score.
+- Render quality and score band together, for example `B (80–89)`; use `—`
+  for unresolved tests and never emit a fake-precise numeric score.
 - In the Test column, prefix `new` or `mod` outside the `<code>` span when known,
   drop the namespace, and insert `<br>` after the class separator and each `_`
   so long MSTest names wrap without changing their copyable text.
-- Mutation is `killed/total killed`, `0/0 (no meaningful points)`, or `N/A`.
-- Keep Notes and How to improve separate. Below-A rows retain either a supported
-  improvement, the rubric-only disposition, or the exact evidence limitation
-  from Step 3; do not invent an improvement to fill the cell. A uses `—`.
+- Keep Notes and How to improve separate. Actions follow the result, not the
+  letter grade: Failed requires an evidence-backed correction, Pass uses
+  `None`, and Uncertain names the evidence needed.
+- Preserve optional pseudo-mutation evidence outside the table as described
+  in Step 3. Never convert static classifications into executed kill ratios.
 
 Emit only one `submit-pull-request-review` call per visible run. Before posting,
 ensure the body includes every applicable specialist result and does not claim
@@ -817,9 +866,11 @@ clean parallel-safety when the specialist returned `PARTIAL`.
 
 ### Calibration cases — check before publishing
 
-- A B-grade test's single exact assertion kills every meaningful mutation in
-  its narrow contract: retain the grade/notes in the table, zero inline demands
-  for additional assertions.
+- A B-grade test's single exact assertion protects its narrow contract:
+  retain `Pass`, quality and notes, `None` for improvements, and zero inline
+  demands for additional assertions. A clean automatic run is silent.
+- An A-grade test has actionable debug output: retain `Failed` and the exact
+  removal action despite its high quality.
 - A changed test asserts only non-null while wrong contents survive: retain
   its grade and publish one exact-content improvement with the surviving
   mutation, expected value, and a supported assertion API.
@@ -830,8 +881,11 @@ clean parallel-safety when the specialist returned `PARTIAL`.
 - A disposal claim about `MemoryStream.ToArray()`, a member used by another
   partial, an unsupported modern API suggestion, or a safely synchronized field:
   investigate the context and reject the contradicted claim, not the analysis.
-- Unavailable production or thread context: state the precise limitation;
-  do not invent a fix or claim complete coverage.
+- Unavailable production, dependency/reference, or thread context: state the
+  precise limitation; do not invent a fix, penalize absent production, or claim
+  complete coverage. An unresolved requested method is `Uncertain`, whereas
+  a valid empty scope is `Not applicable`; both still receive applicable
+  parallel-safety analysis.
 
 ### Step 6 — Stop
 
