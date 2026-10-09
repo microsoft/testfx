@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
         <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
-        <target state="new">Azure DevOps live publishing could not read attachment '{0}': {1}</target>
+        <target state="translated">Динамической публикации Azure DevOps не удалось прочитать вложение '{0}': {1}</target>
         <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
         <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
-        <target state="new">Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</target>
+        <target state="translated">Azure Динамической публикации DevOps не удалось отправить вложение '{0}', так как его размер в {1} байт превышает ограничение в {2} байт.</target>
         <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
         <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
-        <target state="new">Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</target>
+        <target state="translated">Время ожидания публикации {1} в реальном времени в Azure DevOps истекло при ожидании блокировки координации "{0}".</target>
         <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">

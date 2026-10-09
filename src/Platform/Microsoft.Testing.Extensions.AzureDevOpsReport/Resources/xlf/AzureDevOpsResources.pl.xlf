@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
         <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
-        <target state="new">Azure DevOps live publishing could not read attachment '{0}': {1}</target>
+        <target state="translated">Azure DevOps Live Publishing nie może odczytać załącznika '{0}': {1}</target>
         <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
         <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
-        <target state="new">Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</target>
+        <target state="translated">Azure funkcja publikowania na żywo DevOps nie może przekazać '{0}' załącznika, ponieważ jego rozmiar ({1} bajtów) przekracza limit {2} bajtów.</target>
         <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
