@@ -2,7 +2,7 @@
 name: filter-syntax
 description: "Reference-only filter syntax for VSTest and MTP with MSTest, NUnit, xUnit v3, and TUnit. Load only after the platform/framework is known and a consumer needs to create or translate a filter. Do not load for unfiltered runs or platform detection. Used by run-tests and mtp-hot-reload; never invoke directly."
 user-invocable: false
-disable-model-invocation: true
+disable-model-invocation: false
 license: MIT
 ---
 

@@ -8,8 +8,9 @@ in `.github/workflows/shared/test-reviewer-shared.md`, not a fork of the skill.
 The installation deliberately excludes the repository-owned review corrections
 below so a refresh cannot silently overwrite them:
 
-- [Code testing reference helper](.agents/skills/code-testing-extensions/SKILL.md)
-  and [test analysis reference helper](.agents/skills/test-analysis-extensions/SKILL.md)
+- [Code testing reference helper](.agents/skills/code-testing-extensions/SKILL.md),
+  [test analysis reference helper](.agents/skills/test-analysis-extensions/SKILL.md),
+  and [filter syntax reference](.agents/skills/filter-syntax/SKILL.md)
   keep internal language guidance callable by the model while hidden from the
   user menu.
 - [Python generation guidance](.agents/skills/code-testing-extensions/extensions/python.md)
@@ -22,9 +23,15 @@ below so a refresh cannot silently overwrite them:
 - [Test project scaffolding](.agents/skills/scaffold-dotnet-test-project/SKILL.md)
   adds bridge properties only for VSTest command mode.
 - [PowerShell pipeline example](.agents/skills/code-testing-extensions/extensions/powershell-examples.md)
-  loads module-defined types at parse time and uses valid Pester identity checks.
+  loads module-defined types at parse time, uses valid Pester identity checks,
+  and covers the planned missing-invoice path.
 - [C++ pipeline example](.agents/skills/code-testing-extensions/extensions/cpp-examples.md)
   includes the planned missing-invoice case and its required Catch2 header.
+- [Kotlin](.agents/skills/code-testing-extensions/extensions/kotlin-examples.md),
+  [Ruby](.agents/skills/code-testing-extensions/extensions/ruby-examples.md), and
+  [Rust](.agents/skills/code-testing-extensions/extensions/rust-examples.md)
+  examples include the planned missing-invoice case and align their reports
+  with the actual test counts.
 - [xUnit migration mapping](.agents/skills/migrate-xunit-to-mstest/references/mapping-cheatsheet.md)
   preserves the existing assertion package/namespace unless a swap is requested,
   and expands broader owner traits only onto valid method-level attributes.
@@ -99,7 +106,6 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 - [Resolve a Testability Obstacle](.agents/skills/testability-obstacle/SKILL.md) — _skill_ — Introduce the smallest behavior-preserving seam needed to test a specific C# behavior, then add deterministic tests that prove both the behavior and the seam. The production edit is a means to the requested test, not an invitation to redesign adjacent code.
 - [Run .NET Tests](.agents/skills/run-tests/SKILL.md) — _skill_ — Return or execute the command or command sequence that matches the repository's project system, test platform, framework, and SDK mode.
 - [Test Anti-Pattern Detection](.agents/skills/test-anti-patterns/SKILL.md) — _skill_ — Quick, pragmatic analysis of test code in any supported language for anti-patterns and quality issues that undermine test reliability, maintainability, and diagnostic value.
-- [Test Filter Syntax Reference](.agents/skills/filter-syntax/SKILL.md) — _skill_ — Filter syntax depends on the **platform** and **test framework**.
 - [Test Gap Analysis](.agents/skills/test-gap-analysis/SKILL.md) — _skill_ — Answer one question: **which caller-visible production behaviors could change without an existing test failing?** Mutation reasoning is a probe, not the goal. Inventory public outcomes first, then verify only credible gaps.
 - [Test Platform and Framework Detection](.agents/skills/platform-detection/SKILL.md) — _skill_ — Determine **which test platform** (VSTest or Microsoft.Testing.Platform) and **which test framework** (MSTest, xUnit, NUnit, TUnit) a project uses.
 - [Test Smell Detection](.agents/skills/test-smell-detection/SKILL.md) — _skill_ — Audit test code with the academic taxonomy, code evidence, calibrated framework idioms, and fixes native to the codebase.

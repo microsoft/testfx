@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-09T11:01:06.266808Z
-manifestHash: sha256:5273b45ec3b9f73d1b5ab47ea2cfc2856b4e0591d992aea36c5675bfad49ca1b
+generatedAt: 2026-10-09T12:48:59.1418638Z
+manifestHash: sha256:6f5a3b8d5de7e71b160a5990ba681ac7a7095948f7bcafb122d965742779e050
 plugins:
     - id: dotnet-msbuild
       source:
@@ -205,11 +205,6 @@ plugins:
           upstreamHash: sha256:25b32c779b49e17dff4cbb44fa3003cd33edba27592a9f1d0ab28c135eb04125
           localHash: sha256:25b32c779b49e17dff4cbb44fa3003cd33edba27592a9f1d0ab28c135eb04125
           mode: "0666"
-        - path: .agents/skills/code-testing-extensions/extensions/kotlin-examples.md
-          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/kotlin-examples.md
-          upstreamHash: sha256:1d09702b3d6b06bb36b965788c7e8013dfb2fce6014aba29de97f356910c32e4
-          localHash: sha256:1d09702b3d6b06bb36b965788c7e8013dfb2fce6014aba29de97f356910c32e4
-          mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/kotlin.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/kotlin.md
           upstreamHash: sha256:7553070dbf0254c1bb91c293ae8ce4313a68450cf1a451975d9f92d5367eb906
@@ -225,20 +220,10 @@ plugins:
           upstreamHash: sha256:d142728fb8fcd5e0977e317cf52b14bbaa2efb403d8a3dd341470b1fa2f5f238
           localHash: sha256:d142728fb8fcd5e0977e317cf52b14bbaa2efb403d8a3dd341470b1fa2f5f238
           mode: "0666"
-        - path: .agents/skills/code-testing-extensions/extensions/ruby-examples.md
-          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/ruby-examples.md
-          upstreamHash: sha256:cc138ba9250b0b1c3d7ad712227c4d2988e12279e4686aaf6107aeed8b50349e
-          localHash: sha256:cc138ba9250b0b1c3d7ad712227c4d2988e12279e4686aaf6107aeed8b50349e
-          mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/ruby.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/ruby.md
           upstreamHash: sha256:9d6cc5ed7ba9269d259c39fa9754cfc93d496b5fd3abcf81bd91833a27268bbe
           localHash: sha256:9d6cc5ed7ba9269d259c39fa9754cfc93d496b5fd3abcf81bd91833a27268bbe
-          mode: "0666"
-        - path: .agents/skills/code-testing-extensions/extensions/rust-examples.md
-          upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/rust-examples.md
-          upstreamHash: sha256:18c0483fcc3af9d8ddc4d8bf0878b2244991423c7c5890bac95cda8c065838a9
-          localHash: sha256:18c0483fcc3af9d8ddc4d8bf0878b2244991423c7c5890bac95cda8c065838a9
           mode: "0666"
         - path: .agents/skills/code-testing-extensions/extensions/rust.md
           upstreamPath: plugins/dotnet-test/skills/code-testing-extensions/extensions/rust.md
@@ -309,11 +294,6 @@ plugins:
           upstreamPath: plugins/dotnet-test/skills/detect-static-dependencies/SKILL.md
           upstreamHash: sha256:f7f6edd9b24b4fb9286a5e8a2228aa2c38cb05e2216a3bd57dd62c365086d796
           localHash: sha256:f7f6edd9b24b4fb9286a5e8a2228aa2c38cb05e2216a3bd57dd62c365086d796
-          mode: "0666"
-        - path: .agents/skills/filter-syntax/SKILL.md
-          upstreamPath: plugins/dotnet-test/skills/filter-syntax/SKILL.md
-          upstreamHash: sha256:64c294d0fc2d0c4d5887d391c6684429fc4d7a66b6b9f99a475e6abe390c5d19
-          localHash: sha256:64c294d0fc2d0c4d5887d391c6684429fc4d7a66b6b9f99a475e6abe390c5d19
           mode: "0666"
         - path: .agents/skills/find-untested-sources/SKILL.md
           upstreamPath: plugins/dotnet-test/skills/find-untested-sources/SKILL.md
