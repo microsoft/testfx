@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
         <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
-        <target state="new">Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</target>
+        <target state="translated">Publikowanie na żywo w usłudze Azure DevOps przekroczyło limit czasu po {1}, oczekując na blokadę koordynacji „{0}”.</target>
         <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
