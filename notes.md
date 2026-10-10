@@ -91,6 +91,16 @@
 
 7. **Assert/CollectionAssert/StringAssert audit (2026-08-17)**: Did a broad sweep of `src/TestFramework/TestFramework/Assertions/*.cs` looking for zero-coverage newer methods (AreAllDistinct, AreAllNotNull, AreAllOfType, AreAllOfType span/memory, StringAssert.Regex, CollectionAssert.Subset/Type/Membership, Assert.That expression evaluation internals). All are already thoroughly covered (dozens of edge-case tests each) by prior runs. No fresh zero-coverage gap found this pass — future runs should look at MTP/Retry/Analyzer areas rather than core Assert methods, which appear saturated.
 
+## Run 2026-10-10 (run 38093201907) — ConsoleTestExecutionFilterFactory tests
+
+- Task reconciliation: no open `[test-improver]`-prefixed PRs found (search returned 0). PR #11851 (FileLoggerProvider skip-move guard) confirmed merged 2026-10-09. RetryAttemptPropertyExtensions PR from 2026-10-09 run also merged. No open issues labeled `testing` found — Task 5 had nothing to action.
+- Task 2/3: continued the `Microsoft.Testing.Platform` core-internals sweep (Requests/). Found `ConsoleTestExecutionFilterFactory` (selects TreeNodeFilter/TestNodeUidListFilter/NopFilter based on `--treenode-filter`/`--filter-uid` CLI options, wired into `ConsoleTestHost`) had zero direct unit tests.
+- Added `ConsoleTestExecutionFilterFactoryTests.cs` (4 tests): neither-option→NopFilter, only-treenode-filter→TreeNodeFilter(exact pattern), only-uid-filter→TestNodeUidListFilter(exact ordered uids), both-set→throws (UnreachableException, asserted via full type name per `ApplicationStateGuardTests`'s cross-TFM pattern since UnreachableException is an internal polyfill on non-netcoreapp TFMs).
+- Verified red/green: swapped the `(true,false)` switch arm to return `NopFilter` instead of `TreeNodeFilter` — new test failed exactly as expected (actual type NopFilter), 1/2870 failed; reverted, reran — 0/2870 net8.0, 0/2871 net9.0, 22 pre-existing skips.
+- Build succeeded (0 warnings) net8.0+net9.0. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for ConsoleTestExecutionFilterFactory" on branch `test-assist/console-test-execution-filter-factory-tests`.
+- Remaining candidates for future runs: `ServerTestExecutionFilterFactory`/`ServerTestExecutionRequestFactory` (trivial one-liner wrappers, likely too thin); Messages/ `TimingProperty`/`FileLocationProperty`/`OutputProperties` Equals/GetHashCode members are untested but no production code currently relies on their equality semantics (only ToString() is tested in TestNodePropertiesTests.cs) — low value unless a real equality-dependent consumer surfaces. Consider Task 6 (test infrastructure) next run since Requests/ low-hanging fruit is thinning.
+
 ## Run 2026-10-08 (run 37856580472) — FileLoggerProvider skip-move guard tests
 
 - Task reconciliation: PR #11811 (ConfigurationProviderHelpers.GetChildKeys, originally our branch) was recreated/merged by a maintainer from `dev/amauryleve/configuration-child-key-tests` and closed as merged — treat as resolved, nothing to maintain. No open `[test-improver]`-prefixed PRs found.
