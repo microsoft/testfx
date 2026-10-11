@@ -324,7 +324,8 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion));
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
+            + " --ansi off --progress off",
             environmentVariables: new Dictionary<string, string?>
             {
                 ["NO_COLOR"] = "1",
@@ -486,7 +487,8 @@ public sealed class BrowserPackageDesktopTests
 
         return await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
-            + $" -property:DotnetTestInvocation=true {projectProperties} {testArguments}",
+            + $" -property:DotnetTestInvocation=true {projectProperties}"
+            + $" --ansi off --progress off {testArguments}",
             environmentVariables: effectiveEnvironment,
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
