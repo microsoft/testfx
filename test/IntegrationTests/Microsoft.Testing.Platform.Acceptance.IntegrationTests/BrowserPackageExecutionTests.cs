@@ -250,7 +250,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.DoesNotContain("Microsoft.Testing.Platform.Browser.dll", ordinary.StandardOutput);
 
         DotnetMuxerResult unsupported = await DotnetCli.RunAsync(
-            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments;_ConfigureTestingPlatformBrowserRun"
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments;ComputeTestingPlatformRunArguments"
             + commonProperties
             + " -getProperty:TestingPlatformRunCommand"
             + " -getProperty:TestingPlatformRunArguments",
@@ -262,7 +262,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("TestingPlatformRunArgumentsVersion=1", unsupported.StandardOutput + unsupported.StandardError);
 
         DotnetMuxerResult dedicated = await DotnetCli.RunAsync(
-            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments;_ConfigureTestingPlatformBrowserRun"
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments;ComputeTestingPlatformRunArguments"
             + commonProperties
             + " -property:TestingPlatformRunArgumentsVersion=1"
             + " -property:TestingPlatformRunCommand=host-command"
@@ -342,6 +342,7 @@ public sealed class BrowserPackageDesktopTests
 
         DotnetMuxerResult build = await RunBrowserSdkAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
+            workingDirectory: generator.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
         Assert.AreEqual(0, build.ExitCode, build.ToString());
 
@@ -366,6 +367,7 @@ public sealed class BrowserPackageDesktopTests
         string publishDirectory = Path.Combine(generator.TargetAssetPath, "publish");
         DotnetMuxerResult publish = await RunBrowserSdkAsync(
             $"publish {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid} --output {publishDirectory}",
+            workingDirectory: generator.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
         Assert.AreEqual(0, publish.ExitCode, publish.ToString());
 
@@ -407,6 +409,7 @@ public sealed class BrowserPackageDesktopTests
             await RequireAlignedBrowserInputsAsync(generator);
             run = await RunBrowserSdkAsync(
                 $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+                workingDirectory: generator.TargetAssetPath,
                 failIfReturnValueIsNotZero: false);
         }
         else
@@ -472,6 +475,7 @@ public sealed class BrowserPackageDesktopTests
         string browserTargets = browserTargetsReader.ReadToEnd();
         Assert.Contains("SourceId=\"$(PackageId)\"", browserTargets);
         Assert.Contains("AssetKind=\"Build\"", browserTargets);
+        Assert.Contains("Name=\"ComputeTestingPlatformRunArguments\"", browserTargets);
         Assert.Contains("ComputeTestingPlatformRunArgumentsDependsOn", browserTargets);
         Assert.Contains("TestingPlatformRunArgumentsVersion", browserTargets);
         Assert.DoesNotContain("AfterTargets=\"ComputeRunArguments\"", browserTargets);
@@ -613,11 +617,14 @@ public sealed class BrowserPackageDesktopTests
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
             + $" {projectProperties} {testArguments}",
             environmentVariables: environmentVariables,
+            workingDirectory: generator.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
 
     private async Task RequireAlignedBrowserInputsAsync(TestAsset generator)
     {
         string packageFeed = GetBrowserPackageFeed(requireExplicit: true);
+        string dotnetPath = GetBrowserSdkDotnetPath();
+        WriteSdkSelectionGlobalJson(generator.TargetAssetPath, dotnetPath);
         string nugetConfigPath = Path.Combine(generator.TargetAssetPath, "NuGet.config");
         var nugetConfig = XDocument.Load(nugetConfigPath);
         XElement localShipping = nugetConfig.Descendants()
@@ -627,9 +634,9 @@ public sealed class BrowserPackageDesktopTests
         localShipping.SetAttributeValue("value", packageFeed);
         nugetConfig.Save(nugetConfigPath);
 
-        string dotnetPath = GetBrowserSdkDotnetPath();
         DotnetMuxerResult evaluation = await DotnetCli.RunAsync(
             $"msbuild {generator.TargetAssetPath} -getProperty:TestingPlatformRunArgumentsVersion",
+            workingDirectory: generator.TargetAssetPath,
             environmentVariables: GetBrowserSdkEnvironment(dotnetPath),
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
@@ -643,13 +650,14 @@ public sealed class BrowserPackageDesktopTests
         if (version != "1")
         {
             Assert.Inconclusive(
-                $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1.");
+                $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1. Output: {evaluation.StandardOutput} Error: {evaluation.StandardError}");
         }
     }
 
     private async Task<DotnetMuxerResult> RunBrowserSdkAsync(
         string arguments,
         Dictionary<string, string?>? environmentVariables = null,
+        string? workingDirectory = null,
         bool failIfReturnValueIsNotZero = true)
     {
         string dotnetPath = GetBrowserSdkDotnetPath();
@@ -661,12 +669,42 @@ public sealed class BrowserPackageDesktopTests
 
         return await DotnetCli.RunAsync(
             arguments,
+            workingDirectory: workingDirectory,
             environmentVariables: environmentVariables,
             warnAsError: false,
             failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
             useMultithreadedMSBuild: false,
             dotnetPath: dotnetPath,
             cancellationToken: TestContext.CancellationToken);
+    }
+
+    private static void WriteSdkSelectionGlobalJson(string assetPath, string dotnetPath)
+    {
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk");
+        string[] sdkVersions = Directory.Exists(sdkDirectory)
+            ? Directory.GetDirectories(sdkDirectory)
+            : [];
+        string sdkVersion = sdkVersions.Length == 1
+            ? Path.GetFileName(sdkVersions[0])
+            : throw new AssertFailedException(
+                $"The SDK-under-test must contain exactly one SDK directory. Found {sdkVersions.Length} under '{sdkDirectory}'.");
+        File.WriteAllText(
+            Path.Combine(assetPath, "global.json"),
+            $$"""
+            {
+              "sdk": {
+                "version": "{{sdkVersion}}",
+                "rollForward": "disable",
+                "allowPrerelease": true,
+                "paths": [ "$host$" ]
+              },
+              "test": {
+                "runner": "Microsoft.Testing.Platform"
+              }
+            }
+            """);
     }
 
     private static string GetBrowserSdkDotnetPath()
@@ -693,6 +731,9 @@ public sealed class BrowserPackageDesktopTests
             ["DOTNET_ROOT"] = dotnetRoot,
             ["DOTNET_INSTALL_DIR"] = dotnetRoot,
             ["DOTNET_MULTILEVEL_LOOKUP"] = "0",
+            ["DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR"] = dotnetRoot,
+            ["DOTNET_HOST_PATH"] = dotnetPath,
+            ["PATH"] = dotnetRoot + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH"),
         };
     }
 

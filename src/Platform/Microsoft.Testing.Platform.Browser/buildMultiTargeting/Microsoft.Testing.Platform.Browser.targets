@@ -47,6 +47,9 @@
     </DefineStaticWebAssetEndpoints>
   </Target>
 
+  <Target Name="ComputeTestingPlatformRunArguments"
+          DependsOnTargets="$(ComputeTestingPlatformRunArgumentsDependsOn)" />
+
   <Target Name="_ConfigureTestingPlatformBrowserRun"
           Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
                       AND $(RuntimeIdentifier.StartsWith('browser-')) ">
