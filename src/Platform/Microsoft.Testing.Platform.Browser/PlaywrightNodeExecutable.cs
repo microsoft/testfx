@@ -23,13 +23,9 @@ internal static class PlaywrightNodeExecutable
         }
 
         UnixFileMode mode = File.GetUnixFileMode(nodePath);
-        const UnixFileMode executeMode =
-            UnixFileMode.UserExecute
-            | UnixFileMode.GroupExecute
-            | UnixFileMode.OtherExecute;
-        if ((mode & executeMode) != executeMode)
+        if ((mode & UnixFileMode.UserExecute) == 0)
         {
-            File.SetUnixFileMode(nodePath, mode | executeMode);
+            File.SetUnixFileMode(nodePath, mode | UnixFileMode.UserExecute);
         }
     }
 

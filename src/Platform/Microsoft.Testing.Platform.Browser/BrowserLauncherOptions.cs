@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Net;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed record BrowserLauncherOptions(
@@ -155,6 +157,33 @@ internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
     }
 }
 
+internal static class BrowserHostArguments
+{
+    public static string[] Parse(Uri hostUri)
+    {
+        if (string.IsNullOrEmpty(hostUri.Query))
+        {
+            return [];
+        }
+
+        var arguments = new List<string>();
+        foreach (string component in hostUri.Query[1..].Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            int separator = component.IndexOf('=');
+            string name = separator < 0 ? component : component[..separator];
+            if (!string.Equals(WebUtility.UrlDecode(name), "arg", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string value = separator < 0 ? string.Empty : component[(separator + 1)..];
+            arguments.Add(WebUtility.UrlDecode(value));
+        }
+
+        return [.. arguments];
+    }
+}
+
 internal static class SdkResponseFileExpander
 {
     public static string[] Expand(IReadOnlyList<string> arguments)
@@ -181,12 +210,18 @@ internal static class SdkResponseFileExpander
         string path = Path.GetFullPath(arguments[^1][1..]);
         try
         {
-            ValidateResponseFilePermissions(path);
+            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new BrowserLauncherException(
+                    "The SDK response file must not be a symbolic link or reparse point.");
+            }
+
             using var stream = new FileStream(
                 path,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.None);
+            ValidateResponseFilePermissions(path);
             using var reader = new StreamReader(
                 stream,
                 new UTF8Encoding(

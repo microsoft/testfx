@@ -20,7 +20,8 @@ core Microsoft.Testing.Platform.
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="VERSION" />
+    <PackageReference Include="MSTest.TestFramework" Version="VERSION" />
+    <PackageReference Include="MSTest.TestAdapter" Version="VERSION" />
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="0.1.0-alpha" />
   </ItemGroup>
 </Project>
@@ -83,6 +84,11 @@ machinery.
 - The SDK authenticated HTTP bootstrap and invocation marker are experimental
   cross-repository contracts. The current proof-of-concept caller sets
   `DotnetTestInvocation`; the shipping SDK does not yet own this selection.
+- This experiment assumes a trusted test project and package-owned host page.
+  Top-frame and exact-origin binding checks prevent accidental cross-frame or
+  cross-origin use; they do not authenticate another script already executing
+  in the same page. The SDK gateway pins the first accepted Origin (including
+  preflight) rather than accepting launcher preregistration.
 - The package uses the framework-provided WasmAppHost and depends on its exact
   HTTP readiness output; shared external-host readiness is unresolved.
 - Managed MTP does not yet receive graceful cancellation before the launcher

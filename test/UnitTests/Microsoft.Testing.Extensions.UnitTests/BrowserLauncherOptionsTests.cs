@@ -282,6 +282,37 @@ public sealed class BrowserLauncherOptionsTests
     }
 
     [TestMethod]
+    [OSCondition(
+        ConditionMode.Exclude,
+        OperatingSystems.Windows,
+        IgnoreMessage = "Symbolic-link bootstrap validation is Unix-specific.")]
+    public void ResponseFileExpander_RejectsBootstrapSymbolicLink()
+    {
+        string target = CreateResponseFile(
+            """
+            --server dotnettestcli
+            --dotnet-test-transport http
+            --dotnet-test-http-endpoint http://127.0.0.1:1234/
+            --dotnet-test-http-token secret-token
+            """);
+        string link = target + ".link";
+
+        try
+        {
+            File.CreateSymbolicLink(link, target);
+            BrowserLauncherException exception =
+                Assert.ThrowsExactly<BrowserLauncherException>(
+                    () => SdkResponseFileExpander.Expand([$"@{link}"]));
+            Assert.Contains("symbolic link", exception.Message);
+        }
+        finally
+        {
+            File.Delete(link);
+            File.Delete(target);
+        }
+    }
+
+    [TestMethod]
     public void HostProcess_ParsesOnlyExactHttpAppUrlReadiness()
     {
         Assert.AreEqual(
@@ -292,6 +323,22 @@ public sealed class BrowserLauncherOptionsTests
         Assert.IsNull(HostProcess.TryParseAppUrl("Now listening on: http://127.0.0.1:1234/"));
         Assert.ThrowsExactly<BrowserLauncherException>(
             () => HostProcess.TryParseAppUrl("App url: http://example.com/"));
+    }
+
+    [TestMethod]
+    public void BrowserHostArguments_ParsesOrderedArgQueryValues()
+    {
+        string[] arguments = BrowserHostArguments.Parse(
+            new Uri(
+                "http://127.0.0.1:1234/?arg=--filter&ignored=value&arg=FullyQualifiedName%7ERuns+Inside&arg="));
+
+        Assert.AreSequenceEqual(
+        [
+            "--filter",
+            "FullyQualifiedName~Runs Inside",
+            string.Empty,
+        ],
+        arguments);
     }
 
     [TestMethod]

@@ -34,7 +34,8 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
   </ItemGroup>
 
@@ -86,7 +87,8 @@ public sealed class BrowserPackageTests
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Platform.Browser" Version="$BrowserPackageVersion$" />
   </ItemGroup>
 
@@ -143,9 +145,24 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("succeeded: 1", runOutput);
         Assert.DoesNotContain("--dotnet-test-http-token", runOutput);
         Assert.DoesNotContain("pw:channel", runOutput);
+        AssertUsesMinimalMSTestDependencies(generator);
         await AssertIsTestingPlatformApplicationAsync(
             generator,
             $"-property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}");
+
+        DotnetMuxerResult projectConfiguredFilter = await RunBrowserTestAsync(
+            generator,
+            testArguments: string.Empty,
+            projectProperties:
+                "-property:TestingPlatformCommandLineArguments=\"--filter FullyQualifiedName~NoSuchBrowserTest\"");
+        string projectConfiguredFilterOutput =
+            projectConfiguredFilter.StandardOutput + projectConfiguredFilter.StandardError;
+        Assert.AreEqual(
+            (int)ExitCode.ZeroTests,
+            projectConfiguredFilter.ExitCode,
+            projectConfiguredFilter.ToString());
+        Assert.Contains("Zero tests ran", projectConfiguredFilterOutput);
+        Assert.DoesNotContain("Intentional browser experiment failure.", projectConfiguredFilterOutput);
 
         DotnetMuxerResult list = await RunBrowserTestAsync(generator, "--list-tests");
         string listOutput = list.StandardOutput + list.StandardError;
@@ -159,7 +176,7 @@ public sealed class BrowserPackageDesktopTests
             generator,
             "--filter FullyQualifiedName~SkippedInsideBrowser");
         string skippedOutput = skipped.StandardOutput + skipped.StandardError;
-        Assert.AreEqual((int)ExitCode.ZeroTests, skipped.ExitCode, skipped.ToString());
+        Assert.AreEqual(0, skipped.ExitCode, skipped.ToString());
         Assert.Contains("skipped: 1", skippedOutput);
         Assert.DoesNotContain("did not complete within", skippedOutput);
 
@@ -336,6 +353,22 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-x64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-arm64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/package/cli.js", entries);
+        Assert.DoesNotContain(
+            static entry => entry.Contains("//", StringComparison.Ordinal),
+            entries);
+        Assert.DoesNotContain(
+            static entry => entry.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase),
+            entries);
+        Assert.DoesNotContain(
+            static entry => entry.Contains(
+                "/.playwright/package/lib/vite/",
+                StringComparison.Ordinal),
+            entries);
+        Assert.DoesNotContain(
+            static entry => entry.Contains(
+                "/.playwright/package/types/",
+                StringComparison.Ordinal),
+            entries);
         Assert.DoesNotContain("buildMultiTargeting/Microsoft.Testing.Platform.Browser.After.targets", entries);
 
         ZipArchiveEntry browserTargetsEntry = archive.GetEntry(
@@ -439,15 +472,57 @@ public sealed class BrowserPackageDesktopTests
     private async Task<DotnetMuxerResult> RunBrowserTestAsync(
         TestAsset generator,
         string testArguments,
-        Dictionary<string, string?>? environmentVariables = null)
+        Dictionary<string, string?>? environmentVariables = null,
+        string? projectProperties = null)
         => await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
-            + $" -property:DotnetTestInvocation=true {testArguments}",
+            + $" -property:DotnetTestInvocation=true {projectProperties} {testArguments}",
             environmentVariables: environmentVariables,
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
+
+    private static void AssertUsesMinimalMSTestDependencies(TestAsset generator)
+    {
+        using var assets = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            generator.TargetAssetPath,
+            "obj",
+            "project.assets.json")));
+        string[] libraries =
+        [
+            .. assets.RootElement.GetProperty("libraries").EnumerateObject()
+                .Select(static library => library.Name.ToLowerInvariant()),
+        ];
+
+        Assert.DoesNotContain(
+            static library => library.StartsWith("mstest/", StringComparison.Ordinal),
+            libraries);
+        Assert.DoesNotContain(
+            static library => library.StartsWith("microsoft.net.test.sdk/", StringComparison.Ordinal),
+            libraries);
+        Assert.DoesNotContain(
+            static library => library.StartsWith(
+                "microsoft.testing.extensions.codecoverage/",
+                StringComparison.Ordinal),
+            libraries);
+        Assert.DoesNotContain(
+            static library => library.StartsWith(
+                "microsoft.testing.extensions.trxreport/",
+                StringComparison.Ordinal),
+            libraries);
+        Assert.Contains(
+            static library => library.StartsWith("mstest.testadapter/", StringComparison.Ordinal),
+            libraries);
+        Assert.Contains(
+            static library => library.StartsWith("mstest.testframework/", StringComparison.Ordinal),
+            libraries);
+        Assert.Contains(
+            static library => library.StartsWith(
+                "microsoft.testing.extensions.trxreport.abstractions/",
+                StringComparison.Ordinal),
+            libraries);
+    }
 
     private async Task AssertIsTestingPlatformApplicationAsync(
         TestAsset generator,

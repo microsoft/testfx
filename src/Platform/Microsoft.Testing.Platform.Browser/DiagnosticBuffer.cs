@@ -28,11 +28,7 @@ internal sealed class DiagnosticBuffer
 
     public void Add(string source, string message)
     {
-        string redacted = message;
-        foreach (string secret in _secrets)
-        {
-            redacted = redacted.Replace(secret, "[redacted]", StringComparison.Ordinal);
-        }
+        string redacted = Redact(message);
 
         if (redacted.Length > MaximumEntryLength)
         {
@@ -48,6 +44,17 @@ internal sealed class DiagnosticBuffer
 
             _entries.Enqueue($"[{source}] {redacted}");
         }
+    }
+
+    public string Redact(string message)
+    {
+        string redacted = message;
+        foreach (string secret in _secrets)
+        {
+            redacted = redacted.Replace(secret, "[redacted]", StringComparison.Ordinal);
+        }
+
+        return redacted;
     }
 
     public string Format()

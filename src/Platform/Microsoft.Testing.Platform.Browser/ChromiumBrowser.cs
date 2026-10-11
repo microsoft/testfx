@@ -276,8 +276,13 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
     {
         _page.Console += (_, message)
             => _diagnostics.Add($"browser {message.Type}", message.Text);
-        _page.PageError += (_, error)
-            => _diagnostics.Add("browser exception", error);
+        _page.PageError += (_, error) =>
+        {
+            _diagnostics.Add("browser exception", error);
+            _completion.TrySetException(
+                new BrowserLauncherException(
+                    "The browser page reported an unhandled exception before completing."));
+        };
         _page.RequestFailed += (_, request)
             => _diagnostics.Add(
                 "browser request",

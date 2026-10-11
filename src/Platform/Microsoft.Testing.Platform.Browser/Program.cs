@@ -27,13 +27,22 @@ internal static class Program
             };
             Console.CancelKeyPress += cancelHandler;
 
-            var host = HostProcess.Start(options, diagnostics);
+            HostProcess? host = null;
             try
             {
+                host = HostProcess.Start(options, diagnostics);
                 Uri hostUri = await host.WaitUntilReadyAsync(
                     options.StartupTimeout,
                     runCancellationTokenSource.Token).ConfigureAwait(false);
                 var browserUri = new Uri(hostUri, BrowserHostPath);
+                options = options with
+                {
+                    TestApplicationArguments =
+                    [
+                        .. BrowserHostArguments.Parse(hostUri),
+                        .. options.TestApplicationArguments,
+                    ],
+                };
                 ChromiumBrowser browser = await ChromiumBrowser.LaunchAsync(
                     options,
                     browserUri,
@@ -54,13 +63,18 @@ internal static class Program
             }
             finally
             {
-                await host.DisposeAsync().ConfigureAwait(false);
+                if (host is not null)
+                {
+                    await host.DisposeAsync().ConfigureAwait(false);
+                }
+
                 Console.CancelKeyPress -= cancelHandler;
             }
         }
         catch (Exception ex)
         {
-            await Console.Error.WriteLineAsync($"Microsoft.Testing.Platform.Browser: {ex.Message}").ConfigureAwait(false);
+            string error = diagnostics?.Redact(ex.ToString()) ?? ex.ToString();
+            await Console.Error.WriteLineAsync($"Microsoft.Testing.Platform.Browser: {error}").ConfigureAwait(false);
             if (diagnostics is not null)
             {
                 await Console.Error.WriteLineAsync(diagnostics.Format()).ConfigureAwait(false);

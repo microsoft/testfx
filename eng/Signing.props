@@ -5,4 +5,28 @@
     <FileSignInfo Include="Mono.Cecil.Pdb.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Mono.Cecil.Rocks.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
+  <ItemGroup Label="Unsigned browser runtime scripts">
+    <!-- Exact scripts in Microsoft.Testing.Platform.Browser's package-owned host and Playwright 1.63 driver. -->
+    <FileSignInfo Include="Microsoft.Testing.Platform.Browser.main.js" CertificateName="None" />
+    <FileSignInfo Include="bootstrap.js" CertificateName="None" />
+    <FileSignInfo Include="channelSessions.js" CertificateName="None" />
+    <FileSignInfo Include="cli.js" CertificateName="None" />
+    <FileSignInfo Include="cliDaemon.js" CertificateName="None" />
+    <FileSignInfo Include="coreBundle.js" CertificateName="None" />
+    <FileSignInfo Include="dashboardApp.js" CertificateName="None" />
+    <FileSignInfo Include="extension.js" CertificateName="None" />
+    <FileSignInfo Include="index.js" CertificateName="None" />
+    <FileSignInfo Include="loader.js" CertificateName="None" />
+    <FileSignInfo Include="mcp.js" CertificateName="None" />
+    <FileSignInfo Include="minimist.js" CertificateName="None" />
+    <FileSignInfo Include="oopBrowserDownload.js" CertificateName="None" />
+    <FileSignInfo Include="output.js" CertificateName="None" />
+    <FileSignInfo Include="package.js" CertificateName="None" />
+    <FileSignInfo Include="program.js" CertificateName="None" />
+    <FileSignInfo Include="registry.js" CertificateName="None" />
+    <FileSignInfo Include="serverRegistry.js" CertificateName="None" />
+    <FileSignInfo Include="session.js" CertificateName="None" />
+    <FileSignInfo Include="socketConnection.js" CertificateName="None" />
+    <FileSignInfo Include="utilsBundle.js" CertificateName="None" />
+  </ItemGroup>
 </Project>
