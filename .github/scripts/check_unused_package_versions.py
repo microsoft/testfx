@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when a central PackageVersion has no PackageReference in repository projects."""
+"""Fail when a central PackageVersion has no PackageReference Include in repository projects."""
 
 import os
 import sys

@@ -15,7 +15,7 @@ SPEC.loader.exec_module(CHECK)
 
 
 class CheckUnusedPackageVersionsTests(unittest.TestCase):
-    def test_matches_references_in_all_project_formats_and_global_references(self) -> None:
+    def test_matches_references_in_all_project_formats_and_global_references_case_insensitively(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
             (root / "Directory.Packages.props").write_text(
@@ -41,7 +41,7 @@ class CheckUnusedPackageVersionsTests(unittest.TestCase):
 
             self.assertEqual([], CHECK.unused_package_versions(root))
 
-    def test_reports_only_unused_entries_ignoring_comments_updates_and_build_outputs(self) -> None:
+    def test_reports_unused_entries_ignoring_comments_update_only_items_and_build_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
             (root / "Directory.Packages.props").write_text(
