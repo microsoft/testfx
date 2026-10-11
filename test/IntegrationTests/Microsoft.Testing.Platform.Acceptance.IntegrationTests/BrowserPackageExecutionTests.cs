@@ -75,6 +75,21 @@ public sealed class BrowserPackageTests
     [TestMethod]
     public async Task WaitsForCancellation()
         => await Task.Delay(Timeout.InfiniteTimeSpan, TestContext.CancellationToken);
+
+    [TestMethod]
+    public void ProducesLargeArtifact()
+    {
+        const int ArtifactLength = 1_048_713;
+        byte[] content = new byte[ArtifactLength];
+        for (int i = 0; i < content.Length; i++)
+        {
+            content[i] = (byte)(i % 251);
+        }
+
+        string artifactPath = Path.GetFullPath("browser-large-export.bin");
+        File.WriteAllBytes(artifactPath, content);
+        TestContext.AddResultFile(artifactPath);
+    }
 }
 """;
 
@@ -195,7 +210,8 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("SkippedInsideBrowser", listOutput);
         Assert.Contains("FailsInsideBrowser", listOutput);
         Assert.Contains("WaitsForCancellation", listOutput);
-        Assert.Contains("Discovered 4 tests", listOutput);
+        Assert.Contains("ProducesLargeArtifact", listOutput);
+        Assert.Contains("Discovered 5 tests", listOutput);
 
         DotnetMuxerResult skipped = await RunBrowserTestAsync(
             generator,
@@ -328,6 +344,55 @@ public sealed class BrowserPackageDesktopTests
             "Managed HTTP cancellation should finish before the launcher's 120-second completion timeout.");
         Assert.DoesNotContain("did not complete within 120", output);
         Assert.DoesNotContain("Missing test session end", output);
+    }
+
+    [TestMethod]
+    public async Task BrowserPackage_ArtifactQuotaFailureFailsRun()
+    {
+        string? browser = LocateBrowser();
+        if (browser is null)
+        {
+            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
+            return;
+        }
+
+        string browserPackageVersion = GetBrowserPackageVersion();
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "BrowserPackageArtifactQuotaProject",
+            SourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
+                .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
+        await RequireAlignedBrowserInputsAsync(generator);
+
+        DotnetMuxerResult build = await RunBrowserSdkAsync(
+            $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            workingDirectory: generator.TargetAssetPath,
+            failIfReturnValueIsNotZero: false);
+        Assert.AreEqual(0, build.ExitCode, build.ToString());
+
+        string resultsDirectory = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? Path.GetTempPath(),
+            $"browser-quota-{Guid.NewGuid():N}");
+        DotnetMuxerResult result = await RunBrowserTestAsync(
+            generator,
+            $"--no-build --results-directory \"{resultsDirectory}\" --filter FullyQualifiedName~ProducesLargeArtifact",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["DOTNET_CLI_TEST_ARTIFACT_MAX_FILE_BYTES"] = "1048576",
+            });
+
+        string output = NormalizeTerminalOutput(result.StandardOutput + result.StandardError);
+        Assert.AreNotEqual(0, result.ExitCode, result.ToString());
+        Assert.Contains("exceeding the peer's 1048576-byte per-file export limit", output);
+        Assert.IsEmpty(
+            Directory.Exists(resultsDirectory)
+                ? Directory.EnumerateFiles(
+                    resultsDirectory,
+                    "browser-large-export.bin",
+                    SearchOption.AllDirectories)
+                : []);
     }
 
     [TestMethod]

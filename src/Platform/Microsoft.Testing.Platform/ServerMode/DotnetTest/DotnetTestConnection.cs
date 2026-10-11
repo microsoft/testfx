@@ -25,7 +25,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
     private readonly ILogger _logger;
-    private readonly ConcurrentDictionary<string, Task<string?>> _exportedArtifactPaths = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, Task<string>> _exportedArtifactPaths = new(StringComparer.Ordinal);
 #if NET9_0_OR_GREATER
     private readonly Lock _artifactTransferLock = new();
 #else
@@ -605,42 +605,26 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         List<FileArtifactMessage> exportedArtifacts = [];
         foreach (FileArtifactMessage artifact in fileArtifactMessages.FileArtifacts)
         {
-            string? fullPath = await ExportArtifactPathAsync(
+            string fullPath = await ExportArtifactPathAsync(
                 transportClient,
                 fileArtifactMessages.ExecutionId,
                 fileArtifactMessages.InstanceId,
                 artifact.FullPath,
                 cancellationToken).ConfigureAwait(false);
-            if (fullPath is null)
-            {
-                continue;
-            }
 
             string[]? inputArtifactPaths = null;
             if (artifact.InputArtifactPaths is { Length: > 0 })
             {
                 inputArtifactPaths = new string[artifact.InputArtifactPaths.Length];
-                bool exportedAllInputs = true;
                 for (int i = 0; i < artifact.InputArtifactPaths.Length; i++)
                 {
-                    string? exportedInput = await ExportArtifactPathAsync(
+                    string exportedInput = await ExportArtifactPathAsync(
                         transportClient,
                         fileArtifactMessages.ExecutionId,
                         fileArtifactMessages.InstanceId,
                         artifact.InputArtifactPaths[i],
                         cancellationToken).ConfigureAwait(false);
-                    if (exportedInput is null)
-                    {
-                        exportedAllInputs = false;
-                        break;
-                    }
-
                     inputArtifactPaths[i] = exportedInput;
-                }
-
-                if (!exportedAllInputs)
-                {
-                    continue;
                 }
             }
 
@@ -656,14 +640,17 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             : fileArtifactMessages with { FileArtifacts = [.. exportedArtifacts] };
     }
 
-    private Task<string?> ExportArtifactPathAsync(
+    private Task<string> ExportArtifactPathAsync(
         IClient transportClient,
         string? executionId,
         string? instanceId,
         string? path,
         CancellationToken cancellationToken)
         => RoslynString.IsNullOrEmpty(path)
-            ? Task.FromResult<string?>(null)
+            ? FailArtifactTransferAsync(
+                transportClient,
+                "A test-host artifact cannot be exported because its path is empty.",
+                cancellationToken)
             : _exportedArtifactPaths.GetOrAdd(
                 path,
                 artifactPath => ExportArtifactPathCoreAsync(
@@ -673,7 +660,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     artifactPath,
                     cancellationToken));
 
-    private async Task<string?> ExportArtifactPathCoreAsync(
+    private async Task<string> ExportArtifactPathCoreAsync(
         IClient transportClient,
         string? executionId,
         string? instanceId,
@@ -685,21 +672,19 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             var file = new FileInfo(path);
             if (!file.Exists)
             {
-                await ReportArtifactTransferWarningAsync(
+                return await FailArtifactTransferAsync(
                     transportClient,
                     $"Test-host artifact '{path}' could not be exported because it does not exist.",
                     cancellationToken).ConfigureAwait(false);
-                return null;
             }
 
             long fileLength = file.Length;
             if (fileLength > _fileArtifactTransferMaxFileBytes)
             {
-                await ReportArtifactTransferWarningAsync(
+                return await FailArtifactTransferAsync(
                     transportClient,
                     $"Test-host artifact '{path}' is {fileLength} bytes, exceeding the peer's {_fileArtifactTransferMaxFileBytes}-byte per-file export limit.",
                     cancellationToken).ConfigureAwait(false);
-                return null;
             }
 
             bool reserved = false;
@@ -718,13 +703,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
             if (!reserved)
             {
-                await ReportArtifactTransferWarningAsync(
+                return await FailArtifactTransferAsync(
                     transportClient,
                     fileCountLimitReached
                         ? $"Test-host artifact '{path}' was not exported because the peer's {_fileArtifactTransferMaxFileCount}-file per-module export limit was reached."
                         : $"Test-host artifact '{path}' was not exported because the peer's {_fileArtifactTransferMaxModuleBytes}-byte per-module export limit was reached.",
                     cancellationToken).ConfigureAwait(false);
-                return null;
             }
 
             bool committed = false;
@@ -769,21 +753,19 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                             cancellationToken).ConfigureAwait(false);
                     if (!RoslynString.IsNullOrEmpty(response.Error))
                     {
-                        await ReportArtifactTransferWarningAsync(
+                        return await FailArtifactTransferAsync(
                             transportClient,
                             $"Test-host artifact '{path}' was rejected by the dotnet test peer: {response.Error}",
                             cancellationToken).ConfigureAwait(false);
-                        return null;
                     }
 
                     long expectedNextOffset = offset + bytesRead;
                     if (response.NextOffset != expectedNextOffset)
                     {
-                        await ReportArtifactTransferWarningAsync(
+                        return await FailArtifactTransferAsync(
                             transportClient,
                             $"Test-host artifact '{path}' export stopped because the peer acknowledged offset {response.NextOffset} instead of {expectedNextOffset}.",
                             cancellationToken).ConfigureAwait(false);
-                        return null;
                     }
 
                     offset = expectedNextOffset;
@@ -791,11 +773,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     {
                         if (RoslynString.IsNullOrEmpty(response.FullPath))
                         {
-                            await ReportArtifactTransferWarningAsync(
+                            return await FailArtifactTransferAsync(
                                 transportClient,
                                 $"Test-host artifact '{path}' export completed without a committed host path.",
                                 cancellationToken).ConfigureAwait(false);
-                            return null;
                         }
 
                         committed = true;
@@ -815,20 +796,59 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     }
                 }
             }
+
+            return await FailArtifactTransferAsync(
+                transportClient,
+                $"Test-host artifact '{path}' export ended without a final acknowledgment.",
+                cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
+        catch (ArtifactTransferException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
-            await ReportArtifactTransferWarningAsync(
+            throw await CreateArtifactTransferExceptionAsync(
                 transportClient,
                 $"Test-host artifact '{path}' could not be exported: {ex.Message}",
+                cancellationToken,
+                ex).ConfigureAwait(false);
+        }
+    }
+
+    private async Task<string> FailArtifactTransferAsync(
+        IClient transportClient,
+        string message,
+        CancellationToken cancellationToken)
+        => throw await CreateArtifactTransferExceptionAsync(
+            transportClient,
+            message,
+            cancellationToken,
+            innerException: null).ConfigureAwait(false);
+
+    private async Task<ArtifactTransferException> CreateArtifactTransferExceptionAsync(
+        IClient transportClient,
+        string message,
+        CancellationToken cancellationToken,
+        Exception? innerException)
+    {
+        await TryLogAsync(LogLevel.Error, message).ConfigureAwait(false);
+        if (IsDisplayMessageForwardingSupported)
+        {
+            await transportClient.RequestReplyAsync<DisplayMessage, VoidResponse>(
+                new DisplayMessage(
+                    _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
+                    InstanceId,
+                    DisplayMessageLevels.Error,
+                    message),
                 cancellationToken).ConfigureAwait(false);
         }
 
-        return null;
+        return new ArtifactTransferException(message, innerException);
     }
 
     private async Task ReportArtifactTransferWarningAsync(
@@ -863,6 +883,14 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         return response.Properties?.TryGetValue(propertyName, out string? text) is true
             && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value)
             && value > 0;
+    }
+
+    private sealed class ArtifactTransferException : Exception
+    {
+        public ArtifactTransferException(string message, Exception? innerException)
+            : base(message, innerException)
+        {
+        }
     }
 
     private async Task TryLogAsync(LogLevel logLevel, string message)
