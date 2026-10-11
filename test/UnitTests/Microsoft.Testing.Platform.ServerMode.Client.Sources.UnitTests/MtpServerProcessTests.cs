@@ -19,9 +19,16 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// executable, and a zip round trip does not carry POSIX permission bits, so the real extensionless apphost
 /// can arrive without its execute bit. Launching either one aborts the run with <c>Permission denied</c>, so
 /// the launcher has to reject both and fall back to <c>dotnet &lt;dll&gt;</c>.
+/// <para>
+/// Only <see cref="FailedLaunchDisposesProcessHandles"/> carries a method-level
+/// <see cref="DoNotParallelizeAttribute"/>: it measures this ambient, process-wide
+/// <see cref="Process.HandleCount"/> delta on the current test-host process, a resource no other test in this
+/// class or project reads or writes, so no shared <see cref="ResourceLockAttribute"/> key can coordinate it with
+/// another declared observer. Isolating only that method keeps the remaining tests in the parallel set instead of
+/// deferring the whole class to the serial tail.
+/// </para>
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class MtpServerProcessTests
 {
     internal const string StandardOutputFloodEnvironmentVariable = "TESTFX_FLOOD_SERVER_STDOUT";
@@ -811,6 +818,11 @@ public sealed class MtpServerProcessTests
 #if NET
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses repeated Windows process launches and handle counts.")]
+    // Measures the ambient, process-wide Process.HandleCount delta on the current test-host process. No other
+    // test in this project opens/reads that same OS handle count, so isolation (not a shared ResourceLock key)
+    // is the correct declaration: concurrent handle-opening activity from any other test could otherwise widen
+    // the observed delta and make this assertion flaky.
+    [DoNotParallelize]
     public async Task FailedLaunchDisposesProcessHandles()
     {
         using var temp = TempDirectory.Create();
