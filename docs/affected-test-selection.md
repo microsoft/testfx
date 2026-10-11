@@ -7,45 +7,38 @@ builds on the composable filter-provider support from
 
 The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `test-tools` feed together with the
 provider-specific `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps` package. Their shared version is
-pinned separately from `Microsoft.Testing.Extensions.CodeCoverage`, allowing the shipping CodeCoverage dependency to
-remain on a stable release while affected-test development continues on preview builds. Test applications that
+pinned separately from `Microsoft.Testing.Extensions.CodeCoverage`, allowing affected-test package updates without
+requiring the shipping CodeCoverage version to change. Test applications that
 register the affected-test provider override their direct CodeCoverage reference to that matching preview version;
-the packages shipped by this repository retain the stable central version. The provider publishes versioned
+the packages shipped by this repository retain the central CodeCoverage version. The provider publishes versioned
 per-module mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder
 hook is registered by the repository's hand-authored MTP entry points.
 
-Package `18.12.0-preview.26501.1` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
+Package `18.13.0-preview.26508.3` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
 both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
 provider.
 
-Affected-test execution remains temporarily disabled in the pipeline. SDK `12.0.100-alpha.1.26480.103` predates the
-VMR flow containing [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection
-applications can exit `0` while the parent `dotnet test` command reports handshake failures and exits `1`. That
-output is indistinguishable from controller-only or partial handshake failures that must remain failures, so the
-pipeline cannot safely normalize it.
+Affected-test execution is enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
+`907535df2f7eb8e1845571867684244ad04b031b`. It includes both
+[dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450) and
+[dotnet/sdk#56538](https://github.com/dotnet/sdk/pull/56538): successful collection can complete without an ordinary
+reporting handshake, or after the matching `RefreshMappingsOrchestrator` handshake. An empty affected-test selection
+can similarly complete after its `RunAffectedTestsOrchestrator` handshake without launching a test host.
 
-Public SDK `12.0.100-alpha.1.26506.125` contains that fix, but composed-product validation still rejects successful
-collection with the current platform. The platform negotiates a `TestHostOrchestrator` handshake identifying
-`RefreshMappingsOrchestrator`; collection intentionally does not send an ordinary `TestHost` handshake. The SDK
-still classifies that legitimate orchestrator-only completion as a partial handshake failure. An affected-test run
-that selects no tests similarly finishes after its `RunAffectedTestsOrchestrator` handshake and is incorrectly
-reported as failed. Both SDK builds remain denied for rollout.
-
-Activation requires a publicly consumable SDK that accepts successful completion of the matching affected-test
-orchestrator in the requested collection or selection mode, while retaining failures for nonzero exits,
-controller-only or mixed partial handshakes, and protocol rejection. Preserve protocol negotiation and the
-orchestrator's server-control cancellation channel; do not suppress handshakes or normalize failure output. Keep
-the packages and storage configuration dormant until the corrected shipping SDK passes collection, selection,
-zero-result, storage fallback, cancellation, and multi-module validation with the built TestFx packages.
+The SDK accepts those exit-`0` completions only in the corresponding collection or selection mode. Nonzero exits,
+controller-only or mixed partial handshakes, and protocol rejection remain failures. Protocol negotiation and the
+orchestrator's server-control cancellation channel are preserved; the pipeline does not suppress handshakes or
+normalize failure output. The rollout validator requires this SDK or newer, preventing rollback to intermediate
+builds that contain only the no-handshake fix.
 
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- Once re-enabled, the trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
+- The trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
   retry, or coverage arguments, because collection owns its instrumentation and launches discovery
   children with `--list-tests`. A normal full test run follows to retain test reporting and coverage.
-- Once re-enabled, the Windows Release PR test runs `--affected-tests`.
+- The Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework outputs.
@@ -77,5 +70,5 @@ manual builds always keep full validation.
 Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
 after collection and full fallback runs still publish complete coverage.
 
-The one-switch rollback is currently active: `enableAffectedTests` is `false`, which keeps the package and dormant
-storage configuration in place while restoring the ordinary full-test command.
+The one-switch rollback remains available: setting `enableAffectedTests` to `false` keeps the package and storage
+configuration in place while restoring the ordinary full-test command.
