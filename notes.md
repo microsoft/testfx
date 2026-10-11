@@ -91,6 +91,16 @@
 
 7. **Assert/CollectionAssert/StringAssert audit (2026-08-17)**: Did a broad sweep of `src/TestFramework/TestFramework/Assertions/*.cs` looking for zero-coverage newer methods (AreAllDistinct, AreAllNotNull, AreAllOfType, AreAllOfType span/memory, StringAssert.Regex, CollectionAssert.Subset/Type/Membership, Assert.That expression evaluation internals). All are already thoroughly covered (dozens of edge-case tests each) by prior runs. No fresh zero-coverage gap found this pass — future runs should look at MTP/Retry/Analyzer areas rather than core Assert methods, which appear saturated.
 
+## Run 2026-10-11 (run 38182339774) — DotnetTestConnection.IsVersionCompatible tests
+
+- Task reconciliation: PR #11878 (retry-attempt supersession) and #11876 (console test execution filter selection) both green CI but blocked mergeable_state (awaiting maintainer review) — not actionable. No open testing-labeled issues.
+- Task 2/3: continued core-internals sweep into ServerMode/DotnetTest/. `DotnetTestConnection` (474 LOC, internal, `InternalsVisibleTo` to `Microsoft.Testing.Platform.UnitTests`) is mostly async orchestration (handshake, named-pipe/http transport, server control channel) but has one pure static method: `IsVersionCompatible(protocolVersion, supportedProtocolVersions)` — semicolon-split exact-entry containment, zero direct tests.
+- Added `DotnetTestConnectionTests.cs` (6 DataRow tests): exact match (first/mid/last position), absent version, partial-string non-match, substring-of-another-entry non-match (`"1.2.0"` vs `"1.20.0"` entry).
+- Verified red/green: replaced `Split(';').Contains(...)` with raw `.Contains(...)` — 1/2872 failed exactly at `PartialVersionIsNotAMatch` (Actual: true); reverted — 0/2872 net8.0, 0/2873 net9.0, 22 pre-existing skips.
+- Build succeeded (0 warnings) net8.0+net9.0. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for DotnetTestConnection.IsVersionCompatible" on branch `test-assist/dotnet-test-connection-version-compatibility`.
+- Remaining candidates for future runs: rest of `DotnetTestConnection` (handshake property building via mocked `IClient`/`CommandLineHandler`, server control channel listen/cancel loop) — moderate effort, needs IClient/NamedPipeClient mocking; or pivot to Task 6 (test infrastructure) since pure-function low-hanging fruit is thinning.
+
 ## Run 2026-10-10 (run 38093201907) — ConsoleTestExecutionFilterFactory tests
 
 - Task reconciliation: no open `[test-improver]`-prefixed PRs found (search returned 0). PR #11851 (FileLoggerProvider skip-move guard) confirmed merged 2026-10-09. RetryAttemptPropertyExtensions PR from 2026-10-09 run also merged. No open issues labeled `testing` found — Task 5 had nothing to action.
@@ -125,11 +135,11 @@
 
 ## Last Run
 
-2026-10-09 UTC (run 38001888846)
+2026-10-11 UTC (run 38182339774)
 
 ## Last Run (previous)
 
-2026-10-08 UTC (run 37856580472)
+2026-10-10 UTC (run 38093201907)
 
 ## Completed Work (recent, summarized)
 
