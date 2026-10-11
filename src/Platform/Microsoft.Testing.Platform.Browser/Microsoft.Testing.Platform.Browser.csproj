@@ -4,10 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <UseAppHost>false</UseAppHost>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <RollForward>Major</RollForward>
     <PlaywrightPlatform>linux-x64;linux-arm64;osx-x64;osx-arm64;win</PlaywrightPlatform>
+    <TestingPlatformBrowserBundlePlaywrightNode Condition=" '$(TestingPlatformBrowserBundlePlaywrightNode)' == '' ">true</TestingPlatformBrowserBundlePlaywrightNode>
     <!-- Playwright's private driver payload contains nested PowerShell helper scripts. They are
          runtime data for the launcher, not NuGet install scripts. -->
     <NoWarn>$(NoWarn);NU5111</NoWarn>
@@ -48,6 +50,8 @@ $(CommonProductDescription)]]></PackageDescription>
                                      Exclude="$(TargetDir).playwright\package\lib\vite\**\*;$(TargetDir).playwright\package\types\**\*">
         <PackageSubdirectory>$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/').TrimStart('/'))</PackageSubdirectory>
       </_BrowserPlaywrightPackageFile>
+      <_BrowserPlaywrightPackageFile Remove="$(TargetDir).playwright\node\win32_x64\**\*;$(TargetDir).playwright\node\linux-x64\**\*;$(TargetDir).playwright\node\linux-arm64\**\*;$(TargetDir).playwright\node\darwin-x64\**\*;$(TargetDir).playwright\node\darwin-arm64\**\*"
+                                     Condition=" '$(TestingPlatformBrowserBundlePlaywrightNode)' != 'true' " />
       <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).dll"
                               PackagePath="tools\net8.0\any" />
       <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).deps.json"

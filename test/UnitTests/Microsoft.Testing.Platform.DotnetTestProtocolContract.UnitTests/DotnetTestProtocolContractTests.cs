@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC;
 namespace Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests;
 
 /// <summary>
-/// Verifies the shared 'dotnet test' wire contract (serializer/field ids in <c>ObjectFieldIds</c> + the
+/// Verifies the shared framed 'dotnet test' wire contract (serializer/field ids in <c>ObjectFieldIds</c> + the
 /// handshake/session/state values in <c>Constants</c>), compiled into this independent assembly via
 /// <c>DotnetTestProtocolContract.props</c> alongside the rest of the shared serializer stack.
 /// </summary>
@@ -43,6 +43,8 @@ public sealed class DotnetTestProtocolContractTests
             [DisplayMessageFieldsId.MessagesSerializerId] = nameof(DisplayMessageFieldsId),
             [WaitForServerControlRequestFieldsId.MessagesSerializerId] = nameof(WaitForServerControlRequestFieldsId),
             [ServerControlMessageFieldsId.MessagesSerializerId] = nameof(ServerControlMessageFieldsId),
+            [FileArtifactTransferRequestFieldsId.MessagesSerializerId] = nameof(FileArtifactTransferRequestFieldsId),
+            [FileArtifactTransferResponseFieldsId.MessagesSerializerId] = nameof(FileArtifactTransferResponseFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -61,6 +63,8 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(DisplayMessageFieldsId), serializerIds[12]);
         Assert.AreEqual(nameof(WaitForServerControlRequestFieldsId), serializerIds[13]);
         Assert.AreEqual(nameof(ServerControlMessageFieldsId), serializerIds[14]);
+        Assert.AreEqual(nameof(FileArtifactTransferRequestFieldsId), serializerIds[15]);
+        Assert.AreEqual(nameof(FileArtifactTransferResponseFieldsId), serializerIds[16]);
     }
 
     [TestMethod]
@@ -88,6 +92,12 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy),
             [HandshakeMessagePropertyNames.RequiredPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds),
             [HandshakeMessagePropertyNames.RequiredPostProcessingSupported] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported),
+            [HandshakeMessagePropertyNames.ServerControlTransport] = nameof(HandshakeMessagePropertyNames.ServerControlTransport),
+            [HandshakeMessagePropertyNames.FileArtifactTransfer] = nameof(HandshakeMessagePropertyNames.FileArtifactTransfer),
+            [HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes] = nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes),
+            [HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes] = nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes),
+            [HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes] = nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes),
+            [HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount] = nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -110,6 +120,12 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlTransport), properties[20]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransfer), properties[21]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes), properties[22]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes), properties[23]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes), properties[24]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount), properties[25]);
     }
 
     [TestMethod]
@@ -167,6 +183,6 @@ public sealed class DotnetTestProtocolContractTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
     }
 }

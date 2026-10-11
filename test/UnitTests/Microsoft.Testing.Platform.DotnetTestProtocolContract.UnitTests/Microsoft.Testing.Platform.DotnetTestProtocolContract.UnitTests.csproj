@@ -23,7 +23,7 @@
   <!--
     This project intentionally does NOT reference Microsoft.Testing.Platform's protocol types directly. It compiles
     the whole shared 'dotnet test' named-pipe protocol source (the ObjectFieldIds + Constants wire contract AND the
-    message models + serializers for ids 0-12, the serializer registry and base infrastructure) into its own assembly
+    message models + serializers for ids 0-16, the serializer registry and base infrastructure) into its own assembly
     via the shared .props, proving the protocol can live in testfx and be consumed by an independent assembly (e.g.
     dotnet/sdk) with a single source of truth.
 

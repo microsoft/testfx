@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TestingPlatformBrowserEnabled Condition=" '$(TestingPlatformBrowserEnabled)' == '' AND $(RuntimeIdentifier.StartsWith('browser-')) ">true</TestingPlatformBrowserEnabled>
     <_TestingPlatformBrowserAssetsDirectory>$(MSBuildThisFileDirectory)assets\</_TestingPlatformBrowserAssetsDirectory>
+    <ComputeTestingPlatformRunArgumentsDependsOn>$(ComputeTestingPlatformRunArgumentsDependsOn);_ConfigureTestingPlatformBrowserRun</ComputeTestingPlatformRunArgumentsDependsOn>
   </PropertyGroup>
 
   <Target Name="_TestingPlatformBrowserDefineHostStaticWebAssets"
@@ -47,21 +48,22 @@
   </Target>
 
   <Target Name="_ConfigureTestingPlatformBrowserRun"
-          AfterTargets="ComputeRunArguments"
           Condition=" '$(TestingPlatformBrowserEnabled)' == 'true'
-                      AND $(RuntimeIdentifier.StartsWith('browser-'))
-                      AND '$(DotnetTestInvocation)' == 'true' ">
+                      AND $(RuntimeIdentifier.StartsWith('browser-')) ">
+    <Error Condition=" '$(TestingPlatformRunArgumentsVersion)' != '1' "
+           Text="Microsoft.Testing.Platform.Browser requires a .NET SDK that supports TestingPlatformRunArgumentsVersion=1." />
+
     <PropertyGroup>
       <_TestingPlatformBrowserLauncher>$(MSBuildThisFileDirectory)..\tools\net8.0\any\Microsoft.Testing.Platform.Browser.dll</_TestingPlatformBrowserLauncher>
-      <_TestingPlatformBrowserHostCommand>$(RunCommand)</_TestingPlatformBrowserHostCommand>
-      <_TestingPlatformBrowserHostArguments>$(RunArguments)</_TestingPlatformBrowserHostArguments>
-      <_TestingPlatformBrowserHostWorkingDirectory>$(RunWorkingDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
+      <_TestingPlatformBrowserHostCommand>$(TestingPlatformRunCommand)</_TestingPlatformBrowserHostCommand>
+      <_TestingPlatformBrowserHostArguments>$(TestingPlatformRunArguments)</_TestingPlatformBrowserHostArguments>
+      <_TestingPlatformBrowserHostWorkingDirectory>$(TestingPlatformRunWorkingDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
       <_TestingPlatformBrowserHostWorkingDirectory Condition=" '$(_TestingPlatformBrowserHostWorkingDirectory)' == '' ">$(MSBuildProjectDirectory)</_TestingPlatformBrowserHostWorkingDirectory>
 
-      <RunCommand Condition=" '$(DOTNET_HOST_PATH)' != '' ">$(DOTNET_HOST_PATH)</RunCommand>
-      <RunCommand Condition=" '$(DOTNET_HOST_PATH)' == '' ">dotnet</RunCommand>
-      <RunArguments>exec &quot;$(_TestingPlatformBrowserLauncher)&quot; --host-command-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostCommand)`))&quot; --host-arguments-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostArguments)`))&quot; --host-working-directory-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostWorkingDirectory)`))&quot; --browser-executable-uri &quot;$([System.Uri]::EscapeDataString(`$(TestingPlatformBrowserExecutable)`))&quot; --startup-timeout-seconds $(TestingPlatformBrowserStartupTimeoutSeconds) --completion-timeout-seconds $(TestingPlatformBrowserCompletionTimeoutSeconds) --</RunArguments>
-      <RunWorkingDirectory>$(MSBuildProjectDirectory)</RunWorkingDirectory>
+      <TestingPlatformRunCommand Condition=" '$(DOTNET_HOST_PATH)' != '' ">$(DOTNET_HOST_PATH)</TestingPlatformRunCommand>
+      <TestingPlatformRunCommand Condition=" '$(DOTNET_HOST_PATH)' == '' ">dotnet</TestingPlatformRunCommand>
+      <TestingPlatformRunArguments>exec &quot;$(_TestingPlatformBrowserLauncher)&quot; --host-command-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostCommand)`))&quot; --host-arguments-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostArguments)`))&quot; --host-working-directory-uri &quot;$([System.Uri]::EscapeDataString(`$(_TestingPlatformBrowserHostWorkingDirectory)`))&quot; --browser-executable-uri &quot;$([System.Uri]::EscapeDataString(`$(TestingPlatformBrowserExecutable)`))&quot; --node-executable-uri &quot;$([System.Uri]::EscapeDataString(`$(TestingPlatformBrowserNodeExecutable)`))&quot; --startup-timeout-seconds $(TestingPlatformBrowserStartupTimeoutSeconds) --completion-timeout-seconds $(TestingPlatformBrowserCompletionTimeoutSeconds) --</TestingPlatformRunArguments>
+      <TestingPlatformRunWorkingDirectory>$(MSBuildProjectDirectory)</TestingPlatformRunWorkingDirectory>
     </PropertyGroup>
 
     <Error Condition=" !Exists('$(_TestingPlatformBrowserLauncher)') "

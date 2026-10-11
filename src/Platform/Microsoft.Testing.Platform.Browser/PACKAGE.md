@@ -44,8 +44,11 @@ results, or relay the MTP HTTP protocol.
 
 The package:
 
-- wraps the browser framework's existing `ComputeRunArguments` result only when
-  the caller sets the proof-of-concept marker `DotnetTestInvocation=true`;
+- appends its launcher target to the SDK-owned
+  `ComputeTestingPlatformRunArgumentsDependsOn` extension point and writes
+  dedicated `TestingPlatformRunCommand`,
+  `TestingPlatformRunArguments`, and `TestingPlatformRunWorkingDirectory`
+  values without modifying the canonical `dotnet run` properties;
 - requires an explicit installed Chromium-family browser through
   `TestingPlatformBrowserExecutable`;
 - launches that browser through Playwright's private transport in an isolated
@@ -56,34 +59,49 @@ The package:
   top-level page at the exact host origin;
 - keeps the SDK HTTP bearer token out of URLs and redacts it from bounded host,
   browser, and launcher diagnostics;
-- owns bounded cleanup of the browser context, browser, and host process tree on
-  completion, failure, timeout, or cancellation.
+- launches Playwright in a package-private worker behind a startup barrier and
+  owns that worker plus its host, Node driver, and Chromium descendants through
+  a Windows kill-on-close job or a POSIX process group;
+- owns bounded cleanup on completion, failure, timeout, cancellation, or parent
+  process loss.
 
 `TestingPlatformBrowserStartupTimeoutSeconds` defaults to 60 seconds and
 `TestingPlatformBrowserCompletionTimeoutSeconds` defaults to 600 seconds. The
 reserved `/_mtp/` path avoids colliding with a consumer-owned root page; no
 public framework-page integration protocol is provided.
 
-Ordinary desktop targets and unmarked `ComputeRunArguments` calls remain
-unchanged.
+The package bundles Playwright's supported Node.js driver runtimes by default.
+Source-build or distribution builds can pack with
+`TestingPlatformBrowserBundlePlaywrightNode=false` and consumers can point the
+launcher at an approved host Node.js executable through
+`TestingPlatformBrowserNodeExecutable`. This is a packaging seam, not a claim
+that source-build or offline distribution validation is complete.
+
+Ordinary desktop targets and canonical `ComputeRunArguments` calls remain
+unchanged. The package requires an SDK that advertises
+`TestingPlatformRunArgumentsVersion=1`; there is no legacy ordering or caller
+marker fallback.
 
 This minimum proof of concept supports only the canonical
-`Microsoft.NET.Sdk.WebAssembly` and WasmAppHost combination. The package keeps a
-simple `AfterTargets="ComputeRunArguments"` hook; a project target that also
-runs after `ComputeRunArguments` can subsequently replace the browser wrapper
-and is unsupported by this experiment. A product preview must move launcher
-selection into the .NET SDK rather than adding more package-level ordering
-machinery.
+`Microsoft.NET.Sdk.WebAssembly` and WasmAppHost combination. The .NET SDK owns
+launcher selection and invokes the optional browser extension target after the
+framework's canonical `ComputeRunArguments` target has completed.
 
 ## Current limitations
 
-- Browser virtual-file-system artifacts are not exported. TRX, coverage,
-  diagnostics, and other file reports may remain only in the browser VFS.
+- Browser virtual-file-system artifacts are exported only when the SDK
+  negotiates `FileArtifactTransfer=chunked-v1`. The SDK owns destination paths
+  and transfer limits; an older peer receives a clear warning and browser-local
+  paths are not reported as host artifacts.
+- Browser and WASI hosts deliberately do not advertise artifact postprocessors:
+  an SDK host-filesystem manifest cannot be consumed inside their virtual
+  filesystem. Exported original artifacts are preserved, while a future
+  host-side postprocessing contract remains productization work.
 - User-authored `@response-file` arguments are not supported by this experiment.
   Only the final private SDK HTTP bootstrap response file is expanded.
-- The SDK authenticated HTTP bootstrap and invocation marker are experimental
-  cross-repository contracts. The current proof-of-concept caller sets
-  `DotnetTestInvocation`; the shipping SDK does not yet own this selection.
+- The SDK authenticated HTTP bootstrap, dedicated run-argument target, HTTP
+  cancellation capability, and artifact-transfer capability are experimental
+  cross-repository contracts.
 - This experiment assumes a trusted test project and package-owned host page.
   Top-frame and exact-origin binding checks prevent accidental cross-frame or
   cross-origin use; they do not authenticate another script already executing
@@ -91,11 +109,12 @@ machinery.
   preflight) rather than accepting launcher preregistration.
 - The package uses the framework-provided WasmAppHost and depends on its exact
   HTTP readiness output; shared external-host readiness is unresolved.
-- Managed MTP does not yet receive graceful cancellation before the launcher
-  starts bounded process cleanup.
-- A permanently wedged Playwright driver can still leave its private process
-  orphaned after the bounded call-site cleanup expires. A stable implementation
-  needs explicit ownership of the transport process.
+- Managed MTP receives SDK cancellation through capability-gated authenticated
+  HTTP long polls and uses its existing graceful-stop capability before the
+  SDK's grace-period force termination.
+- The supervisor owns the worker's process tree, but no user-mode implementation
+  can guarantee cleanup if external tooling simultaneously sends an
+  uncatchable kill to every supervisor and worker process.
 - The experimental package currently bundles Playwright's cross-platform Node
   driver payload. Package size, source-build, signing, platform validation, and
   servicing must be resolved before any preview or stable productization.

@@ -10,6 +10,7 @@ internal sealed record BrowserLauncherOptions(
     string HostArguments,
     string HostWorkingDirectory,
     string BrowserExecutable,
+    string? NodeExecutable,
     TimeSpan StartupTimeout,
     TimeSpan CompletionTimeout,
     IReadOnlyList<string> TestApplicationArguments,
@@ -49,6 +50,16 @@ internal sealed record BrowserLauncherOptions(
                 $"The configured browser executable does not exist: '{browserExecutable}'.");
         }
 
+        string nodeExecutableValue = ReadEncodedOption(options, "--node-executable-uri", required: false);
+        string? nodeExecutable = string.IsNullOrWhiteSpace(nodeExecutableValue)
+            ? null
+            : Path.GetFullPath(nodeExecutableValue);
+        if (nodeExecutable is not null && !File.Exists(nodeExecutable))
+        {
+            throw new BrowserLauncherException(
+                $"The configured Node.js executable does not exist: '{nodeExecutable}'.");
+        }
+
         TimeSpan startupTimeout = ParseTimeout(options, "--startup-timeout-seconds");
         TimeSpan completionTimeout = ParseTimeout(options, "--completion-timeout-seconds");
         if (options.Count != 0)
@@ -65,6 +76,7 @@ internal sealed record BrowserLauncherOptions(
             hostArguments,
             Path.GetFullPath(hostWorkingDirectory),
             browserExecutable,
+            nodeExecutable,
             startupTimeout,
             completionTimeout,
             expandedArguments,

@@ -97,7 +97,9 @@ internal abstract partial class CommonHost(ServiceProvider serviceProvider) : IH
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
                 IReadOnlyDictionary<byte, string>? additionalHandshakeProperties =
-                    SupportsArtifactPostProcessing(hostType)
+                    !OperatingSystem.IsBrowser()
+                    && !OperatingSystem.IsWasi()
+                    && SupportsArtifactPostProcessing(hostType)
                         ? ArtifactPostProcessingHandshakeProperties.Create(ServiceProvider.GetServicesInternal<IArtifactPostProcessor>())
                         : null;
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType, additionalHandshakeProperties).ConfigureAwait(false);

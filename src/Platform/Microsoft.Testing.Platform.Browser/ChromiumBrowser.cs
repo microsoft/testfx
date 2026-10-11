@@ -73,7 +73,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         {
             // Playwright's DEBUG channel logs can contain binding payloads with the SDK bearer token.
             Environment.SetEnvironmentVariable("DEBUG", null);
-            PlaywrightNodeExecutable.EnsureExecutable();
+            PlaywrightNodeExecutable.Configure(options.NodeExecutable);
             playwrightCreationTask = Microsoft.Playwright.Playwright.CreateAsync();
             playwright = await playwrightCreationTask
                 .WaitAsync(startupCancellationToken).ConfigureAwait(false);

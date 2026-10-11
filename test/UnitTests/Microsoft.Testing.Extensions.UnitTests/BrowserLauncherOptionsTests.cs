@@ -25,6 +25,7 @@ public sealed class BrowserLauncherOptionsTests
             --filter FullyQualifiedName~Browser
             """);
         string browserExecutable = CreateEmptyFile();
+        string nodeExecutable = CreateEmptyFile();
 
         try
         {
@@ -34,6 +35,7 @@ public sealed class BrowserLauncherOptionsTests
                 "--host-arguments-uri", Encode("""run --property "value with spaces" """),
                 "--host-working-directory-uri", Encode(Environment.CurrentDirectory),
                 "--browser-executable-uri", Encode(browserExecutable),
+                "--node-executable-uri", Encode(nodeExecutable),
                 "--startup-timeout-seconds", "30",
                 "--completion-timeout-seconds", "90",
                 "--",
@@ -44,6 +46,7 @@ public sealed class BrowserLauncherOptionsTests
             Assert.AreEqual("""run --property "value with spaces" """, options.HostArguments);
             Assert.AreEqual(Path.GetFullPath(Environment.CurrentDirectory), options.HostWorkingDirectory);
             Assert.AreEqual(Path.GetFullPath(browserExecutable), options.BrowserExecutable);
+            Assert.AreEqual(Path.GetFullPath(nodeExecutable), options.NodeExecutable);
             Assert.AreEqual(TimeSpan.FromSeconds(30), options.StartupTimeout);
             Assert.AreEqual(TimeSpan.FromSeconds(90), options.CompletionTimeout);
             Assert.Contains("--filter", options.TestApplicationArguments);
@@ -54,6 +57,7 @@ public sealed class BrowserLauncherOptionsTests
         {
             File.Delete(responseFile);
             File.Delete(browserExecutable);
+            File.Delete(nodeExecutable);
         }
     }
 

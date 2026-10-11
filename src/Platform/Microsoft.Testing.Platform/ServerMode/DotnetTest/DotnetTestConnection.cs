@@ -16,20 +16,39 @@ namespace Microsoft.Testing.Platform;
 
 internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 {
+    private const int MaximumLocalArtifactTransferChunkBytes = 1024 * 1024;
+    private const int MaximumLocalArtifactTransferFileCount = 10_000;
+    private static readonly TimeSpan ServerControlShutdownTimeout = TimeSpan.FromSeconds(5);
+
     private readonly CommandLineHandler _commandLineHandler;
     private readonly IEnvironment _environment;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
     private readonly ILogger _logger;
+    private readonly ConcurrentDictionary<string, Task<string?>> _exportedArtifactPaths = new(StringComparer.Ordinal);
+#if NET9_0_OR_GREATER
+    private readonly Lock _artifactTransferLock = new();
+#else
+    private readonly object _artifactTransferLock = new();
+#endif
 
     private IClient? _transportClient;
     private DotnetTestTransportKind _transportKind;
 
     private NamedPipeClient? _serverControlPipeClient;
+    private DotnetTestHttpClient? _serverControlHttpClient;
     private Task? _serverControlListenerTask;
     private CancellationTokenSource? _serverControlListenerCts;
     private string? _serverControlPipeName;
+    private string? _serverControlTransport;
     private int _cancelRequested;
+    private int _fileArtifactTransferMaxChunkBytes;
+    private long _fileArtifactTransferMaxFileBytes;
+    private long _fileArtifactTransferMaxModuleBytes;
+    private long _reservedArtifactTransferBytes;
+    private int _fileArtifactTransferMaxFileCount;
+    private int _reservedArtifactTransferFileCount;
+    private int _artifactTransferUnsupportedWarningEmitted;
 
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
@@ -147,6 +166,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     // property (a capability), not on the negotiated version string, so an older SDK simply never enables it.
     public bool IsServerControlChannelSupported { get; private set; }
 
+    private bool IsFileArtifactTransferSupported { get; set; }
+
     public bool IsRequiredArtifactPostProcessingSupported { get; private set; }
 
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
@@ -201,6 +222,35 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             _serverControlPipeName = serverControlPipeName;
             IsServerControlChannelSupported = true;
         }
+        else if (_transportKind == DotnetTestTransportKind.Http
+            && response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlTransport, out string? serverControlTransport) is true
+            && serverControlTransport == ServerControlTransports.Http)
+        {
+            _serverControlTransport = serverControlTransport;
+            IsServerControlChannelSupported = true;
+        }
+
+        int advertisedMaxChunkBytes = 0;
+        IsFileArtifactTransferSupported =
+            _transportKind == DotnetTestTransportKind.Http
+            && response.Properties?.TryGetValue(HandshakeMessagePropertyNames.FileArtifactTransfer, out string? artifactTransfer) is true
+            && artifactTransfer == FileArtifactTransferCapabilities.ChunkedV1
+            && TryReadPositiveInt32(response, HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes, out advertisedMaxChunkBytes)
+            && TryReadPositiveInt64(response, HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes, out _fileArtifactTransferMaxFileBytes)
+            && TryReadPositiveInt64(response, HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes, out _fileArtifactTransferMaxModuleBytes);
+        if (IsFileArtifactTransferSupported)
+        {
+            _fileArtifactTransferMaxChunkBytes = Math.Min(
+                advertisedMaxChunkBytes,
+                MaximumLocalArtifactTransferChunkBytes);
+            _fileArtifactTransferMaxFileCount =
+                TryReadPositiveInt32(
+                    response,
+                    HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount,
+                    out int advertisedMaxFileCount)
+                    ? Math.Min(advertisedMaxFileCount, MaximumLocalArtifactTransferFileCount)
+                    : MaximumLocalArtifactTransferFileCount;
+        }
 
         if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) is true)
         {
@@ -251,7 +301,15 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 break;
 
             case FileArtifactMessages fileArtifactMessages:
-                await transportClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                FileArtifactMessages? messageToSend = await PrepareFileArtifactsAsync(
+                    transportClient,
+                    fileArtifactMessages,
+                    _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                if (messageToSend is not null)
+                {
+                    await transportClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(messageToSend, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                }
+
                 break;
 
             case TestSessionEvent testSessionEvent:
@@ -290,31 +348,94 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     /// </remarks>
     public Task StartServerControlChannelAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync)
     {
-        if (_transportKind != DotnetTestTransportKind.NamedPipe
-            || OperatingSystem.IsBrowser()
-            || OperatingSystem.IsWasi()
-            || !IsServerControlChannelSupported
-            || RoslynString.IsNullOrEmpty(_serverControlPipeName)
-            || _serverControlPipeClient is not null)
+        if (!IsServerControlChannelSupported
+            || _serverControlListenerTask is not null)
         {
             return Task.CompletedTask;
         }
 
         _serverControlListenerCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
 
-        // exitProcessOnConnectionLoss: false - a dropped control pipe must not kill the test host; the listener
-        // turns it into a cooperative cancel instead.
-        var controlClient = new NamedPipeClient(_serverControlPipeName, _environment, exitProcessOnConnectionLoss: false);
-        controlClient.RegisterAllSerializers();
-        _serverControlPipeClient = controlClient;
+        if (_transportKind == DotnetTestTransportKind.Http
+            && _serverControlTransport == ServerControlTransports.Http)
+        {
+            DotnetTestHttpClient controlClient = CreateHttpClient();
+            controlClient.RegisterAllSerializers();
+            _serverControlHttpClient = controlClient;
+            _serverControlListenerTask = Task.Run(
+                () => ConnectAndListenForHttpServerControlAsync(
+                    controlClient,
+                    onCancelSessionRequestedAsync,
+                    _serverControlListenerCts.Token));
+        }
+        else if (_transportKind == DotnetTestTransportKind.NamedPipe
+            && !OperatingSystem.IsBrowser()
+            && !OperatingSystem.IsWasi()
+            && !RoslynString.IsNullOrEmpty(_serverControlPipeName))
+        {
+            // exitProcessOnConnectionLoss: false - a dropped control pipe must not kill the test host; the listener
+            // turns it into a cooperative cancel instead.
+            var controlClient = new NamedPipeClient(_serverControlPipeName, _environment, exitProcessOnConnectionLoss: false);
+            controlClient.RegisterAllSerializers();
+            _serverControlPipeClient = controlClient;
 
-        // Connect AND listen on a background task: we deliberately do not await the connect on the run path so a
-        // slow/absent control server can never delay (or fail) test execution start.
+            // Connect AND listen on a background task: we deliberately do not await the connect on the run path so a
+            // slow/absent control server can never delay (or fail) test execution start.
 #pragma warning disable CA1416 // The runtime guards above exclude browser before the named-pipe operation is scheduled.
-        _serverControlListenerTask = Task.Run(
-            () => ConnectAndListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, _serverControlListenerCts.Token));
+            _serverControlListenerTask = Task.Run(
+                () => ConnectAndListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, _serverControlListenerCts.Token));
 #pragma warning restore CA1416
+        }
+
         return Task.CompletedTask;
+    }
+
+    private async Task ConnectAndListenForHttpServerControlAsync(
+        DotnetTestHttpClient controlClient,
+        Func<CancellationToken, Task> onCancelSessionRequestedAsync,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await controlClient.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                IResponse response = await controlClient.RequestReplyAsync<WaitForServerControlRequest, IResponse>(
+                    WaitForServerControlRequest.CachedInstance,
+                    cancellationToken).ConfigureAwait(false);
+
+                if (response is ServerControlMessage { Kind: ServerControlKinds.CancelSession })
+                {
+                    await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+                    return;
+                }
+
+                if (response is ServerControlMessage { Kind: ServerControlKinds.CloseChannel })
+                {
+                    return;
+                }
+
+                if (response is VoidResponse)
+                {
+                    // The SDK bounds each long poll and returns VoidResponse when no command is pending.
+                    // Yield before parking the next request so a broken peer cannot create a tight loop.
+                    await Task.Delay(TimeSpan.FromMilliseconds(50), cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await TryLogAsync(LogLevel.Trace, "The HTTP server-control listener stopped: shutdown requested.").ConfigureAwait(false);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Debug, $"The HTTP server-control listener failed while the session was live; ensuring cooperative cancellation: {ex}").ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await TryLogAsync(LogLevel.Trace, $"The HTTP server-control listener observed a shutdown race: {ex}").ConfigureAwait(false);
+        }
     }
 
     [UnsupportedOSPlatform("browser")]
@@ -415,13 +536,15 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             _serverControlPipeClient?.Dispose();
         }
 
+        _serverControlHttpClient?.Dispose();
+
         if (_serverControlListenerTask is { } listenerTask)
         {
             // Bounded wait so a stuck listener can never hang the exit path on any target framework.
-            Task completed = await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+            Task completed = await Task.WhenAny(listenerTask, Task.Delay(ServerControlShutdownTimeout)).ConfigureAwait(false);
             if (completed != listenerTask)
             {
-                await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
+                await TryLogAsync(LogLevel.Debug, "The server-control listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
             }
         }
     }
@@ -436,12 +559,14 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             _serverControlPipeClient?.Dispose();
         }
 
+        _serverControlHttpClient?.Dispose();
+
         if (_serverControlListenerTask is { } listenerTask)
         {
             try
             {
                 // Bounded wait: the cancel + dispose above unblock the parked read quickly. Never hang exit.
-                listenerTask.Wait(TimeSpan.FromSeconds(5));
+                listenerTask.Wait(ServerControlShutdownTimeout);
             }
             catch (Exception)
             {
@@ -452,6 +577,292 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         _serverControlListenerCts?.Dispose();
         _transportClient?.Dispose();
+    }
+
+    private async Task<FileArtifactMessages?> PrepareFileArtifactsAsync(
+        IClient transportClient,
+        FileArtifactMessages fileArtifactMessages,
+        CancellationToken cancellationToken)
+    {
+        if (_transportKind != DotnetTestTransportKind.Http)
+        {
+            return fileArtifactMessages;
+        }
+
+        if (!IsFileArtifactTransferSupported)
+        {
+            if (Interlocked.Exchange(ref _artifactTransferUnsupportedWarningEmitted, 1) == 0)
+            {
+                await ReportArtifactTransferWarningAsync(
+                    transportClient,
+                    "The dotnet test HTTP peer does not support remote test-host artifact export. Test-host-local artifact paths will not be reported as host artifacts.",
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            return null;
+        }
+
+        List<FileArtifactMessage> exportedArtifacts = [];
+        foreach (FileArtifactMessage artifact in fileArtifactMessages.FileArtifacts)
+        {
+            string? fullPath = await ExportArtifactPathAsync(
+                transportClient,
+                fileArtifactMessages.ExecutionId,
+                fileArtifactMessages.InstanceId,
+                artifact.FullPath,
+                cancellationToken).ConfigureAwait(false);
+            if (fullPath is null)
+            {
+                continue;
+            }
+
+            string[]? inputArtifactPaths = null;
+            if (artifact.InputArtifactPaths is { Length: > 0 })
+            {
+                inputArtifactPaths = new string[artifact.InputArtifactPaths.Length];
+                bool exportedAllInputs = true;
+                for (int i = 0; i < artifact.InputArtifactPaths.Length; i++)
+                {
+                    string? exportedInput = await ExportArtifactPathAsync(
+                        transportClient,
+                        fileArtifactMessages.ExecutionId,
+                        fileArtifactMessages.InstanceId,
+                        artifact.InputArtifactPaths[i],
+                        cancellationToken).ConfigureAwait(false);
+                    if (exportedInput is null)
+                    {
+                        exportedAllInputs = false;
+                        break;
+                    }
+
+                    inputArtifactPaths[i] = exportedInput;
+                }
+
+                if (!exportedAllInputs)
+                {
+                    continue;
+                }
+            }
+
+            exportedArtifacts.Add(artifact with
+            {
+                FullPath = fullPath,
+                InputArtifactPaths = inputArtifactPaths,
+            });
+        }
+
+        return exportedArtifacts.Count == 0
+            ? null
+            : fileArtifactMessages with { FileArtifacts = [.. exportedArtifacts] };
+    }
+
+    private Task<string?> ExportArtifactPathAsync(
+        IClient transportClient,
+        string? executionId,
+        string? instanceId,
+        string? path,
+        CancellationToken cancellationToken)
+        => RoslynString.IsNullOrEmpty(path)
+            ? Task.FromResult<string?>(null)
+            : _exportedArtifactPaths.GetOrAdd(
+                path,
+                artifactPath => ExportArtifactPathCoreAsync(
+                    transportClient,
+                    executionId,
+                    instanceId,
+                    artifactPath,
+                    cancellationToken));
+
+    private async Task<string?> ExportArtifactPathCoreAsync(
+        IClient transportClient,
+        string? executionId,
+        string? instanceId,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var file = new FileInfo(path);
+            if (!file.Exists)
+            {
+                await ReportArtifactTransferWarningAsync(
+                    transportClient,
+                    $"Test-host artifact '{path}' could not be exported because it does not exist.",
+                    cancellationToken).ConfigureAwait(false);
+                return null;
+            }
+
+            long fileLength = file.Length;
+            if (fileLength > _fileArtifactTransferMaxFileBytes)
+            {
+                await ReportArtifactTransferWarningAsync(
+                    transportClient,
+                    $"Test-host artifact '{path}' is {fileLength} bytes, exceeding the peer's {_fileArtifactTransferMaxFileBytes}-byte per-file export limit.",
+                    cancellationToken).ConfigureAwait(false);
+                return null;
+            }
+
+            bool reserved = false;
+            bool fileCountLimitReached = false;
+            lock (_artifactTransferLock)
+            {
+                fileCountLimitReached = _reservedArtifactTransferFileCount >= _fileArtifactTransferMaxFileCount;
+                if (!fileCountLimitReached
+                    && _reservedArtifactTransferBytes <= _fileArtifactTransferMaxModuleBytes - fileLength)
+                {
+                    _reservedArtifactTransferBytes += fileLength;
+                    _reservedArtifactTransferFileCount++;
+                    reserved = true;
+                }
+            }
+
+            if (!reserved)
+            {
+                await ReportArtifactTransferWarningAsync(
+                    transportClient,
+                    fileCountLimitReached
+                        ? $"Test-host artifact '{path}' was not exported because the peer's {_fileArtifactTransferMaxFileCount}-file per-module export limit was reached."
+                        : $"Test-host artifact '{path}' was not exported because the peer's {_fileArtifactTransferMaxModuleBytes}-byte per-module export limit was reached.",
+                    cancellationToken).ConfigureAwait(false);
+                return null;
+            }
+
+            bool committed = false;
+            try
+            {
+                string transferId = Guid.NewGuid().ToString("N");
+                long offset = 0;
+                using FileStream stream = file.OpenRead();
+                do
+                {
+                    int chunkLength = (int)Math.Min(_fileArtifactTransferMaxChunkBytes, fileLength - offset);
+                    byte[] data = new byte[chunkLength];
+                    int bytesRead = 0;
+                    while (bytesRead < data.Length)
+                    {
+                        int read = await stream.ReadAsync(
+                            data,
+                            bytesRead,
+                            data.Length - bytesRead,
+                            cancellationToken).ConfigureAwait(false);
+                        if (read == 0)
+                        {
+                            throw new EndOfStreamException($"Test-host artifact '{path}' ended before its declared length.");
+                        }
+
+                        bytesRead += read;
+                    }
+
+                    bool isFinal = offset + bytesRead == fileLength;
+                    var request = new FileArtifactTransferRequest(
+                        executionId,
+                        instanceId,
+                        transferId,
+                        file.Name,
+                        fileLength,
+                        offset,
+                        data,
+                        isFinal);
+                    FileArtifactTransferResponse response =
+                        await transportClient.RequestReplyAsync<FileArtifactTransferRequest, FileArtifactTransferResponse>(
+                            request,
+                            cancellationToken).ConfigureAwait(false);
+                    if (!RoslynString.IsNullOrEmpty(response.Error))
+                    {
+                        await ReportArtifactTransferWarningAsync(
+                            transportClient,
+                            $"Test-host artifact '{path}' was rejected by the dotnet test peer: {response.Error}",
+                            cancellationToken).ConfigureAwait(false);
+                        return null;
+                    }
+
+                    long expectedNextOffset = offset + bytesRead;
+                    if (response.NextOffset != expectedNextOffset)
+                    {
+                        await ReportArtifactTransferWarningAsync(
+                            transportClient,
+                            $"Test-host artifact '{path}' export stopped because the peer acknowledged offset {response.NextOffset} instead of {expectedNextOffset}.",
+                            cancellationToken).ConfigureAwait(false);
+                        return null;
+                    }
+
+                    offset = expectedNextOffset;
+                    if (isFinal)
+                    {
+                        if (RoslynString.IsNullOrEmpty(response.FullPath))
+                        {
+                            await ReportArtifactTransferWarningAsync(
+                                transportClient,
+                                $"Test-host artifact '{path}' export completed without a committed host path.",
+                                cancellationToken).ConfigureAwait(false);
+                            return null;
+                        }
+
+                        committed = true;
+                        return response.FullPath;
+                    }
+                }
+                while (offset < fileLength);
+            }
+            finally
+            {
+                if (!committed)
+                {
+                    lock (_artifactTransferLock)
+                    {
+                        _reservedArtifactTransferBytes -= fileLength;
+                        _reservedArtifactTransferFileCount--;
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            await ReportArtifactTransferWarningAsync(
+                transportClient,
+                $"Test-host artifact '{path}' could not be exported: {ex.Message}",
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return null;
+    }
+
+    private async Task ReportArtifactTransferWarningAsync(
+        IClient transportClient,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        await TryLogAsync(LogLevel.Warning, message).ConfigureAwait(false);
+        if (IsDisplayMessageForwardingSupported)
+        {
+            await transportClient.RequestReplyAsync<DisplayMessage, VoidResponse>(
+                new DisplayMessage(
+                    _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
+                    InstanceId,
+                    DisplayMessageLevels.Warning,
+                    message),
+                cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static bool TryReadPositiveInt32(HandshakeMessage response, byte propertyName, out int value)
+    {
+        value = 0;
+        return response.Properties?.TryGetValue(propertyName, out string? text) is true
+            && int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value)
+            && value > 0;
+    }
+
+    private static bool TryReadPositiveInt64(HandshakeMessage response, byte propertyName, out long value)
+    {
+        value = 0;
+        return response.Properties?.TryGetValue(propertyName, out string? text) is true
+            && long.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value)
+            && value > 0;
     }
 
     private async Task TryLogAsync(LogLevel logLevel, string message)

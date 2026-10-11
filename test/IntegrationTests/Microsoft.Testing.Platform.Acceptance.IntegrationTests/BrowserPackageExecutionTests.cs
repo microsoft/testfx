@@ -51,10 +51,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public sealed class BrowserPackageTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void RunsInsideBrowser()
     {
         Assert.IsTrue(OperatingSystem.IsBrowser());
+        string artifactPath = Path.GetFullPath("browser-export.txt");
+        File.WriteAllText(artifactPath, "browser-artifact-marker");
+        TestContext.AddResultFile(artifactPath);
     }
 
     [TestMethod]
@@ -66,6 +71,10 @@ public sealed class BrowserPackageTests
     [TestMethod]
     public void FailsInsideBrowser()
         => Assert.Fail("Intentional browser experiment failure.");
+
+    [TestMethod]
+    public async Task WaitsForCancellation()
+        => await Task.Delay(Timeout.InfiniteTimeSpan, TestContext.CancellationToken);
 }
 """;
 
@@ -132,13 +141,17 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
+        await RequireBrowserRunArgumentsSdkAsync(generator);
         Assert.IsFalse(Directory.Exists(Path.Combine(generator.TargetAssetPath, "wwwroot")));
         Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.html", SearchOption.TopDirectoryOnly));
         Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.js", SearchOption.TopDirectoryOnly));
 
+        string resultsDirectory = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? Path.GetTempPath(),
+            $"browser-export-{Guid.NewGuid():N}");
         DotnetMuxerResult run = await RunBrowserTestAsync(
             generator,
-            "--filter FullyQualifiedName~RunsInsideBrowser",
+            $"--results-directory \"{resultsDirectory}\" --filter FullyQualifiedName~RunsInsideBrowser",
             environmentVariables: new Dictionary<string, string?>
             {
                 ["DEBUG"] = "*",
@@ -149,6 +162,12 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("succeeded: 1", runOutput);
         Assert.DoesNotContain("--dotnet-test-http-token", runOutput);
         Assert.DoesNotContain("pw:channel", runOutput);
+        string exportedArtifact = Assert.ContainsSingle(
+            Directory.EnumerateFiles(
+                resultsDirectory,
+                "browser-export.txt",
+                SearchOption.AllDirectories));
+        Assert.AreEqual("browser-artifact-marker", File.ReadAllText(exportedArtifact));
         AssertUsesMinimalMSTestDependencies(generator);
         await AssertIsTestingPlatformApplicationAsync(
             generator,
@@ -175,7 +194,8 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("RunsInsideBrowser", listOutput);
         Assert.Contains("SkippedInsideBrowser", listOutput);
         Assert.Contains("FailsInsideBrowser", listOutput);
-        Assert.Contains("Discovered 3 tests", listOutput);
+        Assert.Contains("WaitsForCancellation", listOutput);
+        Assert.Contains("Discovered 4 tests", listOutput);
 
         DotnetMuxerResult skipped = await RunBrowserTestAsync(
             generator,
@@ -196,7 +216,7 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
-    public async Task BrowserPackage_WrapsOnlyMarkedBrowserComputeRunArguments()
+    public async Task BrowserPackage_DefinesDedicatedBrowserRunArguments()
     {
         string browserPackageVersion = GetBrowserPackageVersion();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -214,14 +234,14 @@ public sealed class BrowserPackageDesktopTests
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, restore.ExitCode, restore.ToString());
 
-        string commonArguments =
-            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments"
-            + $" -property:TargetFramework={TargetFramework}"
+        string commonProperties =
+            $" -property:TargetFramework={TargetFramework}"
             + $" -property:RuntimeIdentifier={WasmRuntime.BrowserRid}"
             + " -getProperty:RunCommand -getProperty:RunArguments";
 
         DotnetMuxerResult ordinary = await DotnetCli.RunAsync(
-            commonArguments,
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments"
+            + commonProperties,
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
@@ -229,17 +249,75 @@ public sealed class BrowserPackageDesktopTests
         Assert.AreEqual(0, ordinary.ExitCode, ordinary.ToString());
         Assert.DoesNotContain("Microsoft.Testing.Platform.Browser.dll", ordinary.StandardOutput);
 
-        DotnetMuxerResult marked = await DotnetCli.RunAsync(
-            commonArguments + " -property:DotnetTestInvocation=true",
+        DotnetMuxerResult unsupported = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments;_ConfigureTestingPlatformBrowserRun"
+            + commonProperties
+            + " -getProperty:TestingPlatformRunCommand"
+            + " -getProperty:TestingPlatformRunArguments",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, marked.ExitCode, marked.ToString());
-        Assert.Contains("Microsoft.Testing.Platform.Browser.dll", marked.StandardOutput);
-        Assert.Contains("--host-command-uri", marked.StandardOutput);
-        Assert.Contains("--host-arguments-uri", marked.StandardOutput);
-        Assert.DoesNotContain(".launch", marked.StandardOutput);
+        Assert.AreNotEqual(0, unsupported.ExitCode, unsupported.ToString());
+        Assert.Contains("TestingPlatformRunArgumentsVersion=1", unsupported.StandardOutput + unsupported.StandardError);
+
+        DotnetMuxerResult dedicated = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -target:ComputeRunArguments;_ConfigureTestingPlatformBrowserRun"
+            + commonProperties
+            + " -property:TestingPlatformRunArgumentsVersion=1"
+            + " -property:TestingPlatformRunCommand=host-command"
+            + " -property:TestingPlatformRunArguments=host-arguments"
+            + " -property:TestingPlatformRunWorkingDirectory=host-working-directory"
+            + " -getProperty:TestingPlatformRunCommand"
+            + " -getProperty:TestingPlatformRunArguments"
+            + " -getProperty:TestingPlatformRunWorkingDirectory",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, dedicated.ExitCode, dedicated.ToString());
+        Assert.Contains("Microsoft.Testing.Platform.Browser.dll", dedicated.StandardOutput);
+        Assert.Contains("--host-command-uri", dedicated.StandardOutput);
+        Assert.Contains("--host-arguments-uri", dedicated.StandardOutput);
+        Assert.Contains("host-command", dedicated.StandardOutput);
+        Assert.Contains("host-arguments", dedicated.StandardOutput);
+        Assert.DoesNotContain(".launch", dedicated.StandardOutput);
+    }
+
+    [TestMethod]
+    public async Task BrowserPackage_SdkCancellationStopsManagedBrowserRun()
+    {
+        string? browser = LocateBrowser();
+        if (browser is null)
+        {
+            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
+            return;
+        }
+
+        string browserPackageVersion = GetBrowserPackageVersion();
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            "BrowserPackageCancellationProject",
+            SourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
+                .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
+        await RequireBrowserRunArgumentsSdkAsync(generator);
+
+        var stopwatch = Stopwatch.StartNew();
+        DotnetMuxerResult result = await RunBrowserTestAsync(
+            generator,
+            "--timeout 5s --filter FullyQualifiedName~WaitsForCancellation");
+        stopwatch.Stop();
+
+        string output = NormalizeTerminalOutput(result.StandardOutput + result.StandardError);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, result.ExitCode, result.ToString());
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(60),
+            stopwatch.Elapsed,
+            "Managed HTTP cancellation should finish before the launcher's 120-second completion timeout.");
+        Assert.DoesNotContain("did not complete within 120", output);
+        Assert.DoesNotContain("Missing test session end", output);
     }
 
     [TestMethod]
@@ -260,13 +338,11 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
+        await RequireBrowserRunArgumentsSdkAsync(generator);
 
-        DotnetMuxerResult build = await DotnetCli.RunAsync(
+        DotnetMuxerResult build = await RunBrowserSdkAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            cancellationToken: TestContext.CancellationToken);
+            failIfReturnValueIsNotZero: false);
         Assert.AreEqual(0, build.ExitCode, build.ToString());
 
         using var buildManifest = JsonDocument.Parse(File.ReadAllText(
@@ -288,12 +364,9 @@ public sealed class BrowserPackageDesktopTests
         Assert.AreEqual(0, run.ExitCode, run.ToString());
 
         string publishDirectory = Path.Combine(generator.TargetAssetPath, "publish");
-        DotnetMuxerResult publish = await DotnetCli.RunAsync(
+        DotnetMuxerResult publish = await RunBrowserSdkAsync(
             $"publish {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid} --output {publishDirectory}",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            cancellationToken: TestContext.CancellationToken);
+            failIfReturnValueIsNotZero: false);
         Assert.AreEqual(0, publish.ExitCode, publish.ToString());
 
         using var publishManifest = JsonDocument.Parse(File.ReadAllText(
@@ -357,7 +430,11 @@ public sealed class BrowserPackageDesktopTests
         Assert.Contains("tools/net8.0/any/.playwright/node/linux-arm64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-x64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/darwin-arm64/node", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/node/LICENSE", entries);
         Assert.Contains("tools/net8.0/any/.playwright/package/cli.js", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/package/LICENSE", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/package/NOTICE", entries);
+        Assert.Contains("tools/net8.0/any/.playwright/package/ThirdPartyNotices.txt", entries);
         Assert.DoesNotContain(
             static entry => entry.Contains("//", StringComparison.Ordinal),
             entries);
@@ -384,7 +461,10 @@ public sealed class BrowserPackageDesktopTests
         string browserTargets = browserTargetsReader.ReadToEnd();
         Assert.Contains("SourceId=\"$(PackageId)\"", browserTargets);
         Assert.Contains("AssetKind=\"Build\"", browserTargets);
-        Assert.Contains("AfterTargets=\"ComputeRunArguments\"", browserTargets);
+        Assert.Contains("ComputeTestingPlatformRunArgumentsDependsOn", browserTargets);
+        Assert.Contains("TestingPlatformRunArgumentsVersion", browserTargets);
+        Assert.DoesNotContain("AfterTargets=\"ComputeRunArguments\"", browserTargets);
+        Assert.DoesNotContain("DotnetTestInvocation", browserTargets);
         Assert.DoesNotContain("CustomAfterDirectoryBuildTargets", browserTargets);
 
         ZipArchiveEntry browserMainEntry = archive.GetEntry(
@@ -450,6 +530,39 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
+    public async Task BrowserPackage_PackWithoutBundledNodePreservesPrivateDriverAndLicenses()
+    {
+        string packageOutput = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? Path.GetTempPath(),
+            $"browser-pack-system-node-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(packageOutput);
+
+        DotnetMuxerResult pack = await DotnetCli.RunAsync(
+            $"pack {Path.Combine(RootFinder.Find(), "src", "Platform", "Microsoft.Testing.Platform.Browser", "Microsoft.Testing.Platform.Browser.csproj")} --configuration {Constants.BuildConfiguration} --no-build --no-restore -property:TestingPlatformBrowserBundlePlaywrightNode=false -property:PackageOutputPath={packageOutput}",
+            warnAsError: false,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, pack.ExitCode, pack.ToString());
+        string package = Directory.EnumerateFiles(
+            packageOutput,
+            "Microsoft.Testing.Platform.Browser.*.nupkg").Single();
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/Microsoft.Playwright.dll"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/cli.js"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/LICENSE"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/NOTICE"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/ThirdPartyNotices.txt"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/node/LICENSE"));
+        Assert.DoesNotContain(
+            static entry =>
+                entry.FullName.StartsWith("tools/net8.0/any/.playwright/node/", StringComparison.Ordinal)
+                && !entry.FullName.EndsWith("/LICENSE", StringComparison.Ordinal),
+            archive.Entries);
+    }
+
+    [TestMethod]
     public void BrowserPackage_InvalidExplicitBrowserPathFails()
     {
         string? previousValue = Environment.GetEnvironmentVariable(
@@ -485,14 +598,82 @@ public sealed class BrowserPackageDesktopTests
         string testArguments,
         Dictionary<string, string?>? environmentVariables = null,
         string? projectProperties = null)
-        => await DotnetCli.RunAsync(
+        => await RunBrowserSdkAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
-            + $" -property:DotnetTestInvocation=true {projectProperties} {testArguments}",
+            + $" {projectProperties} {testArguments}",
             environmentVariables: environmentVariables,
+            failIfReturnValueIsNotZero: false);
+
+    private async Task RequireBrowserRunArgumentsSdkAsync(TestAsset generator)
+    {
+        string dotnetPath = GetBrowserSdkDotnetPath();
+        DotnetMuxerResult evaluation = await DotnetCli.RunAsync(
+            $"msbuild {generator.TargetAssetPath} -getProperty:TestingPlatformRunArgumentsVersion",
+            environmentVariables: GetBrowserSdkEnvironment(dotnetPath),
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
+            dotnetPath: dotnetPath,
             cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
+        string version = evaluation.StandardOutput
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault() ?? string.Empty;
+        if (version != "1")
+        {
+            Assert.Inconclusive(
+                $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1.");
+        }
+    }
+
+    private async Task<DotnetMuxerResult> RunBrowserSdkAsync(
+        string arguments,
+        Dictionary<string, string?>? environmentVariables = null,
+        bool failIfReturnValueIsNotZero = true)
+    {
+        string dotnetPath = GetBrowserSdkDotnetPath();
+        environmentVariables ??= [];
+        foreach ((string key, string? value) in GetBrowserSdkEnvironment(dotnetPath))
+        {
+            environmentVariables[key] = value;
+        }
+
+        return await DotnetCli.RunAsync(
+            arguments,
+            environmentVariables: environmentVariables,
+            warnAsError: false,
+            failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
+            useMultithreadedMSBuild: false,
+            dotnetPath: dotnetPath,
+            cancellationToken: TestContext.CancellationToken);
+    }
+
+    private static string GetBrowserSdkDotnetPath()
+    {
+        string? dotnetPath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_SDK_DOTNET");
+        if (dotnetPath is null)
+        {
+            Assert.Inconclusive(
+                "Set TESTINGPLATFORM_BROWSER_SDK_DOTNET to the dotnet executable from the aligned source-built SDK.");
+        }
+
+        return File.Exists(dotnetPath)
+            ? Path.GetFullPath(dotnetPath)
+            : throw new AssertFailedException(
+                $"TESTINGPLATFORM_BROWSER_SDK_DOTNET does not exist: '{dotnetPath}'.");
+    }
+
+    private static Dictionary<string, string?> GetBrowserSdkEnvironment(string dotnetPath)
+    {
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
+        return new()
+        {
+            ["DOTNET_ROOT"] = dotnetRoot,
+            ["DOTNET_INSTALL_DIR"] = dotnetRoot,
+            ["DOTNET_MULTILEVEL_LOOKUP"] = "0",
+        };
+    }
 
     private static string NormalizeTerminalOutput(string output)
         => AnsiEscapeRegex.Replace(output, string.Empty);

@@ -11,7 +11,7 @@ internal interface IPushOnlyProtocol : IDisposable
 
     string InstanceId { get; }
 
-    // True once the SDK advertised a reverse "server control" pipe during the handshake, meaning it can push
+    // True once the SDK advertised a reverse server-control transport during the handshake, meaning it can push
     // server-initiated signals (e.g. session cancellation) to the test host. Only meaningful after a successful
     // IsCompatibleProtocolAsync call.
     bool IsServerControlChannelSupported { get; }
@@ -22,7 +22,7 @@ internal interface IPushOnlyProtocol : IDisposable
 
     Task<bool> IsCompatibleProtocolAsync(string testHostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null);
 
-    // Opens the reverse "server control" channel (when supported) and parks a long-poll on it. The provided
+    // Opens the reverse server-control channel (when supported) and parks a long-poll on it. The provided
     // reaction runs exactly once when the SDK signals a session cancellation (or when the control pipe drops).
     Task StartServerControlChannelAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync);
 

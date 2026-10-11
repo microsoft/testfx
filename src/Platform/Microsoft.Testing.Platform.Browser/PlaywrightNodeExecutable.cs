@@ -6,20 +6,30 @@ namespace Microsoft.Testing.Platform.Browser;
 internal static class PlaywrightNodeExecutable
 {
     public static void EnsureExecutable()
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
+        => Configure(explicitPath: null);
 
-        string nodePath = GetPath(
+    public static void Configure(string? explicitPath)
+    {
+        string? configuredPath = explicitPath
+            ?? Environment.GetEnvironmentVariable("PLAYWRIGHT_NODEJS_PATH");
+        string nodePath = configuredPath ?? GetPath(
             AppContext.BaseDirectory,
-            OperatingSystem.IsLinux() ? OSPlatform.Linux : OSPlatform.OSX,
+            OperatingSystem.IsLinux() ? OSPlatform.Linux : OperatingSystem.IsMacOS() ? OSPlatform.OSX : OSPlatform.Windows,
             RuntimeInformation.ProcessArchitecture);
         if (!File.Exists(nodePath))
         {
             throw new BrowserLauncherException(
                 $"The Playwright Node.js driver was not found at '{nodePath}'.");
+        }
+
+        if (configuredPath is not null)
+        {
+            Environment.SetEnvironmentVariable("PLAYWRIGHT_NODEJS_PATH", nodePath);
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            return;
         }
 
         UnixFileMode mode = File.GetUnixFileMode(nodePath);
@@ -40,10 +50,16 @@ internal static class PlaywrightNodeExecutable
             ({ } os, Architecture.Arm64) when os == OSPlatform.Linux => "linux-arm64",
             ({ } os, Architecture.X64) when os == OSPlatform.OSX => "darwin-x64",
             ({ } os, Architecture.Arm64) when os == OSPlatform.OSX => "darwin-arm64",
+            ({ } os, _) when os == OSPlatform.Windows => "win32_x64",
             _ => throw new BrowserLauncherException(
                 $"Microsoft.Testing.Platform.Browser does not support Playwright on {operatingSystem}/{architecture}."),
         };
 
-        return Path.Combine(baseDirectory, ".playwright", "node", platformDirectory, "node");
+        return Path.Combine(
+            baseDirectory,
+            ".playwright",
+            "node",
+            platformDirectory,
+            operatingSystem == OSPlatform.Windows ? "node.exe" : "node");
     }
 }
