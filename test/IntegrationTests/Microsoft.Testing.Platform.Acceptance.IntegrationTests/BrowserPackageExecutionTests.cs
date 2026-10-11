@@ -401,11 +401,22 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion));
 
-        DotnetMuxerResult run = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult run;
+        if (HasExplicitAlignedInputs())
+        {
+            await RequireAlignedBrowserInputsAsync(generator);
+            run = await RunBrowserSdkAsync(
+                $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+                failIfReturnValueIsNotZero: false);
+        }
+        else
+        {
+            run = await DotnetCli.RunAsync(
+                $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+                warnAsError: false,
+                failIfReturnValueIsNotZero: false,
+                cancellationToken: TestContext.CancellationToken);
+        }
 
         string output = NormalizeTerminalOutput(run.StandardOutput + run.StandardError);
         Assert.AreEqual(0, run.ExitCode, run.ToString());
@@ -783,6 +794,10 @@ public sealed class BrowserPackageDesktopTests
             : throw new AssertFailedException(
                 $"TESTINGPLATFORM_BROWSER_PACKAGE_FEED does not exist: '{packageFeed}'.");
     }
+
+    private static bool HasExplicitAlignedInputs()
+        => Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_SDK_DOTNET") is not null
+            && Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_PACKAGE_FEED") is not null;
 
     private static string? LocateBrowser()
     {
