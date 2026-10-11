@@ -304,16 +304,26 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
         await RequireAlignedBrowserInputsAsync(generator);
 
+        DotnetMuxerResult build = await RunBrowserSdkAsync(
+            $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            workingDirectory: generator.TargetAssetPath,
+            failIfReturnValueIsNotZero: false);
+        Assert.AreEqual(0, build.ExitCode, build.ToString());
+
         var stopwatch = Stopwatch.StartNew();
         DotnetMuxerResult result = await RunBrowserTestAsync(
             generator,
-            "--timeout 5s --filter FullyQualifiedName~WaitsForCancellation");
+            "--no-build --timeout 5s --filter FullyQualifiedName~WaitsForCancellation");
         stopwatch.Stop();
 
         string output = NormalizeTerminalOutput(result.StandardOutput + result.StandardError);
         Assert.AreEqual((int)ExitCode.TestSessionAborted, result.ExitCode, result.ToString());
+        // Allow the configured 60-second browser startup timeout, the 5-second SDK policy timeout,
+        // and loaded-machine cleanup while still proving managed cancellation beats the 120-second
+        // launcher completion timeout.
+        var cancellationCompletionLimit = TimeSpan.FromSeconds(90);
         Assert.IsLessThan(
-            TimeSpan.FromSeconds(60),
+            cancellationCompletionLimit,
             stopwatch.Elapsed,
             "Managed HTTP cancellation should finish before the launcher's 120-second completion timeout.");
         Assert.DoesNotContain("did not complete within 120", output);
@@ -620,7 +630,7 @@ public sealed class BrowserPackageDesktopTests
             workingDirectory: generator.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
 
-    private async Task RequireAlignedBrowserInputsAsync(TestAsset generator)
+    private Task RequireAlignedBrowserInputsAsync(TestAsset generator)
     {
         string packageFeed = GetBrowserPackageFeed(requireExplicit: true);
         string dotnetPath = GetBrowserSdkDotnetPath();
@@ -634,24 +644,29 @@ public sealed class BrowserPackageDesktopTests
         localShipping.SetAttributeValue("value", packageFeed);
         nugetConfig.Save(nugetConfigPath);
 
-        DotnetMuxerResult evaluation = await DotnetCli.RunAsync(
-            $"msbuild {generator.TargetAssetPath} -getProperty:TestingPlatformRunArgumentsVersion",
-            workingDirectory: generator.TargetAssetPath,
-            environmentVariables: GetBrowserSdkEnvironment(dotnetPath),
-            warnAsError: false,
-            failIfReturnValueIsNotZero: false,
-            useMultithreadedMSBuild: false,
-            dotnetPath: dotnetPath,
-            cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
-        string version = evaluation.StandardOutput
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-            .LastOrDefault() ?? string.Empty;
-        if (version != "1")
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
+        string sdkVersion = GetSingleSdkVersion(dotnetRoot);
+        string sdkTargetsPath = Path.Combine(
+            dotnetRoot,
+            "sdk",
+            sdkVersion,
+            "Sdks",
+            "Microsoft.NET.Sdk",
+            "Sdk",
+            "Sdk.targets");
+        var sdkTargets = XDocument.Load(sdkTargetsPath);
+        string? runArgumentsVersion = sdkTargets.Descendants()
+            .SingleOrDefault(element =>
+                element.Name.LocalName == "TestingPlatformRunArgumentsVersion")
+            ?.Value;
+        if (runArgumentsVersion != "1")
         {
             Assert.Inconclusive(
-                $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1. Output: {evaluation.StandardOutput} Error: {evaluation.StandardError}");
+                $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1.");
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task<DotnetMuxerResult> RunBrowserSdkAsync(
@@ -682,14 +697,7 @@ public sealed class BrowserPackageDesktopTests
     {
         string dotnetRoot = Path.GetDirectoryName(dotnetPath)
             ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
-        string sdkDirectory = Path.Combine(dotnetRoot, "sdk");
-        string[] sdkVersions = Directory.Exists(sdkDirectory)
-            ? Directory.GetDirectories(sdkDirectory)
-            : [];
-        string sdkVersion = sdkVersions.Length == 1
-            ? Path.GetFileName(sdkVersions[0])
-            : throw new AssertFailedException(
-                $"The SDK-under-test must contain exactly one SDK directory. Found {sdkVersions.Length} under '{sdkDirectory}'.");
+        string sdkVersion = GetSingleSdkVersion(dotnetRoot);
         File.WriteAllText(
             Path.Combine(assetPath, "global.json"),
             $$"""
@@ -705,6 +713,18 @@ public sealed class BrowserPackageDesktopTests
               }
             }
             """);
+    }
+
+    private static string GetSingleSdkVersion(string dotnetRoot)
+    {
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk");
+        string[] sdkVersions = Directory.Exists(sdkDirectory)
+            ? Directory.GetDirectories(sdkDirectory)
+            : [];
+        return sdkVersions.Length == 1
+            ? Path.GetFileName(sdkVersions[0])
+            : throw new AssertFailedException(
+                $"The SDK-under-test must contain exactly one SDK directory. Found {sdkVersions.Length} under '{sdkDirectory}'.");
     }
 
     private static string GetBrowserSdkDotnetPath()
@@ -726,13 +746,20 @@ public sealed class BrowserPackageDesktopTests
     {
         string dotnetRoot = Path.GetDirectoryName(dotnetPath)
             ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
+        string sdkPath = Path.Combine(dotnetRoot, "sdk", GetSingleSdkVersion(dotnetRoot));
         return new()
         {
             ["DOTNET_ROOT"] = dotnetRoot,
+            ["DOTNET_ROOT_X64"] = dotnetRoot,
             ["DOTNET_INSTALL_DIR"] = dotnetRoot,
             ["DOTNET_MULTILEVEL_LOOKUP"] = "0",
             ["DOTNET_MSBUILD_SDK_RESOLVER_CLI_DIR"] = dotnetRoot,
             ["DOTNET_HOST_PATH"] = dotnetPath,
+            ["MSBuildSDKsPath"] = Path.Combine(sdkPath, "Sdks"),
+            ["MSBUILD_EXE_PATH"] = Path.Combine(sdkPath, "MSBuild.dll"),
+            ["MSBuildExtensionsPath"] = sdkPath,
+            ["MSBuildToolsPath"] = sdkPath,
+            ["RoslynTargetsPath"] = Path.Combine(sdkPath, "Roslyn"),
             ["PATH"] = dotnetRoot + Path.PathSeparator + Environment.GetEnvironmentVariable("PATH"),
         };
     }

@@ -9,6 +9,7 @@
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net472</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'">true</AllowUnsafeBlocks>
     <!-- Use full PDBs on .NET Framework so that stack traces include file paths and line numbers even on net462 -->
     <DebugType Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETFramework'">full</DebugType>
   </PropertyGroup>
@@ -90,6 +91,9 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\DiagnosticBuffer.cs" Link="Browser\DiagnosticBuffer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\HostProcess.cs" Link="Browser\HostProcess.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\PlaywrightNodeExecutable.cs" Link="Browser\PlaywrightNodeExecutable.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\WorkerProcessContainment.cs"
+             Link="Browser\WorkerProcessContainment.cs"
+             Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
   </ItemGroup>
 
   <ItemGroup>
