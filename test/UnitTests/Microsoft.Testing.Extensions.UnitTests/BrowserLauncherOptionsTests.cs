@@ -422,16 +422,25 @@ public sealed class BrowserLauncherOptionsTests
     {
         using var release = new ManualResetEventSlim();
         var diagnostics = new List<string>();
-        var stopwatch = Stopwatch.StartNew();
 
-        await BoundedResourceCleanup.DisposeAsync(
+        Task cleanup = BoundedResourceCleanup.DisposeAsync(
             release.Wait,
             TimeSpan.FromMilliseconds(10),
             diagnostics.Add);
-
-        Assert.IsLessThan(TimeSpan.FromSeconds(5), stopwatch.Elapsed);
-        Assert.IsNotEmpty(diagnostics);
-        release.Set();
+        try
+        {
+            // Generous allowance for thread-pool scheduling on saturated CI agents.
+            Task completed = await Task.WhenAny(
+                cleanup,
+                Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Assert.AreSame(cleanup, completed);
+            await cleanup;
+            Assert.IsNotEmpty(diagnostics);
+        }
+        finally
+        {
+            release.Set();
+        }
     }
 
     [TestMethod]

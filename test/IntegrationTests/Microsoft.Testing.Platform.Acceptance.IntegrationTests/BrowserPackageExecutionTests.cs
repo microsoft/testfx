@@ -325,6 +325,10 @@ public sealed class BrowserPackageDesktopTests
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["NO_COLOR"] = "1",
+            },
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
@@ -474,14 +478,21 @@ public sealed class BrowserPackageDesktopTests
         string testArguments,
         Dictionary<string, string?>? environmentVariables = null,
         string? projectProperties = null)
-        => await DotnetCli.RunAsync(
+    {
+        Dictionary<string, string?> effectiveEnvironment = environmentVariables is null
+            ? []
+            : new(environmentVariables);
+        effectiveEnvironment["NO_COLOR"] = "1";
+
+        return await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
             + $" -property:DotnetTestInvocation=true {projectProperties} {testArguments}",
-            environmentVariables: environmentVariables,
+            environmentVariables: effectiveEnvironment,
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
+    }
 
     private static void AssertUsesMinimalMSTestDependencies(TestAsset generator)
     {
@@ -637,7 +648,9 @@ public sealed class BrowserPackageDesktopTests
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
 
-        string path = evaluation.StandardOutput.Trim();
+        string path = evaluation.StandardOutput
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Last();
         return Path.IsPathRooted(path)
             ? path
             : Path.GetFullPath(path, generator.TargetAssetPath);
