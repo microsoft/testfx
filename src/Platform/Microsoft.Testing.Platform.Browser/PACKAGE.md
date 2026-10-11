@@ -70,8 +70,9 @@ The package:
 reserved `/_mtp/` path avoids colliding with a consumer-owned root page; no
 public framework-page integration protocol is provided.
 
-The package bundles Playwright's supported Node.js driver runtimes by default.
-Source-build or distribution builds can pack with
+The package bundles Playwright's upstream Node.js driver payloads for
+`win32-x64`, `linux-x64`, `linux-arm64`, `darwin-x64`, and `darwin-arm64` by
+default. Source-build or distribution builds can pack with
 `TestingPlatformBrowserBundlePlaywrightNode=false` and consumers can point the
 launcher at an approved host Node.js executable through
 `TestingPlatformBrowserNodeExecutable`. This is a packaging seam, not a claim
@@ -86,6 +87,38 @@ This minimum proof of concept supports only the canonical
 `Microsoft.NET.Sdk.WebAssembly` and WasmAppHost combination. The .NET SDK owns
 launcher selection and invokes the optional browser extension target after the
 framework's canonical `ComputeRunArguments` target has completed.
+
+## Validated proof-of-concept matrix
+
+The composed product has been validated with source-matched SDK and TestFX
+packages on:
+
+- Windows x64 with an installed Chromium-family browser.
+- Debian Linux x64 with native Chromium 154.0.8037.92.
+
+Both environments cover run, discovery, matching and zero-result filters,
+project-configured arguments, managed cancellation, artifact export and
+integrity, quota rejection, exit-code propagation, and process cleanup.
+macOS, Linux arm64, and Windows arm64 have package-layout or compile coverage
+only; this experiment does not claim runtime support for those hosts.
+
+## Packaging, source-build, and signing boundary
+
+- The default package is self-contained for the private Playwright transport:
+  it includes the managed Playwright assembly, required JavaScript modules,
+  Node.js license/notice data, and the host-specific Node.js payloads listed
+  above. The browser executable remains an explicit external prerequisite; the
+  package never downloads a browser.
+- A distribution can omit bundled Node.js and use an approved system Node.js
+  executable. A full source-build policy still needs an approved source or
+  binary provenance decision for Microsoft.Playwright, Node.js, and the chosen
+  browser, plus offline restore/build validation in the target distribution.
+- Unused Playwright UI/type/font payloads are excluded. Signing policy exempts
+  only the exact package-owned and vendored JavaScript filenames; there is no
+  repository-wide JavaScript or font bypass.
+- Arcade validation has passed with `SignType=real` and `DryRun=true`. That
+  proves signing policy and container repacking only. It is not official
+  signing, macOS notarization, package publication, or release approval.
 
 ## Current limitations
 
@@ -115,11 +148,14 @@ framework's canonical `ComputeRunArguments` target has completed.
 - The supervisor owns the worker's process tree, but no user-mode implementation
   can guarantee cleanup if external tooling simultaneously sends an
   uncatchable kill to every supervisor and worker process.
-- The experimental package currently bundles Playwright's cross-platform Node
-  driver payload. Package size, source-build, signing, platform validation, and
-  servicing must be resolved before any preview or stable productization.
+- Preview or stable release still requires official signing and publishing
+  approval, third-party license/SBOM and source-build approval, dependency flow
+  of the matching SDK protocol/launcher contract, runtime validation for every
+  advertised OS/architecture, and an explicit servicing owner for Playwright,
+  Node.js, and browser cadence.
 - The package is emitted to the repository's Shipping artifacts for acceptance
-  testing, but is not included in the product shipment layout.
+  testing, but is not included in the product shipment layout. Enabling
+  publication is a separate human release decision.
 
 Microsoft.Testing.Platform is open source. You can find
 `Microsoft.Testing.Platform.Browser` in the
