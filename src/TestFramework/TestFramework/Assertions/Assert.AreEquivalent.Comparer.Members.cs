@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -85,6 +85,7 @@ public sealed partial class Assert
             return null;
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "The public structural equivalence assertion APIs declare that comparison requires unreferenced code.")]
         private static MemberLookup GetMembers(Type type)
             => MemberCache.GetOrAdd(type, static t =>
             {

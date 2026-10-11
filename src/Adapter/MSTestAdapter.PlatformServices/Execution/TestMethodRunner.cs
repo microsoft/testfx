@@ -4,6 +4,9 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+#if !WINDOWS_UWP && !WIN_UI
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -41,6 +44,7 @@ internal sealed partial class TestMethodRunner
     /// TestMethod referred by the above test element.
     /// </summary>
     private readonly TestMethodInfo _testMethodInfo;
+    private readonly ITestExecutionActivityLease? _executionActivityLease;
 
     /// <summary>
     /// Cached <see cref="ReflectionTestMethodInfo"/> wrapper reused across all data rows of a
@@ -63,6 +67,15 @@ internal sealed partial class TestMethodRunner
     /// The test context.
     /// </param>
     public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext)
+        : this(testMethodInfo, testMethod, testContext, executionActivityLease: null)
+    {
+    }
+
+    internal TestMethodRunner(
+        TestMethodInfo testMethodInfo,
+        TestMethod testMethod,
+        ITestContext testContext,
+        ITestExecutionActivityLease? executionActivityLease)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo should not be null");
         DebugEx.Assert(testMethod != null, "testMethod should not be null");
@@ -71,6 +84,7 @@ internal sealed partial class TestMethodRunner
         _testMethodInfo = testMethodInfo;
         _test = testMethod;
         _testContext = testContext;
+        _executionActivityLease = executionActivityLease;
     }
 
     /// <summary>
@@ -89,7 +103,7 @@ internal sealed partial class TestMethodRunner
 
         // The engine-level span for the whole test method: it wraps test initialize, the body, test cleanup and any
         // data-row expansion, so the platform's test-case span gains an explanation of where the time went.
-        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+        using IMSTestActivity? activity = _executionActivityLease is null && MSTestInstrumentation.IsEnabled
             ? MSTestInstrumentation.StartActivity(
                 MSTestInstrumentation.ActivityNames.TestMethod,
                 [
@@ -259,7 +273,7 @@ internal sealed partial class TestMethodRunner
 
             // Set a result in case no result is present, preserving the safeguard from the slow path
             // (ExecuteAsync dereferences result[0] in its finally block).
-            return testResults.Length == 0
+            TestResult[] fastPathResults = testResults.Length == 0
                 ?
                 [
                     new TestResult
@@ -269,6 +283,8 @@ internal sealed partial class TestMethodRunner
                     },
                 ]
                 : testResults;
+            FinalizeAssertionFailureDiagnosticsExecution(fastPathResults);
+            return fastPathResults;
         }
 
         // Slow path for data-driven tests.
@@ -335,8 +351,18 @@ internal sealed partial class TestMethodRunner
             results.Add(emptyResult);
         }
 
-        return [.. results];
+        TestResult[] finalResults = [.. results];
+        FinalizeAssertionFailureDiagnosticsExecution(finalResults);
+        return finalResults;
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    private void FinalizeAssertionFailureDiagnosticsExecution(TestResult[] results)
+        => (_testContext as TestContextImplementation)?.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+#else
+    private void FinalizeAssertionFailureDiagnosticsExecution(TestResult[] results)
+        => GC.KeepAlive(this);
+#endif
 
     /// <summary>
     /// Returns <see langword="true"/> if this test method has a <see cref="DataSourceAttribute"/> or

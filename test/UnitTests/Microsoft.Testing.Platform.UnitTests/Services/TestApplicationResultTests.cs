@@ -84,6 +84,128 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_CompletesAttemptSpanWithoutChangingRunStatistics()
+    {
+        var activity = new Mock<IPlatformActivity>();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(TestNodeStateProperty state) => new()
+        {
+            Uid = "retry-test",
+            DisplayName = "Retry test",
+            Properties = new PropertyBag(
+                state,
+                new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true)),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty())),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Statistics statistics = testApplicationResult.GetStatistics();
+        Assert.AreEqual(0, statistics.TotalRanTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_PreservesUnnumberedSpanForFinalResult()
+    {
+        var activity = new Mock<IPlatformActivity>();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(TestNodeStateProperty state, RetryAttemptProperty? retryAttempt = null) => new()
+        {
+            Uid = "retry-test",
+            DisplayName = "Retry test",
+            Properties = retryAttempt is null
+                ? new PropertyBag(state)
+                : new PropertyBag(state, retryAttempt),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                CreateNode(
+                    new FailedTestNodeStateProperty(),
+                    new RetryAttemptProperty(attemptNumber: 1, isSuperseded: true))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Never);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(
+                default,
+                CreateNode(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    new RetryAttemptProperty(attemptNumber: 2, isSuperseded: false))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Statistics statistics = testApplicationResult.GetStatistics();
+        Assert.AreEqual(1, statistics.TotalRanTests);
+        Assert.AreEqual(0, statistics.TotalFailedTests);
+    }
+
+    [TestMethod]
     public async Task GetProcessExitCode_WithCoverageThresholdFailure_ReturnsCoverageThresholdFailed()
     {
         Mock<ITestCoverageResult> coverageResult = new();

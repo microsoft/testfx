@@ -53,7 +53,7 @@ internal class UnitTestDiscoverer
         ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
-        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, settingsXml, _testSource, isMTP, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = GetTestElements(source, settingsXml, isMTP, out List<string> warnings, out int discoveredTestCount);
 
         if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {
@@ -87,7 +87,7 @@ internal class UnitTestDiscoverer
         }
 
         // No tests found => nothing to do
-        if (testElements == null || testElements.Count == 0)
+        if (testElements == null || discoveredTestCount == 0)
         {
             return;
         }
@@ -96,7 +96,7 @@ internal class UnitTestDiscoverer
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info(
                 "MSTestDiscoverer: Found {0} tests from source {1}",
-                testElements.Count,
+                discoveredTestCount,
                 source);
         }
 
@@ -104,6 +104,18 @@ internal class UnitTestDiscoverer
     }
 
     private readonly ITestSourceHandler _testSource;
+
+    internal virtual ICollection<UnitTestElement>? GetTestElements(
+        string source,
+        string? settingsXml,
+        bool isMTP,
+        out List<string> warnings,
+        out int discoveredTestCount)
+    {
+        ICollection<UnitTestElement>? elements = AssemblyEnumeratorWrapper.GetTests(source, settingsXml, _testSource, isMTP, out warnings);
+        discoveredTestCount = elements?.Count ?? 0;
+        return elements;
+    }
 
     internal static async Task SendTestCasesAsync(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
     {

@@ -116,7 +116,7 @@
       <trans-unit id="AreEquivalentMismatchAt">
         <source>Mismatch at '{0}': {1}</source>
         <target state="translated">'{0}' での不一致: {1}</target>
-        <note>{0} is a member path (e.g., {Locked="Order.Items[2].Price"}). {1} is a localized reason describing the kind of mismatch.</note>
+        <note>{0} is a member path (e.g., Order.Items[2].Price). {1} is a localized reason describing the kind of mismatch.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
         <source>reading the expected dictionary threw {0}: {1}.</source>
@@ -694,7 +694,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailedSummary">
         <source>Expected values to be equal, but they are of different types.</source>
-        <target state="translated">値は等しいが、型が異なる必要があります。</target>
+        <target state="translated">等しい値が必要ですが、型が異なります。</target>
         <note />
       </trans-unit>
       <trans-unit id="AreEqualFailedSummary">

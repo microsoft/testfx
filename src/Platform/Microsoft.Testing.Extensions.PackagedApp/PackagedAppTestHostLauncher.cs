@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
@@ -60,7 +59,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// work to do; see <see cref="IsEnabledAsync"/>.
 /// </para>
 /// </remarks>
-internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHostControllerConnectionAuthorizer
+internal sealed partial class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHostControllerConnectionAuthorizer
 {
     /// <summary>
     /// The environment variable that overrides how the launcher decides whether to take over the test
@@ -85,13 +84,21 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// </summary>
     internal const string PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION";
 
+    /// <summary>
+    /// The full path of the packaged test-host executable selected by an external full-trust controller.
+    /// </summary>
+    private const string TargetExecutableEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_TARGET";
+
     // The handoff is an explicit allowlist of protocol metadata: controller connect-back values,
-    // TRX/HangDump pipe endpoints, and Retry attempt/run correlation. Some correlation values may be
-    // supplied by CI or the user, but arbitrary environment values remain excluded because broader
-    // TESTINGPLATFORM_* values such as inline runsettings can carry secrets.
+    // dotnet-test execution identity, TRX/HangDump pipe endpoints, and Retry attempt/run correlation.
+    // Some correlation values may be supplied by CI or the user, but arbitrary environment values
+    // remain excluded because broader TESTINGPLATFORM_* values such as inline runsettings can carry secrets.
     private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
+    private const string DotnetTestExecutionIdEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID";
     private const string HangDumpPipeEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME";
     private const string LogicalRunIdEnvironmentVariableName = "TESTINGPLATFORM_LOGICAL_RUN_ID";
+    private const string MSBuildNodeOption = "--internal-msbuild-node";
+    private const string TestHostControllerSkipExtensionEnvironmentVariableName = "TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION";
     // These names must match the reporter packages' JournalEnvironmentVariableName constants. They are repeated
     // here intentionally so PackagedApp does not take dependencies on every report package just to forward launch metadata.
     private const string CtrfReportJournalEnvironmentVariableName = "TESTINGPLATFORM_CTRFREPORT_JOURNAL";
@@ -99,24 +106,51 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     private const string JUnitReportJournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
     private const string RetryAttemptEnvironmentVariableName = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER";
     private const string RetryRecoveredArtifactManifestEnvironmentVariableName = "TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST";
+    private const string AppModelControllerExtensionsEnvironmentVariableName = "MSTEST_APPMODEL_CONTROLLER_EXTENSIONS";
     private const string TrxTestRunIdEnvironmentVariableName = "TESTINGPLATFORM_TRX_TESTRUN_ID";
     private const string TrxPipeEnvironmentVariableName = "TRXNAMEDPIPENAME";
+#if PACKAGEDAPP_WINRT
+    private const string AppContainerArtifactRootsConfiguredEnvironmentVariableName = "TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED";
+    private const string ArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_SOURCE_ROOT";
+    private const string ArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+    private const string DiagnosticArtifactPathSourceRootEnvironmentVariableName = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_SOURCE_ROOT";
+    private const string DiagnosticArtifactPathDestinationRootEnvironmentVariableName = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
+#endif
+    private const string ResultsDirectoryOption = "--results-directory";
+    private const string DiagnosticOutputDirectoryOption = "--diagnostic-output-directory";
 
     private readonly string _testApplicationDirectory;
+    private readonly bool _isActivatedChild;
+    private readonly string? _targetExecutable;
     private readonly Func<string, string?> _getEnvironmentVariable;
 
     public PackagedAppTestHostLauncher()
         // The controller process runs the very test application whose host is about to be launched, so
         // its base directory is the layout the platform will ask this launcher to start. The launch
         // context (which carries the authoritative path) does not exist yet when enablement is decided.
-        : this(AppContext.BaseDirectory, Environment.GetEnvironmentVariable)
+        : this(
+            AppContext.BaseDirectory,
+            Environment.GetEnvironmentVariable,
+            IsActivatedChild(Environment.GetCommandLineArgs()))
     {
     }
 
     internal PackagedAppTestHostLauncher(string testApplicationDirectory, Func<string, string?> getEnvironmentVariable)
+        : this(testApplicationDirectory, getEnvironmentVariable, isActivatedChild: false)
     {
-        _testApplicationDirectory = testApplicationDirectory;
+    }
+
+    private PackagedAppTestHostLauncher(
+        string testApplicationDirectory,
+        Func<string, string?> getEnvironmentVariable,
+        bool isActivatedChild)
+    {
         _getEnvironmentVariable = getEnvironmentVariable;
+        _isActivatedChild = isActivatedChild;
+        _targetExecutable = GetTargetExecutable(getEnvironmentVariable);
+        _testApplicationDirectory = _targetExecutable is null
+            ? testApplicationDirectory
+            : Path.GetDirectoryName(_targetExecutable)!;
     }
 
     public string Uid => nameof(PackagedAppTestHostLauncher);
@@ -126,6 +160,15 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     public string DisplayName => ExtensionResources.PackagedAppExtensionDisplayName;
 
     public string Description => ExtensionResources.PackagedAppExtensionDescription;
+
+    private static bool IsActivatedChild(IReadOnlyList<string> processArguments)
+        => PackagedAppConnectBackHandshake.TryGetHandshakeId(processArguments) is not null;
+
+    private string? FindManifestPath()
+        // Stryker disable once Conditional: both overloads delegate to the same nullable-aware core when the target is absent.
+        => _targetExecutable is null
+            ? AppxManifestInfo.FindManifestPath(_testApplicationDirectory)
+            : AppxManifestInfo.FindManifestPath(_testApplicationDirectory, _targetExecutable);
 
     /// <summary>
     /// Reports whether this launcher should take over starting the test host.
@@ -155,7 +198,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
 
     private bool IsEnabled()
     {
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows() || _isActivatedChild)
         {
             return false;
         }
@@ -166,113 +209,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // else — including an unset or misspelled value — falls back to probing the layout.
         return !string.Equals(mode, NeverMode, StringComparison.OrdinalIgnoreCase)
             && (string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase)
-                || AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not null);
-    }
-
-    internal static PackagedAppActivationData CreateActivationArguments(
-        AppxApplicationInfo application,
-        IReadOnlyList<string> arguments,
-        string localStateDirectory)
-    {
-        if (application.UsesLaunchActivationArguments)
-        {
-            // windowsApp/UWP activation exposes one opaque string through OnLaunched rather than argv.
-            // Inline the compact versioned payload when it fits the documented launch-argument envelope;
-            // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
-            // the activation string. User filters/runsettings are therefore never persisted in plaintext.
-            return PackagedAppActivationArguments.Create(arguments, localStateDirectory);
-        }
-
-        // A packaged full-trust desktop app receives activation arguments as process argv. Preserve the
-        // existing Windows command-line quoting exactly for that path.
-        var commandLineBuilder = new StringBuilder();
-        foreach (string argument in arguments)
-        {
-            PasteArguments.AppendArgument(commandLineBuilder, argument);
-        }
-
-        return new PackagedAppActivationData(commandLineBuilder.ToString(), payloadPath: null);
-    }
-
-    /// <summary>
-    /// Returns the AppContainer SID of the packaged application about to be launched, so the platform can
-    /// authorize it on the controller-to-host IPC pipe.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The platform creates that pipe before the launcher runs — it has to be listening before the host
-    /// starts — so the package identity cannot be contributed from <see cref="LaunchTestHostAsync"/>. This
-    /// method therefore re-derives it from the same layout <see cref="IsEnabledAsync"/> probes: the
-    /// controller process <em>is</em> the test application whose host is about to be launched, so its base
-    /// directory is that layout.
-    /// </para>
-    /// <para>
-    /// The grant is deliberately narrow. Nothing is requested unless the selected test host application is
-    /// packaged (MSIX) and runs inside an AppContainer, as classified by
-    /// <see cref="AppxApplicationInfo.RunsInAppContainer"/>. A packaged
-    /// full-trust desktop host already reaches the pipe with the platform's normal current-user protection
-    /// and gets nothing extra — even when an AppContainer sibling shares its package. The value returned is
-    /// the SID of this very package, derived from its own family name, so it cannot authorize any other
-    /// package. The platform independently re-validates it and rejects anything that is not a specific
-    /// AppContainer SID.
-    /// </para>
-    /// </remarks>
-    /// <param name="testHostFileName">The executable path of the test host application being launched.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The AppContainer SIDs to authorize, which is at most this package's own SID.</returns>
-    public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(string testHostFileName, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers(testHostFileName));
-    }
-
-    private IReadOnlyList<string> GetAuthorizedAppContainerSecurityIdentifiers(string testHostFileName)
-    {
-        // AppContainers, package SIDs and named-pipe DACLs are Windows concepts.
-        if (!OperatingSystem.IsWindows())
-        {
-            return [];
-        }
-
-        string? mode = _getEnvironmentVariable(PipeAuthorizationModeEnvironmentVariable)?.Trim();
-        if (string.Equals(mode, NeverMode, StringComparison.OrdinalIgnoreCase))
-        {
-            return [];
-        }
-
-        // Only a packaged layout has a package identity to authorize. Resolve the manifest against the
-        // selected executable, not merely the controller's base directory: one package can declare a
-        // full-trust test host alongside an AppContainer sibling, and the sibling must not widen that run.
-        string? sourceDirectory = Path.GetDirectoryName(testHostFileName);
-        if (sourceDirectory is null
-            || AppxManifestInfo.FindManifestPath(sourceDirectory, testHostFileName) is not { } manifestPath)
-        {
-            return [];
-        }
-
-        AppxManifestInfo manifestInfo;
-        AppxApplicationInfo? application;
-        try
-        {
-            manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
-            application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, testHostFileName);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or XmlException)
-        {
-            // A manifest we cannot read is handled by the launch path, which reports it with a proper
-            // error. Widening the pipe DACL is never the right answer to a parsing problem.
-            Debug.WriteLine($"Unable to read '{manifestPath}' while computing the controller pipe authorization: {ex}");
-            return [];
-        }
-
-        // Note this asks RunsInAppContainer, not UsesLaunchActivationArguments: a packagedClassicApp whose
-        // TrustLevel is appContainer receives ordinary argv but is still sandboxed, so it needs the grant.
-        bool alwaysAuthorize = string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase);
-        return !alwaysAuthorize && application?.RunsInAppContainer != true
-            ? []
-            : AppContainerSecurityIdentifier.TryDerive(manifestInfo.PackageFamilyName) is { } securityIdentifier
-                ? [securityIdentifier]
-                : [];
+                || FindManifestPath() is not null);
     }
 
     public async Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
@@ -280,8 +217,32 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // Honor immediate cancellation before doing any (potentially expensive) deployment work.
         cancellationToken.ThrowIfCancellationRequested();
 
-        string sourceDirectory = Path.GetDirectoryName(context.FileName)
-            ?? throw new InvalidOperationException($"Unable to determine the source directory of '{context.FileName}'.");
+        string targetFileName = _targetExecutable ?? context.FileName;
+#if PACKAGEDAPP_WINRT
+        targetFileName = ResolveFinalPath(targetFileName);
+        targetFileName = MaterializeAppxRecipeLayout(targetFileName, out string? appxRecipePath);
+#else
+        string? appxRecipePath = null;
+#endif
+        string sourceDirectory = Path.GetDirectoryName(targetFileName)
+            ?? throw new InvalidOperationException($"Unable to determine the source directory of '{targetFileName}'.");
+
+        if (_targetExecutable is not null)
+        {
+            context = new TestHostLaunchContext(
+                targetFileName,
+                context.Arguments,
+                context.EnvironmentVariables,
+                context.WorkingDirectory);
+        }
+
+        context = new TestHostLaunchContext(
+            context.FileName,
+            PackagedAppControllerArguments.AddNativeTransport(
+                context.Arguments,
+                _getEnvironmentVariable(PackagedAppControllerArguments.NativePipeEnvironmentVariable)),
+            context.EnvironmentVariables,
+            context.WorkingDirectory);
 
         // A packaged (MSIX) app is detected by a matching AppxManifest.xml. The manifest lives at the
         // package layout root, which may be an ancestor of the executable's directory
@@ -290,179 +251,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory, context.FileName);
         if (manifestPath is not null)
         {
-            return await LaunchPackagedAsync(context, manifestPath, cancellationToken).ConfigureAwait(false);
+            return await LaunchPackagedAsync(context, manifestPath, appxRecipePath, cancellationToken).ConfigureAwait(false);
         }
 
         // The layout is not packaged (no AppxManifest.xml). Deploy the loose layout into an isolated
         // directory and launch the produced executable from there.
         return LaunchLooseLayout(context, sourceDirectory, cancellationToken);
-    }
-
-#if PACKAGEDAPP_WINRT
-    private static async Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
-    {
-        var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
-
-        // Resolve the application matching the executable the platform asked to launch so activation
-        // targets the AUMID of the right app (a package can declare several applications). A package
-        // that declares no application has no AUMID to activate.
-        AppxApplicationInfo application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName)
-            ?? throw new InvalidOperationException(
-                string.Format(
-                    CultureInfo.CurrentCulture,
-                    ExtensionResources.PackagedAppNoApplicationToActivate,
-                    manifestInfo.PackageFamilyName,
-                    manifestPath));
-
-        // Registration provisions the package-owned LocalState directory and its AppContainer ACL.
-        // Handoffs must be written only after this completes; creating the directory from the unpackaged
-        // controller first would give it the controller's ACL and make it unreadable by the activated app.
-        await PackageDeployer.RegisterAsync(manifestPath, cancellationToken).ConfigureAwait(false);
-
-        // Hand off the explicit safe environment allowlist through package LocalState. Controller-host runs
-        // key the file by controller PID; retry runs key it by a hash of their unique pipe name. An
-        // AUMID-activated process does not inherit the controller's environment, so the activated host
-        // applies these values before platform and extension connect-back initialization.
-        string? handshakeId = PackagedAppConnectBackHandshake.TryGetHandshakeId(context.Arguments);
-        string? handshakePath = null;
-        string? activationPayloadPath = null;
-        try
-        {
-            if (handshakeId is not null)
-            {
-                handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, handshakeId);
-                PackagedAppConnectBackHandshake.Write(
-                    handshakePath,
-                    GetConnectBackEnvironment(context).Append(new(LauncherModeEnvironmentVariable, NeverMode)));
-            }
-
-            PackagedAppActivationData activationData = CreateActivationArguments(
-                application,
-                context.Arguments,
-                PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
-            string activationArguments = activationData.Arguments;
-            activationPayloadPath = activationData.PayloadPath;
-
-            cancellationToken.ThrowIfCancellationRequested();
-            uint processId = PackageDeployer.Activate(application.AppUserModelId, activationArguments);
-
-            // The handle owns deleting the hand-off from now on: the activated host normally consumes and
-            // deletes it, but if that host exits before reading it the handle still removes it on dispose,
-            // so connect-back data is never left behind.
-            return new ActivatedAppTestHostHandle(processId, handshakePath, activationPayloadPath);
-        }
-        catch
-        {
-            // No host was activated to consume the hand-off, so remove it now; leaving it behind would
-            // let a later run — or a process that reuses this controller PID — pick up stale connect-back
-            // data.
-            if (handshakePath is not null)
-            {
-                PackagedAppConnectBackHandshake.TryDelete(handshakePath);
-            }
-
-            PackagedAppActivationArguments.TryDeletePayload(activationPayloadPath);
-            throw;
-        }
-    }
-
-#else
-    private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
-    {
-        // Registering and activating a packaged (MSIX) app needs the PackageManager WinRT projection,
-        // which is only available in the Windows build of this extension. When a consumer resolves the
-        // plain net8.0/net9.0 build, fail fast with an actionable message — including the AUMID that
-        // activation would use — pointing at the Windows TFM, instead of starting an executable that
-        // cannot host the run.
-        _ = cancellationToken;
-        var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
-        AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName);
-        throw new InvalidOperationException(
-            string.Format(
-                CultureInfo.CurrentCulture,
-                ExtensionResources.PackagedAppLaunchNotSupported,
-                application?.AppUserModelId ?? manifestInfo.PackageFamilyName,
-                manifestPath));
-    }
-#endif
-
-    // Selects the controller connect-back values, TRX/HangDump endpoints, and Retry attempt/run
-    // correlation metadata that an AUMID-activated host would not otherwise inherit. Unrelated
-    // environment values remain excluded because they can contain user data or secrets.
-    internal static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
-    {
-        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
-        {
-            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, CtrfReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, HtmlReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, JUnitReportJournalEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, RetryAttemptEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, RetryRecoveredArtifactManifestEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, LogicalRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, TrxTestRunIdEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, TrxPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(environmentVariable.Key, HangDumpPipeEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
-            {
-                yield return environmentVariable;
-            }
-        }
-    }
-
-    private static ITestHostHandle LaunchLooseLayout(TestHostLaunchContext context, string sourceDirectory, CancellationToken cancellationToken)
-    {
-        // 1. Copy the app's loose layout into an isolated directory.
-        string deploymentDirectory = Path.Combine(Path.GetTempPath(), "MTPPackagedAppDeployment", Guid.NewGuid().ToString("N"));
-        CopyDirectory(sourceDirectory, deploymentDirectory, cancellationToken);
-
-        // 2. Launch the deployed test host, forwarding the platform-prepared arguments and
-        //    environment (which include the controller IPC pipe name the host connects back on).
-        string deployedFileName = Path.Combine(deploymentDirectory, Path.GetFileName(context.FileName));
-        var startInfo = new ProcessStartInfo(deployedFileName)
-        {
-            UseShellExecute = false,
-            // Honor an explicitly requested working directory; otherwise run from the deployment dir.
-            WorkingDirectory = context.WorkingDirectory ?? deploymentDirectory,
-        };
-
-        foreach (string argument in context.Arguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
-        {
-            startInfo.Environment[environmentVariable.Key] = environmentVariable.Value;
-        }
-
-        // The deployed child is the retry attempt itself. Prevent it from enabling this launcher again and
-        // recursively creating another controller/deployment layer when the parent was opted in with "always".
-        startInfo.Environment[LauncherModeEnvironmentVariable] = NeverMode;
-
-        Process process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");
-
-        // 3. Return a handle that deliberately does NOT surface the underlying process id, validating
-        //    that the platform relies purely on the lifecycle contract
-        //    (WaitForExitAsync/ExitCode/HasExited/Terminate) and the IPC PID handshake. The handle also
-        //    owns cleanup of the deployment directory once the host has exited.
-        return new PackagedAppTestHostHandle(process, deploymentDirectory);
-    }
-
-    private static void CopyDirectory(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(destinationDirectory);
-
-        foreach (string file in Directory.EnumerateFiles(sourceDirectory))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            File.Copy(file, Path.Combine(destinationDirectory, Path.GetFileName(file)), overwrite: true);
-        }
-
-        foreach (string directory in Directory.EnumerateDirectories(sourceDirectory))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            CopyDirectory(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), cancellationToken);
-        }
     }
 }

@@ -22,6 +22,7 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
     private readonly IHost _innerHost;
     private readonly CancellationToken _cancellationToken;
     private readonly TestApplicationResult? _testApplicationResult;
+    private TestCoverageResult? _coverageResult;
     private TestHostControllerCancellationListener? _testHostControllerCancellationListener;
 
     public TestHostControlledHost(
@@ -47,6 +48,9 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
     public void SetCancellationListener(TestHostControllerCancellationListener? testHostControllerCancellationListener)
         => _testHostControllerCancellationListener = testHostControllerCancellationListener;
 
+    internal void SetCoverageResult(TestCoverageResult coverageResult)
+        => _coverageResult = coverageResult;
+
     public async Task<int> RunAsync()
     {
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
@@ -62,7 +66,7 @@ internal sealed class TestHostControlledHost : IHost, IDisposable
                 ? _testApplicationResult.GetProcessExitCodeWithoutIgnore()
                 : exitCode;
             await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
-                new TestHostCompletedRequest(exitCode, unfilteredExitCode),
+                new TestHostCompletedRequest(exitCode, unfilteredExitCode, _coverageResult?.ControllerSummaryArtifacts ?? []),
                 completionCancellationTokenSource.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException oc) when (

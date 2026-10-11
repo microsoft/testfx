@@ -20,10 +20,6 @@ internal partial class TestMethodInfo : ITestMethod
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
-    private object? _classInstance;
-    private bool _isTestContextSet;
-    private bool _isTestCleanupInvoked;
-
     private ExecutionContext? _executionContext;
 
 #if NETFRAMEWORK
@@ -203,6 +199,8 @@ internal partial class TestMethodInfo : ITestMethod
     /// <returns>Result of test method invocation.</returns>
     public virtual async Task<TestResult> InvokeAsync(object?[]? arguments)
     {
+        var testContextImpl = TestContext as TestContextImplementation;
+        using IDisposable? assertionFailureDiagnosticsScope = testContextImpl?.StartAssertionFailureDiagnosticsScope();
         Stopwatch watch = new();
         TestResult? result = null;
 
@@ -224,8 +222,8 @@ internal partial class TestMethodInfo : ITestMethod
 
             if (result != null)
             {
-                var testContextImpl = TestContext as TestContextImplementation;
                 result.SetOutputAndTraces(testContextImpl, TestContext);
+                testContextImpl?.FinalizeAssertionFailureDiagnostics(result.Outcome);
                 result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
             }

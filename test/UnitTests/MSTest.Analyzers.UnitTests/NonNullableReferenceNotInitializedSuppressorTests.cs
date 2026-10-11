@@ -13,6 +13,12 @@ namespace MSTest.Analyzers.UnitTests;
 public sealed class NonNullableReferenceNotInitializedSuppressorTests
 {
     [TestMethod]
+    public void SuppressionJustificationDescribesTestContextInitialization()
+        => Assert.AreEqual(
+            "MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.",
+            NonNullableReferenceNotInitializedSuppressor.Rule.Justification.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+    [TestMethod]
     public async Task TestContextPropertyOnTestClass_DiagnosticIsSuppressed()
     {
         string code = @"

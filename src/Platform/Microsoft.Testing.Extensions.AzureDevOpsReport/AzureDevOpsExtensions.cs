@@ -2,10 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -48,10 +51,8 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetTestApplicationProcessExitCode(),
                     serviceProvider.GetRequiredService<ITestCoverageResult>(),
                     serviceProvider.GetLoggerFactory(),
-                    () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
-                    {
-                        IsRequiredArtifactPostProcessingSupported: true,
-                    }));
+                    () => ShouldDeferToArtifactPostProcessing(serviceProvider),
+                    historyService ??= CreateHistoryService(serviceProvider)));
 
         var compositeSlowTestReporter =
             new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
@@ -134,6 +135,15 @@ public static class AzureDevOpsExtensions
 
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
 
+        CiCoverageSummaryControllerHandlerRegistration.Register(
+            builder.TestHostControllers,
+            AzureDevOpsSummaryArtifactPostProcessor.Provider,
+            AzureDevOpsSummaryArtifactPostProcessor.FragmentArtifactKind,
+            serviceProvider => serviceProvider.GetLoggerFactory().CreateLogger<AzureDevOpsSummaryArtifactPostProcessor>(),
+            serviceProvider => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<AzureDevOpsSummaryArtifactPostProcessor>().Single(),
+            serviceProvider => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsRequiredArtifactPostProcessingSupported: true },
+            (path, exception) => string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SummaryWriteFailedWarning, path, exception.Message));
+
         if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
             artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
@@ -152,4 +162,8 @@ public static class AzureDevOpsExtensions
             new AzureDevOpsHistoryClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
             serviceProvider.GetTask(),
             serviceProvider.GetLoggerFactory());
+
+    private static bool ShouldDeferToArtifactPostProcessing(IServiceProvider serviceProvider)
+        => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection { IsRequiredArtifactPostProcessingSupported: true }
+            || CoverageThresholdPolicy.IsDeferredToController(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment());
 }

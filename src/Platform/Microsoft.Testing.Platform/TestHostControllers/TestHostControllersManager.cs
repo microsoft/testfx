@@ -17,6 +17,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _environmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostLauncher>> _testHostLauncherFactories = [];
+    private readonly List<Func<IServiceProvider, ITestHostControllerRunCompletionHandler>> _runCompletionHandlerFactories = [];
     private readonly List<ICompositeExtensionFactory> _environmentVariableProviderCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _lifetimeHandlerCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _testHostLauncherCompositeFactories = [];
@@ -162,12 +163,28 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             requireProcessRestart = true;
         }
 
+        List<(IExtension Extension, int RegistrationOrder)> runCompletionHandlers = [];
+        if (requireProcessRestart)
+        {
+            // Observers of an existing controller must not introduce an extra process themselves.
+            await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_runCompletionHandlerFactories, serviceProvider, runCompletionHandlers, _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
+        }
+
         return new TestHostControllerConfiguration(
             [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostEnvironmentVariableProvider)x.Extension)],
             [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostProcessLifetimeHandler)x.Extension)],
             [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => (IDataConsumer)x.Extension)],
             testHostLauncher,
-            requireProcessRestart);
+            requireProcessRestart)
+        {
+            RunCompletionHandlers = [.. runCompletionHandlers.OrderBy(handler => handler.RegistrationOrder).Select(handler => (ITestHostControllerRunCompletionHandler)handler.Extension)],
+        };
+    }
+
+    internal void AddRunCompletionHandler(Func<IServiceProvider, ITestHostControllerRunCompletionHandler> factory)
+    {
+        _runCompletionHandlerFactories.Add(factory);
+        _factoryOrdering.Add(factory);
     }
 
     internal async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)

@@ -1,0 +1,47 @@
+name: Check localization catalogs
+
+on:
+  pull_request:
+    paths:
+      - '**.resx'
+      - '**.xlf'
+      - '.github/scripts/check_localization.py'
+      - '.github/scripts/test_check_localization.py'
+      - '.github/skills/testfx-localization-validation/**'
+      - '.github/workflows/check-localization.yml'
+  push:
+    branches:
+      - main
+      - 'rel/*'
+    paths:
+      - '**.resx'
+      - '**.xlf'
+      - '.github/scripts/check_localization.py'
+      - '.github/scripts/test_check_localization.py'
+      - '.github/skills/testfx-localization-validation/**'
+      - '.github/workflows/check-localization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-localization-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check localization catalogs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Test localization guard
+        run: python .github/scripts/test_check_localization.py
+      - name: Validate localization catalogs
+        run: python .github/scripts/check_localization.py

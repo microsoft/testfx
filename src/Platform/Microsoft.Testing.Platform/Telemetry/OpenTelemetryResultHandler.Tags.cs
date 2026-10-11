@@ -17,7 +17,7 @@ internal sealed partial class OpenTelemetryResultHandler
     /// The OpenTelemetry conventions ask for the span name to be the test case name rather than an opaque id,
     /// because it is what shows up in trace waterfalls and what backends group on.
     /// </summary>
-    private static string GetActivityName(TestNode testNode)
+    internal static string GetActivityName(TestNode testNode)
         => RoslynString.IsNullOrWhiteSpace(testNode.DisplayName) ? testNode.Uid.Value : testNode.DisplayName;
 
     private static string? GetSuiteName(TestNode testNode)
@@ -56,7 +56,10 @@ internal sealed partial class OpenTelemetryResultHandler
             ? TestingPlatformSemanticConventions.TestResultStatus.Fail
             : TestingPlatformSemanticConventions.TestResultStatus.Pass;
 
-    private IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
+    internal static IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(
+        TestNode testNode,
+        TestNodeUid? parentUid,
+        PlatformOpenTelemetryOptions options)
     {
         yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseName, testNode.DisplayName);
         yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseId, testNode.Uid.Value);
@@ -65,7 +68,7 @@ internal sealed partial class OpenTelemetryResultHandler
             yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseParentId, parentUid.Value);
         }
 
-        if (_options.EmitLegacyAttributes)
+        if (options.EmitLegacyAttributes)
         {
             yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestName, testNode.DisplayName);
             yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestId, testNode.Uid.Value);
@@ -111,7 +114,7 @@ internal sealed partial class OpenTelemetryResultHandler
             yield return new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, identifierProperty.TypeName);
             yield return new(TestingPlatformSemanticConventions.Attributes.TestAssemblyName, identifierProperty.AssemblyFullName);
 
-            if (_options.EmitLegacyAttributes)
+            if (options.EmitLegacyAttributes)
             {
                 yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestMethod, identifierProperty.MethodName);
                 yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestClass, identifierProperty.TypeName);
@@ -125,7 +128,7 @@ internal sealed partial class OpenTelemetryResultHandler
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeFilePath, testLocationProperty.FilePath);
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeLineNumber, testLocationProperty.LineSpan.Start.Line);
 
-            if (_options.EmitLegacyAttributes)
+            if (options.EmitLegacyAttributes)
             {
                 yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestFilePath, testLocationProperty.FilePath);
                 yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestLineStart, testLocationProperty.LineSpan.Start.Line);
@@ -144,7 +147,7 @@ internal sealed partial class OpenTelemetryResultHandler
             }
 
             yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix}{metadata.Key}", metadata.Value);
-            if (_options.EmitLegacyAttributes)
+            if (options.EmitLegacyAttributes)
             {
                 yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix}{metadata.Key}", metadata.Value);
             }

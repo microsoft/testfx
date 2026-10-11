@@ -15,10 +15,8 @@ namespace ReliableTestSuite;
 ///
 /// Use it deliberately and visibly, never as the default. On MSTest 4.4+ under
 /// Microsoft.Testing.Platform each attempt is reported, so a retried test surfaces as "flaky"
-/// rather than a clean green - that visibility is the point. (On 4.3.x a retried-then-passed
-/// test reports as an ordinary pass, so the retry is easier to forget it is there.) If you find
-/// yourself adding [Retry] to hide a race in your OWN code, stop and fix the race; the earlier
-/// steps are how.
+/// rather than a clean green - that visibility is the point. If you find yourself adding [Retry]
+/// to hide a race in your OWN code, stop and fix the race; the earlier steps are how.
 ///
 /// (Also distinct from the Microsoft.Testing.Extensions.Retry orchestrator's
 /// --retry-failed-tests, which re-runs failed tests in a fresh host process. If you combine

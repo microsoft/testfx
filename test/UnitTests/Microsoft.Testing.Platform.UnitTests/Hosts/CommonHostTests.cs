@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -99,6 +100,8 @@ public sealed class CommonHostTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
         serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
@@ -142,6 +145,8 @@ public sealed class CommonHostTests
         Mock<IStopPoliciesService> policiesServiceMock = new();
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
         serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
@@ -216,6 +221,8 @@ public sealed class CommonHostTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
         serviceProvider.AddService(new Mock<IStopPoliciesService>().Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
@@ -260,6 +267,8 @@ public sealed class CommonHostTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
         serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();

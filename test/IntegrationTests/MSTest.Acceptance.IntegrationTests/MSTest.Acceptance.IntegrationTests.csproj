@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />

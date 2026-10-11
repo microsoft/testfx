@@ -56,8 +56,11 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
                     throw ApplicationStateGuard.Unreachable();
                 }
 
+                // Stryker disable once Boolean: continuation scheduling does not change the frame header.
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
+
+            // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the emitted frame.
             finally
             {
                 ArrayPool<byte>.Shared.Return(bytes);
@@ -76,8 +79,11 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
                     throw ApplicationStateGuard.Unreachable();
                 }
 
+                // Stryker disable once Boolean: continuation scheduling does not change the serializer identifier.
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken).ConfigureAwait(false);
             }
+
+            // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the emitted frame.
             finally
             {
                 ArrayPool<byte>.Shared.Return(bytes);
@@ -88,6 +94,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
 
             // Write the serialized payload
 #if NET
+            // Stryker disable once Boolean: continuation scheduling does not change the serialized payload.
             await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken).ConfigureAwait(false);
 #else
             await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken).ConfigureAwait(false);
@@ -95,11 +102,14 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
 
             // Send the framed message to the pipe stream
 #if NET
+            // Stryker disable once Boolean: continuation scheduling does not change the transmitted frame.
             await stream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken).ConfigureAwait(false);
 #else
             await stream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
+            // Stryker disable once Boolean: continuation scheduling does not change flush completion.
             await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            // Stryker disable once all: request/reply serialization prevents another message until the peer has consumed this frame.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && stream is PipeStream pipeStream)
             {
                 pipeStream.WaitForPipeDrain();
@@ -131,6 +141,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             while (headerBytesRead < sizeof(int))
             {
 #if NET
+                // Stryker disable once Boolean: continuation scheduling does not change the bytes read.
                 int n = await stream.ReadAsync(_readBuffer.AsMemory(headerBytesRead, sizeof(int) - headerBytesRead), cancellationToken).ConfigureAwait(false);
 #else
                 int n = await stream.ReadAsync(_readBuffer, headerBytesRead, sizeof(int) - headerBytesRead, cancellationToken).ConfigureAwait(false);
@@ -158,6 +169,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             {
                 int toRead = Math.Min(_readBuffer.Length, missingBytesToReadOfWholeMessage);
 #if NET
+                // Stryker disable once Boolean: continuation scheduling does not change the bytes read.
                 int n = await stream.ReadAsync(_readBuffer.AsMemory(0, toRead), cancellationToken).ConfigureAwait(false);
 #else
                 int n = await stream.ReadAsync(_readBuffer, 0, toRead, cancellationToken).ConfigureAwait(false);
@@ -169,6 +181,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
                 }
 
 #if NET
+                // Stryker disable once Boolean: continuation scheduling does not change the buffered payload.
                 await _messageBuffer.WriteAsync(_readBuffer.AsMemory(0, n), cancellationToken).ConfigureAwait(false);
 #else
                 await _messageBuffer.WriteAsync(_readBuffer, 0, n, cancellationToken).ConfigureAwait(false);

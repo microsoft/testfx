@@ -1,5 +1,14 @@
 # RFC 005 - Framework Extensibility for Custom Test Data Source
 
+> **Current implementation note (2026-10-09):** The “always fail” empty-sequence remark
+> describes the default, not every configuration: `ConsiderEmptyDataSourceAsInconclusive`
+> permits an inconclusive result. Unfolding also has serialization/duplicate-name fallback
+> boundaries; the default does not guarantee that every row becomes independently discoverable.
+> See [MSTEST-007](../specifications/mstest.md#mstest-007--data-source-folding-controls-discovery-granularity)
+> and the [architecture](../architecture/mstest.md#data-source-and-extensibility-boundaries).
+> The added ignore/row-metadata capabilities were compared with the current helpers and runner;
+> no tests were executed.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation
@@ -140,11 +149,14 @@ public class CustomTestDataSourceAttribute : Attribute, ITestDataSource, ITestDa
 
 To attach metadata to an individual row (rather than the whole source), return a single-element `object[]` whose only item is a `TestDataRow<T>` instance. MSTest unwraps `TestDataRow<T>.Value` to obtain the actual test method arguments and applies the row's metadata:
 
-- `DisplayName` — overrides the display name for that row.
+- `DisplayName` — overrides the entire display name for that row.
+- `ArgumentsDisplayName` — labels the arguments while retaining the test method's display name, for example `MyTest (empty input)`. Non-blank labels are displayed verbatim and take precedence over the source's display-name callback. A non-null `DisplayName` takes precedence over the argument label.
 - `IgnoreMessage` — when non-null, that single row is reported as skipped with the provided message.
 - `TestCategories` — assigns test categories to the generated test case.
 
 `T` can be a tuple when the test method takes more than one parameter.
+
+Use matching `MSTest.TestFramework` and `MSTest.TestAdapter` versions that support `ArgumentsDisplayName`; older adapters do not apply this metadata.
 
 ```csharp
 public class CustomTestDataSourceAttribute : Attribute, ITestDataSource

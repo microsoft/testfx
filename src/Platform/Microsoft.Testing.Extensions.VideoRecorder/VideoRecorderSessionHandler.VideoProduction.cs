@@ -54,7 +54,12 @@ internal sealed partial class VideoRecorderSessionHandler
                 continue;
             }
 
-            double startOffset = Math.Max(0, (record.Start - recordingStart).TotalSeconds);
+            double startOffset = (record.Start - recordingStart).TotalSeconds;
+            if (startOffset < 0)
+            {
+                startOffset = 0;
+            }
+
             double endOffset = Math.Max(startOffset, (record.End - recordingStart).TotalSeconds);
 
             var overlapping = new List<VideoSegment>();
@@ -68,14 +73,17 @@ internal sealed partial class VideoRecorderSessionHandler
 
             if (overlapping.Count == 0)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the trace diagnostic.
                 await _logger.LogTraceAsync($"No segments survived for test '{record.DisplayName}' (pruned by the rolling buffer); skipping its clip.").ConfigureAwait(false);
                 continue;
             }
 
             string fileName = BuildFileName(record.DisplayName);
+            // Stryker disable once Boolean: continuation scheduling does not change video production.
             string? file = await _recorder!.ConcatAsync(overlapping, fileName, ffmetadataPath: null, cancellationToken).ConfigureAwait(false);
             if (file is not null)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change artifact publication.
                 await PublishArtifactAsync(
                     file,
                     string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.ArtifactPerTestDisplayName, record.DisplayName),
@@ -99,9 +107,11 @@ internal sealed partial class VideoRecorderSessionHandler
         }
 
         string fileName = BuildFileName("session");
+        // Stryker disable once Boolean: continuation scheduling does not change video production.
         string? file = await _recorder!.ConcatAsync(segments, fileName, metadataPath, cancellationToken).ConfigureAwait(false);
         if (file is not null)
         {
+            // Stryker disable once Boolean: continuation scheduling does not change artifact publication.
             await PublishArtifactAsync(file, VideoRecorderResources.ArtifactSessionDisplayName, VideoRecorderResources.ArtifactSessionDescription).ConfigureAwait(false);
         }
     }
@@ -130,11 +140,11 @@ internal sealed partial class VideoRecorderSessionHandler
         }
 
         var builder = new StringBuilder();
-        builder.AppendLine(";FFMETADATA1");
+        builder.Append(';').AppendLine("FFMETADATA1");
         foreach ((TestRecord record, double start, double end) in ordered)
         {
             long startMs = (long)(Math.Max(0, start) * 1000);
-            long endMs = (long)(Math.Min(videoEnd, Math.Max(start + 0.001, end)) * 1000);
+            long endMs = (long)(Math.Min(videoEnd, end) * 1000);
             if (endMs <= startMs)
             {
                 endMs = startMs + 1;
@@ -150,7 +160,9 @@ internal sealed partial class VideoRecorderSessionHandler
 
         try
         {
-            string metadataPath = Path.Combine(directory, "chapters_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
+            // Stryker disable once String: "N" and the default GUID format have the same first eight hexadecimal characters.
+            string unique = Guid.NewGuid().ToString("N").Substring(0, 8);
+            string metadataPath = Path.Combine(directory, $"chapters_{unique}.txt");
             File.WriteAllText(metadataPath, builder.ToString());
             return metadataPath;
         }

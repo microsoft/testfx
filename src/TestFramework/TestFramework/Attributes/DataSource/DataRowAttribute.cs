@@ -52,6 +52,16 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnor
     public string? DisplayName { get; set; }
 
     /// <summary>
+    /// Gets or sets the text displayed in place of the test arguments, while retaining the test method display name.
+    /// </summary>
+    /// <remarks>
+    /// A null, empty, or whitespace-only value uses the default argument display text.
+    /// Otherwise, the value is displayed verbatim using the default data-driven test name format.
+    /// A non-empty, non-whitespace <see cref="DisplayName"/> takes precedence over this property.
+    /// </remarks>
+    public string? ArgumentsDisplayName { get; set; }
+
+    /// <summary>
     /// Gets or sets a reason to ignore the specific test case. Setting the property to non-null value will ignore the test case.
     /// </summary>
     public string? IgnoreMessage { get; set; }
@@ -63,5 +73,7 @@ public class DataRowAttribute : Attribute, ITestDataSource, ITestDataSourceIgnor
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => !string.IsNullOrWhiteSpace(DisplayName)
             ? DisplayName
-            : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
+            : !StringEx.IsNullOrWhiteSpace(ArgumentsDisplayName)
+                ? TestDataSourceUtilities.ComputeDisplayName(methodInfo, ArgumentsDisplayName)
+                : TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
 }

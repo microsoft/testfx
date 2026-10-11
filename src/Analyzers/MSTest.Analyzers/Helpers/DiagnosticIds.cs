@@ -90,4 +90,8 @@ internal static class DiagnosticIds
     public const string UseExecutableConditionAttributeInsteadOfProcessCheckRuleId = "MSTEST0083";
     public const string OSPlatformAttributesShouldBeConsistentRuleId = "MSTEST0084";
     public const string TestClassAttributeShouldNotBeAppliedToAbstractClassRuleId = "MSTEST0085";
+    public const string RedundantTestMethodAttributeRuleId = "MSTEST0086";
+    public const string DuplicateDataRowDisplayNameRuleId = "MSTEST0087";
+    public const string MSTestHostTestClassInjectionNotSupportedRuleId = "MSTEST0088";
+    public const string ConflictingDataRowDisplayNamesRuleId = "MSTEST0089";
 }

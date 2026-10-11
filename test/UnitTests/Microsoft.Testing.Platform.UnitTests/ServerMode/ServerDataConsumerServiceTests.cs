@@ -56,6 +56,23 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_WithFileArtifact()
+    {
+        FileArtifact fileArtifact = new(new FileInfo("file"), "name", "description");
+        DataProducer producer = new();
+
+        await _service.ConsumeAsync(producer, fileArtifact, CancellationToken.None).ConfigureAwait(false);
+
+        Artifact artifact = Assert.ContainsSingle(_service.Artifacts);
+        Uri uri = new(artifact.Uri);
+        Assert.AreEqual("file", Path.GetFileName(uri.AbsolutePath));
+        Assert.AreEqual(producer.Uid, artifact.Producer);
+        Assert.AreEqual("file", artifact.Type);
+        Assert.AreEqual("name", artifact.DisplayName);
+        Assert.AreEqual("description", artifact.Description);
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_WithTestNodeUpdatedMessage()
     {
         TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
@@ -65,6 +82,52 @@ public sealed class ServerDataConsumerServiceTests : IDisposable
 
         List<Artifact> actual = _service.Artifacts;
         Assert.IsEmpty(actual);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_WithUnrecognizedData_DoesNotAddArtifact()
+    {
+        await _service.ConsumeAsync(new DataProducer(), new Mock<IData>().Object, CancellationToken.None).ConfigureAwait(false);
+
+        Assert.IsEmpty(_service.Artifacts);
+        _serverTestHost.Verify(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_BeforeIdleDelayCompletes_FlushesPendingUpdate()
+    {
+        TestNodeUpdateMessage update = new(new SessionUid("1"), new TestNode
+        {
+            Uid = new TestNodeUid("test()"),
+            DisplayName = "test",
+            Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+        });
+        _task.Setup(task => task.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .Returns(new TaskCompletionSource<bool>().Task);
+        TestNodeStateChangedEventArgs? sentChange = null;
+        _serverTestHost.Setup(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()))
+            .Callback<TestNodeStateChangedEventArgs, CancellationToken>((change, _) => sentChange = change)
+            .Returns(Task.CompletedTask);
+
+        await _service.ConsumeAsync(new DataProducer(), update, CancellationToken.None).ConfigureAwait(false);
+        _serverTestHost.Verify(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        await _service.OnTestSessionFinishingAsync(_serviceProvider.GetTestSessionContext()).ConfigureAwait(false);
+
+        _serverTestHost.Verify(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.IsNotNull(sentChange);
+        Assert.AreEqual(_runId, sentChange.RunId);
+        Assert.IsNotNull(sentChange.Changes);
+        Assert.HasCount(1, sentChange.Changes);
+        Assert.AreSame(update, sentChange.Changes[0]);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_CompletesWithoutSendingUpdates()
+    {
+        await _service.OnTestSessionStartingAsync(_serviceProvider.GetTestSessionContext()).ConfigureAwait(false);
+
+        _serverTestHost.Verify(host => host.SendTestUpdateAsync(It.IsAny<TestNodeStateChangedEventArgs>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]

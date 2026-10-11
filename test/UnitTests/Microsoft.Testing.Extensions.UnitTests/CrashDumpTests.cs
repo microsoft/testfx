@@ -631,6 +631,18 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
+    [DataRow("dump_%p.dmp", "*.dmp")]
+    [DataRow("dump_%p.crashdump", "*.crashdump")]
+    [DataRow("dump", "*")]
+    [DataRow("dump_%p", "*")]
+    public void GetDumpSearchPattern_ReturnsWildcardForDumpExtension(string pattern, string expected)
+    {
+        string actual = CrashDumpProcessLifetimeHandler.GetDumpSearchPattern(pattern);
+
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod]
     [DataRow("{pname}_{pid}_crash.dmp", "%e_%p_crash.dmp")]
     [DataRow("{asm}_{pid}.dmp", null)]
     [DataRow("literal.dmp", "literal.dmp")]

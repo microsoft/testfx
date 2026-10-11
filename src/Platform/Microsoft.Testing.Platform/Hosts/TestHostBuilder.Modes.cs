@@ -126,11 +126,21 @@ internal sealed partial class TestHostBuilder
     private async Task<IHost?> TryBuildTestHostOrchestratorHostAsync(BuildContext context)
     {
         TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await _testHostOrchestratorManager.BuildAsync(context.ServiceProvider).ConfigureAwait(false);
-        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0
+
+        // Middleware only wraps an existing orchestrator invocation (see
+        // ITestHostExecutionOrchestratorMiddleware); it does not stand in for one. Registering middleware
+        // without also registering exactly one orchestrator is a misconfiguration, not silently ignored.
+        bool hasActiveMiddleware = testHostOrchestratorConfiguration.Middleware.Length > 0;
+
+        if ((testHostOrchestratorConfiguration.TestHostOrchestrators.Length == 0 && !hasActiveMiddleware)
             || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
             return null;
         }
+
+        ValidateTestHostOrchestratorMiddlewareConfiguration(
+            testHostOrchestratorConfiguration.TestHostOrchestrators.Length,
+            testHostOrchestratorConfiguration.Middleware.Length);
 
         if (testHostOrchestratorConfiguration.TestHostOrchestrators.Any(
             static orchestrator => orchestrator is ITestHostControllerConnectionAuthorizationConsumer))
@@ -156,11 +166,24 @@ internal sealed partial class TestHostBuilder
         return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, context.ServiceProvider);
     }
 
+    internal static void ValidateTestHostOrchestratorMiddlewareConfiguration(int orchestratorCount, int middlewareCount)
+    {
+        if (middlewareCount > 0 && orchestratorCount != 1)
+        {
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage,
+                    orchestratorCount));
+        }
+    }
+
     private async Task<IHost?> TryBuildTestHostControllersHostAsync(BuildContext context)
     {
-        if ((context.TestHostControllerInfo.HasTestHostController
-                && context.SystemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{context.TestHostControllerInfo.GetTestHostControllerPID()}") == "1")
-            || context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
+        if (ShouldSkipTestHostControllersHost(
+            context.TestHostControllerInfo,
+            context.CommandLineHandler,
+            context.SystemEnvironment))
         {
             return null;
         }
@@ -214,6 +237,17 @@ internal sealed partial class TestHostBuilder
         CompleteBuilderActivity(context.BuilderActivity, nameof(TestHostControllersTestHost));
         return testHostControllersHost;
     }
+
+    internal static bool ShouldSkipTestHostControllersHost(
+        ITestHostControllerInfo testHostControllerInfo,
+        ICommandLineOptions commandLineOptions,
+        IEnvironment environment)
+        => (testHostControllerInfo.HasTestHostController
+                && environment.GetEnvironmentVariable(
+                    $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID()}") == "1")
+            || (commandLineOptions.IsOptionSet("internal-retry-pipename")
+                && environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION) == "1")
+            || commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
 
     private async Task<IHost> BuildTestHostModeAsync(BuildContext context)
     {
@@ -291,6 +325,7 @@ internal sealed partial class TestHostBuilder
                 serverTestHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
                 context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCoverageResult(context.ServiceProvider.GetRequiredService<TestCoverageResult>());
             controlledHost.SetCancellationListener(testHostControllerCancellationListener);
             actualTestHost = controlledHost;
         }
@@ -358,6 +393,7 @@ internal sealed partial class TestHostBuilder
                 consoleHost,
                 context.TestApplicationCancellationTokenSource.CancellationToken,
                 context.ServiceProvider.GetRequiredService<TestApplicationResult>());
+            controlledHost.SetCoverageResult(context.ServiceProvider.GetRequiredService<TestCoverageResult>());
             controlledHost.SetCancellationListener(testHostControllerCancellationListener);
             actualTestHost = controlledHost;
         }

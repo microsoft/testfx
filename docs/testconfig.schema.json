@@ -169,7 +169,7 @@
             },
             "treatDiscoveryWarningsAsErrors": {
               "type": "boolean",
-              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to false."
+              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to true."
             },
             "considerEmptyDataSourceAsInconclusive": {
               "type": "boolean",
@@ -179,6 +179,10 @@
               "type": "string",
               "description": "Controls whether the debugger is launched when an assertion fails.",
               "enum": ["Disabled", "Enabled", "EnabledExcludingCI"]
+            },
+            "captureAssertionFailureDiagnostics": {
+              "type": "boolean",
+              "description": "When true, captures bounded JSON diagnostic artifacts for up to the first three assertion failures of each test execution attempt. Each artifact includes stack frames, concurrently running test names, and test-host CPU, memory, process I/O, and result-volume information. Defaults to false."
             },
             "executionApartmentState": {
               "type": "string",

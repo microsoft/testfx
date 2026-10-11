@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
@@ -12,6 +12,7 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE

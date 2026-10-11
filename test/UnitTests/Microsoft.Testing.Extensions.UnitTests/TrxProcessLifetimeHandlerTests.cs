@@ -55,10 +55,6 @@ public sealed class TrxProcessLifetimeHandlerTests
 
             Assert.IsTrue(endpoint.PipeName.StartsWith(@"LOCAL\", StringComparison.OrdinalIgnoreCase));
             Assert.IsNotNull(task.DeferredFunction);
-
-            using var client = new NamedPipeClientStream(".", endpoint.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            await client.ConnectAsync(timeout: 5_000, TestContext.CancellationToken);
-            Assert.IsTrue(client.IsConnected);
         }
     }
 

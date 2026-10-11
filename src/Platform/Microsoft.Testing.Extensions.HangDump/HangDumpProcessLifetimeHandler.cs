@@ -157,6 +157,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
             _dumpFileNamePattern = fileName[0];
         }
 
+        // Stryker disable once Boolean: continuation scheduling does not change the configured timeout.
         await _logger.LogInformationAsync($"Hang dump timeout setup {_activityTimerValue}.").ConfigureAwait(false);
 
         // In addition to the inactivity timeout above, honor an absolute CI deadline (if provided).
@@ -192,6 +193,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     {
         if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the received pipe name.
             await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'").ConfigureAwait(false);
 
             // exitProcessOnConnectionLoss: false, because this is an auxiliary channel. It carries nothing but

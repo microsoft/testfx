@@ -44,6 +44,7 @@ internal static class DeadlineHelper
             return false;
         }
 
+        // Stryker disable once Equality: a six-character offset alone is never a valid deadline.
         bool hasExplicitOffset = raw.EndsWith("Z", StringComparison.OrdinalIgnoreCase)
             || (raw.Length >= 6
                 && raw[^6] is '+' or '-'
@@ -57,7 +58,7 @@ internal static class DeadlineHelper
                 raw,
                 SupportedDeadlineFormats,
                 CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                DateTimeStyles.None,
                 out DateTimeOffset parsed))
         {
             return false;

@@ -50,14 +50,53 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
+    public void ToTestNode_WhenTestResultHasDisplayName_TestNodeDisplayNameUsesResultValue()
+    {
+        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
+        {
+            DisplayName = "DiscoveryDisplayName",
+        })
+        {
+            DisplayName = "ExecutionDisplayName",
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.AreEqual("ExecutionDisplayName", testNode.DisplayName);
+    }
+
+    [TestMethod]
+    public void ToTestNode_InvokesAdditionalPropertiesCallbackWithConvertedObjects()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+        TestNode? capturedTestNode = null;
+        TestCase? capturedTestCase = null;
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            (node, source) => (capturedTestNode, capturedTestCase) = (node, source),
+            null,
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        Assert.AreSame(testNode, capturedTestNode);
+        Assert.AreSame(testCase, capturedTestCase);
+    }
+
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasCodeFilePath_SetsTestFileLocationProperty()
     {
         TestResult testResult = new(new("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
         {
             CodeFilePath = "FilePath",
+            LineNumber = 42,
         });
         var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
-        Assert.AreEqual("FilePath", testNode.Properties.Single<TestFileLocationProperty>().FilePath);
+        TestFileLocationProperty location = testNode.Properties.Single<TestFileLocationProperty>();
+        Assert.AreEqual("FilePath", location.FilePath);
+        Assert.AreEqual(new LinePosition(42, -1), location.LineSpan.Start);
+        Assert.AreEqual(new LinePosition(42, -1), location.LineSpan.End);
     }
 
     [TestMethod]
@@ -96,6 +135,34 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
+    public void ToTestNode_WhenTestCaseHasCategory_CopiesCategoryFromDiscoveryObject()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+#pragma warning disable CS0618 // Type or member is obsolete
+        var testCategoryProperty = TestProperty.Register("Discovery.Category", "Label", typeof(string[]), TestPropertyAttributes.Trait, typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
+        testCase.SetPropertyValue<string[]>(testCategoryProperty, ["discovery-category"]);
+
+        var testNode = testCase.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        TestMetadataProperty metadata = testNode.Properties.Single<TestMetadataProperty>();
+        Assert.AreEqual("discovery-category", metadata.Key);
+        Assert.AreEqual(string.Empty, metadata.Value);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenStringArrayPropertyIsNotATrait_DoesNotCopyItAsMetadata()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+        var nonTraitProperty = TestProperty.Register("NonTrait.StringArray", "Label", typeof(string[]), typeof(TestCase));
+        testCase.SetPropertyValue<string[]>(nonTraitProperty, ["not-a-category"]);
+
+        var testNode = testCase.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.IsEmpty(testNode.Properties.OfType<TestMetadataProperty>());
+    }
+
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasMSTestDiscovererTestCategoryTestPropertyWithTrxEnabled_TestNodePropertiesContainTrxCategoriesProperty()
     {
         TestResult testResult = new(new TestCase("assembly.class.SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -110,6 +177,109 @@ public sealed class ObjectModelConvertersTests
         Assert.HasCount(1, trxCategoriesProperty);
         Assert.HasCount(1, trxCategoriesProperty[0].Categories);
         Assert.AreEqual("category1", trxCategoriesProperty[0].Categories[0]);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTestCaseHasMSTestDependencies_CopiesThemAsSerializableProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+#pragma warning disable CS0618 // Type or member is obsolete
+        var dependenciesProperty = TestProperty.Register(
+            "MSTestDiscoverer.Dependencies",
+            "Dependencies",
+            typeof(string[]),
+            TestPropertyAttributes.Hidden,
+            typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
+        testCase.SetPropertyValue<string[]>(dependenciesProperty, ["SMy.Namespace.Setup\nInitialize", "P\nWarmup"]);
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            null,
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        SerializableKeyValuePairStringProperty[] dependencies =
+        [
+            .. testNode.Properties
+                .OfType<SerializableKeyValuePairStringProperty>()
+                .Where(static property => property.Key == "mstest.TestCase.Dependency"),
+        ];
+        Assert.HasCount(2, dependencies);
+        string[] dependencyValues =
+        [
+            .. dependencies
+                .Select(static property => property.Value)
+                .OrderBy(static value => value, StringComparer.Ordinal),
+        ];
+        Assert.AreSequenceEqual(["P\nWarmup", "SMy.Namespace.Setup\nInitialize"], dependencyValues);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenMSTestDependenciesExceedBounds_CapsTransportedMetadata()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+#pragma warning disable CS0618 // Type or member is obsolete
+        var dependenciesProperty = TestProperty.Register(
+            "MSTestDiscoverer.Dependencies",
+            "Dependencies",
+            typeof(string[]),
+            TestPropertyAttributes.Hidden,
+            typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
+        string oversizedDependency = "S" + new string('x', 1024);
+        testCase.SetPropertyValue<string[]>(
+            dependenciesProperty,
+            [oversizedDependency, .. Enumerable.Range(0, 40).Select(static index => $"SNamespace.Type\nMethod{index}")]);
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            null,
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        string[] dependencyValues =
+        [
+            .. testNode.Properties
+                .OfType<SerializableKeyValuePairStringProperty>()
+                .Where(static property => property.Key == "mstest.TestCase.Dependency")
+                .Select(static property => property.Value),
+        ];
+        Assert.HasCount(32, dependencyValues);
+        Assert.DoesNotContain(oversizedDependency, dependencyValues);
+        Assert.Contains("SNamespace.Type\nMethod31", dependencyValues);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenMSTestDependencyIsExactlyMaximumLength_CopiesIt()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+#pragma warning disable CS0618 // Type or member is obsolete
+        var dependenciesProperty = TestProperty.Register(
+            "MSTestDiscoverer.Dependencies",
+            "Dependencies",
+            typeof(string[]),
+            TestPropertyAttributes.Hidden,
+            typeof(TestCase));
+#pragma warning restore CS0618 // Type or member is obsolete
+        string maximumLengthDependency = new('x', 1024);
+        testCase.SetPropertyValue<string[]>(dependenciesProperty, [maximumLengthDependency]);
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            null,
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        SerializableKeyValuePairStringProperty dependency = Assert.ContainsSingle(
+            testNode.Properties.OfType<SerializableKeyValuePairStringProperty>());
+        Assert.AreEqual(maximumLengthDependency, dependency.Value);
     }
 
     [TestMethod]
@@ -130,6 +300,105 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
+    public void ToTestNode_WhenVisualStudioClientPredatesLocationSupport_AddsLegacyLocationProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
+        {
+            CodeFilePath = "TestFile.cs",
+            LineNumber = 42,
+        };
+        var clientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false));
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            new NamedFeatureCapabilityWithVSTestProvider(),
+            new ServerModeCommandLineOptions(),
+            clientInfo);
+
+        SerializableKeyValuePairStringProperty[] properties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
+        Assert.Contains(property => property.Key == "vstest.TestCase.CodeFilePath" && property.Value == "TestFile.cs", properties);
+        Assert.Contains(property => property.Key == "vstest.TestCase.LineNumber" && property.Value == "42", properties);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenVisualStudioClientSupportsLocation_DoesNotAddLegacyLocationProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
+        {
+            CodeFilePath = "TestFile.cs",
+            LineNumber = 42,
+        };
+        var clientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.1", new ClientCapabilitiesService(DeclaredIsStateful: false));
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            new NamedFeatureCapabilityWithVSTestProvider(),
+            new ServerModeCommandLineOptions(),
+            clientInfo);
+
+        SerializableKeyValuePairStringProperty[] properties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
+        Assert.DoesNotContain(property => property.Key is "vstest.TestCase.CodeFilePath" or "vstest.TestCase.LineNumber", properties);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenNonVisualStudioClientPredatesLocationSupport_DoesNotAddLegacyLocationProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs")
+        {
+            CodeFilePath = "TestFile.cs",
+            LineNumber = 42,
+        };
+        var clientInfo = new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false));
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            new NamedFeatureCapabilityWithVSTestProvider(),
+            new ServerModeCommandLineOptions(),
+            clientInfo);
+
+        SerializableKeyValuePairStringProperty[] properties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
+        Assert.DoesNotContain(property => property.Key is "vstest.TestCase.CodeFilePath" or "vstest.TestCase.LineNumber", properties);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenVSTestProviderCapabilityIsSupportedWithoutServerMode_DoesNotAddVSTestProviderProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            new NamedFeatureCapabilityWithVSTestProvider(),
+            new ConsoleCommandLineOptions(),
+            ClientInfo);
+
+        Assert.IsEmpty(testNode.Properties.OfType<SerializableKeyValuePairStringProperty>());
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenDotNetTestPipeOptionIsSet_DoesNotAddVSTestProviderProperties()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+
+        var testNode = testCase.ToTestNode(
+            isTrxEnabled: false,
+            useFullyQualifiedNameAsUid: false,
+            static (_, _) => { },
+            new NamedFeatureCapabilityWithVSTestProvider(),
+            new ServerAndDotNetTestPipeCommandLineOptions(),
+            ClientInfo);
+
+        Assert.IsEmpty(testNode.Properties.OfType<SerializableKeyValuePairStringProperty>());
+    }
+
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasFullyQualifiedTypeAndTrxEnabled_TestNodeHasFullyQualifiedTypeName()
     {
         TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"));
@@ -138,6 +407,110 @@ public sealed class ObjectModelConvertersTests
 
         Assert.AreEqual(0, testNode.Properties.OfType<TrxExceptionProperty>()?.Length);
         Assert.AreEqual("assembly.class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTrxEnabledAndOnlyErrorMessageIsSet_AddsTrxException()
+    {
+        TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            ErrorMessage = "error message",
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        TrxExceptionProperty exception = testNode.Properties.Single<TrxExceptionProperty>();
+        Assert.AreEqual("error message", exception.Message);
+        Assert.IsNull(exception.StackTrace);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTrxEnabled_UsesTestCaseDisplayNameForDefinition()
+    {
+        TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs")
+        {
+            DisplayName = "Test case display name",
+        })
+        {
+            DisplayName = "Result display name",
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.AreEqual("Test case display name", testNode.Properties.Single<TrxTestDefinitionName>().TestDefinitionName);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTrxEnabledWithoutMessages_AddsEmptyTrxMessages()
+    {
+        TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"));
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.IsEmpty(testNode.Properties.Single<TrxMessagesProperty>().Messages);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTrxEnabledWithMessage_CopiesMessageToTrxMessages()
+    {
+        TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            Messages = { new TestResultMessage(TestResultMessage.StandardOutCategory, "output") },
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        TrxMessage message = Assert.ContainsSingle(testNode.Properties.Single<TrxMessagesProperty>().Messages);
+        Assert.IsInstanceOfType<StandardOutputTrxMessage>(message);
+        Assert.AreEqual("output", message.Message);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTrxDisabled_IgnoresUnknownMessageCategory()
+    {
+        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            Messages = { new TestResultMessage("custom-category", "message") },
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.IsEmpty(testNode.Properties.OfType<TrxMessagesProperty>());
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenArgumentsContainDots_ParsesTypeBeforeOpeningParenthesis()
+    {
+        TestResult testResult = new(new TestCase(
+            "Namespace.Class.TestMethod(.argument.with.dots)",
+            new("executor://uri", UriKind.Absolute),
+            "source.cs"));
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.AreEqual("Namespace.Class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenFullyQualifiedNameStartsWithParenthesis_UsesLastDot()
+    {
+        TestResult testResult = new(new TestCase(
+            "(argument).Namespace.Class.TestMethod",
+            new("executor://uri", UriKind.Absolute),
+            "source.cs"));
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        Assert.AreEqual("(argument).Namespace.Class", testNode.Properties.Single<TrxFullyQualifiedTypeNameProperty>().FullyQualifiedTypeName);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenFullyQualifiedNameStartsWithDot_Throws()
+    {
+        TestResult testResult = new(new TestCase(".TestMethod", new("executor://uri", UriKind.Absolute), "source.cs"));
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => testResult.ToTestNode(isTrxEnabled: true, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo));
     }
 
     [TestMethod]
@@ -187,6 +560,21 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
+    public void ToTestNode_WhenTestResultOutcomeIsNotFoundWithErrorMessage_UsesProvidedMessage()
+    {
+        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            Outcome = TestOutcome.NotFound,
+            ErrorMessage = "Adapter-specific not found message",
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        ErrorTestNodeStateProperty property = testNode.Properties.Single<ErrorTestNodeStateProperty>();
+        Assert.AreEqual("Adapter-specific not found message", property.Exception!.Message);
+    }
+
+    [TestMethod]
     public void ToTestNode_WhenTestResultOutcomeIsSkipped_TestNodePropertiesContainSkippedTestNodeStateProperty()
     {
         TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
@@ -197,6 +585,24 @@ public sealed class ObjectModelConvertersTests
 
         SkippedTestNodeStateProperty[] skipTestNodeStateProperties = [.. testNode.Properties.OfType<SkippedTestNodeStateProperty>()];
         Assert.HasCount(1, skipTestNodeStateProperties);
+        Assert.AreSame(SkippedTestNodeStateProperty.CachedInstance, skipTestNodeStateProperties[0]);
+        Assert.IsNull(skipTestNodeStateProperties[0].Explanation);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTestResultOutcomeIsSkippedWithErrorMessage_UsesMessageAsExplanation()
+    {
+        TestResult testResult = new(new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs"))
+        {
+            Outcome = TestOutcome.Skipped,
+            ErrorMessage = "Skip reason",
+        };
+
+        var testNode = testResult.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, null, new ConsoleCommandLineOptions(), ClientInfo);
+
+        SkippedTestNodeStateProperty property = testNode.Properties.Single<SkippedTestNodeStateProperty>();
+        Assert.AreNotSame(SkippedTestNodeStateProperty.CachedInstance, property);
+        Assert.AreEqual("Skip reason", property.Explanation);
     }
 
     [TestMethod]
@@ -356,6 +762,14 @@ public sealed class ObjectModelConvertersTests
     private sealed class ServerModeCommandLineOptions : ICommandLineOptions
     {
         public bool IsOptionSet(string optionName) => optionName is PlatformCommandLineProvider.ServerOptionKey;
+
+        public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => throw new NotImplementedException();
+    }
+
+    private sealed class ServerAndDotNetTestPipeCommandLineOptions : ICommandLineOptions
+    {
+        public bool IsOptionSet(string optionName)
+            => optionName is PlatformCommandLineProvider.ServerOptionKey or PlatformCommandLineProvider.DotNetTestPipeOptionKey;
 
         public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) => throw new NotImplementedException();
     }

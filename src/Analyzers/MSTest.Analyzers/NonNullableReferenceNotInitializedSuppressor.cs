@@ -13,7 +13,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0028: <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification"/>.
+/// MSTEST0033: <inheritdoc cref="Resources.NonNullableReferenceNotInitializedSuppressorJustification"/>.
 /// </summary>
 #pragma warning disable RS1004 // Recommend adding language support to diagnostic analyzer - This suppressor is not valid for VB
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -24,9 +24,9 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
     // https://learn.microsoft.com/dotnet/csharp/language-reference/compiler-messages/nullable-warnings?f1url=%3FappId%3Droslyn%26k%3Dk(CS8618)#nonnullable-reference-not-initialized
     private const string SuppressedDiagnosticId = "CS8618";
 
-    /// <inheritdoc cref="Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification" />
+    /// <inheritdoc cref="Resources.NonNullableReferenceNotInitializedSuppressorJustification" />
     public static readonly SuppressionDescriptor Rule =
-        new(DiagnosticIds.NonNullableReferenceNotInitializedSuppressorRuleId, SuppressedDiagnosticId, Resources.UseAsyncSuffixTestFixtureMethodSuppressorJustification);
+        new(DiagnosticIds.NonNullableReferenceNotInitializedSuppressorRuleId, SuppressedDiagnosticId, Resources.NonNullableReferenceNotInitializedSuppressorJustification);
 
     /// <inheritdoc />
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions { get; } = ImmutableArray.Create(Rule);

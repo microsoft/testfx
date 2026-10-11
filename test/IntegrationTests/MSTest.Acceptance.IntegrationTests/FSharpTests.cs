@@ -27,6 +27,7 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
         TestHostResult listResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, listResult.ExitCode, listResult.StandardOutput);
         Assert.Contains("Test method passing with a . in it", listResult.StandardOutput);
+        Assert.Contains("Module test with a . in its name", listResult.StandardOutput);
     }
 
     [TestMethod]
@@ -39,7 +40,7 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
         Assert.Contains("Test run summary: Passed!", result.StandardOutput);
         Assert.Contains("failed: 0", result.StandardOutput);
-        Assert.Contains("succeeded: 1", result.StandardOutput);
+        Assert.Contains("succeeded: 2", result.StandardOutput);
     }
 
     public sealed class TestAssetFixture : ITestAssetFixture
@@ -100,6 +101,14 @@ type ``This is a test type`` () =
     [<TestMethod>]
     member this.``Test method passing with a . in it`` () =
         Assert.IsTrue(true);
+
+module Tests =
+    [<TestMethod>]
+    let ``Module test with a . in its name`` () =
+        Assert.AreEqual(4, 2 + 2)
+
+module internal Helper =
+    let unused () = ()
 """;
     }
 }

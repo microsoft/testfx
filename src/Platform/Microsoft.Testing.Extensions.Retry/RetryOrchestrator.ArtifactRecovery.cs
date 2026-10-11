@@ -9,15 +9,16 @@ namespace Microsoft.Testing.Extensions.Policy;
 
 internal sealed partial class RetryOrchestrator
 {
-    private const long MaxRecoveredArtifactManifestBytes = 16L * 1024 * 1024;
-    private const int MaxRecoveredArtifactManifestLineBytes = 64 * 1024;
-    private const int MaxRecoveredArtifactManifestRecords = 10_000;
+    private const string AppContainerArtifactRootsConfiguredEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_APPCONTAINER_ARTIFACT_ROOTS_CONFIGURED";
+    private const string ArtifactPathDestinationRootEnvironmentVariable = "TESTINGPLATFORM_ARTIFACT_PATH_DESTINATION_ROOT";
+    private const string DiagnosticArtifactPathDestinationRootEnvironmentVariable = "TESTINGPLATFORM_DIAGNOSTIC_ARTIFACT_PATH_DESTINATION_ROOT";
     private const int MaxRecoveredArtifactPathChars = 32 * 1024;
     private const int MaxRecoveredArtifactKindChars = 1024;
 
     private static void CollectRecoveredArtifacts(
         IFileSystem fileSystem,
         string manifestPath,
+        string attemptDirectory,
         List<ArtifactRequest> artifacts,
         ILogger logger)
     {
@@ -30,8 +31,11 @@ internal sealed partial class RetryOrchestrator
 
             using IFileStream stream = fileSystem.NewFileStream(manifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             var reader = new BoundedManifestLineReader(stream.Stream);
+            // Normalize the attempt-directory containment prefix once here instead of inside the per-record loop
+            // below (up to RetryArtifactManifest.MaxRecords iterations), since attemptDirectory never changes.
+            string attemptDirectoryPrefix = PathContainment.NormalizeDirectoryPrefix(attemptDirectory);
             int recordCount = 0;
-            while (recordCount++ < MaxRecoveredArtifactManifestRecords)
+            while (recordCount++ < RetryArtifactManifest.MaxRecords)
             {
                 BoundedManifestLineReadResult readResult = reader.ReadLine(out string line);
                 if (readResult == BoundedManifestLineReadResult.End)
@@ -45,8 +49,7 @@ internal sealed partial class RetryOrchestrator
                     return;
                 }
 
-                int separatorIndex = line.IndexOf('\t');
-                if (separatorIndex <= 0)
+                if (!RetryArtifactManifest.TrySplitEntry(line, out string? encodedPath, out string? encodedKindOrNullSentinel))
                 {
                     logger.LogWarning($"Ignoring malformed recovered retry artifact manifest entry in '{manifestPath}'.");
                     continue;
@@ -54,19 +57,23 @@ internal sealed partial class RetryOrchestrator
 
                 try
                 {
-                    string path = Encoding.UTF8.GetString(Convert.FromBase64String(line.Substring(0, separatorIndex)));
-                    string encodedKind = line.Substring(separatorIndex + 1);
-                    string? kind = encodedKind == "-"
-                        ? null
-                        : Encoding.UTF8.GetString(Convert.FromBase64String(encodedKind));
-                    if (path.Length > MaxRecoveredArtifactPathChars
-                        || kind?.Length > MaxRecoveredArtifactKindChars)
+                    string path = RetryArtifactManifest.DecodePath(encodedPath);
+                    string? kind = RetryArtifactManifest.DecodeKind(encodedKindOrNullSentinel);
+                    if (IsRecoveredArtifactEntryOversized(path.Length, kind?.Length))
                     {
                         logger.LogWarning($"Ignoring oversized recovered retry artifact manifest entry in '{manifestPath}'.");
                         continue;
                     }
 
-                    if (!fileSystem.ExistFile(path))
+                    string artifactPath = Path.GetFullPath(path);
+                    if (!PathContainment.IsUnderNormalizedDirectory(artifactPath, attemptDirectoryPrefix))
+                    {
+                        logger.LogWarning(
+                            $"Ignoring recovered retry artifact '{path}' because it is outside the retry attempt directory '{attemptDirectory}'.");
+                        continue;
+                    }
+
+                    if (!fileSystem.ExistFile(artifactPath))
                     {
                         logger.LogWarning($"Ignoring recovered retry artifact '{path}' because it does not exist.");
                         continue;
@@ -76,12 +83,12 @@ internal sealed partial class RetryOrchestrator
                     {
                         artifacts.RemoveAll(artifact => string.Equals(artifact.Kind, kind, StringComparison.Ordinal));
                     }
-                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, path, StringComparison.Ordinal)))
+                    else if (artifacts.Any(artifact => string.Equals(artifact.Path, artifactPath, StringComparison.Ordinal)))
                     {
                         continue;
                     }
 
-                    artifacts.Add(new ArtifactRequest(path, kind));
+                    artifacts.Add(new ArtifactRequest(artifactPath, kind));
                 }
                 catch (Exception ex) when (ex is FormatException or ArgumentException or NotSupportedException or PathTooLongException)
                 {
@@ -89,7 +96,7 @@ internal sealed partial class RetryOrchestrator
                 }
             }
 
-            logger.LogWarning($"Stopped reading recovered retry artifact manifest '{manifestPath}' after the maximum of {MaxRecoveredArtifactManifestRecords} records.");
+            logger.LogWarning($"Stopped reading recovered retry artifact manifest '{manifestPath}' after the maximum of {RetryArtifactManifest.MaxRecords} records.");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -111,6 +118,70 @@ internal sealed partial class RetryOrchestrator
         }
     }
 
+    private static bool IsRecoveredArtifactEntryOversized(int pathLength, int? kindLength)
+        => pathLength > MaxRecoveredArtifactPathChars
+            || kindLength > MaxRecoveredArtifactKindChars;
+
+    private static bool TryAdvanceRecoveredArtifactManifestByteCount(ref long bytesRead)
+    {
+        if (bytesRead == RetryArtifactManifest.MaxBytes)
+        {
+            return false;
+        }
+
+        bytesRead++;
+        return true;
+    }
+
+    private static void RemoveArtifactsOutsideControllerRoots(
+        IEnvironment environment,
+        List<ArtifactRequest> artifacts,
+        ILogger logger)
+    {
+        if (!string.Equals(
+                environment.GetEnvironmentVariable(AppContainerArtifactRootsConfiguredEnvironmentVariable),
+                "1",
+                StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        string? artifactRoot = environment.GetEnvironmentVariable(ArtifactPathDestinationRootEnvironmentVariable);
+        string? diagnosticArtifactRoot = environment.GetEnvironmentVariable(DiagnosticArtifactPathDestinationRootEnvironmentVariable);
+        // Normalize each allowed root's containment prefix once here, rather than inside the per-artifact loop
+        // below, since PathContainment.NormalizeDirectoryPrefix allocates and re-resolves the full path on every call.
+        string[] allowedRootPrefixes =
+        [
+            .. new[] { artifactRoot, diagnosticArtifactRoot }
+                .OfType<string>()
+                .Where(root => root.Length > 0)
+                .Select(PathContainment.NormalizeDirectoryPrefix),
+        ];
+
+        for (int i = artifacts.Count - 1; i >= 0; i--)
+        {
+            ArtifactRequest artifact = artifacts[i];
+            try
+            {
+                string artifactPath = Path.GetFullPath(artifact.Path);
+                if (allowedRootPrefixes.Any(prefix => PathContainment.IsUnderNormalizedDirectory(artifactPath, prefix)))
+                {
+                    continue;
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                logger.LogWarning($"Ignoring malformed retry artifact path '{artifact.Path}': {ex.Message}");
+                artifacts.RemoveAt(i);
+                continue;
+            }
+
+            logger.LogWarning(
+                $"Ignoring retry artifact '{artifact.Path}' because it is outside the configured AppContainer artifact roots.");
+            artifacts.RemoveAt(i);
+        }
+    }
+
     private enum BoundedManifestLineReadResult
     {
         Line,
@@ -123,7 +194,7 @@ internal sealed partial class RetryOrchestrator
         private const int BufferSize = 8192;
 
         private readonly byte[] _readBuffer = new byte[BufferSize];
-        private readonly byte[] _lineBuffer = new byte[MaxRecoveredArtifactManifestLineBytes];
+        private readonly byte[] _lineBuffer = new byte[RetryArtifactManifest.MaxLineLength];
         private int _readOffset;
         private int _readCount;
         private long _bytesRead;
@@ -133,7 +204,7 @@ internal sealed partial class RetryOrchestrator
             int lineLength = 0;
             while (TryReadByte(out byte value))
             {
-                if (++_bytesRead > MaxRecoveredArtifactManifestBytes)
+                if (!TryAdvanceRecoveredArtifactManifestByteCount(ref _bytesRead))
                 {
                     line = string.Empty;
                     return BoundedManifestLineReadResult.LimitExceeded;
@@ -144,8 +215,9 @@ internal sealed partial class RetryOrchestrator
                     return DecodeLine(lineLength, out line);
                 }
 
-                if (lineLength >= MaxRecoveredArtifactManifestLineBytes)
+                if (lineLength >= RetryArtifactManifest.MaxLineLength)
                 {
+                    // Stryker disable once String: callers inspect only LimitExceeded and deliberately ignore this out value.
                     line = string.Empty;
                     return BoundedManifestLineReadResult.LimitExceeded;
                 }
@@ -155,6 +227,7 @@ internal sealed partial class RetryOrchestrator
 
             if (lineLength == 0)
             {
+                // Stryker disable once String: callers inspect only End and deliberately ignore this out value.
                 line = string.Empty;
                 return BoundedManifestLineReadResult.End;
             }

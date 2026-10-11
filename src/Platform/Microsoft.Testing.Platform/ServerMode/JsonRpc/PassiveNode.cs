@@ -109,7 +109,10 @@ internal sealed class PassiveNode : IDisposable
                                 // This means we push attachments
                                 SupportsAttachments: true,
                                 // This means we're a push node
-                                MultiConnectionProvider: true)))
+                                MultiConnectionProvider: true)
+                            {
+                                ShowMessage = initializeRequest.Capabilities.ShowMessage.HasValue ? false : null,
+                            }))
         {
             ProtocolVersion = negotiatedProtocolVersion,
         };

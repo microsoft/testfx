@@ -325,6 +325,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Usar 'Assert' em vez de 'CollectionAssert'</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesDescription">
+        <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
+        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
+        <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
+        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesTitle">
+        <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
+        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
         <target state="translated">'CultureInfo.DefaultThreadCurrentCulture' e 'DefaultThreadCurrentUICulture' definem a cultura padrão para todo o processo; assim, cada teste em execução simultânea observa a alteração, e a formatação ou a análise sintática podem ser corrompidas sob paralelização dentro do assembly. As formas por thread e de ambiente intencionalmente não são sinalizadas: nas versões modernas do .NET, os setters de 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' e de 'CultureInfo.CurrentCulture' / 'CurrentUICulture' atribuem um valor baseado em 'AsyncLocal', que acompanha o contexto de execução. Assim, eles não corrompem testes paralelos relacionados nem vazam para threads reutilizadas posteriormente pelo pool. Como os setters sinalizados afetam todo o processo, restaurar o valor anterior em um bloco 'finally' não resolve o problema. Os testes executados simultaneamente ainda observam a cultura alterada durante o período da mutação. Em vez disso, declare '[DoNotParallelize]' no teste ou evite alterar a cultura global do processo.</target>
@@ -348,7 +363,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
         <target state="translated">'{0}' altera o diretório atual global do processo, que não tem equivalente por thread e é observado por todos os testes executados simultaneamente; evite alterá-lo em um conjunto de testes paralelizado (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' para ao menos coordenar ou '[DoNotParallelize]')</target>
-        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
@@ -420,6 +435,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">O TestContext passado para a inicialização do assembly ou da classe é específico desse contexto e não é atualizado para cada execução de teste. Reutilizá-lo em um membro 'static' pode expor um contexto obsoleto.</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="translated">Os nomes de exibição "DataRow" duplicados tornam indistinguíveis os casos de teste orientados por dados nos resultados de teste e no gerenciadores de testes.</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
+        <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
+        <target state="translated">Não duplique o nome de exibição 'DataRow' '{0}'. Cada 'DataRow' em um método de teste deve usar um nome de exibição exclusivo.</target>
+        <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameTitle">
+        <source>Avoid duplicated 'DataRow' display names</source>
+        <target state="translated">Evite nomes de exibição de "DataRow" duplicados</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
         <target state="translated">O MSTest resolve os atributos de ciclo de vida herdados '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' e '[ClassCleanup]' e os atributos de teste '[TestMethod]' e '[DataTestMethod]' pela identidade exata do tipo de estrutura. O assembly da estrutura foi renomeado de 'Microsoft.VisualStudio.TestPlatform.TestFramework' para 'MSTest.TestFramework', portanto uma classe base compilada com uma versão principal diferente do MSTest expõe esses atributos com uma identidade de tipo diferente. Quando essa base é herdada por uma classe de teste compilada com outra versão, a configuração e a limpeza herdadas não são executadas e os métodos de teste herdados não são descobertos, sem erro de build nem erro de descoberta. Recompile o assembly base e, para atributos personalizados, o assembly que define o atributo na mesma versão do MSTest que o projeto de teste.</target>
@@ -433,6 +463,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionTitle">
         <source>A test class inherits a lifecycle or test method from a different MSTest version</source>
         <target state="translated">Uma classe de teste herda um ciclo de vida ou método de teste de uma versão diferente do MSTest</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedDescription">
+        <source>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</source>
+        <target state="translated">A injeção de classe de teste do MSTest gerenciada pelo host usa a ativação baseada em reflexão do Microsoft.Extensions.DependencyInjection. Remova AddMSTestTestClassInjection ou desabilite o modo de compilação sem suporte.</target>
+        <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedMessageFormat">
+        <source>AddMSTestTestClassInjection is not supported when '{0}' is enabled</source>
+        <target state="translated">AddMSTestTestClassInjection não tem suporte quando ''{0}'' está habilitado</target>
+        <note>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedTitle">
+        <source>MSTest host test-class injection is not supported by the selected build mode</source>
+        <target state="translated">A injeção de classe de teste pelo host do MSTest não tem suporte no modo de compilação selecionado</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -760,14 +805,19 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Não ignore o valor retornado dos métodos de cadeia de caracteres</target>
         <note />
       </trans-unit>
+      <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
+        <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
+        <target state="translated">O MSTest inicializa a propriedade TestContext gravável de uma classe de teste, portanto, não precisa ser inicializado no construtor.</target>
+        <note>{Locked="TestContext"}</note>
+      </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
-        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="translated">''SupportedOSPlatformAttribute'' e ''UnsupportedOSPlatformAttribute'' informam a análise de compatibilidade da plataforma, mas não controlam a execução do MSTest. Os métodos de teste e classes de teste que usam esses atributos também devem declarar um ''[OSCondition]'' equivalente para que os testes sem suporte sejam ignorados em tempo de execução.</target>
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
+        <target state="translated">'SupportedOSPlatformAttribute' e 'UnsupportedOSPlatformAttribute' informar a análise de compatibilidade de plataforma, mas não controlar MSTest execução. Os métodos de teste e as classes de teste que usam esses atributos também devem declarar um '[OSCondition]' compatível para que os testes sejam ignorados em famílias de sistemas operacionais sem suporte em tempo de execução. '[OSCondition]' não impõe restrições de versão de plataforma.</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
-        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="translated">Os atributos de compatibilidade de plataforma no teste ''{0}'' não são representados por um atributo ''[OSCondition]'' equivalente</target>
+        <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
+        <target state="translated">Atributos de compatibilidade de plataforma em '{0}' de teste não são representados por um atributo '[OSCondition]' compatível</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -854,6 +904,21 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
         <target state="translated">Prefira 'TestMethod' a 'DataTestMethod'</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeDescription">
+        <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
+        <target state="translated">Um atributo de nível de método deve ser removido quando a classe de teste que a contém já estabelece um comportamento equivalente ou mais restritivo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeMessageFormat">
+        <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
+        <target state="translated">{0} no método de teste '{1}' é redundante porque não altera o comportamento estabelecido pela classe de teste que o contém</target>
+        <note>{0} is the attribute name and {1} is the test method name.</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeTitle">
+        <source>Remove redundant test method attribute</source>
+        <target state="translated">Remover atributo redundante de método de teste</target>
+        <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
@@ -987,18 +1052,28 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription">
         <source>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</source>
-        <target state="new">MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</target>
+        <target state="translated">O MSTest ignora os atributos "[TestClass]" aplicados a classes abstratas. Os métodos de teste declarados por uma classe abstrata são descobertos por meio de classes de teste derivadas concretas, que devem declarar seu próprio atributo "[TestClass]".</target>
         <note>{Locked="MSTest"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassMessageFormat">
         <source>'[TestClass]' has no effect on abstract class '{0}'</source>
-        <target state="new">'[TestClass]' has no effect on abstract class '{0}'</target>
+        <target state="translated">"[TestClass]" não tem efeito sobre a classe abstrata "{0}"</target>
         <note>{0} is the class name. {Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassTitle">
         <source>'[TestClass]' should not be applied to abstract classes</source>
-        <target state="new">'[TestClass]' should not be applied to abstract classes</target>
+        <target state="translated">"[TestClass]" não deve ser aplicado a classes abstratas</target>
         <note>{Locked="[TestClass]"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassConstructorHasDerivedTestContextMessageFormat">
+        <source>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</source>
+        <target state="translated">O parâmetro de construtor ''{0}'' da classe de teste ''{1}'' é derivado de TestContext. Use exatamente TestContext.</target>
+        <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">
+        <source>Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
+        <target state="translated">A classe de teste '{0}' tem vários construtores public marcados com ActivatorUtilitiesConstructorAttribute. Marque exatamente um construtor.</target>
+        <note>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
@@ -1093,7 +1168,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
         <target state="translated">'{0}' altera o estado global do processo e não é seguro quando testes são executados em paralelo; declare '[ResourceLock(WellKnownResources.{1})]' no teste (ou '[DoNotParallelize]')</target>
-        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>
@@ -1173,7 +1248,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">A classe de teste '{0}' deve ter pelo menos um método de teste ou ser 'static' com métodos marcados por '[AssemblyInitialize]' e/ou '[AssemblyCleanup]'.</target>
+        <target state="translated">A classe de teste '{0}' deve ter pelo menos um método de teste ou ser 'static' com métodos marcados por '[AssemblyInitialize]' e/ou '[AssemblyCleanup]'</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">

@@ -180,7 +180,7 @@ internal sealed class FakeMtpServer : IDisposable
 
             // A NetworkStream is duplex, so the same stream is used for both the read and write directions.
             var handler = new TcpMessageHandler(tcp, stream, stream, FormatterUtilities.CreateFormatter());
-            var connection = new MtpJsonRpcConnection(handler);
+            var connection = new MtpJsonRpcConnection(handler, options?.Logger);
 
             // Ownership of the socket transfers to the returned client (its Dispose closes it). Only if
             // construction throws before we hand it over do we dispose it here.
@@ -233,10 +233,10 @@ internal sealed class FakeMtpServer : IDisposable
             new TestNodeStateChangedEventArgs(runId, null)));
 
     /// <summary>Pushes a <c>client/log</c> notification at <see cref="LogLevel.Information"/>.</summary>
-    public Task SendLogAsync(string message)
+    public Task SendLogAsync(string message, string method = JsonRpcMethods.ClientLog, LogLevel level = LogLevel.Information)
         => WriteAsync(new NotificationMessage(
-            JsonRpcMethods.ClientLog,
-            new LogEventArgs(new ServerLogMessage(LogLevel.Information, message))));
+            method,
+            new LogEventArgs(new ServerLogMessage(level, message))));
 
     /// <summary>Pushes a <c>telemetry/update</c> notification.</summary>
     public Task SendTelemetryAsync(string eventName, IDictionary<string, object> metrics)
@@ -300,6 +300,10 @@ internal sealed class FakeMtpServer : IDisposable
         {
             StringId = useStringId ? request.Id.ToString(CultureInfo.InvariantCulture) : null,
         });
+
+    /// <summary>Sends a JSON-RPC error response for the supplied client request.</summary>
+    public Task SendErrorResponseAsync(RequestMessage request, int errorCode, string message)
+        => WriteAsync(new ErrorMessage(request.Id, errorCode, message, Data: null));
 
     /// <summary>
     /// Writes a raw, pre-framed body to the client so a test can inject a malformed message. The

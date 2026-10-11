@@ -62,6 +62,109 @@ namespace MSTestSdkTest
     public TestContext TestContext { get; set; }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DotnetRun_WithCoverageSettings_PreservesInvocationWorkingDirectory(bool absoluteSettingsPath)
+    {
+        const string directoryTestSource = """
+
+#file DirectoryTests.cs
+using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestSdkTest
+{
+    public static class StartupDirectory
+    {
+        // MSTest switches directories for test execution; capture the process startup directory first.
+        [ModuleInitializer]
+        public static void CaptureChildWorkingDirectory()
+        {
+            if (Array.IndexOf(Environment.GetCommandLineArgs(), "--internal-testhostcontroller-pid") >= 0)
+            {
+                File.WriteAllText(Environment.GetEnvironmentVariable("WORKING_DIRECTORY_MARKER")!, Environment.CurrentDirectory);
+            }
+        }
+    }
+
+    [TestClass]
+    public class DirectoryTests
+    {
+        [TestMethod]
+        public void ControllerChildWorkingDirectory()
+        {
+            Assert.Contains("--internal-testhostcontroller-pid", Environment.GetCommandLineArgs());
+            Assert.IsNull(Environment.GetEnvironmentVariable("DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY"));
+        }
+    }
+}
+
+#file test.runsettings
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <IncludeTestAssembly>True</IncludeTestAssembly>
+          <CodeCoverage>
+            <!-- Do not rewrite the already loaded controller/test assembly during collection. -->
+            <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
+            <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
+            <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+            <EnableDynamicNativeInstrumentation>False</EnableDynamicNativeInstrumentation>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
+""";
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            (SingleTestSourceCode + directoryTestSource)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ExtraProperties$", "<EnableMicrosoftTestingExtensionsCodeCoverage>true</EnableMicrosoftTestingExtensionsCodeCoverage>"));
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string settingsPath = absoluteSettingsPath ? Path.Combine(testAsset.TargetAssetPath, "test.runsettings") : "test.runsettings";
+        string markerPath = Path.Combine(testAsset.TargetAssetPath, "working-directory.txt");
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
+        DotnetMuxerResult runResult = await DotnetCli.RunAsync(
+            $"run --no-build -c Release -f {TargetFrameworks.NetCurrent} -- --coverage --coverage-settings \"{settingsPath}\" --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --results-directory \"{resultsDirectory}\" --no-ansi --progress off",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new()
+            {
+                ["DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY"] = null,
+                ["WORKING_DIRECTORY_MARKER"] = markerPath,
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        runResult.AssertExitCodeIs(0);
+        const string expectedSummary = """
+              total: 2
+              failed: 0
+              succeeded: 2
+              skipped: 0
+            """;
+        Assert.Contains(expectedSummary.ReplaceLineEndings(), runResult.StandardOutput.ReplaceLineEndings(), runResult.ToString());
+        Assert.AreEqual(testAsset.TargetAssetPath, await File.ReadAllTextAsync(markerPath, TestContext.CancellationToken));
+
+        var coverage = System.Xml.Linq.XDocument.Load(Path.Combine(resultsDirectory, "coverage.cobertura.xml"));
+        Assert.AreEqual("coverage", coverage.Root?.Name.LocalName);
+        Assert.IsTrue(coverage.Descendants("class").Any(element =>
+            element.Attribute("name")?.Value == "MSTestSdkTest.DirectoryTests"
+            && element.Descendants("line").Any(line => int.Parse(line.Attribute("hits")!.Value, CultureInfo.InvariantCulture) > 0)));
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
@@ -997,39 +1100,198 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_DefaultsToVSTestAndUsesAppContainerHost()
+    public async Task MSTestSdk_ModernUwp_DefaultsToMtpWithAppModelController()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpSdk",
             """
             <UseUwp>true</UseUwp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             """);
 
-        result.AssertOutputContains("WindowsTestContract:UseVSTest=true");
-        result.AssertOutputContains("Microsoft.NET.Test.Sdk");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("ControllerTfm=net9.0");
+        result.AssertOutputContains("ControllerExtensions=msbuild;packagedapp;codecoverage;trx;mstest;EndContract");
         result.AssertOutputContains("MSTest.TestAdapter");
         result.AssertOutputContains("MSTest.TestFramework");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
         result.AssertOutputContains("TestContainer");
-        result.AssertOutputContains("IsTestProject=true");
-        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
     }
 
     [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
     [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP is Windows-only.")]
-    public async Task MSTestSdk_ModernUwp_RejectsExplicitMtpSelection()
+    public async Task MSTestSdk_ModernUwp_AllowsExplicitMtpSelection()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "ModernUwpMtpSdk",
             """
             <UseUwp>true</UseUwp>
+            <UseUwpTools>true</UseUwpTools>
             <UseVSTest>false</UseVSTest>
-            """,
-            failIfReturnValueIsNotZero: false,
-            target: "Build");
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
 
-        Assert.AreNotEqual(0, result.ExitCode);
-        result.AssertOutputContains("Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts.");
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains("Controller=mstest-appmodel-controller.exe");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_UsesDirectMtpRunner()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UwpXamlReferencesSdk",
+            """
+            <UseUwp>true</UseUwp>
+            <UseUwpTools>false</UseUwpTools>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputContains("Capabilities=TestingPlatformServer");
+        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+        result.AssertOutputDoesNotContain("Microsoft.NET.Test.Sdk");
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_BuildsAndRunsDirectMtpRunner()
+    {
+        const string DirectMtpAssetName = "UwpXamlReferencesDirectMtp";
+        const string Source = """
+            #file $AssetName$.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+              <PropertyGroup>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <PlatformTarget>x64</PlatformTarget>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+                <UseUwp>true</UseUwp>
+                <UseUwpTools>false</UseUwpTools>
+                <NoWarn>$(NoWarn);NU1507</NoWarn>
+              </PropertyGroup>
+
+              <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
+                <WriteLinesToFile
+                  File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
+                  Lines="UseUwp=$(UseUwp);UseUwpTools=$(UseUwpTools);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);TestingPlatformExecutablePath=$(TestingPlatformExecutablePath)"
+                  Overwrite="true" />
+                <WriteLinesToFile
+                  File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
+                  Lines="@(ReferencePath->'%(FullPath)')"
+                  Overwrite="false" />
+              </Target>
+            </Project>
+
+            #file UnitTest1.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace UwpXamlReferencesDirectMtp;
+
+            [TestClass]
+            public sealed class UnitTest1
+            {
+                [TestMethod]
+                public void UseUwpToolsFalse_RunsThroughDirectMtp()
+                    => Assert.AreEqual(4, 2 + 2);
+            }
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            DirectMtpAssetName,
+            Source
+                .PatchCodeWithReplace("$AssetName$", DirectMtpAssetName)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0"));
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{DirectMtpAssetName}.binlog");
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath} -bl:\"{binlogPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
+        Assert.IsTrue(
+            File.Exists(resolvedAssetsReport),
+            $"The resolved MSTest asset report '{resolvedAssetsReport}' was not created. Binlog: '{binlogPath}'.");
+        string[] resolvedAssets = await File.ReadAllLinesAsync(resolvedAssetsReport, TestContext.CancellationToken);
+        Assert.Contains("UseUwp=true", resolvedAssets);
+        Assert.Contains("UseUwpTools=false", resolvedAssets);
+        Assert.Contains("PackagedApp=false", resolvedAssets);
+        Assert.Contains("TestingPlatformExecutablePath=", resolvedAssets);
+
+        string adapterPath = resolvedAssets.Single(
+            path => path.EndsWith("MSTest.TestAdapter.dll", StringComparison.OrdinalIgnoreCase));
+        string frameworkExtensionsPath = resolvedAssets.Single(
+            path => path.EndsWith("MSTest.TestFramework.Extensions.dll", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", adapterPath, adapterPath);
+        Assert.DoesNotContain($"{Path.DirectorySeparatorChar}uwp{Path.DirectorySeparatorChar}", frameworkExtensionsPath, frameworkExtensionsPath);
+        Assert.DoesNotContain(
+            path => path.Contains("Microsoft.Testing.Extensions.PackagedApp", StringComparison.OrdinalIgnoreCase),
+            resolvedAssets);
+        Assert.DoesNotContain(
+            path => path.Contains("mstest-appmodel-controller", StringComparison.OrdinalIgnoreCase),
+            resolvedAssets);
+
+        var testHost = TestHost.LocateFrom(
+            testAsset.TargetAssetPath,
+            DirectMtpAssetName,
+            $"{TargetFrameworks.NetCurrent}-windows10.0.26100.0",
+            buildConfiguration: BuildConfiguration.Release);
+        Assert.AreEqual($"{DirectMtpAssetName}.exe", Path.GetFileName(testHost.FullName), ignoreCase: true);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UwpXamlReferencesWithoutUwpTools_WithApplicationDefinition_UsesSelfHostedDirectMtp()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UwpXamlReferencesSelfHostedSdk",
+            """
+            <UseUwp>true</UseUwp>
+            <UseUwpTools>false</UseUwpTools>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "UWP XAML references are supported only on Windows.")]
+    public async Task MSTestSdk_UnpackagedWinUIWithUwpXamlReferences_DoesNotConflictWithUwpTools()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIUwpXamlSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <UseUwp>true</UseUwp>
+            <UseUwpTools>false</UseUwpTools>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=false;OutputType=Exe");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
     }
 
     [TestMethod]
@@ -1051,6 +1313,37 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUIWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIWithPackagedAppSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_ConsoleWithExplicitPackagedAppExtension_KeepsDirectLaunch()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ConsoleWithPackagedAppSdk",
+            """
+            <EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp>
+            """);
+
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=true;GenerateHelper=true;PackagedApp=true");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=");
+        result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
     public async Task MSTestSdk_UnpackagedWinUI_RejectsVSTest()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
@@ -1068,17 +1361,23 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    public async Task MSTestSdk_PackagedWinUI_DefaultsToMtpWithPackagedAppLauncher()
+    [DataRow("Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("Unix", "", "", "")]
+    public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
+        string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "PackagedWinUISdk",
-            """
+            $$"""
             <UseWinUI>true</UseWinUI>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
+            <OS>{{operatingSystem}}</OS>
             """);
 
-        result.AssertOutputContains("WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true");
-        result.AssertOutputContains("OutputType=Exe");
+        result.AssertOutputContains(
+            "WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true;OutputType=Exe;");
+        result.AssertOutputContains(
+            $";Controller={controller};ControllerTfm={controllerTfm};ControllerExtensions={controllerExtensions};EndContract");
         result.AssertOutputContains("Microsoft.Testing.Extensions.PackagedApp");
     }
 
@@ -1104,7 +1403,7 @@ namespace MSTestWebTest
             .ToArray();
         string[] expected = expectedCultures.Order(StringComparer.OrdinalIgnoreCase).ToArray();
 
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             expected,
             actualCultures,
             $"Unexpected cultures for {resourceAssemblyName}. Expected: '{string.Join(";", expected)}'. Actual: '{string.Join(";", actualCultures)}'.");
@@ -1121,6 +1420,7 @@ namespace MSTestWebTest
             <Project Sdk="MSTest.Sdk/$MSTestVersion$">
               <PropertyGroup>
                 <TargetFramework>$TargetFramework$</TargetFramework>
+                <OutputType>Exe</OutputType>
                 <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
                 <NoWarn>$(NoWarn);NETSDK1201;NU1507</NoWarn>
                 $ApplicationModelProperties$
@@ -1131,9 +1431,9 @@ namespace MSTestWebTest
               </ItemGroup>
 
               <Target Name="PrintWindowsTestContract"
-                      DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
+                      DependsOnTargets="_MSTestSDKValidateWindowsApplicationModel;_CalculateGenerateTestingPlatformEntryPoint">
                 <Message Importance="high"
-                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject)" />
+                         Text="WindowsTestContract:UseVSTest=$(UseVSTest);GenerateEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateHelper=$(GenerateTestingPlatformApplicationHelper);PackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp);OutputType=$(OutputType);IsTestProject=$(IsTestProject);Controller=$([System.IO.Path]::GetFileName($(TestingPlatformExecutablePath)));ControllerTfm=$(_TestingPlatformPackagedAppControllerTfm);ControllerExtensions=$(_TestingPlatformPackagedAppControllerExtensions);EndContract" />
                 <Message Importance="high"
                          Text="PackageReferences=@(PackageReference->'%(Identity)')" />
                 <Message Importance="high"
@@ -1149,9 +1449,10 @@ namespace MSTestWebTest
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
+        string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 
         return await DotnetCli.RunAsync(
-            $"build {testAsset.TargetAssetPath} -restore -t:{target}",
+            $"build {testAsset.TargetAssetPath} -restore -t:{target} -bl:\"{binlogPath}\"",
             failIfReturnValueIsNotZero: failIfReturnValueIsNotZero,
             cancellationToken: TestContext.CancellationToken);
     }

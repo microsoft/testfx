@@ -26,6 +26,7 @@ internal abstract class ContextAdapterBase
     {
         RunSettings = runSettings;
 
+        // Stryker disable once Statement: This debug-only contract check has no release behavior.
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
         string? filterFromRunsettings = XDocument.Parse(runSettings.SettingsXml).Element("RunSettings")?.Element("RunConfiguration")?.Element("TestCaseFilter")?.Value;
@@ -87,10 +88,12 @@ internal abstract class ContextAdapterBase
     private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption, bool useFullyQualifiedNameAsUid)
     {
         // No filters at all, we can return immediately as there is nothing to do.
+        // Stryker disable once Block: Continuing with an empty builder produces the same null filter.
         if (filter is null or NopFilter
             && filterFromRunsettings is null
             && filterFromCommandLineOption is null)
         {
+            // Stryker disable once Statement: Continuing with an empty builder produces the same null filter.
             return;
         }
 

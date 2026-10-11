@@ -102,6 +102,10 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCoordinatedRun.RunId.g
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCoordinatedRun.RunId.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCoordinatedRun.RunIdFilePath.get -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCoordinatedRun.RunIdFilePath.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField.AzureDevOpsCustomTestField(string! fieldName, object! value) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField.FieldName.get -> string!
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField.Value.get -> object!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsHistoryClient
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsHistoryClient.AzureDevOpsHistoryClient(Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, System.Net.Http.HttpClient? httpClient = null) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsHistoryClient.GetResultsAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsHistoryQuery! query, string! runUrl, int skip, int top, string? continuationToken, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsPage!>!
@@ -314,6 +318,7 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSlowTestReporter
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSlowTestReporter.AzureDevOpsSlowTestReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsHistoryService! historyService) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSlowTestThresholds
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter.AzureDevOpsSummaryReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Services.ITestCoverageResult! testCoverageResult, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, System.Func<bool>! shouldDeferToArtifactPostProcessing, Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsHistoryService? historyService) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter.AzureDevOpsSummaryReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Services.ITestCoverageResult! testCoverageResult, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, System.Func<bool>! shouldDeferToArtifactPostProcessing) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsSummaryReporter.DataTypesConsumed.get -> System.Type![]!
@@ -334,6 +339,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Automat
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.AzureDevOpsTestCaseResult(string! AutomatedTestName, string! AutomatedTestStorage, string! TestCaseTitle, string! Outcome, long? DurationInMs, string? ErrorMessage, string? StackTrace, System.DateTimeOffset? StartedDate, System.DateTimeOffset? CompletedDate) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CompletedDate.get -> System.DateTimeOffset?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CompletedDate.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CustomFields.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField!>?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.CustomFields.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Deconstruct(out string! AutomatedTestName, out string! AutomatedTestStorage, out string! TestCaseTitle, out string! Outcome, out long? DurationInMs, out string? ErrorMessage, out string? StackTrace, out System.DateTimeOffset? StartedDate, out System.DateTimeOffset? CompletedDate) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.DurationInMs.get -> long?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.DurationInMs.init -> void
@@ -350,6 +357,7 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.StackTr
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.StackTrace.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.StartedDate.get -> System.DateTimeOffset?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.StartedDate.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.State.get -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.SubResults.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.SubResults.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.TestCaseTitle.get -> string!
@@ -377,7 +385,9 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultAttachment.F
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultAttachment.FilePath.get -> string?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultAttachment.InlineContent.get -> string?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(System.Net.Http.HttpClient! httpClient, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.AzureDevOpsTestResultsClient(System.Net.Http.HttpClient! httpClient, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.CreateTestRunAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.PublishTestResultsAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult!>! results, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<int>?>!
@@ -451,6 +461,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.<Clone>$
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.AzureDevOpsTestSubResult(int SequenceId, string! DisplayName, string! Outcome, long? DurationInMs, string? ErrorMessage, string? StackTrace, System.DateTimeOffset? StartedDate, System.DateTimeOffset? CompletedDate) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CompletedDate.get -> System.DateTimeOffset?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CompletedDate.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CustomFields.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsCustomTestField!>?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.CustomFields.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.Deconstruct(out int SequenceId, out string! DisplayName, out string! Outcome, out long? DurationInMs, out string? ErrorMessage, out string? StackTrace, out System.DateTimeOffset? StartedDate, out System.DateTimeOffset? CompletedDate) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.DisplayName.get -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.DisplayName.init -> void

@@ -382,6 +382,26 @@
         <target state="translated">Не удалось найти каталог "{0}".</target>
         <note>{0} is the directory path.</note>
       </trans-unit>
+      <trans-unit id="CoverageThresholdAmbiguous">
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
+        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdEmptyMeasurement">
+        <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
+        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdMissingMeasurement">
+        <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
+        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNotMet">
+        <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
+        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
+      </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
         <target state="translated">Внимание! Переменная среды "{0}" является нерекомендуемой и будет удалена в будущей основной версии. Вместо него используйте '{1}'.</target>
@@ -639,6 +659,11 @@
         <target state="translated">&lt;test application runner&gt;</target>
         <note>{Locked="&lt;test application runner&gt;"}</note>
       </trans-unit>
+      <trans-unit id="IncompleteInformationalResponse">
+        <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
+        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
         <target state="translated">Сбой выхода метода "{0}"</target>
@@ -652,7 +677,7 @@
       <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
         <target state="translated">Запись "{0}" в разделе "{1}" файла testconfig.json ("{2}") должна содержать ненулевое скалярное значение или непустой массив скалярных значений.</target>
-        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
@@ -667,12 +692,12 @@
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
         <target state="translated">Запись "{0}" в разделе "{1}" файла testconfig.json ("{2}") должна быть либо скалярным значением (строка, число, логическое значение), либо массивом скалярных значений. Вложенные объекты не поддерживаются.</target>
-        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptions"}{Locked="timeout"}{Locked="timeout:0"}</note>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
         <target state="translated">В файле testconfig.json в разделе "commandLineOptions": {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -682,12 +707,12 @@
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
         <target state="translated">Элемент JSON верхнего уровня должен быть объектом. Вместо этого обнаружено "{0}"</target>
-        <note>{0} is the JSON value kind that was found.</note>
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">Найден неподдерживаемый маркер JSON "{0}"</target>
-        <note>{0} is the unsupported JSON token type.</note>
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
@@ -697,7 +722,7 @@
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
         <target state="translated">Раздел "{0}" в файле testconfig.json ("{1}") должен быть объектом JSON.</target>
-        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="environmentVariables"}</note>
+        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
@@ -774,6 +799,11 @@
         <target state="translated">Пройден</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineAppModelActivationPayloadOptionDescription">
+        <source>Specifies the app-model activation payload.</source>
+        <target state="translated">Указывает полезную нагрузку активации модели приложения.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
         <target state="translated">Укажите имя узла клиента.</target>
@@ -788,6 +818,31 @@
         <source>Specifies a testconfig.json file.</source>
         <target state="translated">Указывает файл testconfig.json.</target>
         <note>{Locked="testconfig.json"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
+        <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
+        <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
+        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <note>{Locked="--list-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
+        <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
+        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <note>{Locked="--retry-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
+        <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
+        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
+        <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
@@ -842,7 +897,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">Параметр "--list-tests" получил неожиданное значение "{0}". Поддерживаемые значения: {1}.</target>
-        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}{Locked="text"}{Locked="json"}</note>
+        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
@@ -854,7 +909,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
         <target state="translated">Для --server {0} требуется указать --{1}.</target>
-        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
+        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
@@ -904,7 +959,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">"--dotnet-test-transport" получен непредвиденное значение "{0}". Поддерживаемые значения: {1}.</target>
-        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
@@ -952,9 +1007,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="translated">Не сообщать о неуспешном значении завершения для указанных кодов завершения.
-Например, "'--ignore-exit-code 8;9" игнорирует коды завершения 8 и 9 и в этих случаях возвращает 0.
-Дополнительные сведения о кодах завершения см. на странице https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="new">Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -1031,7 +1086,7 @@ The default is TestResults in the directory that contains the test application.<
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">Параметр --server получил неожиданное значение {0}. Поддерживаемые значения: {1}.</target>
-        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}{Locked="jsonrpc"}{Locked="dotnettestcli"}</note>
+        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
@@ -1145,7 +1200,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">По-прежнему ожидается: </target>
-        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ". {Locked="{DisplayName} ({Phase}, {Seconds}s)"}{Locked="; "}</note>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -1302,6 +1357,41 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">Расширения контроллера узла тестирования, требующие перезапуска процесса, не поддерживаются на платформах браузера/WebAssembly.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
+        <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
+        <target state="translated">ПО промежуточного слоя "{0}" прервало выполнение конвейера оркестратора на тестовом узле (не вызвало функцию "next"), но вернуло код успешного завершения. ПО промежуточного слоя, прерывающее выполнение, должно возвращать явный код завершения, означающий неудачу, чтобы пропущенное выполнение не отображалось как будто тесты действительно прошли и завершились успешно.</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
+        <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
+        <target state="translated">Делегат "next", переданный в "ITestHostExecutionOrchestratorMiddleware", может быть вызван не более одного раза. Он был вызван повторно после того, как уже был вызван, одновременно с другим вызовом или после того, как собственный вызов промежуточного модуля уже завершился возвратом результата или генерацией исключения.</target>
+        <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
+        <source>The test host execution orchestrator middleware continuation returned a null task.</source>
+        <target state="translated">ПО промежуточного слоя оркестратора выполнения тестового узла вернуло задачу со значением NULL.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
+        <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
+        <target state="translated">Зарегистрирован один или несколько экземпляров "ITestHostExecutionOrchestratorMiddleware", но для обертывания ПО промежуточного слоя должен быть также зарегистрирован ровно один экземпляр "ITestHostExecutionOrchestrator". Вместо этого найдены оркестраторы ({0}).</target>
+        <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
+        <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
+        <target state="translated">ПО промежуточного слоя "{0}" изменило код завершения нисходящего выполнения с {1} на {2}. В данной версии конвейера оркестратора выполнения тестового узла ПО промежуточного слоя не может перезаписывать нисходящий результат.</target>
+        <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
+        <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
+        <target state="translated">ПО промежуточного слоя "{0}" успешно завершило работу после того, как запущенный им с помощью команды "next" нисходящий процесс выполнения фактически завершился сбоем. Этот сбой не был замечен или распространен ПО промежуточного слоя, поэтому нельзя допускать, чтобы это выглядело как успешное завершение.</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
+        <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
+        <target state="translated">Диспетчер оркестрации тестового узла типа '{0}' не поддерживает регистрацию 'ITestHostExecutionOrchestratorMiddleware'. Реализуйте "ITestHostExecutionOrchestratorMiddlewareManager" для типа диспетчера для его поддержки.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">Тестовый процесс приложения завершился неправильно. Код завершения: "{0}"</target>
@@ -1355,7 +1445,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
         <target state="translated">Выражение фильтра "{0}" содержит несбалансированное число операторов "{1}" "{2}"</target>
-        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs. {Locked="()"}{Locked="[]"}</note>
+        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
@@ -1365,7 +1455,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
         <target state="translated">Фильтр содержит непредвиденный оператор "/" внутри выражения в круглых скобках. Фильтр: "{0}". Чтобы объединить альтернативы для одного сегмента пути, используйте синтаксис вида "/A/B/C/(X|Y)".</target>
-        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}{Locked="/A/(B/C)"}</note>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>

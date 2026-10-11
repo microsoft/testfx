@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -9,10 +9,15 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed partial class CtrfReportEngine
 {
-    private static void WriteTest(Utf8JsonWriter writer, ReportTestResult result)
+    private static void WriteTest(Utf8JsonWriter writer, ReportTestResult result, string executionId)
     {
         CapturedTestResult r = result.Final;
         writer.WriteStartObject();
+
+        // testId is derived from the producer's full MTP TestNode UID, while r.Uid
+        // remains the capped compatibility value. executionId spans coordinated retries.
+        writer.WriteString("testId", GetTestId(r));
+        writer.WriteString("executionId", executionId);
 
         // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID
         // (also non-empty) when the framework didn't supply a display name.
@@ -180,12 +185,13 @@ internal sealed partial class CtrfReportEngine
             writer.WriteEndObject();
         }
 
-        // CTRF `extra` (free-form object) — the CTRF spec doesn't define a
-        // dedicated stable identifier so we surface the MTP UID here for
-        // cross-tool correlation, alongside other framework metadata.
+        // Preserve the MTP UID under `extra` for compatibility with reports
+        // produced before CTRF added the first-class `testId` field.
         writer.WritePropertyName("extra");
         writer.WriteStartObject();
         writer.WriteString("uid", r.Uid);
+        // CTRF 0.1.0 has no final-attempt identity field; keep it in the permitted extension point.
+        writer.WriteString("mtpAttemptId", Guid.NewGuid().ToString("D"));
         if (r.MethodName is not null)
         {
             writer.WriteString("method", r.MethodName);
@@ -204,6 +210,7 @@ internal sealed partial class CtrfReportEngine
     private static void WriteRetryAttempt(Utf8JsonWriter writer, CapturedTestResult attempt, int attemptNumber)
     {
         writer.WriteStartObject();
+        writer.WriteString("attemptId", Guid.NewGuid().ToString("D"));
         writer.WriteNumber("attempt", attemptNumber);
         writer.WriteString("status", attempt.Status);
         writer.WriteNumber("duration", (long)Math.Max(0, attempt.Duration.TotalMilliseconds));
@@ -284,6 +291,8 @@ internal sealed partial class CtrfReportEngine
             writer.WriteStartObject();
             writer.WriteString("name", attachment.Name);
             writer.WriteString("contentType", attachment.ContentType);
+            // CTRF treats path as an opaque URL-or-file-path value. Preserve the
+            // absolute local path supplied by MTP without URI rewriting.
             writer.WriteString("path", attachment.Path);
             if (attachment.Description is not null)
             {

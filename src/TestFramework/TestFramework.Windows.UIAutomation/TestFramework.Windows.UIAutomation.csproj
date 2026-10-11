@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-windows;net9.0-windows</TargetFrameworks>
+    <EnableWindowsTargeting Condition=" '$(EnableWindowsTargeting)' == '' and '$(OS)' != 'Windows_NT' ">true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>MSTest.Windows.UIAutomation</PackageId>
+    <PackageTags>$(CommonPackageTags) Windows Desktop UIAutomation WinForms WPF E2E EndToEnd</PackageTags>
+    <PackageDescription><![CDATA[MSTest lifecycle integration for Windows desktop UI Automation tests.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting.Windows.UIAutomation</RootNamespace>
+    <AssemblyName>MSTest.Windows.UIAutomation</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+</Project>

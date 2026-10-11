@@ -7,6 +7,9 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
+    private const string AttemptIdFieldName = "AttemptId";
+    private const string IsTestResultFlakyFieldName = "IsTestResultFlaky";
+
     /// <summary>
     /// Publishes results Azure DevOps has not seen in this build yet, recording the ids it assigns them so
     /// that a later attempt can update them.
@@ -138,12 +141,14 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, newAttemptResults);
             appendedAttempts[i] = [.. attemptHistories[i].Where(attempt => attempt.SequenceId > updates[i].Published.LastPublishedSubResultSequenceId)];
             totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, newAttemptResults);
-            startedDates[i] = Min(updates[i].Published.StartedDate, AzureDevOpsResultIdStore.GetEarliestStartedDate(newAttemptResults));
-            completedDates[i] = Max(updates[i].Published.CompletedDate, AzureDevOpsResultIdStore.GetLatestCompletedDate(newAttemptResults));
+            (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(newAttemptResults);
+            startedDates[i] = Min(updates[i].Published.StartedDate, startedDate);
+            completedDates[i] = Max(updates[i].Published.CompletedDate, completedDate);
             parents[i] = updates[i].Attempt.Result with
             {
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+                CustomFields = CreateRerunCustomFields(updates[i].Attempt.Result.Outcome, attemptHistories[i]),
                 SubResults = appendedAttempts[i],
                 DurationInMs = totalDurations[i],
                 StartedDate = startedDates[i],
@@ -227,6 +232,25 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
     private static IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> GetAttempts(AzureDevOpsTestCaseResultWithAttachments result)
         => result.PreviousAttempts.Count == 0 ? [result] : [.. result.PreviousAttempts, result];
+
+    private static IReadOnlyList<AzureDevOpsCustomTestField> CreateRerunCustomFields(
+        string outcome,
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+    {
+        var customFields = new List<AzureDevOpsCustomTestField>(capacity: 2);
+        if (attempts.Count > 1)
+        {
+            customFields.Add(new AzureDevOpsCustomTestField(AttemptIdFieldName, attempts[^1].SequenceId - 1));
+        }
+
+        bool isFlaky = outcome == AzureDevOpsLivePublishingConstants.PassedTestOutcome
+            && attempts.Any(static attempt => attempt.Outcome is
+                AzureDevOpsLivePublishingConstants.FailedTestOutcome
+                or AzureDevOpsLivePublishingConstants.AbortedTestOutcome);
+
+        customFields.Add(new AzureDevOpsCustomTestField(IsTestResultFlakyFieldName, isFlaky ? "true" : "false"));
+        return customFields;
+    }
 
     private sealed class FirstAttemptSeedCanceledException(OperationCanceledException innerException)
         : OperationCanceledException(innerException.Message, innerException, innerException.CancellationToken);

@@ -26,10 +26,9 @@ internal sealed class MtpServerClient : IMtpServerClient
     private readonly MtpJsonRpcConnection _connection;
     private readonly MtpServerClientOptions _options;
     private readonly IMtpServerHost? _host;
-    private readonly object _shutdownLock = new();
+    private readonly SingleFlightTask _shutdown = new();
 
     private Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? _serverRequestHandler;
-    private Task? _shutdown;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MtpServerClient"/> class over an existing connection.
@@ -205,7 +204,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         var args = new InitializeRequestArgs(
             MtpServerConnector.GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
-            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful))
+            new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful) { ShowMessage = _options.ShowMessage })
         {
             ProtocolVersions = _options.SupportedProtocolVersions.ToArray(),
         };
@@ -282,12 +281,7 @@ internal sealed class MtpServerClient : IMtpServerClient
     }
 
     private Task StartConnectionShutdownAsync()
-    {
-        lock (_shutdownLock)
-        {
-            return _shutdown ??= Task.Run(_connection.Dispose);
-        }
-    }
+        => _shutdown.StartAsync(_connection.Dispose);
 
     private void DetachHandlers()
     {
@@ -318,6 +312,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         bool vstestProviderSupport = false;
         bool supportsAttachments = false;
         bool multiConnectionProvider = false;
+        bool? showMessage = null;
         string? protocolVersion = null;
         if (result.TryGetValue(JsonRpcStrings.ProtocolVersion, out object? protocolVersionObj))
         {
@@ -340,6 +335,14 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport = AsBool(testing, JsonRpcStrings.VSTestProviderSupport);
             supportsAttachments = AsBool(testing, JsonRpcStrings.AttachmentsSupport);
             multiConnectionProvider = AsBool(testing, JsonRpcStrings.MultiConnectionProvider);
+            showMessage = testing.TryGetValue(JsonRpcStrings.ShowMessage, out object? showMessageValue)
+                ? showMessageValue switch
+                {
+                    null => null,
+                    bool value => value,
+                    _ => throw new MtpServerClientException($"Expected '{JsonRpcStrings.ShowMessage}' to be a boolean."),
+                }
+                : null;
         }
 
         return new MtpServerCapabilities(
@@ -351,7 +354,10 @@ internal sealed class MtpServerClient : IMtpServerClient
             vstestProviderSupport,
             supportsAttachments,
             multiConnectionProvider,
-            protocolVersion);
+            protocolVersion)
+        {
+            ShowMessage = showMessage,
+        };
     }
 
     private bool IsSupportedProtocolVersion(string negotiatedProtocolVersion)
@@ -454,6 +460,7 @@ internal sealed class MtpServerClient : IMtpServerClient
                 break;
 
             case JsonRpcMethods.ClientLog:
+            case JsonRpcMethods.ClientShowMessage:
                 RaiseLog(notification.Params as IDictionary<string, object?>);
                 break;
 

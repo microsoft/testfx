@@ -24,7 +24,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 //   its three inheritance paths are preserved by MultiLevelBeforeEachDerivedClass_HasExactPerTestMessages;
 //   assembly boundary ordering is already equivalent to LifecycleTests.LifecycleTest.
 [TestClass]
-[DoNotParallelize]
 public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyLifecycleObjectModelTests.TestAssetFixture>
 {
     private static readonly Lock AssemblyLoadLock = new();
@@ -33,6 +32,7 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
     public TestContext TestContext { get; set; } = default!;
 
     [TestMethod]
+    [DoNotParallelize]
     public async Task LifecycleInheritanceModes_HaveExactPerTestObjectModelMessages()
     {
         string tfm = TargetFrameworks.NetCurrent;
@@ -117,6 +117,7 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public async Task InheritedTestMethod_HasDerivedLifecycleAndIsIsolatedFromSiblingResult()
     {
         string tfm = TargetFrameworks.NetCurrent;
@@ -125,13 +126,14 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
             .ToImmutableArray();
 
         Assert.HasCount(2, inheritedCases);
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new[]
             {
                 "LifecycleObjectModel.InheritedDerived.BaseTest",
                 "LifecycleObjectModel.InheritedDerived.DerivedTest",
             },
-            inheritedCases.Select(testCase => testCase.FullyQualifiedName).ToArray());
+            inheritedCases.Select(testCase => testCase.FullyQualifiedName).ToArray(),
+            SequenceOrder.InAnyOrder);
 
         foreach (TestCase testCase in inheritedCases)
         {
@@ -167,6 +169,7 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public async Task MultiLevelBeforeEachDerivedClass_HasExactPerTestMessages()
     {
         string tfm = TargetFrameworks.NetCurrent;

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// Based on the XXH128 implementation from https://github.com/Cyan4973/xxHash.
+// Adapted from https://github.com/dotnet/runtime/blob/cd6580ff499dd9ae37656edcf2239bbab2362251/src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHash128.cs
 using System.Buffers.Binary;
 using System.IO.Hashing;
 using System.Numerics;
@@ -177,7 +177,7 @@ internal sealed unsafe class XxHash128
             ulong* accumulators = stackalloc ulong[AccumulatorCount];
             CopyAccumulators(ref _state, accumulators);
 
-            fixed (byte* secret = _state.Secret)
+            fixed (byte* secret = &_state.Secret[0])
             {
                 DigestLong(ref _state, accumulators, secret);
                 current = new Hash128(
@@ -187,7 +187,7 @@ internal sealed unsafe class XxHash128
         }
         else
         {
-            fixed (byte* buffer = _state.Buffer)
+            fixed (byte* buffer = &_state.Buffer[0])
             {
                 current = HashToHash128(buffer, (uint)(int)_state.TotalLength, (long)_state.Seed);
             }

@@ -29,8 +29,16 @@ configuration:
               action: Closed
         then:
           - removeLabel:
+              label: 'needs/triage'
+          - removeLabel:
               label: 'needs/attention'
           - removeLabel:
               label: 'needs/author-feedback'
+          - removeLabel:
+              label: 'needs/merge-conflict-resolution'
+          - removeLabel:
+              label: 'state/needs-review'
+          - removeLabel:
+              label: 'state/approved'
 onFailure:
 onSuccess:

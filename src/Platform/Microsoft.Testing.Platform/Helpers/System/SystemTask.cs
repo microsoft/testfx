@@ -3,6 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the implementation of ITask")]
 internal sealed class SystemTask : ITask
 {
     public Task Run(Action action)

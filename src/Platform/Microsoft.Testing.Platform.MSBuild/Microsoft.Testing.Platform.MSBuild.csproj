@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 

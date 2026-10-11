@@ -162,30 +162,74 @@ For Linux and macOS:
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
+### Code coverage
+
+Code coverage is enabled by default for repository tests. Each test project's generated `coverage.config` includes only its directly referenced production assemblies, excluding shared test-host infrastructure, NuGet package sources, and generated artifacts. `Microsoft.Testing.TestInfrastructure` is explicitly excluded at both the assembly and source levels.
+
+Compatibility shims in `Polyfills` directories are excluded from coverage. `Ensure.cs` and `ProcessExtensions.cs` remain included because their argument validation and process-lifetime behavior are repository-owned logic worth testing. Coverage exclusions do not change which tests execute.
+
 ### Mutation testing
 
-The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the production projects covered by the unit-test projects in `MutationTesting.slnx`. Restore the pinned local tool and run it from the repository root:
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) for mutation testing. The checked-in `MutationTesting.slnx` provides a focused local run for the server-mode client sources, while the weekly workflow generates isolated solutions for every module in `eng/mutation-testing/modules.json`, including all Microsoft.Testing.Platform extensions. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
 
 On Windows PowerShell:
 
 ```powershell
-dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
-$env:MutationTesting = "true"
-Push-Location .config/stryker
-dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing
-Pop-Location
+$strykerVersion = (Get-Content .config/stryker/dotnet-tools.json | ConvertFrom-Json).tools.'dotnet-stryker'.version
+$toolCommand = if (Test-Path artifacts/tools/stryker/dotnet-stryker.exe) { "update" } else { "install" }
+$previousMutationTesting = $env:MutationTesting
+$previousDotnetRoot = $env:DOTNET_ROOT
+$previousTelemetryOptOut = $env:DOTNET_CLI_TELEMETRY_OPTOUT
+$previousPath = $env:PATH
+try {
+    $env:DOTNET_ROOT = (Resolve-Path .dotnet).Path
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
+    $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+    if ($toolCommand -eq "update") {
+        & ./.dotnet/dotnet tool update dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config --allow-downgrade
+    }
+    else {
+        & ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to install the pinned Stryker.NET tool."
+    }
+    $env:MutationTesting = "true"
+    ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+    if ($LASTEXITCODE -ne 0) {
+        throw "Stryker.NET mutation testing failed."
+    }
+}
+finally {
+    $env:MutationTesting = $previousMutationTesting
+    $env:DOTNET_ROOT = $previousDotnetRoot
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = $previousTelemetryOptOut
+    $env:PATH = $previousPath
+}
 ```
 
 On Linux and macOS:
 
 ```shell
-dotnet tool restore --tool-manifest .config/stryker/dotnet-tools.json --configfile .config/stryker/NuGet.config
-(cd .config/stryker && MutationTesting=true dotnet stryker --config-file ../../stryker-config.json --solution ../../MutationTesting.slnx --output ../../artifacts/mutation-testing)
+(
+  set -e
+  export DOTNET_ROOT="$PWD/.dotnet"
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export PATH="$DOTNET_ROOT:$PATH"
+  stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+  test -n "$stryker_version"
+  if [ -x artifacts/tools/stryker/dotnet-stryker ]; then
+    "$DOTNET_ROOT/dotnet" tool update dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config --allow-downgrade
+  else
+    "$DOTNET_ROOT/dotnet" tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
+  fi
+  MutationTesting=true ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+)
 ```
 
 The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.
 
-The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs daily (so the mutation-test-improver workflow always has fresh data) and can be started manually; it publishes the mutation score and a killed/survived/timeout breakdown to the run's job summary, and uploads the full HTML/JSON report as the `mutation-testing-report` artifact.
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It reads the enabled modules from [`eng/mutation-testing/modules.json`](../eng/mutation-testing/modules.json), runs each production/test-project mapping on an isolated runner, and uploads its detailed Stryker report. Every `Microsoft.Testing.Extensions.*` project must have a module so newly added extensions cannot silently skip mutation testing. An aggregate job verifies that every enabled module used the same source revision, computes the weighted enabled-module score from the mutant counts, reports onboarding coverage against the known mutation targets, and uploads the `mutation-testing-full-report` artifact with a Markdown summary, an HTML index, aggregate JSON, logs, and all module reports. If any expected module is missing or failed, the aggregate is explicitly marked partial and the workflow fails after publishing the available diagnostics.
 
 ## Working with Visual Studio
 

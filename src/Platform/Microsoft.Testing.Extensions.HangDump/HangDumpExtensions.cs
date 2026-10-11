@@ -33,7 +33,12 @@ public static class HangDumpExtensions
             throw new PlatformNotSupportedException("Hang dump extension is not available on browser");
         }
 
-        if (OperatingSystem.IsIOS() || OperatingSystem.IsTvOS())
+        if (OperatingSystem.IsIOS())
+        {
+            throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
+        }
+
+        if (OperatingSystem.IsTvOS())
         {
             throw new PlatformNotSupportedException("Hang dump extension is not available on ios nor tvos");
         }

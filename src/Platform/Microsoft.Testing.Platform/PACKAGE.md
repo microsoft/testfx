@@ -4,6 +4,8 @@ Microsoft.Testing.Platform is a lightweight and portable alternative to [VSTest]
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Platform` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
+To keep test applications lightweight and portable, the core package has no compile-time or runtime dependencies outside the .NET Base Class Library (BCL).
+
 ## Install the package
 
 ```dotnetcli
@@ -17,11 +19,48 @@ Framework authors can create and run a test application directly:
 ```csharp
 using Microsoft.Testing.Platform.Builder;
 
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+using var cancellationTokenSource = new CancellationTokenSource();
+var options = new TestApplicationOptions
+{
+    CancellationToken = cancellationTokenSource.Token,
+};
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args, options);
 // Register the test framework and extensions with builder.
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 ```
+
+`TestApplicationOptions.CancellationToken` requests cooperative cancellation while the application is
+running. It shares MTP's existing cancellation path with Ctrl+C, timeouts, controller cancellation,
+and test framework stop policies. A canceled run completes cleanup and returns the
+test-session-aborted exit code (`3`).
+
+## Coverage thresholds
+
+With a compatible coverage collector enabled, require minimum overall coverage for the current test
+application:
+
+```text
+--coverage-threshold-line 80 --coverage-threshold-branch 70
+```
+
+Each option is independently optional and accepts a percentage from 0 to 100, including decimals with
+a dot separator. Both requirements must pass when both options are supplied. Thresholds use the
+collector's overall covered/coverable counts, not rounded display percentages or averages of module
+percentages. They do not enable collection or change instrumentation filters.
+
+Missing, unsupported, empty, or ambiguous overall coverage data fails the requirement, including for
+a threshold of 0. Each requested metric must have exactly one overall measurement published through
+MTP's coverage-message contract. Collectors reporting different metrics can coexist; measurements
+for the same metric are not silently chosen or combined. A report file alone is not sufficient.
+Branch coverage is not inferred from line or block coverage.
+
+Violations return exit code 14 when the run would otherwise succeed, without changing individual test
+outcomes. Existing test failures, cancellation, and minimum-test policies retain precedence.
+`--ignore-exit-code 14` can explicitly suppress a coverage failure. Thresholds cannot be combined with
+`--list-tests` or `--retry-failed-tests`. Process-level retries need coverage merging across attempts
+before an overall gate can be evaluated reliably; framework-managed in-process retries remain supported.
+Each test application is evaluated separately; solution-wide coverage merging is not performed.
 
 ## About
 

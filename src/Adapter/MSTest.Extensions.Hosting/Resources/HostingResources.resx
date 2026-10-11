@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ActivationFailed" xml:space="preserve">
+    <value>MSTest could not create test class '{0}' from the application host service provider. Ensure that exactly one public constructor can be satisfied by registered services and TestContext.</value>
+    <comment>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="TestContext"}</comment>
+  </data>
+  <data name="AmbiguousConstructors" xml:space="preserve">
+    <value>MSTest could not select a unique public constructor for test class '{0}'. Mark one constructor with ActivatorUtilitiesConstructorAttribute or remove the ambiguity.</value>
+    <comment>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</comment>
+  </data>
+  <data name="DerivedTestContextParameter" xml:space="preserve">
+    <value>MSTest cannot supply constructor parameter '{1}' on test class '{0}' because it derives from TestContext. Use TestContext exactly.</value>
+    <comment>{0} is the test class name. {1} is the constructor parameter type. {Locked="MSTest"}{Locked="TestContext"}</comment>
+  </data>
+  <data name="MultiplePreferredConstructors" xml:space="preserve">
+    <value>MSTest could not select a constructor for test class '{0}' because multiple public constructors are marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</value>
+    <comment>{0} is the test class name. {Locked="MSTest"}{Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</comment>
+  </data>
+  <data name="DynamicCodeNotSupported" xml:space="preserve">
+    <value>MSTest test-class injection from Microsoft.Extensions.Hosting requires runtime dynamic code and is not supported by this runtime.</value>
+    <comment>{Locked="MSTest"}{Locked="Microsoft.Extensions.Hosting"}</comment>
+  </data>
+</root>

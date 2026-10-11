@@ -382,6 +382,26 @@
         <target state="translated">{0} 디렉터리를 찾을 수 없음</target>
         <note>{0} is the directory path.</note>
       </trans-unit>
+      <trans-unit id="CoverageThresholdAmbiguous">
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
+        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdEmptyMeasurement">
+        <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
+        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdMissingMeasurement">
+        <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
+        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNotMet">
+        <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
+        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
+      </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
         <target state="translated">경고: 환경 변수 '{0}'은(는) 더 이상 사용되지 않으며 향후 주 버전에서 제거됩니다. 대신 '{1}'을(를) 사용합니다.</target>
@@ -639,6 +659,11 @@
         <target state="translated">&lt;test application runner&gt;</target>
         <note>{Locked="&lt;test application runner&gt;"}</note>
       </trans-unit>
+      <trans-unit id="IncompleteInformationalResponse">
+        <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
+        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
         <target state="translated">'{0}' 메서드가 성공적으로 종료되지 않았습니다.</target>
@@ -652,7 +677,7 @@
       <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
         <target state="translated">testconfig.json 파일(''{2}'')의 섹션 '{1}' 아래에 있는 항목 '{0}'은(는) null이 아닌 스칼라 값 또는 비어 있지 않은 스칼라 값 배열을 제공해야 합니다.</target>
-        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
@@ -667,12 +692,12 @@
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
         <target state="translated">testconfig.json 파일의 '{1}' 섹션 아래에 있는 항목 '{0}'('{2}')은(는) 스칼라 값(문자열, 숫자, 부울) 또는 스칼라 값의 배열이어야 합니다. 중첩된 개체는 지원되지 않습니다.</target>
-        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptions"}{Locked="timeout"}{Locked="timeout:0"}</note>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
         <target state="translated">testconfig.json의 'commandLineOptions' 아래: {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -682,12 +707,12 @@
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
         <target state="translated">최상위 JSON 요소는 개체여야 합니다. 대신 '{0}'을(를) 찾았습니다.</target>
-        <note>{0} is the JSON value kind that was found.</note>
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">지원되지 않는 JSON 토큰('{0}')을 발견했습니다.</target>
-        <note>{0} is the unsupported JSON token type.</note>
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
@@ -697,7 +722,7 @@
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
         <target state="translated">testconfig.json 파일('{1}')의 '{0}' 섹션은 JSON 개체여야 합니다.</target>
-        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="environmentVariables"}</note>
+        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
@@ -774,6 +799,11 @@
         <target state="translated">통과</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineAppModelActivationPayloadOptionDescription">
+        <source>Specifies the app-model activation payload.</source>
+        <target state="translated">앱 모델 활성화 페이로드를 지정합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
         <target state="translated">클라이언트의 호스트 이름을 지정합니다.</target>
@@ -788,6 +818,31 @@
         <source>Specifies a testconfig.json file.</source>
         <target state="translated">testconfig.json 파일을 지정합니다.</target>
         <note>{Locked="testconfig.json"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
+        <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
+        <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
+        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <note>{Locked="--list-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
+        <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
+        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <note>{Locked="--retry-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
+        <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
+        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
+        <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
@@ -842,7 +897,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">'--list-tests'에 예상하지 못한 값 '{0}'이(가) 전달되었습니다. 지원되는 값은 {1}입니다.</target>
-        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}{Locked="text"}{Locked="json"}</note>
+        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
@@ -854,7 +909,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
         <target state="translated">'--server {0}'를 사용하려면 '--{1}'를 지정해야 합니다.</target>
-        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
+        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
@@ -904,7 +959,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">`'--dotnet-test-transport'에서 예기치 않은 값 '{0}'이(가) 수신되었습니다. 지원되는 값은 {1}입니다.</target>
-        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
@@ -1031,7 +1086,7 @@ The default is TestResults in the directory that contains the test application.<
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">'--server'가 예기치 않은 값 '{0}'을(를) 받았습니다. 지원되는 값은 {1}입니다.</target>
-        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}{Locked="jsonrpc"}{Locked="dotnettestcli"}</note>
+        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
@@ -1145,7 +1200,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">아직 대기 중: </target>
-        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ". {Locked="{DisplayName} ({Phase}, {Seconds}s)"}{Locked="; "}</note>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -1302,6 +1357,41 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">프로세스를 다시 시작해야 하는 테스트 호스트 컨트롤러 확장은 브라우저/WebAssembly 플랫폼에서 지원되지 않습니다.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
+        <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
+        <target state="translated">미들웨어 '{0}'이(가) 테스트 호스트 실행 오케스트레이터 파이프라인을 조기에 종료('next'를 호출하지 않음)했지만 성공 종료 코드를 반환했습니다. 조기에 종료하는 미들웨어는 명시적인 비성공 종료 코드를 반환해야 합니다. 그래야 건너뛴 실행이 마치 테스트가 실제로 실행되어 통과된 것처럼 보고되지 않습니다.</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
+        <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
+        <target state="translated">'ITestHostExecutionOrchestratorMiddleware'에 전달된 'next' 대리자는 최대 한 번만 호출할 수 있습니다. 이미 호출된 후, 다른 호출과 동시에 또는 미들웨어 자체 호출이 이미 반환되거나 throw된 후에 다시 호출되었습니다.</target>
+        <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
+        <source>The test host execution orchestrator middleware continuation returned a null task.</source>
+        <target state="translated">테스트 호스트 실행 오케스트레이터 미들웨어의 연속 실행에서 null 작업을 반환했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
+        <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
+        <target state="translated">하나 이상의 'ITestHostExecutionOrchestratorMiddleware' 인스턴스가 등록되었지만 미들웨어를 래핑하려면 정확히 하나의 'ITestHostExecutionOrchestrator'도 등록해야 합니다. 대신 {0} 오케스트레이터를 찾았습니다.</target>
+        <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
+        <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
+        <target state="translated">미들웨어 '{0}'이(가) 다운스트림 종료 코드를 {1} 에서 {2}(으)로 변경했습니다. 이 버전의 테스트 호스트 실행 오케스트레이터 파이프라인에서는 미들웨어가 다운스트림 결과를 다시 쓸 수 없습니다.</target>
+        <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
+        <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
+        <target state="translated">'next'로 시작한 다운스트림 실행이 실제로 오류가 발생했음에도 불구하고 미들웨어 '{0}'은(는) 올바르게 반환되었습니다. 미들웨어에서 실패를 확인하거나 전파하지 않았으므로 이를 성공으로 간주해서는 안 됩니다.</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
+        <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
+        <target state="translated">'{0}' 유형의 테스트 호스트 오케스트레이터 관리자가 'ITestHostExecutionOrchestratorMiddleware' 등록을 지원하지 않습니다. 관리자 유형에 'ITestHostExecutionOrchestratorMiddlewareManager'를 구현하여 지원하세요.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
+      </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
         <target state="translated">테스트 애플리케이션 프로세스가 정상적으로 종료되지 않았습니다. 종료 코드는 '{0}'입니다.</target>
@@ -1355,7 +1445,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
         <target state="translated">필터 식 '{0}'이(가) '{1}' '{2}' 연산자의 균형이 맞지 않는 개수를 포함함</target>
-        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs. {Locked="()"}{Locked="[]"}</note>
+        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
@@ -1365,7 +1455,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
         <target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함합니다. 필터: '{0}'. 하나의 경로 세그먼트에 대한 여러 대안을 결합하려면 '/A/B/C/(X|Y)'와 같은 구문을 사용하세요.</target>
-        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}{Locked="/A/(B/C)"}</note>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>

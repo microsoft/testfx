@@ -127,6 +127,6 @@
   </data>
   <data name="MSBuildNodeOptionDescription" xml:space="preserve">
     <value>Used to pass the MSBuild node handle.</value>
-    <comment>Do not localize option name {Locked="--internal-msbuild-node"} or {Locked="MSBuild"}.</comment>
+    <comment>Do not localize {Locked="MSBuild"}.</comment>
   </data>
 </root>

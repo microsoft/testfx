@@ -1,5 +1,12 @@
 # RFC 023 - Dynamically resolved extensions
 
+> **Current implementation note (2026-10-09):** The [loader](../../src/Platform/Microsoft.Testing.Platform/DynamicExtensions/DynamicExtensionLoader.cs)
+> and [assembly loader](../../src/Platform/Microsoft.Testing.Platform/DynamicExtensions/DynamicExtensionAssemblyLoader.cs)
+> support the opt-in, application-directory, synchronous-hook and runtime-specific isolation topics.
+> See [MTP-015](../specifications/mtp.md#mtp-015--dynamic-hooks-are-explicit-application-code).
+> This is a topic-level source/test mapping, not execution of the full deployment/trimming/runtime
+> matrix or verification of every failure/security rationale below.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation

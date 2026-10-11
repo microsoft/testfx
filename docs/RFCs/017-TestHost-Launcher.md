@@ -1,5 +1,11 @@
 # RFC 017 - Custom test host launcher
 
+> **Current implementation note (2026-10-09):** [Controller launch delegation](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.CustomLauncher.cs)
+> and the local-process acceptance fixture support the core hook described below.
+> See [MTP-009](../specifications/mtp.md#mtp-009--controller-launcher-and-process-isolation).
+> Remote/container/debugger examples, packaged activation and every authorization/deployment claim
+> remain design guidance, not composed-product verification from this audit.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
@@ -79,7 +81,7 @@ public sealed partial class Assert
         for (int i = start; i < start + length;)
         {
             ScalarInfo scalar = GetScalar(value, i);
-            renderedLength += GetEscapedCharacterLength(value, i);
+            renderedLength += StringEscapeHelper.GetEscapedCharacterLength(value, i);
             isSafePrefix &= scalar.Value <= 0x7F && !scalar.IsUnpairedSurrogate;
             hasUnpairedSurrogate |= scalar.IsUnpairedSurrogate;
             scalarCount++;

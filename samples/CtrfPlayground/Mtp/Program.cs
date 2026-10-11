@@ -14,6 +14,7 @@ public static class Program
     public static async Task<int> Main(string[] args)
     {
         ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+        testApplicationBuilder.AddAffectedTestsProvider();
         testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
         testApplicationBuilder.AddCtrfReportProvider();
         using ITestApplication app = await testApplicationBuilder.BuildAsync();

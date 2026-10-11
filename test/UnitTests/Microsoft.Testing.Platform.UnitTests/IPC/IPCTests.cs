@@ -278,6 +278,83 @@ public sealed class IPCTests
     }
 
     [TestMethod]
+    public async Task SingleConnectionNamedPipeServer_ClientDisconnectsBeforeReply_LogsConciseClosure()
+    {
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        TaskCompletionSource<bool> requestReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseResponse = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<string> loggedMessage = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ILogger> logger = new();
+        logger
+            .Setup(x => x.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>(
+                (_, message, _, _) =>
+                {
+                    if (message.Contains("while writing reply", StringComparison.Ordinal))
+                    {
+                        loggedMessage.TrySetResult(message);
+                    }
+                })
+            .Returns(Task.CompletedTask);
+
+        NamedPipeServer server = new(
+            pipeNameDescription,
+            async _ =>
+            {
+                requestReceived.TrySetResult(true);
+                await releaseResponse.Task.ConfigureAwait(false);
+                return VoidResponse.CachedInstance;
+            },
+            new SystemEnvironment(),
+            logger.Object,
+            new SystemTask(),
+            _testContext.CancellationToken);
+        server.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        NamedPipeClient client = new(
+            pipeNameDescription.Name,
+            new SystemEnvironment(),
+            exitProcessOnConnectionLoss: false);
+        client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+
+        try
+        {
+            Task waitConnectionTask = server.WaitConnectionAsync(_testContext.CancellationToken);
+            await client.ConnectAsync(_testContext.CancellationToken);
+            await waitConnectionTask;
+
+            Task<VoidResponse> requestTask = client.RequestReplyAsync<IntMessage, VoidResponse>(
+                new IntMessage(42),
+                _testContext.CancellationToken);
+            await requestReceived.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            client.Dispose();
+            releaseResponse.TrySetResult(true);
+
+            await loggedMessage.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            string message = await loggedMessage.Task;
+            Assert.AreEqual(
+                $"Pipe '{pipeNameDescription.Name}' closed while writing reply; exiting server loop.",
+                message);
+            Task completedRequestTask = await Task.WhenAny(
+                requestTask,
+                Task.Delay(TimeoutHelper.DefaultHangTimeSpanTimeout, _testContext.CancellationToken));
+            Assert.AreSame(requestTask, completedRequestTask, "The client request did not observe the closed pipe.");
+            await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => requestTask);
+        }
+        finally
+        {
+            releaseResponse.TrySetResult(true);
+            client.Dispose();
+#if NETCOREAPP
+            await server.DisposeAsync();
+#else
+            server.Dispose();
+#endif
+        }
+    }
+
+    [TestMethod]
     public async Task ConnectionNamedPipeServer_MultipleConnection_Succeeds()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));

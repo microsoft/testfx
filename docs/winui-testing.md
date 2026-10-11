@@ -4,13 +4,13 @@
 
 | Application model | Recommended test configuration | Test host |
 | --- | --- | --- |
-| Legacy UWP (`uap10.0`) | Existing non-SDK project with `MSTest.TestAdapter` and `MSTest.TestFramework` | VSTest AppContainer |
-| Modern UWP (.NET 9+, `UseUwp`) | `MSTest.Sdk` | VSTest AppContainer, selected automatically |
-| Packaged full-trust WinUI 3 (`UseWinUI`) | `MSTest.Sdk` | MTP with automatic package registration and AUMID activation |
-| Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | `MSTest.Sdk` | MTP direct executable launch |
-| AppContainer-configured WinUI 3 | VSTest | MTP is not currently supported |
+| Legacy UWP (`uap10.0`) | [`ClassicUwpMtpApp`](../samples/public/ClassicUwpMtpApp) | MTP sidecar controller with native UAP adapter assets |
+| Modern UWP (.NET 10, `UseUwp` with UWP tooling) | [`UwpMtpApp`](../samples/public/UwpMtpApp) | MTP sidecar controller with AUMID activation |
+| Packaged full-trust WinUI 3 (`UseWinUI`) | [`WinUIMtpPackagedApp`](../samples/public/WinUIMtpPackagedApp) | MTP sidecar controller with automatic package registration and AUMID activation |
+| Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | [`WinUIMtpUnpackagedApp`](../samples/public/WinUIMtpUnpackagedApp) | MTP direct executable launch |
+| WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | [`WinUIMtpAppContainerApp`](../samples/public/WinUIMtpAppContainerApp) | MTP sidecar controller with exact package-SID pipe authorization |
 
-True UWP/AppContainer test hosts cannot use MTP. `MSTest.Sdk` therefore selects VSTest when `UseUwp=true` and reports a build error if a project explicitly selects MTP for that application model. Legacy `uap10.0` projects remain on their existing package-based setup because they do not use the SDK-style project system.
+`MSTest.Sdk` uses Microsoft.Testing.Platform for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved.
 
 ### Packaging and sandboxing are separate choices
 
@@ -21,7 +21,39 @@ Two independent settings describe a Windows app:
 
 A packaged WinUI 3 desktop app is full trust by default. Packaging gives it identity and MSIX file/registry virtualization, but does not put it in AppContainer. A WinUI 3 app can be explicitly configured for AppContainer with `uap10:TrustLevel="appContainer"` in its package manifest; it then has the same MTP communication restrictions as UWP.
 
-`Microsoft.Testing.Extensions.PackagedApp` currently supports packaged **full-trust** desktop hosts end to end. It also provides both communication primitives an AppContainer host needs: a reusable launch-activation argument bootstrap and exact package-SID authorization on the controller pipe. Those primitives do not by themselves make true UWP/AppContainer an MTP test-host mode: `MSTest.Sdk` still routes `UseUwp=true` to VSTest and rejects forced MTP, and the existing MTP startup path still expects an ordinary initial controller process.
+`Microsoft.Testing.Extensions.PackagedApp` supports both full-trust and AppContainer hosts end to end. `Microsoft.Testing.Extensions.PackagedApp.MSBuild` supplies the full-trust sidecar controller, selects the packaged test executable explicitly, and ships the UAP-compatible bootstrap. `MSTest.Sdk` references that integration package automatically; the adapter supplies classic UWP's runtime assets.
+
+### Explicit metapackage or adapter integration
+
+Projects using `Microsoft.NET.Sdk` or `MSBuild.Sdk.Extras` instead of `MSTest.Sdk`
+can reference the same integration package explicitly:
+
+```xml
+<PropertyGroup>
+  <EnableMSTestRunner>true</EnableMSTestRunner>
+  <OutputType>Exe</OutputType>
+  <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
+</PropertyGroup>
+<ItemGroup>
+  <PackageReference Include="MSTest" Version="4.5.0" />
+  <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Version="2.5.0" />
+</ItemGroup>
+```
+
+The `MSTest` reference can be replaced with explicit `MSTest.TestAdapter` and
+`MSTest.TestFramework` references. Preserve the application's WinUI/UWP build
+settings and `OnLaunched` bootstrap, then execute
+`msbuild MyTests.csproj -t:InvokeTestingPlatform`. Desktop MSBuild and
+`dotnet msbuild` both reuse `InvokeTestingPlatformTask` to launch the controller
+out of process. Libraries, VSTest, unpackaged apps and non-Windows builds keep
+their existing launch paths. An explicit `TestingPlatformExecutablePath`
+override is never replaced or given controller-specific environment variables.
+
+This new package targets the main/next-release lineage, not a servicing
+backport. It must be published alongside the matching MTP runtime and MSTest
+packages before SDK or explicit consumers reference it; all MTP packages must
+remain version-aligned. The integration pins its direct runtime/MSBuild
+dependencies to its own version.
 
 #### AppContainer communication primitives
 
@@ -30,21 +62,34 @@ MTP's controller must give the new test host its command-line options and then e
 1. **Activation arguments are not process arguments.** For a packaged full-trust desktop app, AUMID activation starts an ordinary Win32 process and the activation string becomes its command line, which .NET exposes through `Environment.GetCommandLineArgs()`. A true UWP/AppContainer app instead receives one opaque string through [`LaunchActivatedEventArgs.Arguments`](https://learn.microsoft.com/uwp/api/windows.applicationmodel.activation.launchactivatedeventargs.arguments) in `Application.OnLaunched`. `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` restores that value to the `string[]` expected by the platform before `TestApplication.CreateBuilderAsync`.
 2. **The controller pipe must authorize the app identity.** MTP normally creates its named pipe with [`PipeOptions.CurrentUserOnly`](https://learn.microsoft.com/dotnet/api/system.io.pipes.pipeoptions), granting the creating token's owner SID access. An AppContainer token is additionally restricted by its package SID, and Windows grants access only when both the normal and restricted identity checks succeed. The packaged-app launcher now contributes the selected application's exact package SID; the platform grants only the minimum client rights and explicitly rejects `ALL APPLICATION PACKAGES`.
 
-The packaged-app handshake transfers the controller pipe name and related environment values through the package's `LocalState`. Together these mechanisms solve activation argument delivery and pipe access. The remaining limitation is earlier in the lifecycle: selecting and starting a true UWP/AppContainer application as an MTP test host is not yet supported by the SDK/platform routing described above.
+The packaged-app handshake transfers the controller pipe name and related environment values through the package's `LocalState`. Result, diagnostic, TRX, HangDump, and Retry artifacts are written to package-owned scratch storage and recovered to the controller-visible results directory after the sandboxed host exits.
 
 For modern UWP, the test-related part of the project is reduced to the SDK declaration:
 
 ```xml
 <Project Sdk="MSTest.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <UseUwp>true</UseUwp>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 </Project>
 ```
 
-The UWP XAML, MSIX, architecture, and Native AOT settings remain application concerns. Modern UWP builds also continue to require the Visual Studio MSBuild toolchain.
+The UWP XAML, MSIX, architecture, and Native AOT settings remain application concerns. Modern and classic UWP builds continue to require the Visual Studio MSBuild/UWP toolchain, but not its VSTest runtime provider.
+
+The repository includes copy-ready modern and classic UWP samples. The classic sample preserves the
+legacy `MSBuild.Sdk.Extras`/UAP project shape and its Visual Studio build-time prerequisites, while
+execution still uses the integration package's MTP sidecar rather than the VSTest runtime provider.
+
+`UseUwp` adds UWP XAML references. The desktop Visual Studio UWP targets enable `UseUwpTools` after MSTest.Sdk declares its package references and before the packages select their specialized UWP assemblies. MSTest.Sdk preserves the UWP application model during that earlier evaluation while `UseUwpTools` is still unset. To use the references in a non-UWP MTP test application, disable the tools explicitly:
+
+```xml
+<UseUwp>true</UseUwp>
+<UseUwpTools>false</UseUwpTools>
+```
+
+With `UseUwpTools=false`, `MSTest.Sdk` selects the ordinary MSTest assemblies and uses the direct MTP runner rather than assuming the project needs UWP package activation. Other application-model settings, such as packaged WinUI, still determine whether the package controller is needed.
 
 ## WinUI 3
 
@@ -143,8 +188,43 @@ Requirements and limitations:
 - `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
 - The controller named pipe additionally authorizes the exact package SID of an AppContainer host, which a restricted AppContainer token needs in order to connect at all; see [Controller pipe access for AppContainer hosts](#controller-pipe-access-for-appcontainer-hosts).
+- Native .NET SDK 10 project-based `dotnet test` (including `--no-build`) starts the sidecar for packaged full-trust WinUI. Only the activated host connects to the SDK pipe, reporting its actual runtime, architecture, execution ID and test results. Controller-generated TRX and other reports remain on disk in the requested results directory; they are not advertised to the native SDK.
+- Native `--help` and `--list-tests` activate the selected host to report its own options and tests, not the sidecar's dummy framework. Both require Developer Mode and register the package. SDK 10 can hide a help launch failure behind its built-in help and exit zero; use `--list-tests` to surface that failure. With `EnableMSTestRunner=true`, MSTest's `--filter` is also accepted for controller-backed execution and evaluated only by the activated host.
+- Native AppContainer execution is explicitly rejected. Use the `InvokeTestingPlatform` MSBuild target for AppContainer-hosted WinUI and UWP projects so the sidecar can recover sandbox-owned result artifacts. Ctrl+C tears down the owned informational host, but externally hard-killing the sidecar can leave an AUMID-activated help/discovery host running.
+- Project-based `dotnet run` uses the same SDK launch properties and therefore also starts the sidecar for packaged applications. Startup metadata lives beside a project-local controller in the intermediate output directory, leaving application arguments empty when needed so SDK launch-profile arguments and explicit-argument precedence are preserved. The staged files are incremental and cleaned by `dotnet clean`. Customized `RunCommand` and `TestingPlatformExecutablePath` values are not replaced. A relative `TestingPlatformPackagedAppTargetPath` is resolved against the project directory; `UseAppHost=false` requires a staged packaged executable override.
+- `dotnet run -- --help` and `dotnet run -- --list-tests` activate the actual full-trust host and relay its options or test names to the caller. An incomplete informational response is an error rather than successful empty output. AppContainer informational launches still require the `InvokeTestingPlatform` path.
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
+
+### Filtering packaged MSTest tests
+
+Use a single quoted filter expression with the native .NET SDK 10 MTP runner:
+
+```powershell
+dotnet test --project MyTests.csproj --no-build --filter "TestCategory=Fast Lane&(Name=Identity|Name=Outcome)" --report-trx
+```
+
+The MSBuild target accepts the same option through `TestingPlatformCommandLineArguments`:
+
+```powershell
+dotnet msbuild MyTests.csproj -t:InvokeTestingPlatform '-p:TestingPlatformCommandLineArguments=--filter FullyQualifiedName~Identity --report-trx'
+```
+
+For an expression containing spaces, put the quoted value in the project rather
+than relying on MSBuild command-line property quoting:
+
+```xml
+<TestingPlatformCommandLineArguments>--filter &quot;TestCategory=Fast Lane&amp;(Name=Identity|Name=Outcome)&quot; --report-trx</TestingPlatformCommandLineArguments>
+```
+
+The sidecar preserves the logical arguments, including boolean expressions and
+literal quotes; the selected MSTest host owns grammar and selection. Missing or
+repeated filter arguments and unknown options fail before activation. Invalid
+syntax, no matches under the default zero-tests policy, and selected test failures
+remain non-successful runs; reports contain only selected tests. This registration
+does not enable arbitrary framework options or native AppContainer execution.
+The legacy VSTest-mode `dotnet test --filter` is not forwarded to the sidecar;
+use the MSBuild target or native MTP mode above.
 
 ### Launch activation
 
@@ -191,7 +271,7 @@ Notable properties:
 - Nothing changes for a packaged **full-trust** desktop host, an unpackaged app, an ordinary console test app, or any non-Windows run: the pipe is created exactly as it was before.
 - No loopback exemption (`CheckNetIsolation LoopbackExempt`) is used or needed — that applies to network sockets, not named pipes.
 
-> **Elevated controllers are out of scope.** The pipe is owned by the creating token's *owner* SID, which for an elevated controller is `BUILTIN\Administrators`. An AppContainer can never be elevated, so its own owner SID is the user — and the client-side `PipeOptions.CurrentUserOnly` check then rejects the connection as "not owned by the current user" even though the DACL admits it. Run AppContainer test hosts from a non-elevated controller.
+> **Run AppContainer tests non-elevated.** The exact package-SID grant and normal-user controller path are covered end to end. Elevation changes the controller token owner and integrity boundary and is not a supported AppContainer test configuration.
 
 Set `TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION` to override the decision. Values are compared case-insensitively; anything unrecognized falls back to `auto`.
 
@@ -211,7 +291,7 @@ The launcher therefore decides for itself, per run:
 | --- | --- | --- |
 | Not Windows | no | Nothing changes. Packaged Windows apps are a Windows-only concept. |
 | Supported packaged full-trust layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
-| True UWP/AppContainer packaged layout | yes, but unsupported | Registration, activation arguments, and exact package-SID pipe authorization are implemented; SDK/platform routing still does not support starting it as an MTP test host. |
+| UWP or AppContainer packaged layout | yes | The sidecar controller activates the exact manifest application and authorizes only its package SID on controller and extension pipes. |
 | Any other layout — including unpackaged WinUI and ordinary console test apps | no | The platform keeps its default in-process / `Process.Start` path. |
 
 So an **unpackaged** WinUI app that references `Microsoft.Testing.Extensions.PackagedApp` (directly, or transitively through a shared `Directory.Packages.props`) pays nothing for it: no extra process, and no copy of the build output into a deployment directory.
@@ -259,6 +339,9 @@ Note those conditions are evaluated per project, and a **class library** does no
 ## Related
 
 - [`Microsoft.Testing.Extensions.PackagedApp` package readme](../src/Platform/Microsoft.Testing.Extensions.PackagedApp/PACKAGE.md)
+- [`UwpMtpApp` sample](../samples/public/UwpMtpApp)
+- [`ClassicUwpMtpApp` sample](../samples/public/ClassicUwpMtpApp)
+- [`WinUIMtpPackagedApp` sample](../samples/public/WinUIMtpPackagedApp)
+- [`WinUIMtpUnpackagedApp` sample](../samples/public/WinUIMtpUnpackagedApp)
+- [`WinUIMtpAppContainerApp` sample](../samples/public/WinUIMtpAppContainerApp)
 - [RFC 017 — Test host launcher](RFCs/017-TestHost-Launcher.md)
-- [`MSTestRunnerWinUI` sample](../samples/public/mstest-runner/MSTestRunnerWinUI) (packaged, MTP)
-- [`MSTestRunnerWinUIUnpackaged` sample](../samples/public/mstest-runner/MSTestRunnerWinUIUnpackaged) (unpackaged, MTP)

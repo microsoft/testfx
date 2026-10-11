@@ -131,6 +131,8 @@ Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.ge
 Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.RetryAttemptNumber.init -> void
 Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Status.get -> string!
 Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.Status.init -> void
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.TestId.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CapturedTestResult.TestId.init -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.CtrfArtifactPostProcessor() -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Description.get -> string!

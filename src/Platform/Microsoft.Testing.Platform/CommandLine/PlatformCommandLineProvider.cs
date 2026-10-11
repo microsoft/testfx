@@ -25,12 +25,15 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string DiscoverTestsJsonArgument = "json";
     public const string DiscoverTestsTextArgument = "text";
 
+    private const string AppModelActivationPayloadOptionKey = "internal-appmodel-activation-payload";
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
     private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
     private static readonly string SupportedDotNetTestTransportValues = $"'{DotNetTestTransportPipeArgument}', '{DotNetTestTransportHttpArgument}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
+    public const string CoverageThresholdLineOptionKey = "coverage-threshold-line";
+    public const string CoverageThresholdBranchOptionKey = "coverage-threshold-branch";
     public const string ZeroTestsPolicyOptionKey = "zero-tests-policy";
     public const string ZeroTestsPolicyStrictArgument = "strict";
     public const string ZeroTestsPolicyAllowSkippedArgument = "allow-skipped";
@@ -72,6 +75,8 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         MinimumExpectedTests,
+        new(CoverageThresholdLineOptionKey, PlatformResources.PlatformCommandLineCoverageThresholdLineDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(CoverageThresholdBranchOptionKey, PlatformResources.PlatformCommandLineCoverageThresholdBranchDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ZeroTestsPolicyOptionKey, PlatformResources.PlatformCommandLineZeroTestsPolicyOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -87,6 +92,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+        new(AppModelActivationPayloadOptionKey, PlatformResources.PlatformCommandLineAppModelActivationPayloadOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(DotNetTestHttpEndpointOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpEndpointOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestHttpTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
@@ -108,6 +114,14 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
+        if (commandOption.Name is CoverageThresholdLineOptionKey or CoverageThresholdBranchOptionKey
+            && (arguments is not [string percentageArgument]
+                || !decimal.TryParse(percentageArgument, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal percentage)
+                || percentage is < 0 or > 100))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCoverageThresholdInvalid, commandOption.Name));
+        }
+
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
             if (!VerbosityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
@@ -273,6 +287,20 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
+        }
+
+        if (commandLineOptions.IsOptionSet(DiscoverTestsOptionKey)
+            && (commandLineOptions.IsOptionSet(CoverageThresholdLineOptionKey)
+                || commandLineOptions.IsOptionSet(CoverageThresholdBranchOptionKey)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests);
+        }
+
+        if (commandLineOptions.IsOptionSet("retry-failed-tests")
+            && (commandLineOptions.IsOptionSet(CoverageThresholdLineOptionKey)
+                || commandLineOptions.IsOptionSet(CoverageThresholdBranchOptionKey)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries);
         }
 
         if (commandLineOptions.IsOptionSet(FilterUidOptionKey)

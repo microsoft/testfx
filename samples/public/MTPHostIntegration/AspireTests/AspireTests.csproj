@@ -1,0 +1,27 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <EnableAspireTesting>true</EnableAspireTesting>
+    <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <MicrosoftTestingPlatformVersion>$(MTPVersion)</MicrosoftTestingPlatformVersion>
+    <EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>
+    <AspireHostingTestingVersion>$(AspireVersion)</AspireHostingTestingVersion>
+    <TestingPlatformHostFactory>AspireTestHost.CreateHost</TestingPlatformHostFactory>
+    <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
+    <PackageReference Update="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
+    <PackageReference Update="Microsoft.Testing.Platform.MSBuild" Version="$(MTPVersion)" />
+    <PackageReference Include="MSTest.Extensions.Hosting" Version="$(MSTestExtensionsHostingVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AspireAppHost\AspireAppHost.csproj" />
+    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

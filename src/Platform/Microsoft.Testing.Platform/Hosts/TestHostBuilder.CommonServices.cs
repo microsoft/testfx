@@ -79,8 +79,7 @@ internal sealed partial class TestHostBuilder
         if (loggingState.FileLoggerProvider is not null)
         {
             logger = loggingState.FileLoggerProvider.CreateLogger(GetType().ToString());
-            FileLoggerInformation fileLoggerInformation = new(loggingState.FileLoggerProvider.SyncFlush, new(loggingState.FileLoggerProvider.FileLogger.FileName), loggingState.LogLevel);
-            serviceProvider.TryAddService(fileLoggerInformation);
+            serviceProvider.TryAddService(new DiagnosticLoggingInformation(loggingState.FileLoggerProvider));
         }
 
         if (logger is not null)
@@ -120,23 +119,28 @@ internal sealed partial class TestHostBuilder
         }
 #pragma warning restore CA1416
 
-        if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
+        var telemetryManager = (TelemetryManager)Telemetry;
+        if (telemetryManager.BuildOTelService(serviceProvider) is { } platformOTelService)
         {
-            serviceProvider.AddService(otelService);
+            serviceProvider.AddService(platformOTelService);
+        }
 
-            // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
-            // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
-            IPlatformOpenTelemetryService? platformOTelService = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>();
-            if (platformOTelService is not null)
-            {
-                // Set before creating any span so every span picks it up, including the ones created with an
-                // explicit parent id (which do not inherit tracestate).
-                platformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
-                context.BuilderActivity = platformOTelService.StartActivity(
-                    TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                    parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
-                    startTime: buildBuilderStart);
-            }
+        if (telemetryManager.BuildOTelProvider(serviceProvider) is { } otelProvider)
+        {
+            serviceProvider.AddService(otelProvider);
+        }
+
+        // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
+        // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
+        if (serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>() is { } registeredPlatformOTelService)
+        {
+            // Set before creating any span so every span picks it up, including the ones created with an
+            // explicit parent id (which do not inherit tracestate).
+            registeredPlatformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+            context.BuilderActivity = registeredPlatformOTelService.StartActivity(
+                TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
+                startTime: buildBuilderStart);
         }
 
         _ = bool.TryParse(context.Configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);
@@ -166,6 +170,7 @@ internal sealed partial class TestHostBuilder
             systemConsole,
             loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
         serviceProvider.AddService(context.TestApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
+        testApplicationOptions.HostLifetimeBridge?.Connect(context.TestApplicationCancellationTokenSource.Cancel);
 
         CommandLineOptionsProxy commandLineOptionsProxy = new();
         serviceProvider.TryAddService(commandLineOptionsProxy);

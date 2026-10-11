@@ -67,6 +67,7 @@ static Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProv
 static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegex(string! fileName) -> System.Text.RegularExpressions.Regex!
 static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegexPattern(string! fileName) -> string!
 static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.GetDumpDirectory(string! dumpFileNamePattern) -> string!
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.GetDumpSearchPattern(string! dumpFileNamePattern) -> string!
 static Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.FormatLine(string! eventName, System.DateTimeOffset timestamp, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! lastField) -> string!
 static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string! errorMessage) -> void
 static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string? path = null, int line = 0) -> void

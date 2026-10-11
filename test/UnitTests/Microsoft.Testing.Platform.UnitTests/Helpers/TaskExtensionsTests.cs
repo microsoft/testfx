@@ -73,7 +73,7 @@ public sealed class TaskExtensionsTests
     [TestMethod]
     public async Task CancellationAsync_ObserveException_Succeeds()
     {
-        ManualResetEvent waitException = new(false);
+        TaskCompletionSource<bool> exceptionThrown = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> throwException = new(TaskCreationOptions.RunContinuationsAsynchronously);
         using CancellationTokenSource cancellationTokenSource = new();
         CancellationToken token = cancellationTokenSource.Token;
@@ -81,7 +81,7 @@ public sealed class TaskExtensionsTests
             async () =>
             {
                 await throwException.Task;
-                waitException.Set();
+                exceptionThrown.SetResult(true);
                 throw new InvalidOperationException();
             }, TestContext.CancellationToken).WithCancellationAsync(token);
 
@@ -91,15 +91,14 @@ public sealed class TaskExtensionsTests
         OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
         throwException.SetResult(true);
-        Assert.IsTrue(
-            waitException.WaitOne(TimeSpan.FromSeconds(30)),
-            "Inner task did not reach the exception-throw point within the allotted time.");
+        Task completedTask = await Task.WhenAny(exceptionThrown.Task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(exceptionThrown.Task, completedTask, "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     [TestMethod]
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
     {
-        ManualResetEvent waitException = new(false);
+        TaskCompletionSource<bool> exceptionThrown = new(TaskCreationOptions.RunContinuationsAsynchronously);
         using CancellationTokenSource cancellationTokenSource = new();
         CancellationToken token = cancellationTokenSource.Token;
         Task<int> task = Task.Run(async () =>
@@ -111,7 +110,7 @@ public sealed class TaskExtensionsTests
             }
             finally
             {
-                waitException.Set();
+                exceptionThrown.SetResult(true);
 #pragma warning disable CA2219 // Do not raise exceptions in finally clauses
                 throw new InvalidOperationException();
 #pragma warning restore CA2219 // Do not raise exceptions in finally clauses
@@ -123,9 +122,8 @@ public sealed class TaskExtensionsTests
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
         OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
-        Assert.IsTrue(
-            waitException.WaitOne(TimeSpan.FromSeconds(30)),
-            "Inner task did not reach the exception-throw point within the allotted time.");
+        Task completedTask = await Task.WhenAny(exceptionThrown.Task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(exceptionThrown.Task, completedTask, "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     private static async Task<string> DoSomething()

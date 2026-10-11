@@ -101,7 +101,7 @@ public class UnitTest1 : GenericBase<int>
     public async Task TestMethod4(object[] values)
     {
         await Task.Yield();
-        CollectionAssert.AreEqual(new[] { 1, 2 }, values);
+        Assert.AreSequenceEqual(new object[] { 1, 2 }, values);
     }
 
     [TestMethod]
@@ -130,6 +130,13 @@ public class UnitTest1 : GenericBase<int>
     [CombinatorialData]
     public void TestMethod6(CustomValue? value)
         => Assert.IsTrue(value is null or CustomValue.First or CustomValue.Second);
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullDataRow(string? value)
+    {
+        Assert.IsNull(value);
+    }
 }
 
 public enum CustomValue
@@ -198,26 +205,32 @@ public sealed class AsyncVoidTests
         int synchronousNextMethodIndex = registry.IndexOf("Name = \"TestMethod2\"", synchronousMethodIndex, StringComparison.Ordinal);
         Assert.IsGreaterThan(-1, synchronousMethodIndex);
         Assert.IsGreaterThan(synchronousMethodIndex, synchronousNextMethodIndex);
-        StringAssert.Contains(
-            registry.Substring(synchronousMethodIndex, synchronousNextMethodIndex - synchronousMethodIndex),
-            "IsDescriptorSupported = true");
+        Assert.Contains(
+            "IsDescriptorSupported = true",
+            registry.Substring(synchronousMethodIndex, synchronousNextMethodIndex - synchronousMethodIndex));
 
         int asyncMethodIndex = registry.IndexOf("Name = \"TestMethod3\"", StringComparison.Ordinal);
         int nextMethodIndex = registry.IndexOf("Name = \"TestMethod4\"", asyncMethodIndex, StringComparison.Ordinal);
         Assert.IsGreaterThan(-1, asyncMethodIndex);
         Assert.IsGreaterThan(asyncMethodIndex, nextMethodIndex);
-        StringAssert.Contains(
-            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
-            "AreAttributesComplete = true");
-        StringAssert.Contains(
-            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
-            "IsDescriptorSupported = false");
+        Assert.Contains(
+            "AreAttributesComplete = true",
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex));
+        Assert.Contains(
+            "IsDescriptorSupported = false",
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex));
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 0);
         result.AssertExitCodeIs(0);
+
+        TestHostResult nullRowResult = await testHost.ExecuteAsync(
+            "--filter FullyQualifiedName~NullDataRow",
+            cancellationToken: TestContext.CancellationToken);
+        nullRowResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        nullRowResult.AssertExitCodeIs(0);
 
         TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(
             "--filter TestCategory=AsyncGenerated",

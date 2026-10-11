@@ -11,15 +11,65 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// Verifies the physical Windows application-model assets in the configuration-matched MSTest packages.
 /// </summary>
 [TestClass]
-[OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
 public sealed class WindowsApplicationModelPackageTests
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void NativeSdkEnvironment_AlignsSdkPathsAndPreservesSharedTooling(bool inheritedSdk)
+    {
+        string dotnetRoot = Path.Combine(Path.GetTempPath(), "native-dotnet");
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk", "10.0.401");
+        var expected = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["NUGET_PACKAGES"] = "acceptance-package-cache",
+            ["MSBUILDLOGIMPORTS"] = "1",
+            ["MSBuildSDKsPath"] = Path.Combine(sdkDirectory, "Sdks"),
+            ["MSBuildExtensionsPath"] = sdkDirectory,
+            ["DOTNET_ROOT"] = dotnetRoot,
+            ["DOTNET_ROOT_X64"] = dotnetRoot,
+            ["DOTNET_INSTALL_DIR"] = dotnetRoot,
+            ["DOTNET_MULTILEVEL_LOOKUP"] = "0",
+            ["MSBUILDUSESERVER"] = "0",
+        };
+        var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["NUGET_PACKAGES"] = "acceptance-package-cache",
+            ["MSBUILDLOGIMPORTS"] = "1",
+        };
+        if (inheritedSdk)
+        {
+            foreach (string name in expected.Keys.Except(environment.Keys))
+            {
+                environment[name] = "outer-sdk-value";
+            }
+        }
+
+        AcceptanceTestBase.ConfigureDotnetSdkEnvironment(environment, Path.Combine(dotnetRoot, "dotnet.exe"), "10.0.401");
+
+        Assert.AreSequenceEqual(expected.OrderBy(pair => pair.Key), environment.OrderBy(pair => pair.Key));
+    }
+
+    [TestMethod]
+    public void PackagedHostFilterTests_AreSelectedByApplicationModelJob()
+    {
+        string[] categories = typeof(PackagedAppNativeDotnetTestTests)
+            .GetCustomAttributes(typeof(TestCategoryAttribute), inherit: false)
+            .Cast<TestCategoryAttribute>()
+            .SelectMany(attribute => attribute.TestCategories)
+            .ToArray();
+
+        Assert.AreSequenceEqual(["WindowsApplicationModel"], categories);
+        Assert.ContainsSingle(typeof(PackagedAppNativeDotnetTestTests).GetCustomAttributes(typeof(MemberConditionAttribute), inherit: false));
+    }
+
     private static readonly string[] RequiredTestAdapterEntries =
     [
         // Classic UWP.
         "build/uap10.0/MSTest.TestAdapter.props",
         "build/uap10.0/MSTest.TestAdapter.targets",
         "buildTransitive/uap10.0/Microsoft.Testing.Extensions.TrxReport.Abstractions.dll",
+        "buildTransitive/uap10.0/Microsoft.Testing.Extensions.Retry.dll",
         "buildTransitive/uap10.0/Microsoft.Testing.Platform.dll",
         "buildTransitive/uap10.0/MSTest.TestAdapter.dll",
         "buildTransitive/uap10.0/MSTestAdapter.PlatformServices.dll",
@@ -74,12 +124,14 @@ public sealed class WindowsApplicationModelPackageTests
     ];
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestAdapter_ContainsRequiredWindowsApplicationModelAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestAdapter"),
             RequiredTestAdapterEntries);
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestAdapter_UwpPropsRegisterMSTestBuilderHook()
     {
         string packagePath = GetExactCurrentPackagePath("MSTest.TestAdapter");
@@ -97,16 +149,127 @@ public sealed class WindowsApplicationModelPackageTests
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
     public void PackedMSTestTestFramework_ContainsRequiredWindowsApplicationModelAssets()
         => AssertPackageContainsAllEntries(
             GetExactCurrentPackagePath("MSTest.TestFramework"),
             RequiredTestFrameworkEntries);
 
-    private static string GetExactCurrentPackagePath(string packageId)
+    [TestMethod]
+    public void PackedIntegration_AppModelControllerContainsCompleteMtpOnlyRuntime()
     {
-        string expectedVersion = AcceptanceTestBase.MSTestVersion;
+        string packagePath = GetExactCurrentPackagePath(
+            "Microsoft.Testing.Extensions.PackagedApp.MSBuild",
+            AcceptanceTestBase.MicrosoftTestingPlatformVersion);
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        string[] entries = archive.Entries
+            .Select(entry => entry.FullName)
+            .Where(entry => entry.StartsWith("tools/AppModelController/", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        Assert.IsEmpty(
+            entries.Where(entry => entry.Contains('\\') || entry.Contains("//", StringComparison.Ordinal)).ToArray(),
+            "Controller ZIP entries must use canonical single-slash paths on every producer host.");
+
+        string[] targetFrameworks = ["net8.0", "net9.0"];
+        foreach (string targetFramework in targetFrameworks)
+        {
+            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.exe", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.dll", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.deps.json", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.runtimeconfig.json", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Platform.dll", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/Microsoft.Testing.Extensions.PackagedApp.dll", entries);
+            Assert.Contains($"tools/AppModelController/{targetFramework}/fr/Microsoft.Testing.Extensions.PackagedApp.resources.dll", entries);
+            Assert.DoesNotContain($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller", entries);
+
+            ZipArchiveEntry depsEntry = archive.GetEntry($"tools/AppModelController/{targetFramework}/mstest-appmodel-controller.deps.json")!;
+            using var reader = new StreamReader(depsEntry.Open());
+            using var deps = System.Text.Json.JsonDocument.Parse(reader.ReadToEnd());
+            string runtimeTarget = deps.RootElement.GetProperty("runtimeTarget").GetProperty("name").GetString()!;
+            foreach (System.Text.Json.JsonProperty library in deps.RootElement.GetProperty("targets").GetProperty(runtimeTarget).EnumerateObject())
+            {
+                foreach (System.Text.Json.JsonProperty assetGroup in library.Value.EnumerateObject().Where(property => property.Name is "runtime" or "native" or "runtimeTargets" or "resources"))
+                {
+                    foreach (System.Text.Json.JsonProperty asset in assetGroup.Value.EnumerateObject())
+                    {
+                        string relativePath = assetGroup.Name switch
+                        {
+                            "resources" => $"{asset.Value.GetProperty("locale").GetString()}/{Path.GetFileName(asset.Name)}",
+                            "runtimeTargets" => asset.Name,
+                            _ => Path.GetFileName(asset.Name),
+                        };
+                        Assert.Contains($"tools/AppModelController/{targetFramework}/{relativePath}", entries, $"Missing runtime asset for {library.Name}.");
+                    }
+                }
+            }
+        }
+
+        string[] forbiddenEntries = entries
+            .Where(entry =>
+                entry.Contains("Microsoft.NET.Test.Sdk", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("MSTest.TestAdapter", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("MSTest.TestFramework", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("vstest", StringComparison.OrdinalIgnoreCase)
+                || entry.Contains("UwpTestHostRuntimeProvider", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        Assert.IsEmpty(
+            forbiddenEntries,
+            $"The MTP app-model controller must not carry MSTest or VSTest runtime/deployment assets:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, forbiddenEntries));
+    }
+
+    [TestMethod]
+    public void PackedMSTestSdk_DelegatesToIntegrationWithoutDuplicatePayload()
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.Sdk"));
+        Assert.DoesNotContain(entry => entry.FullName.StartsWith("tools/", StringComparison.OrdinalIgnoreCase), archive.Entries);
+        Assert.IsNull(archive.GetEntry("Sdk/Runner/ClassicUwpMtpBootstrap.cs"));
+        using var reader = new StreamReader(archive.GetEntry("Sdk/Runner/Common.targets")!.Open());
+        Assert.Contains("Microsoft.Testing.Extensions.PackagedApp.MSBuild", reader.ReadToEnd());
+    }
+
+    [TestMethod]
+    public void PackedMSTestAdapter_DoesNotImplicitlyDistributeWindowsController()
+    {
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("MSTest.TestAdapter"));
+        Assert.DoesNotContain(entry => entry.FullName.StartsWith("tools/", StringComparison.OrdinalIgnoreCase), archive.Entries);
+        using var reader = new StreamReader(archive.GetEntry("MSTest.TestAdapter.nuspec")!.Open());
+        var nuspec = XDocument.Parse(reader.ReadToEnd());
+        Assert.DoesNotContain(
+            element => (string?)element.Attribute("id") == "Microsoft.Testing.Extensions.PackagedApp.MSBuild",
+            nuspec.Descendants().Where(element => element.Name.LocalName == "dependency"));
+    }
+
+    [TestMethod]
+    public void PackedIntegration_SharesBuildAssetsAndPinsVersionAlignedDependencies()
+    {
+        string version = AcceptanceTestBase.MicrosoftTestingPlatformVersion;
+        using ZipArchive archive = ZipFile.OpenRead(GetExactCurrentPackagePath("Microsoft.Testing.Extensions.PackagedApp.MSBuild", version));
+        foreach (string folder in new[] { "build", "buildTransitive", "buildMultiTargeting" })
+        {
+            Assert.IsNotNull(archive.GetEntry($"{folder}/Microsoft.Testing.Extensions.PackagedApp.MSBuild.targets"));
+        }
+
+        Assert.IsNotNull(archive.GetEntry("buildTransitive/ClassicUwpMtpBootstrap.cs"));
+        Assert.IsNotNull(archive.GetEntry("PACKAGE.md"));
+        using var reader = new StreamReader(archive.GetEntry("Microsoft.Testing.Extensions.PackagedApp.MSBuild.nuspec")!.Open());
+        var nuspec = XDocument.Parse(reader.ReadToEnd());
+        XElement[] groups = nuspec.Descendants().Where(element => element.Name.LocalName == "group").ToArray();
+        XElement classicGroup = groups.Single(group => (string?)group.Attribute("targetFramework") == ".NETStandard2.0");
+        Assert.HasCount(1, classicGroup.Elements());
+        Assert.AreEqual("Microsoft.Testing.Platform.MSBuild", (string?)classicGroup.Elements().Single().Attribute("id"));
+        foreach (XElement dependency in groups.SelectMany(group => group.Elements()))
+        {
+            Assert.AreEqual($"[{version}]", (string?)dependency.Attribute("version"));
+        }
+    }
+
+    private static string GetExactCurrentPackagePath(string packageId, string? version = null)
+    {
+        string expectedVersion = version ?? AcceptanceTestBase.MSTestVersion;
         string[] matches = Directory.Exists(Constants.ArtifactsPackagesShipping)
             ? Directory.GetFiles(Constants.ArtifactsPackagesShipping, $"{packageId}.*.nupkg", SearchOption.TopDirectoryOnly)
+                .Where(path => char.IsDigit(Path.GetFileName(path)[packageId.Length + 1])).ToArray()
             : [];
         string expectedPath = Path.Combine(
             Constants.ArtifactsPackagesShipping,

@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
     <AdditionalFiles Include="InternalAPI.Shipped.txt" />

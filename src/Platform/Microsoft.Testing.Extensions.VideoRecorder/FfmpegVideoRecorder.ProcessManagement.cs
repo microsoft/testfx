@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
@@ -250,7 +250,7 @@ internal sealed partial class FfmpegVideoRecorder
 
     private static string? FindFfmpeg(string? configuredPath)
     {
-        if (!RoslynString.IsNullOrEmpty(configuredPath))
+        if (configuredPath is { Length: > 0 })
         {
             return File.Exists(configuredPath) ? configuredPath : null;
         }

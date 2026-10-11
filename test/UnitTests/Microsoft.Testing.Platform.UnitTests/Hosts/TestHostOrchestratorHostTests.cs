@@ -182,6 +182,51 @@ public sealed class TestHostOrchestratorHostTests
         Assert.AreEqual(1, healthy.DisposeCount);
     }
 
+    [TestMethod]
+    public async Task RunAsync_WithMiddleware_WrapsOrchestratorAndLifetimesRunOnceAroundTheWholePipeline()
+    {
+        RecordingLifetime lifetime = new();
+        List<string> log = [];
+        RecordingMiddleware outer = new("outer", log);
+        RecordingMiddleware inner = new("inner", log);
+        TestHostOrchestratorHost host = CreateHostWithMiddleware(
+            new RecordingOrchestrator(exitCode: 7, onOrchestrate: _ => log.Add("orchestrator")),
+            [outer, inner],
+            lifetime);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(7, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual(7, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+        Assert.AreSequenceEqual(
+            new[] { "outer-before", "inner-before", "orchestrator", "inner-after", "outer-after" },
+            log);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_MiddlewareShortCircuits_OrchestratorNeverRunsButLifetimesStillRunOnce()
+    {
+        RecordingLifetime lifetime = new();
+        bool orchestratorInvoked = false;
+        RecordingMiddleware gatekeeper = new("gatekeeper", [], behaviorOverride: (_, _) => Task.FromResult((int)ExitCode.GenericFailure));
+        TestHostOrchestratorHost host = CreateHostWithMiddleware(
+            new RecordingOrchestrator(onOrchestrate: _ => orchestratorInvoked = true),
+            [gatekeeper],
+            lifetime);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
+        Assert.IsFalse(orchestratorInvoked);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
     private static TestHostOrchestratorHost CreateHost(
         RecordingOrchestrator orchestrator,
         RecordingLifetime lifetime,
@@ -202,6 +247,21 @@ public sealed class TestHostOrchestratorHostTests
         serviceProvider.AddServices([.. lifetimes]);
 
         return new TestHostOrchestratorHost(new TestHostOrchestratorConfiguration([orchestrator]), serviceProvider);
+    }
+
+    private static TestHostOrchestratorHost CreateHostWithMiddleware(
+        RecordingOrchestrator orchestrator,
+        ITestHostExecutionOrchestratorMiddleware[] middleware,
+        RecordingLifetime lifetime)
+    {
+        ServiceProvider serviceProvider = new();
+        FakeApplicationCancellationTokenSource cancellationTokenSource = new();
+        orchestrator.CancellationTokenSource = cancellationTokenSource;
+        serviceProvider.AddService(cancellationTokenSource);
+        serviceProvider.AddService(new NopLoggerFactory());
+        serviceProvider.AddServices([lifetime]);
+
+        return new TestHostOrchestratorHost(new TestHostOrchestratorConfiguration([orchestrator], middleware), serviceProvider);
     }
 
     private sealed class RecordingOrchestrator : ITestHostExecutionOrchestrator
@@ -235,9 +295,38 @@ public sealed class TestHostOrchestratorHostTests
         }
     }
 
+    private sealed class RecordingMiddleware : ITestHostExecutionOrchestratorMiddleware
+    {
+        private readonly Func<Func<CancellationToken, Task<int>>, CancellationToken, Task<int>> _behavior;
+
+        public RecordingMiddleware(string uid, List<string> log, Func<Func<CancellationToken, Task<int>>, CancellationToken, Task<int>>? behaviorOverride = null)
+        {
+            Uid = uid;
+            _behavior = behaviorOverride ?? (async (next, ct) =>
+            {
+                log.Add($"{uid}-before");
+                int result = await next(ct);
+                log.Add($"{uid}-after");
+                return result;
+            });
+        }
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken cancellationToken)
+            => _behavior(next, cancellationToken);
+    }
+
     private sealed class RecordingLifetime : ITestHostOrchestratorApplicationLifetime, IDisposable
     {
-        private static int s_instanceCount;
         private readonly Exception? _beforeRunException;
         private readonly Exception? _afterRunException;
 
@@ -245,7 +334,13 @@ public sealed class TestHostOrchestratorHostTests
         {
             _beforeRunException = beforeRunException;
             _afterRunException = afterRunException;
-            Uid = $"{nameof(RecordingLifetime)}-{Interlocked.Increment(ref s_instanceCount)}";
+
+            // A per-instance GUID (rather than a shared static counter) keeps Uid unique without any
+            // process-global state: every test method in this class constructs its own RecordingLifetime
+            // instances, and under the assembly's method-level parallelization those constructions can run
+            // concurrently on different worker threads. Nothing asserts on the specific Uid value, only that
+            // it is stable and unique per instance, so a GUID satisfies that without a shared counter.
+            Uid = $"{nameof(RecordingLifetime)}-{Guid.NewGuid():N}";
         }
 
         public int BeforeRunCount { get; private set; }

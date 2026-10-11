@@ -153,11 +153,7 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
 
     public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
     {
-        AttachmentRequest? payload = TryBuildAttachmentRequest(attachment);
-        if (payload is null)
-        {
-            return;
-        }
+        AttachmentRequest payload = BuildAttachmentRequest(attachment);
 
         using HttpRequestMessage request = CreateRequest(
             HttpMethod.Post,
@@ -170,11 +166,7 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
 
     public async Task UploadTestRunAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
     {
-        AttachmentRequest? payload = TryBuildAttachmentRequest(attachment);
-        if (payload is null)
-        {
-            return;
-        }
+        AttachmentRequest payload = BuildAttachmentRequest(attachment);
 
         using HttpRequestMessage request = CreateRequest(
             HttpMethod.Post,

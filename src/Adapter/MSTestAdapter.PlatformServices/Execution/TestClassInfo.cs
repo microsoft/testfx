@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -21,13 +22,13 @@ internal sealed partial class TestClassInfo
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
     /// </summary>
     /// <param name="type">Underlying test class type.</param>
-    /// <param name="constructor">Constructor for the test class.</param>
+    /// <param name="constructor">Constructor for the test class, or null for an F# module.</param>
     /// <param name="isParameterlessConstructor">Whether or not the test class constructor has no parameters.</param>
     /// <param name="classAttribute">Test class attribute.</param>
     /// <param name="parent">Parent assembly info.</param>
     internal TestClassInfo(
         Type type,
-        ConstructorInfo constructor,
+        ConstructorInfo? constructor,
         bool isParameterlessConstructor,
         TestClassAttribute classAttribute,
         TestAssemblyInfo parent)
@@ -53,7 +54,9 @@ internal sealed partial class TestClassInfo
     /// <summary>
     /// Gets the constructor.
     /// </summary>
-    public ConstructorInfo Constructor { get; }
+    public ConstructorInfo? Constructor { get; }
+
+    internal bool IsFSharpModule => ClassType.IsFSharpModule();
 
     internal bool IsParameterlessConstructor { get; }
 

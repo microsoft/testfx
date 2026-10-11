@@ -515,6 +515,151 @@ public class TestMethodInfoTests : TestContainer
         ctorCallCount.Should().Be(2);
     }
 
+    public async Task TestMethodInfoInvokeWithoutCleanupPreservesTestContextCancellationTokenSource()
+    {
+        CancellationTokenSource originalCancellationTokenSource = _testContextImplementation.CancellationTokenSource;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testContextImplementation.CancellationTokenSource.Should().BeSameAs(originalCancellationTokenSource);
+    }
+
+    public async Task NonCooperativeTimeoutWithoutCleanupRefreshesCancellationForNextInvocation()
+    {
+        CancellationTokenSource originalCancellationTokenSource = _testContextImplementation.CancellationTokenSource;
+        using ManualResetEventSlim firstInvocationStarted = new();
+        using ManualResetEventSlim releaseFirstInvocation = new();
+        int invocationCount = 0;
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            if (Interlocked.Increment(ref invocationCount) == 1)
+            {
+                firstInvocationStarted.Set();
+                releaseFirstInvocation.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+            }
+        };
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+        firstInvocationStarted.IsSet.Should().BeTrue();
+        TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+
+        firstResult.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        secondResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testContextImplementation.CancellationTokenSource.Should().NotBeSameAs(originalCancellationTokenSource);
+        _testContextImplementation.CancellationTokenSource.IsCancellationRequested.Should().BeFalse();
+        releaseFirstInvocation.Set();
+    }
+
+    public async Task NonCooperativeTimeoutAndNextInvocationDisposeTheirOwnLeasesExactlyOnce()
+    {
+        var firstInstance = new DummyTestClass();
+        var secondInstance = new DummyTestClass();
+        var firstLease = new CountingTestClassInstanceLease(firstInstance);
+        var secondLease = new CountingTestClassInstanceLease(secondInstance);
+        var factory = new QueueTestClassInstanceFactory(firstLease, secondLease);
+        using ManualResetEventSlim firstInvocationStarted = new();
+        using ManualResetEventSlim releaseFirstInvocation = new();
+        DummyTestClass.TestMethodBody = instance =>
+        {
+            if (ReferenceEquals(instance, firstInstance))
+            {
+                firstInvocationStarted.Set();
+                releaseFirstInvocation.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+            }
+        };
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+            firstInvocationStarted.IsSet.Should().BeTrue();
+            firstResult.Outcome.Should().Be(UnitTestOutcome.Timeout);
+
+            TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+            secondResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+        }
+
+        releaseFirstInvocation.Set();
+        await WaitForCompletionAsync(Task.WhenAll(firstLease.DisposalCompleted, secondLease.DisposalCompleted));
+        firstLease.DisposeCount.Should().Be(1);
+        secondLease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task NonCooperativeTimeoutDefersCleanupWhileTestContextSetterIsRunning()
+    {
+        var lease = new CountingTestClassInstanceLease(new DummyTestClass());
+        using ManualResetEventSlim testContextSetterStarted = new();
+        using ManualResetEventSlim releaseTestContextSetter = new();
+        int cleanupCount = 0;
+        DummyTestClass.TestContextSetterBody = _ =>
+        {
+            testContextSetterStarted.Set();
+            releaseTestContextSetter.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+        };
+        DummyTestClass.TestCleanupMethodBody = _ => cleanupCount++;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        using (TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(lease)))
+        {
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+            testContextSetterStarted.IsSet.Should().BeTrue();
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            lease.DisposeCount.Should().Be(0);
+            releaseTestContextSetter.Set();
+            await WaitForCompletionAsync(lease.DisposalCompleted);
+        }
+
+        cleanupCount.Should().Be(1);
+        lease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotDisposePreviousLeaseWhenNextActivationFails()
+    {
+        var lease = new CountingTestClassInstanceLease(new DummyTestClass());
+        var factory = new SequencedTestClassInstanceFactory(
+            lease,
+            new InvalidOperationException("second activation failed"));
+
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+            TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+
+            firstResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+            secondResult.Outcome.Should().Be(UnitTestOutcome.Failed);
+        }
+
+        lease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task TestMethodInfoInvokeShouldPreserveTestContextFailureWhenLeaseDisposalFails()
+    {
+        DummyTestClass.TestContextSetterBody = _ => throw new InvalidOperationException("test context failure");
+        var lease = new CountingTestClassInstanceLease(
+            new DummyTestClass(),
+            new InvalidOperationException("lease disposal failure"));
+        var factory = new SequencedTestClassInstanceFactory(
+            lease,
+            new InvalidOperationException("unexpected second activation"));
+
+        TestResult result;
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            result = await _testMethodInfo.InvokeAsync(null);
+        }
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        AggregateException aggregateException = result.TestFailureException.Should().BeOfType<AggregateException>().Subject;
+        aggregateException.InnerExceptions.Should().HaveCount(2);
+        aggregateException.InnerExceptions[0].ToString().Should().Contain("test context failure");
+        aggregateException.InnerExceptions[1].Message.Should().Be("lease disposal failure");
+        lease.DisposeCount.Should().Be(1);
+    }
+
     public async Task TestMethodInfoInvokeShouldMarkOutcomeFailedIfTestClassConstructorThrows()
     {
         DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
@@ -2006,9 +2151,69 @@ public class TestMethodInfoTests : TestContainer
         return await tcs.Task;
     }
 
+    private static async Task WaitForCompletionAsync(Task task)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cts.Token));
+        completed.Should().BeSameAs(task, "Timed out waiting for background invocation cleanup.");
+        await task;
+    }
+
     #endregion
 
     #region Test data
+
+    private sealed class SequencedTestClassInstanceFactory(
+        ITestClassInstanceLease firstLease,
+        Exception secondException) : ITestClassInstanceFactory
+    {
+        private int _activationCount;
+
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return Interlocked.Increment(ref _activationCount) == 1
+                ? firstLease
+                : throw secondException;
+        }
+    }
+
+    private sealed class QueueTestClassInstanceFactory(params ITestClassInstanceLease[] leases) : ITestClassInstanceFactory
+    {
+        private readonly ConcurrentQueue<ITestClassInstanceLease> _leases = new(leases);
+
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return _leases.TryDequeue(out ITestClassInstanceLease? lease)
+                ? lease
+                : throw new InvalidOperationException("No activation lease is available.");
+        }
+    }
+
+    private sealed class CountingTestClassInstanceLease(object instance, Exception? disposeException = null) : ITestClassInstanceLease
+    {
+        private readonly TaskCompletionSource<object?> _disposalCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public object Instance { get; } = instance;
+
+        public bool RequiresCleanup => true;
+
+        public int DisposeCount { get; private set; }
+
+        public Task DisposalCompleted => _disposalCompleted.Task;
+
+        public Task DisposeAsync()
+        {
+            DisposeCount++;
+            _disposalCompleted.TrySetResult(null);
+            return disposeException is null
+                ? Task.CompletedTask
+                : Task.FromException(disposeException);
+        }
+    }
 
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {

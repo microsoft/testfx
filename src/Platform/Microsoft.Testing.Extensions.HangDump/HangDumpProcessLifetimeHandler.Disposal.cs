@@ -48,10 +48,12 @@ internal sealed partial class HangDumpProcessLifetimeHandler
         {
             try
             {
+                // Stryker disable once Boolean: continuation scheduling does not change disposal results.
                 await activityIndicatorTask.TimeoutAfterAsync(_disposeTimeout).ConfigureAwait(false);
             }
             catch (Exception e)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change disposal results.
                 await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpFailed, e.ToString(), GetDiskInfo())), CancellationToken.None).ConfigureAwait(false);
                 throw;
             }

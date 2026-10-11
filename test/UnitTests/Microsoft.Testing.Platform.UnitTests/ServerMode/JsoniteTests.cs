@@ -46,6 +46,91 @@ public sealed class JsoniteTests
     }
 
     [TestMethod]
+    public void Deserialize_DuplicatePropertiesKeepLastValue()
+    {
+        Jsonite.JsonObject result = Assert.IsInstanceOfType<Jsonite.JsonObject>(
+            Jsonite.Json.Deserialize("""{"value":1,"value":[false,null,{"value":2}]}"""));
+
+        Assert.HasCount(1, result);
+        Jsonite.JsonArray values = Assert.IsInstanceOfType<Jsonite.JsonArray>(result["value"]);
+        Assert.HasCount(3, values);
+        Assert.IsFalse(Assert.IsInstanceOfType<bool>(values[0]));
+        Assert.IsNull(values[1]);
+        Jsonite.JsonObject nested = Assert.IsInstanceOfType<Jsonite.JsonObject>(values[2]);
+        Assert.AreEqual(2, nested["value"]);
+    }
+
+    [TestMethod]
+    public void Deserialize_PrimitivesPreserveValuesAndNumericTypes()
+    {
+        Jsonite.JsonArray result = Assert.IsInstanceOfType<Jsonite.JsonArray>(
+            Jsonite.Json.Deserialize("""[true,false,null,"\"\\\/\b\f\n\r\t\u0041",-999999999,2147483647,2147483648,9223372036854775808,18446744073709551616,1.25,1e2]"""));
+        object?[] expected =
+        [
+            true, false, null, "\"\\/\b\f\n\r\tA", -999999999, int.MaxValue,
+            2147483648L, 9223372036854775808UL, 18446744073709551616m, 1.25d, 100d,
+        ];
+
+        Assert.AreSequenceEqual(expected, result);
+        for (int i = 0; i < expected.Length; i++)
+        {
+            Assert.AreEqual(expected[i]?.GetType(), result[i]?.GetType());
+        }
+    }
+
+    [TestMethod]
+    public void Deserialize_PrimitiveSettingsPreserveTextAndDecimal()
+    {
+        Jsonite.JsonSettings textSettings = new() { ParseValuesAsStrings = true };
+        Jsonite.JsonArray textValues = Assert.IsInstanceOfType<Jsonite.JsonArray>(
+            Jsonite.Json.Deserialize("[true,false,null,-0,1.20e+2]", textSettings));
+        Assert.AreSequenceEqual(new object?[] { "true", "false", null, "-0", "1.20e+2" }, textValues);
+
+        Jsonite.JsonSettings decimalSettings = new() { ParseFloatAsDecimal = true };
+        Assert.AreEqual(1.25m, Assert.IsInstanceOfType<decimal>(Jsonite.Json.Deserialize("1.25", decimalSettings)));
+    }
+
+    [TestMethod]
+    public void Deserialize_EmptyValuesAndTrailingContent()
+    {
+        Assert.IsNull(Jsonite.Json.Deserialize(" \r\n\t"));
+        Assert.IsEmpty(Assert.IsInstanceOfType<Jsonite.JsonObject>(Jsonite.Json.Deserialize("{}")));
+        Assert.IsEmpty(Assert.IsInstanceOfType<Jsonite.JsonArray>(Jsonite.Json.Deserialize("[]")));
+        Assert.IsTrue(Assert.IsInstanceOfType<bool>(Jsonite.Json.Deserialize("true false")));
+    }
+
+    [TestMethod]
+    [DataRow("[1,]", 3, 0, 3, "Unexpected character ']' while parsing an array. Expecting a STRING, NUMBER, OBJECT, ARRAY, true, false or null after a comma ','")]
+    [DataRow("{\n\"x\": 01}", 8, 1, 6, "Unexpected character '1' while parsing a number. The number '0' must followed by '.' or by an exponent or nothing")]
+    [DataRow("[tru]", 4, 0, 4, "Unexpected character ']' while trying to parse a BOOL 'true' value")]
+    [DataRow("""["\u12x4"]""", 6, 0, 6, "Unexpected character 'x' while parsing a string. Expecting only hexadecimals [0-9a-fA-F] after escape \\u")]
+    [DataRow("[1e+]", 4, 0, 4, "Unexpected character ']' while parsing the exponent of a number. Expecting a digit 0-9 after an exponent")]
+    public void Deserialize_MalformedValuesPreserveDiagnostics(string input, int offset, int line, int column, string message)
+    {
+        Jsonite.JsonException exception = Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Deserialize(input));
+
+        Assert.AreEqual(offset, exception.Offset);
+        Assert.AreEqual(line, exception.Line);
+        Assert.AreEqual(column, exception.Column);
+        Assert.AreEqual(message, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_MaxDepthPreservesDiagnostic()
+    {
+        Jsonite.JsonSettings settings = new() { MaxDepth = 1 };
+        Jsonite.JsonException exception = Assert.ThrowsExactly<Jsonite.JsonException>(
+            () => Jsonite.Json.Deserialize("[[]]", settings));
+
+        Assert.AreEqual(1, exception.Offset);
+        Assert.AreEqual(0, exception.Line);
+        Assert.AreEqual(1, exception.Column);
+        Assert.AreEqual(
+            "The maximum allowed depth [{settings.MaxDepth}] level has been reached. The object graph is too deep",
+            exception.Message);
+    }
+
+    [TestMethod]
     public void SerializeJsoniteInvalidStringHighSurrogateAtTheEnd()
     {
         const string Input = "Hello\uD800";

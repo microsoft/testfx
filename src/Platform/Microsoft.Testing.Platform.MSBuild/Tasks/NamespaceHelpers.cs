@@ -36,7 +36,7 @@ internal static class NamespaceHelpers
             }
             else if ((isFirstCharacterOfIdentifier && isValidFirstCharacter) ||
                     (!isFirstCharacterOfIdentifier && isValidPartCharacter) ||
-                    (safeValueStr.Length > 0 && i < value.Length - 1 && value[i] == '.'))
+                    (!isFirstCharacterOfIdentifier && i < value.Length - 1 && value[i] == '.'))
             {
                 // This character is allowed to be where it is.
                 safeValueStr.Append(value[i]);

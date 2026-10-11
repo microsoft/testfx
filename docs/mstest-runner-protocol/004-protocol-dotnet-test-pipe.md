@@ -1,5 +1,12 @@
 # 004 - `dotnet test` Binary Protocol
 
+> **Current implementation note (2026-10-09):** [Host handshake/capability parsing](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+> pipe/HTTP transport and local fake-SDK fixtures support the host-side protocol topics.
+> See [MTP-011](../specifications/mtp.md#mtp-011--native-binary-channel-versus-legacy-msbuild) and
+> [MTP-016](../specifications/mtp.md#mtp-016--no-handshake-and-undeclared-capability-fallback).
+> The external SDK comparisons, gateway/browser deployment requirements, vendored-file alignment
+> and full wire-field catalog below were not independently validated in this scoped audit.
+
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
 `dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy
@@ -582,9 +589,14 @@ provenance is unavailable, including messages from older hosts. Test-scoped arti
 ### 9.6 `CommandLineOptionMessages` (ID 3)
 
 Sent only on the **help** path (`--help`). Carries `ModulePath`(1) and a list of
-`CommandLineOptionMessage`(`Name`(1), `Description`(2), `IsHidden`(3, bool), `IsBuiltIn`(4, bool)),
-sorted by name. Tool-provided options (`IToolCommandLineOptionsProvider`) are excluded. This lets the
-SDK render `dotnet test --help` from the test host's actual option set.
+`CommandLineOptionMessage`(`Name`(1), `Description`(2), `IsHidden`(3, bool), `IsBuiltIn`(4, bool),
+reserved field ID 5, `ProviderUid`(6), `MinimumArity`(7, int), `MaximumArity`(8, int)), sorted by name.
+Tool-provided options (`IToolCommandLineOptionsProvider`) are excluded. This lets the SDK render
+`dotnet test --help` from the test host's actual option set.
+
+Fields 6-8 are optional additive metadata. Older readers skip these unknown fields and continue to
+read fields 1-4. Newer readers treat an absent provider UID or arity as undeclared, preserving
+compatibility with older hosts.
 
 ### 9.7 `AzureDevOpsLogMessage` (ID 11, ≥ 1.2.0)
 

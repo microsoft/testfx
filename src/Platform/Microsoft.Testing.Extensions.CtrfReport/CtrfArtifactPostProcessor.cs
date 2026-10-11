@@ -25,7 +25,7 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
 
     public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
-    // CTRF has no marker that lets this merger label an incomplete input set as a partial run.
+    // Lineage metadata does not supply the authoritative expected-input set needed to describe a partial run.
     public bool SupportsTruncatedRuns => false;
 
     public IReadOnlyList<string> SupportedKinds => SupportedArtifactKinds;

@@ -325,6 +325,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">'CollectionAssert' の代わりに 'Assert' を使用する</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesDescription">
+        <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
+        <target state="translated">完全なテスト ケース名に 'DisplayName' を指定するか、またはメソッドの表示名を保持する引数ラベルに 'ArgumentsDisplayName' を指定します。ただし、両方を指定することはできません。現在の名前を保持するために、無視される 'ArgumentsDisplayName' を削除するか、または引数ラベルを使用するために 'DisplayName' を削除します。</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
+        <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
+        <target state="translated">'DisplayName' がテスト ケース名全体を上書きするため、'ArgumentsDisplayName' は無視されます</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="ConflictingDataRowDisplayNamesTitle">
+        <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
+        <target state="translated">'DisplayName' と 'ArgumentsDisplayName' を組み合わせないでください</target>
+        <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
+      </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
         <target state="translated">'CultureInfo.DefaultThreadCurrentCulture' と 'DefaultThreadCurrentUICulture' はプロセス全体の既定のカルチャを設定するため、同時に実行されるすべてのテストにより変更と書式設定が検知され、アセンブリ内並列化の下で解析が破損する可能性があります。スレッドごと、およびアンビエントのフォームは、意図的にフラグ付けされていません。最新の .NET では、'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' および 'CultureInfo.CurrentCulture' / 'CurrentUICulture' セッターはすべて、実行コンテキストによりフローする 'AsyncLocal' に基づく値を割り当て、兄弟テストを破損したり、後でプールされたスレッドにリークしたりしないようにしています。フラグ付きのセッターはプロセス全体に及ぶため、'finally' で前の値を復元しても役に立ちません。ミューテーションの期間中、同時に実行されているテストは変更後のカルチャを検知します。テストに '[DoNotParallelize]' を宣言するか、代わりにプロセス全体のカルチャを変更しないようにしてください。</target>
@@ -348,7 +363,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
         <target state="translated">'{0}' はプロセスグローバルな現在のディレクトリを変更します。これはスレッドごとに同等なものを持たず、同時に実行されるすべてのテストにより検知されます。並列化されるテスト スイート内でのミューテートは避けてください。(少なくとも '[ResourceLock(WellKnownResources.CurrentDirectory)]' を宣言して調整するか、'[DoNotParallelize]' を宣言します)</target>
-        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
@@ -420,6 +435,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">アセンブリまたはクラスの初期化に渡される TestContext は、そのコンテキストに固有であり、テストの実行ごとに更新されません。'static' メンバーで再利用すると、古いコンテキストが公開される可能性があります。</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameDescription">
+        <source>Duplicate 'DataRow' display names make data-driven test cases indistinguishable in test results and test explorers.</source>
+        <target state="translated">重複する 'DataRow' 表示名があると、データ駆動テスト ケースをテスト結果やテスト エクスプローラーで区別できなくなります。</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameMessageFormat">
+        <source>Do not duplicate the 'DataRow' display name '{0}'. Each 'DataRow' on a test method should use a unique display name.</source>
+        <target state="translated">DataRow の表示名 '{0}' を重複させないでください。テスト メソッドの各 'DataRow' では、一意の表示名を使用する必要があります。</target>
+        <note>{0} is the duplicated display name. {Locked="DataRow"}</note>
+      </trans-unit>
+      <trans-unit id="DuplicateDataRowDisplayNameTitle">
+        <source>Avoid duplicated 'DataRow' display names</source>
+        <target state="translated">重複する 'DataRow' 表示名を避ける</target>
+        <note>{Locked="DataRow"}</note>
+      </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
         <target state="translated">MSTest では、継承されたライフサイクル属性 '[TestInitialize]'、'[TestCleanup]'、'[ClassInitialize]'、'[ClassCleanup]' と、テスト属性 '[TestMethod]' および '[DataTestMethod]' が、厳密なフレームワークの型 ID で解決されます。フレームワーク アセンブリは 'Microsoft.VisualStudio.TestPlatform.TestFramework' から 'MSTest.TestFramework' に名前が変更されたため、異なる MSTest のメジャーに対してコンパイルされた基底クラスでは、異なる型 ID でこれらの属性が公開されます。こうした基底のものが、別のバージョンに対してコンパイルされたテスト クラスによって継承されると、継承されたセットアップとクリーンアップは実行されず、継承されたテスト メソッドは検出されず、ビルド エラーも検出エラーも発生しません。基本アセンブリと、カスタム属性の場合はその属性を定義しているアセンブリを、テスト プロジェクトと同じバージョンの MSTest に対して再コンパイルします。</target>
@@ -433,6 +463,21 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionTitle">
         <source>A test class inherits a lifecycle or test method from a different MSTest version</source>
         <target state="translated">テスト クラスは、別の MSTest バージョンからライフサイクルまたはテスト メソッドを継承します</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedDescription">
+        <source>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</source>
+        <target state="translated">ホスト所有の MSTest テスト クラス インジェクションでは、リフレクション ベースの Microsoft.Extensions.DependencyInjection アクティベーションが使用されます。AddMSTestTestClassInjection を削除するか、サポートされていないビルド モードを無効にしてください。</target>
+        <note>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedMessageFormat">
+        <source>AddMSTestTestClassInjection is not supported when '{0}' is enabled</source>
+        <target state="translated">'{0}' が有効な場合、AddMSTestTestClassInjection はサポートされません</target>
+        <note>{0} is the unsupported build mode or platform. {Locked="AddMSTestTestClassInjection"}</note>
+      </trans-unit>
+      <trans-unit id="MSTestHostTestClassInjectionNotSupportedTitle">
+        <source>MSTest host test-class injection is not supported by the selected build mode</source>
+        <target state="translated">選択したビルド モードでは、MSTest ホストのテスト クラス インジェクションはサポートされていません</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -760,14 +805,19 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">文字列メソッドの戻り値を無視しない</target>
         <note />
       </trans-unit>
+      <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
+        <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
+        <target state="translated">MSTest はテスト クラスの書き込み可能な TestContext プロパティを初期化するため、コンストラクターで初期化する必要はありません。</target>
+        <note>{Locked="TestContext"}</note>
+      </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
-        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare an equivalent '[OSCondition]' so unsupported tests are skipped at run time.</source>
-        <target state="translated">'SupportedOSPlatformAttribute' と 'UnsupportedOSPlatformAttribute' は、プラットフォーム互換性の分析に使用されますが、MSTest の実行を制御するものではありません。これらの属性を使用するテスト メソッドとテスト クラスでは、サポートされていないテストが実行時にスキップされるように、同等の '[OSCondition]' も宣言する必要があります。</target>
+        <source>'SupportedOSPlatformAttribute' and 'UnsupportedOSPlatformAttribute' inform platform compatibility analysis but do not control MSTest execution. Test methods and test classes that use these attributes should also declare a compatible '[OSCondition]' so tests are skipped on unsupported operating-system families at run time. '[OSCondition]' does not enforce platform version constraints.</source>
+        <target state="translated">'SupportedOSPlatformAttribute' と 'UnsupportedOSPlatformAttribute' はプラットフォームの互換性分析を通知しますが、MSTest 実行を制御しません。これらの属性を使用するテスト メソッドとテスト クラスでは、互換性のある '[OSCondition]' も宣言して、サポートされていないオペレーティング システム ファミリでのテストが実行時にスキップされるようにする必要があります。'[OSCondition]' では、プラットフォーム バージョンの制約は適用されません。</target>
         <note>{Locked="SupportedOSPlatformAttribute"}{Locked="UnsupportedOSPlatformAttribute"}{Locked="MSTest"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentMessageFormat">
-        <source>Platform compatibility attributes on test '{0}' are not represented by an equivalent '[OSCondition]' attribute</source>
-        <target state="translated">テスト '{0}' のプラットフォーム互換性属性が、同等の '[OSCondition]' 属性で表されていません</target>
+        <source>Platform compatibility attributes on test '{0}' are not represented by a compatible '[OSCondition]' attribute</source>
+        <target state="translated">テスト '{0}' のプラットフォーム互換性属性が、互換性のある '[OSCondition]' 属性で表されていません</target>
         <note>{0} is the test method or test class name. {Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentTitle">
@@ -797,7 +847,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="translated">async 呼び出しをブロックする代わりに、'Assert.{0}' ではなく 'Assert.{1}' を使用します</target>
+        <target state="translated">'Assert.{1}' で async 呼び出しをブロックする代わりに、'Assert.{0}' を使用します</target>
         <note>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
@@ -854,6 +904,21 @@ The type declaring these methods should also respect the following rules:
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
         <target state="translated">'DataTestMethod' よりも 'TestMethod' を優先する</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeDescription">
+        <source>A method-level attribute should be removed when the containing test class already establishes equivalent or more restrictive behavior.</source>
+        <target state="translated">含まれているテスト クラスがすでに同等またはより制限的な動作を確立している場合は、メソッドレベルの属性を削除する必要があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeMessageFormat">
+        <source>{0} on test method '{1}' is redundant because it does not change behavior established by its containing test class</source>
+        <target state="translated">テスト メソッド '{1}' の {0} は冗長です。含まれているテスト クラスで確立された動作を変更しないためです</target>
+        <note>{0} is the attribute name and {1} is the test method name.</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodAttributeTitle">
+        <source>Remove redundant test method attribute</source>
+        <target state="translated">冗長なテスト メソッド属性を削除する</target>
+        <note />
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
@@ -987,18 +1052,28 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassDescription">
         <source>MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</source>
-        <target state="new">MSTest ignores '[TestClass]' attributes applied to abstract classes. Test methods declared by an abstract class are discovered through concrete derived test classes, which must declare their own '[TestClass]' attribute.</target>
+        <target state="translated">MSTest は抽象クラスに適用された '[TestClass]' 属性を無視します。抽象クラスによって宣言されたテスト メソッドは、具象派生テスト クラスを通じて検出されます。このクラスでは、独自の '[TestClass]' 属性を宣言する必要があります。</target>
         <note>{Locked="MSTest"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassMessageFormat">
         <source>'[TestClass]' has no effect on abstract class '{0}'</source>
-        <target state="new">'[TestClass]' has no effect on abstract class '{0}'</target>
+        <target state="translated">'[TestClass]' は抽象クラス '{0}' には効果がありません</target>
         <note>{0} is the class name. {Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TestClassAttributeShouldNotBeAppliedToAbstractClassTitle">
         <source>'[TestClass]' should not be applied to abstract classes</source>
-        <target state="new">'[TestClass]' should not be applied to abstract classes</target>
+        <target state="translated">'[TestClass]' を抽象クラスに適用しないでください</target>
         <note>{Locked="[TestClass]"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassConstructorHasDerivedTestContextMessageFormat">
+        <source>Test class '{0}' constructor parameter '{1}' derives from TestContext. Use TestContext exactly.</source>
+        <target state="translated">テスト クラス '{0}' のコンストラクター パラメーター '{1}' は TestContext から派生しています。TestContext をそのまま使用してください。</target>
+        <note>{0} is the test class name. {1} is the constructor parameter type. {Locked="TestContext"}</note>
+      </trans-unit>
+      <trans-unit id="TestClassConstructorHasMultipleActivatorUtilitiesConstructorsMessageFormat">
+        <source>Test class '{0}' has multiple public constructors marked with ActivatorUtilitiesConstructorAttribute. Mark exactly one constructor.</source>
+        <target state="translated">テスト クラス '{0}' には、ActivatorUtilitiesConstructorAttribute でマークされた複数の public コンストラクターがあります。コンストラクターを 1 つだけマークしてください。</target>
+        <note>{0} is the test class name. {Locked="public"}{Locked="ActivatorUtilitiesConstructorAttribute"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
@@ -1093,7 +1168,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
         <target state="translated">'{0}' はプロセスグローバルな状態をミューテートするので、テストを並列で実行する場合は安全ではありません。テストでは '[ResourceLock(WellKnownResources.{1})]' (または '[DoNotParallelize]') を宣言してください</target>
-        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="ResourceLock"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>

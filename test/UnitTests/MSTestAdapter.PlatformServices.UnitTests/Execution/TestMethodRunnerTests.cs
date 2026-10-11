@@ -168,6 +168,34 @@ public class TestMethodRunnerTests : TestContainer
         results[1].Outcome.Should().Be(UnitTestOutcome.Failed);
     }
 
+    public async Task Execute_RunsInsideLeaseAfterRestoringFixtureExecutionContext()
+    {
+        var fixtureState = new AsyncLocal<string?> { Value = "fixture" };
+        _testClassInfo.ExecutionContext = ExecutionContext.Capture();
+        fixtureState.Value = null;
+
+        var lease = new FakeExecutionActivityLease();
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () =>
+            {
+                fixtureState.Value.Should().Be("fixture");
+                lease.IsEntered.Should().BeTrue();
+                return new TestResult { Outcome = UnitTestOutcome.Passed };
+            });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, lease);
+
+        TestResult[] results = await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        results[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        lease.EnterCount.Should().Be(1);
+        lease.ExitCount.Should().Be(1);
+        lease.IsEntered.Should().BeFalse();
+        fixtureState.Value.Should().BeNull();
+    }
+
     public async Task ExecuteForFailingTestShouldRecordReturnedFailureExceptionOnActivity()
     {
         var failureException = new InvalidOperationException("failed");
@@ -393,6 +421,55 @@ public class TestMethodRunnerTests : TestContainer
 
         results.Length.Should().Be(1);
         results[0].DisplayName.Should().Be("DataRowTestDisplayName");
+    }
+
+    public async Task RunTestMethodArgumentsDisplayNameOverridesSourceNameAndKeepsMethodDisplayName()
+    {
+        var row = new TestDataRow<string>(string.Empty) { ArgumentsDisplayName = "empty input" };
+        var source = new DataRowAttribute(row) { DisplayName = "Source name" };
+        _testMethod.DisplayName = "Friendly method";
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(new Attribute[] { source });
+        var methodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
+        var runner = new TestMethodRunner(methodInfo, _testMethod, _testContextImplementation);
+
+        TestResult[] results = await runner.RunTestMethodAsync();
+
+        results.Should().ContainSingle().Which.DisplayName.Should().Be("Friendly method (empty input)");
+    }
+
+    public async Task RunTestMethodArgumentsDisplayNamePreservesBlankFullRowNames()
+    {
+        foreach (string fullName in new[] { string.Empty, " \t" })
+        {
+            var row = new TestDataRow<string>(string.Empty) { DisplayName = fullName, ArgumentsDisplayName = "empty input" };
+            var source = new DataRowAttribute(row) { DisplayName = "Source name" };
+            _testablePlatformServiceProvider.MockReflectionOperations
+                .Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(new Attribute[] { source });
+            var methodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
+            var runner = new TestMethodRunner(methodInfo, _testMethod, _testContextImplementation);
+
+            TestResult[] results = await runner.RunTestMethodAsync();
+
+            results.Should().ContainSingle().Which.DisplayName.Should().Be(fullName);
+        }
+    }
+
+    public async Task RunTestMethodBlankArgumentsDisplayNamesKeepSourceCustomization()
+    {
+        foreach (string? label in new string?[] { null, string.Empty, " \t" })
+        {
+            var row = new TestDataRow<string>(string.Empty) { ArgumentsDisplayName = label };
+            var source = new DataRowAttribute(row) { DisplayName = "Source name" };
+            _testablePlatformServiceProvider.MockReflectionOperations
+                .Setup(ro => ro.GetCustomAttributes(_methodInfo)).Returns(new Attribute[] { source });
+            var methodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult());
+            var runner = new TestMethodRunner(methodInfo, _testMethod, _testContextImplementation);
+
+            TestResult[] results = await runner.RunTestMethodAsync();
+
+            results.Should().ContainSingle().Which.DisplayName.Should().Be("Source name");
+        }
     }
 
     public async Task RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
@@ -641,6 +718,32 @@ public class TestMethodRunnerTests : TestContainer
 
         public void Dispose()
         {
+        }
+    }
+
+    private sealed class FakeExecutionActivityLease : ITestExecutionActivityLease
+    {
+        private readonly AsyncLocal<bool> _isEntered = new();
+
+        public bool IsEntered => _isEntered.Value;
+
+        public int EnterCount { get; private set; }
+
+        public int ExitCount { get; private set; }
+
+        public async Task<T> RunAsync<T>(Func<Task<T>> callback)
+        {
+            EnterCount++;
+            _isEntered.Value = true;
+            try
+            {
+                return await callback();
+            }
+            finally
+            {
+                ExitCount++;
+                _isEntered.Value = false;
+            }
         }
     }
 

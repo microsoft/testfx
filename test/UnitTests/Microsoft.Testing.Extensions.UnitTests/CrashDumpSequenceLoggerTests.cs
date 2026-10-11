@@ -22,6 +22,8 @@ public sealed class CrashDumpSequenceLoggerTests
     private readonly Mock<ILoggerFactory> _mockLoggerFactory = new();
     private readonly Mock<IOutputDevice> _mockOutputDevice = new();
 
+    public TestContext TestContext { get; set; } = null!;
+
     public CrashDumpSequenceLoggerTests()
     {
         // The ILoggerFactory mock must be configured before CrashDumpSequenceLogger is constructed:
@@ -37,6 +39,192 @@ public sealed class CrashDumpSequenceLoggerTests
 
     private CrashDumpSequenceLogger CreateLogger()
         => new(_mockEnvironment.Object, _mockClock.Object, _mockLoggerFactory.Object, _mockOutputDevice.Object);
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_WithoutEnablement_ThrowsInvariantViolation()
+    {
+        CrashDumpSequenceLogger logger = CreateLogger();
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None)));
+
+        Assert.Contains("Unexpected state", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_CreatesNestedDirectoryAndWritesHeader()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "crash-sequence-" + Guid.NewGuid().ToString("N"));
+        string path = Path.Combine(root, "nested", "sequence.log");
+        _mockEnvironment
+            .Setup(x => x.GetEnvironmentVariable(CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName))
+            .Returns(path);
+        CrashDumpSequenceLogger logger = CreateLogger();
+
+        try
+        {
+            Assert.IsTrue(await logger.IsEnabledAsync());
+            await logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+            var writer = (StreamWriter)(typeof(CrashDumpSequenceLogger)
+                .GetField("_writer", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .GetValue(logger)!);
+            Assert.IsTrue(writer.AutoFlush);
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            Assert.AreSequenceEqual(
+                ["# MTP CrashDump test sequence v1 (format: <event>\\t<isoTimestamp>\\t<uid>\\t<displayName-or-state>)"],
+                File.ReadAllLines(path));
+        }
+        finally
+        {
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_StartedRecordIsImmediatelyVisibleWithRoundtripTimestamp()
+    {
+        string path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        DateTimeOffset timestamp = new DateTimeOffset(2026, 10, 3, 19, 52, 40, 321, TimeSpan.Zero).AddTicks(9876);
+        _mockClock.Setup(x => x.UtcNow).Returns(timestamp);
+        _mockEnvironment
+            .Setup(x => x.GetEnvironmentVariable(CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName))
+            .Returns(path);
+        CrashDumpSequenceLogger logger = CreateLogger();
+
+        try
+        {
+            Assert.IsTrue(await logger.IsEnabledAsync());
+            await logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+            await logger.ConsumeAsync(
+                null!,
+                CreateUpdate(InProgressTestNodeStateProperty.CachedInstance, "started-uid", "Started Test"),
+                CancellationToken.None);
+
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            string[] lines = File.ReadAllLines(path);
+            Assert.HasCount(2, lines);
+            Assert.AreEqual(
+                $"STARTED\t{timestamp:O}\tstarted-uid\tStarted Test",
+                lines[1]);
+        }
+        finally
+        {
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_EachTerminalStateWritesItsSpecificState()
+    {
+        string path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        var timestamp = new DateTimeOffset(2026, 10, 3, 19, 52, 40, TimeSpan.Zero);
+        _mockClock.Setup(x => x.UtcNow).Returns(timestamp);
+        _mockEnvironment
+            .Setup(x => x.GetEnvironmentVariable(CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName))
+            .Returns(path);
+        CrashDumpSequenceLogger logger = CreateLogger();
+
+        try
+        {
+            Assert.IsTrue(await logger.IsEnabledAsync());
+            await logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+#pragma warning disable CS0618, MTP0001 // Cover the same terminal-state set as the production sequence logger.
+            (IProperty Property, string ExpectedState)[] terminalStates =
+            [
+                (PassedTestNodeStateProperty.CachedInstance, "Passed"),
+                (new FailedTestNodeStateProperty(), "Failed"),
+                (new ErrorTestNodeStateProperty(), "Error"),
+                (SkippedTestNodeStateProperty.CachedInstance, "Skipped"),
+                (new CancelledTestNodeStateProperty(), "Cancelled"),
+                (new TimeoutTestNodeStateProperty(), "Timeout"),
+            ];
+#pragma warning restore CS0618, MTP0001
+
+            for (int i = 0; i < terminalStates.Length; i++)
+            {
+                await logger.ConsumeAsync(
+                    null!,
+                    CreateUpdate(terminalStates[i].Property, $"uid-{i}", $"Test {i}"),
+                    CancellationToken.None);
+            }
+
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            string[] lines = File.ReadAllLines(path);
+            Assert.HasCount(terminalStates.Length + 1, lines);
+            for (int i = 0; i < terminalStates.Length; i++)
+            {
+                Assert.AreEqual(
+                    $"ENDED\t{timestamp:O}\tuid-{i}\t{terminalStates[i].ExpectedState}",
+                    lines[i + 1]);
+            }
+        }
+        finally
+        {
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void FormatLine_UsesRoundtripTimestampAndSanitizesUserFields()
+    {
+        DateTimeOffset timestamp = new DateTimeOffset(2026, 10, 3, 19, 52, 40, 321, TimeSpan.FromHours(2)).AddTicks(9876);
+
+        string line = CrashDumpSequenceLogger.FormatLine("EVENT", timestamp, new TestNodeUid("uid\tone"), "line\r\nvalue");
+
+        Assert.AreEqual($"EVENT\t{timestamp:O}\tuid one\tline  value", line);
+    }
+
+#if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_ReleasesQueuedWaiterAndDisposesSemaphore()
+    {
+        CrashDumpSequenceLogger logger = CreateLogger();
+        var semaphore = (SemaphoreSlim)(typeof(CrashDumpSequenceLogger)
+            .GetField("_writeSemaphore", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .GetValue(logger)!);
+        semaphore.Wait(TestContext.CancellationToken);
+        ValueTask disposal = logger.DisposeAsync();
+        Task queuedWait = semaphore.WaitAsync(TestContext.CancellationToken);
+
+        semaphore.Release();
+        await disposal;
+
+        await queuedWait.WaitAsync(TestContext.CancellationToken);
+        Assert.IsTrue(queuedWait.IsCompletedSuccessfully);
+        Assert.ThrowsExactly<ObjectDisposedException>(() => semaphore.Wait(0, TestContext.CancellationToken));
+    }
+#endif
 
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
@@ -220,13 +408,13 @@ public sealed class CrashDumpSequenceLoggerTests
         }
     }
 
-    private static TestNodeUpdateMessage CreateUpdate(IProperty property)
+    private static TestNodeUpdateMessage CreateUpdate(IProperty property, string uid = "uid", string displayName = "DroppedTest")
         => new(
             new SessionUid("session"),
             new TestNode
             {
-                Uid = "uid",
-                DisplayName = "DroppedTest",
+                Uid = uid,
+                DisplayName = displayName,
                 Properties = new PropertyBag(property),
             });
 

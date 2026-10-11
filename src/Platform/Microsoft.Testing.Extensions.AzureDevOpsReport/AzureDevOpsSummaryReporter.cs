@@ -20,9 +20,12 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataProducer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
     private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}-{1}-{2}.md";
-    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
-    private const int MaxSlowestTests = 10;
-    private const int MaxTopFailingClasses = 5;
+    private const string MSTestDependencyPropertyKey = "mstest.TestCase.Dependency";
+    private const int MaxFailureMessageLength = 4 * 1024;
+    private const int MaxDependenciesPerTest = 32;
+    private const int MaxDependencyCandidatesPerTest = 64;
+    private const int MaxDependencyLength = 1024;
+    private const int MaxCapturedDependencies = 1_000;
     private const int MaxFirstFailingFqns = 10;
 
     private readonly ICommandLineOptions _commandLineOptions;
@@ -36,6 +39,7 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ITestCoverageResult _testCoverageResult;
+    private readonly IAzureDevOpsHistoryService? _historyService;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -43,8 +47,12 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
 #else
     private readonly object _stateLock = new();
 #endif
+    private readonly List<SummaryRow> _rows = [];
 #pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
-    private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _finalRowCountsByUid = new Dictionary<string, int>(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<int>> _flakyRowIndicesByUid = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+    private readonly HashSet<string> _inProcessFailedTests = new HashSet<string>(StringComparer.Ordinal);
+    private readonly HashSet<string> _notRecoveredTests = new HashSet<string>(StringComparer.Ordinal);
 #pragma warning restore IDE0028
     private readonly bool _isEnabled;
 
@@ -62,6 +70,35 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
         ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
         Func<bool> shouldDeferToArtifactPostProcessing)
+        : this(
+            commandLineOptions,
+            configuration,
+            environment,
+            fileSystem,
+            messageBus,
+            outputDevice,
+            testApplicationModuleInfo,
+            testApplicationProcessExitCode,
+            testCoverageResult,
+            loggerFactory,
+            shouldDeferToArtifactPostProcessing,
+            historyService: null)
+    {
+    }
+
+    public AzureDevOpsSummaryReporter(
+        ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
+        IEnvironment environment,
+        IFileSystem fileSystem,
+        IMessageBus messageBus,
+        IOutputDevice outputDevice,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ITestCoverageResult testCoverageResult,
+        ILoggerFactory loggerFactory,
+        Func<bool> shouldDeferToArtifactPostProcessing,
+        IAzureDevOpsHistoryService? historyService)
     {
         _commandLineOptions = commandLineOptions;
         _configuration = configuration;
@@ -72,6 +109,7 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _testCoverageResult = testCoverageResult;
+        _historyService = historyService;
         _logger = loggerFactory.CreateLogger<AzureDevOpsSummaryReporter>();
         _isEnabled = commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary);
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
@@ -91,4 +129,19 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
     public string Description => AzureDevOpsResources.Description;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+
+    private sealed class SummaryRow(
+        string uid,
+        TestRecord record,
+        CiRunSummaryHistoryTest? historyTest,
+        CiRunSummaryDependency[] dependencies)
+    {
+        public string Uid { get; } = uid;
+
+        public TestRecord Record { get; set; } = record;
+
+        public CiRunSummaryHistoryTest? HistoryTest { get; } = historyTest;
+
+        public CiRunSummaryDependency[] Dependencies { get; } = dependencies;
+    }
 }

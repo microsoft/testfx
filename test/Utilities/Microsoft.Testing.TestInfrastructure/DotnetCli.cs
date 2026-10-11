@@ -105,6 +105,9 @@ public static class DotnetCli
         try
         {
             environmentVariables ??= [];
+            // Generated assets need isolated builds, not a shared long-lived MSBuild server. On Unix,
+            // opening its named mutex can block before restore even starts. Explicit test settings win.
+            environmentVariables.TryAdd("MSBUILDUSESERVER", "0");
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.

@@ -53,6 +53,7 @@ internal sealed partial class MSTestSettings
         RandomizeTestOrder = false;
         RandomTestOrderSeed = null;
         LaunchDebuggerOnAssertionFailure = DebuggerLaunchMode.Disabled;
+        CaptureAssertionFailureDiagnostics = false;
     }
 
     /// <summary>
@@ -218,6 +219,11 @@ internal sealed partial class MSTestSettings
     /// Gets a value specifying when to launch the debugger on assertion failure.
     /// </summary>
     internal DebuggerLaunchMode LaunchDebuggerOnAssertionFailure { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether a diagnostic artifact should be captured when an assertion fails.
+    /// </summary>
+    internal bool CaptureAssertionFailureDiagnostics { get; private set; }
 
     /// <summary>
     /// Resets any settings loaded.

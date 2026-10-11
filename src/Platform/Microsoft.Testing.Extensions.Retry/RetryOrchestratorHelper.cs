@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 namespace Microsoft.Testing.Extensions.Policy;
@@ -17,6 +17,7 @@ internal static class RetryOrchestratorHelper
         }
 
         index = Array.IndexOf(executableArgs, "--" + optionName);
+        // Stryker disable once Conditional: Array.IndexOf returns either a valid non-negative index or -1, so both branches return index.
         return index >= 0 ? index : -1;
     }
 
@@ -38,6 +39,7 @@ internal static class RetryOrchestratorHelper
                     || arg.StartsWith(shortForm + "=", StringComparison.Ordinal) || arg.StartsWith(shortForm + ":", StringComparison.Ordinal))
                 {
                     idx = i;
+                    // Stryker disable once Statement: selecting a later occurrence only changes removal order; the outer loop removes all occurrences.
                     break;
                 }
             }

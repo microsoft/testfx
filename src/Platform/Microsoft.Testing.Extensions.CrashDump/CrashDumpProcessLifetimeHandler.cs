@@ -82,6 +82,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler : ITestHostProcess
             return;
         }
 
+        // Stryker disable once Boolean: Capturing the current context does not change the displayed informational message.
         await _outputDisplay.DisplayAsync(
             this,
             new FormattedTextOutputDeviceData(message),
@@ -114,12 +115,17 @@ internal sealed partial class CrashDumpProcessLifetimeHandler : ITestHostProcess
             return;
         }
 
+        // Stryker disable once Boolean: Capturing the current context does not change artifact publication.
         await _artifactPublisher.PublishAsync(testHostProcessInformation, cancellationToken).ConfigureAwait(false);
+        // Stryker disable once Boolean: Capturing the current context does not change sequence-file publication.
         await _sequenceFileHandler.TryPublishAsync(cancellationToken).ConfigureAwait(false);
     }
 
     internal static string GetDumpDirectory(string dumpFileNamePattern)
         => CrashDumpFileNameHelper.GetDumpDirectory(dumpFileNamePattern);
+
+    internal static string GetDumpSearchPattern(string dumpFileNamePattern)
+        => CrashDumpFileNameHelper.GetDumpSearchPattern(dumpFileNamePattern);
 
     internal static Regex BuildDumpFileNameRegex(string fileName)
         => CrashDumpFileNameHelper.BuildDumpFileNameRegex(fileName);

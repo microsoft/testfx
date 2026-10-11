@@ -36,12 +36,70 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+### Test-quality skill contract
+
+The [automatic test reviewer](./test-reviewer-on-pr.agent.md) and
+[`/review-tests` reviewer](./test-reviewer.agent.md) share
+[one prompt](./shared/test-reviewer-shared.md). They consume the upstream
+`grade-tests` and `test-gap-analysis` skills pinned by
+[the curated manifest](../../.copilot/curate/manifest.yml), without a local
+grading-weight fork.
+
+The primary per-test result is `Pass`, `Failed`, or `Uncertain`; a valid empty
+scope is `Not applicable`. Quality bands are secondary: a focused `B / Pass`
+needs no invented improvement, while `A / Failed` still requires a concrete
+action. Clean automatic runs are silent regardless of letter grade; command
+runs always return the requested result, including incomplete evidence and
+applicable parallel-safety analysis.
+
+Grading reads the bundled .NET language reference directly and composes
+`test-gap-analysis` in read-only per-test context before scoring. It does not
+execute tests or mutations. Mutation evidence uses `Likely killed (inferred)`
+or `Candidate survivor (unverified)`, with a distinguishing input and
+original/mutant observations, not empirical kill ratios. Unavailable production
+context is disclosed without a deduction. Existing changed-line anchoring,
+deduplication, parallel-safety, and safe-output publication gates still apply.
+
+### Firewall access for repository work
+
+`network: defaults` covers infrastructure, not package feeds or Git transport.
+Workflows that restore, build, test, or query .NET package metadata need the
+`dotnet` ecosystem. It includes the repository's Azure DevOps feeds and their
+`*.vsblob.vsassets.io` package-download redirects. Workflows that fetch Git history
+or PR branches also allow `github.com` explicitly; GitHub MCP/CLI proxy access does
+not grant direct Git HTTPS access. Keep GitHub API calls on the existing proxies
+rather than adding `api.github.com` to bypass them.
+
+Build/test workflows set `DOTNET_CLI_TELEMETRY_OPTOUT=1` at workflow scope so both
+setup steps and agent-launched child processes inherit it. MTP and MSTest honor
+the same opt-out; do not add Application Insights destinations just to silence
+blocked telemetry requests.
+
+This is client-side suppression, not a blanket firewall ban on telemetry:
+gh-aw v0.89.21's maintained `dotnet` bundle also permits the Application Insights
+ingestion host `dc.services.visualstudio.com`. Adding `dotnet` therefore permits
+that host as well as package and SDK downloads. The removed regional
+`*.in.applicationinsights.azure.com` exception stays denied. The local firewall
+replay verified denial of `southcentralus-0.in.applicationinsights.azure.com`,
+not every telemetry endpoint. Keep the maintained SDK/feed bundle for restore
+compatibility rather than treating the opt-out as an egress-enforcement control.
+
+When investigating a blocked request, inspect the downloaded raw firewall
+`access.log` as well as the gh-aw summary. A `TCP_DENIED` entry remains a denial
+even when its HTTP status is `200`; some gh-aw summaries count those entries as
+allowed. Add only destinations required by the workflow's task, or eliminate
+unnecessary requests instead of broadening the firewall.
+
 ### Compile on the pinned toolchain, and check the pins afterwards
 
 > [!WARNING]
 > A locally installed `gh aw` extension can silently rewrite action pins in **every** `.lock.yml` it touches, even when its `compiler_version` header matches CI. Observed corruptions include `actions/checkout` being downgraded (v7.0.1 → v7.0.0) and `github/gh-aw-actions/setup` losing its immutable SHA in favour of a mutable `@v0.83.1` tag. See [#10258](https://github.com/microsoft/testfx/issues/10258).
 
 The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
+
+This update retains gh-aw v0.89.21 because [v0.89.22](https://github.com/github/gh-aw/releases/tag/v0.89.22) is marked as a prerelease as of October 8, 2026. `gh aw upgrade` selects stable releases by default; this update does not opt into `--pre-releases`.
+
+[`aw.json`](./aw.json) redirects gh-aw v0.89.21's embedded `actions/upload-artifact@v7.0.1` references to v7.0.2. The daily-credit guardrail otherwise retains the embedded version while other generated steps use the newer action cache entry, producing mixed pins. Keep this redirect until the compiler's embedded version catches up, and align handwritten workflows whenever updating a shared action pin.
 
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
@@ -222,7 +280,7 @@ a security control.
 
 **Symptom.** A long-running workflow reaches threat detection, then the detection job fails before
 the model starts with `awf: command not found`. The tracker records `parse_error` because no
-`THREAT_DETECTION_RESULT` was produced.
+detector verdict was recorded.
 
 **Why.** This is a runner/runtime failure, not a malformed detector response and not evidence that
 the agent output contained a threat. Repository prompt changes cannot repair a missing `awf`
@@ -232,36 +290,50 @@ executable.
 capture the detection job log and report it upstream to `github/gh-aw`. Do not disable threat
 detection or weaken the safe-output gate.
 
+### A no-op run is recorded as `agent_failure`
+
+**Symptom.** The agent job succeeds and calls `noop`, but the detection tracker records
+`warning | agent_failure`. The detection log says both
+`Detection skipped: no agent outputs or patches to analyze` and
+`threat-detect binary not found on PATH`.
+
+**Why.** In gh-aw v0.88.7, an intentional no-op sets `RUN_DETECTION=false`, so the
+`Install threat-detect binary` step is skipped. The unconditional conclude step still checks for
+that binary before honoring the skipped result and reports its expected absence as an agent
+failure. Superseded runs can produce the same warning when their agent job is cancelled before
+emitting an output.
+
+**What to do.** For workflows where a no-op has no downstream side effects, gate threat detection
+on the presence of an actual safe output or patch:
+
+```yaml
+safe-outputs:
+  threat-detection:
+    enabled: ${{ (needs.agent.outputs.output_types != '' && needs.agent.outputs.output_types != 'noop') || needs.agent.outputs.has_patch == 'true' }}
+```
+
+The collector reports an intentional no-op as `output_types=noop`, so the explicit exclusion is
+needed to skip the broken no-content conclude path while preserving detection for every
+publishable output and patch. Remove the workaround after gh-aw fixes the external detector's
+skipped conclusion behavior.
+
 ### `detection` job succeeds but the run is recorded as `parse_error`
 
 **Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the
-`[aw] Detection Runs` tracker still records the run as `warning | parse_error`. The job log shows
-that the marker was found and then failed to parse:
+`[aw] Detection Runs` tracker still records the run as `failure | parse_error`. The job log shows
+that the model completed without recording a verdict:
 
 ```text
-📄 Lines containing THREAT_DETECTION_RESULT (1 of 194):
-   [155] **THREAT_DETECTION_RESULT:{"prompt_injection":false,"secret_leak":false,…**
-🔎 Parsing THREAT_DETECTION_RESULT from detection log...
-##[error]❌ Failed to parse detection result: Unexpected token 'T', "T:{"prompt"... is not valid JSON
+[threat-detect] attempt 1 outcome=no_verdict err=open /tmp/threat-detect-result-….json: no such file or directory
+Error running detection: detection model did not record a usable verdict via the threat_detection_result tool
+THREAT_DETECTION_STATUS: reason=invalid_report_exhausted exit=2
 ```
 
-**Telling the two `parse_error` causes apart.** Read the line immediately above the parse error:
-
-- `Lines containing THREAT_DETECTION_RESULT (1 of N)` means the marker is present, so the detection
-  model ran and answered. That is the formatting cause described here.
-- `No THREAT_DETECTION_RESULT found` means no result was ever written. That can be the
-  [Copilot CLI installer failure](#detection-job-fails-at-install-github-copilot-cli), or another
-  job-level failure that stopped the model before it answered.
-
-**Why.** One observed cause is that the model wrapped its result line in Markdown emphasis, so the
-line starts with `**THREAT_…` instead of `THREAT_…`. Another run appended the marker directly after
-prose instead of starting it on a new line. gh-aw's fallback parser requires the marker at the start
-of the line, so either format is rejected even when the JSON itself is valid.
-
-Another observed cause is invalid JSON inside an otherwise correctly positioned marker, such as a
-reason string containing an unescaped quoted gh-aw redaction marker. The affected workflow should
-constrain the detector prompt to emit exactly one single-line result and JSON-escape quotes and
-backslashes inside reason strings.
+**Why.** The external detector bundled with gh-aw v0.88.7 no longer scrapes a textual
+`THREAT_DETECTION_RESULT` marker from the model transcript. It provisions a
+`threat_detection_result` command and accepts only the out-of-band result written by that command.
+A custom prompt that still asks the model to print or format the legacy marker can make the model
+finish successfully without invoking the command, which produces `invalid_report_exhausted`.
 
 **Status.** The original mitigation pinned every detector to `gpt-5-mini` in
 [#10729](https://github.com/microsoft/testfx/pull/10729). Detection runs tracked by
@@ -270,20 +342,30 @@ still emitted a misplaced marker and repeatedly classified trusted workflow orch
 injection even when its own reasons said no malicious injection was present. The concrete override
 was replaced with gh-aw's maintained `detection` model alias.
 
-**What to do.** Use the `detection` alias instead of pinning a concrete detector model:
+**What to do.** Keep workflow-specific trust-boundary guidance, but instruct the model to use the
+detector's result command instead of describing a custom output format:
 
 ```yaml
 safe-outputs:
   threat-detection:
+    prompt: >-
+      [Workflow-specific trust-boundary guidance.]
+      After deciding the three booleans, use the shell tool to execute exactly
+      one invocation of the pre-provisioned `threat_detection_result` command,
+      passing `--prompt-injection`, `--secret-leak`, and `--malicious-patch` with
+      boolean values. This command execution is the only accepted report; it
+      must happen before the final response. Never put the command in prose or
+      a Markdown code block, and do not print, echo, or manually format a
+      `THREAT_DETECTION_RESULT` line.
+    model: detection
     engine:
       id: copilot
-      model: detection
 ```
 
 Then recompile with `gh aw compile --strict` and confirm the generated detection step reports
 `COPILOT_MODEL: detection`. Never hand-edit a `.lock.yml` or disable threat detection to avoid a
-parser or model failure; both approaches remove or bypass a security control instead of fixing the
-cause.
+result-reporting failure; both approaches remove or bypass a security control instead of fixing
+the cause.
 
 ## Catalog
 
@@ -309,9 +391,8 @@ cause.
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`pipeline-test-triage.md`](./pipeline-test-triage.md) | Failed `microsoft.testfx (Build ...)` child checks; completed aggregate `microsoft.testfx` check; manual | Posts deduplicated preliminary PR feedback from failed build legs, then analyzes the completed build for failures, retries/flakiness, crash or hang diagnostics, and historically abnormal durations. The final PR comment supersedes preliminary feedback; Bug issues are created only when recurrence and actionability thresholds are met. |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
-| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; bundles the scorecard and apply-ready suggestions into one COMMENT review when findings exist, and stays silent when clean. |
-| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand and submits one COMMENT review. |
-| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits changed MSTest tests for parallel-safety and submits one ranked COMMENT review only when findings exist; clean automatic runs are silent. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
+| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` or repository-root test configuration | Runs one consolidated test-quality review: grades changed test methods, delegates assembly-wide parallel-safety analysis, bundles both results with apply-ready suggestions into one COMMENT review when findings exist, and stays silent when clean. |
+| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the consolidated test-quality review on demand and submits one COMMENT review. |
 | [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand and submits one COMMENT review. |
 
 #### Continuous quality improvers (scheduled)
@@ -326,13 +407,13 @@ cause.
 | [`resource-lock-refactoring.md`](./resource-lock-refactoring.md) | Daily + manual | Prepares one bounded test project for safe parallel execution by eliminating shared state or applying the narrowest appropriate `[ResourceLock]`, then opens a draft PR. |
 | [`repository-quality-improver.md`](./repository-quality-improver.md) | Weekday schedule + manual | Daily analysis of repository quality, rotating focus areas. Opens tracking issues like this one. |
 | [`daily-file-diet.md`](./daily-file-diet.md) | Daily + manual | Identifies oversized source files and opens actionable refactoring issues. |
-| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Finds tests skipped via `[Ignore("…#issue")]` whose tracking issue is now closed, verifies they pass, and opens a PR re-enabling them. |
+| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Builds a source-bound Ignore inventory at the exact commit, accepts only completed issues or merged PRs, and opens one draft PR only for tests proven executed and passed in structured TRX results. |
 | [`duplicate-code-detector.md`](./duplicate-code-detector.md) | Schedule + manual | Identifies duplicate code patterns and suggests refactoring opportunities. |
 | [`malicious-code-scan.md`](./malicious-code-scan.md) | Schedule + manual | Reviews code changes from the last 3 days for suspicious patterns indicating malicious or agentic threats. |
 | [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual | Runs Markdown quality checks using markdownlint-cli2 and opens issues for violations. |
 | [`link-checker.md`](./link-checker.md) | Daily | Daily automated link checker that finds and fixes broken links in documentation files. |
 | [`glossary-maintainer.md`](./glossary-maintainer.md) | Schedule + manual | Maintains and updates the documentation glossary based on codebase changes. |
-| [`mutation-test-improver.md`](./mutation-test-improver.md) | Mutation testing workflow completion + manual | Tracks daily Stryker.NET mutation-testing results in a monthly report issue and may open focused draft PRs for verified test gaps. |
+| [`mutation-test-improver.md`](./mutation-test-improver.md) | Mutation testing workflow completion + manual | Tracks the weekly ServerMode Stryker.NET result in a monthly report issue and may open focused draft PRs for verified test gaps. |
 
 #### Issue & PR housekeeping
 
@@ -357,6 +438,7 @@ cause.
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
 | [`enable-auto-merge.yml`](./enable-auto-merge.yml) | `pull_request_target` | Enables auto-merge on eligible PRs. |
 | [`markdownlint.yml`](./markdownlint.yml) | PR | Runs `markdownlint` on changed Markdown files. |
+| [`test-build-failure-analysis.yml`](./test-build-failure-analysis.yml) | PR + push + manual | Runs the Build Failure Analysis archive-validation regression suite when its workflow sources or tests change. |
 
 ## Shared components
 
@@ -369,7 +451,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 | [`shared/formatting.md`](./shared/formatting.md) | Quality improver workflows (output formatting conventions) |
 | [`shared/msbuild-review-shared.md`](./shared/msbuild-review-shared.md) | `msbuild-quality-review.md` |
 | [`shared/test-reviewer-shared.md`](./shared/test-reviewer-shared.md) | `test-reviewer-on-pr.agent.md`, `test-reviewer.agent.md` |
-| [`shared/parallel-safety-audit-shared.md`](./shared/parallel-safety-audit-shared.md) | `parallel-safety-audit.md`, `parallel-safety-audit-command.md` |
+| [`shared/parallel-safety-audit-shared.md`](./shared/parallel-safety-audit-shared.md) | `parallel-safety-audit-command.md`; also supplies the analysis rubric used by the consolidated test-review specialist |
 | [`shared/repo-build-setup.md`](./shared/repo-build-setup.md) | Workflows that need to restore + build the repo before the agent runs |
 | [`shared/reporting.md`](./shared/reporting.md) | Quality improver workflows (issue/PR body templates) |
 | [`shared/review-shared.md`](./shared/review-shared.md) | `review.agent.md`, `review-on-open.agent.md`, `review-after-autofix.agent.md` |

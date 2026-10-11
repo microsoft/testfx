@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -187,7 +188,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     internal static string GetAssemblyPath(Assembly assembly)
     {
         string location = assembly.Location;
-        if (!string.IsNullOrEmpty(location))
+        if (!RoslynString.IsNullOrEmpty(location))
         {
             return location;
         }

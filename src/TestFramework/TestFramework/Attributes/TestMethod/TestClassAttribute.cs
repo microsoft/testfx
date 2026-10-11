@@ -4,13 +4,13 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// This attribute is used to mark test classes.
+/// This attribute is used to mark test classes. It is optional on F# test modules.
 /// </summary>
 /// <remarks>
 /// Test classes must be:
 /// <list type="bullet">
 /// <item><description>public, or if <see cref="DiscoverInternalsAttribute"/> is used then it can be internal.</description></item>
-/// <item><description>not static</description></item>
+/// <item><description>not static, unless the type represents an F# module</description></item>
 /// <item><description>not generic</description></item>
 /// </list>
 /// </remarks>

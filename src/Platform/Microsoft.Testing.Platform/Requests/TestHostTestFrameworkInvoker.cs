@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -123,8 +125,105 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             ]);
         otelService?.TestFrameworkActivity = testFrameworkActivity;
         using SemaphoreSlim requestSemaphore = new(0, 1);
-        await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
-        await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        TestExecutionActivityBroker? testExecutionActivityBroker = otelService is IPlatformOpenTelemetryServiceWithTestExecutionActivities testExecutionActivityService
+            ? new TestExecutionActivityBroker(testExecutionActivityService, _openTelemetryOptions)
+            : null;
+        var context = new ExecuteRequestContext(
+            request,
+            messageBus,
+            new SemaphoreSlimRequestCompleteNotifier(requestSemaphore),
+            cancellationToken,
+            testExecutionActivityBroker);
+        Exception? executionException = null;
+        try
+        {
+            await testFramework.ExecuteRequestAsync(context).ConfigureAwait(false);
+            await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            executionException = ex;
+            throw;
+        }
+        finally
+        {
+            await CompleteTestExecutionScopeAsync(
+                testExecutionActivityBroker,
+                executionException,
+                cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    protected async Task CompleteTestExecutionScopeAsync(
+        TestExecutionActivityBroker? testExecutionActivityBroker,
+        Exception? executionException,
+        CancellationToken requestCancellationToken)
+    {
+        if (testExecutionActivityBroker is null)
+        {
+            return;
+        }
+
+        Exception? cleanupException = null;
+        try
+        {
+            if (!requestCancellationToken.IsCancellationRequested)
+            {
+                await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex)
+        {
+            cleanupException = ex;
+        }
+
+        try
+        {
+            testExecutionActivityBroker.Dispose();
+        }
+        catch (Exception ex)
+        {
+            cleanupException = cleanupException is null
+                ? ex
+                : new AggregateException(cleanupException, ex);
+        }
+
+        if (cleanupException is null)
+        {
+            return;
+        }
+
+        if (executionException is null)
+        {
+            ExceptionDispatchInfo.Capture(cleanupException).Throw();
+            return;
+        }
+
+        AddSecondaryExceptionOrThrow(
+            executionException,
+            "TestExecutionScopeCleanupException",
+            cleanupException);
+    }
+
+    private static void AddSecondaryExceptionOrThrow(Exception primaryException, string operation, Exception secondaryException)
+    {
+        try
+        {
+            if (primaryException.Data is { IsReadOnly: false } data)
+            {
+                data[operation] = secondaryException;
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            // An exception can expose an IDictionary implementation that rejects reads or writes.
+        }
+
+        throw new AggregateException(
+            $"{operation} failed while handling another exception.",
+            primaryException,
+            secondaryException);
     }
 
     private KeyValuePair<string, object?>[] GetSessionTags(SessionUid sessionId)

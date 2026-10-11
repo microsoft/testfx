@@ -110,7 +110,12 @@ internal sealed partial class AzureDevOpsResultIdStore
             result.ErrorMessage,
             result.StackTrace,
             result.StartedDate,
-            result.CompletedDate);
+            result.CompletedDate)
+        {
+            CustomFields = sequenceId <= 1
+                ? null
+                : [new AzureDevOpsCustomTestField("AttemptId", sequenceId - 1)],
+        };
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The map payload type is internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The map payload type is internal, fixed, and controlled by this extension.")]
@@ -197,12 +202,21 @@ internal sealed partial class AzureDevOpsResultIdStore
                     continue;
                 }
 
+                DateTimeOffset? startedDate = entry.StartedDate;
+                DateTimeOffset? completedDate = entry.CompletedDate;
+                if (startedDate is null || completedDate is null)
+                {
+                    (DateTimeOffset? fallbackStartedDate, DateTimeOffset? fallbackCompletedDate) = GetDateRange(entry.Attempts!);
+                    startedDate ??= fallbackStartedDate;
+                    completedDate ??= fallbackCompletedDate;
+                }
+
                 _results[key] = new AzureDevOpsPublishedResult(entry.Storage!, entry.Name!, entry.Title!, entry.Id, entry.Attempts!)
                 {
                     LastPublishedSubResultSequenceId = entry.LastPublishedSubResultSequenceId!.Value,
                     TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
-                    StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts!),
-                    CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts!),
+                    StartedDate = startedDate,
+                    CompletedDate = completedDate,
                 };
             }
         }

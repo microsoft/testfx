@@ -9,6 +9,9 @@
 # re-declare its top-level permissions.
 
 description: "Shared body for build-failure-analysis workflows"
+
+# Threat detection inherits this model. Preserve the agent/default overrides.
+model: ${{ vars.GH_AW_MODEL_AGENT_COPILOT || vars.GH_AW_DEFAULT_MODEL_COPILOT || 'gpt-5.6-sol' }}
 ---
 
 # Build Failure Analyst

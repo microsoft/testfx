@@ -2,6 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Client;
@@ -49,6 +53,10 @@ public sealed class MtpServerClientInProcessTests
             $"'--client-port' must carry the client's listener port. Actual: {string.Join(" ", arguments)}");
         Assert.AreEqual("--no-banner", arguments[6]);
         Assert.HasCount(7, arguments);
+        Assert.Contains(
+            $"Hosting an MTP server in process with '{string.Join(" ", arguments)}'.",
+            server.Log,
+            "The launch diagnostic must include the complete argument array handed to the callback.");
     }
 
     [TestMethod]
@@ -126,6 +134,27 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken));
 
         Assert.AreSame(callbackFailure, exception.InnerException);
+        Assert.Contains("failed before connecting back", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackReportsMultipleFailuresBeforeConnecting_PreservesAggregateException()
+    {
+        var firstFailure = new InvalidOperationException("The first startup operation failed.");
+        var secondFailure = new IOException("The second startup operation failed.");
+        var callbackCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        callbackCompletion.SetException([firstFailure, secondFailure]);
+
+        MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (_, _) => callbackCompletion.Task,
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        AggregateException aggregateException = Assert.IsInstanceOfType<AggregateException>(exception.InnerException);
+        Assert.HasCount(2, aggregateException.InnerExceptions);
+        Assert.AreSame(firstFailure, aggregateException.InnerExceptions[0]);
+        Assert.AreSame(secondFailure, aggregateException.InnerExceptions[1]);
     }
 
     [TestMethod]
@@ -172,6 +201,38 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task LaunchInProcessAsync_AbandonedCallback_KeepsCancellationSourceAlive()
+    {
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackStarted = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        MtpServerClientOptions options = CreateOptions();
+        options.ConnectionTimeout = TimeSpan.FromMilliseconds(50);
+
+        try
+        {
+            Task<MtpServerClient> launch = MtpServerClient.LaunchInProcessAsync(
+                async (_, serverToken) =>
+                {
+                    callbackStarted.TrySetResult(serverToken);
+                    await release.Task;
+                    GC.KeepAlive(serverToken.WaitHandle);
+                    return 0;
+                },
+                options,
+                TestContext.CancellationToken);
+            CancellationToken serverToken = await WithTimeoutAsync(callbackStarted.Task);
+
+            _ = await AssertThrowsAsync<MtpServerConnectionClosedException>(() => launch);
+
+            _ = serverToken.WaitHandle;
+        }
+        finally
+        {
+            release.TrySetResult(true);
+        }
+    }
+
+    [TestMethod]
     public async Task LaunchInProcessAsync_CallbackIsCanceledBeforeConnecting_PreservesCancellationException()
     {
         MtpServerConnectionClosedException exception = await AssertThrowsAsync<MtpServerConnectionClosedException>(
@@ -182,6 +243,7 @@ public sealed class MtpServerClientInProcessTests
 
         TaskCanceledException cancellationException = Assert.IsInstanceOfType<TaskCanceledException>(exception.InnerException);
         Assert.IsNotNull(cancellationException.Task);
+        Assert.Contains("was canceled before connecting back", exception.Message);
     }
 
     [TestMethod]
@@ -221,6 +283,105 @@ public sealed class MtpServerClientInProcessTests
             "exited with code 3",
             exception.Message,
             "A callback that returns without connecting back must be reported with its exit code, not as a timeout.");
+        Assert.Contains(
+            "Make sure the callback forwards the supplied server-mode arguments",
+            exception.Message,
+            "The failure must tell embedded hosts how to correct a callback that exits before connecting.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_CallbackExitsBeforeConnecting_StopsListenerAndDisposesCancellationSource()
+    {
+        string[]? arguments = null;
+        CancellationToken serverToken = default;
+
+        _ = await AssertThrowsAsync<MtpServerConnectionClosedException>(
+            () => MtpServerClient.LaunchInProcessAsync(
+                (serverArguments, cancellationToken) =>
+                {
+                    arguments = serverArguments;
+                    serverToken = cancellationToken;
+                    return Task.FromResult(7);
+                },
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        Assert.IsNotNull(arguments);
+        int port = int.Parse(ReadArgument(arguments, "--client-port"), CultureInfo.InvariantCulture);
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, port);
+        listener.Start();
+        Assert.ThrowsExactly<ObjectDisposedException>(() => _ = serverToken.WaitHandle);
+    }
+
+    [TestMethod]
+    public async Task CleanupFailedStartAsync_DisposesCreatedResourcesWithExactDiagnostics()
+    {
+        var log = new List<(MtpClientLogLevel Level, string Message)>();
+        var logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message)));
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var client = new ThrowingTcpClient();
+        var cancellation = new ThrowingCancellationTokenSource();
+
+        await MtpServerInProcessHost.CleanupFailedStartAsync(
+            listener,
+            client,
+            cancellation,
+            serverTask: null,
+            logger);
+
+        Assert.AreEqual(1, client.DisposeCount);
+        Assert.AreEqual(1, cancellation.DisposeCount);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Debug
+                && entry.Message.Contains("Disposing the accepted client socket threw:", StringComparison.Ordinal)
+                && entry.Message.Contains("client dispose failure", StringComparison.Ordinal),
+            log);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Debug
+                && entry.Message.Contains("Disposing the server cancellation source threw:", StringComparison.Ordinal)
+                && entry.Message.Contains("cancellation dispose failure", StringComparison.Ordinal),
+            log);
+
+        using var replacement = new DisposableTcpListener(IPAddress.Loopback, port);
+        replacement.Start();
+    }
+
+    [TestMethod]
+    public async Task CleanupFailedStartAsync_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        using var client = new TcpClient();
+        using var cancellation = new CancellationTokenSource();
+        Task<int> serverTask = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(Timeout.Infinite, cancellation.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                await Task.Delay(100, TestContext.CancellationToken);
+            }
+
+            return 0;
+        });
+        Task cleanup = InvokeWithSynchronizationContext(
+            () => MtpServerInProcessHost.CleanupFailedStartAsync(
+                listener,
+                client,
+                cancellation,
+                serverTask,
+                NullMtpClientLogger.Instance),
+            out QueueingSynchronizationContext context);
+
+        bool completedWithoutPumping = await CompletesQuicklyAsync(cleanup);
+        DrainContextUntilCompleted(context, cleanup);
+        await cleanup;
+
+        Assert.IsTrue(completedWithoutPumping, "Failed-launch cleanup must not capture the calling synchronization context.");
     }
 
     [TestMethod]
@@ -235,12 +396,67 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken));
 
         Assert.IsInstanceOfType<MtpServerClientException>(exception.InnerException);
+        Assert.Contains("returned a null task", exception.InnerException.Message);
     }
 
     [TestMethod]
     public async Task LaunchInProcessAsync_NullCallback_Throws()
-        => await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+    {
+        ArgumentNullException exception = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
             () => MtpServerClient.LaunchInProcessAsync(null!, CreateOptions(), TestContext.CancellationToken));
+
+        Assert.DoesNotContain(nameof(MtpServerInProcessHost), exception.StackTrace ?? string.Empty);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        using var server = new InProcessServerFixture();
+
+        using MtpServerClient client = await AssertCompletesWithoutPumpingAsync(
+            () => MtpServerClient.LaunchInProcessAsync(
+                server.RunAsync,
+                CreateOptions(),
+                TestContext.CancellationToken));
+
+        _ = await WithTimeoutAsync(server.Connected);
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_ZeroTimeoutFailedStartCleanup_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        MtpServerClientOptions options = CreateOptions();
+        options.ConnectionTimeout = TimeSpan.Zero;
+
+        Task<MtpServerClient> launch = InvokeWithSynchronizationContext(
+            () => MtpServerClient.LaunchInProcessAsync(
+                async (_, serverToken) =>
+                {
+                    try
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, serverToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException) when (serverToken.IsCancellationRequested)
+                    {
+                        await Task.Delay(100, TestContext.CancellationToken).ConfigureAwait(false);
+                    }
+
+                    return 0;
+                },
+                options,
+                TestContext.CancellationToken),
+            out QueueingSynchronizationContext context);
+
+        bool completedWithoutPumping = await CompletesQuicklyAsync(launch);
+        DrainContextUntilCompleted(context, launch);
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => launch);
+
+        Assert.IsTrue(
+            completedWithoutPumping,
+            "Failed-launch cleanup must not capture the calling synchronization context.");
+        Assert.Contains("did not connect back within", exception.Message);
+    }
 
     [TestMethod]
     public async Task LaunchInProcessAsync_AlreadyCanceled_DoesNotInvokeCallback()
@@ -284,7 +500,7 @@ public sealed class MtpServerClientInProcessTests
         await WithTimeoutAsync(callbackStarted.Task);
         cancellation.Cancel();
 
-        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => WithTimeoutAsync(launch));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => WithTimeoutAsync(launch));
         Assert.IsTrue(
             await WithTimeoutAsync(callbackObservedCancellation.Task),
             "A canceled launch must cancel the token handed to the callback so the abandoned application can stop.");
@@ -319,6 +535,10 @@ public sealed class MtpServerClientInProcessTests
             stopwatch.Stop();
 
             Assert.Contains("did not connect back within", exception.Message);
+            Assert.Contains(
+                "Make sure the callback forwards the supplied server-mode arguments",
+                exception.Message,
+                "A connection timeout must explain the most likely embedded-host integration error.");
             Assert.IsLessThan(
                 TimeSpan.FromSeconds(20),
                 stopwatch.Elapsed,
@@ -350,6 +570,23 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    public async Task Dispose_InProcessHost_DoesNotStartTheClientFallbackShutdown()
+    {
+        using var server = new InProcessServerFixture();
+        MtpServerClient client = await LaunchAsync(server);
+
+        client.Dispose();
+
+        object shutdown = typeof(MtpServerClient).GetField(
+            "_shutdown",
+            BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(client)!;
+        object? fallbackTask = shutdown.GetType().GetField(
+            "_task",
+            BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(shutdown);
+        Assert.IsNull(fallbackTask);
+    }
+
+    [TestMethod]
     public async Task ShutdownAsync_ClosesTransportAndAwaitsTheCallback_WithoutBlocking()
     {
         using var server = new InProcessServerFixture();
@@ -370,6 +607,364 @@ public sealed class MtpServerClientInProcessTests
         stopwatch.Stop();
         Assert.IsLessThan(TimeSpan.FromSeconds(2), stopwatch.Elapsed, "Dispose after ShutdownAsync must return immediately.");
         Assert.AreEqual(1, server.CompletionCount);
+        Assert.ThrowsExactly<ObjectDisposedException>(() => _ = server.ServerToken.WaitHandle);
+    }
+
+    [TestMethod]
+    public async Task ShutdownCoreAsync_DisposesResourcesAndLogsTheirExactDescriptions()
+    {
+        var log = new List<(MtpClientLogLevel Level, string Message)>();
+        var logger = new DelegateMtpClientLogger((level, message) => log.Add((level, message)));
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var client = new ThrowingTcpClient();
+        var cancellation = new ThrowingCancellationTokenSource();
+        using var handler = new TrackingMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler, logger);
+        MtpServerInProcessHost host = CreateHost(
+            listener,
+            client,
+            connection,
+            Task.FromResult(0),
+            cancellation,
+            TimeSpan.Zero,
+            logger);
+
+        await InvokeShutdownCoreAsync(host);
+
+        Assert.AreEqual(1, handler.DisposeCount);
+        Assert.AreEqual(1, client.DisposeCount);
+        Assert.AreEqual(1, cancellation.DisposeCount);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Debug
+                && entry.Message.Contains("Disposing the accepted client socket threw:", StringComparison.Ordinal)
+                && entry.Message.Contains("client dispose failure", StringComparison.Ordinal),
+            log);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Debug
+                && entry.Message.Contains("Disposing the server cancellation source threw:", StringComparison.Ordinal)
+                && entry.Message.Contains("cancellation dispose failure", StringComparison.Ordinal),
+            log);
+
+        using var replacement = new DisposableTcpListener(IPAddress.Loopback, port);
+        replacement.Start();
+    }
+
+    [TestMethod]
+    public async Task StartShutdownAsync_SkipReadLoopWait_IsHonoredWithoutReadLoopContext()
+    {
+        var readCompletion = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new TrackingMessageHandler
+        {
+            ReadAsyncCallback = _ => readCompletion.Task,
+        };
+        using var connection = new MtpJsonRpcConnection(handler);
+        connection.Start();
+        await WithTimeoutAsync(handler.ReadStarted);
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        using var client = new TcpClient();
+        using var cancellation = new CancellationTokenSource();
+        MtpServerInProcessHost host = CreateHost(
+            listener,
+            client,
+            connection,
+            Task.FromResult(0),
+            cancellation,
+            TimeSpan.Zero,
+            NullMtpClientLogger.Instance);
+        MethodInfo method = typeof(MtpServerInProcessHost).GetMethod(
+            "StartShutdownAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        var shutdown = (Task)method.Invoke(host, [true])!;
+        bool completedWithoutReadLoop = await CompletesQuicklyAsync(shutdown);
+        readCompletion.TrySetResult(null);
+        await WithTimeoutAsync(shutdown);
+
+        Assert.IsTrue(completedWithoutReadLoop, "The explicit skip flag must avoid waiting for a read loop whose context is not flowing.");
+    }
+
+    [TestMethod]
+    public async Task ShutdownCoreAsync_ServerWait_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new TrackingMessageHandler(() =>
+            _ = Task.Run(
+                async () =>
+                {
+                    await Task.Delay(100, TestContext.CancellationToken);
+                    serverCompletion.TrySetResult(0);
+                },
+                TestContext.CancellationToken));
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var listener = new DisposableTcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        using var client = new TcpClient();
+        using var cancellation = new CancellationTokenSource();
+        MtpServerInProcessHost host = CreateHost(
+            listener,
+            client,
+            connection,
+            serverCompletion.Task,
+            cancellation,
+            TimeSpan.FromSeconds(5),
+            NullMtpClientLogger.Instance);
+
+        Task shutdown = InvokeWithSynchronizationContext(
+            () => InvokeShutdownCoreAsync(host),
+            out QueueingSynchronizationContext context);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(shutdown);
+        DrainContextUntilCompleted(context, shutdown);
+        await WithTimeoutAsync(shutdown);
+
+        Assert.IsTrue(completedWithoutPumping, "Awaiting the server shutdown task must not capture the calling synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task ShutdownServerAsync_CompletedServer_ReturnsTrue()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var log = new List<(MtpClientLogLevel Level, string Message)>();
+
+        bool stopped = await InvokeShutdownServerAsync(
+            Task.FromResult(0),
+            cancellation,
+            TimeSpan.Zero,
+            new DelegateMtpClientLogger((level, message) => log.Add((level, message))));
+
+        Assert.IsTrue(stopped);
+        Assert.IsEmpty(log);
+    }
+
+    [TestMethod]
+    public async Task ShutdownServerAsync_ZeroGracefulTimeout_DoesNotLogGracefulTimeout()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var log = new List<(MtpClientLogLevel Level, string Message)>();
+        Task<int> serverTask = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(Timeout.Infinite, cancellation.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                await Task.Delay(100, TestContext.CancellationToken);
+            }
+
+            return 0;
+        });
+
+        Task<bool> shutdown = InvokeWithSynchronizationContext(
+            () => InvokeShutdownServerAsync(
+                serverTask,
+                cancellation,
+                TimeSpan.Zero,
+                new DelegateMtpClientLogger((level, message) => log.Add((level, message)))),
+            out QueueingSynchronizationContext context);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(shutdown);
+        DrainContextUntilCompleted(context, shutdown);
+        bool stopped = await shutdown;
+
+        Assert.IsTrue(stopped);
+        Assert.IsTrue(completedWithoutPumping, "The cancellation-grace wait must not capture the calling synchronization context.");
+        Assert.DoesNotContain(
+            entry => entry.Message.Contains("requesting cancellation", StringComparison.Ordinal),
+            log);
+    }
+
+    [TestMethod]
+    public async Task ShutdownServerAsync_GracefulWait_DoesNotCaptureTheCallingSynchronizationContext()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() => serverCompletion.TrySetResult(0));
+
+        Task<bool> shutdown = InvokeWithSynchronizationContext(
+            () => InvokeShutdownServerAsync(
+                serverCompletion.Task,
+                cancellation,
+                TimeSpan.FromMilliseconds(100),
+                NullMtpClientLogger.Instance),
+            out QueueingSynchronizationContext context);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(shutdown);
+        DrainContextUntilCompleted(context, shutdown);
+
+        Assert.IsTrue(await shutdown);
+        Assert.IsTrue(completedWithoutPumping, "The graceful wait must not capture the calling synchronization context.");
+    }
+
+    [TestMethod]
+    public async Task ShutdownServerAsync_ServerStopsBeforeCancellationCompletes_WaitsForCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        using var releaseRegistration = new ManualResetEventSlim();
+        using var serverStopped = new ManualResetEventSlim();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
+        {
+            serverCompletion.TrySetResult(0);
+            serverStopped.Set();
+            releaseRegistration.Wait(TestContext.CancellationToken);
+        });
+
+        Task<bool> shutdown = InvokeShutdownServerAsync(
+            serverCompletion.Task,
+            cancellation,
+            TimeSpan.Zero,
+            NullMtpClientLogger.Instance);
+
+        // Keep the probe off the thread pool: on net462 an awaited timer can resume only after
+        // shutdown has exhausted its shared cancellation grace and correctly returned false.
+        await Task.Factory.StartNew(
+            () =>
+            {
+                try
+                {
+                    Assert.IsTrue(
+                        serverStopped.Wait(DefaultTimeout, TestContext.CancellationToken),
+                        "The server must stop inside the cancellation registration.");
+                    Assert.IsFalse(
+                        shutdown.Wait(100, TestContext.CancellationToken),
+                        "Shutdown must keep waiting while a cancellation registration can still use the token.");
+                }
+                finally
+                {
+                    releaseRegistration.Set();
+                }
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
+        Assert.IsTrue(await WithTimeoutAsync(shutdown));
+    }
+
+    [TestMethod]
+    public async Task ShutdownServerAsync_BlockingCancellationRegistration_ReturnsFalse()
+    {
+        using var cancellation = new CancellationTokenSource();
+        using var releaseRegistration = new ManualResetEventSlim();
+        var cancellationStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
+        {
+            cancellationStarted.TrySetResult(true);
+            releaseRegistration.Wait(TestContext.CancellationToken);
+        });
+        Task<int> serverTask = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(Timeout.Infinite, cancellation.Token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            return 0;
+        });
+
+        try
+        {
+            bool stopped = await InvokeShutdownServerAsync(
+                serverTask,
+                cancellation,
+                TimeSpan.Zero,
+                NullMtpClientLogger.Instance);
+
+            Assert.IsFalse(stopped);
+            Assert.IsTrue(await WithTimeoutAsync(cancellationStarted.Task));
+        }
+        finally
+        {
+            releaseRegistration.Set();
+        }
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task ShutdownServerAsync_ObservesTheInFlightCancellationTaskWithExactDiagnostic()
+    {
+        using var observation = new CancellationTaskObservationScope();
+        using var cancellation = new CancellationTokenSource();
+        using var releaseRegistration = new ManualResetEventSlim();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cancellationTaskId = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var log = new ConcurrentQueue<string>();
+        using CancellationTokenRegistration registration = cancellation.Token.Register(() =>
+        {
+            serverCompletion.TrySetResult(0);
+            cancellationTaskId.TrySetResult(Task.CurrentId!.Value);
+            releaseRegistration.Wait(TestContext.CancellationToken);
+        });
+
+        try
+        {
+            Task<bool> shutdown = InvokeShutdownServerAsync(
+                serverCompletion.Task,
+                cancellation,
+                TimeSpan.Zero,
+                new DelegateMtpClientLogger((_, message) => log.Enqueue(message)));
+            int taskId = await WithTimeoutAsync(cancellationTaskId.Task);
+            await observation.AssertObservedAsync(taskId);
+
+            Assert.IsFalse(await WithTimeoutAsync(shutdown));
+            Assert.IsEmpty(log, "Shutdown must not report abandonment of a still-running server.");
+        }
+        finally
+        {
+            releaseRegistration.Set();
+            serverCompletion.TrySetResult(0);
+        }
+    }
+
+    [TestMethod]
+    public async Task ShutdownServerAsync_AbandonedFault_IsObservedWithExactDiagnostic()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failureLogged = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var logger = new DelegateMtpClientLogger((level, message) =>
+        {
+            if (level == MtpClientLogLevel.Error && message.Contains("abandoned failure", StringComparison.Ordinal))
+            {
+                failureLogged.TrySetResult(message);
+            }
+        });
+
+        bool stopped = await InvokeShutdownServerAsync(
+            serverCompletion.Task,
+            cancellation,
+            TimeSpan.Zero,
+            logger);
+        serverCompletion.TrySetException(new InvalidOperationException("abandoned failure"));
+
+        string message = await WithTimeoutAsync(failureLogged.Task);
+        Assert.IsFalse(stopped);
+        Assert.Contains("The in-process MTP application failed:", message);
+    }
+
+    [TestMethod]
+    public void SafeDispose_DisposesAndLogsSupportedFailures()
+    {
+        var disposable = new ThrowingDisposable();
+        var log = new List<(MtpClientLogLevel Level, string Message)>();
+        MethodInfo method = typeof(MtpServerInProcessHost).GetMethod(
+            "SafeDispose",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        _ = method.Invoke(
+            null,
+            [disposable, new DelegateMtpClientLogger((level, message) => log.Add((level, message))), "Synthetic resource"]);
+
+        Assert.AreEqual(1, disposable.DisposeCount);
+        Assert.ContainsSingle(
+            entry => entry.Level == MtpClientLogLevel.Debug
+                && entry.Message.Contains("Synthetic resource threw:", StringComparison.Ordinal)
+                && entry.Message.Contains("synthetic dispose failure", StringComparison.Ordinal),
+            log);
     }
 
     [TestMethod]
@@ -519,9 +1114,13 @@ public sealed class MtpServerClientInProcessTests
             server.Completion.Exception?.GetBaseException());
         Assert.AreEqual("The application failed while shutting down.", faultException.Message);
         Assert.Contains(
-            "The in-process MTP application failed",
+            "The in-process MTP application failed during disposal",
             server.Log,
             $"The shutdown failure must be reported through the client logger. Log:{Environment.NewLine}{server.Log}");
+        Assert.Contains(
+            "The application failed while shutting down.",
+            server.Log,
+            "The disposal diagnostic must retain the callback failure details.");
     }
 
     [TestMethod]
@@ -601,7 +1200,7 @@ public sealed class MtpServerClientInProcessTests
         var releaseCancellationHandler = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var connected = new TaskCompletionSource<FakeMtpServer>(TaskCreationOptions.RunContinuationsAsynchronously);
         MtpServerClientOptions options = CreateOptions();
-        options.ServerShutdownTimeout = TimeSpan.FromSeconds(1);
+        options.ServerShutdownTimeout = TimeSpan.FromSeconds(5);
         var log = new StringBuilder();
         options.Logger = new DelegateMtpClientLogger((_, message) =>
         {
@@ -647,10 +1246,11 @@ public sealed class MtpServerClientInProcessTests
             client.Dispose();
             stopwatch.Stop();
 
-            // The connection's fixed 5s read-loop wait must overlap ServerShutdownTimeout (1s) plus the fixed
-            // 5s cancellation grace. Running those waits serially would take at least 11s.
+            // Matching ServerShutdownTimeout to the connection's fixed 5s read-loop wait avoids depending on a
+            // shorter timer continuation getting a worker before a blocked handler releases one on net462. The
+            // fixed 5s cancellation grace makes the concurrent path take about 10s; serial waits take at least 15s.
             Assert.IsLessThan(
-                TimeSpan.FromSeconds(9),
+                TimeSpan.FromSeconds(13),
                 stopwatch.Elapsed,
                 $"Dispose took {stopwatch.Elapsed.TotalSeconds:N1}s; it must abandon an unresponsive application within the documented bound rather than block indefinitely.");
 
@@ -665,6 +1265,10 @@ public sealed class MtpServerClientInProcessTests
             }
 
             Assert.Contains("abandoning it", text, $"Abandoning the application must be reported. Log:{Environment.NewLine}{text}");
+            Assert.Contains(
+                "requesting cancellation",
+                text,
+                $"Escalating from graceful shutdown to cancellation must be reported. Log:{Environment.NewLine}{text}");
         }
         finally
         {
@@ -760,6 +1364,23 @@ public sealed class MtpServerClientInProcessTests
             nameof(MtpServerClientOptions.EnvironmentVariables),
             server.Log,
             "An in-process application shares the caller's environment, so silently dropping the variables would be a trap.");
+        Assert.Contains(
+            "application is hosted in process: it shares the caller's environment",
+            server.Log,
+            "The warning must explain why the configured variables are ignored.");
+    }
+
+    [TestMethod]
+    public async Task LaunchInProcessAsync_WithNoEnvironmentVariables_DoesNotWarnAboutIgnoredVariables()
+    {
+        using var server = new InProcessServerFixture();
+
+        using MtpServerClient client = await LaunchAsync(server);
+
+        Assert.DoesNotContain(
+            nameof(MtpServerClientOptions.EnvironmentVariables),
+            server.Log,
+            "The client must not emit an ignored-environment warning when no variables were configured.");
     }
 
     private async Task<MtpServerClient> LaunchAsync(InProcessServerFixture server, MtpServerClientOptions? options = null)
@@ -841,6 +1462,231 @@ public sealed class MtpServerClientInProcessTests
         where TException : Exception
         => await Assert.ThrowsExactlyAsync<TException>(() => WithTimeoutAsync(action()));
 
+    private static async Task<T> AssertCompletesWithoutPumpingAsync<T>(Func<Task<T>> action)
+    {
+        Task<T> task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
+        bool completedWithoutPumping = await CompletesQuicklyAsync(task);
+        DrainContextUntilCompleted(context, task);
+
+        T result = await task.ConfigureAwait(false);
+        Assert.IsTrue(
+            completedWithoutPumping,
+            $"The operation captured the calling synchronization context and posted {context.PostCount} continuation(s).");
+        return result;
+    }
+
+    private static Task<T> InvokeWithSynchronizationContext<T>(
+        Func<Task<T>> action,
+        out QueueingSynchronizationContext context)
+    {
+        context = new QueueingSynchronizationContext();
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(context);
+        try
+        {
+            return action();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+    }
+
+    private static Task InvokeWithSynchronizationContext(
+        Func<Task> action,
+        out QueueingSynchronizationContext context)
+    {
+        context = new QueueingSynchronizationContext();
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(context);
+        try
+        {
+            return action();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+    }
+
+    private static async Task<bool> CompletesQuicklyAsync(Task task)
+        => await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false) == task;
+
+    private static void DrainContextUntilCompleted(QueueingSynchronizationContext context, Task task)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (!task.IsCompleted && stopwatch.Elapsed < DefaultTimeout)
+        {
+            if (!context.TryRunOne())
+            {
+                Thread.Sleep(10);
+            }
+        }
+    }
+
+    private static MtpServerInProcessHost CreateHost(
+        TcpListener listener,
+        TcpClient client,
+        MtpJsonRpcConnection connection,
+        Task<int> serverTask,
+        CancellationTokenSource cancellation,
+        TimeSpan shutdownTimeout,
+        IMtpClientLogger logger)
+        => (MtpServerInProcessHost)typeof(MtpServerInProcessHost).GetConstructor(
+            BindingFlags.Instance | BindingFlags.NonPublic,
+            binder: null,
+            [typeof(TcpListener), typeof(TcpClient), typeof(MtpJsonRpcConnection), typeof(Task<int>),
+             typeof(CancellationTokenSource), typeof(TimeSpan), typeof(IMtpClientLogger)],
+            modifiers: null)!.Invoke(
+            [listener, client, connection, serverTask, cancellation, shutdownTimeout, logger]);
+
+    private static Task InvokeShutdownCoreAsync(MtpServerInProcessHost host)
+        => (Task)typeof(MtpServerInProcessHost).GetMethod(
+            "ShutdownCoreAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(host, null)!;
+
+    private static Task<bool> InvokeShutdownServerAsync(
+        Task<int> serverTask,
+        CancellationTokenSource cancellation,
+        TimeSpan gracefulTimeout,
+        IMtpClientLogger logger)
+        => (Task<bool>)typeof(MtpServerInProcessHost).GetMethod(
+            "ShutdownServerAsync",
+            BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(
+            null,
+            [serverTask, cancellation, gracefulTimeout, logger])!;
+
+    // Task has no public API for inspecting the attached diagnostic continuation. Keep its private hooks
+    // here, restoring the process-wide tracking flag after the cancellation registration has finished.
+    private sealed class CancellationTaskObservationScope : IDisposable
+    {
+        private readonly FieldInfo _asyncDebugging = typeof(Task).GetField(
+            "s_asyncDebuggingEnabled",
+            BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        private readonly bool _previousAsyncDebugging;
+
+        public CancellationTaskObservationScope()
+        {
+            _previousAsyncDebugging = (bool)_asyncDebugging.GetValue(null)!;
+            _asyncDebugging.SetValue(null, true);
+        }
+
+        public async Task AssertObservedAsync(int taskId)
+        {
+            Task cancelling = GetActiveTask(taskId);
+            object continuation = await WaitForContinuationAsync(cancelling).ConfigureAwait(false);
+
+            Assert.IsTrue(
+                ObjectGraphContainsString(
+                    continuation,
+                    "Canceling the in-process MTP application failed",
+                    [with(ReferenceComparer.Instance)],
+                    remainingDepth: 8),
+                "The in-flight cancellation task must be observed with the exact diagnostic used for late failures.");
+        }
+
+        public void Dispose()
+            => _asyncDebugging.SetValue(null, _previousAsyncDebugging);
+
+        private static Task GetActiveTask(int taskId)
+            => (Task)typeof(Task).GetMethod(
+                "GetActiveTaskFromId",
+                BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [taskId])!;
+
+        private static async Task<object> WaitForContinuationAsync(Task task)
+        {
+            FieldInfo continuationField = typeof(Task).GetField(
+                "m_continuationObject",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var stopwatch = Stopwatch.StartNew();
+            while (stopwatch.Elapsed < TimeSpan.FromSeconds(5))
+            {
+                if (continuationField.GetValue(task) is { } continuation)
+                {
+                    return continuation;
+                }
+
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+
+            throw new TimeoutException("The cancellation task was not observed.");
+        }
+
+        private static bool ObjectGraphContainsString(
+            object? value,
+            string expected,
+            HashSet<object> visited,
+            int remainingDepth)
+        {
+            if (value is null || remainingDepth < 0)
+            {
+                return false;
+            }
+
+            if (value is string text)
+            {
+                return text.Contains(expected, StringComparison.Ordinal);
+            }
+
+            if (value is Array array)
+            {
+                foreach (object? element in array)
+                {
+                    if (ObjectGraphContainsString(element, expected, visited, remainingDepth - 1))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            Type type = value.GetType();
+            if (type.IsPrimitive || type.IsEnum || !visited.Add(value))
+            {
+                return false;
+            }
+
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                object? fieldValue;
+                try
+                {
+                    fieldValue = field.GetValue(value);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (ObjectGraphContainsString(fieldValue, expected, visited, remainingDepth - 1))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            public static ReferenceComparer Instance { get; } = new();
+
+            public new bool Equals(object? x, object? y)
+                => ReferenceEquals(x, y);
+
+            public int GetHashCode(object obj)
+                => RuntimeHelpers.GetHashCode(obj);
+        }
+    }
+
+    private sealed class DisposableTcpListener(IPAddress localaddr, int port) : TcpListener(localaddr, port), IDisposable
+    {
+        void IDisposable.Dispose()
+            => Stop();
+    }
+
     /// <summary>
     /// Plays the part of the hosted MTP application: it reads the client-generated arguments, dials back to
     /// the client's listener, serves the protocol until the client closes the connection, and then completes
@@ -887,6 +1733,8 @@ public sealed class MtpServerClientInProcessTests
         /// <summary>Gets the task that mirrors the hosted application's lifetime.</summary>
         public Task<int> Completion => _completion.Task;
 
+        public CancellationToken ServerToken { get; private set; }
+
         /// <summary>Gets how many times the callback dialed back to the client.</summary>
         public int ConnectionCount => Volatile.Read(ref _connectionCount);
 
@@ -922,6 +1770,7 @@ public sealed class MtpServerClientInProcessTests
         public async Task<int> RunAsync(string[] serverArguments, CancellationToken cancellationToken)
         {
             Arguments = serverArguments;
+            ServerToken = cancellationToken;
             FakeMtpServer server = ConnectBack(serverArguments);
             _server = server;
             _connected.TrySetResult(server);
@@ -961,6 +1810,128 @@ public sealed class MtpServerClientInProcessTests
             _server?.Dispose();
             _ = _completion.TrySetResult(0);
             _ = _connected.TrySetCanceled();
+        }
+    }
+
+    private sealed class QueueingSynchronizationContext : SynchronizationContext
+    {
+        private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = new();
+        private readonly object _lock = new();
+        private int _postCount;
+
+        public int PostCount => Volatile.Read(ref _postCount);
+
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            _ = Interlocked.Increment(ref _postCount);
+            lock (_lock)
+            {
+                _callbacks.Enqueue((d, state));
+            }
+        }
+
+        public bool TryRunOne()
+        {
+            (SendOrPostCallback Callback, object? State) work;
+            lock (_lock)
+            {
+                if (_callbacks.Count == 0)
+                {
+                    return false;
+                }
+
+                work = _callbacks.Dequeue();
+            }
+
+            SynchronizationContext? previous = Current;
+            SetSynchronizationContext(this);
+            try
+            {
+                work.Callback(work.State);
+            }
+            finally
+            {
+                SetSynchronizationContext(previous);
+            }
+
+            return true;
+        }
+    }
+
+    private sealed class TrackingMessageHandler : IMessageHandler, IDisposable
+    {
+        private readonly Action? _onDispose;
+        private readonly TaskCompletionSource<bool> _readStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _disposeCount;
+
+        public TrackingMessageHandler(Action? onDispose = null)
+            => _onDispose = onDispose;
+
+        public Func<CancellationToken, Task<RpcMessage?>>? ReadAsyncCallback { get; init; }
+
+        public int DisposeCount => Volatile.Read(ref _disposeCount);
+
+        public Task ReadStarted => _readStarted.Task;
+
+        public Task<RpcMessage?> ReadAsync(CancellationToken cancellationToken)
+        {
+            _readStarted.TrySetResult(true);
+            return ReadAsyncCallback?.Invoke(cancellationToken)
+                ?? Task.Delay(Timeout.Infinite, cancellationToken).ContinueWith<RpcMessage?>(
+                _ => null,
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
+
+        public Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
+        public void Dispose()
+        {
+            _ = Interlocked.Increment(ref _disposeCount);
+            _onDispose?.Invoke();
+        }
+    }
+
+    private sealed class ThrowingTcpClient : TcpClient
+    {
+        private int _disposeCount;
+
+        public int DisposeCount => Volatile.Read(ref _disposeCount);
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            _ = Interlocked.Increment(ref _disposeCount);
+            throw new IOException("client dispose failure");
+        }
+    }
+
+    private sealed class ThrowingCancellationTokenSource : CancellationTokenSource
+    {
+        private int _disposeCount;
+
+        public int DisposeCount => Volatile.Read(ref _disposeCount);
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            _ = Interlocked.Increment(ref _disposeCount);
+            throw new ObjectDisposedException(nameof(ThrowingCancellationTokenSource), "cancellation dispose failure");
+        }
+    }
+
+    private sealed class ThrowingDisposable : IDisposable
+    {
+        private int _disposeCount;
+
+        public int DisposeCount => Volatile.Read(ref _disposeCount);
+
+        public void Dispose()
+        {
+            _ = Interlocked.Increment(ref _disposeCount);
+            throw new IOException("synthetic dispose failure");
         }
     }
 }

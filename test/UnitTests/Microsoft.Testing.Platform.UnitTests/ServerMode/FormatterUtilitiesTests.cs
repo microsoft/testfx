@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
@@ -12,6 +13,105 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class FormatterUtilitiesTests
 {
+    [TestMethod]
+    [DataRow(JsonRpcMethods.ClientLog)]
+    [DataRow(JsonRpcMethods.ClientShowMessage)]
+    public async Task Serialize_OutputNotificationsKeepTheSamePayload(string method)
+    {
+        string json = await _formatter.SerializeAsync(new NotificationMessage(
+            method, new LogEventArgs(new ServerLogMessage(LogLevel.Information, "plain μ"))));
+        IDictionary<string, object?> properties =
+#if NETCOREAPP
+            Deserialize<IDictionary<string, object?>>(json);
+#else
+            Assert.IsInstanceOfType<IDictionary<string, object?>>(Jsonite.Json.Deserialize(json));
+#endif
+        Assert.AreEqual(method, properties[JsonRpcStrings.Method]);
+        var parameters = (IDictionary<string, object?>)properties[JsonRpcStrings.Params]!;
+        Assert.HasCount(2, parameters);
+        Assert.AreEqual("Information", parameters[JsonRpcStrings.Level]);
+        Assert.AreEqual("plain μ", parameters[JsonRpcStrings.Message]);
+    }
+
+    [TestMethod]
+    [DataRow("", null)]
+    [DataRow("\"showMessage\":null,", null)]
+    [DataRow("\"showMessage\":false,", false)]
+    [DataRow("\"showMessage\":true,", true)]
+    public void Deserialize_ShowMessage_RequestPreservesOptionalValue(string capability, bool? expected)
+    {
+        string json = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{ "testing":{ {{capability}} "debuggerProvider":false} } }
+            """;
+
+        Assert.AreEqual(expected, Deserialize<InitializeRequestArgs>(json).Capabilities.ShowMessage);
+    }
+
+    [TestMethod]
+    [DataRow("\"true\"")]
+    [DataRow("1")]
+    [DataRow("{}")]
+    [DataRow("[]")]
+    public void Deserialize_ShowMessage_InvalidRequestValueIsRejected(string value)
+    {
+        string json = $$"""
+            {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"testing":{"showMessage":{{value}},"debuggerProvider":false} } } }
+            """;
+
+        RequestMessage request = Assert.IsInstanceOfType<RequestMessage>(Deserialize<RpcMessage>(json));
+        InvalidRequestParamsArgs error = Assert.IsInstanceOfType<InvalidRequestParamsArgs>(request.Params);
+        Assert.AreEqual(ErrorCodes.InvalidParams, error.ErrorCode);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Serialize_ShowMessage_ResponseRoundTripsOptionalAcknowledgement(bool? applied)
+    {
+        ServerCapabilities capabilities = new(new ServerTestingCapabilities(true, false, false, true, false)
+        {
+            ShowMessage = applied,
+        });
+
+        string json = await _formatter.SerializeAsync(capabilities);
+        Assert.AreEqual(applied, Deserialize<ServerCapabilities>(json).TestingCapabilities.ShowMessage);
+        Assert.AreEqual(applied.HasValue, json.Contains("\"showMessage\""));
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(capabilities);
+        Assert.IsFalse(properties.ContainsKey(JsonRpcStrings.ShowMessage));
+        IDictionary<string, object?> testing = Assert.IsInstanceOfType<IDictionary<string, object?>>(properties[JsonRpcStrings.Testing]);
+        Assert.AreEqual(applied.HasValue, testing.ContainsKey(JsonRpcStrings.ShowMessage));
+        Assert.AreEqual(applied, SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.ShowMessage);
+        if (applied is null)
+        {
+            testing[JsonRpcStrings.ShowMessage] = null;
+            Assert.IsNull(SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.ShowMessage);
+            string explicitNull = json.Replace(" ", string.Empty).Replace("\"testing\":{", "\"testing\":{\"showMessage\":null,");
+            Assert.Contains("\"showMessage\":null", explicitNull);
+            Assert.IsNull(Deserialize<ServerCapabilities>(explicitNull).TestingCapabilities.ShowMessage);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("true")]
+    [DataRow("false")]
+    [DataRow("null")]
+    [DataRow("\"ignored\"")]
+    public async Task ShowMessage_TopLevelPropertyIsIgnored(string value)
+    {
+        string request = $$"""
+            {"processId":1,"clientInfo":{"name":"client","version":"1"},"capabilities":{"showMessage":{{value}},"testing":{"debuggerProvider":false} } }
+            """;
+        Assert.IsNull(Deserialize<InitializeRequestArgs>(request).Capabilities.ShowMessage);
+
+        ServerCapabilities capabilities = new(new ServerTestingCapabilities(true, false, false, true, false));
+        string response = await _formatter.SerializeAsync(capabilities);
+        Assert.IsNull(Deserialize<ServerCapabilities>(response.Insert(1, $"\"showMessage\":{value},")).TestingCapabilities.ShowMessage);
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(capabilities);
+        properties[JsonRpcStrings.ShowMessage] = true;
+        Assert.IsNull(SerializerUtilities.Deserialize<ServerCapabilities>(properties).TestingCapabilities.ShowMessage);
+    }
+
     private readonly IMessageFormatter _formatter = FormatterUtilities.CreateFormatter();
 
     public static IEnumerable<object[]> SerializerTypesForDynamicData

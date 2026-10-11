@@ -29,6 +29,7 @@ internal static partial class UnicodeCharacterUtilities
             return true;
         }
 
+        // Stryker disable once Equality: U+007F is a control character and the Unicode-category path also rejects it.
         if (ch <= '\u007F') // max ASCII
         {
             return false;
@@ -68,6 +69,7 @@ internal static partial class UnicodeCharacterUtilities
             return true;
         }
 
+        // Stryker disable once Equality: U+007F is a control character and the Unicode-category path also rejects it.
         if (ch <= '\u007F') // max ASCII
         {
             return false;

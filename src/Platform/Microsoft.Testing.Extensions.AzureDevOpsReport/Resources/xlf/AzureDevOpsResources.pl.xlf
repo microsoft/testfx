@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">Włącz lub wyłącz adnotacje błędów usługi Azure DevOps („on” (włączone) lub „off” (wyłączone)). Domyślna wartość to „on” (włączone). Wymaga polecenia „--report-azdo”.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+        <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
@@ -42,6 +42,16 @@
         <target state="translated">Element „--report-azdo-groups” wymaga włączenia polecenia „--report-azdo”</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
+        <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
+        <target state="translated">Azure DevOps Live Publishing nie może odczytać załącznika '{0}': {1}</target>
+        <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
+        <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
+        <target state="translated">Azure funkcja publikowania na żywo DevOps nie może przekazać '{0}' załącznika, ponieważ jego rozmiar ({1} bajtów) przekracza limit {2} bajtów.</target>
+        <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
         <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może przekazać {0} załączników. Nie będzie ich w przebiegu testu usługi Azure DevOps.</target>
@@ -56,6 +66,11 @@
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może ukończyć przebiegu testu.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
+        <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
+        <target state="translated">Publikowanie na żywo w usłudze Azure DevOps przekroczyło limit czasu po {1}, oczekując na blokadę koordynacji „{0}”.</target>
+        <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
         <source>Azure DevOps live publishing failed to create the test run.</source>
@@ -95,7 +110,7 @@
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
         <target state="translated">Ustawiono parametr „--publish-azdo-test-results”, ale publikowanie na żywo w usłudze Azure DevOps jest wyłączone, ponieważ brakuje następujących zmiennych środowiskowych lub są one nieprawidłowe: {0}.</target>
-        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -235,7 +250,7 @@
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
         <target state="translated">Nie można załadować niestabilnej historii usługi Azure DevOps. Kontynuowanie bez adnotacji historii. {0}</target>
-        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
+        <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
@@ -245,7 +260,7 @@
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
         <target state="translated">Zażądano niestabilnej historii usługi Azure DevOps, ale brakuje wymaganych zmiennych środowiskowych usługi Azure DevOps. Kontynuowanie bez adnotacji historii.</target>
-        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+        <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -350,7 +365,7 @@
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
         <target state="translated">Nie można załadować pliku kwarantanny usługi Azure DevOps „{0}”. Kontynuowanie bez świadomości kwarantanny. {1}</target>
-        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
+        <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
@@ -423,9 +438,9 @@
         <note>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
-        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="translated">Zapisz podsumowanie zadania w formacie Markdown na końcu przebiegu testu i prześlij je za pomocą „##vso[task.uploadsummary]”. Opcjonalny argument ścieżki pliku zastępuje lokalizację domyślną ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Wymaga polecenia „--report-azdo”.</target>
-        <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
+        <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">Napisz podsumowanie zadania języka Markdown na końcu przebiegu testu i przekaż do karty Rozszerzenia usługi Azure DevOps. Opcjonalny argument ścieżki pliku zastępuje lokalizację domyślną („{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md”). Wymaga polecenia „--report-azdo”.</target>
+        <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>

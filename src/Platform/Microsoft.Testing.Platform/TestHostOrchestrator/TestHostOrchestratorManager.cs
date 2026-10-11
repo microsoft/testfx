@@ -7,10 +7,14 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.TestHostOrchestrator;
 
-internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Extensions.TestHostOrchestrator.ITestHostOrchestratorManager
+internal class TestHostOrchestratorManager :
+    ITestHostOrchestratorManager,
+    Extensions.TestHostOrchestrator.ITestHostOrchestratorManager,
+    ITestHostExecutionOrchestratorMiddlewareManager
 {
     private readonly List<Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime>> _testHostOrchestratorApplicationLifetimeFactories = [];
     private List<Func<IServiceProvider, ITestHostExecutionOrchestrator>>? _factories;
+    private List<Func<IServiceProvider, ITestHostExecutionOrchestratorMiddleware>>? _middlewareFactories;
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostExecutionOrchestrator> factory)
     {
@@ -29,17 +33,30 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager, Exten
     void Extensions.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)
         => AddTestHostOrchestratorApplicationLifetime(testHostOrchestratorApplicationLifetimeFactory);
 
+    public void AddTestHostExecutionOrchestratorMiddleware(Func<IServiceProvider, ITestHostExecutionOrchestratorMiddleware> factory)
+    {
+        _ = factory ?? throw new ArgumentNullException(nameof(factory));
+        _middlewareFactories ??= [];
+        _middlewareFactories.Add(factory);
+    }
+
     internal async Task<TestHostOrchestratorConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
-        if (_factories is null)
+        List<ITestHostExecutionOrchestrator> orchestrators = [];
+        if (_factories is not null)
         {
-            return new TestHostOrchestratorConfiguration([]);
+            await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_factories, serviceProvider, orchestrators).ConfigureAwait(false);
         }
 
-        List<ITestHostExecutionOrchestrator> orchestrators = [];
-        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_factories, serviceProvider, orchestrators).ConfigureAwait(false);
+        List<ITestHostExecutionOrchestratorMiddleware> middleware = [];
+        if (_middlewareFactories is not null)
+        {
+            // Preserves registration order: BuildAndRegisterExtensionsAsync appends in the order the
+            // factories were added, which is the documented outermost-first composition order.
+            await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_middlewareFactories, serviceProvider, middleware).ConfigureAwait(false);
+        }
 
-        return new TestHostOrchestratorConfiguration([.. orchestrators]);
+        return new TestHostOrchestratorConfiguration([.. orchestrators], [.. middleware]);
     }
 
     public void AddTestHostOrchestratorApplicationLifetime(Func<IServiceProvider, ITestHostOrchestratorApplicationLifetime> testHostOrchestratorApplicationLifetimeFactory)

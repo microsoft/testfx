@@ -141,7 +141,7 @@
   <data name="CrashDumpFileNameOptionDescription" xml:space="preserve">
     <value>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</value>
-    <comment>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</comment>
+    <comment>Do not localize placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"} or .NET runtime tokens {Locked="%e"}{Locked="%p"}{Locked="%h"}{Locked="%t"}.</comment>
   </data>
   <data name="CrashDumpInvalidEnvironmentVariableValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</value>
@@ -172,7 +172,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
     <value>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</value>
-    <comment>Do not localize option values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</comment>
+    <comment>Do not localize option values {Locked=&quot;&apos;on&apos;&quot;}{Locked=&quot;true&quot;}{Locked=&quot;enable&quot;}{Locked=&quot;1&quot;}{Locked=&quot;off&quot;}{Locked=&quot;false&quot;}{Locked=&quot;disable&quot;}{Locked=&quot;0&quot;}.</comment>
   </data>
   <data name="CrashSequenceOptionInvalidArgument" xml:space="preserve">
     <value>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
@@ -188,7 +188,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
   </data>
   <data name="CrashDumpOptionDescription" xml:space="preserve">
     <value>[net6.0+ only] Generate a dump file if the test process crashes.</value>
-    <comment>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</comment>
+    <comment>Do not localize target framework moniker {Locked="net6.0+"}.</comment>
   </data>
   <data name="CrashDumpProcessCrashed" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</value>
@@ -200,7 +200,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
   </data>
   <data name="CrashDumpProcessCrashedDumpFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a dump file was generated</value>
-    <comment>{0} is the crashed test host process ID.</comment>
+    <comment>{0} is the crashed test host process ID and must occur exactly once in the translation.</comment>
   </data>
   <data name="CrashDumpProcessCrashedReportFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a crash report was generated</value>
@@ -210,7 +210,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
     <value>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</value>
-    <comment>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</comment>
+    <comment>Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"} or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</comment>
   </data>
   <data name="CrashDumpTypeOptionInvalidType" xml:space="preserve">
     <value>'{0}' is not a valid dump type. Valid options are {1}</value>
@@ -240,7 +240,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
   </data>
   <data name="CrashReportIfSupportedOptionDescription" xml:space="preserve">
     <value>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</value>
-    <comment>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</comment>
+    <comment>Do not localize option name {Locked="--crash-report"} or platform name {Locked="Windows"}.</comment>
   </data>
   <data name="CrashReportNotSupportedOnWindowsErrorMessage" xml:space="preserve">
     <value>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</value>

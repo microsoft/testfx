@@ -41,6 +41,7 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLA
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER = "TESTINGPLATFORM_NOBANNER" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT = "TESTINGPLATFORM_TELEMETRY_OPTOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME" -> string!
@@ -55,7 +56,10 @@ const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.MessagesSeria
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Description = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsBuiltIn = 4 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsHidden = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MaximumArity = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.MinimumArity = 7 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Name = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.ProviderUid = 6 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.MessagesSerializerId = 3 -> int
 const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.ModulePath = 1 -> ushort
@@ -308,6 +312,7 @@ Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, Sys
 Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitForDisconnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.IPC.NamedPipeServer.WasConnected.get -> bool
 Microsoft.Testing.Platform.IPC.PipeNameDescription
 Microsoft.Testing.Platform.IPC.PipeNameDescription.Name.get -> string!
@@ -396,7 +401,10 @@ static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.DebugAssert(boo
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.IsNullOrEmpty<T>(T[]? list) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadBool(System.IO.Stream! stream) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadByte(System.IO.Stream! stream) -> byte
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadCollectionLength(System.IO.Stream! stream, int minimumBytesPerItem) -> int
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFieldPayload<T>(System.IO.Stream! stream, int fieldSize, System.Func<System.IO.Stream!, T>! readPayload) -> T
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields<TState>(System.IO.Stream! stream, TState state, System.Func<System.IO.Stream!, ushort, int, TState, TState?>! tryReadField) -> TState
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadInt(System.IO.Stream! stream) -> int
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadLong(System.IO.Stream! stream) -> long
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadString(System.IO.Stream! stream) -> string!

@@ -15,9 +15,10 @@ dotnet add package Microsoft.Testing.Extensions.OpenTelemetry
 This package extends Microsoft.Testing.Platform with:
 
 - **OpenTelemetry integration**: exposes the Microsoft Testing Platform activity source and meter (both named `Microsoft.Testing.Platform`) so test execution can be observed via the OpenTelemetry .NET SDK.
+- **Application-owned diagnostics**: `AddTestingPlatformDiagnostics()` activates the source and meter without constructing or owning an OpenTelemetry SDK provider, so test applications can use the provider configured by Aspire ServiceDefaults or any other host-level observability setup.
 - **Semantic conventions**: where an OpenTelemetry convention exists it is used verbatim — `test.case.name`, `test.case.result.status` (upstream `pass`/`fail`), `test.suite.name`, `code.function.name`, `code.file.path`, `code.line.number`, `code.stacktrace`, `error.type`, plus an `exception` span event and an `Error` span status on failures. The pre-existing attribute and instrument names are still emitted by default so existing dashboards keep working; set `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0` to drop them.
 - **Platform extensions**: OpenTelemetry does not define any `test.*` **metrics** or test-case **span** conventions (as of semantic conventions 1.43.0), and `test.case.result.status` upstream only defines `pass` and `fail`. The instruments listed below, the additional result statuses (`skipped`, `error`, `timeout`, `cancelled`, `unknown`), `cicd.provider.name`, and the `test.case.*` attributes not listed above are therefore Microsoft.Testing.Platform extensions, deliberately placed in the namespace where an upstream definition would land.
-- **Resource attributes**: `AddTestingPlatformResource()` describes *where* the run happened — test assembly, host, OS, runtime — and detects the CI provider, pipeline run, branch and commit (`cicd.*` / `vcs.*`) from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins.
+- **Composable resource attributes**: `AddTestingPlatformTestResource()` adds test-specific identity and `AddTestingPlatformCIResource()` adds CI/source-control provenance without changing application-owned service, host, OS or process identity. `AddTestingPlatformResource()` remains the standalone aggregate convenience path for test assembly, service, host, OS, runtime, CI provider, pipeline run, branch and commit.
 - **Turnkey configuration**: `AddOpenTelemetryProviderFromEnvironment()` wires instrumentation, resource and an OTLP exporter purely from the standard `OTEL_*` environment variables, so a run can be exported without writing configuration code.
 - **Trace context propagation**: when the process that started the test run publishes a `TRACEPARENT` environment variable (CI runners, `dotnet test`, IDEs), the whole run nests under that trace instead of starting an orphan one.
 - **Lifecycle management**: ties the lifetime of a `TracerProvider` and `MeterProvider` to the test application, so they are disposed alongside the test host.
@@ -32,6 +33,63 @@ This package extends Microsoft.Testing.Platform with:
 > Without instrumentation, no MTP activities or metrics are collected; without an exporter, collected telemetry is not emitted anywhere.
 >
 > Use `AddOpenTelemetryProviderFromEnvironment()` instead if you want all of that configured for you from the standard `OTEL_*` variables. It only installs the instrumentation when an exporter is actually configured (via `OTEL_TRACES_EXPORTER` / `OTEL_METRICS_EXPORTER` / `OTEL_EXPORTER_OTLP_ENDPOINT`) or when you pass a configuration delegate, so leaving it in `Program.cs` unconditionally costs nothing on machines that do not opt in.
+
+### Use an application-owned OpenTelemetry provider
+
+When the test application already configures OpenTelemetry through Aspire ServiceDefaults, `OpenTelemetry.Extensions.Hosting`, or another application-level composition root, use `Microsoft.Testing.Extensions.Hosting` to preserve that ownership while MTP runs:
+
+```dotnetcli
+dotnet add package Microsoft.Testing.Extensions.Hosting
+dotnet add package Microsoft.Extensions.Hosting
+```
+
+```csharp
+HostApplicationBuilder hostBuilder = Host.CreateApplicationBuilder(args);
+
+hostBuilder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService("MyTestApplication")
+        .AddTestingPlatformTestResource()
+        .AddTestingPlatformCIResource())
+    .WithTracing(tracing => tracing.AddTestingPlatformInstrumentation())
+    .WithMetrics(metrics => metrics.AddTestingPlatformInstrumentation());
+
+using IHost host = hostBuilder.Build();
+return await host.RunTestingPlatformAsync(args, testBuilder =>
+{
+    // Register the test framework here.
+    testBuilder.AddTestingPlatformDiagnostics();
+});
+```
+
+`AddTestingPlatformDiagnostics()` does not build, configure, flush, or dispose a `TracerProvider` or `MeterProvider`. The application keeps full ownership of those providers and their exporters. The older `AddOpenTelemetryProvider()` and `AddOpenTelemetryProviderFromEnvironment()` helpers remain available as standalone convenience paths when the test application wants MTP to own the provider lifetime.
+
+For an MSBuild-generated hosted entry point, set:
+
+```xml
+<PropertyGroup>
+  <TestingPlatformHostFactory>Contoso.Tests.TestHost.CreateHost</TestingPlatformHostFactory>
+  <TestingPlatformOpenTelemetryMode>HostOwned</TestingPlatformOpenTelemetryMode>
+</PropertyGroup>
+```
+
+`HostOwned` contributes one generated builder hook that calls only `AddTestingPlatformDiagnostics()`. It does not create providers or exporters and does not replace the host's `service.name`, host, OS, or process resource identity.
+
+The focused resource helpers are recommended when Aspire ServiceDefaults, `HostApplicationBuilder`, or another application-level composition root already owns `service.*`, `host.*`, `os.*`, and `process.*`. Use `AddTestingPlatformResource()` only when the test application wants the extension to configure that complete standalone resource identity.
+
+See the complete [`HostApplicationBuilder` sample](../../../samples/public/MTPOTel).
+Native MSTest uses one MTP-owned activity for each test execution. MSTest makes that activity current only while the
+test's constructor, test initialization, test method, cleanup, and custom `TestMethodAttribute` code execute, so
+automatic `HttpClient`, SQL, Entity Framework, WCF, and custom activities become children of the test activity. MTP
+then adds the reported result attributes, status, output, artifacts, and timing to that same activity and stops it
+with the execution-end timestamp recorded by MSTest. The asynchronous result queue therefore does not inflate the
+test duration, and no duplicate `MSTest.TestMethod` plus MTP result spans are emitted.
+
+Frameworks that do not participate in this internal execution-lease integration keep the existing compatibility
+behavior demonstrated by the sample: the framework's execution activity and MTP's test-result activity remain
+siblings under `TestFramework`, and the result activity carries an `ActivityLink` to the activity that was current
+when the framework published the in-progress update. MTP never reparents an asynchronously consumed result to
+whatever activity happens to be current on the message-bus thread.
 
 ## Emitted metrics
 
@@ -74,7 +132,7 @@ Telemetry is only ever sent to the exporters and endpoints **you** configure —
 | `test.output.stdout` / `test.output.stderr` (`test.stdout` / `test.stderr`) | Captured standard output and error of the test, which routinely contains secrets or environment data. | Off when `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0`; truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. |
 | `code.stacktrace`, `test.case.result.explanation` (`test.result.explanation`), the `exception` span event (`exception.type` / `exception.message` / `exception.stacktrace`), the span status description, and the legacy `test.result.exception.type` / `test.result.exception.message` / `test.result.exception.stacktrace` | Exception message and stack-trace text. | Truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`. Disable the legacy twins with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
 | `test.metadata.*` (`test.metadataProperty.*`) | Framework-supplied trait/metadata values, exported verbatim (not truncated). | Emitted whenever a test carries metadata. Disable the legacy twin with `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0`. |
-| Resource `vcs.repository.url.full`, plus the other resource attributes (`host.name`, `os.description`, and in CI the `cicd.*` / `vcs.*` pipeline, branch and commit — see *Resource attributes* above) | The machine, OS and CI provenance attached to every span and metric point. | User-info credentials in the repository URL (`https://user:token@host/...`) are stripped before export. |
+| Resource `vcs.repository.url.full`, plus the other resource attributes (`host.name`, `os.description`, and in CI the `cicd.*` / `vcs.*` pipeline, branch and commit — see *Composable resource attributes* above) | The machine, OS and CI provenance attached to every span and metric point. | User-info credentials in the repository URL (`https://user:token@host/...`) are stripped before export. |
 
 Only the captured output, the result explanation and the exception message and stack trace are truncated to `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` (8192 characters by default); all other listed values are exported verbatim unless the Control column notes otherwise, so truncation is a size guard rather than redaction. Set `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT=0` on any job whose test output can contain secrets, and prefer sending telemetry to a backend you control.
 

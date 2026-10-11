@@ -57,6 +57,16 @@ public sealed class VideoRecorderSessionHandlerSegmentPruningTests
         Assert.AreEqual(expected, actual);
     }
 
+    [TestMethod]
+    public void VideoSegment_OverlapsInteriorRange_ReturnsTrue()
+    {
+        var segment = new VideoSegment("segment.mp4", 10, 20);
+
+        bool overlaps = segment.Overlaps(15, 25);
+
+        Assert.IsTrue(overlaps);
+    }
+
     public static IEnumerable<object[]> GetOverlapCases()
     {
         yield return [Array.Empty<double>(), false];
@@ -100,6 +110,95 @@ public sealed class VideoRecorderSessionHandlerSegmentPruningTests
 
             Assert.IsFalse(File.Exists(first.Path));
             Assert.IsFalse(File.Exists(second.Path));
+            VerifyWarningCount(logger, Times.Never());
+        }
+        finally
+        {
+            DeleteTemporaryDirectory(directory);
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_ExecutionCompleted_RemovesInFlightTestAndPrunesFinalizedSegments()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            const string TestUid = "execution-completed";
+            DateTimeOffset recordingStart = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            DateTimeOffset now = recordingStart.AddSeconds(10);
+            IReadOnlyList<VideoSegment> currentSegments = [];
+            VideoRecorderSessionHandler handler = CreateHandler(
+                VideoRecorderPersistenceMode.OnFailure,
+                maxRetainedDuration: null,
+                directory,
+                recordingStart,
+                () => now,
+                () => currentSegments,
+                out Mock<IVideoRecorder> recorder,
+                out Mock<ILogger<VideoRecorderSessionHandler>> logger);
+
+            await handler.ConsumeAsync(
+                null!,
+                CreateUpdate(InProgressTestNodeStateProperty.CachedInstance, recordingStart, recordingStart, TestUid),
+                CancellationToken.None);
+            now = recordingStart.AddSeconds(100);
+            VideoSegment finalized = CreateSegment(directory, "execution-completed.tmp", 0, 20);
+            currentSegments = [finalized];
+
+            await handler.ConsumeAsync(
+                null!,
+                CreateExecutionCompletedUpdate(TestUid),
+                CancellationToken.None);
+
+            Assert.IsFalse(File.Exists(finalized.Path));
+            recorder.Verify(instance => instance.ReadSegments(), Times.Once());
+            VerifyWarningCount(logger, Times.Never());
+        }
+        finally
+        {
+            DeleteTemporaryDirectory(directory);
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_TerminalPassedTest_RemovesInFlightTestAndPrunesFinalizedSegments()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            const string TestUid = "terminal-passed";
+            DateTimeOffset recordingStart = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            DateTimeOffset now = recordingStart.AddSeconds(10);
+            IReadOnlyList<VideoSegment> currentSegments = [];
+            VideoRecorderSessionHandler handler = CreateHandler(
+                VideoRecorderPersistenceMode.OnFailure,
+                maxRetainedDuration: null,
+                directory,
+                recordingStart,
+                () => now,
+                () => currentSegments,
+                out _,
+                out Mock<ILogger<VideoRecorderSessionHandler>> logger);
+
+            await handler.ConsumeAsync(
+                null!,
+                CreateUpdate(InProgressTestNodeStateProperty.CachedInstance, recordingStart, recordingStart, TestUid),
+                CancellationToken.None);
+            now = recordingStart.AddSeconds(100);
+            VideoSegment finalized = CreateSegment(directory, "terminal-passed.tmp", 0, 20);
+            currentSegments = [finalized];
+
+            await handler.ConsumeAsync(
+                null!,
+                CreateUpdate(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    recordingStart.AddSeconds(10),
+                    recordingStart.AddSeconds(20),
+                    TestUid),
+                CancellationToken.None);
+
+            Assert.IsFalse(File.Exists(finalized.Path));
             VerifyWarningCount(logger, Times.Never());
         }
         finally
@@ -385,16 +484,27 @@ public sealed class VideoRecorderSessionHandlerSegmentPruningTests
     private static TestNodeUpdateMessage CreateUpdate(
         TestNodeStateProperty state,
         DateTimeOffset start,
-        DateTimeOffset end)
+        DateTimeOffset end,
+        string? uid = null)
         => new(
             new SessionUid("session"),
             new TestNode
             {
-                Uid = Guid.NewGuid().ToString("N"),
+                Uid = uid ?? Guid.NewGuid().ToString("N"),
                 DisplayName = "Pruning test",
                 Properties = new PropertyBag(
                     state,
                     new TimingProperty(new TimingInfo(start, end, end - start))),
+            });
+
+    private static TestNodeUpdateMessage CreateExecutionCompletedUpdate(string uid)
+        => new(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = uid,
+                DisplayName = "Pruning test",
+                Properties = new PropertyBag(TestNodeExecutionCompletedProperty.CachedInstance),
             });
 
     private static VideoSegment CreateSegment(string directory, string fileName, double startSeconds, double endSeconds)

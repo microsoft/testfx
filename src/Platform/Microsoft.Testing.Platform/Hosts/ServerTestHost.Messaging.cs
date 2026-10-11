@@ -9,6 +9,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost
 {
+    private bool _showMessage;
+
     private async Task SendErrorAsync(
         int reqId,
         int errorCode,
@@ -129,7 +131,7 @@ internal sealed partial class ServerTestHost
         {
             case ServerLogMessage logMessage:
                 await SendMessageAsync(
-                    method: JsonRpcMethods.ClientLog,
+                    method: _showMessage ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog,
                     @params: new LogEventArgs(logMessage),
                     cancellationToken,
                     checkServerExit: true,

@@ -432,6 +432,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod
 Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Random = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod
 Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Sequential = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.ArgumentsDisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.ArgumentsDisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.Data.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data) -> void
@@ -600,6 +602,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.TestClassAttribu
 Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute.TestCleanupAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.ArgumentsDisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.ArgumentsDisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.DisplayName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.DisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestDataRow<T>.IgnoreMessage.get -> string?

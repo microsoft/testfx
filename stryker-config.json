@@ -1,6 +1,7 @@
 {
   "stryker-config": {
     "solution": "MutationTesting.slnx",
+    "project": "Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj",
     "test-runner": "mtp",
     "mutation-level": "Standard",
     "mutate": [

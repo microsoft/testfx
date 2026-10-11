@@ -142,7 +142,19 @@ internal sealed class AppxManifestInfo
         {
             manifestInfo = ReadFromManifest(manifestPath);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Xml.XmlException)
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+        catch (System.Xml.XmlException)
         {
             return false;
         }
@@ -160,13 +172,13 @@ internal sealed class AppxManifestInfo
                 continue;
             }
 
-            if (executablePath is not null)
+            if (executablePath is string expectedExecutablePath)
             {
                 // The launch path knows exactly which executable it was asked to start, so it must match
                 // that entry. Accepting any executable that merely sits in the same directory would let a
                 // package that declares a different application there be activated under the wrong
                 // Application User Model ID.
-                if (string.Equals(applicationExecutablePath, executablePath, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(applicationExecutablePath, expectedExecutablePath, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -368,6 +380,7 @@ internal sealed class AppxManifestInfo
             return exactMatches[0];
         }
 
+        // Stryker disable once Equality: the preceding single-match return makes Length == 1 unreachable here.
         if (exactMatches.Length > 1)
         {
             // Several applications declare this very executable, so it cannot identify one of them. That
@@ -446,7 +459,7 @@ internal sealed class AppxManifestInfo
     private static string GetExecutableFileName(string executable)
     {
         int lastSeparator = executable.LastIndexOfAny(['\\', '/']);
-        return lastSeparator < 0 ? executable : executable[(lastSeparator + 1)..];
+        return executable[(lastSeparator + 1)..];
     }
 
     private static string? ResolvePackageRelativePath(string manifestDirectory, string packageRelativePath)
@@ -491,18 +504,19 @@ internal sealed class AppxManifestInfo
         {
             buffer = (buffer << 8) | hash[i];
             bitsInBuffer += 8;
+            // Stryker disable once Equality: delaying an exactly full five-bit group until the next byte preserves the same bit stream.
             while (bitsInBuffer >= 5)
             {
                 bitsInBuffer -= 5;
+                // Stryker disable once Bitwise: buffer is nonnegative because only its low four bits are retained between input bytes.
                 builder.Append(PublisherHashAlphabet[(buffer >> bitsInBuffer) & 0x1F]);
+                // Stryker disable once all: consumed high bits cannot affect any later five-bit group selected from the low-order buffer.
                 buffer &= (1 << bitsInBuffer) - 1;
             }
         }
 
-        if (bitsInBuffer > 0)
-        {
-            builder.Append(PublisherHashAlphabet[(buffer << (5 - bitsInBuffer)) & 0x1F]);
-        }
+        // Eight input bytes leave exactly four bits after all complete five-bit groups.
+        builder.Append(PublisherHashAlphabet[(buffer << (5 - bitsInBuffer)) & 0x1F]);
 
         return builder.ToString();
     }

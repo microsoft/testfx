@@ -31,6 +31,7 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="Sdk\Sdk.targets" Pack="true" PackagePath="Sdk\Sdk.targets" />
     <None Include="Sdk\Features\Aspire.targets" Pack="true" PackagePath="Sdk\Features\Aspire.targets" />
     <None Include="Sdk\Features\Playwright.targets" Pack="true" PackagePath="Sdk\Features\Playwright.targets" />
+    <None Include="Sdk\Features\WindowsUIAutomation.targets" Pack="true" PackagePath="Sdk\Features\WindowsUIAutomation.targets" />
     <None Include="Sdk\Runner\Runner.targets" Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
     <None Include="Sdk\Runner\Common.targets" Pack="true" PackagePath="Sdk\Runner\Common.targets" />
     <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
@@ -41,6 +42,16 @@ $(CommonProductDescription)]]></PackageDescription>
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build the separately shipped integration without adding a dependency to the MSBuild SDK itself. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.PackagedApp.MSBuild\Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"
+                      SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework" />
+  </ItemGroup>
+
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
@@ -57,7 +68,7 @@ $(CommonProductDescription)]]></PackageDescription>
       <_MicrosoftTestingExtensionsJUnitReportVersion>$(MicrosoftTestingExtensionsJUnitReportVersionPrefix)</_MicrosoftTestingExtensionsJUnitReportVersion>
       <_MicrosoftTestingExtensionsJUnitReportVersion Condition="'$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsJUnitReportVersion)-$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)</_MicrosoftTestingExtensionsJUnitReportVersion>
 
-      <_TemplateProperties>MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestVersion=$(Version);MSTestWindowsUIAutomationVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

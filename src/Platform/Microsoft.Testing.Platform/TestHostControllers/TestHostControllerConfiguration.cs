@@ -21,4 +21,6 @@ internal sealed class TestHostControllerConfiguration(ITestHostEnvironmentVariab
     public ITestHostLauncher? TestHostLauncher { get; } = testHostLauncher;
 
     public bool RequireProcessRestart { get; } = requireProcessRestart;
+
+    internal ITestHostControllerRunCompletionHandler[] RunCompletionHandlers { get; set; } = [];
 }

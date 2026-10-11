@@ -28,9 +28,7 @@ internal static class TestDataSourceUtilities
         }
 
         MethodData methodData = MethodDataCache.GetValue(methodInfo, static method => new(method));
-        string methodDisplayName = methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
-            ? reflectionTestMethodInfo.DisplayName
-            : methodInfo.Name;
+        string methodDisplayName = GetMethodDisplayName(methodInfo);
         CultureInfo currentCulture = CultureInfo.CurrentCulture;
         string displayNameFormat = GetDisplayNameFormat();
 
@@ -45,12 +43,19 @@ internal static class TestDataSourceUtilities
         }
 
         string arguments = GetStringAndReleaseBuilder(argumentsBuilder);
-        return string.Format(
-            currentCulture,
-            displayNameFormat,
-            methodDisplayName,
-            arguments);
+        return ComputeDisplayName(methodDisplayName, arguments, currentCulture, displayNameFormat);
     }
+
+    public static string ComputeDisplayName(MethodInfo methodInfo, string argumentsDisplayName)
+        => ComputeDisplayName(GetMethodDisplayName(methodInfo), argumentsDisplayName, CultureInfo.CurrentCulture, GetDisplayNameFormat());
+
+    private static string GetMethodDisplayName(MethodInfo methodInfo)
+        => methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
+            ? reflectionTestMethodInfo.DisplayName
+            : methodInfo.Name;
+
+    private static string ComputeDisplayName(string methodDisplayName, string argumentsDisplayName, CultureInfo culture, string displayNameFormat)
+        => string.Format(culture, displayNameFormat, methodDisplayName, argumentsDisplayName);
 
     private static string GetDisplayNameFormat()
     {
@@ -134,11 +139,11 @@ internal static class TestDataSourceUtilities
                 break;
 
             case string value:
-                builder.Append('"').Append(value).Append('"');
+                AppendEscapedString(builder, value);
                 break;
 
             case char value:
-                builder.Append('\'').Append(value).Append('\'');
+                AppendEscapedChar(builder, value);
                 break;
 
             case object?[] values:
@@ -157,6 +162,20 @@ internal static class TestDataSourceUtilities
                 builder.Append(data.ToString());
                 break;
         }
+    }
+
+    private static void AppendEscapedString(StringBuilder builder, string value)
+    {
+        builder.Append('"');
+        StringEscapeHelper.AppendEscapedString(builder, value, 0, value.Length, escapeUnpairedSurrogates: true, useExtendedEscapes: true);
+        builder.Append('"');
+    }
+
+    private static void AppendEscapedChar(StringBuilder builder, char value)
+    {
+        builder.Append('\'');
+        StringEscapeHelper.AppendEscapedChar(builder, value, useExtendedEscapes: true);
+        builder.Append('\'');
     }
 
     private sealed class MethodData

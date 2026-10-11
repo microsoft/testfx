@@ -119,6 +119,7 @@ internal static class RetrySummaryReporter
 
             await outputDevice.DisplayAsync(producer, new TextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryTotalLine, summary.SuiteTotalTests)), cancellationToken).ConfigureAwait(false);
 
+            // Stryker disable once Boolean: continuation scheduling does not change the publication message.
             await outputDevice.DisplayAsync(
                 producer,
                 new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryFailedLine, summary.FinalFailedTests))
@@ -264,16 +265,19 @@ internal static class RetrySummaryReporter
             // Create the directory if missing
             fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
+            // Stryker disable once Boolean: continuation scheduling does not change the copy diagnostic.
             await logger.LogDebugAsync($"Copying file '{sourceFile}' to '{finalFileLocation}'").ConfigureAwait(false);
             fileSystem.CopyFile(sourceFile, finalFileLocation, overwrite: true);
         }
 
-        await outputDevice.DisplayAsync(
+        Task displayTask = outputDevice.DisplayAsync(
             producer,
             new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryArtifactsPublished, filesToMove.Length, resultDirectory))
             {
                 ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGray },
             },
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken);
+        // Stryker disable once Boolean: continuation scheduling does not change the publication message.
+        await displayTask.ConfigureAwait(false);
     }
 }

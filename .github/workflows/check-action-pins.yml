@@ -19,6 +19,8 @@ on:
       - '.github/aw/actions-lock.json'
       - '.github/scripts/check_action_pins.py'
       - '.github/scripts/check-action-pins-requirements.txt'
+      - '.github/scripts/issue-labeler.mjs'
+      - '.github/scripts/issue-labeler.test.mjs'
   push:
     branches:
       - main
@@ -29,6 +31,8 @@ on:
       - '.github/aw/actions-lock.json'
       - '.github/scripts/check_action_pins.py'
       - '.github/scripts/check-action-pins-requirements.txt'
+      - '.github/scripts/issue-labeler.mjs'
+      - '.github/scripts/issue-labeler.test.mjs'
   workflow_dispatch:
 
 permissions:
@@ -48,7 +52,12 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
       - name: Install PyYAML
         run: python -m pip install --disable-pip-version-check --require-hashes -r .github/scripts/check-action-pins-requirements.txt
       - name: Audit action pins
         run: python .github/scripts/check_action_pins.py
+      - name: Test issue labeler helper
+        run: node --test .github/scripts/issue-labeler.test.mjs

@@ -120,6 +120,29 @@ public class RunSettingsPatcherTests
     }
 
     [TestMethod]
+    public void Patch_WhenMultipleDefaultsAreAdded_AddsOneDelimitedPatchingComment()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            "<RunSettings />",
+            _configuration.Object,
+            new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false)),
+            _commandLineOptions.Object);
+
+        XElement runConfiguration = runSettingsDocument.Root!.Element("RunConfiguration")!;
+        XNode[] nodes = [.. runConfiguration.Nodes()];
+        Assert.HasCount(5, nodes);
+        XComment startComment = Assert.IsInstanceOfType<XComment>(nodes[0]);
+        Assert.AreEqual("Default configuration added by Microsoft Testing Platform", startComment.Value);
+        Assert.AreEqual("DesignMode", Assert.IsInstanceOfType<XElement>(nodes[1]).Name.LocalName);
+        Assert.AreEqual("CollectSourceInformation", Assert.IsInstanceOfType<XElement>(nodes[2]).Name.LocalName);
+        Assert.AreEqual("ResultsDirectory", Assert.IsInstanceOfType<XElement>(nodes[3]).Name.LocalName);
+        XComment endComment = Assert.IsInstanceOfType<XComment>(nodes[4]);
+        Assert.AreEqual("End", endComment.Value);
+    }
+
+    [TestMethod]
     public void Patch_WithRunSettingsContainingResultsDirectory_EntryIsNotOverridden()
     {
         string runSettings =

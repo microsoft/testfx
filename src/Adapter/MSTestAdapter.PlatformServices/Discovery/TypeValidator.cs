@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -52,7 +53,11 @@ internal class TypeValidator
         // gives us a better performance.
         // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
         // but the difference is quite small, and we don't expect a huge amount of non-test classes in the assembly.
-        if (!type.IsClass || !_reflectHelper.IsAttributeDefined<TestClassAttribute>(type))
+        if (!type.IsClass
+            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(type)
+                && (!type.IsFSharpModule()
+                    || !PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(type)
+                        .Any(method => _reflectHelper.IsAttributeDefined<TestMethodAttribute>(method)))))
         {
             return false;
         }
@@ -90,7 +95,7 @@ internal class TypeValidator
         // What we do is:
         //   - report the class as "not valid" test class. This will cause to skip enumerating tests from it.
         //   - Do not generate warnings/do not create NOT RUNNABLE tests.
-        return !type.IsAbstract;
+        return !type.IsAbstract || type.IsFSharpModule();
     }
 
     /// <summary>

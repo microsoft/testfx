@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectCapability Include="TestContainer" />
     <SDKReference Include="TestPlatform.Universal, Version=$(VisualStudioVersion)" />
+    <!-- An AppContainer testhost cannot monitor its parent VSTest process. -->
     <RuntimeHostConfigurationOption Include="MSTest.EnableParentProcessQuery"
                                     Value="false"
                                     Trim="true" />

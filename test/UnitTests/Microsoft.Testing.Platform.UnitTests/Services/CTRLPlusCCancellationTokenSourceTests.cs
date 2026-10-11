@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -127,6 +127,21 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
         Assert.IsNull(environment.ExitCode, "First Ctrl+C must not force-exit even when the cancel callback throws.");
         Assert.AreEqual(1, logger.WarningCount, "The AggregateException must be logged as a warning.");
+        Assert.IsNotNull(logger.LastWarning);
+        Assert.Contains("CTRLPlusCCancellationTokenSource cancel", logger.LastWarning!);
+    }
+
+    [TestMethod]
+    public void ExternalCancel_WhenCallbackThrows_LogsWarningAndSuppressesException()
+    {
+        var logger = new RecordingLogger();
+        using var source = new CTRLPlusCCancellationTokenSource(console: null, logger);
+        source.CancellationToken.Register(() => throw new InvalidOperationException("boom"));
+
+        source.Cancel();
+
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.AreEqual(1, logger.WarningCount);
         Assert.IsNotNull(logger.LastWarning);
         Assert.Contains("CTRLPlusCCancellationTokenSource cancel", logger.LastWarning!);
     }

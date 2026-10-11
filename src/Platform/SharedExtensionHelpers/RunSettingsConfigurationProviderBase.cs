@@ -13,7 +13,9 @@ namespace Microsoft.Testing.Extensions;
 /// the raw runsettings content is read. Shared by the VSTest bridge and the MSTest adapter's native
 /// Microsoft.Testing.Platform integration.
 /// </summary>
-[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into projects that are allowed to use MTP APIs")]
+#if MSTEST_TESTADAPTER
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into the MSTest adapter, which is allowed to use MTP APIs")]
+#endif
 internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSource, IHierarchicalConfigurationProvider
 {
     private string? _runSettingsFileContent;
@@ -41,7 +43,7 @@ internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSou
     /// <inheritdoc />
     public bool TryGet(string key, out string? value)
     {
-        if (string.IsNullOrEmpty(_runSettingsFileContent))
+        if (_runSettingsFileContent is not { Length: > 0 })
         {
             value = null;
             return false;

@@ -358,6 +358,7 @@ internal sealed partial class MSTestSettings
         ParseBooleanSetting(configuration, "execution:treatDiscoveryWarningsAsErrors", logger, value => settings.TreatDiscoveryWarningsAsErrors = value);
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
         ParseDebuggerLaunchModeSetting(configuration, "execution:launchDebuggerOnAssertionFailure", logger, value => settings.LaunchDebuggerOnAssertionFailure = value);
+        ParseBooleanSetting(configuration, "execution:captureAssertionFailureDiagnostics", logger, value => settings.CaptureAssertionFailureDiagnostics = value);
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
         ParseTimeoutSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
         ParseTimeoutSetting(configuration, "timeout:assemblyCleanup", logger, value => settings.AssemblyCleanupTimeout = value);

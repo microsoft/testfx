@@ -21,6 +21,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingExtensionsAzureFoundryVersion$", MicrosoftTestingExtensionsAzureFoundryVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
@@ -30,6 +31,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContains("--coverage-threshold-line");
+        testHostResult.AssertOutputContains("--coverage-threshold-branch");
         testHostResult.AssertOutputContains("--crashdump");
         testHostResult.AssertOutputContains("--hangdump");
         testHostResult.AssertOutputContains("--publish-azdo-run-name");
@@ -48,6 +51,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
 
         Assert.Contains("Microsoft.Testing.Extensions.AzureDevOpsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.AzureFoundry.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CtrfReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
@@ -113,6 +117,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureFoundry" Version="$MicrosoftTestingExtensionsAzureFoundryVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />

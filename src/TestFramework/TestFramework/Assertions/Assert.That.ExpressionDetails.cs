@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq.Expressions;
@@ -42,6 +42,7 @@ public static partial class AssertExtensions
     /// The suppressIntermediateValues parameter controls whether to display the value of intermediate
     /// expressions (like 'new List()' when it's part of 'new List().Count').
     /// </summary>
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The public Assert.That API declares that expression evaluation requires dynamic code.")]
     private static void ExtractVariablesFromExpression(Expression? expr, Dictionary<string, object?> details, Dictionary<Expression, object?> evaluationCache, bool suppressIntermediateValues = false)
     {
         if (expr is null)

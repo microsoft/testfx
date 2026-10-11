@@ -97,6 +97,142 @@ public sealed class RunSettingsEnvironmentVariableProviderTests
     }
 
     [TestMethod]
+    public async Task IsEnabledAsync_WhenCommandLineOptionHasNoArguments_FallsBackToContentEnvironmentVariable()
+    {
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        commandLineOptions.Setup(x => x.TryGetOptionArgumentList("settings", out It.Ref<string[]?>.IsAny))
+            .Returns((string optionName, out string[]? value) =>
+            {
+                value = [];
+                return true;
+            });
+
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS"))
+            .Returns(RunSettingsWithEnvironmentVariables);
+
+        var provider = new RunSettingsEnvironmentVariableProvider(
+            new TestExtension(),
+            commandLineOptions.Object,
+            new Mock<IFileSystem>(MockBehavior.Strict).Object,
+            environment.Object);
+
+        Assert.IsTrue(await provider.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task IsEnabledAsync_WhenContentAndFileEnvironmentVariablesAreProvided_PrefersContent()
+    {
+        const string filePath = "test.runsettings";
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        commandLineOptions.Setup(x => x.TryGetOptionArgumentList("settings", out It.Ref<string[]?>.IsAny))
+            .Returns((string optionName, out string[]? value) =>
+            {
+                value = null;
+                return false;
+            });
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(filePath)).Returns(true);
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(x => x.Stream).Returns(new MemoryStream(Encoding.UTF8.GetBytes(RunSettingsWithoutEnvironmentVariables)));
+        fileSystem.Setup(x => x.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Returns(fileStream.Object);
+
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS"))
+            .Returns(RunSettingsWithEnvironmentVariables);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE"))
+            .Returns(filePath);
+
+        var provider = new RunSettingsEnvironmentVariableProvider(new TestExtension(), commandLineOptions.Object, fileSystem.Object, environment.Object);
+
+        Assert.IsTrue(await provider.IsEnabledAsync());
+        fileSystem.Verify(x => x.ExistFile(filePath), Times.Never);
+        fileSystem.Verify(x => x.NewFileStream(filePath, FileMode.Open, FileAccess.Read), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task IsEnabledAsync_WhenContentEnvironmentVariableIsEmpty_FallsBackToFileEnvironmentVariable()
+    {
+        const string filePath = "test.runsettings";
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        commandLineOptions.Setup(x => x.TryGetOptionArgumentList("settings", out It.Ref<string[]?>.IsAny))
+            .Returns((string optionName, out string[]? value) =>
+            {
+                value = null;
+                return false;
+            });
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(filePath)).Returns(true);
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(x => x.Stream).Returns(new MemoryStream(Encoding.UTF8.GetBytes(RunSettingsWithEnvironmentVariables)));
+        fileSystem.Setup(x => x.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Returns(fileStream.Object);
+
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS"))
+            .Returns(string.Empty);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE"))
+            .Returns(filePath);
+
+        var provider = new RunSettingsEnvironmentVariableProvider(new TestExtension(), commandLineOptions.Object, fileSystem.Object, environment.Object);
+
+        Assert.IsTrue(await provider.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task IsEnabledAsync_WhenFileEnvironmentVariableDoesNotExist_ReturnsFalse()
+    {
+        const string filePath = "missing.runsettings";
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        commandLineOptions.Setup(x => x.TryGetOptionArgumentList("settings", out It.Ref<string[]?>.IsAny))
+            .Returns((string optionName, out string[]? value) =>
+            {
+                value = null;
+                return false;
+            });
+
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem.Setup(x => x.ExistFile(filePath)).Returns(false);
+
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS"))
+            .Returns((string?)null);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE"))
+            .Returns(filePath);
+
+        var provider = new RunSettingsEnvironmentVariableProvider(new TestExtension(), commandLineOptions.Object, fileSystem.Object, environment.Object);
+
+        Assert.IsFalse(await provider.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task IsEnabledAsync_WhenFileEnvironmentVariableIsEmpty_DoesNotProbeFileSystem()
+    {
+        var commandLineOptions = new Mock<ICommandLineOptions>();
+        commandLineOptions.Setup(x => x.TryGetOptionArgumentList("settings", out It.Ref<string[]?>.IsAny))
+            .Returns((string optionName, out string[]? value) =>
+            {
+                value = null;
+                return false;
+            });
+
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS"))
+            .Returns(string.Empty);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE"))
+            .Returns(string.Empty);
+
+        var provider = new RunSettingsEnvironmentVariableProvider(
+            new TestExtension(),
+            commandLineOptions.Object,
+            new Mock<IFileSystem>(MockBehavior.Strict).Object,
+            environment.Object);
+
+        Assert.IsFalse(await provider.IsEnabledAsync());
+    }
+
+    [TestMethod]
     public async Task IsEnabledAsync_WhenEnvironmentVariableWithContentProvided_ReturnsTrue()
     {
         // Arrange
@@ -241,5 +377,7 @@ public sealed class RunSettingsEnvironmentVariableProviderTests
         Assert.HasCount(2, capturedVariables);
         Assert.Contains(v => v.Variable == "TEST_ENV" && v.Value == "TestValue", capturedVariables);
         Assert.Contains(v => v.Variable == "ANOTHER_VAR" && v.Value == "AnotherValue", capturedVariables);
+        Assert.IsTrue(capturedVariables.All(static variable => variable.IsSecret));
+        Assert.IsTrue(capturedVariables.All(static variable => variable.IsLocked));
     }
 }

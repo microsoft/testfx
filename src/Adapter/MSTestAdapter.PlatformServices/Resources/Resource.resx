@@ -245,7 +245,7 @@
   </data>
   <data name="CannotExpandIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</value>
-    <comment>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}{Locked="CannotExpandIDataSourceAttribute_DuplicateDisplayName"}{Locked="CannotExpandIDataSourceAttribute_CannotSerialize"}</comment>
+    <comment>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}</comment>
   </data>
   <data name="CannotExpandIDataSourceAttribute_CannotSerialize" xml:space="preserve">
     <value>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</value>
@@ -475,7 +475,11 @@ but received {4} argument(s), with types '{5}'.</value>
   </data>
   <data name="UTA_ErrorIncorrectTestMethodSignature" xml:space="preserve">
     <value>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</value>
-    <comment>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</comment>
+    <comment>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="ValueTask"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</comment>
+  </data>
+  <data name="UTA_ErrorIncorrectFSharpTestMethodSignature" xml:space="preserve">
+    <value>UTA007: Function {1} defined in F# module {0} does not have a correct signature. A test function marked with the [&lt;TestMethod&gt;] attribute must be static and public, and return void, Task, or non-generic ValueTask. Parameters require test data.</value>
+    <comment>{0} is the F# module full name. {1} is the test function name. {Locked="UTA007"}{Locked="F#"}{Locked="[&lt;TestMethod&gt;]"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</comment>
   </data>
   <data name="UTA_ErrorGenericValueTaskReturnType" xml:space="preserve">
     <value>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</value>
@@ -598,6 +602,10 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</value>
     <comment>{0} is the test class name. {Locked="public"}{Locked="TestContext"}</comment>
   </data>
+  <data name="HostedTestClassInjectionRequiresNoAppDomain" xml:space="preserve">
+    <value>MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</value>
+    <comment>{Locked="MSTest"}{Locked=".NET Framework"}{Locked="AppDomain"}{Locked="DisableAppDomain"}</comment>
+  </data>
   <data name="UTA_TestContextLoadError" xml:space="preserve">
     <value>Unable to find property {0}.TestContext. Error:{1}.</value>
     <comment>{0} is the test class name. {1} is the error message. {Locked="TestContext"}</comment>
@@ -613,6 +621,10 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_TestInitializeAndCleanupMethodHasWrongSignature" xml:space="preserve">
     <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
     <comment>{0} is the declaring type name. {1} is the method name. {Locked="non-static"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</comment>
+  </data>
+  <data name="UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature" xml:space="preserve">
+    <value>Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</value>
+    <comment>{0} is the F# module full name. {1} is the function name. {Locked="F#"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</comment>
   </data>
   <data name="UTA_TestMethodThrows" xml:space="preserve">
     <value>Test method {0}.{1} threw exception:

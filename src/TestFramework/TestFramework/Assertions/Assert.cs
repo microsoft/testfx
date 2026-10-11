@@ -70,8 +70,10 @@ public sealed partial class Assert
     [StackTraceHidden]
     internal static void ThrowAssertFailed(string assertionName, string? message)
     {
+        AssertFailedException assertionFailedException = CreateAssertFailedException(assertionName, message);
+        AssertionFailureSettings.CaptureDiagnostics(assertionFailedException.Message, expected: null, actual: null);
         LaunchDebuggerIfNeeded();
-        throw CreateAssertFailedException(assertionName, message);
+        throw assertionFailedException;
     }
 
     /// <summary>
@@ -89,8 +91,9 @@ public sealed partial class Assert
     [StackTraceHidden]
     internal static void ReportAssertFailed(string assertionName, string? message)
     {
-        LaunchDebuggerIfNeeded();
         AssertFailedException assertionFailedException = CreateAssertFailedException(assertionName, message);
+        AssertionFailureSettings.CaptureDiagnostics(assertionFailedException.Message, expected: null, actual: null);
+        LaunchDebuggerIfNeeded();
         if (AssertScope.Current is { } scope)
         {
             // Throw and catch to capture the stack trace at the point of failure,
@@ -172,8 +175,9 @@ public sealed partial class Assert
     [StackTraceHidden]
     internal static void ReportAssertFailed(StructuredAssertionMessage structuredMessage)
     {
-        LaunchDebuggerIfNeeded();
         AssertFailedException assertionFailedException = CreateAssertFailedException(structuredMessage);
+        AssertionFailureSettings.CaptureDiagnostics(assertionFailedException.Message, assertionFailedException.ExpectedText, assertionFailedException.ActualText);
+        LaunchDebuggerIfNeeded();
         if (AssertScope.Current is { } scope)
         {
             try
@@ -204,8 +208,10 @@ public sealed partial class Assert
     [StackTraceHidden]
     internal static void ThrowAssertFailed(StructuredAssertionMessage structuredMessage)
     {
+        AssertFailedException assertionFailedException = CreateAssertFailedException(structuredMessage);
+        AssertionFailureSettings.CaptureDiagnostics(assertionFailedException.Message, assertionFailedException.ExpectedText, assertionFailedException.ActualText);
         LaunchDebuggerIfNeeded();
-        throw CreateAssertFailedException(structuredMessage);
+        throw assertionFailedException;
     }
 
     /// <summary>
@@ -319,7 +325,9 @@ public sealed partial class Assert
         if (param is null)
         {
             string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName);
-            throw CreateAssertFailedException(assertionName, finalMessage);
+            AssertFailedException assertionFailedException = CreateAssertFailedException(assertionName, finalMessage);
+            AssertionFailureSettings.CaptureDiagnostics(assertionFailedException.Message, expected: null, actual: null);
+            throw assertionFailedException;
         }
     }
 

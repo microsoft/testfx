@@ -6,7 +6,7 @@ namespace Microsoft.Testing.Platform.ServerMode.Client;
 /// <summary>
 /// Severity of a diagnostic message emitted by the MTP server client itself (transport, handshake, process
 /// lifetime). This is the client's own trace channel and is intentionally decoupled from the platform's
-/// <c>LogLevel</c> and from the <c>client/log</c> notifications the server forwards.
+/// <c>LogLevel</c> and from the <c>client/log</c> or <c>client/showMessage</c> notifications the server forwards.
 /// </summary>
 internal enum MtpClientLogLevel
 {

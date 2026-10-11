@@ -557,11 +557,23 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0", SuccessExitCode);
 
-        Assert.Contains("## ✅ Test Run Summary — CalculatorTests (net9.0)", markdown);
-        Assert.Contains("| 3 | 2 | 0 | 1 | 0 | 30ms |", markdown);
-        Assert.DoesNotContain("### ❌ Failures", markdown);
-        Assert.DoesNotContain("### ⚠️ Flaky tests", markdown);
-        Assert.DoesNotContain("[!WARNING]", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ✅ Test Run Summary — CalculatorTests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 3 | 2 | 0 | 1 | 0 | 30ms |
+
+            ### ⏱ Slowest tests
+
+            - `CalculatorTests.Sub` — 20ms
+            - `CalculatorTests.Add` — 10ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -574,9 +586,26 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0", SuccessExitCode);
 
-        Assert.Contains("| 1 | 1 | 0 | 0 | 1 | 10ms |", markdown);
-        Assert.Contains("### ⚠️ Flaky tests (1)", markdown);
-        Assert.Contains("- `CalculatorTests.Flaky`", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ✅ Test Run Summary — CalculatorTests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 1 | 0 | 0 | 1 | 10ms |
+
+            ### ⚠️ Flaky tests (1)
+
+            - `CalculatorTests.Flaky`
+
+            ### ⏱ Slowest tests
+
+            - `CalculatorTests.Flaky` — 10ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -610,12 +639,27 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "StringUtilsTests", "net9.0", AtLeastOneTestFailedExitCode);
 
-        Assert.Contains("## ❌ Test Run Summary — StringUtilsTests (net9.0)", markdown);
-        Assert.Contains("### ❌ Failures (1)", markdown);
-        Assert.Contains("- `StringUtilsTests.Boom`", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — StringUtilsTests (net9.0)
 
-        // A plain "at least one test failed" outcome is conveyed by the failures list, not an exit-code callout.
-        Assert.DoesNotContain("[!WARNING]", markdown);
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 0 | 12ms |
+
+            ### ❌ Failures (1)
+
+            - `StringUtilsTests.Boom` — 7ms
+
+            ### ⏱ Slowest tests
+
+            - `StringUtilsTests.Boom` — 7ms
+            - `StringUtilsTests.Pass` — 5ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -629,15 +673,23 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", SuccessExitCode);
 
-        Assert.Contains("### ⏱ Slowest tests", markdown);
-        int slowIndex = markdown.IndexOf("- `T.Slow` — 1m 05s", StringComparison.Ordinal);
-        int fastIndex = markdown.IndexOf("- `T.Fast` — 10ms", StringComparison.Ordinal);
-        Assert.IsGreaterThanOrEqualTo(0, slowIndex, markdown);
-        Assert.IsGreaterThanOrEqualTo(0, fastIndex, markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ✅ Test Run Summary — T (net9.0)
 
-        // Slowest-first ordering: the slow test must be listed before the fast one, i.e. at a smaller index.
-        // IsLessThan(upperBound, value) asserts value < upperBound, so this asserts slowIndex < fastIndex.
-        Assert.IsLessThan(fastIndex, slowIndex, markdown);
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 2 | 0 | 0 | 0 | 1m 05s |
+
+            ### ⏱ Slowest tests
+
+            - `T.Slow` — 1m 05s
+            - `T.Fast` — 10ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -656,11 +708,22 @@ public sealed class GitHubActionsSummaryReporterTests
             AtLeastOneTestFailedExitCode,
             GitHubActionsStepSummarySections.TestResults);
 
-        Assert.Contains("| 2 | 1 | 1 | 0 | 0 | 1m 15s |", markdown);
-        Assert.Contains("### ❌ Failures (1)", markdown);
-        Assert.Contains("`T.Fail`", markdown);
-        Assert.DoesNotContain("### ⏱ Slowest tests", markdown);
-        Assert.DoesNotContain("`T.Pass`", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — T (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 0 | 1m 15s |
+
+            ### ❌ Failures (1)
+
+            - `T.Fail` — 5.00s
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -679,12 +742,19 @@ public sealed class GitHubActionsSummaryReporterTests
             ZeroTestsExitCode,
             GitHubActionsStepSummarySections.SlowTests);
 
-        Assert.Contains("## ❌ Test Run Summary — T (net9.0)", markdown);
-        Assert.Contains("### ⏱ Slowest tests", markdown);
-        Assert.Contains("`T.Slow` — 1m 05s", markdown);
-        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Flaky | Duration |", markdown);
-        Assert.DoesNotContain("### ❌ Failures", markdown);
-        Assert.DoesNotContain("[!WARNING]", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — T (net9.0)
+
+            ### ⏱ Slowest tests
+
+            - `T.Slow` — 1m 05s
+            - `T.Fail` — 5.00s
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -697,9 +767,22 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", SuccessExitCode);
 
-        Assert.Contains("| 1 | 1 | 0 | 0 | 0 | 1m 05s |", markdown);
-        Assert.Contains("### ⏱ Slowest tests", markdown);
-        Assert.Contains("`T.Slow` — 1m 05s", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ✅ Test Run Summary — T (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 1 | 0 | 0 | 0 | 1m 05s |
+
+            ### ⏱ Slowest tests
+
+            - `T.Slow` — 1m 05s
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -707,8 +790,18 @@ public sealed class GitHubActionsSummaryReporterTests
     {
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown([], "Empty", "net9.0", SuccessExitCode);
 
-        Assert.Contains("## ✅ Test Run Summary — Empty (net9.0)", markdown);
-        Assert.Contains("| 0 | 0 | 0 | 0 | 0 | 0ms |", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ✅ Test Run Summary — Empty (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 0 | 0 | 0 | 0 | 0 | 0ms |
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -717,9 +810,21 @@ public sealed class GitHubActionsSummaryReporterTests
         // No failing tests, but the process exit code says the run failed because nothing ran.
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown([], "Empty", "net9.0", ZeroTestsExitCode);
 
-        Assert.Contains("## ❌ Test Run Summary — Empty (net9.0)", markdown);
-        Assert.Contains("> [!WARNING]", markdown);
-        Assert.Contains("Exit code 8 — ZeroTests:", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — Empty (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 0 | 0 | 0 | 0 | 0 | 0ms |
+
+            > [!WARNING]
+            > Exit code 8 — ZeroTests: No tests were found to run. This often means a test filter matched nothing.
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -732,10 +837,25 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0", MinimumExpectedTestsExitCode);
 
-        // The single test passed, yet the run failed the minimum-expected-tests policy: icon and callout reflect it.
-        Assert.Contains("## ❌ Test Run Summary — CalculatorTests (net9.0)", markdown);
-        Assert.Contains("Exit code 9 — MinimumExpectedTestsPolicyViolation:", markdown);
-        Assert.Contains("--minimum-expected-tests", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — CalculatorTests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 1 | 0 | 0 | 0 | 10ms |
+
+            > [!WARNING]
+            > Exit code 9 — MinimumExpectedTestsPolicyViolation: Fewer tests ran than required by --minimum-expected-tests.
+
+            ### ⏱ Slowest tests
+
+            - `CalculatorTests.Add` — 10ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -863,17 +983,41 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalcTests", "net9.0", AtLeastOneTestFailedExitCode);
 
-        Assert.Contains("<details>\n<summary><code>CalcTests.Boom</code> — 2.40s</summary>", markdown);
-        Assert.Contains("**Exception:** `System.Exception`", markdown);
-        Assert.Contains("**Location:** `src/Calc.cs:42`", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — CalcTests (net9.0)
 
-        // Assert the whole fenced block, not the message and stack trace separately: they have to land inside one
-        // code block. Rendered outside it, an assertion diff's leading spaces and angle brackets would be eaten as
-        // markdown, and a stack frame would fold onto the line above.
-        Assert.Contains(
-            "```text\nExpected: 42\nActual:   41\n\n   at Calc.Add() in Calc.cs:line 42\n```",
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 2.40s |
+
+            ### ❌ Failures (1)
+
+            <details>
+            <summary><code>CalcTests.Boom</code> — 2.40s</summary>
+
+            **Exception:** `System.Exception`
+
+            **Location:** `src/Calc.cs:42`
+
+            ```text
+            Expected: 42
+            Actual:   41
+
+               at Calc.Add() in Calc.cs:line 42
+            ```
+
+            </details>
+
+
+            ### ⏱ Slowest tests
+
+            - `CalcTests.Boom` — 2.40s
+
+
+            """.Replace("\r\n", "\n"),
             markdown);
-        Assert.Contains("</details>", markdown);
     }
 
     [TestMethod]
@@ -887,10 +1031,26 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalcTests", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: false);
 
-        Assert.Contains("### ❌ Failures (1)", markdown);
-        Assert.Contains("- `CalcTests.Boom` — 120ms", markdown);
-        Assert.DoesNotContain("<details>", markdown);
-        Assert.DoesNotContain("**Exception:**", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — CalcTests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 120ms |
+
+            ### ❌ Failures (1)
+
+            - `CalcTests.Boom` — 120ms
+
+            ### ⏱ Slowest tests
+
+            - `CalcTests.Boom` — 120ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -904,8 +1064,26 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalcTests", "net9.0", AtLeastOneTestFailedExitCode);
 
-        Assert.Contains("- `CalcTests.Boom` — 5ms", markdown);
-        Assert.DoesNotContain("<details>", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — CalcTests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 5ms |
+
+            ### ❌ Failures (1)
+
+            - `CalcTests.Boom` — 5ms
+
+            ### ⏱ Slowest tests
+
+            - `CalcTests.Boom` — 5ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -920,8 +1098,34 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
 
-        Assert.Contains("<code>T.Map&lt;string,int&gt;</code>", markdown);
-        Assert.DoesNotContain("<code>T.Map<string,int></code>", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — T (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 1ms |
+
+            ### ❌ Failures (1)
+
+            <details>
+            <summary><code>T.Map&lt;string,int&gt;</code> — 1ms</summary>
+
+            ```text
+            boom
+            ```
+
+            </details>
+
+
+            ### ⏱ Slowest tests
+
+            - `T.Map<string,int>` — 1ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]
@@ -936,12 +1140,38 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
 
-        // The fence has to survive intact, and so does the collapsible wrapper around it: a body that closed our
-        // fence early would leave the block open and swallow everything after it.
-        Assert.Contains("<details>\n<summary><code>T.Boom</code> — ", markdown);
-        Assert.Contains("</summary>\n\n````text\n", markdown);
-        Assert.Contains("injected", markdown);
-        Assert.Contains("\n````\n\n</details>\n", markdown);
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — T (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 1ms |
+
+            ### ❌ Failures (1)
+
+            <details>
+            <summary><code>T.Boom</code> — 1ms</summary>
+
+            ````text
+            before
+            ```
+            injected
+            ```
+            after
+            ````
+
+            </details>
+
+
+            ### ⏱ Slowest tests
+
+            - `T.Boom` — 1ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
     }
 
     [TestMethod]

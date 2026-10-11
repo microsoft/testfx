@@ -27,6 +27,9 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HotReload\Microsoft.Testing.Extensions.HotReload.csproj">
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HtmlReport\Microsoft.Testing.Extensions.HtmlReport.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
@@ -52,10 +55,19 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj">
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VideoRecorder\Microsoft.Testing.Extensions.VideoRecorder.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Logging\Microsoft.Testing.Extensions.Logging.csproj">
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Configuration\Microsoft.Testing.Extensions.Configuration.csproj">
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Hosting\Microsoft.Testing.Extensions.Hosting.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureFoundry\Microsoft.Testing.Extensions.AzureFoundry.csproj">
@@ -81,6 +93,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 

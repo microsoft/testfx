@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Build.Framework;
@@ -16,6 +16,11 @@ public partial class InvokeTestingPlatformTask
     {
         get
         {
+            if (TestingPlatformUseDirectExecutable)
+            {
+                return Path.GetFileName(TargetPath.ItemSpec);
+            }
+
             if (TryGetRunCommand() is string runCommand)
             {
                 Log.LogMessage(MessageImportance.Low, $"Constructed target path via similar logic as to RunCommand: '{runCommand}'");
@@ -46,6 +51,11 @@ public partial class InvokeTestingPlatformTask
     /// <inheritdoc />
     protected override string? GenerateFullPathToTool()
     {
+        if (TestingPlatformUseDirectExecutable)
+        {
+            return TargetPath.ItemSpec;
+        }
+
         if (TryGetRunCommand() is string runCommand)
         {
             return runCommand;
@@ -143,7 +153,7 @@ public partial class InvokeTestingPlatformTask
         }
 
         string? dotnetRoot = Path.GetDirectoryName(DotnetHostPath.ItemSpec);
-        if (string.IsNullOrEmpty(dotnetRoot))
+        if (RoslynString.IsNullOrEmpty(dotnetRoot))
         {
             return;
         }
@@ -163,8 +173,8 @@ public partial class InvokeTestingPlatformTask
         if (hasExplicitDotnetRoot || hasExplicitWindowsX86DotnetRoot)
         {
             EnvironmentVariables = hasExplicitDotnetRoot && isWindowsX86 && !hasExplicitWindowsX86DotnetRoot
-                ? [$"{variableName}=", "DOTNET_ROOT(x86)=", .. EnvironmentVariables ?? []]
-                : [$"{variableName}=", .. EnvironmentVariables ?? []];
+                ? [$"{variableName}=", "DOTNET_ROOT(x86)=", .. EnvironmentVariables!]
+                : [$"{variableName}=", .. EnvironmentVariables!];
             return;
         }
 
@@ -189,6 +199,7 @@ public partial class InvokeTestingPlatformTask
         foreach (string environmentVariable in EnvironmentVariables)
         {
             int separatorIndex = environmentVariable.IndexOf('=');
+            // Stryker disable once Equality: At index zero the extracted name is empty and cannot equal the non-empty requested variable name.
             if (separatorIndex > 0
                 && string.Equals(environmentVariable.Substring(0, separatorIndex), variableName, comparison))
             {

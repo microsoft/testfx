@@ -15,6 +15,7 @@ internal sealed partial class TestMethodRunner
 {
     private async Task<TestResult[]> ExecuteTestAsync(ITestContext executionContext, TestMethodInfo testMethodInfo)
     {
+        TestResult[] results;
         try
         {
             ExecutionContext? capturedContext = testMethodInfo.Parent.ExecutionContext
@@ -29,36 +30,44 @@ internal sealed partial class TestMethodRunner
                 using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
                 {
                     testMethodInfo.TestContext = executionContext;
-                    return await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false);
+                    results = _executionActivityLease is null
+                        ? await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false)
+                        : await _executionActivityLease.RunAsync(
+                            () => _testMethodInfo.Executor.ExecuteAsync(testMethodInfo)).ConfigureAwait(false);
                 }
             }
-
-            var tcs = new TaskCompletionSource<TestResult[]>();
-
+            else
+            {
+                var tcs = new TaskCompletionSource<TestResult[]>();
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
-            ExecutionContextHelpers.RunOnContext(
-                capturedContext,
-                async () =>
-                {
-                    try
+                ExecutionContextHelpers.RunOnContext(
+                    capturedContext,
+                    async () =>
                     {
-                        using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
+                        try
                         {
-                            testMethodInfo.TestContext = executionContext;
-                            tcs.SetResult(await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false));
+                            using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
+                            {
+                                testMethodInfo.TestContext = executionContext;
+                                TestResult[] executionResults = _executionActivityLease is null
+                                    ? await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false)
+                                    : await _executionActivityLease.RunAsync(
+                                        () => _testMethodInfo.Executor.ExecuteAsync(testMethodInfo)).ConfigureAwait(false);
+                                tcs.SetResult(executionResults);
+                            }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        tcs.SetException(e);
-                    }
-                });
+                        catch (Exception e)
+                        {
+                            tcs.SetException(e);
+                        }
+                    });
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
-            return await tcs.Task.ConfigureAwait(false);
+                results = await tcs.Task.ConfigureAwait(false);
+            }
         }
         catch (Exception ex)
         {
-            return
+            results =
             [
                 new TestResult
                 {
@@ -72,6 +81,8 @@ internal sealed partial class TestMethodRunner
                 },
             ];
         }
+
+        return results;
     }
 
     /// <summary>

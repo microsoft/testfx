@@ -78,7 +78,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
 
             if (fieldId == FileArtifactMessagesFieldsId.FileArtifactMessageList)
             {
-                fileArtifactMessages = ReadFileArtifactMessagesPayload(stream);
+                fileArtifactMessages = ReadFieldPayload(stream, fieldSize, ReadFileArtifactMessagesPayload);
                 return true;
             }
 
@@ -90,7 +90,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
 
     private static FileArtifactMessage[] ReadFileArtifactMessagesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var fileArtifactMessages = new FileArtifactMessage[length];
 
         for (int i = 0; i < length; i++)
@@ -131,7 +131,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
                         return true;
 
                     case FileArtifactMessageFieldsId.InputArtifactPaths:
-                        inputArtifactPaths = ReadInputArtifactPathsPayload(stream);
+                        inputArtifactPaths = ReadFieldPayload(stream, fieldSize, ReadInputArtifactPathsPayload);
                         return true;
 
                     default:
@@ -155,7 +155,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
 
     private static string[] ReadInputArtifactPathsPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(int));
         string[] inputArtifactPaths = new string[length];
         for (int i = 0; i < length; i++)
         {

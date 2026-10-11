@@ -88,11 +88,13 @@ internal sealed partial class TerminalTestReporter
                 if (threshold.HasCoverableData)
                 {
                     (string actual, string required) = FormatThresholdPercentages(threshold);
-                    comparison = string.Format(
-                        CultureInfo.InvariantCulture,
-                        passed ? TerminalResources.CoverageThresholdPassed : TerminalResources.CoverageThresholdFailed,
-                        actual,
-                        required);
+                    comparison = !passed && threshold.ActualPercentage >= threshold.RequiredPercentage
+                        ? TerminalResources.CoverageThresholdFailedRoundedValues
+                        : string.Format(
+                            CultureInfo.InvariantCulture,
+                            passed ? TerminalResources.CoverageThresholdPassed : TerminalResources.CoverageThresholdFailed,
+                            actual,
+                            required);
                 }
                 else
                 {

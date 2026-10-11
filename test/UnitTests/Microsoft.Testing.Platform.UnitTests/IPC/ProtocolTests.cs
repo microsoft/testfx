@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.TestHost;
 
 using static Microsoft.Testing.Platform.UnitTests.ProtocolSerializerTestHelper;
 
@@ -14,6 +16,34 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class ProtocolTests
 {
     [TestMethod]
+    [DataRow(0)]
+    [DataRow(1234)]
+    [DataRow(-1)]
+    [DataRow(int.MaxValue)]
+    [DataRow(int.MinValue)]
+    public void TestHostProcessPIDRequestSerializeDeserialize_RoundTripsPID(int pid)
+    {
+        var message = new TestHostProcessPIDRequest(pid);
+
+        TestHostProcessPIDRequest actual = RoundTrip(new TestHostProcessPIDRequestSerializer(), message);
+
+        Assert.AreEqual(pid, actual.PID);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    [DataRow(3)]
+    public void TestHostProcessPIDRequestDeserialize_TruncatedPayloadThrows(int byteCount)
+    {
+        var stream = new MemoryStream(new byte[byteCount]);
+
+        TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
+            () => Deserialize(new TestHostProcessPIDRequestSerializer(), stream));
+        Assert.IsInstanceOfType<EndOfStreamException>(wrapper.InnerException);
+    }
+
+    [TestMethod]
     public void TestHostCompletedRequestSerializeDeserialize_PreservesFilteredAndUnfilteredExitCodes()
     {
         var message = new TestHostCompletedRequest(returnCode: 0, unfilteredReturnCode: 2);
@@ -22,6 +52,27 @@ public sealed class ProtocolTests
 
         Assert.AreEqual(0, actual.ExitCode);
         Assert.AreEqual(2, actual.UnfilteredExitCode);
+        Assert.IsEmpty(actual.SummaryArtifacts);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("summary description")]
+    public void TestHostCompletedRequestSerializeDeserialize_PreservesSummaryArtifact(string? description)
+    {
+        SessionFileArtifact artifact = new(new SessionUid("session"), new FileInfo("summary.json"), "CI summary", description, "microsoft.testing.github-actions-summary-fragment");
+        TestHostCompletedRequest message = new(0, 2, [artifact]);
+
+        TestHostCompletedRequest actual = RoundTrip(new TestHostCompletedRequestSerializer(), message);
+
+        Assert.AreEqual(0, actual.ExitCode);
+        Assert.AreEqual(2, actual.UnfilteredExitCode);
+        SessionFileArtifact restored = Assert.ContainsSingle(actual.SummaryArtifacts);
+        Assert.AreEqual(artifact.SessionUid, restored.SessionUid);
+        Assert.AreEqual(artifact.FileInfo.FullName, restored.FileInfo.FullName);
+        Assert.AreEqual(artifact.DisplayName, restored.DisplayName);
+        Assert.AreEqual(description, restored.Description);
+        Assert.AreEqual(artifact.Kind, restored.Kind);
     }
 
     [TestMethod]
@@ -52,6 +103,37 @@ public sealed class ProtocolTests
 
         TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
             () => Deserialize(new TestHostCompletedRequestSerializer(), stream));
+        Assert.IsInstanceOfType<EndOfStreamException>(wrapper.InnerException);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1234)]
+    [DataRow(-1)]
+    [DataRow(int.MaxValue)]
+    [DataRow(int.MinValue)]
+    public void TestHostProcessPIDRequestSerializeDeserialize_PreservesPID(int pid)
+    {
+        var message = new TestHostProcessPIDRequest(pid);
+
+        TestHostProcessPIDRequest actual = RoundTrip(new TestHostProcessPIDRequestSerializer(), message);
+
+        Assert.AreEqual(pid, actual.PID);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    [DataRow(3)]
+    public void TestHostProcessPIDRequestDeserialize_TruncatedPIDThrows(int byteCount)
+    {
+        var stream = new MemoryStream();
+        byte[] pidBytes = BitConverter.GetBytes(1234);
+        stream.Write(pidBytes, 0, byteCount);
+        stream.Position = 0;
+
+        TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
+            () => Deserialize(new TestHostProcessPIDRequestSerializer(), stream));
         Assert.IsInstanceOfType<EndOfStreamException>(wrapper.InnerException);
     }
 
@@ -408,7 +490,7 @@ public sealed class ProtocolTests
         var message = new CommandLineOptionMessages(
             "path/to/module.dll",
             [
-                new CommandLineOptionMessage("filter", "Filters the tests", false, true),
+                new CommandLineOptionMessage("filter", "Filters the tests", false, true, "FilterProvider", 1, int.MaxValue),
                 new CommandLineOptionMessage("hidden-option", null, true, false),
                 new CommandLineOptionMessage(null, "no name", null, null),
             ]);
@@ -430,6 +512,9 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.Description, actualOption.Description);
             Assert.AreEqual(expected.IsHidden, actualOption.IsHidden);
             Assert.AreEqual(expected.IsBuiltIn, actualOption.IsBuiltIn);
+            Assert.AreEqual(expected.ProviderUid, actualOption.ProviderUid);
+            Assert.AreEqual(expected.MinimumArity, actualOption.MinimumArity);
+            Assert.AreEqual(expected.MaximumArity, actualOption.MaximumArity);
         }
     }
 

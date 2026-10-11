@@ -119,10 +119,15 @@ internal static class MtpServerConnector
     /// </summary>
     /// <param name="listener">The already-started loopback listener.</param>
     /// <param name="tryGetServerStoppedFailure">
-    /// Probed on every poll. Returns the exception to throw when the server has already stopped without
-    /// connecting back, or <see langword="null"/> while it is still running.
+    /// Probed on every poll. Returns a task whose result is the exception to throw when the server has already
+    /// stopped without connecting back, or <see langword="null"/> while it is still running. An asynchronous
+    /// probe can finish bounded diagnostic collection without allowing a late accept to win after the stopped
+    /// state was observed.
     /// </param>
-    /// <param name="createTimeoutFailure">Creates the exception thrown when the connection timeout elapses.</param>
+    /// <param name="createTimeoutFailure">
+    /// Creates the exception thrown when the connection timeout elapses. The asynchronous callback lets a
+    /// launcher preserve a stopped-server diagnostic when exit races the timeout boundary.
+    /// </param>
     /// <param name="connectionTimeout">Upper bound on the wait for the server to connect back.</param>
     /// <param name="serverCompletion">
     /// Optional completion signal for the launched server. When supplied it joins the wait so a server that
@@ -135,8 +140,8 @@ internal static class MtpServerConnector
     /// </remarks>
     public static async Task<TcpClient> AcceptAsync(
         TcpListener listener,
-        Func<Exception?> tryGetServerStoppedFailure,
-        Func<Exception> createTimeoutFailure,
+        Func<CancellationToken, Task<Exception?>> tryGetServerStoppedFailure,
+        Func<CancellationToken, Task<Exception>> createTimeoutFailure,
         TimeSpan connectionTimeout,
         Task? serverCompletion,
         CancellationToken cancellationToken)
@@ -152,23 +157,33 @@ internal static class MtpServerConnector
 #endif
 
             var connectStopwatch = Stopwatch.StartNew();
-            while (!acceptTask.IsCompleted)
+            while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                bool acceptCompleted = acceptTask.IsCompleted;
+                Task<Exception?> serverStoppedFailureTask = cancellationToken.IsCancellationRequested
+                    ? throw new OperationCanceledException(cancellationToken)
+                    : tryGetServerStoppedFailure(cancellationToken);
 
-                // No grace period here on purpose. Once the server has stopped, any socket the accept might
-                // still yield belongs to a dead peer, so waiting for it would only trade this precise failure
-                // (exit code, captured stderr) for a generic connection-closed error on the first request.
-                // The loop re-checks acceptTask above, so a connection that completed while the server was
-                // still alive is already taken before this probe runs.
-                if (tryGetServerStoppedFailure() is { } serverStopped)
+                // Once a probe observes that the server stopped, await its bounded diagnostic collection
+                // before checking acceptTask again. Any socket accepted during that wait belongs to a dead
+                // peer, so the precise stopped-server failure (exit code, captured stderr) must win. The loop
+                // checks acceptTask before probing, so a connection completed while the server was still
+                // alive is already taken.
+                if (await serverStoppedFailureTask.ConfigureAwait(false) is { } serverStopped)
                 {
                     throw serverStopped;
                 }
 
-                if (connectStopwatch.Elapsed >= connectionTimeout)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (acceptCompleted)
                 {
-                    throw createTimeoutFailure();
+                    break;
+                }
+
+                if (connectStopwatch.Elapsed.CompareTo(connectionTimeout) is not -1)
+                {
+                    throw await createTimeoutFailure(cancellationToken).ConfigureAwait(false);
                 }
 
                 var delayTask = Task.Delay(ServerStoppedPollInterval, cancellationToken);
@@ -177,19 +192,28 @@ internal static class MtpServerConnector
                     : await Task.WhenAny(acceptTask, delayTask, serverCompletion).ConfigureAwait(false);
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
-            acceptedClient = await acceptTask.ConfigureAwait(false);
+            // The loop only exits after observing IsCompleted, so this cannot block and preserves the
+            // exception-unwrapping behavior of await without creating an equivalent ConfigureAwait mutant.
+#pragma warning disable VSTHRD103 // GetResult synchronously blocks - the task is already completed.
+            acceptedClient = acceptTask.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD103
             acceptedClient.NoDelay = true;
             return acceptedClient;
         }
         catch
         {
-            if (acceptedClient is null && acceptTask is not null)
+            if (acceptTask is not null)
             {
-                NeutralizePendingAccept(acceptTask);
+                if (acceptedClient is null)
+                {
+                    NeutralizePendingAccept(acceptTask);
+                }
             }
 
-            acceptedClient?.Dispose();
+            using (acceptedClient)
+            {
+            }
+
             throw;
         }
     }
@@ -253,15 +277,7 @@ internal static class MtpServerConnector
             return true;
         }
 
-        if (timeout <= TimeSpan.Zero)
-        {
-            return false;
-        }
-
-        if (timeout > MaxDelay)
-        {
-            timeout = MaxDelay;
-        }
+        timeout = TimeSpan.FromTicks(Math.Min(Math.Max(timeout.Ticks, 0), MaxDelay.Ticks));
 
         Task completed = await Task.WhenAny(task, Task.Delay(timeout, CancellationToken.None)).ConfigureAwait(false);
         return completed == task;
@@ -289,10 +305,8 @@ internal static class MtpServerConnector
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);
-            return;
         }
-
-        if (task.Exception is { } exception)
+        else if (task.Exception is { } exception)
         {
             logger.SafeLog(MtpClientLogLevel.Error, $"{description}: {exception}");
         }

@@ -80,6 +80,14 @@ internal class AssemblyEnumerator
     /// <param name="useGeneratedDescriptors">Whether native MTP discovery may consume complete source-generated descriptors.</param>
     /// <returns>A collection of Test Elements.</returns>
     internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors)
+        => EnumerateAssembly(assemblyFileName, mustSerialize, useGeneratedDescriptors, null, null);
+
+    internal AssemblyEnumerationResult EnumerateAssembly(
+        string assemblyFileName,
+        bool mustSerialize,
+        bool useGeneratedDescriptors,
+        Type[]? types,
+        Action<Type, IReadOnlyList<UnitTestElement>?>? typeObserver)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -87,7 +95,7 @@ internal class AssemblyEnumerator
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
-        Type[] types = GetTypes(assembly);
+        types ??= GetTypes(assembly);
         bool discoverInternals = ReflectHelper.HasDiscoverInternalsAttribute(assembly);
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
@@ -106,8 +114,10 @@ internal class AssemblyEnumerator
 
         foreach (Type type in types)
         {
+            typeObserver?.Invoke(type, null);
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
                 dataSourcesUnfoldingStrategy, mustSerialize, useGeneratedDescriptors);
+            typeObserver?.Invoke(type, testsInType);
             tests.AddRange(testsInType);
         }
 
@@ -315,7 +325,7 @@ internal class AssemblyEnumerator
             // TestDataRow<T>), falling back to the whole-source ignore message. It must be
             // recomputed per row so an ignore message on one row does not leak to later rows.
             string? testDataSourceIgnoreMessage = sourceLevelIgnoreMessage;
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow, out string? argumentsDisplayNameFromTestDataRow))
             {
                 testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? sourceLevelIgnoreMessage;
             }
@@ -342,6 +352,9 @@ internal class AssemblyEnumerator
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.TestMethod.DisplayName = displayNameFromTestDataRow
+                ?? (!StringEx.IsNullOrWhiteSpace(argumentsDisplayNameFromTestDataRow)
+                    ? TestDataSourceUtilities.ComputeDisplayName(methodInfo, argumentsDisplayNameFromTestDataRow)
+                    : null)
                 ?? dataSource.GetDisplayName(methodInfo, d)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
                 ?? discoveredTest.TestMethod.DisplayName;

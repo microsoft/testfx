@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ApplicationExitedBeforeWindowDiscovery" xml:space="preserve">
+    <value>Application '{0}' exited with code {1} before a window was discovered.</value>
+  </data>
+  <data name="ApplicationProcessFailedToStart" xml:space="preserve">
+    <value>Failed to start process '{0}'.</value>
+  </data>
+  <data name="ApplicationProcessNotAvailable" xml:space="preserve">
+    <value>The application process is available only after application setup and before disposal.</value>
+  </data>
+  <data name="ApplicationProcessTerminationTimedOut" xml:space="preserve">
+    <value>Application process {0} did not exit within {1} after termination was requested.</value>
+  </data>
+  <data name="InvalidApplicationShutdownTimeout" xml:space="preserve">
+    <value>The application shutdown timeout must be non-negative, infinite, or no greater than Int32.MaxValue milliseconds.</value>
+    <comment>{Locked="Int32.MaxValue"}</comment>
+  </data>
+  <data name="InvalidWindowDiscoveryTimeout" xml:space="preserve">
+    <value>The window discovery timeout must be non-negative or infinite.</value>
+  </data>
+  <data name="WindowDiscoveryTimedOut" xml:space="preserve">
+    <value>Application '{0}' did not expose a window within {1}.</value>
+  </data>
+</root>

@@ -25,6 +25,35 @@ There are many ways to contribute:
 - **DO NOT** submit Pull Requests without having an approved feature request or enhancement.
 - **DO NOT** submit large code formatting changes without discussing them with the team first.
 
+### Feature evidence and design decisions
+
+Use a descriptive title that tells users what changes. Category prefixes such as
+`[feat]` are not required; the [title research and decision](docs/decisions/feature-delivery-guidance.md#pr-title-research)
+explains the tradeoffs. Preserve prefixes required by existing automation.
+
+For new features, keep a concise, versioned decision record in an existing design
+document/RFC or `docs/decisions/<feature-name>.md`. Start before implementation and
+update it with research sources, approaches actually tried and their outcomes,
+alternatives, assumptions, and the reasons for changing or choosing a direction.
+Challenge material design decisions, especially when requirements or rationale
+are missing; compare the existing approach and simpler alternatives rather than
+assuming the first proposal is right.
+
+Whenever practical, show the feature working with screenshots or a short GIF/video
+in the PR description, including terminal and report changes. Provide captions
+and reproduction commands; use a text transcript or result artifact when clearer,
+and explain unavailable or inapplicable media. Do not expose sensitive data.
+
+For regression coverage, keep the tests while removing the production change in
+an isolated comparison: they must execute and fail for the intended behavioral
+reason without it and pass with it. Include exact commands, source states, exits,
+test identities/counts, and the relevant assertion failure. A build failure or
+skipped test is not proof. Behavior-preserving changes instead need focused
+green-before/green-after evidence. The [feature-delivery skill](.github/skills/feature-delivery/SKILL.md)
+describes safe comparisons, new-API limitations, and the decision-record format.
+Link this evidence using the [PR template](.github/PULL_REQUEST_TEMPLATE.md);
+screenshots do not replace executable tests.
+
 ## Coding Style
 
 The MSTest project follows the same rules as the runtime repository [developer guide](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/coding-style.md).
@@ -42,6 +71,50 @@ To keep technical debt visible and tracked, the project enforces the following p
 ## Developing
 
 Please see our [Dev Guide](./docs/dev-guide.md) which explains how to develop, build, and test.
+
+## AI Coding Tools
+
+The `csharp-expert`, `csharp-refactoring`, `msbuild`, and `setup-local-sdk`
+skills are imported from
+[`dotnet/skills`](https://github.com/dotnet/skills/tree/main/plugins/dotnet) through
+`gh copilot-curate`. Their supporting references, source commit, and file hashes are
+tracked in `.copilot/curate/manifest.lock.yml`. Run `gh copilot-curate update` to
+refresh curated skills; the existing weekly workflow also refreshes them.
+Repository-specific instructions and the `behavior-preserving-refactor` skill
+continue to apply.
+
+The MSBuild and local-SDK siblings satisfy the expert skill's build and SDK
+routing assumptions. The existing `dotnet-msbuild` specialists remain available
+as alternative entry points; one task does not require both workflows.
+
+The `dotnet-test` plugin, including the
+[`grade-tests` skill](./.agents/skills/grade-tests/SKILL.md), tracks the pinned
+upstream revision in the curator manifest. TestFx-specific testing guidance
+outside the selected paths remains separately maintained. Preserve that
+ownership split when adopting additional upstream test skills.
+
+Copilot CLI uses [`.github/lsp.json`](./.github/lsp.json) for C# code intelligence.
+This configuration is adapted from the upstream
+[Roslyn LSP declaration](https://github.com/dotnet/skills/blob/3d38ac343faf65054f7e8d45ca06925273e867e2/plugins/dotnet/lsp.json):
+it uses `dotnet dnx`, omits the plugin-only working directory so the server runs
+in the current checkout, and sets the CLI's initialization timeout to two minutes.
+It uses plain stdio rather than daemon mode so the CLI owns the server's lifetime
+and the server can shut down cleanly with its session.
+The curator does not import LSP declarations, so this configuration is maintained
+separately from the managed skill files.
+
+First bootstrap the pinned SDK with the repository build scripts. Start Copilot
+CLI from the repository root with that SDK's directory on `PATH` (`.dotnet` by
+default, or the matching `DOTNET_INSTALL_DIR`). The launcher requires .NET 10 or
+later and downloads `roslyn-language-server` on first use, so it also needs access
+to the package feed. No global tool installation or user-level LSP settings are
+required. The language-server package is pinned to `5.13.0-1.26509.1`; change
+that version deliberately and repeat startup, navigation, and shutdown checks
+before updating the pin.
+
+In an existing Copilot CLI session, run `/skills reload` and `/lsp reload`, then
+use `/lsp test csharp` to check server startup. Other hosts may discover the skills
+but do not necessarily consume Copilot CLI's LSP configuration.
 
 ## Agentic Workflows
 

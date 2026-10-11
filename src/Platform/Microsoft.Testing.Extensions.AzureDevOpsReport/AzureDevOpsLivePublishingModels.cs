@@ -124,9 +124,31 @@ internal sealed record AzureDevOpsTestCaseResult(
     [JsonPropertyName("resultGroupType")]
     public string? ResultGroupType { get; init; }
 
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this result.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
+
     /// <summary>Gets the individual attempts of this test, oldest first.</summary>
     [JsonPropertyName("subResults")]
     public IReadOnlyList<AzureDevOpsTestSubResult>? SubResults { get; init; }
+}
+
+internal sealed class AzureDevOpsCustomTestField
+{
+    public AzureDevOpsCustomTestField(string fieldName, object value)
+    {
+        FieldName = fieldName;
+        Value = value;
+    }
+
+    [JsonPropertyName("fieldName")]
+    public string FieldName { get; }
+
+    [JsonPropertyName("value")]
+    public object Value { get; }
 }
 
 /// <summary>
@@ -146,7 +168,16 @@ internal sealed record AzureDevOpsTestSubResult(
     [property: JsonPropertyName("errorMessage")] string? ErrorMessage,
     [property: JsonPropertyName("stackTrace")] string? StackTrace,
     [property: JsonPropertyName("startedDate")] DateTimeOffset? StartedDate,
-    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate);
+    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
+{
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this attempt. Retry entries include the zero-based
+    /// <c>AttemptId</c> field.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
+}
 
 /// <summary>A test case result bundled with optional attachments to upload after the result is published.</summary>
 internal sealed record AzureDevOpsTestCaseResultWithAttachments(

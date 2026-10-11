@@ -37,11 +37,6 @@ public sealed partial class PropertyBag
     {
         _ = properties ?? throw new ArgumentNullException(nameof(properties));
 
-        if (properties.Length == 0)
-        {
-            return;
-        }
-
         for (int i = 0; i < properties.Length; i++)
         {
             if (properties[i] is TestNodeStateProperty testNodeStateProperty)

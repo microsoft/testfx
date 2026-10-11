@@ -67,9 +67,7 @@ internal static class StackTraceHelper
         if (hasLocation)
         {
             // get the exact info from stack frame.
-            Group code = match.Groups["code"];
-            Group codeWithoutLocation = match.Groups["code1"];
-            place = code.Success ? code.Value : codeWithoutLocation.Value;
+            place = match.Groups["code"].Value;
 
             file = match.Groups["file"].Value;
             _ = int.TryParse(match.Groups["line"].Value, out line);

@@ -1,35 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>WinUIMtpPackagedApp</RootNamespace>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <Platform>x64</Platform>
     <Platforms>x64;x86;ARM64</Platforms>
-    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">x64</PlatformTarget>
-    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'">ARM64</PlatformTarget>
-    <PlatformTarget Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">x86</PlatformTarget>
-    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">win-x64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'">win-arm64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">win-x86</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
-    <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'AMD64'">win-x64.pubxml</PublishProfile>
-    <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'ARM64'">win-arm64.pubxml</PublishProfile>
-    <PublishProfile Condition="'$(Platform)' == 'AnyCPU' and '$(PROCESSOR_ARCHITECTURE)' == 'x86'">win-x86.pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <WinUIDSKReferences>false</WinUIDSKReferences>
+    <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
-    <IsTestProject>true</IsTestProject>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <GenerateTestingPlatformEntryPoint Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateTestingPlatformEntryPoint>
-    <DefineConstants Condition=" '$(EnableMSTestRunner)' == 'true' ">$(DefineConstants);MSTEST_RUNNER</DefineConstants>
+    <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
+    <EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>
+    <EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>
+    <EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,19 +48,8 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(VSTestVersion)" Condition=" '$(EnableMSTestRunner)' != 'true' " />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
-    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
-    <!--
-      Launch the packaged WinUI test host through Microsoft.Testing.Platform's ITestHostLauncher
-      extension point: the layout is registered with the OS and activated by Application User Model ID,
-      which is the only way a packaged (MSIX) app can be started. Referencing the package is enough: its
-      MSBuild props register the launcher through the SelfRegisteredExtensions that this app already
-      calls in UnitTestApp.OnLaunched (do NOT also call AddPackagedAppDeployment() explicitly, as only
-      one test host launcher may be registered). MTP-only.
-    -->
-    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$(MicrosoftTestingExtensionsPackagedAppVersion)" Condition=" '$(EnableMSTestRunner)' == 'true' " />
   </ItemGroup>
 
   <!--

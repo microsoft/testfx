@@ -38,9 +38,8 @@ public static class PackagedAppExtensions
     /// windowsApp/UWP hosts restore launch activation arguments with
     /// <see cref="GetTestApplicationArguments(string)"/>. The launcher also contributes the selected
     /// application's exact package SID to the controller connection through
-    /// <see cref="ITestHostControllerConnectionAuthorizer"/>. These are communication primitives; the
-    /// SDK/platform startup path still routes true UWP/AppContainer test projects to VSTest rather than
-    /// starting them as MTP test hosts.
+    /// <see cref="ITestHostControllerConnectionAuthorizer"/>. MSTest.Sdk uses these primitives to start
+    /// modern UWP and AppContainer projects as MTP test hosts through its app-model controller.
     /// </summary>
     /// <remarks>
     /// The launcher only enables itself when the test application is a packaged layout, so calling this
@@ -51,6 +50,24 @@ public static class PackagedAppExtensions
     /// </remarks>
     /// <param name="builder">The test application builder.</param>
     public static void AddPackagedAppDeployment(this ITestApplicationBuilder builder)
+        => AddPackagedAppDeployment(builder, Environment.GetCommandLineArgs());
+
+    internal static void AddPackagedAppDeployment(
+        ITestApplicationBuilder builder,
+        IReadOnlyList<string> processArguments)
+        => AddPackagedAppDeployment(
+            builder,
+            processArguments,
+            PackagedAppConnectBackReader.TryApplyConnectBackEnvironment,
+            PackagedAppConnectBackHandshake.TryGetHandshakeId,
+            static () => new PackagedAppTestHostLauncher());
+
+    private static void AddPackagedAppDeployment(
+        ITestApplicationBuilder builder,
+        IReadOnlyList<string> processArguments,
+        Action<IReadOnlyList<string>> applyConnectBackEnvironment,
+        Func<IReadOnlyList<string>, string?> getHandshakeId,
+        Func<ITestHostLauncher> createLauncher)
     {
         _ = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
@@ -61,8 +78,16 @@ public static class PackagedAppExtensions
         // the controller, for non-packaged layouts, and when there is no handshake to consume. Note that
         // environment consumed strictly earlier during CreateBuilderAsync (culture, config discovery) is
         // not reproduced for the packaged path; only the platform connect-back variables are.
-        PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(Environment.GetCommandLineArgs());
+        applyConnectBackEnvironment(processArguments);
 
-        builder.TestHostControllers.AddTestHostLauncher(_ => new PackagedAppTestHostLauncher());
+        // A host activated by this launcher is already the target test process. Registering the launcher
+        // again would make controller-host and retry children recursively activate another copy of
+        // themselves instead of connecting to the controller or retry pipe that launched them.
+        if (getHandshakeId(processArguments) is not null)
+        {
+            return;
+        }
+
+        builder.TestHostControllers.AddTestHostLauncher(_ => createLauncher());
     }
 }

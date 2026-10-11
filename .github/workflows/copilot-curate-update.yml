@@ -1,7 +1,8 @@
 name: Update curated Copilot skills/agents
 
 # Onboards microsoft/testfx for automatic refresh of gh-copilot-curate managed
-# plugins (dotnet/skills: dotnet-test + dotnet-msbuild). Runs weekly, re-resolves
+# plugins (dotnet/skills: dotnet-test + dotnet-msbuild + selected dotnet skills).
+# Runs weekly, re-resolves
 # the refs pinned in .copilot/curate/manifest.yml, re-installs the skills/agents
 # under .agents/skills/ and .github/agents/, and opens a PR if anything changed.
 #

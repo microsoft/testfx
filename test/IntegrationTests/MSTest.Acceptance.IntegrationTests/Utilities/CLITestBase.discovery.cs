@@ -201,7 +201,7 @@ public abstract partial class CLITestBase
         public ImmutableArray<TestResult> GetFlattenedTestResults()
         {
             var allTestResults = _testResults.SelectMany(i => i.Value).ToImmutableArray();
-            CollectionAssert.AllItemsAreNotNull(allTestResults, "All test results should be non-null.");
+            Assert.AreAllNotNull(allTestResults, "All test results should be non-null.");
 
             return allTestResults;
         }

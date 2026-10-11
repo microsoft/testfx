@@ -32,6 +32,8 @@ internal sealed partial class AppInsightsProvider :
     // Note: We're currently using the same environment variable as dotnet CLI.
     public static readonly string SessionIdEnvVar = "TESTINGPLATFORM_APPINSIGHTS_SESSIONID";
 
+    private static bool ContinueOnCapturedContext => false;
+
     // Allows us to correlate events produced from the same process.
     // Not calling this ProcessId, because it has a different meaning.
     private static readonly string CurrentReporterId = Guid.NewGuid().ToString();
@@ -103,18 +105,7 @@ internal sealed partial class AppInsightsProvider :
         _telemetryClientFactory = telemetryClientFactory;
 
 #if NETCOREAPP
-        _payloads = Channel.CreateUnbounded<(string EventName, IDictionary<string, object> ParamsMap)>(new UnboundedChannelOptions
-        {
-            // We process only 1 data at a time
-            SingleReader = true,
-
-            // We don't know how many threads will call the Log method
-            SingleWriter = false,
-
-            // We want to unlink the caller from the consumer
-            AllowSynchronousContinuations = false,
-        });
-
+        _payloads = Channel.CreateUnbounded<(string EventName, IDictionary<string, object> ParamsMap)>(CreatePayloadChannelOptions());
 #else
         _payloads = new SingleConsumerUnboundedChannel<(string EventName, IDictionary<string, object> ParamsMap)>();
 #endif
@@ -124,14 +115,36 @@ internal sealed partial class AppInsightsProvider :
         // _telemetryTask.Wait(...) would throw PlatformNotSupportedException. Telemetry requires a
         // background sender, so skip the loop entirely there and keep Dispose non-blocking by leaving
         // the task completed. LogEventAsync short-circuits in this mode, so no events are queued.
-        _telemetryTask = RuntimeFeatureHelper.IsMultiThreaded
-#if NETCOREAPP
-            ? task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken)
-#else
-            ? task.RunLongRunning(IngestLoopAsync, "AppInsights telemetry ingest", _testApplicationCancellationTokenSource.CancellationToken)
-#endif
-            : Task.CompletedTask;
+        _telemetryTask = StartTelemetryTaskAsync(
+            RuntimeFeatureHelper.IsMultiThreaded,
+            task,
+            IngestLoopAsync,
+            _testApplicationCancellationTokenSource.CancellationToken);
         _logger = loggerFactory.CreateLogger<AppInsightsProvider>();
+    }
+
+#if NETCOREAPP
+    private static UnboundedChannelOptions CreatePayloadChannelOptions()
+        => new()
+        {
+            SingleReader = true,
+            SingleWriter = false,
+            AllowSynchronousContinuations = false,
+        };
+#endif
+
+    private static Task StartTelemetryTaskAsync(bool isMultiThreaded, ITask task, Func<Task> ingestLoop, CancellationToken cancellationToken)
+    {
+        if (!isMultiThreaded)
+        {
+            return Task.CompletedTask;
+        }
+
+#if NETCOREAPP
+        return task.Run(ingestLoop, cancellationToken);
+#else
+        return task.RunLongRunning(ingestLoop, "AppInsights telemetry ingest", cancellationToken);
+#endif
     }
 
     // Start ingesting events, initializing the telemetry client only when there is data to send.
@@ -156,7 +169,7 @@ internal sealed partial class AppInsightsProvider :
         try
         {
 #if NETCOREAPP
-            while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
+            while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(ContinueOnCapturedContext))
 #else
 #pragma warning disable VSTHRD103 // The consumer runs on a dedicated thread; synchronous waiting prevents thread-pool starvation.
             while (_payloads.WaitToRead())
@@ -171,14 +184,14 @@ internal sealed partial class AppInsightsProvider :
                     }
                     catch (Exception e)
                     {
-                        await _logger.LogErrorAsync("Failed to initialize telemetry client", e).ConfigureAwait(false);
+                        await _logger.LogErrorAsync("Failed to initialize telemetry client", e).ConfigureAwait(ContinueOnCapturedContext);
                         return;
                     }
                 }
 
 #if NETCOREAPP
                 {
-                    (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync().ConfigureAwait(false);
+                    (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync().ConfigureAwait(ContinueOnCapturedContext);
 #else
                 while (_payloads.TryRead(out (string EventName, IDictionary<string, object> ParamsMap) payload))
                 {
@@ -219,8 +232,7 @@ internal sealed partial class AppInsightsProvider :
                             // Properties:
 #if DEBUG
                             case string value:
-                                AssertHashed(pair.Key, value);
-                                properties.Add(pair.Key, value);
+                                properties.Add(pair.Key, AssertHashed(pair.Key, value));
                                 break;
 #endif
                             case bool value:
@@ -246,7 +258,7 @@ internal sealed partial class AppInsightsProvider :
                             builder.AppendLine(CultureInfo.InvariantCulture, $"    {kvp.Key}: {kvp.Value.ToString("f", CultureInfo.InvariantCulture)}");
                         }
 
-                        await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(false);
+                        await _logger.LogTraceAsync(builder.ToString()).ConfigureAwait(ContinueOnCapturedContext);
                     }
 
                     try
@@ -260,7 +272,7 @@ internal sealed partial class AppInsightsProvider :
                         // We could do better back-pressure.
                         if (_logger.IsEnabled(LogLevel.Error) && (!lastLoggedError.HasValue || (_clock.UtcNow - lastLoggedError.Value).TotalSeconds > 3))
                         {
-                            await _logger.LogErrorAsync("Error during telemetry report.", ex).ConfigureAwait(false);
+                            await _logger.LogErrorAsync("Error during telemetry report.", ex).ConfigureAwait(ContinueOnCapturedContext);
                             lastLoggedError = _clock.UtcNow;
                         }
                     }
@@ -286,7 +298,7 @@ internal sealed partial class AppInsightsProvider :
             {
                 if (_logger.IsEnabled(LogLevel.Error))
                 {
-                    await _logger.LogErrorAsync("Error during telemetry flush.", ex).ConfigureAwait(false);
+                    await _logger.LogErrorAsync("Error during telemetry flush.", ex).ConfigureAwait(ContinueOnCapturedContext);
                 }
             }
         }
@@ -299,26 +311,32 @@ internal sealed partial class AppInsightsProvider :
         (value.UtcTicks - 621355968000000000L) * 100;
 
 #if DEBUG
-    private static void AssertHashed(string key, string value)
+    private static string AssertHashed(string key, string value)
     {
         if (value is TelemetryProperties.True or TelemetryProperties.False)
         {
-            return;
+            return value;
         }
 
-        // Full qualification of Regex to avoid adding conditional 'using' on top of the file.
-        if (value.Length == 64 && GetValidHashPattern().IsMatch(value))
+        if (IsValidHash(value))
         {
-            return;
+            return value;
         }
 
-        if (KnownUnhashedProperties.Contains(key))
+        if (IsKnownUnhashedProperty(key))
         {
-            return;
+            return value;
         }
 
         RoslynDebug.Assert(false, $"Telemetry entry '{key}' contains an unhashed string value '{value}'. Strings need to be hashed using {nameof(Sha256Hasher)}.{nameof(Sha256Hasher.HashWithNormalizedCasing)}(), or white-listed.");
+        return value;
     }
+
+    private static bool IsValidHash(string value)
+        => value.Length == 64 && GetValidHashPattern().IsMatch(value);
+
+    private static bool IsKnownUnhashedProperty(string key)
+        => KnownUnhashedProperties.Contains(key);
 
 #if NET7_0_OR_GREATER
     [GeneratedRegex("[a-f0-9]{64}")]
@@ -348,7 +366,7 @@ internal sealed partial class AppInsightsProvider :
         }
 
 #if NETCOREAPP
-        await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(false);
+        await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(ContinueOnCapturedContext);
 #else
         if (cancellationToken.IsCancellationRequested)
         {
@@ -385,20 +403,29 @@ internal sealed partial class AppInsightsProvider :
     public async ValueTask DisposeAsync()
     {
         _payloads.Writer.Complete();
-        if (!_isDisposed)
+        if (_isDisposed)
         {
-            int flushForSeconds = 3;
-            try
-            {
-                await _telemetryTask.TimeoutAfterAsync(TimeSpan.FromSeconds(flushForSeconds)).ConfigureAwait(false);
-            }
-            catch (TimeoutException)
-            {
-                await _flushTimeoutOrStop.CancelAsync().ConfigureAwait(false);
-                await _logger.LogWarningAsync($"Telemetry task didn't flush after '{flushForSeconds}', some payload could be lost").ConfigureAwait(false);
-            }
+            return;
+        }
 
-            _isDisposed = true;
+        await WaitForTelemetryTaskAsync(_telemetryTask, _flushTimeoutOrStop, _logger, flushForSeconds: 3).ConfigureAwait(ContinueOnCapturedContext);
+        _isDisposed = true;
+    }
+
+    private static async Task WaitForTelemetryTaskAsync(
+        Task telemetryTask,
+        CancellationTokenSource flushTimeoutOrStop,
+        ILogger logger,
+        int flushForSeconds)
+    {
+        try
+        {
+            await telemetryTask.TimeoutAfterAsync(TimeSpan.FromSeconds(flushForSeconds)).ConfigureAwait(ContinueOnCapturedContext);
+        }
+        catch (TimeoutException)
+        {
+            await flushTimeoutOrStop.CancelAsync().ConfigureAwait(ContinueOnCapturedContext);
+            await logger.LogWarningAsync($"Telemetry task didn't flush after '{flushForSeconds}', some payload could be lost").ConfigureAwait(ContinueOnCapturedContext);
         }
     }
 #endif

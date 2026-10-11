@@ -77,7 +77,7 @@ internal static class AppContainerSecurityIdentifier
         }
 
         var builder = new StringBuilder(AppContainerSidPrefix);
-        for (int i = 0; i < SubAuthorityCount; i++)
+        foreach (int i in Enumerable.Range(0, SubAuthorityCount))
         {
             uint subAuthority = BinaryPrimitives.ReadUInt32LittleEndian(hash.AsSpan(i * sizeof(uint), sizeof(uint)));
             builder.Append(CultureInfo.InvariantCulture, $"-{subAuthority}");

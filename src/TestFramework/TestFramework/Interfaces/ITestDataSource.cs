@@ -28,7 +28,7 @@ public interface ITestDataSource
     /// single-element <see cref="object"/> array whose only item is a <see cref="TestDataRow{T}"/> instance, for
     /// example <c>new object[] { new TestDataRow&lt;(int, int, int)&gt;((1, 2, 3)) { DisplayName = "my row" } }</c>.
     /// When MSTest sees a <see cref="TestDataRow{T}"/>, it unwraps its <see cref="TestDataRow{T}.Value"/> to obtain
-    /// the actual test method arguments and applies the row's <see cref="TestDataRow{T}.DisplayName"/>,
+    /// the actual test method arguments and applies the row's <see cref="TestDataRow{T}.DisplayName"/>, <see cref="TestDataRow{T}.ArgumentsDisplayName"/>,
     /// <see cref="TestDataRow{T}.IgnoreMessage"/>, and <see cref="TestDataRow{T}.TestCategories"/>.
     /// </para>
     /// <para>

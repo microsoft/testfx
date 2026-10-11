@@ -5,6 +5,7 @@
 //       As such, we have two separate implementations for the serialization code.
 #if !NETCOREAPP
 using Jsonite;
+
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -99,7 +100,6 @@ internal static partial class SerializerUtilities
 #else
                         (traits ??= []).Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
 #endif
-                        continue;
                     }
 
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -266,8 +266,6 @@ internal static partial class SerializerUtilities
                             default:
                                 throw new NotSupportedException($"Unsupported TestNodeStateProperty '{testNodeStateProperty.GetType()}'");
                         }
-
-                        continue;
                     }
 
                     if (property is TimingProperty timingProperty)

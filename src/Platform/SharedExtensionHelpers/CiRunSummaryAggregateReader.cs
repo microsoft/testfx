@@ -16,6 +16,7 @@ internal static partial class CiRunSummaryAggregation
     // extension versions can still aggregate each other's fragments in mixed-version test runs.
     private const int SchemaVersion = 1;
     private const int MaxHistoryTests = 10_000;
+    private const int MaxDependencies = 1_000;
 
     public static CiRunSummaryAggregate ReadAndAggregate(
         IReadOnlyList<InputArtifact> inputs,
@@ -24,7 +25,6 @@ internal static partial class CiRunSummaryAggregation
     {
         var modules = new List<CiRunSummaryModule>(inputs.Count);
         var identities = new HashSet<string>(StringComparer.Ordinal);
-        int remainingHistoryTests = MaxHistoryTests;
         foreach (InputArtifact input in inputs)
         {
             CiRunSummaryFragment? fragment;
@@ -42,15 +42,6 @@ internal static partial class CiRunSummaryAggregation
             }
 
             ValidateModule(fragment.Module, input, context.Mode);
-            if (fragment.Module.HistoryTests.Length > remainingHistoryTests)
-            {
-                fragment.Module.HistoryTests =
-                [
-                    .. fragment.Module.HistoryTests.Take(remainingHistoryTests),
-                ];
-            }
-
-            remainingHistoryTests -= fragment.Module.HistoryTests.Length;
             string identity = GetModuleIdentity(fragment.Module);
             if (!identities.Add(identity))
             {
@@ -61,6 +52,7 @@ internal static partial class CiRunSummaryAggregation
         }
 
         modules.Sort(CompareModules);
+        ApplyAggregateBounds(modules);
 
         long observedPassed = 0;
         long observedFailed = 0;
@@ -124,6 +116,8 @@ internal static partial class CiRunSummaryAggregation
             || module.SlowestTests is null
             || module.HistoryTests is null
             || module.HistoryTests.Length > MaxHistoryTests
+            || module.Dependencies is null
+            || module.Dependencies.Length > MaxDependencies
             || module.TopFailingClasses is null
             || module.Coverage is null
             || module.Coverage.Metrics is null
@@ -132,11 +126,26 @@ internal static partial class CiRunSummaryAggregation
             || module.FlakyTests.Any(test => !IsValidTest(test))
             || module.SlowestTests.Any(test => !IsValidTest(test))
             || module.HistoryTests.Any(static test =>
-                RoslynString.IsNullOrWhiteSpace(test.TestId)
+                test is null
+                || RoslynString.IsNullOrWhiteSpace(test.TestId)
                 || RoslynString.IsNullOrWhiteSpace(test.DisplayName)
                 || RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
                 || test.Outcome is not ("passed" or "failed" or "skipped")
-                || test.DurationTicks < 0)
+                || test.DurationTicks < 0
+                || test.HistoricalPassCount < 0
+                || test.HistoricalFailCount < 0
+                || test.HistoryWindowInDays is < 0 or > 90
+                || test.DurationSampleCount < 0
+                || double.IsNaN(test.P95DurationMilliseconds)
+                || double.IsNaN(test.P99DurationMilliseconds)
+                || double.IsInfinity(test.P95DurationMilliseconds)
+                || double.IsInfinity(test.P99DurationMilliseconds)
+                || test.P95DurationMilliseconds < 0
+                || test.P99DurationMilliseconds < test.P95DurationMilliseconds)
+            || module.Dependencies.Any(static dependency =>
+                dependency is null
+                || RoslynString.IsNullOrWhiteSpace(dependency.DependentFullyQualifiedName)
+                || RoslynString.IsNullOrWhiteSpace(dependency.Prerequisite))
             || module.TopFailingClasses.Any(item => RoslynString.IsNullOrWhiteSpace(item.ClassName) || item.FailureCount <= 0)
             || module.Coverage.Metrics.Any(metric =>
                 RoslynString.IsNullOrWhiteSpace(metric.ProducerId)
@@ -149,7 +158,9 @@ internal static partial class CiRunSummaryAggregation
                 || threshold.ActualPercentage < 0
                 || threshold.ActualPercentage > 100
                 || threshold.RequiredPercentage < 0
-                || threshold.RequiredPercentage > 100))
+                || threshold.RequiredPercentage > 100
+                || !IsValidExactPercentage(threshold.ExactActualPercentage, threshold.ActualPercentage)
+                || !IsValidExactPercentage(threshold.ExactRequiredPercentage, threshold.RequiredPercentage)))
         {
             throw new FormatException($"Invalid CI summary module in '{input.Path}'.");
         }
@@ -182,11 +193,44 @@ internal static partial class CiRunSummaryAggregation
         }
     }
 
+    private static void ApplyAggregateBounds(IReadOnlyList<CiRunSummaryModule> modules)
+    {
+        int remainingHistoryTests = MaxHistoryTests;
+        int remainingDependencies = MaxDependencies;
+        foreach (CiRunSummaryModule module in modules)
+        {
+            if (module.HistoryTests.Length > remainingHistoryTests)
+            {
+                module.HistoryTests =
+                [
+                    .. module.HistoryTests.Take(remainingHistoryTests),
+                ];
+            }
+
+            remainingHistoryTests -= module.HistoryTests.Length;
+            if (module.Dependencies.Length > remainingDependencies)
+            {
+                module.Dependencies =
+                [
+                    .. module.Dependencies.Take(remainingDependencies),
+                ];
+            }
+
+            remainingDependencies -= module.Dependencies.Length;
+        }
+    }
+
     private static bool IsValidTest(CiRunSummaryTest test)
         => !RoslynString.IsNullOrWhiteSpace(test.DisplayName)
             && !RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
             && test.DurationTicks >= 0
             && test.LineNumber is null or >= 0;
+
+    private static bool IsValidExactPercentage(string? value, double percentage)
+        => value is null
+            || (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal exact)
+                && exact is >= 0 and <= 100
+                && (double)exact == percentage);
 
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {

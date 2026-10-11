@@ -2,14 +2,20 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reflection;
 
 using Microsoft.Testing.Extensions.OpenTelemetry;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 
 using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -18,23 +24,31 @@ using EnvironmentConfiguration = Microsoft.Testing.Extensions.OpenTelemetryProvi
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 /// <summary>
-/// Direct tests for the two turnkey OpenTelemetry helpers that shipped as stable API in this release —
-/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformResource(ResourceBuilder)"/> and
+/// Direct tests for the OpenTelemetry registration and configuration helpers —
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformDiagnostics(ITestApplicationBuilder)"/>,
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformResource(ResourceBuilder)"/>,
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(ResourceBuilder)"/>,
+/// <see cref="OpenTelemetryProviderExtensions.AddTestingPlatformCIResource(ResourceBuilder)"/> and
 /// <see cref="OpenTelemetryProviderExtensions.AddOpenTelemetryProviderFromEnvironment(ITestApplicationBuilder, System.Action{TracerProviderBuilder}?, System.Action{MeterProviderBuilder}?)"/> —
-/// plus an end-to-end trace test that runs the real OpenTelemetry SDK pipeline.
+/// including raw-listener and real OpenTelemetry SDK coverage.
 /// </summary>
 /// <remarks>
-/// The method that mutates real environment variables carries a method-level
+/// Methods that mutate real environment variables carry a method-level
 /// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> (the same pattern
 /// used by <c>AzureFoundryChatClientProviderTests</c> and <c>TestingPlatformResourceDetectorTests</c> in this
-/// project): it still serializes against every other test in the assembly that mutates environment variables, but
-/// allows this test to run in parallel with tests that never touch environment variables at all. The end-to-end
-/// test still carries <see cref="DoNotParallelizeAttribute"/> because it stands up a real
-/// <see cref="TracerProvider"/> against the shared platform <c>ActivitySource</c>, an unbounded process-global
-/// resource that a <see cref="ResourceLockAttribute"/> key cannot narrow. The remaining methods use a pure
-/// in-memory environment fake (or only read process state) and stay in the parallel set. Captured spans in the
-/// end-to-end test are additionally filtered by a per-test unique name prefix so an ambient provider in the test
-/// host cannot pollute the assertions.
+/// project): they still serialize against every other test in the assembly that mutates environment variables, but
+/// can run in parallel with tests that never touch environment variables at all. The two raw-listener methods carry
+/// a method-level write <see cref="ResourceLockAttribute"/> on
+/// <see cref="OpenTelemetryPlatformService.ActivitySourceName"/> instead:
+/// <see cref="ActivitySource.AddActivityListener(ActivityListener)"/> registers an unfiltered listener against the
+/// process-wide listener registry for that source name. Tests that only produce or observe their own filtered
+/// activities carry matching read locks, so they remain mutually parallel while serializing against the raw
+/// listeners. Tests that stand up a real <see cref="TracerProvider"/> or <see cref="MeterProvider"/> against the
+/// shared platform source or meter carry <see cref="DoNotParallelizeAttribute"/> because the SDK-level subscription
+/// is a broader and unbounded process-global registration that a single <see cref="ResourceLockAttribute"/> key
+/// cannot narrow. The remaining methods use a pure in-memory environment fake (or only read process state) and stay
+/// in the parallel set. Captured spans are additionally filtered by a per-test unique name prefix so an ambient
+/// provider in the test host cannot pollute the assertions.
 /// </remarks>
 [TestClass]
 public sealed class OpenTelemetryProviderExtensionsTests
@@ -45,32 +59,251 @@ public sealed class OpenTelemetryProviderExtensionsTests
         "OTEL_TRACES_EXPORTER",
         "OTEL_METRICS_EXPORTER",
         "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_SERVICE_NAME",
+        "GITHUB_ACTIONS", "GITHUB_WORKFLOW", "GITHUB_RUN_ID", "GITHUB_JOB", "GITHUB_REF_NAME", "GITHUB_SHA", "GITHUB_REPOSITORY",
+        "TF_BUILD", "BUILD_DEFINITIONNAME", "BUILD_BUILDID", "SYSTEM_JOBID", "BUILD_SOURCEBRANCHNAME", "BUILD_SOURCEVERSION", "BUILD_REPOSITORY_URI",
+        "GITLAB_CI", "CI_PIPELINE_NAME", "CI_PIPELINE_ID", "CI_JOB_ID", "CI_COMMIT_REF_NAME", "CI_COMMIT_SHA", "CI_REPOSITORY_URL",
+        "JENKINS_URL", "JOB_NAME", "BUILD_NUMBER", "GIT_BRANCH", "GIT_COMMIT", "GIT_URL",
     ];
+
+    [TestMethod]
+    public void AddTestingPlatformDiagnostics_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddTestingPlatformDiagnostics());
 
     [TestMethod]
     public void AddTestingPlatformResource_WithNullBuilder_Throws()
         => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformResource(null!));
 
     [TestMethod]
-    public void AddTestingPlatformResource_AttachesPlatformAttributesToTheBuiltResource()
+    public void AddTestingPlatformTestResource_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformTestResource(null!));
+
+    [TestMethod]
+    public void AddTestingPlatformCIResource_WithNullBuilder_Throws()
+        => Assert.ThrowsExactly<ArgumentNullException>(() => OpenTelemetryProviderExtensions.AddTestingPlatformCIResource(null!));
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void AddTestingPlatformResource_PreservesAggregateResourceBehavior()
+        => WithEnvironment(
+            new()
+            {
+                ["TF_BUILD"] = "true",
+                ["BUILD_DEFINITIONNAME"] = "testfx-ci",
+                ["BUILD_BUILDID"] = "7",
+                ["SYSTEM_JOBID"] = "job-guid",
+                ["BUILD_SOURCEBRANCHNAME"] = "main",
+                ["BUILD_SOURCEVERSION"] = "deadbeef",
+                ["BUILD_REPOSITORY_URI"] = "https://user:token@dev.azure.com/org/_git/repo",
+            },
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformResource().Build());
+
+                Assert.IsTrue(attributes.TryGetValue("service.name", out object? serviceName));
+                Assert.IsFalse(string.IsNullOrWhiteSpace(serviceName as string));
+                Assert.IsTrue(attributes.TryGetValue("service.instance.id", out object? serviceInstanceId));
+                Assert.IsFalse(string.IsNullOrWhiteSpace(serviceInstanceId as string));
+                Assert.AreEqual(Environment.MachineName, attributes["host.name"]);
+                Assert.AreEqual(".NET", attributes["process.runtime.name"]);
+                Assert.AreEqual(Assembly.GetEntryAssembly()!.GetName().Name, attributes["test.assembly.name"]);
+                Assert.AreEqual("azure_pipelines", attributes["cicd.provider.name"]);
+                Assert.AreEqual("testfx-ci", attributes["cicd.pipeline.name"]);
+                Assert.AreEqual("deadbeef", attributes["vcs.ref.head.revision"]);
+                Assert.AreEqual("https://dev.azure.com/org/_git/repo", attributes["vcs.repository.url.full"]);
+            });
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void AddTestingPlatformTestResource_AddsOnlyTestSpecificAttributes()
+        => WithEnvironment(
+            [],
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformTestResource().Build());
+
+                Assert.HasCount(1, attributes);
+                Assert.AreEqual(Assembly.GetEntryAssembly()!.GetName().Name, attributes["test.assembly.name"]);
+                AssertDoesNotContainPrefixes(attributes, "service.", "host.", "os.", "process.", "cicd.", "vcs.");
+            });
+
+    [TestMethod]
+    [DataRow("github_actions")]
+    [DataRow("azure_pipelines")]
+    [DataRow("gitlab")]
+    [DataRow("jenkins")]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void AddTestingPlatformCIResource_EmitsExistingProviderMappingsWithoutApplicationOrTestIdentity(string provider)
     {
-        Resource resource = ResourceBuilder.CreateEmpty().AddTestingPlatformResource().Build();
-
-        Dictionary<string, object> attributes = [];
-        foreach (KeyValuePair<string, object> attribute in resource.Attributes)
+        Dictionary<string, string?> environment = provider switch
         {
-            attributes[attribute.Key] = attribute.Value;
-        }
+            "github_actions" => new()
+            {
+                ["GITHUB_ACTIONS"] = "true",
+                ["GITHUB_WORKFLOW"] = "CI",
+                ["GITHUB_RUN_ID"] = "42",
+                ["GITHUB_JOB"] = "build",
+                ["GITHUB_REF_NAME"] = "main",
+                ["GITHUB_SHA"] = "abc123",
+                ["GITHUB_REPOSITORY"] = "microsoft/testfx",
+            },
+            "azure_pipelines" => new()
+            {
+                ["TF_BUILD"] = "true",
+                ["BUILD_DEFINITIONNAME"] = "testfx-ci",
+                ["BUILD_BUILDID"] = "7",
+                ["SYSTEM_JOBID"] = "job-guid",
+                ["BUILD_SOURCEBRANCHNAME"] = "main",
+                ["BUILD_SOURCEVERSION"] = "deadbeef",
+                ["BUILD_REPOSITORY_URI"] = "https://user:token@dev.azure.com/org/_git/repo",
+            },
+            "gitlab" => new()
+            {
+                ["GITLAB_CI"] = "true",
+                ["CI_PIPELINE_NAME"] = "pipeline",
+                ["CI_PIPELINE_ID"] = "9",
+                ["CI_JOB_ID"] = "13",
+                ["CI_COMMIT_REF_NAME"] = "feature",
+                ["CI_COMMIT_SHA"] = "cafe",
+                ["CI_REPOSITORY_URL"] = "https://gitlab.example.com/group/project.git",
+            },
+            "jenkins" => new()
+            {
+                ["JENKINS_URL"] = "https://jenkins.example.com/",
+                ["JOB_NAME"] = "nightly",
+                ["BUILD_NUMBER"] = "128",
+                ["GIT_BRANCH"] = "origin/main",
+                ["GIT_COMMIT"] = "1234abcd",
+                ["GIT_URL"] = "https://github.com/microsoft/testfx.git",
+            },
+            _ => throw new InvalidOperationException($"Unknown provider '{provider}'."),
+        };
 
-        Assert.IsTrue(attributes.TryGetValue("service.name", out object? serviceName));
-        Assert.IsFalse(string.IsNullOrWhiteSpace(serviceName as string));
-        Assert.AreEqual(Environment.MachineName, attributes["host.name"]);
-        Assert.AreEqual(".NET", attributes["process.runtime.name"]);
+        WithEnvironment(
+            environment,
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty().AddTestingPlatformCIResource().Build());
+
+                Assert.AreEqual(provider, attributes["cicd.provider.name"]);
+                Assert.IsTrue(attributes.ContainsKey("cicd.pipeline.name"));
+                Assert.IsTrue(attributes.ContainsKey("cicd.pipeline.run.id"));
+                Assert.IsTrue(attributes.ContainsKey("vcs.ref.head.name"));
+                Assert.IsTrue(attributes.ContainsKey("vcs.ref.head.revision"));
+                AssertDoesNotContainPrefixes(attributes, "service.", "host.", "os.", "process.", "test.");
+
+                if (provider == "github_actions")
+                {
+                    Assert.AreEqual("build", attributes["cicd.pipeline.task.name"]);
+                    Assert.AreEqual("microsoft/testfx", attributes["vcs.repository.name"]);
+                }
+                else if (provider == "azure_pipelines")
+                {
+                    Assert.AreEqual("job-guid", attributes["cicd.pipeline.task.run.id"]);
+                    Assert.AreEqual("https://dev.azure.com/org/_git/repo", attributes["vcs.repository.url.full"]);
+                }
+            });
     }
+
+    [TestMethod]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public void FocusedResourceHelpers_PreserveApplicationOwnedIdentity()
+        => WithEnvironment(
+            new()
+            {
+                ["GITHUB_ACTIONS"] = "true",
+                ["GITHUB_WORKFLOW"] = "CI",
+            },
+            () =>
+            {
+                Dictionary<string, object> attributes = GetResourceAttributeMap(
+                    ResourceBuilder.CreateEmpty()
+                        .AddService(
+                            serviceName: "application-service",
+                            serviceVersion: "1.2.3",
+                            serviceInstanceId: "application-instance")
+                        .AddAttributes(
+                        [
+                            new("host.name", "application-host"),
+                            new("os.description", "application-os"),
+                            new("process.pid", 123),
+                        ])
+                        .AddTestingPlatformTestResource()
+                        .AddTestingPlatformCIResource()
+                        .Build());
+
+                Assert.AreEqual("application-service", attributes["service.name"]);
+                Assert.AreEqual("1.2.3", attributes["service.version"]);
+                Assert.AreEqual("application-instance", attributes["service.instance.id"]);
+                Assert.AreEqual("application-host", attributes["host.name"]);
+                Assert.AreEqual("application-os", attributes["os.description"]);
+                Assert.AreEqual(123L, attributes["process.pid"]);
+                Assert.IsTrue(attributes.ContainsKey("test.assembly.name"));
+                Assert.AreEqual("github_actions", attributes["cicd.provider.name"]);
+            });
 
     [TestMethod]
     public void AddOpenTelemetryProviderFromEnvironment_WithNullBuilder_Throws()
         => Assert.ThrowsExactly<ArgumentNullException>(() => ((ITestApplicationBuilder)null!).AddOpenTelemetryProviderFromEnvironment());
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void AddTestingPlatformInstrumentation_ConfiguresDurationHistogramBoundaries()
+    {
+        CapturingMetricExporter exporter = new();
+        using BaseExportingMetricReader reader = new(exporter);
+
+        using (var provider = new OpenTelemetryProvider(
+            withMetrics: metrics => metrics
+                .AddTestingPlatformInstrumentation()
+                .AddReader(reader)))
+        using (var service = new OpenTelemetryPlatformService())
+        {
+            service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(0.25);
+            service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestRunDuration).Record(60);
+        }
+
+        AssertHistogramBounds(
+            exporter,
+            TestingPlatformSemanticConventions.Metrics.TestCaseDuration,
+            [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 300]);
+        AssertHistogramBounds(
+            exporter,
+            TestingPlatformSemanticConventions.Metrics.TestRunDuration,
+            [1, 5, 10, 30, 60, 120, 300, 600, 1800, 3600]);
+    }
+
+    [TestMethod]
+    public void OpenTelemetryProvider_InvokesConfigurationDelegatesAndDisposesBothProviders()
+    {
+        CapturingActivityExporter activityExporter = new([], namePrefix: string.Empty);
+        CapturingMetricExporter metricExporter = new();
+        bool tracingConfigured = false;
+        bool metricsConfigured = false;
+        using SimpleActivityExportProcessor activityProcessor = new(activityExporter);
+        using BaseExportingMetricReader metricReader = new(metricExporter);
+        var provider = new OpenTelemetryProvider(
+            tracing =>
+            {
+                tracingConfigured = true;
+                tracing.AddProcessor(activityProcessor);
+            },
+            metrics =>
+            {
+                metricsConfigured = true;
+                metrics.AddReader(metricReader);
+            });
+
+        provider.Dispose();
+
+        Assert.IsTrue(tracingConfigured);
+        Assert.IsTrue(metricsConfigured);
+        Assert.AreEqual(1, activityExporter.ShutdownCount);
+        Assert.AreEqual(1, metricExporter.ShutdownCount);
+    }
 
     [TestMethod]
     [ResourceLock(WellKnownResources.EnvironmentVariables)]
@@ -88,9 +321,12 @@ public sealed class OpenTelemetryProviderExtensionsTests
 
                 builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => tracingConfigured = true);
 
-                IOpenTelemetryProvider? provider = ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).BuildOTelProvider(new ServiceProvider());
+                var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
+                using IPlatformOpenTelemetryService? service = telemetryManager.BuildOTelService(new ServiceProvider());
+                IOpenTelemetryProvider? provider = telemetryManager.BuildOTelProvider(new ServiceProvider());
                 using (provider)
                 {
+                    Assert.IsNotNull(service);
                     Assert.IsNotNull(provider);
                     Assert.IsTrue(tracingConfigured);
                 }
@@ -99,12 +335,250 @@ public sealed class OpenTelemetryProviderExtensionsTests
                 Environment.SetEnvironmentVariable("OTEL_SDK_DISABLED", "true");
                 disabledBuilder.AddOpenTelemetryProviderFromEnvironment();
 
-                IOpenTelemetryProvider? disabledProvider = ((TelemetryManager)((TestApplicationBuilder)disabledBuilder).Telemetry).BuildOTelProvider(new ServiceProvider());
+                var disabledTelemetryManager = (TelemetryManager)((TestApplicationBuilder)disabledBuilder).Telemetry;
+                using IPlatformOpenTelemetryService? disabledService = disabledTelemetryManager.BuildOTelService(new ServiceProvider());
+                IOpenTelemetryProvider? disabledProvider = disabledTelemetryManager.BuildOTelProvider(new ServiceProvider());
                 using (disabledProvider)
                 {
+                    Assert.IsNull(disabledService);
                     Assert.IsNull(disabledProvider);
                 }
             });
+
+    [TestMethod]
+    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task AddOpenTelemetryProviderFromEnvironment_WithDelegates_InstrumentsBothSignals()
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "none",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                string activityName = $"environment-{Guid.NewGuid():N}";
+                List<Activity> activities = [];
+                CapturingActivityExporter activityExporter = new(activities, activityName);
+                CapturingMetricExporter metricExporter = new();
+                using SimpleActivityExportProcessor activityProcessor = new(activityExporter);
+                using BaseExportingMetricReader metricReader = new(metricExporter);
+                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+
+                builder.AddOpenTelemetryProviderFromEnvironment(
+                    tracing => tracing.AddProcessor(activityProcessor),
+                    metrics => metrics.AddReader(metricReader));
+
+                var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
+                IPlatformOpenTelemetryService? service = telemetryManager.BuildOTelService(new ServiceProvider());
+                IOpenTelemetryProvider? provider = telemetryManager.BuildOTelProvider(new ServiceProvider());
+                Assert.IsNotNull(service);
+                Assert.IsNotNull(provider);
+
+                using (service)
+                using (provider)
+                {
+                    using IPlatformActivity? activity = service.StartActivity(activityName);
+                    Assert.IsNotNull(activity);
+                    service.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.TestCaseDuration).Record(1);
+                }
+
+                Assert.HasCount(1, activities);
+                Assert.AreEqual(activityName, activities[0].OperationName);
+                Assert.IsTrue(metricExporter.Contains(TestingPlatformSemanticConventions.Metrics.TestCaseDuration));
+            });
+
+    [TestMethod]
+    [DoNotParallelize]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public async Task AddOpenTelemetryProviderFromEnvironment_WithOtlpTracing_AddsExporterBeforeDelegate()
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "otlp",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                bool foundOtlpRegistration = false;
+                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync([]);
+                builder.AddOpenTelemetryProviderFromEnvironment(
+                    configureTracing: tracing =>
+                    {
+                        FieldInfo? innerBuilderField = tracing.GetType().GetField(
+                            "innerBuilder",
+                            BindingFlags.Instance | BindingFlags.NonPublic);
+                        Assert.IsNotNull(innerBuilderField);
+                        object? innerBuilder = innerBuilderField.GetValue(tracing);
+                        Assert.IsNotNull(innerBuilder);
+                        PropertyInfo? servicesProperty = innerBuilder.GetType().GetProperty(
+                            "Services",
+                            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        Assert.IsNotNull(servicesProperty);
+                        System.Collections.IEnumerable services = Assert.IsInstanceOfType<System.Collections.IEnumerable>(servicesProperty.GetValue(innerBuilder));
+                        foundOtlpRegistration = services
+                            .Cast<object>()
+                            .Any(service => service.ToString()?.Contains("OtlpExporterOptions", StringComparison.Ordinal) is true);
+                    });
+
+                var telemetryManager = (TelemetryManager)((TestApplicationBuilder)builder).Telemetry;
+                using IOpenTelemetryProvider? provider = telemetryManager.BuildOTelProvider(new ServiceProvider());
+
+                Assert.IsNotNull(provider);
+                Assert.IsTrue(foundOtlpRegistration);
+            });
+
+    [TestMethod]
+    [DataRow("diagnostics-only")]
+    [DataRow("diagnostics-twice")]
+    [DataRow("provider-only")]
+    [DataRow("diagnostics-provider")]
+    [DataRow("provider-diagnostics")]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
+    public async Task DiagnosticsAndProviderRegistration_IsIdempotentAndOrdered(string registrationOrder)
+    {
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+
+        switch (registrationOrder)
+        {
+            case "diagnostics-only":
+                builder.AddTestingPlatformDiagnostics();
+                break;
+
+            case "diagnostics-twice":
+                builder.AddTestingPlatformDiagnostics();
+                builder.AddTestingPlatformDiagnostics();
+                break;
+
+            case "provider-only":
+                builder.AddOpenTelemetryProvider();
+                break;
+
+            case "diagnostics-provider":
+                builder.AddTestingPlatformDiagnostics();
+                builder.AddOpenTelemetryProvider();
+                break;
+
+            case "provider-diagnostics":
+                builder.AddOpenTelemetryProvider();
+                builder.AddTestingPlatformDiagnostics();
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unknown registration order '{registrationOrder}'.");
+        }
+
+        await AssertSingleDiagnosticsRegistrationAsync(builder, expectProvider: registrationOrder.Contains("provider", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName, Mode = ResourceAccessMode.Read)]
+    public async Task DiagnosticsAndEnvironmentProviderRegistration_IsIdempotentAndOrdered(bool diagnosticsFirst)
+        => await WithEnvironmentAsync(
+            new()
+            {
+                ["OTEL_TRACES_EXPORTER"] = "none",
+                ["OTEL_METRICS_EXPORTER"] = "none",
+            },
+            async () =>
+            {
+                ITestApplicationBuilder builder = await CreateBuilderAsync();
+                if (diagnosticsFirst)
+                {
+                    builder.AddTestingPlatformDiagnostics();
+                    builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => { });
+                }
+                else
+                {
+                    builder.AddOpenTelemetryProviderFromEnvironment(configureTracing: _ => { });
+                    builder.AddTestingPlatformDiagnostics();
+                }
+
+                await AssertSingleDiagnosticsRegistrationAsync(builder, expectProvider: true);
+            });
+
+    [TestMethod]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
+    public async Task AddTestingPlatformDiagnostics_RawListenerObservesBuilderActivityWithoutProvider()
+    {
+        List<Activity> stoppedActivities = [];
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == OpenTelemetryPlatformService.ActivitySourceName,
+            Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                lock (stoppedActivities)
+                {
+                    stoppedActivities.Add(activity);
+                }
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+        builder.AddTestingPlatformDiagnostics();
+
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            Assert.IsNotNull(serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>());
+            Assert.IsNull(serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
+            AssertBuilderActivityObserved(stoppedActivities);
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
+
+    [TestMethod]
+    [ResourceLock(OpenTelemetryPlatformService.ActivitySourceName)]
+    public async Task LegacyProviderFactorySideEffect_StillActivatesDiagnostics()
+    {
+        List<Activity> stoppedActivities = [];
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == OpenTelemetryPlatformService.ActivitySourceName,
+            Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                lock (stoppedActivities)
+                {
+                    stoppedActivities.Add(activity);
+                }
+            },
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        ITestApplicationBuilder builder = await CreateBuilderAsync();
+        ((TelemetryManager)((TestApplicationBuilder)builder).Telemetry).AddOpenTelemetryProvider(serviceProvider =>
+        {
+            ((ServiceProvider)serviceProvider).AddService(new OpenTelemetryPlatformService());
+            return new LegacyOpenTelemetryProvider();
+        });
+
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            IPlatformOpenTelemetryService service = serviceProvider.GetRequiredService<IPlatformOpenTelemetryService>();
+            LegacyOpenTelemetryProvider provider = Assert.IsInstanceOfType<LegacyOpenTelemetryProvider>(
+                serviceProvider.GetServiceInternal<IOpenTelemetryProvider>());
+            Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
+            AssertBuilderActivityObserved(stoppedActivities);
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
 
     [TestMethod]
     public void ResolveEnvironmentConfiguration_WhenSdkDisabled_RegistersNothingEvenWithEndpointAndDelegates()
@@ -309,6 +783,78 @@ public sealed class OpenTelemetryProviderExtensionsTests
     private static Func<string, string?> Env(Dictionary<string, string?> values)
         => name => values.TryGetValue(name, out string? value) ? value : null;
 
+    private static Dictionary<string, object> GetResourceAttributeMap(Resource resource)
+    {
+        Dictionary<string, object> attributes = [];
+        foreach (KeyValuePair<string, object> attribute in resource.Attributes)
+        {
+            attributes[attribute.Key] = attribute.Value;
+        }
+
+        return attributes;
+    }
+
+    private static void AssertHistogramBounds(CapturingMetricExporter exporter, string metricName, double[] expected)
+    {
+        double[] actual = exporter.GetExplicitBounds(metricName);
+        Assert.HasCount(expected.Length, actual);
+        for (int i = 0; i < expected.Length; i++)
+        {
+            Assert.AreEqual(expected[i], actual[i], $"Unexpected bound at index {i} for metric '{metricName}'.");
+        }
+    }
+
+    private static void AssertDoesNotContainPrefixes(Dictionary<string, object> attributes, params string[] prefixes)
+    {
+        foreach (string prefix in prefixes)
+        {
+            Assert.DoesNotContain(
+                key => key.StartsWith(prefix, StringComparison.Ordinal),
+                attributes.Keys,
+                $"Resource unexpectedly contained an attribute with the '{prefix}' prefix.");
+        }
+    }
+
+    private static async Task<ITestApplicationBuilder> CreateBuilderAsync()
+    {
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(["--no-banner", "--ignore-exit-code", "8", "--internal-testingplatform-skipbuildercheck"]);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new MockTestFramework());
+        return builder;
+    }
+
+    private static void AssertBuilderActivityObserved(List<Activity> stoppedActivities)
+    {
+        lock (stoppedActivities)
+        {
+            Assert.Contains(
+                activity => activity.OperationName == TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                stoppedActivities);
+        }
+    }
+
+    private static async Task AssertSingleDiagnosticsRegistrationAsync(ITestApplicationBuilder builder, bool expectProvider)
+    {
+        var application = (TestApplication)await builder.BuildAsync();
+        var serviceProvider = (ServiceProvider)application.ServiceProvider;
+        serviceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        try
+        {
+            IPlatformOpenTelemetryService service = serviceProvider.Services.OfType<IPlatformOpenTelemetryService>().Single();
+            IOpenTelemetryProvider? provider = serviceProvider.Services.OfType<IOpenTelemetryProvider>().SingleOrDefault();
+
+            Assert.IsNotNull(service);
+            Assert.AreEqual(expectProvider, provider is not null);
+            if (provider is not null)
+            {
+                Assert.IsLessThan(serviceProvider.Services.ToList().IndexOf(provider), serviceProvider.Services.ToList().IndexOf(service));
+            }
+        }
+        finally
+        {
+            Assert.AreEqual(0, await application.RunAsync());
+        }
+    }
+
     private static async Task WithEnvironmentAsync(Dictionary<string, string?> values, Func<Task> body)
     {
         Dictionary<string, string?> snapshot = [];
@@ -336,6 +882,33 @@ public sealed class OpenTelemetryProviderExtensionsTests
         }
     }
 
+    private static void WithEnvironment(Dictionary<string, string?> values, Action body)
+    {
+        Dictionary<string, string?> snapshot = [];
+        foreach (string name in ObservedEnvironmentVariables)
+        {
+            snapshot[name] = Environment.GetEnvironmentVariable(name);
+            Environment.SetEnvironmentVariable(name, null);
+        }
+
+        try
+        {
+            foreach (KeyValuePair<string, string?> value in values)
+            {
+                Environment.SetEnvironmentVariable(value.Key, value.Value);
+            }
+
+            body();
+        }
+        finally
+        {
+            foreach (KeyValuePair<string, string?> entry in snapshot)
+            {
+                Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            }
+        }
+    }
+
     private sealed class CapturingActivityExporter : BaseExporter<Activity>
     {
         private readonly List<Activity> _activities;
@@ -348,6 +921,8 @@ public sealed class OpenTelemetryProviderExtensionsTests
         }
 
         public Resource? CapturedResource { get; private set; }
+
+        public int ShutdownCount { get; private set; }
 
         public override ExportResult Export(in Batch<Activity> batch)
         {
@@ -364,6 +939,95 @@ public sealed class OpenTelemetryProviderExtensionsTests
             }
 
             return ExportResult.Success;
+        }
+
+        protected override bool OnShutdown(int timeoutMilliseconds)
+        {
+            ShutdownCount++;
+            return base.OnShutdown(timeoutMilliseconds);
+        }
+    }
+
+    private sealed class CapturingMetricExporter : BaseExporter<Metric>
+    {
+        private readonly Dictionary<string, double[]> _histogramBounds = [];
+
+        public int ShutdownCount { get; private set; }
+
+        public override ExportResult Export(in Batch<Metric> batch)
+        {
+            foreach (Metric metric in batch)
+            {
+                if (metric.MetricType != MetricType.Histogram)
+                {
+                    continue;
+                }
+
+                foreach (ref readonly MetricPoint metricPoint in metric.GetMetricPoints())
+                {
+                    List<double> explicitBounds = [];
+                    foreach (HistogramBucket bucket in metricPoint.GetHistogramBuckets())
+                    {
+                        if (!double.IsPositiveInfinity(bucket.ExplicitBound))
+                        {
+                            explicitBounds.Add(bucket.ExplicitBound);
+                        }
+                    }
+
+                    _histogramBounds[metric.Name] = explicitBounds.ToArray();
+                    break;
+                }
+            }
+
+            return ExportResult.Success;
+        }
+
+        public bool Contains(string metricName) => _histogramBounds.ContainsKey(metricName);
+
+        public double[] GetExplicitBounds(string metricName)
+        {
+            Assert.IsTrue(_histogramBounds.ContainsKey(metricName));
+            return _histogramBounds[metricName];
+        }
+
+        protected override bool OnShutdown(int timeoutMilliseconds)
+        {
+            ShutdownCount++;
+            return base.OnShutdown(timeoutMilliseconds);
+        }
+    }
+
+    private sealed class MockTestFramework : ITestFramework
+    {
+        public ICapability[] Capabilities => [];
+
+        public string Uid => nameof(MockTestFramework);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(MockTestFramework);
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+            => Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
+
+        public Task ExecuteRequestAsync(ExecuteRequestContext context)
+        {
+            context.Complete();
+            return Task.CompletedTask;
+        }
+
+        public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+            => Task.FromResult(new CloseTestSessionResult { IsSuccess = true });
+    }
+
+    private sealed class LegacyOpenTelemetryProvider : IOpenTelemetryProvider
+    {
+        public void Dispose()
+        {
         }
     }
 }

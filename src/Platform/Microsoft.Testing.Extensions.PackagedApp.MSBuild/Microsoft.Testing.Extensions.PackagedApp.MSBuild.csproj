@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Classic UWP uses the adapter's bootstrap, not the modern PackagedApp runtime assembly. -->
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsTrimmable>false</IsTrimmable>
+    <IsAotCompatible>false</IsAotCompatible>
+    <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
+    <PackageDescription><![CDATA[Run packaged Windows test applications through a full-trust Microsoft.Testing.Platform controller. This package supplies the controller executable, its runtime dependencies, and shared MSBuild targets for WinUI, modern UWP, and classic UWP.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="buildTransitive\ClassicUwpMtpBootstrap.cs" />
+    <None Include="build\*.targets;buildTransitive\*.targets;buildTransitive\*.cs;buildMultiTargeting\*.targets"
+          Pack="true" PackagePath="%(Identity)" />
+    <ProjectReference Include="..\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj"
+                      PrivateAssets="none" />
+    <ProjectReference Include="..\Microsoft.Testing.Extensions.PackagedApp\Microsoft.Testing.Extensions.PackagedApp.csproj"
+                      Condition="'$(TargetFramework)' == 'net8.0'" PrivateAssets="none" />
+    <ProjectReference Include="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all"
+                      SkipGetTargetFrameworkProperties="true"
+                      GlobalPropertiesToRemove="TargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;UseAppHost;EnableWindowsTargeting" />
+  </ItemGroup>
+
+  <!-- The controller and its consumers must resolve the same platform/protocol version. -->
+  <Target Name="_AlignPackagedAppIntegrationDependencies" AfterTargets="_GetProjectReferenceVersions">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Condition="'%(Filename)' == 'Microsoft.Testing.Platform.MSBuild' OR '%(Filename)' == 'Microsoft.Testing.Extensions.PackagedApp'">
+        <ProjectVersion>[$(PackageVersion)]</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddPackagedAppControllerToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddPackagedAppControllerToPackage" Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <ItemGroup>
+      <_PackagedAppControllerFramework Include="net8.0;net9.0" />
+    </ItemGroup>
+    <MSBuild Projects="..\Microsoft.Testing.Extensions.PackagedApp.Controller\Microsoft.Testing.Extensions.PackagedApp.Controller.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);TargetFramework=%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0;RuntimeIdentifier=win-x64;SelfContained=false;UseAppHost=true;EnableWindowsTargeting=true"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;UseAppHost;EnableWindowsTargeting" />
+    <Error Condition="!Exists('$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\mstest-appmodel-controller.exe')"
+           Text="The Windows packaged-app controller was not built for %(_PackagedAppControllerFramework.Identity). The integration package requires both win-x64 apphosts on every pack host." />
+    <ItemGroup>
+      <_PackagedAppControllerPackageFile Include="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\*"
+                                         Exclude="$(ArtifactsBinDir)Microsoft.Testing.Extensions.PackagedApp.Controller\$(Configuration)\%(_PackagedAppControllerFramework.Identity)-windows10.0.19041.0\win-x64\**\.*">
+        <ControllerTargetFramework>%(_PackagedAppControllerFramework.Identity)</ControllerTargetFramework>
+      </_PackagedAppControllerPackageFile>
+    </ItemGroup>
+    <ItemGroup>
+      <!-- Explicit file paths avoid host-dependent implicit directory mapping. -->
+      <TfmSpecificPackageFile Include="@(_PackagedAppControllerPackageFile)">
+        <PackagePath>tools/AppModelController/%(_PackagedAppControllerPackageFile.ControllerTargetFramework)/$([System.String]::Copy('%(_PackagedAppControllerPackageFile.RecursiveDir)').Replace('\', '/').TrimStart('/'))%(_PackagedAppControllerPackageFile.Filename)%(_PackagedAppControllerPackageFile.Extension)</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+</Project>

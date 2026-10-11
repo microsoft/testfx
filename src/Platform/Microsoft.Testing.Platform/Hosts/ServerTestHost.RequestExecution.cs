@@ -49,7 +49,10 @@ internal sealed partial class ServerTestHost
                             MultiRequestSupport: false,
                             VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
                             SupportsAttachments: true,
-                            MultiConnectionProvider: false)))
+                            MultiConnectionProvider: false)
+                        {
+                            ShowMessage = args.Capabilities.ShowMessage,
+                        }))
                 {
                     ProtocolVersion = negotiatedProtocolVersion,
                 };

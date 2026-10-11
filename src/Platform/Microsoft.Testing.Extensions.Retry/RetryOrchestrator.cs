@@ -82,6 +82,7 @@ internal sealed partial class RetryOrchestrator : ITestHostExecutionOrchestrator
         if (originalExecutableArguments.Any(argument => argument.StartsWith("@", StringComparison.Ordinal))
             && !finalArguments.Contains($"@{generatedResponseFilePath}"))
         {
+            // Stryker disable once Boolean: continuation scheduling does not change the warning diagnostic.
             await logger.LogWarningAsync(
                 "Retry arguments could not be regenerated in a response file because an argument contains a literal double quote. "
                 + "The retry command line may exceed the operating system limit.").ConfigureAwait(false);

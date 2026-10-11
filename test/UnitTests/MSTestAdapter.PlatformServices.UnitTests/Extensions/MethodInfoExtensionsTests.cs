@@ -132,6 +132,24 @@ public class MethodInfoExtensionsTests : TestContainer
         methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
     }
 
+    public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForInstanceMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
+    }
+
+    public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForStaticMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("StaticMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestInitializeOrCleanupSignature().Should().BeTrue();
+    }
+
     public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnFalseForNonPublicMethods()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("InternalMethod", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)!;
@@ -188,6 +206,24 @@ public class MethodInfoExtensionsTests : TestContainer
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticMethod")!;
         methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
+    }
+
+    public void HasCorrectTestMethodSignatureShouldReturnFalseForInstanceMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("InstanceMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
+    }
+
+    public void HasCorrectTestMethodSignatureShouldReturnTrueForStaticMethodsOnFSharpModules()
+    {
+        Type moduleType = FSharpModuleTestFixture.ModuleType;
+        MethodInfo methodInfo = moduleType.GetMethod("StaticMethod")!;
+        moduleType.IsFSharpModule().Should().BeTrue();
+
+        methodInfo.HasCorrectTestMethodSignature(false).Should().BeTrue();
     }
 
     public void HasCorrectTestMethodSignatureShouldReturnFalseForGenericMethods()

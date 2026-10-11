@@ -1,10 +1,13 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace MTPOTel;
@@ -12,9 +15,13 @@ namespace MTPOTel;
 internal sealed class SimpleTestFramework : ITestFramework, IDataProducer
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ActivitySource _activitySource;
 
-    public SimpleTestFramework(IServiceProvider serviceProvider)
-        => _serviceProvider = serviceProvider;
+    public SimpleTestFramework(IServiceProvider serviceProvider, ActivitySource activitySource)
+    {
+        _serviceProvider = serviceProvider;
+        _activitySource = activitySource;
+    }
 
     public string Uid => nameof(SimpleTestFramework);
 
@@ -37,14 +44,20 @@ internal sealed class SimpleTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         var sessionUid = new SessionUid("SimpleTestSession");
+        IConfiguration configuration = _serviceProvider.GetConfiguration();
+        Console.WriteLine($"Configuration imported from: {configuration["MTPOTel:Composition"]}");
 
         // Create 5 tests to run sequentially
         for (int i = 1; i <= 5; i++)
         {
             string testId = $"Test{i}";
             string testName = $"Simple Test {i}";
+            using Activity? testActivity = _activitySource.StartActivity("MTPOTel.Test");
+            testActivity?.SetTag("test.name", testName);
 
-            // Publish test node as in-progress
+            // Publish the in-progress update while the execution activity is current. MTP keeps the result span
+            // parented to TestFramework and adds an ActivityLink back to this activity when results are processed
+            // asynchronously.
             await context.MessageBus.PublishAsync(
                 this,
                 new TestNodeUpdateMessage(

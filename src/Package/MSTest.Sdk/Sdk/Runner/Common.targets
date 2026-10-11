@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
-    <OutputType Condition=" '$(UseWinUI)' != 'true' ">Exe</OutputType>
+    <OutputType Condition=" '$(UseWinUI)' != 'true' AND '$(_MSTestUwpApplicationModel)' != 'true' AND !$(TargetFramework.StartsWith('uap')) ">Exe</OutputType>
     <OutputType Condition=" '$(UseWinUI)' == 'true' AND '$(OutputType)' == 'Library' ">Exe</OutputType>
     <_SdkMajorVersion>$(NETCoreSdkVersion.Split('.')[0])</_SdkMajorVersion>
     <_SupportsGlobalJsonTestRunner Condition="'$(NETCoreSdkVersion)' != '' AND '$(_SdkMajorVersion)' >= '10'">true</_SupportsGlobalJsonTestRunner>
@@ -17,7 +17,7 @@
 
   <Target Name="_MSTestSDKConfigureWinUIEntryPoint"
           BeforeTargets="_CalculateGenerateTestingPlatformEntryPoint"
-          Condition=" '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '@(ApplicationDefinition)' != '' ">
+          Condition=" '$(IsTestApplication)' == 'true' AND ('$(UseWinUI)' == 'true' OR '$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') AND '@(ApplicationDefinition)' != '' ">
     <PropertyGroup>
       <!-- A self-hosted WinUI app owns Main through ApplicationDefinition but still needs the reusable MTP runner helper. -->
       <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">false</GenerateTestingPlatformEntryPoint>
@@ -36,10 +36,12 @@
     <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsTrxReport>
     <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
 
-    <!-- Packaged WinUI applications must be registered and activated by AUMID. -->
+    <!-- Packaged WinUI and UWP applications must be registered and activated by AUMID. -->
     <MicrosoftTestingExtensionsPackagedAppVersion Condition=" '$(MicrosoftTestingExtensionsPackagedAppVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsPackagedAppVersion>
     <EnableMicrosoftTestingExtensionsPackagedApp
       Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None' ">true</EnableMicrosoftTestingExtensionsPackagedApp>
+    <EnableMicrosoftTestingExtensionsPackagedApp
+      Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND ('$(_MSTestUwpApplicationModel)' == 'true' OR $(TargetFramework.StartsWith('uap'))) ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' ">false</EnableMicrosoftTestingExtensionsPackagedApp>
 
     <!-- MS Code Coverage -->
@@ -53,10 +55,10 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(IsTestApplication)' == 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' == 'true' ">
-    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Sdk="MSTest">
+    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsPackagedAppVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="Microsoft.Testing.Extensions.PackagedApp" Version="$(MicrosoftTestingExtensionsPackagedAppVersion)"
+    <PackageVersion Include="Microsoft.Testing.Extensions.PackagedApp.MSBuild" Version="$(MicrosoftTestingExtensionsPackagedAppVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

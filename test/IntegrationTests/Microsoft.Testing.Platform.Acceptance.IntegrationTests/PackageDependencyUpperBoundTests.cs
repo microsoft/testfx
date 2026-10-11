@@ -119,3 +119,113 @@ public sealed class PackageDependencyUpperBoundTests
         }
     }
 }
+
+/// <summary>
+/// Guards the dependency-free invariant of the core <c>Microsoft.Testing.Platform</c> package.
+/// </summary>
+[TestClass]
+public sealed class CorePackageDependencyInvariantTests
+{
+    private const string PlatformPackageId = "Microsoft.Testing.Platform";
+
+    public TestContext TestContext { get; set; } = null!;
+
+    /// <summary>
+    /// The core package must not declare NuGet dependencies or carry another assembly/native runtime payload.
+    /// </summary>
+    [TestMethod]
+    public void MicrosoftTestingPlatformPackage_HasNoExternalDependencyClosure()
+    {
+        string nupkg = FindLatestPlatformPackage();
+        using ZipArchive archive = ZipFile.OpenRead(nupkg);
+        ZipArchiveEntry nuspecEntry = archive.Entries.Single(
+            entry => entry.FullName.EndsWith(".nuspec", StringComparison.OrdinalIgnoreCase) && !entry.FullName.Contains('/'));
+
+        XDocument nuspec;
+        using (Stream stream = nuspecEntry.Open())
+        {
+            nuspec = XDocument.Load(stream);
+        }
+
+        string[] packageDependencies = nuspec.Descendants()
+            .Where(element => element.Name.LocalName == "dependency")
+            .Select(element => (string?)element.Attribute("id") ?? element.ToString(SaveOptions.DisableFormatting))
+            .ToArray();
+        Assert.IsEmpty(
+            packageDependencies,
+            $"The core '{PlatformPackageId}' package must not declare NuGet dependencies, but found:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, packageDependencies));
+
+        string[] unexpectedRuntimeAssets = archive.Entries
+            .Select(entry => entry.FullName.Replace('\\', '/'))
+            .Where(IsUnexpectedRuntimeAsset)
+            .ToArray();
+        Assert.IsEmpty(
+            unexpectedRuntimeAssets,
+            $"The core '{PlatformPackageId}' package must not bundle external runtime assets, but found:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, unexpectedRuntimeAssets));
+    }
+
+    private static bool IsUnexpectedRuntimeAsset(string packagePath)
+    {
+        if (packagePath.StartsWith("runtimes/", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if ((!packagePath.StartsWith("lib/", StringComparison.OrdinalIgnoreCase)
+                && !packagePath.StartsWith("ref/", StringComparison.OrdinalIgnoreCase))
+            || !packagePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string fileName = Path.GetFileName(packagePath);
+        return !string.Equals(fileName, $"{PlatformPackageId}.dll", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(fileName, $"{PlatformPackageId}.resources.dll", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string FindLatestPlatformPackage()
+    {
+        List<string> matches = [];
+
+        foreach (string folder in new[] { Constants.ArtifactsPackagesShipping, Constants.ArtifactsPackagesNonShipping })
+        {
+            if (!Directory.Exists(folder))
+            {
+                continue;
+            }
+
+            foreach (string nupkg in Directory.EnumerateFiles(folder, $"{PlatformPackageId}.*.nupkg", SearchOption.TopDirectoryOnly))
+            {
+                if (nupkg.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                using ZipArchive archive = ZipFile.OpenRead(nupkg);
+                ZipArchiveEntry? nuspecEntry = archive.Entries.FirstOrDefault(
+                    entry => entry.FullName.EndsWith(".nuspec", StringComparison.OrdinalIgnoreCase) && !entry.FullName.Contains('/'));
+                if (nuspecEntry is null)
+                {
+                    continue;
+                }
+
+                using Stream stream = nuspecEntry.Open();
+                var nuspec = XDocument.Load(stream);
+                if (string.Equals(
+                    nuspec.Descendants().FirstOrDefault(element => element.Name.LocalName == "id")?.Value,
+                    PlatformPackageId,
+                    StringComparison.Ordinal))
+                {
+                    matches.Add(nupkg);
+                }
+            }
+        }
+
+        Assert.IsNotEmpty(
+            matches,
+            $"Expected the '{PlatformPackageId}' package to be present. Build with '-pack' before running this test.");
+        return matches.OrderByDescending(File.GetLastWriteTimeUtc).First();
+    }
+}

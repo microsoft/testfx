@@ -28,6 +28,12 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
             BindingFlags.Instance | BindingFlags.NonPublic)
         ?? throw new InvalidOperationException("Could not resolve ProduceVideosAsync.");
 
+    private static readonly MethodInfo BuildFileNameMethod =
+        typeof(VideoRecorderSessionHandler).GetMethod(
+            "BuildFileName",
+            BindingFlags.Instance | BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("Could not resolve BuildFileName.");
+
     private static readonly FieldInfo SessionUidField =
         typeof(VideoRecorderSessionHandler).GetField(
             "_sessionUid",
@@ -35,6 +41,41 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
         ?? throw new InvalidOperationException("Could not resolve _sessionUid.");
 
     private static readonly DateTimeOffset RecordingStart = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    [TestMethod]
+    public void BuildFileName_NullName_UsesFallbackTimestampUniqueSuffixAndExtension()
+    {
+        var context = new HandlerContext(
+            VideoRecorderPersistenceMode.Always,
+            VideoCaptureGranularity.PerTest,
+            RecordingStart);
+
+        string fileName = InvokeBuildFileName(context.Handler, name: null);
+
+        const string Prefix = "recording_20260101_000000_000_";
+        Assert.StartsWith(Prefix, fileName);
+        Assert.EndsWith(".mp4", fileName);
+        Assert.AreEqual(Prefix.Length + 8 + ".mp4".Length, fileName.Length);
+        Assert.IsTrue(fileName.Substring(Prefix.Length, 8).All(Uri.IsHexDigit));
+    }
+
+    [TestMethod]
+    public void BuildFileName_NameWithInvalidCharacter_SanitizesNameAndPreservesValidCharacters()
+    {
+        var context = new HandlerContext(
+            VideoRecorderPersistenceMode.Always,
+            VideoCaptureGranularity.PerTest,
+            RecordingStart);
+        char invalidCharacter = Path.GetInvalidFileNameChars()[0];
+
+        string fileName = InvokeBuildFileName(context.Handler, $"valid{invalidCharacter}name");
+
+        const string Prefix = "valid_name_20260101_000000_000_";
+        Assert.StartsWith(Prefix, fileName);
+        Assert.EndsWith(".mp4", fileName);
+        Assert.AreEqual(Prefix.Length + 8 + ".mp4".Length, fileName.Length);
+        Assert.IsTrue(fileName.Substring(Prefix.Length, 8).All(Uri.IsHexDigit));
+    }
 
     [TestMethod]
     public async Task ProduceVideosAsync_RecordingHasNotStarted_DoesNothing()
@@ -162,7 +203,7 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
         context.Logger.Verify(
             instance => instance.LogAsync(
                 LogLevel.Trace,
-                It.Is<string>(message => message.Contains(DisplayName, StringComparison.Ordinal)),
+                $"No segments survived for test '{DisplayName}' (pruned by the rolling buffer); skipping its clip.",
                 null,
                 It.IsAny<Func<string, Exception?, string>>()),
             Times.Once());
@@ -332,6 +373,212 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
         }
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ProduceVideosAsync_PerSessionChapterSetting_PassesExpectedMetadata(bool includeChapters)
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            // DateTimeOffset.AddSeconds rounds fractional milliseconds on .NET Framework.
+            DateTimeOffset videoEndTime = RecordingStart.AddSeconds(40).AddTicks(4_000);
+            var context = new HandlerContext(
+                VideoRecorderPersistenceMode.Always,
+                VideoCaptureGranularity.PerSession,
+                RecordingStart,
+                includeChapters,
+                directory);
+            if (includeChapters)
+            {
+                await AddRecordAsync(
+                    context.Handler,
+                    "Late",
+                    PassedTestNodeStateProperty.CachedInstance,
+                    RecordingStart.AddSeconds(25),
+                    RecordingStart.AddSeconds(50));
+                await AddRecordAsync(
+                    context.Handler,
+                    "Before surviving video",
+                    PassedTestNodeStateProperty.CachedInstance,
+                    RecordingStart,
+                    RecordingStart.AddSeconds(10));
+                await AddRecordAsync(
+                    context.Handler,
+                    "Boundary",
+                    PassedTestNodeStateProperty.CachedInstance,
+                    RecordingStart.AddSeconds(40).AddTicks(3_000),
+                    RecordingStart.AddSeconds(50));
+                await AddRecordAsync(
+                    context.Handler,
+                    "Escapes=;#\\\nLine",
+                    PassedTestNodeStateProperty.CachedInstance,
+                    RecordingStart.AddSeconds(15),
+                    RecordingStart.AddSeconds(20));
+                await AddRecordAsync(
+                    context.Handler,
+                    "After surviving video",
+                    PassedTestNodeStateProperty.CachedInstance,
+                    videoEndTime,
+                    RecordingStart.AddSeconds(45));
+            }
+            else
+            {
+                await AddRecordAsync(
+                    context.Handler,
+                    "Chapter test",
+                    PassedTestNodeStateProperty.CachedInstance,
+                    RecordingStart.AddSeconds(5),
+                    RecordingStart.AddSeconds(10));
+            }
+
+            context.CurrentSegments =
+            [
+                new VideoSegment("segment.mp4", 10, (videoEndTime - RecordingStart).TotalSeconds),
+            ];
+            string? capturedFileName = null;
+            string? capturedMetadataPath = null;
+            SetupConcat(
+                context.Recorder,
+                _ => { },
+                captureOutput: (fileName, metadataPath) =>
+                {
+                    capturedFileName = fileName;
+                    capturedMetadataPath = metadataPath;
+                });
+
+            await InvokeProduceVideosAsync(context.Handler);
+
+            Assert.IsNotNull(capturedFileName);
+            Assert.StartsWith("session_20260101_000000_000_", capturedFileName);
+            Assert.EndsWith(".mp4", capturedFileName);
+            if (includeChapters)
+            {
+                Assert.IsNotNull(capturedMetadataPath);
+                Assert.IsTrue(File.Exists(capturedMetadataPath));
+                string metadataFileName = Path.GetFileName(capturedMetadataPath);
+                Assert.StartsWith("chapters_", metadataFileName);
+                Assert.EndsWith(".txt", metadataFileName);
+                Assert.AreEqual("chapters_".Length + 8 + ".txt".Length, metadataFileName.Length);
+
+                string escapedTitle = string.Format(
+                    CultureInfo.CurrentCulture,
+                    VideoRecorderResources.ChapterTitleFormat,
+                    @"Escapes\=\;\#\\\ Line",
+                    VideoRecorderResources.OutcomePassed);
+                string lateTitle = string.Format(
+                    CultureInfo.CurrentCulture,
+                    VideoRecorderResources.ChapterTitleFormat,
+                    "Late",
+                    VideoRecorderResources.OutcomePassed);
+                string boundaryTitle = string.Format(
+                    CultureInfo.CurrentCulture,
+                    VideoRecorderResources.ChapterTitleFormat,
+                    "Boundary",
+                    VideoRecorderResources.OutcomePassed);
+                Assert.AreSequenceEqual(
+                    new[]
+                    {
+                        ";FFMETADATA1",
+                        "[CHAPTER]",
+                        "TIMEBASE=1/1000",
+                        "START=5000",
+                        "END=10000",
+                        "title=" + escapedTitle,
+                        "[CHAPTER]",
+                        "TIMEBASE=1/1000",
+                        "START=15000",
+                        "END=30000",
+                        "title=" + lateTitle,
+                        "[CHAPTER]",
+                        "TIMEBASE=1/1000",
+                        "START=30000",
+                        "END=30001",
+                        "title=" + boundaryTitle,
+                    },
+                    File.ReadAllLines(capturedMetadataPath));
+            }
+            else
+            {
+                Assert.IsNull(capturedMetadataPath);
+            }
+        }
+        finally
+        {
+            DeleteTemporaryDirectory(directory);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProduceVideosAsync_PerSessionChaptersEnabledWithoutRecords_DoesNotInspectSegmentDirectory()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            var context = new HandlerContext(
+                VideoRecorderPersistenceMode.Always,
+                VideoCaptureGranularity.PerSession,
+                RecordingStart,
+                includeChapters: true,
+                segmentDirectory: directory)
+            {
+                CurrentSegments = [new VideoSegment("segment.mp4", 0, 30)],
+            };
+            string? capturedMetadataPath = null;
+            SetupConcat(
+                context.Recorder,
+                _ => { },
+                captureOutput: (_, metadataPath) => capturedMetadataPath = metadataPath);
+
+            await InvokeProduceVideosAsync(context.Handler);
+
+            Assert.IsNull(capturedMetadataPath);
+            context.Recorder.VerifyGet(instance => instance.SegmentDirectory, Times.Never());
+        }
+        finally
+        {
+            DeleteTemporaryDirectory(directory);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProduceVideosAsync_PerSessionChapterMetadata_StartsWithFfmetadataHeader()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            var context = new HandlerContext(
+                VideoRecorderPersistenceMode.Always,
+                VideoCaptureGranularity.PerSession,
+                RecordingStart,
+                includeChapters: true,
+                segmentDirectory: directory)
+            {
+                CurrentSegments = [new VideoSegment("segment.mp4", 0, 30)],
+            };
+            await AddRecordAsync(
+                context.Handler,
+                "Chapter test",
+                PassedTestNodeStateProperty.CachedInstance,
+                RecordingStart.AddSeconds(5),
+                RecordingStart.AddSeconds(10));
+            string? capturedMetadataPath = null;
+            SetupConcat(
+                context.Recorder,
+                _ => { },
+                captureOutput: (_, metadataPath) => capturedMetadataPath = metadataPath);
+
+            await InvokeProduceVideosAsync(context.Handler);
+
+            Assert.IsNotNull(capturedMetadataPath);
+            Assert.AreEqual(";FFMETADATA1", File.ReadLines(capturedMetadataPath).First());
+        }
+        finally
+        {
+            DeleteTemporaryDirectory(directory);
+        }
+    }
+
     private static Task AddRecordAsync(
         VideoRecorderSessionHandler handler,
         string displayName,
@@ -355,10 +602,14 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
     private static async Task InvokeProduceVideosAsync(VideoRecorderSessionHandler handler)
         => await (Task)ProduceVideosAsyncMethod.Invoke(handler, [CancellationToken.None])!;
 
+    private static string InvokeBuildFileName(VideoRecorderSessionHandler handler, string? name)
+        => (string)BuildFileNameMethod.Invoke(handler, [name])!;
+
     private static void SetupConcat(
         Mock<IVideoRecorder> recorder,
         Action<IReadOnlyList<VideoSegment>> capture,
-        string? result = null)
+        string? result = null,
+        Action<string, string?>? captureOutput = null)
         => recorder
             .Setup(instance => instance.ConcatAsync(
                 It.IsAny<IReadOnlyList<VideoSegment>>(),
@@ -366,7 +617,11 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .Callback<IReadOnlyList<VideoSegment>, string, string?, CancellationToken>(
-                (segments, _, _, _) => capture(segments))
+                (segments, fileName, metadataPath, _) =>
+                {
+                    capture(segments);
+                    captureOutput?.Invoke(fileName, metadataPath);
+                })
             .ReturnsAsync(result);
 
     private static void VerifyNoConcat(Mock<IVideoRecorder> recorder)
@@ -417,14 +672,16 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
         public HandlerContext(
             VideoRecorderPersistenceMode persistMode,
             VideoCaptureGranularity granularity,
-            DateTimeOffset? recordingStartUtc)
+            DateTimeOffset? recordingStartUtc,
+            bool includeChapters = false,
+            string? segmentDirectory = null)
         {
             var options = new VideoRecorderOptions
             {
                 OutputDirectory = Path.GetTempPath(),
                 PersistMode = persistMode,
                 Granularity = granularity,
-                IncludeChapters = false,
+                IncludeChapters = includeChapters,
             };
             var commandLineOptions = new TestCommandLineOptions(new()
             {
@@ -433,6 +690,7 @@ public sealed class VideoRecorderSessionHandlerVideoProductionTests
             var clock = new Mock<IClock>();
             clock.SetupGet(instance => instance.UtcNow).Returns(RecordingStart);
             Recorder.SetupGet(instance => instance.RecordingStartUtc).Returns(recordingStartUtc);
+            Recorder.SetupGet(instance => instance.SegmentDirectory).Returns(segmentDirectory);
             Recorder.SetupGet(instance => instance.SegmentExtension).Returns("mp4");
             Recorder.Setup(instance => instance.ReadSegments()).Returns(() => CurrentSegments);
             Recorder.Setup(instance => instance.DescribeLastFfmpegError()).Returns(DiagnosticTail);

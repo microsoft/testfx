@@ -299,16 +299,17 @@ public sealed class MtpServerClientSourcePackageTests
     }
 
     [TestMethod]
-    public void SourcePackage_ShipsBuildTargets_AndNet462SafetyGuardsSurviveTransform()
+    public void SourcePackage_ShipsBuildTargetsWithoutLanguageVersionOverride_AndNet462SafetyGuardsSurviveTransform()
     {
         // The package ships a build/*.targets that customizes the consumer's compilation of the injected
-        // source (defines the package compilation constants and language floor).
+        // source (defines the package compilation constants). It must not ship build props because an early
+        // LangVersion assignment there would suppress the SDK's target-framework-specific default.
         const string PropsEntry = "build/Microsoft.Testing.Platform.ServerMode.Client.Sources.props";
         const string TargetsEntry = "build/Microsoft.Testing.Platform.ServerMode.Client.Sources.targets";
-        Assert.Contains(
+        Assert.DoesNotContain(
             PropsEntry,
             Package.AllEntries,
-            $"Expected the package to ship '{PropsEntry}' so consumers get the default language version.");
+            $"The package must not ship '{PropsEntry}' because it must not override the consumer's language version.");
         Assert.Contains(
             TargetsEntry,
             Package.AllEntries,
@@ -319,7 +320,7 @@ public sealed class MtpServerClientSourcePackageTests
         // do not exist on net462 and no facade forwards them). The two client source sites that use them are
         // guarded with #if NETFRAMEWORK.
         var missingGuard = new List<string>();
-        foreach (string guarded in new[] { "Client/MtpClientOperatingSystem.cs", "Client/MtpServerProcess.cs" })
+        foreach (string guarded in new[] { "Client/MtpClientOperatingSystem.cs", "Client/MtpServerProcess.LaunchCommand.cs" })
         {
             if (!Package.PackedTextByTfm[NetStandard].TryGetValue(guarded, out string? text))
             {
@@ -347,7 +348,7 @@ public sealed class MtpServerClientSourcePackageTests
         // net5.0, net6.0 and net7.0 consumers, so reusing it here would drop a Linux net7.0 consumer back to
         // the existence-only check, select a non-executable apphost, and abort with 'Permission denied'
         // instead of falling back to `dotnet <dll>`.
-        const string Logical = "Client/MtpServerProcess.cs";
+        const string Logical = "Client/MtpServerProcess.LaunchCommand.cs";
         const string Fence = "#if NET7_0_OR_GREATER";
         const string GuardedCall = "File.GetUnixFileMode(";
 

@@ -117,7 +117,7 @@ internal static partial class CtrfReportMerger
     }
 
     /// <summary>
-    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports and the merge mode, so identical
+    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports, merge mode, and output format, so identical
     /// inputs merged the same way reproduce the same id on every retry (RFC 018 idempotency) without a random
     /// source or reusing an input report's id, while the same inputs merged a DIFFERENT way — which yields a
     /// materially different document — get a distinct id, as CTRF 5.3 requires. Only the payloads that passed
@@ -126,7 +126,8 @@ internal static partial class CtrfReportMerger
     /// collision-resistant enough to identify a merged report, not secret.
     /// </summary>
     private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode)
-        => CreateDeterministicId(acceptedReports, (ulong)mode).ToString("D");
+        // Adding lineage changes the emitted document, so it must not reuse a pre-lineage merger's reportId.
+        => CreateDeterministicId(["microsoft.testingplatform.lineage.v1", .. acceptedReports], (ulong)mode).ToString("D");
 
     internal static Guid CreateDeterministicId(IReadOnlyList<string> values)
         => CreateDeterministicId(values, discriminator: null);

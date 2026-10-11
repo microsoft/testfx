@@ -18,6 +18,10 @@
     <TestingPlatformCommandLineArguments Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <!-- Live publishing uses a unique per-job run name so the pipeline can verify that the extension completed
+         the expected runs with results. Fork builds and any publication failures retain the traditional TRX
+         push as a fallback. -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TESTFX_AZDO_LIVE_PUBLISHING)' == 'true' ">$(TestingPlatformCommandLineArguments) --publish-azdo-test-results --publish-azdo-run-name $(AZDO_LIVE_PUBLISHING_RUN_NAME)</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
     <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
          output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
@@ -73,6 +77,10 @@
   </PropertyGroup>
   <PropertyGroup>
     <_CodeCoverageSourceRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)src'))</_CodeCoverageSourceRoot>
+    <_CodeCoverageNuGetPackagesRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(NuGetPackageRoot)'))</_CodeCoverageNuGetPackagesRootPattern>
+    <_CodeCoverageArtifactsRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(ArtifactsDir)'))</_CodeCoverageArtifactsRootPattern>
+    <_CodeCoverageTestInfrastructureRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure'))</_CodeCoverageTestInfrastructureRoot>
+    <_CodeCoverageTestInfrastructureRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_CodeCoverageTestInfrastructureRoot)'))</_CodeCoverageTestInfrastructureRootPattern>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableCodeCoverage)' == 'True' ">
@@ -96,6 +104,19 @@
       <_CodeCoverageProjectReference Update="@(_CodeCoverageProjectReference)">
         <CoverageAssemblyPattern>$([System.String]::Copy('%(_CodeCoverageProjectReference.CoverageAssemblyName)').Replace('.', '\.'))</CoverageAssemblyPattern>
       </_CodeCoverageProjectReference>
+      <_CodeCoverageExcludedSource Include="Packages" Condition=" '$(NuGetPackageRoot)' != '' ">
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageNuGetPackagesRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Include="Artifacts">
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageArtifactsRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Include="TestInfrastructure">
+        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageTestInfrastructureRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageExcludedSource>
+      <!-- Keep repository-owned validation and process-lifetime logic measurable while excluding BCL compatibility shims. -->
+      <_CodeCoverageExcludedSource Include="Polyfills">
+        <XmlPattern>(^|[\\/])Polyfills[\\/](?!Ensure\.cs$|ProcessExtensions\.cs$).*\.cs$</XmlPattern>
+      </_CodeCoverageExcludedSource>
     </ItemGroup>
 
     <ItemGroup>
@@ -106,7 +127,15 @@
       <_CodeCoverageSettingsLine Include="      &lt;Include&gt;" />
       <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference->'        &lt;ModulePath&gt;.*%(CoverageAssemblyPattern)\.dll$&lt;/ModulePath&gt;')" />
       <_CodeCoverageSettingsLine Include="      &lt;/Include&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="        &lt;ModulePath&gt;.*Microsoft\.Testing\.TestInfrastructure\.dll$&lt;/ModulePath&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;/ModulePaths&gt;" />
+      <_CodeCoverageSettingsLine Include="    &lt;Sources&gt;" />
+      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource->'        &lt;Source&gt;%(XmlPattern)&lt;/Source&gt;')" />
+      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="    &lt;/Sources&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;EnableStaticNativeInstrumentation&gt;False&lt;/EnableStaticNativeInstrumentation&gt;" />
       <_CodeCoverageSettingsLine Include="    &lt;EnableDynamicNativeInstrumentation&gt;False&lt;/EnableDynamicNativeInstrumentation&gt;" />
@@ -139,7 +168,9 @@
          NuGet package here pins the older flowed-in version and produces an NU1605 downgrade against the locally
          built project (see https://github.com/microsoft/testfx/pull/9259). -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition="'$(UseMSTestFromSource)' == 'true'" IsTestInfrastructure="true" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
+    <!-- AffectedTests requires the matching preview CodeCoverage build. Keep this test-only override separate
+         from the stable CodeCoverage version shipped by MSTest packages. -->
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" VersionOverride="$(MicrosoftTestingExtensionsAffectedTestsVersion)" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Import the capabilities for the Microsoft.Testing.Platform -->

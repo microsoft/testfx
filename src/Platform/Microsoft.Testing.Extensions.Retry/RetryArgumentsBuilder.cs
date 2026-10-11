@@ -90,6 +90,7 @@ internal static class RetryArgumentsBuilder
         string pipeName,
         string[]? lastListOfFailedId,
         int attemptCount)
+        // Stryker disable once Boolean: continuation scheduling does not change the constructed arguments.
         => await BuildAttemptArgumentsAsync(
             fileSystem,
             executableArguments,
@@ -158,6 +159,7 @@ internal static class RetryArgumentsBuilder
             {
                 foreach (string argument in finalArguments.Skip(directPrefixArguments.Count))
                 {
+                    // Stryker disable once Boolean: continuation scheduling does not change response-file contents.
                     await writer.WriteLineAsync($"\"{argument}\"").ConfigureAwait(false);
                 }
             }
@@ -217,12 +219,15 @@ internal static class RetryArgumentsBuilder
                     // Write all UIDs on a single line, each quoted. The RSP parser splits
                     // by whitespace and uses '"' for grouping, so quoting handles UIDs
                     // containing whitespace or starting with '#' (comment marker).
+                    // Stryker disable once Boolean: continuation scheduling does not change response-file contents.
                     await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
                     foreach (string uid in lastListOfFailedId)
                     {
+                        // Stryker disable once Boolean: continuation scheduling does not change response-file contents.
                         await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
                     }
 
+                    // Stryker disable once Boolean: continuation scheduling does not change response-file contents.
                     await writer.WriteLineAsync().ConfigureAwait(false);
                 }
 

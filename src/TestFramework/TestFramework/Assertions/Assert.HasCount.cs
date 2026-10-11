@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -237,7 +239,7 @@ public sealed partial class Assert
         // string instead of allocating "Assert." + assertionName on every call.
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
-        int actualCount = collection.Count();
+        int actualCount = CollectionCountHelper.GetCount(collection);
         if (actualCount == expected)
         {
             return;

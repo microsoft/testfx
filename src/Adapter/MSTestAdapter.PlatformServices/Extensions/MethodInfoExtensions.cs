@@ -61,7 +61,8 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            method is { IsStatic: false, IsPublic: true } &&
+            method.IsPublic &&
+            (method.IsStatic == method.DeclaringType!.IsFSharpModule()) &&
             (method.GetParameters().Length == 0) &&
             method.IsValidReturnType();
     }
@@ -79,7 +80,8 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            method is { IsAbstract: false, IsStatic: false } &&
+            !method.IsAbstract &&
+            (method.IsStatic == method.DeclaringType!.IsFSharpModule()) &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
