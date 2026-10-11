@@ -474,6 +474,12 @@ public sealed class BrowserPackageDesktopTests
         }
     }
 
+    [TestMethod]
+    public void BrowserPackage_EvaluatedPropertyIgnoresTelemetryBanner()
+        => Assert.AreEqual(
+            "true",
+            GetLastNonEmptyOutputLine($"Telemetry is: Disabled{Environment.NewLine}true"));
+
     private async Task<DotnetMuxerResult> RunBrowserTestAsync(
         TestAsset generator,
         string testArguments,
@@ -544,7 +550,7 @@ public sealed class BrowserPackageDesktopTests
             cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
-        Assert.AreEqual("true", evaluation.StandardOutput.Trim());
+        Assert.AreEqual("true", GetLastNonEmptyOutputLine(evaluation.StandardOutput));
     }
 
     private static string GetBrowserPackageVersion()
@@ -645,11 +651,14 @@ public sealed class BrowserPackageDesktopTests
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, evaluation.ExitCode, evaluation.ToString());
 
-        string path = evaluation.StandardOutput
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-            .Last();
+        string path = GetLastNonEmptyOutputLine(evaluation.StandardOutput);
         return Path.IsPathRooted(path)
             ? path
             : Path.GetFullPath(path, generator.TargetAssetPath);
     }
+
+    private static string GetLastNonEmptyOutputLine(string output)
+        => output
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Last();
 }
