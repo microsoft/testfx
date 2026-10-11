@@ -3,6 +3,7 @@
 
 using System.IO.Compression;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -14,6 +15,9 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
     private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
+    private static readonly Regex AnsiEscapeRegex = new(
+        @"\x1B\[[0-?]*[ -/]*[@-~]",
+        RegexOptions.CultureInvariant);
 
     private const string SourceCode = """
 #file BrowserPackageTestProject.csproj
@@ -139,7 +143,7 @@ public sealed class BrowserPackageDesktopTests
             {
                 ["DEBUG"] = "*",
             });
-        string runOutput = run.StandardOutput + run.StandardError;
+        string runOutput = NormalizeTerminalOutput(run.StandardOutput + run.StandardError);
         Assert.AreEqual(0, run.ExitCode, run.ToString());
         Assert.Contains($"({TargetFramework}|wasm) passed [+1/x0/?0]", runOutput);
         Assert.Contains("succeeded: 1", runOutput);
@@ -156,7 +160,8 @@ public sealed class BrowserPackageDesktopTests
             projectProperties:
                 "-property:TestingPlatformCommandLineArguments=\"--filter FullyQualifiedName~NoSuchBrowserTest\"");
         string projectConfiguredFilterOutput =
-            projectConfiguredFilter.StandardOutput + projectConfiguredFilter.StandardError;
+            NormalizeTerminalOutput(
+                projectConfiguredFilter.StandardOutput + projectConfiguredFilter.StandardError);
         Assert.AreEqual(
             (int)ExitCode.ZeroTests,
             projectConfiguredFilter.ExitCode,
@@ -165,7 +170,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.DoesNotContain("Intentional browser experiment failure.", projectConfiguredFilterOutput);
 
         DotnetMuxerResult list = await RunBrowserTestAsync(generator, "--list-tests");
-        string listOutput = list.StandardOutput + list.StandardError;
+        string listOutput = NormalizeTerminalOutput(list.StandardOutput + list.StandardError);
         Assert.AreEqual(0, list.ExitCode, list.ToString());
         Assert.Contains("RunsInsideBrowser", listOutput);
         Assert.Contains("SkippedInsideBrowser", listOutput);
@@ -175,7 +180,7 @@ public sealed class BrowserPackageDesktopTests
         DotnetMuxerResult skipped = await RunBrowserTestAsync(
             generator,
             "--filter FullyQualifiedName~SkippedInsideBrowser");
-        string skippedOutput = skipped.StandardOutput + skipped.StandardError;
+        string skippedOutput = NormalizeTerminalOutput(skipped.StandardOutput + skipped.StandardError);
         Assert.AreEqual(0, skipped.ExitCode, skipped.ToString());
         Assert.Contains("skipped: 1", skippedOutput);
         Assert.DoesNotContain("did not complete within", skippedOutput);
@@ -183,7 +188,7 @@ public sealed class BrowserPackageDesktopTests
         DotnetMuxerResult failed = await RunBrowserTestAsync(
             generator,
             "--filter FullyQualifiedName~FailsInsideBrowser");
-        string failedOutput = failed.StandardOutput + failed.StandardError;
+        string failedOutput = NormalizeTerminalOutput(failed.StandardOutput + failed.StandardError);
         Assert.AreNotEqual(0, failed.ExitCode, failed.ToString());
         Assert.Contains("failed: 1", failedOutput);
         Assert.Contains("Intentional browser experiment failure.", failedOutput);
@@ -324,17 +329,12 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion));
 
         DotnetMuxerResult run = await DotnetCli.RunAsync(
-            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
-            + " --ansi off --progress off",
-            environmentVariables: new Dictionary<string, string?>
-            {
-                ["NO_COLOR"] = "1",
-            },
+            $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        string output = run.StandardOutput + run.StandardError;
+        string output = NormalizeTerminalOutput(run.StandardOutput + run.StandardError);
         Assert.AreEqual(0, run.ExitCode, run.ToString());
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         Assert.Contains($"({TargetFramework}|{architecture}) passed [+1/x0/?0]", output);
@@ -479,22 +479,17 @@ public sealed class BrowserPackageDesktopTests
         string testArguments,
         Dictionary<string, string?>? environmentVariables = null,
         string? projectProperties = null)
-    {
-        Dictionary<string, string?> effectiveEnvironment = environmentVariables is null
-            ? []
-            : new(environmentVariables);
-        effectiveEnvironment["NO_COLOR"] = "1";
-
-        return await DotnetCli.RunAsync(
+        => await DotnetCli.RunAsync(
             $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}"
-            + $" -property:DotnetTestInvocation=true {projectProperties}"
-            + $" --ansi off --progress off {testArguments}",
-            environmentVariables: effectiveEnvironment,
+            + $" -property:DotnetTestInvocation=true {projectProperties} {testArguments}",
+            environmentVariables: environmentVariables,
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
-    }
+
+    private static string NormalizeTerminalOutput(string output)
+        => AnsiEscapeRegex.Replace(output, string.Empty);
 
     private static void AssertUsesMinimalMSTestDependencies(TestAsset generator)
     {
