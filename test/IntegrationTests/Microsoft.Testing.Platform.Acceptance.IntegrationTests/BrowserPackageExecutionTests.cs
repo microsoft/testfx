@@ -141,7 +141,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireBrowserRunArgumentsSdkAsync(generator);
+        await RequireAlignedBrowserInputsAsync(generator);
         Assert.IsFalse(Directory.Exists(Path.Combine(generator.TargetAssetPath, "wwwroot")));
         Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.html", SearchOption.TopDirectoryOnly));
         Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.js", SearchOption.TopDirectoryOnly));
@@ -302,7 +302,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireBrowserRunArgumentsSdkAsync(generator);
+        await RequireAlignedBrowserInputsAsync(generator);
 
         var stopwatch = Stopwatch.StartNew();
         DotnetMuxerResult result = await RunBrowserTestAsync(
@@ -338,7 +338,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireBrowserRunArgumentsSdkAsync(generator);
+        await RequireAlignedBrowserInputsAsync(generator);
 
         DotnetMuxerResult build = await RunBrowserSdkAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
@@ -604,8 +604,18 @@ public sealed class BrowserPackageDesktopTests
             environmentVariables: environmentVariables,
             failIfReturnValueIsNotZero: false);
 
-    private async Task RequireBrowserRunArgumentsSdkAsync(TestAsset generator)
+    private async Task RequireAlignedBrowserInputsAsync(TestAsset generator)
     {
+        string packageFeed = GetBrowserPackageFeed(requireExplicit: true);
+        string nugetConfigPath = Path.Combine(generator.TargetAssetPath, "NuGet.config");
+        var nugetConfig = XDocument.Load(nugetConfigPath);
+        XElement localShipping = nugetConfig.Descendants()
+            .Single(element =>
+                element.Name.LocalName == "add"
+                && element.Attribute("key")?.Value == "local-shipping");
+        localShipping.SetAttributeValue("value", packageFeed);
+        nugetConfig.Save(nugetConfigPath);
+
         string dotnetPath = GetBrowserSdkDotnetPath();
         DotnetMuxerResult evaluation = await DotnetCli.RunAsync(
             $"msbuild {generator.TargetAssetPath} -getProperty:TestingPlatformRunArgumentsVersion",
@@ -744,12 +754,34 @@ public sealed class BrowserPackageDesktopTests
     private static string GetBrowserPackagePath()
     {
         const string packagePrefix = "Microsoft.Testing.Platform.Browser.";
+        string packageFeed = GetBrowserPackageFeed(requireExplicit: false);
         return Directory
-            .EnumerateFiles(Constants.ArtifactsPackagesShipping, $"{packagePrefix}*.nupkg")
+            .EnumerateFiles(packageFeed, $"{packagePrefix}*.nupkg")
             .OrderByDescending(File.GetLastWriteTimeUtc)
             .FirstOrDefault()
             ?? throw new AssertFailedException(
-                $"Microsoft.Testing.Platform.Browser was not packed under '{Constants.ArtifactsPackagesShipping}'.");
+                $"Microsoft.Testing.Platform.Browser was not packed under '{packageFeed}'.");
+    }
+
+    private static string GetBrowserPackageFeed(bool requireExplicit)
+    {
+        string? packageFeed = Environment.GetEnvironmentVariable(
+            "TESTINGPLATFORM_BROWSER_PACKAGE_FEED");
+        if (packageFeed is null)
+        {
+            if (requireExplicit)
+            {
+                Assert.Inconclusive(
+                    "Set TESTINGPLATFORM_BROWSER_PACKAGE_FEED to the immutable aligned TestFX package directory.");
+            }
+
+            return Constants.ArtifactsPackagesShipping;
+        }
+
+        return Directory.Exists(packageFeed)
+            ? Path.GetFullPath(packageFeed)
+            : throw new AssertFailedException(
+                $"TESTINGPLATFORM_BROWSER_PACKAGE_FEED does not exist: '{packageFeed}'.");
     }
 
     private static string? LocateBrowser()
