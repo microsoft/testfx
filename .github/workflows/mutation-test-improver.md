@@ -43,6 +43,7 @@ network:
   - dotnet
   - "*.blob.core.windows.net"
   - github
+  - github.com
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
@@ -103,6 +104,20 @@ tools:
   github:
     mode: gh-proxy
     toolsets: [actions, issues, pull_requests, repos]
+
+# Binary ZIP downloads through gh-proxy are text-corrupted (#11704). Stage and
+# validate this optional input with the runner's read-only token before sandboxing.
+steps:
+  - name: Prepare upstream mutation report
+    env:
+      GH_TOKEN: ${{ github.token }}
+    run: |
+      set -euo pipefail
+      python .github/scripts/mutation_testing.py prepare-improver \
+        --repository "$GITHUB_REPOSITORY" \
+        --event-name "$GITHUB_EVENT_NAME" \
+        --event-path "$GITHUB_EVENT_PATH" \
+        --output-dir /tmp/gh-aw/mutation-input
 ---
 
 # Mutation Test Improver
@@ -135,9 +150,8 @@ Treat the monthly report issue as the only durable source of truth for maintaine
 
 ### Step 1: Identify the triggering run
 
-- If activated by `workflow_dispatch`, find the most recently completed run of the "Mutation testing" workflow via the GitHub tools instead of relying on event context.
-- Otherwise use `${{ github.event.workflow_run.id }}` and `${{ github.event.workflow_run.conclusion }}`.
-- Preserve the identified upstream Mutation testing run id and head SHA in local variables (for example, `upstream_run_id` and `upstream_head_sha`) and use those variables consistently for artifact download, source links, report history links, and duplicate-run detection.
+- Read `/tmp/gh-aw/mutation-input/input.json`, prepared before the sandbox starts. It resolves the triggering run (or the latest completed `main` run for manual dispatch), verifies the repository/workflow/branch identity, and records `runId`, `runAttempt`, `sourceCommit`, `conclusion`, `artifactId`, `artifactStatus`, `reportPath`, and `error`.
+- Preserve `runId` and `sourceCommit` in local variables (`upstream_run_id` and `upstream_head_sha`) and use them consistently for source links, report history links, and duplicate-run detection. Do not resolve a different run or redownload artifacts through the CLI proxy.
 - Before inspecting source, verifying mutants, or preparing a PR, fetch and check out the upstream head SHA (`git fetch --no-tags --depth=1 origin <upstream_head_sha>` then `git checkout --detach <upstream_head_sha>`) so the workspace source exactly matches the downloaded mutation report.
 - If the current monthly report issue's Run History already contains the upstream run id, call `noop` with an explanation and stop.
 - Before suppressing any candidate because the monthly report says a PR was opened, reconcile pending PR attempts by searching GitHub for the recorded branch/title prefix. Only add an opened PR number/link to the report after an actual open PR is found. If no matching PR exists, keep the entry pending for this run and allow future runs to retry after confirming the safe-output PR creation failed or never materialized.
@@ -147,15 +161,15 @@ Treat the monthly report issue as the only durable source of truth for maintaine
 If the conclusion is not `success`:
 
 1. Carry a one-line failure entry and a link to the run forward for Step 5 to add to the monthly report issue's Run History.
-2. Attempt to download the backward-compatible `mutation-testing-report` artifact into `./stryker-report` with the command from Step 3. A failed aggregate can still contain a successful ServerMode module report.
-3. Read `stryker-report/module-result.json`. Continue only when it is valid JSON, its `status` is `success`, and its `sourceCommit` exactly matches `upstream_head_sha`.
-4. If the artifact is unavailable or the module result is missing, invalid, unsuccessful, or from another commit, complete Step 5 and stop without parsing mutants or opening PRs.
+2. Check `artifactStatus` in the prepared input. A failed aggregate can still contain a successful ServerMode module report; the preparation step validates its module identity, successful status, and exact `sourceCommit` before marking it available.
+3. If `artifactStatus` is not `available`, carry the recorded `error` into Step 5 and stop without parsing mutants or opening PRs. Retain older score/hotspot data explicitly as historical, not a fresh measurement.
+4. Do not attempt another binary download through `gh run download` or `gh api` inside the sandbox.
 5. Otherwise, carry a note into Step 5 that the aggregate run failed but the ServerMode module succeeded, then continue with Step 3 and the fresh ServerMode data.
 
 ### Step 3: Download and parse the report
 
-1. If Step 2 did not already download it, download the `mutation-testing-report` artifact from the upstream Mutation testing run into `./stryker-report` with `gh run download "$upstream_run_id" --repo "${{ github.repository }}" --name mutation-testing-report --dir ./stryker-report`. The configured `gh-proxy` mode provides the authenticated `gh` session without direct access to `api.github.com`.
-2. Parse `stryker-report/reports/mutation-report.json`. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
+1. If `artifactStatus` is not `available` (including on a successful upstream run), carry its `error` into Step 5 and stop without fresh measurements or PRs. Missing, expired, invalid, or undownloadable artifacts are not zero scores.
+2. Parse the JSON file at `/tmp/gh-aw/mutation-input/<reportPath>`. The preparation step already validated its schema and, when module metadata exists, its successful status and source identity. Successful legacy runs without module metadata remain supported. For each file, compute killed/survived/timeout/no-coverage/compile-error/runtime-error/ignored counts and the overall mutation score. Stryker counts `Killed` and `Timeout` as detected mutants and excludes invalid `CompileError`/`RuntimeError` mutants, so use `(Killed + Timeout) / (Killed + Timeout + Survived + NoCoverage)`; Stryker also prints "The final mutation score is NN.NN %" in its console output if you need to cross-check. Track invalid statuses separately, but do not include them in the score denominator.
 3. Rank files by number of `Survived` and `NoCoverage` mutants, since those are the undetected actionable gaps. Do not spend verification budget on `Timeout` mutants unless investigating Stryker performance itself. For each candidate mutant, resolve the exact source line via `location` so you can link to it (`https://github.com/${{ github.repository }}/blob/<upstream_head_sha>/<path>#L<line>`).
 4. Compute a stable fingerprint for every candidate before comparing it to memory. Include at least the normalized repository-relative source path, mutator name, replacement text, start/end line and column, and original source snippet at that location. Revalidate any memory match against the current report and current source snippet before suppressing it; Stryker mutant IDs and line locations alone are not stable enough.
 5. Filter out mutants already recorded in the monthly report as equivalent or already attempted while their revalidated outcome is still active, including successfully killed mutants whose draft PR is still open. Do not retry the same active mutant on later weekly runs.
