@@ -14,7 +14,7 @@ public sealed class DotnetTestConnectionTests
     [DataRow("1.2.0", "1.0.0;1.1.0;1.2.0", true, DisplayName = "MultipleEntriesLastMatch")]
     [DataRow("2.0.0", "1.0.0;1.1.0;1.2.0", false, DisplayName = "VersionNotInList")]
     [DataRow("1.2", "1.2.0", false, DisplayName = "PartialVersionIsNotAMatch")]
-    [DataRow("2.0", "1.2.0", false, DisplayName = "VersionSubstringOfAnotherEntryIsNotAMatch")]
+    [DataRow("1.0", "1.0.0;1.10.0", false, DisplayName = "VersionSubstringOfAnotherEntryIsNotAMatch")]
     public void IsVersionCompatible_ReturnsExpectedResult(string protocolVersion, string supportedProtocolVersions, bool expected)
     {
         bool actual = DotnetTestConnection.IsVersionCompatible(protocolVersion, supportedProtocolVersions);
