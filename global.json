@@ -1,6 +1,6 @@
 {
   "tools": {
-    "dotnet": "12.0.100-alpha.1.26480.103",
+    "dotnet": "12.0.100-alpha.1.26509.101",
     "runtimes": {
       "dotnet": [
         "8.0.31",
@@ -24,7 +24,7 @@
     }
   },
   "sdk": {
-    "version": "12.0.100-alpha.1.26480.103",
+    "version": "12.0.100-alpha.1.26509.101",
     "paths": [
       ".dotnet",
       "$host$"
