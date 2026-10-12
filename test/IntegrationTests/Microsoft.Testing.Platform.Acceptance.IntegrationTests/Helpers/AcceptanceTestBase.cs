@@ -17,6 +17,22 @@ public abstract class AcceptanceTestBase
 {
     private const string NuGetPackageExtensionName = ".nupkg";
 
+    private static readonly Lazy<string> MSTestVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
+    private static readonly Lazy<string> MSTestExtensionsHostingVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "MSTest.Extensions.Hosting.");
+    private static readonly Lazy<string> MSTestSourceGenerationVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
+    private static readonly Lazy<string> MicrosoftTestingPlatformVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsConfigurationVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsHostingVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Hosting.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsLoggingVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsOpenTelemetryVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.OpenTelemetry.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsCtrfReportVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsJUnitReportVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsGitHubActionsReportVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsPackagedAppVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsRetryVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Retry.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsVideoRecorderVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
+    private static readonly Lazy<string> MicrosoftTestingExtensionsAzureFoundryVersionValue = CreatePackageVersion(Constants.ArtifactsPackagesNonShipping, "Microsoft.Testing.Extensions.AzureFoundry.");
+
     static AcceptanceTestBase()
     {
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
@@ -31,22 +47,6 @@ public abstract class AcceptanceTestBase
             .GetProperty("MSBuild.Sdk.Extras")
             .GetString()
             ?? throw new InvalidOperationException("The repository global.json does not define a non-empty MSBuild.Sdk.Extras version.");
-
-        MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
-        MSTestExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Extensions.Hosting.");
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
-        MicrosoftTestingExtensionsConfigurationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Configuration.");
-        MicrosoftTestingExtensionsHostingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Hosting.");
-        MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
-        MicrosoftTestingExtensionsOpenTelemetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.OpenTelemetry.");
-        MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
-        MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
-        MicrosoftTestingExtensionsGitHubActionsReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.GitHubActionsReport.");
-        MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
-        MicrosoftTestingExtensionsRetryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Retry.");
-        MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
-        MicrosoftTestingExtensionsAzureFoundryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesNonShipping, "Microsoft.Testing.Extensions.AzureFoundry.");
     }
 
     internal static string RID { get; }
@@ -84,11 +84,11 @@ public abstract class AcceptanceTestBase
         return Microsoft.Testing.TestInfrastructure.TestHost.LocateFrom(clone.Path, assetName);
     }
 
-    public static string MSTestVersion { get; private set; }
+    public static string MSTestVersion => MSTestVersionValue.Value;
 
-    public static string MSTestExtensionsHostingVersion { get; private set; }
+    public static string MSTestExtensionsHostingVersion => MSTestExtensionsHostingVersionValue.Value;
 
-    public static string MSTestSourceGenerationVersion { get; private set; }
+    public static string MSTestSourceGenerationVersion => MSTestSourceGenerationVersionValue.Value;
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
@@ -120,29 +120,32 @@ public abstract class AcceptanceTestBase
             "1",
             StringComparison.Ordinal);
 
-    public static string MicrosoftTestingPlatformVersion { get; private set; }
+    public static string MicrosoftTestingPlatformVersion => MicrosoftTestingPlatformVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsConfigurationVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsConfigurationVersion => MicrosoftTestingExtensionsConfigurationVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsHostingVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsHostingVersion => MicrosoftTestingExtensionsHostingVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsLoggingVersion => MicrosoftTestingExtensionsLoggingVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsOpenTelemetryVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsOpenTelemetryVersion => MicrosoftTestingExtensionsOpenTelemetryVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsCtrfReportVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsCtrfReportVersion => MicrosoftTestingExtensionsCtrfReportVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsJUnitReportVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsJUnitReportVersion => MicrosoftTestingExtensionsJUnitReportVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsGitHubActionsReportVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsGitHubActionsReportVersion => MicrosoftTestingExtensionsGitHubActionsReportVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsPackagedAppVersion => MicrosoftTestingExtensionsPackagedAppVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsRetryVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsRetryVersion => MicrosoftTestingExtensionsRetryVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsVideoRecorderVersion => MicrosoftTestingExtensionsVideoRecorderVersionValue.Value;
 
-    public static string MicrosoftTestingExtensionsAzureFoundryVersion { get; private set; }
+    public static string MicrosoftTestingExtensionsAzureFoundryVersion => MicrosoftTestingExtensionsAzureFoundryVersionValue.Value;
+
+    internal static Lazy<string> CreatePackageVersion(string rootFolder, string packagePrefixName)
+        => new(() => ExtractVersionFromPackage(rootFolder, packagePrefixName));
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
