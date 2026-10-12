@@ -24,7 +24,7 @@ steps:
       New-Item -ItemType Directory -Path '$(Build.SourcesDirectory)/artifacts/log' -Force | Out-Null
       $sdkRoot = if ($IsWindows) {
         $driveRoot = [IO.Path]::GetPathRoot('$(Build.SourcesDirectory)')
-        Join-Path $driveRoot "bsi-$(Build.BuildId)-$(System.JobAttempt)"
+        Join-Path $driveRoot 'bsi'
       } else {
         "/tmp/bsi-$(Build.BuildId)-$(System.JobAttempt)"
       }
