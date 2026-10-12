@@ -15,6 +15,18 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string StrictAcceptanceEnvironmentVariable = "TESTINGPLATFORM_BROWSER_REQUIRED";
+    private static readonly string[] AlignedPackageIds =
+    [
+        "Microsoft.Testing.Platform.Browser",
+        "Microsoft.Testing.Platform",
+        "Microsoft.Testing.Platform.MSBuild",
+        "Microsoft.Testing.Extensions.Telemetry",
+        "Microsoft.Testing.Extensions.TrxReport.Abstractions",
+        "MSTest.TestFramework",
+        "MSTest.TestAdapter",
+        "MSTest.Analyzers",
+    ];
+
     private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
     private static readonly Regex AnsiEscapeRegex = new(
         @"\x1B\[[0-?]*[ -/]*[@-~]",
@@ -181,6 +193,10 @@ public sealed class BrowserPackageDesktopTests
                 SearchOption.AllDirectories));
         Assert.AreEqual("browser-artifact-marker", File.ReadAllText(exportedArtifact));
         AssertUsesMinimalMSTestDependencies(generator);
+        BrowserPackageRestoreIdentity.AssertMatches(
+            Path.Combine(generator.TargetAssetPath, "obj", "project.assets.json"),
+            GetBrowserPackageFeed(requireExplicit: true),
+            AlignedPackageIds);
         await AssertIsTestingPlatformApplicationAsync(
             generator,
             $"-property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}");
@@ -753,6 +769,13 @@ public sealed class BrowserPackageDesktopTests
         foreach ((string key, string? value) in GetBrowserSdkEnvironment(dotnetPath))
         {
             environmentVariables[key] = value;
+        }
+
+        if (workingDirectory is not null)
+        {
+            environmentVariables["NUGET_PACKAGES"] = Path.Combine(
+                workingDirectory,
+                ".packages");
         }
 
         return await DotnetCli.RunAsync(
