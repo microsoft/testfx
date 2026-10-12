@@ -20,6 +20,7 @@ Param(
   [switch] $publish,
   [switch] $clean,
   [switch][Alias('bl')]$binaryLog,
+  [string][Alias('bln')]$binaryLogName = '',
   [switch][Alias('nobl')]$excludeCIBinarylog,
   [switch] $ci,
   [switch] $prepareMachine,
@@ -83,3 +84,4 @@ $null = $PSBoundParameters.Remove("vs")
 $null = $PSBoundParameters.Remove("installWindowsSdk")
 
 & $PSScriptRoot\common\Build.ps1 @PSBoundParameters
+exit $LASTEXITCODE
