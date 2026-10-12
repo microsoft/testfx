@@ -257,6 +257,80 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
     }
 
     [TestMethod]
+    public async Task CompositeContainsSingleDiscardedResults_Diagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check(IQueryable<string> first, IQueryable<string> second, bool flag, string value)
+                {
+                    _ = flag ? [|Assert.ContainsSingle(first)|] : [|Assert.ContainsSingle(second)|];
+                    _ = ([|Assert.ContainsSingle(first)|], [|Assert.ContainsSingle(second)|]);
+                    _ = flag ? ([|Assert.ContainsSingle(first)|], 0) : ([|Assert.ContainsSingle(second)|], 1);
+                    _ = ((object)([|Assert.ContainsSingle(first)|]), 0);
+                    _ = value ?? [|Assert.ContainsSingle(first)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task CompositeContainsSingleConsumedResults_NoDiagnostic()
+    {
+        string code = """
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check(IQueryable<string> first, IQueryable<string> second, IQueryable<bool> conditions, bool flag)
+                {
+                    var item = flag ? Assert.ContainsSingle(first) : Assert.ContainsSingle(second);
+                    var pair = (Assert.ContainsSingle(first), Assert.ContainsSingle(second));
+                    Consume(flag ? Assert.ContainsSingle(first) : Assert.ContainsSingle(second));
+                    Consume((Assert.ContainsSingle(first), Assert.ContainsSingle(second)));
+                    _ = Assert.ContainsSingle(conditions) ? 1 : 0;
+                    _ = (Assert.ContainsSingle(conditions) ? 1 : 0, 0);
+                    _ = Assert.ContainsSingle(first) ?? "fallback";
+                }
+
+                private static void Consume(string item) { }
+                private static void Consume((string, string) pair) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task UntypedNullCollections_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Tests
+            {
+                public void Check()
+                {
+                    Assert.HasCount<int>(1, null!);
+                    Assert.IsEmpty<int>(null!);
+                    Assert.IsNotEmpty<int>(null!);
+                    Assert.ContainsSingle<int>(null!);
+                    Assert.IsEmpty((IEnumerable)null!);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task ScalarChecksAndMaterializedCollections_NoDiagnostic()
     {
         string code = """

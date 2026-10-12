@@ -81,7 +81,7 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzer : DiagnosticAna
 
         IArgumentOperation? collection = invocation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == "collection");
         ITypeSymbol? collectionType = collection is null ? null : GetCollectionType(collection.Value, enumerableSymbol);
-        if (!collectionType.DerivesFrom(queryableSymbol) || UsesCollectionCount(collectionType, method, collectionSymbol, genericCollectionSymbol))
+        if (collectionType is null || !collectionType.DerivesFrom(queryableSymbol) || UsesCollectionCount(collectionType, method, collectionSymbol, genericCollectionSymbol))
         {
             return;
         }
@@ -132,9 +132,13 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzer : DiagnosticAna
     private static bool IsResultIgnored(IInvocationOperation invocation)
     {
         IOperation result = invocation;
-        while (result.Parent is IParenthesizedOperation or IConversionOperation { Conversion.IsUserDefined: false })
+        // Branch results are forwarded, but conditions and coalesce inputs consume the item.
+        while (result.Parent is { } parent
+            && (parent is IParenthesizedOperation or ITupleOperation or IConversionOperation { Conversion.IsUserDefined: false }
+                || (parent is IConditionalOperation conditional && (conditional.WhenTrue == result || conditional.WhenFalse == result))
+                || (parent is ICoalesceOperation coalesce && coalesce.WhenNull == result)))
         {
-            result = result.Parent;
+            result = parent;
         }
 
         return result.Parent is IExpressionStatementOperation

@@ -19,5 +19,8 @@ cache results. The rule is advisory because an `IQueryable` can also be in-memor
 Queries are exempt when the selected assertion reads `ICollection.Count` or a
 matching `ICollection<T>.Count` instead of enumerating. `ContainsSingle` still
 enumerates even when the query exposes a count.
+Discarded tuple elements, conditional branch results, and coalesce fallback
+results count as ignored returns. Results inspected as conditions or coalesce
+inputs, or passed on to other code, remain valid.
 No automatic fix is provided: query translation, exception behavior, and
 assertion messages need deliberate consideration.

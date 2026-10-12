@@ -26,6 +26,10 @@ Non-generic assertions only check `ICollection`; generic `HasCount`/`IsEmpty`
 also check it. Generic `IsNotEmpty` only explicitly checks `ICollection<T>`.
 `ContainsSingle` still enumerates count-bearing queries, so it keeps its diagnostic.
 
+Ignored results include values forwarded through tuples, conditional branches,
+or coalesce fallbacks to a discard. Conditions and coalesce inputs inspect the
+returned item and are not treated as ignored.
+
 This is deliberately not general dataflow analysis: queries hidden behind
 `IEnumerable` variables or arbitrary methods are outside the initial scope.
 Other collection assertions are not automatically considered bad; tests of
@@ -289,6 +293,73 @@ Only focused suites were rerun for this correction; the earlier full-suite
 result remains evidence for the initial implementation, not a CI claim for
 the review-fix commit. No localization resources or runtime framework behavior
 changed.
+
+### 2026-10-12: null-guard clarity and discarded composite expressions
+
+Code-quality review flagged the nullable `collectionType` access. The existing
+`DerivesFrom` helper already returns false for null and declares
+`NotNullWhen(true)`, so the previous short circuit was safe. Added an explicit
+guard at the call site to make that behavior locally visible without depending
+on interprocedural annotation support.
+
+The review summary also identified a real missed diagnostic: a `ContainsSingle`
+result forwarded through a conditional or tuple into a discard was not recognized.
+The parent walk now follows tuple elements, conditional branch results, and
+coalesce fallbacks. It does not follow conditional conditions or coalesce inputs,
+because those inspect the item, and it still stops at other consumers and
+user-defined conversions.
+
+Added `CompositeContainsSingleDiscardedResults_Diagnostic`,
+`CompositeContainsSingleConsumedResults_NoDiagnostic`, and
+`UntypedNullCollections_NoDiagnostic`. With unchanged production at
+`de1404264175c3c205386ecb2f71a5aabc5858a0`, retained new tests, and isolated
+`artifacts\queryable-composite-review-red` outputs, the exact three-case selection
+executed and exited 2: the discarded-composite case expected eight diagnostics
+but received zero; the consumed-composite and untyped-null cases both passed.
+The same selection passed all three cases after the change (exit 0, no skips).
+The null guard therefore has green-before/green-after evidence, while the
+composite behavior has an intended red/green assertion comparison.
+
+The test-file SHA-256 was unchanged between those runs:
+`37E8EE8C850FB446131A2D670E9BB32476189C793774A2247C1FE32343368E38`.
+The complete focused analyzer/release-tracking selection passed 28/28 cases on
+net8.0 and net472, with no skips. Normal-output builds had zero warnings/errors;
+the redirected red build had generated-resource warnings but compiled and
+executed the intended assertions successfully. Method-level parallelization
+remained enabled with 32 workers and per-test Roslyn workspaces.
+
+```powershell
+$red = Join-Path (Get-Location) 'artifacts\queryable-composite-review-red'
+.\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net8.0 -v:quiet "-p:ArtifactsDir=$red\" "-bl:$evidence\queryable-composite-review-red-build-{}.binlog"
+.\.dotnet\dotnet.exe "$red\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll" --filter "FullyQualifiedName~CompositeContainsSingle|FullyQualifiedName~UntypedNullCollections" --report-trx --report-trx-filename red.trx --results-directory "$evidence\queryable-composite-review-red-results"
+.\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net8.0 --no-restore -v:quiet "-bl:$evidence\queryable-composite-review-green-build-{}.binlog"
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~CompositeContainsSingle|FullyQualifiedName~UntypedNullCollections" --report-trx --report-trx-filename regression-green.trx --results-directory "$evidence\queryable-composite-review-green-results"
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green.trx --results-directory "$evidence\queryable-composite-review-green-results"
+.\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net472 --no-restore -v:quiet "-bl:$evidence\queryable-composite-review-net472-build-{}.binlog"
+.\artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net472\MSTest.Analyzers.UnitTests.exe --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green-net472.trx --results-directory "$evidence\queryable-composite-review-green-results"
+.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Debug --no-restore -v:quiet "-bl:$evidence\queryable-composite-review-pack-{}.binlog"
+```
+
+All builds and green runs exited 0. The repacked analyzer was consumed with a
+new `.packages-composite` cache. The package/cache SHA-256 matched:
+`8D128D4B7BB6FEE4713ED1DDA247E944D368FA2A4D14E2EECFE2E330144BA7D2`.
+Consumed conditional/tuple results and control-flow inputs compiled successfully
+with no MSTEST0090. The bad branch produced eight MSTEST0090 errors: five for
+discarded composite results and three existing count/enumeration cases. This
+consumer initially hit an unused-tuple-local compiler warning promoted to an
+error; explicitly consuming its good-branch values corrected the fixture without
+changing or suppressing product diagnostics.
+
+```powershell
+$consumer = "$evidence\queryable-review-consumer"
+$cache = "$consumer\.packages-composite"
+.\.dotnet\dotnet.exe build "$consumer\consumer.csproj" -v:quiet -p:DefineConstants=GOOD "-p:RestorePackagesPath=$cache" "-p:ErrorLog=$consumer\composite-good.sarif" "-bl:$evidence\queryable-composite-consumer-good-{}.binlog"
+.\.dotnet\dotnet.exe build "$consumer\consumer.csproj" --no-restore -v:quiet -p:DefineConstants=BAD "-p:RestorePackagesPath=$cache" "-p:ErrorLog=$consumer\composite-bad.sarif" "-bl:$evidence\queryable-composite-consumer-bad-{}.binlog"
+```
+
+The good consumer exited 0 with zero warnings/errors; the bad consumer exited 1
+with only the eight expected MSTEST0090 errors. No CI result is inferred from
+these local runs.
 
 ## Open questions
 
