@@ -451,6 +451,9 @@ stages:
             parameters:
               osName: MacOS
 
+      - ${{ if eq(parameters.SkipTests, False) }}:
+        - template: /eng/pipelines/jobs/browser-testing.yml
+
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
