@@ -135,11 +135,21 @@
 
 ## Last Run
 
-2026-10-11 UTC (run 38182339774)
+2026-10-12 UTC (run 38319495889)
 
 ## Last Run (previous)
 
-2026-10-10 UTC (run 38093201907)
+2026-10-11 UTC (run 38182339774)
+
+## Run 2026-10-12 (run 38319495889) — DotnetTestConnection.GetExecutionMode / GetAttemptNumber tests
+
+- Task reconciliation: all 3 previously-tracked PRs confirmed merged — #11876 (console test execution filter selection), #11878 (retry-attempt supersession), #11889 (DotnetTestConnection.IsVersionCompatible). No open testing-labeled issues (Task 5 had nothing to action).
+- Task 2/3: continued the `DotnetTestConnection` sweep. Found `GetExecutionMode` (Tool/Help/Discover/Run precedence) and `GetAttemptNumber` (env-var parsing with `>= 1` guard) — both private, zero direct tests.
+- Added `DotnetTestConnectionGetExecutionModeAndAttemptNumberTests.cs` (12 tests) via reflection-invoked private methods on a real `DotnetTestConnection` built with the `DotnetTestHelperTests.cs` `CommandLineHandler` construction pattern. Covers precedence (Tool > Help > Discover > Run, including a `CommandLineParseResult` with non-null `ToolName` to exercise `HasTool`) and attempt-number edge cases (absent/empty→"1", valid positive ints, 0/negative/non-numeric→`InvalidOperationException`).
+- Verified red/green: injected 2 simultaneous faults (precedence swap Discover-before-Help; dropped `>= 1` guard) — exactly 2/2945 failed at the intended assertions; reverted, reran — 0/2945 net8.0, 0/2946 net9.0, 22 pre-existing skips.
+- Build succeeded (0 warnings) net8.0+net9.0. `dotnet format whitespace --verify-no-changes` clean.
+- Created PR "Add unit tests for DotnetTestConnection.GetExecutionMode and GetAttemptNumber" on branch `test-assist/dotnet-test-connection-execution-mode-attempt-number`.
+- Remaining candidates for future runs: `DotnetTestConnection`'s remaining async orchestration (`IsCompatibleProtocolAsync` handshake property building, server control channel listen/cancel loop, `SendMessageAsync`, `OnExitAsync`) — needs `IClient`/`NamedPipeClient` mocking, moderate effort; or pivot to Task 6 (test infrastructure) since pure-function low-hanging fruit in this class is now largely exhausted.
 
 ## Completed Work (recent, summarized)
 
