@@ -661,7 +661,7 @@
       </trans-unit>
       <trans-unit id="IncompleteInformationalResponse">
         <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
-        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <target state="translated">Тестовый узел завершил работу без выполнения ожидаемой справки или протокола обнаружения. Полный информационный результат не получен.</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
