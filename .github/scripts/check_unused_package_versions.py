@@ -15,7 +15,8 @@ EXCLUDED_DIRECTORIES = {".git", ".dotnet", "artifacts", "bin", "obj", "node_modu
 def unused_package_versions(root: Path) -> list[str]:
     versions = {
         element.attrib["Include"].casefold(): element.attrib["Include"]
-        for element in ET.parse(root / "Directory.Packages.props").iter("PackageVersion")
+        for element in ET.parse(root / "Directory.Packages.props").iter()
+        if element.tag.rsplit("}", 1)[-1] == "PackageVersion"
     }
     references = set()
     for directory, subdirectories, files in os.walk(root):
@@ -24,7 +25,7 @@ def unused_package_versions(root: Path) -> list[str]:
             if Path(name).suffix not in PROJECT_EXTENSIONS:
                 continue
             for element in ET.parse(Path(directory) / name).iter():
-                if element.tag in {"PackageReference", "GlobalPackageReference"}:
+                if element.tag.rsplit("}", 1)[-1] in {"PackageReference", "GlobalPackageReference"}:
                     if include := element.get("Include"):
                         references.add(include.casefold())
     return sorted((name for key, name in versions.items() if key not in references), key=str.casefold)
