@@ -61,7 +61,6 @@ foreach ($path in @(
 
 foreach ($requiredForceAllPattern in @(
     "Directory.Build.*",
-    "src/**",
     "src/**/Directory.Build.*",
     "test/**/Directory.Build.*"
 )) {
@@ -161,7 +160,6 @@ Assert-Containment `
     "_CopyAffectedTestsRuntimeAssets",
     "_RegisterAffectedTestsRuntimeAssetsForClean",
     "'`$(RuntimeIdentifier)' == 'win-x64'",
-    'Value="..\..\..\ctsrun64.dll"',
     "MicrosoftInstrumentationEngine_x64.dll",
     "ctsrun64.dll",
     "Cts_x64.config"

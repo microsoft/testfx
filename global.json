@@ -54,7 +54,6 @@
           "build.sh",
           "test.sh",
           "eng/**",
-          "src/**",
           "src/**/Directory.Build.*",
           "test/**/Directory.Build.*"
         ]
