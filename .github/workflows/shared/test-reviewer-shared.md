@@ -59,6 +59,36 @@ tools:
     - uniq
 
 safe-outputs:
+  # gh-aw v0.89.21 mistakes successful provisional CONNECT records for denials.
+  # Correct only its footer classifier, not the firewall or its raw evidence.
+  steps:
+    - name: Correct provisional CONNECT firewall reporting
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      with:
+        script: |
+          const fs = require("fs");
+          const path = require("path");
+          const { createHash } = require("crypto");
+          const modulePath = path.join(process.env.RUNNER_TEMP, "gh-aw", "actions", "firewall_blocked_domains.cjs");
+          const source = fs.readFileSync(modulePath, "utf8");
+          const digest = createHash("sha256").update(source).digest("hex");
+          const originalDigest = "3a9edc197333e6447d2ac557328d1e292d3a7816beca6457a161bfb542921284";
+          const correctedDigest = "374a41b9b844f0fd528c5d3429553ec839571ec79b4347074b32b714cc0a362c";
+          if (digest === correctedDigest) {
+            core.info("Firewall footer classifier is already corrected.");
+            return;
+          }
+          if (digest !== originalDigest) {
+            throw new Error("The gh-aw firewall footer module changed; revalidate or remove the v0.89.21 correction.");
+          }
+          const original = 'if (decision.includes("NONE_NONE") || decision.includes("TCP_DENIED")) {';
+          const corrected = 'if (decision.includes("TCP_DENIED")) {';
+          const result = source.replace(original, corrected);
+          if (createHash("sha256").update(result).digest("hex") !== correctedDigest) {
+            throw new Error("The gh-aw firewall footer correction did not produce the expected module.");
+          }
+          fs.writeFileSync(modulePath, result);
+          core.info("Corrected provisional CONNECT reporting; explicit firewall denials remain warnings.");
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced
   # false positives and malformed result markers (#10821).
   threat-detection:

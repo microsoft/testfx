@@ -42,6 +42,7 @@ jobs:
     timeout-minutes: ${{ matrix.timeoutMinutes }}
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      MutationTesting: true
     strategy:
       fail-fast: false
       max-parallel: 6
@@ -58,17 +59,26 @@ jobs:
             --output MutationTesting.generated.slnx
 
       - name: Build mutation shard
-        run: ./build.sh --binaryLog --projects MutationTesting.generated.slnx
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          output="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}"
+          mkdir -p "$output"
+          ./build.sh --binaryLog --projects "$GITHUB_WORKSPACE/MutationTesting.generated.slnx" \
+            2>&1 | tee "$output/build-console.log"
 
       - name: Install Stryker.NET
+        id: install
+        if: ${{ steps.build.outcome == 'success' }}
         run: |
           stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
           test -n "$stryker_version"
           ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
-        env:
-          MutationTesting: true
+        id: mutate
+        if: ${{ success() && steps.build.outcome == 'success' }}
         run: |
           set -u
           export DOTNET_ROOT="$GITHUB_WORKSPACE/.dotnet"
@@ -102,17 +112,25 @@ jobs:
 
       - name: Summarize mutation testing results
         if: ${{ always() }}
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          MUTATE_OUTCOME: ${{ steps.mutate.outcome }}
         run: |
-          summary="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}/module-summary.md"
-          if [ -f "$summary" ]; then
-            cat "$summary" >> "$GITHUB_STEP_SUMMARY"
-          else
-            {
-              echo "## Mutation testing: ${{ matrix.displayName }}"
-              echo ""
-              echo "The module did not produce result metadata."
-            } >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          output="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}"
+          if [ ! -f "$output/module-result.json" ]; then
+            python .github/scripts/mutation_testing.py record-module \
+              --manifest eng/mutation-testing/modules.json \
+              --module "${{ matrix.id }}" \
+              --artifact-dir "$output" \
+              --source-commit "$GITHUB_SHA" \
+              --exit-code 1 \
+              --duration-seconds 0 \
+              --failure-reason "Mutation execution did not complete (build: $BUILD_OUTCOME; tool: $INSTALL_OUTCOME; mutation: $MUTATE_OUTCOME)."
           fi
+          summary="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}/module-summary.md"
+          cat "$summary" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload module report
         if: ${{ always() }}

@@ -209,6 +209,38 @@ public sealed class DiscoveredTestsJsonSerializerTests
     }
 
     [TestMethod]
+    public void Serialize_NonAsciiCharacters_ProducesLosslessAsciiJson()
+    {
+        var node = new TestNode
+        {
+            Uid = new TestNodeUid("uid-\u20DD"),
+            DisplayName = "Unicode \u00C5 \u20DD \uD83D\uDE00",
+        };
+
+        string json = DiscoveredTestsJsonSerializer.Serialize([node]);
+
+        Assert.AreEqual(
+            """
+
+            {
+              "schemaVersion": 1,
+              "tests": [
+                {
+                  "uid": "uid-\u20dd",
+                  "displayName": "Unicode \u00c5 \u20dd \ud83d\ude00"
+                }
+              ]
+            }
+            """.Replace("\r", string.Empty),
+            json.Replace("\r", string.Empty));
+
+        using var document = JsonDocument.Parse(json);
+        JsonElement test = document.RootElement.GetProperty("tests")[0];
+        Assert.AreEqual(node.Uid.Value, test.GetProperty("uid").GetString());
+        Assert.AreEqual(node.DisplayName, test.GetProperty("displayName").GetString());
+    }
+
+    [TestMethod]
     public void Serialize_DisplayNameWithLoneSurrogate_ReplacesWithReplacementCharacter()
     {
         // Lone high surrogate followed by a non-surrogate.

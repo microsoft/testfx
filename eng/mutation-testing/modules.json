@@ -1,6 +1,16 @@
 {
   "schemaVersion": 1,
-  "knownTargetCount": 26,
+  "knownTargetCount": 28,
+  "excludedProjects": [
+    {
+      "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.Controller/Microsoft.Testing.Extensions.PackagedApp.Controller.csproj",
+      "reason": "Windows-only controller targets net8.0-windows/net9.0-windows and win-x64; it cannot execute in the Ubuntu/net8.0 mutation shards."
+    },
+    {
+      "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.MSBuild/Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj",
+      "reason": "Build-only packaging project with no compiled production assembly; its MSBuild targets and packaged controller are covered by acceptance tests, not Stryker."
+    }
+  ],
   "modules": [
     {
       "id": "server-mode-client",

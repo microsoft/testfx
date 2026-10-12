@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
 
@@ -12,7 +14,10 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TestHostOrchestratorManagerTests
 {
+    private static readonly TimeSpan CompletionLimit = TimeSpan.FromSeconds(30);
     private readonly ServiceProvider _serviceProvider = new();
+
+    public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
     public async Task AddTestHostOrchestrator_ViaPublicInterface_RegistersAndBuildsOrchestrator()
@@ -242,6 +247,454 @@ public sealed class TestHostOrchestratorManagerTests
             () => unsupportedManager.AddTestHostExecutionOrchestratorMiddleware(_ => new FakeMiddleware("never-registered")));
 
         Assert.Contains(nameof(UnsupportedOrchestratorManager), exception.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task BackCompatConcreteOverload_ForwardsFactoryAndProvider()
+    {
+        var manager = new BackCompat.TestHostOrchestratorManager();
+        var orchestrator = new FakeOrchestrator("concrete-compat");
+        IServiceProvider? observedProvider = null;
+        Func<IServiceProvider, BackCompat.ITestHostOrchestrator> factory = provider =>
+        {
+            observedProvider = provider;
+            return orchestrator;
+        };
+
+        manager.AddTestHostOrchestrator(factory);
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreSame(_serviceProvider, observedProvider);
+        Assert.AreSequenceEqual(new[] { orchestrator }, config.TestHostOrchestrators);
+        Assert.IsEmpty(config.Middleware);
+    }
+
+    [TestMethod]
+    [DataRow("public")]
+    [DataRow("legacy-interface")]
+    [DataRow("legacy-concrete")]
+    public void AddTestHostOrchestrator_NullFactory_ThrowsWithParameterName(string registration)
+    {
+        var manager = new BackCompat.TestHostOrchestratorManager();
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(() =>
+        {
+            switch (registration)
+            {
+                case "public":
+                    ((PublicApi.ITestHostOrchestratorManager)manager).AddTestHostOrchestrator(null!);
+                    break;
+                case "legacy-interface":
+                    ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestrator(null!);
+                    break;
+                default:
+                    manager.AddTestHostOrchestrator(null!);
+                    break;
+            }
+        });
+
+        Assert.AreEqual("factory", exception.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AddTestHostOrchestratorApplicationLifetime_NullFactory_ThrowsWithParameterName(bool legacy)
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(() =>
+        {
+            if (legacy)
+            {
+                ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestratorApplicationLifetime(null!);
+            }
+            else
+            {
+                manager.AddTestHostOrchestratorApplicationLifetime(null!);
+            }
+        });
+
+        Assert.AreEqual("testHostOrchestratorApplicationLifetimeFactory", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void AddTestHostExecutionOrchestratorMiddleware_NullFactory_ThrowsWithParameterName()
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddTestHostExecutionOrchestratorMiddleware(null!));
+
+        Assert.AreEqual("factory", exception.ParamName);
+    }
+
+    [TestMethod]
+    public async Task BackCompatLifetimeRegistration_ForwardsFactoryAndProvider()
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var lifetime = new FakeOrchestratorLifetime("legacy-lifetime");
+        IServiceProvider? observedProvider = null;
+        ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestratorApplicationLifetime(provider =>
+        {
+            observedProvider = provider;
+            return lifetime;
+        });
+
+        BackCompat.ITestHostOrchestratorApplicationLifetime[] result =
+            await manager.BuildTestHostOrchestratorApplicationLifetimesAsync(_serviceProvider);
+
+        Assert.AreSame(_serviceProvider, observedProvider);
+        Assert.AreSequenceEqual(new[] { lifetime }, result);
+    }
+
+    [TestMethod]
+    public void Configuration_CompatibilityConstructor_PreservesOrderedOrchestratorsWithoutMiddleware()
+    {
+        BackCompat.ITestHostExecutionOrchestrator[] orchestrators =
+            [new FakeOrchestrator("first"), new FakeOrchestrator("second")];
+
+        PublicApi.TestHostOrchestratorConfiguration config = new(orchestrators);
+
+        Assert.AreSame(orchestrators, config.TestHostOrchestrators);
+        Assert.AreSequenceEqual(new[] { "first", "second" }, config.TestHostOrchestrators.Select(x => x.Uid));
+        Assert.IsEmpty(config.Middleware);
+    }
+
+    [TestMethod]
+    public void Configuration_WithMiddleware_PreservesBothOrderedArrays()
+    {
+        BackCompat.ITestHostExecutionOrchestrator[] orchestrators = [new FakeOrchestrator("orchestrator")];
+        BackCompat.ITestHostExecutionOrchestratorMiddleware[] middleware = [new FakeMiddleware("outer"), new FakeMiddleware("inner")];
+
+        PublicApi.TestHostOrchestratorConfiguration config = new(orchestrators, middleware);
+
+        Assert.AreSame(orchestrators, config.TestHostOrchestrators);
+        Assert.AreSame(middleware, config.Middleware);
+        Assert.AreSequenceEqual(new[] { "outer", "inner" }, config.Middleware.Select(x => x.Uid));
+    }
+
+    [TestMethod]
+    [DataRow("orchestrator")]
+    [DataRow("middleware")]
+    [DataRow("lifetime")]
+    public async Task Build_EnabledExtensions_InitializeInOrderAndUseProvidedServices(string kind)
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var events = new List<string>();
+        var first = new InitializableExtension("first", events);
+        var second = new InitializableExtension("second", events);
+        Register(kind, manager, provider =>
+        {
+            Assert.AreSame(_serviceProvider, provider);
+            events.Add("factory:first");
+            return first;
+        });
+        Register(kind, manager, provider =>
+        {
+            Assert.AreSame(_serviceProvider, provider);
+            events.Add("factory:second");
+            return second;
+        });
+
+        IExtension[] result = await BuildAsync(kind, manager);
+
+        Assert.AreSequenceEqual(new IExtension[] { first, second }, result);
+        Assert.AreSequenceEqual(
+            new[] { "factory:first", "enabled:first", "initialize:first", "factory:second", "enabled:second", "initialize:second" },
+            events);
+    }
+
+    [TestMethod]
+    [DataRow("orchestrator")]
+    [DataRow("middleware")]
+    [DataRow("lifetime")]
+    public async Task Build_DisabledExtensions_AreNotInitializedOrReturned(string kind)
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var events = new List<string>();
+        var disabled = new InitializableExtension("disabled", events, enabled: false);
+        var enabled = new InitializableExtension("enabled", events);
+        Register(kind, manager, _ => disabled);
+        Register(kind, manager, _ => enabled);
+
+        IExtension[] result = await BuildAsync(kind, manager);
+
+        Assert.AreSequenceEqual(new IExtension[] { enabled }, result);
+        Assert.AreSequenceEqual(new[] { "enabled:disabled", "enabled:enabled", "initialize:enabled" }, events);
+    }
+
+    [TestMethod]
+    [DataRow("orchestrator", "factory")]
+    [DataRow("orchestrator", "enabled")]
+    [DataRow("orchestrator", "initialize")]
+    [DataRow("middleware", "factory")]
+    [DataRow("middleware", "enabled")]
+    [DataRow("middleware", "initialize")]
+    [DataRow("lifetime", "factory")]
+    [DataRow("lifetime", "enabled")]
+    [DataRow("lifetime", "initialize")]
+    public async Task Build_ExtensionFailure_PreservesExceptionAndStopsLaterFactories(string kind, string stage)
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var failure = new InvalidOperationException("extension failed");
+        var events = new List<string>();
+        Register(kind, manager, _ =>
+        {
+            events.Add("factory:first");
+            return stage == "factory"
+                ? throw failure
+                : new InitializableExtension("first", events, failureStage: stage, failure: failure);
+        });
+        Register(kind, manager, _ =>
+        {
+            events.Add("factory:unreachable");
+            return new InitializableExtension("unreachable", events);
+        });
+
+        InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => BuildAsync(kind, manager));
+
+        Assert.AreSame(failure, observed);
+        string[] expected = stage switch
+        {
+            "factory" => ["factory:first"],
+            "enabled" => ["factory:first", "enabled:first"],
+            _ => ["factory:first", "enabled:first", "initialize:first"],
+        };
+        Assert.AreSequenceEqual(expected, events);
+    }
+
+    [TestMethod]
+    [DataRow("orchestrator")]
+    [DataRow("middleware")]
+    [DataRow("lifetime")]
+    public async Task Build_RepeatedCalls_RebuildsFreshOrderedResults(string kind)
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        int generation = 0;
+        Register(kind, manager, _ => new InitializableExtension($"first-{++generation}", []));
+        Register(kind, manager, _ => new InitializableExtension($"second-{generation}", []));
+
+        IExtension[] first = await BuildAsync(kind, manager);
+        IExtension[] second = await BuildAsync(kind, manager);
+
+        Assert.AreSequenceEqual(new[] { "first-1", "second-1" }, first.Select(x => x.Uid));
+        Assert.AreSequenceEqual(new[] { "first-2", "second-2" }, second.Select(x => x.Uid));
+        Assert.AreNotSame(first, second);
+    }
+
+    [TestMethod]
+    [DataRow("orchestrator", false)]
+    [DataRow("orchestrator", true)]
+    [DataRow("middleware", false)]
+    [DataRow("middleware", true)]
+    [DataRow("lifetime", false)]
+    [DataRow("lifetime", true)]
+    public async Task Build_AsynchronousLifecycle_WaitsBeforeBuildingNextExtension(string kind, bool initialize)
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var events = new List<string>();
+        TaskCompletionSource<bool> gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = new InitializableExtension(
+            "first", events,
+            enablement: initialize ? null : gate.Task,
+            initialization: initialize ? gate.Task : null);
+        var second = new InitializableExtension("second", events);
+        Register(kind, manager, _ => first);
+        Register(kind, manager, _ =>
+        {
+            events.Add("factory:second");
+            return second;
+        });
+        Task<IExtension[]> build = BuildAsync(kind, manager);
+        Exception? assertionFailure = null;
+
+        try
+        {
+            Assert.IsFalse(build.IsCompleted);
+            Assert.AreSequenceEqual(
+                initialize ? new[] { "enabled:first", "initialize:first" } : new[] { "enabled:first" },
+                events);
+
+            gate.SetResult(true);
+            IExtension[] result = await build.WaitAsync(CompletionLimit, TestContext.CancellationToken);
+
+            Assert.AreSequenceEqual(new IExtension[] { first, second }, result);
+            Assert.AreSequenceEqual(
+                new[] { "enabled:first", "initialize:first", "factory:second", "enabled:second", "initialize:second" },
+                events);
+        }
+        catch (Exception exception)
+        {
+            assertionFailure = exception;
+            throw;
+        }
+        finally
+        {
+            gate.TrySetResult(true);
+            await JoinForCleanupAsync(build, assertionFailure);
+        }
+    }
+
+    [TestMethod]
+    public async Task Build_IndependentCategories_AllowSameUidAndKeepSeparateResults()
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+        var orchestrator = new FakeOrchestrator("same-uid");
+        var middleware = new FakeMiddleware("same-uid");
+        var lifetime = new FakeOrchestratorLifetime("same-uid");
+        manager.AddTestHostOrchestrator(_ => orchestrator);
+        manager.AddTestHostExecutionOrchestratorMiddleware(_ => middleware);
+        manager.AddTestHostOrchestratorApplicationLifetime(_ => lifetime);
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+        BackCompat.ITestHostOrchestratorApplicationLifetime[] lifetimes =
+            await manager.BuildTestHostOrchestratorApplicationLifetimesAsync(_serviceProvider);
+
+        Assert.AreSequenceEqual(new[] { orchestrator }, config.TestHostOrchestrators);
+        Assert.AreSequenceEqual(new[] { middleware }, config.Middleware);
+        Assert.AreSequenceEqual(new[] { lifetime }, lifetimes);
+    }
+
+    [TestMethod]
+    public async Task Build_LifetimesWithoutRegistration_ReturnsEmptyArray()
+    {
+        var manager = new PublicApi.TestHostOrchestratorManager();
+
+        Assert.IsEmpty(await manager.BuildTestHostOrchestratorApplicationLifetimesAsync(_serviceProvider));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AddMiddlewareExtension_NullManager_IsValidatedBeforeFactory(bool nullFactory)
+    {
+        Func<IServiceProvider, BackCompat.ITestHostExecutionOrchestratorMiddleware> factory = _ => new FakeMiddleware("unused");
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => PublicApi.TestHostOrchestratorManagerExtensions.AddTestHostExecutionOrchestratorMiddleware(
+                null!, nullFactory ? null! : factory));
+
+        Assert.AreEqual("manager", exception.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AddMiddlewareExtension_NullFactory_IsValidatedBeforeCapability(bool supported)
+    {
+        PublicApi.ITestHostOrchestratorManager manager = supported
+            ? new PublicApi.TestHostOrchestratorManager()
+            : new UnsupportedOrchestratorManager();
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => PublicApi.TestHostOrchestratorManagerExtensions.AddTestHostExecutionOrchestratorMiddleware(manager, null!));
+
+        Assert.AreEqual("factory", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void AddMiddlewareExtension_Capability_ForwardsFactoryUnchangedAndPreservesFailure()
+    {
+        var failure = new InvalidOperationException("registration failed");
+        var manager = new Moq.Mock<PublicApi.ITestHostOrchestratorManager>();
+        Func<IServiceProvider, BackCompat.ITestHostExecutionOrchestratorMiddleware> factory = _ => new FakeMiddleware("unused");
+        Moq.Mock<PublicApi.ITestHostExecutionOrchestratorMiddlewareManager> capability =
+            manager.As<PublicApi.ITestHostExecutionOrchestratorMiddlewareManager>();
+        capability.Setup(x => x.AddTestHostExecutionOrchestratorMiddleware(factory)).Throws(failure);
+
+        InvalidOperationException observed = Assert.ThrowsExactly<InvalidOperationException>(
+            () => PublicApi.TestHostOrchestratorManagerExtensions.AddTestHostExecutionOrchestratorMiddleware(manager.Object, factory));
+
+        Assert.AreSame(failure, observed);
+        capability.Verify(x => x.AddTestHostExecutionOrchestratorMiddleware(factory), Moq.Times.Once);
+    }
+
+    private static async Task JoinForCleanupAsync(Task work, Exception? assertionFailure)
+    {
+        try
+        {
+            // Joining the original work must not be abandoned because the test token is canceled.
+            await work.WaitAsync(CompletionLimit, CancellationToken.None);
+        }
+        catch (Exception cleanupFailure) when (assertionFailure is not null)
+        {
+            throw new AggregateException("Test assertions and cleanup both failed.", assertionFailure, cleanupFailure);
+        }
+    }
+
+    private static void Register(
+        string kind,
+        PublicApi.TestHostOrchestratorManager manager,
+        Func<IServiceProvider, InitializableExtension> factory)
+    {
+        switch (kind)
+        {
+            case "orchestrator":
+                manager.AddTestHostOrchestrator(factory);
+                break;
+            case "middleware":
+                manager.AddTestHostExecutionOrchestratorMiddleware(factory);
+                break;
+            default:
+                manager.AddTestHostOrchestratorApplicationLifetime(factory);
+                break;
+        }
+    }
+
+    private async Task<IExtension[]> BuildAsync(string kind, PublicApi.TestHostOrchestratorManager manager)
+    {
+        if (kind == "lifetime")
+        {
+            return await manager.BuildTestHostOrchestratorApplicationLifetimesAsync(_serviceProvider);
+        }
+
+        PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
+        return kind == "orchestrator" ? config.TestHostOrchestrators : config.Middleware;
+    }
+
+    private sealed class InitializableExtension(
+        string uid,
+        List<string> events,
+        bool enabled = true,
+        string? failureStage = null,
+        Exception? failure = null,
+        Task<bool>? enablement = null,
+        Task? initialization = null) :
+        BackCompat.ITestHostOrchestrator,
+        BackCompat.ITestHostOrchestratorApplicationLifetime,
+        BackCompat.ITestHostExecutionOrchestratorMiddleware,
+        IAsyncInitializableExtension
+    {
+        public string Uid => uid;
+
+        public string Version => PlatformVersion.Version;
+
+        public string DisplayName => uid;
+
+        public string Description => uid;
+
+        public Task<bool> IsEnabledAsync()
+        {
+            events.Add($"enabled:{uid}");
+            return failureStage == "enabled" ? Task.FromException<bool>(failure!) : enablement ?? Task.FromResult(enabled);
+        }
+
+        public Task InitializeAsync()
+        {
+            events.Add($"initialize:{uid}");
+            return failureStage == "initialize" ? Task.FromException(failure!) : initialization ?? Task.CompletedTask;
+        }
+
+        public Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken) => Task.FromResult(7);
+
+        public Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken cancellationToken)
+            => next(cancellationToken);
+
+        public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class FakeOrchestrator : BackCompat.ITestHostOrchestrator

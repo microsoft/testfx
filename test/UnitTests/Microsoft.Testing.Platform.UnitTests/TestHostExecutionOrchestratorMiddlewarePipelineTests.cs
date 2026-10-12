@@ -16,6 +16,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
 {
+    private static readonly TimeSpan CompletionLimit = TimeSpan.FromSeconds(30);
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -736,6 +738,231 @@ public sealed class TestHostExecutionOrchestratorMiddlewarePipelineTests
         await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => leafSource.Task);
         await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => outerDownstream!);
         await Assert.ThrowsExactlyAsync<TaskCanceledException>(() => pipelineTask);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_MiddlewareFailsBeforeNext_PreservesFailureAndRejectsLateInvocation(bool asynchronousFailure)
+    {
+        var failure = new InvalidOperationException("admission failed");
+        Func<CancellationToken, Task<int>>? capturedNext = null;
+        int leafInvocations = 0;
+        FakeMiddleware middleware = new("admission", (next, _) =>
+        {
+            capturedNext = next;
+            return asynchronousFailure ? Task.FromException<int>(failure) : throw failure;
+        });
+
+        InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [middleware],
+                _ =>
+                {
+                    leafInvocations++;
+                    return Task.FromResult(7);
+                },
+                new NopLogger(),
+                CancellationToken.None).WaitAsync(CompletionLimit, TestContext.CancellationToken));
+
+        Assert.AreSame(failure, observed);
+        InvalidOperationException lateInvocation = Assert.ThrowsExactly<InvalidOperationException>(
+            () => capturedNext!(CancellationToken.None));
+        Assert.Contains("next", lateInvocation.Message, StringComparison.Ordinal);
+        Assert.AreEqual(0, leafInvocations);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_MiddlewareFailsAfterSuccessfulChild_PreservesMiddlewareFailure(bool asynchronousFailure)
+    {
+        var failure = new InvalidOperationException("middleware failed after child");
+        int leafInvocations = 0;
+        FakeMiddleware middleware = new("failed-after-next", (next, ct) =>
+        {
+            _ = next(ct);
+            return asynchronousFailure ? Task.FromException<int>(failure) : throw failure;
+        });
+
+        InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [middleware],
+                _ =>
+                {
+                    leafInvocations++;
+                    return Task.FromResult(7);
+                },
+                new NopLogger(),
+                CancellationToken.None).WaitAsync(CompletionLimit, TestContext.CancellationToken));
+
+        Assert.AreSame(failure, observed);
+        Assert.AreEqual(1, leafInvocations);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_DiagnosticLoggerFails_PreservesDownstreamFailureAndDrainsAllFrames(bool asynchronousFailure)
+    {
+        var failure = new InvalidOperationException("leaf failed during drain");
+        var logger = new FailingLogger(asynchronousFailure);
+        FakeMiddleware outer = new("outer", (next, ct) => next(ct));
+        FakeMiddleware inner = new("inner", (next, ct) => next(ct));
+
+        InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [outer, inner],
+                _ => Task.FromException<int>(failure),
+                logger,
+                CancellationToken.None).WaitAsync(CompletionLimit, TestContext.CancellationToken));
+
+        Assert.AreSame(failure, observed);
+        Assert.HasCount(2, logger.Messages, "A failed diagnostic must not prevent draining the next accepted frame.");
+        foreach ((LogLevel level, string message) in logger.Messages)
+        {
+            Assert.AreEqual(LogLevel.Debug, level);
+            Assert.Contains("leaf failed during drain", message, StringComparison.Ordinal);
+        }
+    }
+
+    [TestMethod]
+    public async Task RunAsync_UnrequestedCancellation_IsReportedAsSwallowedFailure()
+    {
+        var cancellation = new OperationCanceledException("not canceled by any pipeline token");
+        FakeMiddleware swallower = new("swallowed-unrequested-cancellation", (next, ct) =>
+        {
+            _ = next(ct);
+            return Task.FromResult(7);
+        });
+
+        InvalidOperationException observed = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [swallower],
+                _ => Task.FromException<int>(cancellation),
+                new NopLogger(),
+                CancellationToken.None).WaitAsync(CompletionLimit, TestContext.CancellationToken));
+
+        Assert.AreSame(cancellation, observed.InnerException);
+        Assert.Contains("swallowed-unrequested-cancellation", observed.Message, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_UnawaitedSuccessfulChild_WaitsForCompletionAndPreservesResult()
+    {
+        TaskCompletionSource<int> child = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeMiddleware fireAndForget = new("fire-and-forget", (next, ct) =>
+        {
+            _ = next(ct);
+            return Task.FromResult(7);
+        });
+        Task<int> pipeline = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+            [fireAndForget], _ => child.Task, new NopLogger(), CancellationToken.None);
+        Exception? assertionFailure = null;
+
+        try
+        {
+            // The synchronous middleware prefix accepted next and returned its own already-completed
+            // task. No scheduling race is involved: only the accepted child is keeping this run alive.
+            Assert.IsFalse(pipeline.IsCompleted);
+            child.SetResult(7);
+            Assert.AreEqual(7, await pipeline.WaitAsync(CompletionLimit, TestContext.CancellationToken));
+        }
+        catch (Exception exception)
+        {
+            assertionFailure = exception;
+            throw;
+        }
+        finally
+        {
+            child.TrySetResult(7);
+            await JoinForCleanupAsync(pipeline, assertionFailure);
+        }
+    }
+
+    [TestMethod]
+    public async Task RunAsync_RepeatedRuns_UseFreshSingleInvocationGuards()
+    {
+        FakeMiddleware middleware = new("reused-middleware", (next, ct) => next(ct));
+        int leafInvocations = 0;
+
+        for (int run = 0; run < 2; run++)
+        {
+            int result = await TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+                [middleware],
+                _ => Task.FromResult(++leafInvocations),
+                new NopLogger(),
+                CancellationToken.None).WaitAsync(CompletionLimit, TestContext.CancellationToken);
+
+            Assert.AreEqual(run + 1, result);
+        }
+
+        Assert.AreEqual(2, leafInvocations);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OverlappingRuns_DrainOnlyTheirOwnAcceptedChild()
+    {
+        TaskCompletionSource<int> firstChild = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<int> secondChild = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeMiddleware middleware = new("shared-middleware", (next, ct) => next(ct));
+        Task<int> first = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+            [middleware], _ => firstChild.Task, new NopLogger(), CancellationToken.None);
+        Task<int> second = TestHostExecutionOrchestratorMiddlewarePipeline.RunAsync(
+            [middleware], _ => secondChild.Task, new NopLogger(), CancellationToken.None);
+        Exception? assertionFailure = null;
+
+        try
+        {
+            Assert.IsFalse(first.IsCompleted);
+            Assert.IsFalse(second.IsCompleted);
+            firstChild.SetResult(7);
+            Assert.AreEqual(7, await first.WaitAsync(CompletionLimit, TestContext.CancellationToken));
+            Assert.IsFalse(second.IsCompleted, "Finishing one run must not finish or wait for the other run's child.");
+            secondChild.SetResult(9);
+            Assert.AreEqual(9, await second.WaitAsync(CompletionLimit, TestContext.CancellationToken));
+        }
+        catch (Exception exception)
+        {
+            assertionFailure = exception;
+            throw;
+        }
+        finally
+        {
+            firstChild.TrySetResult(7);
+            secondChild.TrySetResult(9);
+            await JoinForCleanupAsync(Task.WhenAll(first, second), assertionFailure);
+        }
+    }
+
+    private static async Task JoinForCleanupAsync(Task work, Exception? assertionFailure)
+    {
+        try
+        {
+            // Bound cleanup independently from test cancellation and keep every original task joined.
+            await work.WaitAsync(CompletionLimit, CancellationToken.None);
+        }
+        catch (Exception cleanupFailure) when (assertionFailure is not null)
+        {
+            throw new AggregateException("Test assertions and cleanup both failed.", assertionFailure, cleanupFailure);
+        }
+    }
+
+    private sealed class FailingLogger(bool asynchronousFailure) : ILogger
+    {
+        public List<(LogLevel Level, string Message)> Messages { get; } = [];
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => throw new InvalidOperationException("synchronous logger failure");
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Messages.Add((logLevel, formatter(state, exception)));
+            var failure = new InvalidOperationException("diagnostic logger failure");
+            return asynchronousFailure ? Task.FromException(failure) : throw failure;
+        }
     }
 
     private sealed class NopLogger : ILogger
