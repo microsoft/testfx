@@ -16,6 +16,9 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- Carry the WinUI runtime locally instead of blocking CI on the bootstrapper's installation dialog. -->
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
