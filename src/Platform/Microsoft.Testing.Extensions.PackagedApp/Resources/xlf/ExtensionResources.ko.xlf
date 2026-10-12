@@ -74,12 +74,12 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidBootstrap">
         <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
-        <target state="new">The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</target>
+        <target state="translated">패키지 앱 컨트롤러 시작 인수가 잘못되었습니다. 일치하는 Microsoft.Testing.Extensions.PackagedApp.MSBuild 및 Microsoft.Testing.Extensions.PackagedApp 패키지를 복원하세요.</target>
         <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidTransport">
         <source>The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</source>
-        <target state="new">The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</target>
+        <target state="translated">패키지 앱 컨트롤러에는 네이티브 SDK 명명된 파이프 전송이 정확히 하나 필요합니다. 중복되거나 불완전한 --server 및 --dotnet-test-* 인수와 기타 인수는 지원되지 않습니다.</target>
         <note>{Locked="--server"}{Locked="--dotnet-test-*"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
         <source>Packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</source>
-        <target state="new">Packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</target>
+        <target state="translated">패키지 앱 도움말 및 검색 기능을 사용하려면 패키지 앱 실행기가 활성화되어 있어야 합니다. 패키지 앱 확장을 활성화하고 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never를 제거하세요. 테스트 호스트가 활성화되지 않았습니다.</target>
         <note>{Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
