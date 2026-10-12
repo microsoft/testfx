@@ -938,6 +938,11 @@ public sealed class NamedPipeServerSecurityTests
         [SupportedOSPlatform("windows")]
         public static bool TryConnectManagedClientAs(SafeHandle impersonationToken, string pipeName)
         {
+#if NET
+            // CurrentUserOnly loads this assembly lazily; the AppContainer token cannot read the
+            // desktop runtime installation when collection runs this test in a fresh process.
+            _ = typeof(System.Security.AccessControl.GenericSecurityDescriptor).Assembly;
+#endif
             if (!ImpersonateLoggedOnUser(impersonationToken))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
