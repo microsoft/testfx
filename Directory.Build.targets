@@ -168,6 +168,7 @@
             and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
     <ItemGroup>
       <_AffectedTestsRuntimeAsset Include="$(TargetDir)MicrosoftInstrumentationEngine_x64.dll" />
+      <_AffectedTestsRuntimeAsset Include="$(TargetDir)msdia140.dll" Condition=" '$(RuntimeIdentifier)' == 'win-x64' " />
       <_AffectedTestsRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\ctsrun64.dll" />
       <_AffectedTestsRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\Cts_x64.config" />
     </ItemGroup>
@@ -188,6 +189,7 @@
             and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
     <ItemGroup>
       <FileWrites Include="$(TargetDir)runtimes\win-x64\native\MicrosoftInstrumentationEngine_x64.dll" />
+      <FileWrites Include="$(TargetDir)runtimes\win-x64\native\msdia140.dll" Condition=" '$(RuntimeIdentifier)' == 'win-x64' " />
       <FileWrites Include="$(TargetDir)runtimes\win-x64\native\ctsrun64.dll" />
       <FileWrites Include="$(TargetDir)runtimes\win-x64\native\Cts_x64.config" />
     </ItemGroup>

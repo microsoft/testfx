@@ -161,6 +161,7 @@ Assert-Containment `
     "_RegisterAffectedTestsRuntimeAssetsForClean",
     "'`$(RuntimeIdentifier)' == 'win-x64'",
     "MicrosoftInstrumentationEngine_x64.dll",
+    "msdia140.dll",
     "ctsrun64.dll",
     "Cts_x64.config"
 ) `

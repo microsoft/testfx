@@ -46,6 +46,9 @@ builds that contain only the no-handshake fix.
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
   outputs, including the WinUI test-framework unit host.
+  The native symbol reader (`msdia140.dll`) must accompany the profiler; otherwise collection can succeed with
+  test identities but no source associations. The WinUI validation went from 1,598 tests with zero associations
+  to 1,598 tests with 498 associations when the complete native layout was restored.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
@@ -71,6 +74,19 @@ over stdout when reporting child failures, and a statistics-only stderr would ot
 WinUI profiler layout. [Run 20261012.44](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1632380)
 confirmed the discovery and test-isolation fixes but hit the old 90-minute job limit during acceptance collection,
 before the normal full test and coverage run. Its child failure messages contained only `Process started` statistics.
+Restoring the failure output exposed concurrent collection batches contending for acceptance build binlogs.
+Each process started the same counter in the shared testsuite directory, so unrelated builds could open the same
+file and fail with `MSB4104`. Binlog names now include a fresh GUID for every invocation and retry.
+
+`DotnetCli_BinlogsHaveGloballyUniqueNames` guards the GUID namespace, concurrent builds, and actual log creation.
+With the same test retained and the original helper in isolated source state
+`1b85d12ede74827f64215a505ddcde5562eeb9e9`, it executed and failed the GUID assertion (exit 2, one failed test).
+With the corrected helper it passed, together with both MSBuild-server configuration cases (exit 0, three passed
+tests, no skips). After a Release build/pack, reproduce the focused run with:
+
+```powershell
+.\.dotnet\dotnet.exe test --project (Resolve-Path test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj) -c Release --no-build -p:UsingDotNetTest=true -p:TestRunnerAdditionalArguments= '-bl:{}' --filter 'FullyQualifiedName~DotnetCli_BinlogsHaveGloballyUniqueNames|FullyQualifiedName~DotnetCli_MSBuildServer_DefaultsToDisabledAndPreservesExplicitSettings' --show-test-results all
+```
 
 Tests must also work independently of prior test execution and the launch directory. Desktop XML data-source tests
 resolve their copied fixture from the application base directory. The AppContainer pipe test loads the framework
