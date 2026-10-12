@@ -18,23 +18,10 @@ public sealed class DiagnosticLoggingInformationTests
     [TestMethod]
     public async Task SynchronousLoggerFormatterCanLogRecursively(bool useAsync)
     {
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        Mock<IFileSystem> fileSystem = CreateFileSystemMock();
+        Mock<IFileStreamFactory> fileStreamFactory = CreateFileStreamFactoryMock();
 
-        var fileStreamFactory = new Mock<IFileStreamFactory>();
-        fileStreamFactory
-            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
-            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
-
-        FileLoggerProvider provider = new(
-            new FileLoggerOptions("diagnostics", "test", "test.diag", syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, "diagnostics", syncFlush: true);
         ILogger logger = provider.CreateLogger("test");
 
         var logTask = Task.Run(
@@ -73,8 +60,7 @@ public sealed class DiagnosticLoggingInformationTests
         var disposeStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowDispose = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        Mock<IFileSystem> fileSystem = CreateFileSystemMock();
 
         int streamIndex = 0;
         MemoryStream? replacementStream = null;
@@ -93,15 +79,7 @@ public sealed class DiagnosticLoggingInformationTests
                 return CreateFileStream(path, currentStreamIndex == 1 ? BlockFirstStreamDisposalAsync : null, stream);
             });
 
-        FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: false),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: false, fileName: FileName);
         ILogger logger = provider.CreateLogger("test");
 
         var relocationTask = Task.Run(
@@ -137,8 +115,7 @@ public sealed class DiagnosticLoggingInformationTests
         string resultsDirectory = Path.Combine("final", "results");
         const string FileName = "test.diag";
 
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        Mock<IFileSystem> fileSystem = CreateFileSystemMock();
 
         int streamIndex = 0;
         var fileStreamFactory = new Mock<IFileStreamFactory>();
@@ -151,15 +128,7 @@ public sealed class DiagnosticLoggingInformationTests
                         ? new IOException("Simulated disposal failure.")
                         : null));
 
-        FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         ILogger logger = provider.CreateLogger("test");
         var information = new DiagnosticLoggingInformation(provider);
 
@@ -188,26 +157,14 @@ public sealed class DiagnosticLoggingInformationTests
         string initialPath = Path.Combine(initialDirectory, FileName);
         string conflictingPath = Path.Combine(resultsDirectory, FileName);
 
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        Mock<IFileSystem> fileSystem = CreateFileSystemMock();
         fileSystem
             .Setup(x => x.MoveFile(initialPath, conflictingPath, false))
             .Throws(new IOException("Destination file already exists."));
 
-        var fileStreamFactory = new Mock<IFileStreamFactory>();
-        fileStreamFactory
-            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
-            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+        Mock<IFileStreamFactory> fileStreamFactory = CreateFileStreamFactoryMock();
 
-        FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         ILogger logger = provider.CreateLogger("test");
         var information = new DiagnosticLoggingInformation(provider);
 
@@ -240,8 +197,7 @@ public sealed class DiagnosticLoggingInformationTests
         var logThreadCompleted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         Exception? logException = null;
 
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        Mock<IFileSystem> fileSystem = CreateFileSystemMock();
 
         int streamIndex = 0;
         var fileStreamFactory = new Mock<IFileStreamFactory>();
@@ -250,15 +206,7 @@ public sealed class DiagnosticLoggingInformationTests
             .Returns((string path, FileMode _, FileAccess _, FileShare _) =>
                 CreateFileStream(path, Interlocked.Increment(ref streamIndex) == 1 ? BlockFirstStreamDisposalAsync : null));
 
-        using FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        using FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         ILogger logger = provider.CreateLogger("test");
 
         var relocationTask = Task.Run(
@@ -323,23 +271,10 @@ public sealed class DiagnosticLoggingInformationTests
         string initialPath = Path.Combine(initialDirectory, FileName);
         string finalPath = Path.Combine(resultsDirectory, FileName);
 
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        Mock<IFileSystem> fileSystem = CreateFileSystemMock();
+        Mock<IFileStreamFactory> fileStreamFactory = CreateFileStreamFactoryMock();
 
-        var fileStreamFactory = new Mock<IFileStreamFactory>();
-        fileStreamFactory
-            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
-            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
-
-        using FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        using FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         var information = new DiagnosticLoggingInformation(provider);
         ILogger logger = provider.CreateLogger("test");
 
@@ -366,20 +301,9 @@ public sealed class DiagnosticLoggingInformationTests
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
 
-        var fileStreamFactory = new Mock<IFileStreamFactory>();
-        fileStreamFactory
-            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
-            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+        Mock<IFileStreamFactory> fileStreamFactory = CreateFileStreamFactoryMock();
 
-        using FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: true,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        using FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName, customDirectory: true);
         FileLogger originalLogger = provider.FileLogger;
 
         await provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(resultsDirectory);
@@ -397,20 +321,9 @@ public sealed class DiagnosticLoggingInformationTests
         var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
         fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
 
-        var fileStreamFactory = new Mock<IFileStreamFactory>();
-        fileStreamFactory
-            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
-            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+        Mock<IFileStreamFactory> fileStreamFactory = CreateFileStreamFactoryMock();
 
-        using FileLoggerProvider provider = new(
-            new FileLoggerOptions(initialDirectory, "test", FileName, syncFlush: true),
-            LogLevel.Debug,
-            customDirectory: false,
-            Mock.Of<IClock>(),
-            new SystemTask(),
-            Mock.Of<IConsole>(),
-            fileSystem.Object,
-            fileStreamFactory.Object);
+        using FileLoggerProvider provider = CreateProvider(fileSystem, fileStreamFactory, initialDirectory, syncFlush: true, fileName: FileName);
         FileLogger originalLogger = provider.FileLogger;
 
         await provider.CheckLogFolderAndMoveToTheNewIfNeededAsync(initialDirectory);
@@ -418,6 +331,39 @@ public sealed class DiagnosticLoggingInformationTests
         Assert.AreSame(originalLogger, provider.FileLogger);
         fileSystem.Verify(x => x.MoveFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
     }
+
+    private static Mock<IFileSystem> CreateFileSystemMock()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        return fileSystem;
+    }
+
+    private static Mock<IFileStreamFactory> CreateFileStreamFactoryMock()
+    {
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode _, FileAccess _, FileShare _) => CreateFileStream(path));
+        return fileStreamFactory;
+    }
+
+    private static FileLoggerProvider CreateProvider(
+        Mock<IFileSystem> fileSystem,
+        Mock<IFileStreamFactory> fileStreamFactory,
+        string directory,
+        bool syncFlush,
+        string fileName = "test.diag",
+        bool customDirectory = false)
+        => new(
+            new FileLoggerOptions(directory, "test", fileName, syncFlush),
+            LogLevel.Debug,
+            customDirectory,
+            Mock.Of<IClock>(),
+            new SystemTask(),
+            Mock.Of<IConsole>(),
+            fileSystem.Object,
+            fileStreamFactory.Object);
 
     private static IFileStream CreateFileStream(
         string path,
