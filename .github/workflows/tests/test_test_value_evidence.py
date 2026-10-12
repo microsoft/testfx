@@ -196,6 +196,16 @@ class ReviewInputTests(unittest.TestCase):
 
 
 class ReportingContractTests(unittest.TestCase):
+    def test_canonical_survival_rule_distinguishes_measured_and_static(self):
+        canonical = REPO / ".agents" / "skills" / "test-value-evidence" / "SKILL.md"
+        body = canonical.read_text(encoding="utf-8").split("---", 2)[2]
+        guidance = " ".join(body.split())
+        self.assertIn(
+            "Report **executed: survived** only for an executed, non-equivalent fault",
+            guidance,
+        )
+        self.assertIn("**static: predicts survival**", guidance)
+
     def test_canonical_description_preserves_identified_test_change_guard(self):
         canonical = REPO / ".agents" / "skills" / "test-value-evidence" / "SKILL.md"
         frontmatter = canonical.read_text(encoding="utf-8").split("---", 2)[1]
