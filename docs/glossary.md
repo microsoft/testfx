@@ -88,6 +88,10 @@ An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.Uni
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [ConditionBaseAttribute](#conditionbaseattribute)-derived attributes to control whether the condition is reversed. `Include` (default): run the test only when the condition is met. `Exclude`: skip (ignore) the test when the condition is met, reversing the condition.
 
+### Coverage threshold options (`--coverage-threshold-line` / `--coverage-threshold-branch`)
+
+Two independent MTP command-line options that each accept an inclusive percentage (0–100, invariant-culture decimals) and fail the run with exit code `CoverageThresholdFailed` (14) when the collector's authoritative overall [CoverageMetric](#coveragemetric) measurement for the run falls below the requested value. Both requirements must pass when both options are supplied. Evaluation reads only the platform's existing coverage read model ([ITestCoverageResult](#itestcoverageresult)) — it does not average per-module percentages, parse report files, or merge collectors — so terminal output, CI summaries, and the run verdict always agree. Missing, unsupported, empty, or ambiguous required measurements fail explicitly, even for a threshold of zero. An enabled controller-side coverage producer owns evaluation after collection; a controller's child process defers evaluation until out-of-process data is available. Combining these options with process-level retries is rejected with an explicit configuration error, because retries need merged coverage and an independent full-run verdict. Collection enablement, instrumentation filters, and report formats remain owned by the collector (e.g. [CodeCoverage](#codecoverage)). Introduced in [PR #11814](https://github.com/microsoft/testfx/pull/11814).
+
 ### CoverageAggregation
 
 A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (append-only, treat unrecognized values non-exhaustively) that specifies how per-scope coverage values are combined when evaluating a threshold. Values: `None` (0, not an aggregate — a single scope's own value), `Total` (aggregate covered / aggregate coverable across the population), `Minimum` (worst scope), `Average` (mean of per-scope percentages), `Maximum` (best scope). Used by [TestCoverageThresholdMessage](#testcoveragethresholdmessage) together with `AggregatedOver` (a [CoverageScopeLevel](#coveragescopelevel)) to express the threshold evaluation: for example, `Minimum` over `Module` is a distinct evaluation from `Minimum` over `File`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
@@ -161,6 +165,10 @@ The practice of using formal mathematical proofs to establish correctness proper
 ### FV Target
 
 A specific code component (function, struct, or class) selected for formal verification. Each FV target progresses through defined phases: (1) identified, (2) informal spec extracted, (3) Lean 4 formal spec written, (4) implementation model extracted, (5) proofs completed. Current targets are listed in `formal-verification/TARGETS.md`.
+
+### F# test containers
+
+Support for discovering `[<TestMethod>]` functions declared directly in F# modules, without requiring the module to carry `[<TestClass>]` (previously mandatory, which conflicted with F#'s idiomatic module-based style). The shared MSTest adapter recognizes F# compiler-generated module metadata without taking an `FSharp.Core` dependency, and runs the static test and lifecycle functions through the existing execution pipeline. Module declarations honor existing class-level attributes (categories, properties, ignore, retry, parallelization controls); nested modules are independent containers, and module-level mutable state is shared across tests and retries within that module. Supported return types are `void`, `Task`, and non-generic `ValueTask`; F# `Async<unit>` and source-generator/AOT support are not covered. C#, VB, and ordinary F# classes keep their existing attribute and instance-method requirements. Introduced in [PR #11830](https://github.com/microsoft/testfx/pull/11830).
 
 ## G
 
@@ -535,6 +543,10 @@ A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that controls wh
 ### Server Mode
 
 An MTP execution mode in which the test host process runs as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
+
+### showMessage negotiation
+
+An optional [Server Mode](#server-mode) capability (`capabilities.testing.showMessage`) that lets a client request the `client/showMessage` JSON-RPC method instead of the legacy `client/log` for user-facing output. The server only switches methods after the client both requests and acknowledges support in the initialization response; missing or `false` support retains `client/log`. Both methods carry the same `{level, message}` payload, so acknowledgment selects the transport method only — it is not exclusive rendering, and a client displaying both console and RPC output may see duplicates. Introduced in [PR #11712](https://github.com/microsoft/testfx/pull/11712).
 
 ## T
 
