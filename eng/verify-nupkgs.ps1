@@ -117,13 +117,11 @@ function Confirm-NugetPackages {
         }
     }
 
-    $isMSTestProductBuild = $false
-    foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
-        if ($verifiedPackageKeys.Contains($expectedPackageKey)) {
-            $isMSTestProductBuild = $true
-            break
-        }
-    }
+    # Leaf packages can be packed independently through the supported -projects
+    # build option. The umbrella packages identify a complete MSTest product build.
+    $isMSTestProductBuild =
+        $verifiedPackageKeys.Contains("MSTest.Sdk") -or
+        $verifiedPackageKeys.Contains("MSTest")
 
     if ($isMSTestProductBuild) {
         foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
