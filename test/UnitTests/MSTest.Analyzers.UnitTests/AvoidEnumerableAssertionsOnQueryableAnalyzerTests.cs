@@ -18,6 +18,48 @@ namespace MSTest.Analyzers.UnitTests;
 [TestClass]
 public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
 {
+    private const string CountBearingQueryTypes = """
+        using System;
+        using System.Linq;
+        using System.Collections;
+        using System.Collections.Generic;
+        using System.Linq.Expressions;
+        using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+        public abstract class Query<T> : IQueryable<T>
+        {
+            public abstract Type ElementType { get; }
+            public abstract Expression Expression { get; }
+            public abstract IQueryProvider Provider { get; }
+            public abstract IEnumerator<T> GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        public abstract class GenericCountQuery<T> : Query<T>, ICollection<T>
+        {
+            public abstract int Count { get; }
+            public abstract bool IsReadOnly { get; }
+            public abstract void Add(T item);
+            public abstract void Clear();
+            public abstract bool Contains(T item);
+            public abstract void CopyTo(T[] array, int arrayIndex);
+            public abstract bool Remove(T item);
+        }
+
+        public abstract class NonGenericCountQuery<T> : Query<T>, ICollection
+        {
+            public abstract int Count { get; }
+            public abstract bool IsSynchronized { get; }
+            public abstract object SyncRoot { get; }
+            public abstract void CopyTo(Array array, int index);
+        }
+
+        public abstract class ReadOnlyCountQuery<T> : Query<T>, IReadOnlyCollection<T>
+        {
+            public abstract int Count { get; }
+        }
+        """;
+
     [TestMethod]
     [DataRow("Assert.HasCount(1, query)", "HasCount", "Count", DisplayName = "CSharp HasCount")]
     [DataRow("Assert.IsEmpty(query)", "IsEmpty", "Any", DisplayName = "CSharp IsEmpty")]
@@ -329,6 +371,100 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzerTests
                     Assert.AreEqual(1, query.Count())
                     Assert.IsTrue(query.Any())
                     Assert.IsEmpty(query.ToList())
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task CountBearingQueries_UseCountFastPaths_NoDiagnostic()
+    {
+        string code = $$"""
+            {{CountBearingQueryTypes}}
+
+            public class Tests
+            {
+                public void Check(GenericCountQuery<string> generic, NonGenericCountQuery<string> nonGeneric)
+                {
+                    Assert.HasCount(1, generic);
+                    Assert.IsEmpty(generic);
+                    Assert.IsNotEmpty(generic);
+                    Assert.IsEmpty(generic.AsEnumerable());
+                    Assert.IsNotEmpty((IEnumerable<string>)generic);
+                    Assert.HasCount(1, nonGeneric);
+                    Assert.IsEmpty(nonGeneric);
+                    Assert.HasCount(1, (IEnumerable)nonGeneric);
+                    Assert.IsEmpty((IEnumerable)nonGeneric);
+                    Assert.IsNotEmpty((IEnumerable)nonGeneric);
+                }
+
+                public void Check<TCollection, TBase>(TCollection query)
+                    where TCollection : TBase
+                    where TBase : IQueryable<string>, ICollection<string>
+                {
+                    Assert.HasCount(1, query);
+                    Assert.IsEmpty(query);
+                    Assert.IsNotEmpty(query);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task CountBearingQueriesWithoutMatchingFastPath_Diagnostic()
+    {
+        string code = $$"""
+            {{CountBearingQueryTypes}}
+
+            public class Tests
+            {
+                public void Check(GenericCountQuery<string> generic, NonGenericCountQuery<string> nonGeneric, ReadOnlyCountQuery<string> readOnly)
+                {
+                    [|Assert.HasCount<object>(1, generic)|];
+                    [|Assert.IsEmpty<object>(generic)|];
+                    [|Assert.IsNotEmpty<object>(generic)|];
+                    [|Assert.HasCount(1, (IEnumerable)generic)|];
+                    [|Assert.IsEmpty((IEnumerable)generic)|];
+                    [|Assert.IsNotEmpty((IEnumerable)generic)|];
+                    [|Assert.ContainsSingle(generic)|];
+                    [|Assert.ContainsSingle(nonGeneric)|];
+                    [|Assert.ContainsSingle(i => i.Length > 0, generic)|];
+                    [|Assert.HasCount(1, readOnly)|];
+                    [|Assert.IsEmpty(readOnly)|];
+                    [|Assert.IsNotEmpty(readOnly)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task VisualBasicCountBearingQueries_RespectSelectedOverload()
+    {
+        string code = """
+            Imports System.Linq
+            Imports System.Collections
+            Imports System.Collections.Generic
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Interface ICountedQuery(Of T)
+                Inherits IQueryable(Of T), ICollection(Of T)
+            End Interface
+
+            Public Class Tests
+                Public Sub Check(query As ICountedQuery(Of String))
+                    Assert.HasCount(1, query)
+                    Assert.IsEmpty(query)
+                    Assert.IsNotEmpty(query)
+                    Assert.IsEmpty(query.AsEnumerable())
+                    [|Assert.ContainsSingle(query)|]
+                    [|Assert.HasCount(Of Object)(1, query)|]
+                    [|Assert.IsEmpty(DirectCast(query, IEnumerable))|]
                 End Sub
             End Class
             """;

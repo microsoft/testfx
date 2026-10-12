@@ -16,5 +16,8 @@ Use `Assert.AreEqual(expected, query.Count())` for cardinality and
 Materialize with `ToList` or `ToArray` when testing retrieved contents or reusing
 a snapshot, not merely to check a count. `AsEnumerable` does not materialize or
 cache results. The rule is advisory because an `IQueryable` can also be in-memory.
+Queries are exempt when the selected assertion reads `ICollection.Count` or a
+matching `ICollection<T>.Count` instead of enumerating. `ContainsSingle` still
+enumerates even when the query exposes a count.
 No automatic fix is provided: query translation, exception behavior, and
 assertion messages need deliberate consideration.

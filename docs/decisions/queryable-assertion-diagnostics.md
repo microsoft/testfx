@@ -20,6 +20,12 @@ and constrained type parameters. Built-in casts and a direct
 `Enumerable.AsEnumerable` do not materialize the query and do not exempt it.
 User-defined conversions are opaque: they may actually materialize results.
 
+Queries whose selected assertion uses a collection-count fast path are exempt.
+For generic assertions, `ICollection<T>` must match the selected method's `T`.
+Non-generic assertions only check `ICollection`; generic `HasCount`/`IsEmpty`
+also check it. Generic `IsNotEmpty` only explicitly checks `ICollection<T>`.
+`ContainsSingle` still enumerates count-bearing queries, so it keeps its diagnostic.
+
 This is deliberately not general dataflow analysis: queries hidden behind
 `IEnumerable` variables or arbitrary methods are outside the initial scope.
 Other collection assertions are not automatically considered bad; tests of
@@ -214,6 +220,75 @@ complete deletion of the comparison SDK directory, including
 `Microsoft.NET.Build.Tasks.dll`; its remaining files are reported rather than
 removing unrelated build servers or shared caches. Build-server termination was
 restricted to explicitly verified PIDs from the task-owned comparison SDK.
+
+### 2026-10-12: review correction for count-bearing queries
+
+Review identified a false positive for a query that also implements
+`ICollection<T>`. Re-reading the framework helpers confirmed that the exemption
+must follow the selected overload, not merely the presence of any count:
+`ICollection<T>` is invariant, non-generic overloads do not inspect it, and
+`ContainsSingle` always enumerates. `IReadOnlyCollection<T>` alone is not an
+explicit framework fast path either.
+
+Added `CountBearingQueries_UseCountFastPaths_NoDiagnostic`,
+`CountBearingQueriesWithoutMatchingFastPath_Diagnostic`, and
+`VisualBasicCountBearingQueries_RespectSelectedOverload`. Their inputs cover
+concrete hybrid query types, derived type-parameter constraints, generic and
+non-generic collection interfaces, direct casts and `AsEnumerable`, mismatched
+generic type arguments, read-only collections, and `ContainsSingle` with and
+without a predicate.
+
+The red state was commit `5589cc59be24c54c48127e4b199b4ab0f13e0b39` plus only
+the new test/support code. Built into the isolated
+`artifacts\queryable-review-red` output/restore area before changing production.
+An initially considered output area outside the repository was not used for
+execution because `RootFinder` requires the host to have a Git-root ancestor.
+The redirected build emitted generated-resource warnings; the normal green
+builds had zero warnings/errors. Neither warning output nor compilation failure
+was used as behavioral proof.
+
+With the selector `FullyQualifiedName~CountBearingQueries`, three cases executed
+in both states. Red exited 2 with two intended assertion failures and one pass:
+the C# negative case expected zero diagnostics but received 13; the VB mixed case
+expected three but received seven. Green exited 0 with three passes and no skips.
+The retained test file had the same SHA-256 in both states:
+`4EA11A7297B7D8A12F60983911AA3F81DF4597B9EE021589C9406EF51F6BF239`.
+The full focused analyzer/release-tracking selection then passed 25/25 cases
+with no skips on both net8.0 and net472. Assembly method parallelization remained
+enabled, with 32 workers and no shared mutable test resources.
+
+The commands below use the same `$evidence` convention as above. All builds and
+green test commands exited 0; the isolated red host deliberately exited 2.
+
+```powershell
+$red = Join-Path (Get-Location) 'artifacts\queryable-review-red'
+.\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net8.0 -v:quiet "-p:ArtifactsDir=$red\" "-bl:$evidence\queryable-review-red-build-{}.binlog"
+.\.dotnet\dotnet.exe "$red\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll" --filter "FullyQualifiedName~CountBearingQueries" --report-trx --report-trx-filename red.trx --results-directory "$evidence\queryable-review-red-results"
+.\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net8.0 --no-restore -v:quiet "-bl:$evidence\queryable-review-green-build-{}.binlog"
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~CountBearingQueries" --report-trx --report-trx-filename regression-green.trx --results-directory "$evidence\queryable-review-green-results"
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net8.0\MSTest.Analyzers.UnitTests.dll --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green.trx --results-directory "$evidence\queryable-review-green-results"
+.\.dotnet\dotnet.exe build test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj -f net472 --no-restore -v:quiet "-bl:$evidence\queryable-review-net472-build-{}.binlog"
+.\artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net472\MSTest.Analyzers.UnitTests.exe --filter "FullyQualifiedName~AvoidEnumerableAssertionsOnQueryableAnalyzerTests|FullyQualifiedName~AnalyzerReleaseTrackingTests" --report-trx --report-trx-filename green-net472.trx --results-directory "$evidence\queryable-review-green-results"
+.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Debug --no-restore -v:quiet "-bl:$evidence\queryable-review-pack-{}.binlog"
+```
+
+Repacked the analyzer and restored a separate net8.0/C# 12 consumer into another
+fresh, task-owned cache. The current package/cache SHA-256 matched:
+`9A8CAA8E8956FC598A6CAA9BA1E0D802CDC0F2D35B7D19B0E81D57EBB169F233`.
+The count-bearing query's matching generic assertions compiled with no MSTEST0090
+and exit 0. `ContainsSingle`, a widened `HasCount<object>` and a non-generic
+`IsEmpty` call over a generic-only collection produced exactly three MSTEST0090
+errors and exit 1. Both builds used Recommended mode and warnings-as-errors:
+
+```powershell
+.\.dotnet\dotnet.exe build "$evidence\queryable-review-consumer\consumer.csproj" -v:quiet -p:DefineConstants=GOOD "-p:ErrorLog=$evidence\queryable-review-consumer\good.sarif" "-bl:$evidence\queryable-review-consumer-good-{}.binlog"
+.\.dotnet\dotnet.exe build "$evidence\queryable-review-consumer\consumer.csproj" --no-restore -v:quiet -p:DefineConstants=BAD "-p:ErrorLog=$evidence\queryable-review-consumer\bad.sarif" "-bl:$evidence\queryable-review-consumer-bad-{}.binlog"
+```
+
+Only focused suites were rerun for this correction; the earlier full-suite
+result remains evidence for the initial implementation, not a CI claim for
+the review-fix commit. No localization resources or runtime framework behavior
+changed.
 
 ## Open questions
 

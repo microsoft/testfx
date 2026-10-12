@@ -52,11 +52,13 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzer : DiagnosticAna
             }
 
             INamedTypeSymbol? enumerableSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqEnumerable);
-            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, queryableSymbol, enumerableSymbol), OperationKind.Invocation);
+            INamedTypeSymbol? collectionSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemCollectionsICollection);
+            INamedTypeSymbol genericCollectionSymbol = context.Compilation.GetSpecialType(SpecialType.System_Collections_Generic_ICollection_T);
+            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, queryableSymbol, enumerableSymbol, collectionSymbol, genericCollectionSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol queryableSymbol, INamedTypeSymbol? enumerableSymbol)
+    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol queryableSymbol, INamedTypeSymbol? enumerableSymbol, INamedTypeSymbol? collectionSymbol, INamedTypeSymbol genericCollectionSymbol)
     {
         var invocation = (IInvocationOperation)context.Operation;
         IMethodSymbol method = invocation.TargetMethod;
@@ -78,12 +80,31 @@ public sealed class AvoidEnumerableAssertionsOnQueryableAnalyzer : DiagnosticAna
         }
 
         IArgumentOperation? collection = invocation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == "collection");
-        if (collection is null || !GetCollectionType(collection.Value, enumerableSymbol).DerivesFrom(queryableSymbol))
+        ITypeSymbol? collectionType = collection is null ? null : GetCollectionType(collection.Value, enumerableSymbol);
+        if (!collectionType.DerivesFrom(queryableSymbol) || UsesCollectionCount(collectionType, method, collectionSymbol, genericCollectionSymbol))
         {
             return;
         }
 
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, $"Assert.{method.Name}", queryOperation));
+    }
+
+    private static bool UsesCollectionCount(ITypeSymbol collectionType, IMethodSymbol method, INamedTypeSymbol? collectionSymbol, INamedTypeSymbol genericCollectionSymbol)
+    {
+        if (method.Name == "ContainsSingle")
+        {
+            return false;
+        }
+
+        if (!method.IsGenericMethod)
+        {
+            return collectionType.DerivesFrom(collectionSymbol);
+        }
+
+        // ICollection<T> is invariant, so the fast path must match the selected assertion's T.
+        // Generic IsNotEmpty only checks ICollection<T>; its Enumerable.Any fallback is runtime-dependent.
+        return collectionType.DerivesFrom(genericCollectionSymbol.Construct(method.TypeArguments[0]))
+            || (method.Name is "HasCount" or "IsEmpty" && collectionType.DerivesFrom(collectionSymbol));
     }
 
     private static ITypeSymbol? GetCollectionType(IOperation operation, INamedTypeSymbol? enumerableSymbol)
