@@ -452,7 +452,29 @@ stages:
               osName: MacOS
 
       - ${{ if eq(parameters.SkipTests, False) }}:
-        - template: /eng/pipelines/jobs/browser-testing.yml
+        - job: BrowserWebAssembly
+          displayName: Browser WebAssembly integration
+          dependsOn: DetectChanges
+          condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), eq(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true')))
+          timeoutInMinutes: 120
+          strategy:
+            matrix:
+              Windows_x64:
+                image: windows-2025
+                browserExecutable: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+              Linux_x64:
+                image: ubuntu-24.04
+                browserExecutable: '/usr/bin/google-chrome'
+          pool:
+            vmImage: $(image)
+          variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
+          - name: _BuildConfig
+            value: Release
+          - name: BrowserResultsDirectory
+            value: '$(Agent.TempDirectory)/browser-ci-$(Build.BuildId)-$(System.JobName)-$(System.JobAttempt)'
+          steps:
+          - template: /eng/pipelines/steps/browser-testing.yml
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
