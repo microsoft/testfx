@@ -16,11 +16,6 @@ steps:
         throw 'The browser validation SDK counterpart must be pinned to a full dotnet/sdk SHA.'
       }
 
-      $browser = '$(browserExecutable)'
-      if (-not (Test-Path -LiteralPath $browser -PathType Leaf)) {
-        throw "The required Chromium-family browser is not installed at '$browser'."
-      }
-
       New-Item -ItemType Directory -Path '$(Build.SourcesDirectory)/artifacts/log' -Force | Out-Null
       $sdkRoot = if ($IsWindows) {
         $driveRoot = [IO.Path]::GetPathRoot('$(Build.SourcesDirectory)')
@@ -47,6 +42,16 @@ steps:
         throw "The SDK checkout '$actualCommit' does not match the pin '$($pin.commit)'."
       }
 
+      if (-not $IsWindows) {
+        & bash (Join-Path $sdkRoot 'eng/browser-testing/InstallBrowser.sh')
+        if ($LASTEXITCODE -ne 0) { throw 'The SDK browser prerequisite installation failed.' }
+      }
+
+      $browser = '$(browserExecutable)'
+      if (-not (Test-Path -LiteralPath $browser -PathType Leaf)) {
+        throw "The required Chromium-family browser is not installed at '$browser'."
+      }
+
       & (Join-Path $sdkRoot 'eng/browser-testing/TestResultValidation.ps1')
       if ($LASTEXITCODE -ne 0) { throw 'The SDK browser-result validator self-tests failed.' }
       & (Join-Path $sdkRoot 'eng/browser-testing/RunBrowserTests.ps1') `
@@ -54,7 +59,6 @@ steps:
         -TestFxRoot '$(Build.SourcesDirectory)' `
         -BrowserExecutable $browser `
         -Configuration Release `
-        -DiscardSdkIntermediates `
         -ResultsDirectory '$(BrowserResultsDirectory)'
       if ($LASTEXITCODE -ne 0) { throw 'The composed browser validation failed.' }
 
