@@ -42,5 +42,5 @@ builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
 builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 int returnValue = await app.RunAsync();
-Console.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");
+Console.Error.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");
 return returnValue;

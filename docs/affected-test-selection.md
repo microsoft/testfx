@@ -46,6 +46,23 @@ containing the fix is published and verified in this repository.
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.
 
+## Headless collection compatibility
+
+Collection launches discovery and execution batches in fresh, headless processes. On Windows, a headless process
+can inherit a legacy console encoding rather than UTF-8. JSON discovery therefore escapes non-ASCII characters,
+including surrogate pairs, so test UIDs and metadata remain lossless after decoding. Escaping only JSON control
+characters is insufficient: a legacy encoding's best-fit fallback can convert Unicode into a raw control character
+after serialization. The schema and decoded values are unchanged, and malformed discovery still fails collection.
+Runner startup diagnostics and process statistics use stderr so they do not surround the JSON document on stdout.
+
+Tests must also work independently of prior test execution and the launch directory. Desktop XML data-source tests
+resolve their copied fixture from the application base directory. The AppContainer pipe test loads the framework
+access-control and Windows-principal assemblies before impersonation, retaining the real restricted-token connection
+and denial checks.
+
+Regression coverage includes `Serialize_NonAsciiCharacters_ProducesLosslessAsciiJson` and the packed, headless
+consumer test `ListTestsJson_HeadlessProcess_PreservesUnicode`.
+
 ## Storage design
 
 The map uses the extension's Azure DevOps artifact provider:
