@@ -719,7 +719,7 @@ public sealed class BrowserPackageDesktopTests
 
         string dotnetRoot = Path.GetDirectoryName(dotnetPath)
             ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
-        string sdkVersion = GetSingleSdkVersion(dotnetRoot);
+        string sdkVersion = GetBrowserSdkVersion(dotnetRoot);
         string sdkTargetsPath = Path.Combine(
             dotnetRoot,
             "sdk",
@@ -770,7 +770,7 @@ public sealed class BrowserPackageDesktopTests
     {
         string dotnetRoot = Path.GetDirectoryName(dotnetPath)
             ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
-        string sdkVersion = GetSingleSdkVersion(dotnetRoot);
+        string sdkVersion = GetBrowserSdkVersion(dotnetRoot);
         File.WriteAllText(
             Path.Combine(assetPath, "global.json"),
             $$"""
@@ -788,17 +788,11 @@ public sealed class BrowserPackageDesktopTests
             """);
     }
 
-    private static string GetSingleSdkVersion(string dotnetRoot)
-    {
-        string sdkDirectory = Path.Combine(dotnetRoot, "sdk");
-        string[] sdkVersions = Directory.Exists(sdkDirectory)
-            ? Directory.GetDirectories(sdkDirectory)
-            : [];
-        return sdkVersions.Length == 1
-            ? Path.GetFileName(sdkVersions[0])
-            : throw new AssertFailedException(
-                $"The SDK-under-test must contain exactly one SDK directory. Found {sdkVersions.Length} under '{sdkDirectory}'.");
-    }
+    private static string GetBrowserSdkVersion(string dotnetRoot)
+        => BrowserSdkSelection.ResolveSdkVersion(
+            dotnetRoot,
+            Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_SDK_VERSION"),
+            Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_SDK_COMMIT"));
 
     private static string GetBrowserSdkDotnetPath()
     {
@@ -819,7 +813,7 @@ public sealed class BrowserPackageDesktopTests
     {
         string dotnetRoot = Path.GetDirectoryName(dotnetPath)
             ?? throw new AssertFailedException($"Unable to determine the SDK root for '{dotnetPath}'.");
-        string sdkPath = Path.Combine(dotnetRoot, "sdk", GetSingleSdkVersion(dotnetRoot));
+        string sdkPath = Path.Combine(dotnetRoot, "sdk", GetBrowserSdkVersion(dotnetRoot));
         return new()
         {
             ["DOTNET_ROOT"] = dotnetRoot,
