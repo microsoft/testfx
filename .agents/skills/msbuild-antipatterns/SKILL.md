@@ -1,6 +1,6 @@
 ---
 name: msbuild-antipatterns
-description: "Catalog of MSBuild anti-patterns with detection rules and fix recipes. USE FOR: reviewing, auditing, or cleaning up .csproj, .vbproj, .fsproj, .props, .targets, or .proj files. Each anti-pattern has a symptom, explanation, and concrete BAD→GOOD transformation. Covers Exec-instead-of-built-in-task, unquoted conditions, hardcoded paths, restating SDK defaults, scattered package versions, and more. DO NOT USE FOR: non-MSBuild build systems (npm, Maven, CMake, etc.), project migration to SDK-style (use msbuild-modernization)."
+description: "DO NOT INVOKE when the primary request explicitly asks to convert, migrate, modernize, or rewrite a legacy/old-style project to SDK style; use msbuild-modernization. Migration prompts often mention ToolsVersion, explicit Compile/Reference entries, packages.config, or Microsoft.CSharp.targets, but merely reviewing or auditing a file that contains those patterns remains in scope here. USE FOR broad review, audit, lint, or maintainability/correctness checks of project/build files, including custom targets; prioritized cross-cutting findings; discrete anti-patterns; F# ordering/FS0039; cross-platform paths; and focused Import safety verdicts. Review/audit is analysis-only unless fixes are requested. For concrete property/item defects use property-patterns/item-management; use target-authoring for implementation and extension-points for NuGet auto-import/layout discovery. Exclude non-MSBuild systems."
 license: MIT
 ---
 
@@ -13,6 +13,15 @@ A numbered catalog of common MSBuild anti-patterns. Each entry follows the forma
 - **Fix**: Concrete transformation
 
 Use this catalog when scanning project files for improvements.
+
+## Review output contract
+
+For review, audit, maintainability, or correctness-risk requests:
+
+1. Do not edit files unless the user explicitly asks for fixes.
+2. Return prioritized findings grounded in the supplied file, with impact and a targeted recommendation.
+3. Separate confirmed defects from conditional risks and already-correct patterns.
+4. Keep the final answer as the review; do not replace it with a terse summary of changes.
 
 ---
 
@@ -344,6 +353,8 @@ See `incremental-build` skill for deep guidance on Inputs/Outputs, FileWrites, a
 
 Before flagging an unguarded `<Import>` inside a `build/` or `buildTransitive/` folder, **resolve it against the packed layout** — read every `*.nuspec` in the project directory **and its immediate parent directory** (shared nuspecs are common in mono-repos; do not walk further up), and any `<PackagePath>` metadata on `<None>`/`<Content>` items in the `.csproj`. Only flag if the target path is missing from **both** the source tree *and* the projected package layout. The `dotnet-msbuild/extension-points` skill — *Source tree vs packed layout* — documents the full cross-check procedure.
 
+**Forwarding `buildTransitive/` → `build/`:** forward through the sibling `build/*.props` / `build/*.targets` file (not directly to `buildMultiTargeting/`); when `build/` is per-TFM (`build/<tfm>/`), include the TFM segment derived from the file's own folder (not `$(TargetFramework)`), or transitive consumers hit `MSB4019`. See the `extension-points` skill — *Forwarding chain* — for the rule and derivation expression.
+
 ---
 
 ## AP-14: Backslashes in Paths — Where It Matters
@@ -404,4 +415,4 @@ MSBuild's evaluator normalizes `\` → `/` on Unix-like systems before resolving
 
 ---
 
-For additional anti-patterns (AP-16 through AP-22) and a quick-reference checklist, see [additional-antipatterns.md](references/additional-antipatterns.md).
+For additional anti-patterns (AP-16 through AP-23) and a quick-reference checklist, see [additional-antipatterns.md](references/additional-antipatterns.md).
