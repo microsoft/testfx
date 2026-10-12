@@ -15,15 +15,23 @@
   <!-- Properties specific to WinUI -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
+    <Reference Include="System.Configuration" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
+    <!-- Needed to execute the shipping WinUI Extensions assembly; its private SDK dependency does not flow here. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
