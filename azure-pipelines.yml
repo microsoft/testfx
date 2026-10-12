@@ -452,25 +452,42 @@ stages:
               osName: MacOS
 
       - ${{ if eq(parameters.SkipTests, False) }}:
-        - job: BrowserWebAssembly
-          displayName: Browser WebAssembly integration
+        - job: BrowserWebAssemblyWindows
+          displayName: Browser WebAssembly integration Windows_x64
           dependsOn: DetectChanges
           condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), eq(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true')))
           timeoutInMinutes: 120
-          strategy:
-            matrix:
-              Windows_x64:
-                image: windows-2025
-                browserExecutable: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-              Linux_x64:
-                image: ubuntu-24.04
-                browserExecutable: '/usr/bin/google-chrome'
           pool:
-            vmImage: $(image)
+            name: NetCore-Public
+            demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
           variables:
           - template: /eng/pipelines/variables/test-env-vars.yml
           - name: _BuildConfig
             value: Release
+          - name: image
+            value: windows.vs2026preview.scout.amd64.open
+          - name: browserExecutable
+            value: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+          - name: BrowserResultsDirectory
+            value: '$(Agent.TempDirectory)/browser-ci-$(Build.BuildId)-$(System.JobName)-$(System.JobAttempt)'
+          steps:
+          - template: /eng/pipelines/steps/browser-testing.yml
+
+        - job: BrowserWebAssemblyLinux
+          displayName: Browser WebAssembly integration Linux_x64
+          dependsOn: DetectChanges
+          condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), eq(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true')))
+          timeoutInMinutes: 120
+          pool:
+            vmImage: ubuntu-24.04
+          variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
+          - name: _BuildConfig
+            value: Release
+          - name: image
+            value: ubuntu-24.04
+          - name: browserExecutable
+            value: '/usr/bin/google-chrome'
           - name: BrowserResultsDirectory
             value: '$(Agent.TempDirectory)/browser-ci-$(Build.BuildId)-$(System.JobName)-$(System.JobAttempt)'
           steps:
