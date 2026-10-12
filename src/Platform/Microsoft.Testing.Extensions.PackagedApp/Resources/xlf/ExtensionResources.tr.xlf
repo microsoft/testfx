@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidBootstrap">
         <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
-        <target state="new">The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</target>
+        <target state="translated">Paketlenmiş uygulama denetleyicisi başlangıç bağımsız değişkenleri geçersiz. Eşleşen Microsoft.Testing.Extensions.PackagedApp.MSBuild ve Microsoft.Testing.Extensions.PackagedApp paketlerini geri yükleyin.</target>
         <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidTransport">
