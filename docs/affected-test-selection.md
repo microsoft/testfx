@@ -46,10 +46,17 @@ builds that contain only the no-handshake fix.
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
   `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
   outputs, including the WinUI test-framework unit host.
+  RID-specific profiler configuration points back to the flattened CTS DLL: loading a second nested copy gives
+  the profiler and managed test hooks separate correlation state and produces an empty source map.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
   test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
+  Acceptance initialization also disables inherited CTS profiling for generated consumers without detaching the
+  already-running parent's profiler. Arbitrary child CLR/dependency sets and test identities cannot share that
+  instrumentation session. Ordinary code-coverage profiling is unchanged, and the previous enable flags are restored
+  during assembly cleanup. Production changes under `src/**` conservatively select all tests, because acceptance
+  mappings do not cover code executed exclusively by these independently launched consumers.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
   nested-process isolation, command names, and fallbacks.
 
@@ -71,6 +78,9 @@ over stdout when reporting child failures, and a statistics-only stderr would ot
 WinUI profiler layout. [Run 20261012.44](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1632380)
 confirmed the discovery and test-isolation fixes but hit the old 90-minute job limit during acceptance collection,
 before the normal full test and coverage run. Its child failure messages contained only `Process started` statistics.
+With the failure output restored, local collection exposed generated .NET Framework consumers crashing while resolving
+`System.Runtime.InteropServices.RuntimeInformation` and hosting configuration assemblies. The same 17 entry-point and
+hosting-injection cases pass in the ordinary coverage run; the collection-only profiler inheritance is the difference.
 
 Tests must also work independently of prior test execution and the launch directory. Desktop XML data-source tests
 resolve their copied fixture from the application base directory. The AppContainer pipe test loads the framework

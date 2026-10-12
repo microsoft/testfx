@@ -176,6 +176,12 @@
     <Copy SourceFiles="@(_AffectedTestsRuntimeAsset)"
           DestinationFolder="$(TargetDir)runtimes\win-x64\native"
           SkipUnchangedFiles="true" />
+    <!-- RID deps.json resolves the managed hook's P/Invoke to the flattened CTS DLL. The profiler must
+         load that same DLL, not a second copy with separate test-correlation state. -->
+    <XmlPoke XmlInputPath="$(TargetDir)runtimes\win-x64\native\Cts_x64.config"
+             Query="/InstrumentationEngineConfiguration/InstrumentationMethod/Module"
+             Value="..\..\..\ctsrun64.dll"
+             Condition=" '$(RuntimeIdentifier)' == 'win-x64' " />
     <ItemGroup>
       <FileWrites Include="@(_AffectedTestsRuntimeAsset->'$(TargetDir)runtimes\win-x64\native\%(Filename)%(Extension)')" />
     </ItemGroup>

@@ -7,6 +7,9 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public static class AcceptanceFixture
 {
     private static string? s_directoryToCleanup;
+    private static bool s_isAffectedTestCollection;
+    private static string? s_previousCoreClrEnableProfiling;
+    private static string? s_previousCorEnableProfiling;
 
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
@@ -25,19 +28,42 @@ public static class AcceptanceFixture
         string nugetCache = Path.Combine(s_directoryToCleanup, ".packages");
         Directory.CreateDirectory(nugetCache);
         Environment.SetEnvironmentVariable("NUGET_PACKAGES", nugetCache);
+
+        s_isAffectedTestCollection = !string.IsNullOrEmpty(
+            Environment.GetEnvironmentVariable("MicrosoftInstrumentationEngine_ConfigPath64_CtsInstrumentationProfiler"));
+        if (s_isAffectedTestCollection)
+        {
+            // The profiler is already attached here. Generated consumers have independent CLR/dependency sets
+            // and test identities, so they must not inherit an enabled CTS profiler from this process.
+            s_previousCoreClrEnableProfiling = Environment.GetEnvironmentVariable("CORECLR_ENABLE_PROFILING");
+            s_previousCorEnableProfiling = Environment.GetEnvironmentVariable("COR_ENABLE_PROFILING");
+            Environment.SetEnvironmentVariable("CORECLR_ENABLE_PROFILING", "0");
+            Environment.SetEnvironmentVariable("COR_ENABLE_PROFILING", "0");
+        }
     }
 
     [AssemblyCleanup]
     public static void AssemblyCleanup(TestContext context)
     {
-        if (s_directoryToCleanup is not null)
+        try
         {
-            try
+            if (s_directoryToCleanup is not null)
             {
-                Directory.Delete(s_directoryToCleanup, recursive: true);
+                try
+                {
+                    Directory.Delete(s_directoryToCleanup, recursive: true);
+                }
+                catch (IOException)
+                {
+                }
             }
-            catch (IOException)
+        }
+        finally
+        {
+            if (s_isAffectedTestCollection)
             {
+                Environment.SetEnvironmentVariable("CORECLR_ENABLE_PROFILING", s_previousCoreClrEnableProfiling);
+                Environment.SetEnvironmentVariable("COR_ENABLE_PROFILING", s_previousCorEnableProfiling);
             }
         }
     }
