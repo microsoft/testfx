@@ -241,7 +241,6 @@ internal sealed partial class TestHostControllersTestHost
 
         return await FinalizeTestHostProcessAsync(
             testHostProcess,
-            _testHostPID.Value,
             outputDevice,
             telemetryInformation,
             consoleRunStarted,

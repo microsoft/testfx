@@ -17,7 +17,6 @@ internal sealed partial class TestHostControllersTestHost
 {
     private async Task<(int ExitCode, TestHostProcessInformation ProcessInformation, string? ExtensionInformation)> FinalizeTestHostProcessAsync(
         IProcess testHostProcess,
-        int testHostPid,
         ProxyOutputDevice outputDevice,
         ITelemetryInformation telemetryInformation,
         Stopwatch consoleRunStarted,
@@ -35,7 +34,8 @@ internal sealed partial class TestHostControllersTestHost
             _testHostExitCodeReceived,
             testHostProcessExitCode,
             testHostProcessExitCodeIsAuthoritative);
-        TestHostProcessInformation testHostProcessInformation = new(testHostPid, reportedTestHostExitCode, _testHostCompletedReceived);
+        ApplicationStateGuard.Ensure(_testHostPID is not null);
+        TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         CancellationTokenSource finalizationCancellationTokenSource = EnsureControllerFinalizationCancellationTokenSource();
         RegisterControllerFinalizationTransition(applicationCancellationToken);
@@ -208,7 +208,7 @@ internal sealed partial class TestHostControllersTestHost
                    OS exit code authoritative: '{testHostProcessExitCodeIsAuthoritative}'
                    IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
                    TestHostCompletedRequest received: '{_testHostCompletedReceived}'
-                   PID: '{testHostPid.ToString(CultureInfo.InvariantCulture)}'
+                   PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}'
                    CancellationRequested: '{testExecutionCanceled}'
                  """)
                 .ConfigureAwait(false);
