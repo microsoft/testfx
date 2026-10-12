@@ -32,6 +32,8 @@ public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFi
         @"\x1B\[[0-?]*[ -/]*[@-~]",
         RegexOptions.CultureInvariant);
 
+    private BrowserPackageCache? _browserPackageCache;
+
     private const string SourceCode = """
 #file BrowserPackageTestProject.csproj
 <Project Sdk="Microsoft.NET.Sdk.WebAssembly">
@@ -165,7 +167,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireAlignedBrowserInputsAsync(generator);
+        using BrowserPackageCache packageCache = RequireAlignedBrowserInputs(generator);
         Assert.IsFalse(Directory.Exists(Path.Combine(generator.TargetAssetPath, "wwwroot")));
         Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.html", SearchOption.TopDirectoryOnly));
         Assert.IsEmpty(Directory.EnumerateFiles(generator.TargetAssetPath, "*.js", SearchOption.TopDirectoryOnly));
@@ -349,7 +351,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireAlignedBrowserInputsAsync(generator);
+        using BrowserPackageCache packageCache = RequireAlignedBrowserInputs(generator);
 
         DotnetMuxerResult build = await RunBrowserSdkAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
@@ -391,7 +393,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireAlignedBrowserInputsAsync(generator);
+        using BrowserPackageCache packageCache = RequireAlignedBrowserInputs(generator);
 
         DotnetMuxerResult build = await RunBrowserSdkAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
@@ -436,7 +438,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion)
                 .PatchCodeWithReplace("$Browser$", EscapeMsBuildValue(browser)));
-        await RequireAlignedBrowserInputsAsync(generator);
+        using BrowserPackageCache packageCache = RequireAlignedBrowserInputs(generator);
 
         DotnetMuxerResult build = await RunBrowserSdkAsync(
             $"build {generator.TargetAssetPath} --configuration Release --framework {TargetFramework} --runtime {WasmRuntime.BrowserRid}",
@@ -502,23 +504,21 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion));
 
-        DotnetMuxerResult run;
-        if (HasExplicitAlignedInputs() || IsStrictComposedValidation())
-        {
-            await RequireAlignedBrowserInputsAsync(generator);
-            run = await RunBrowserSdkAsync(
+        bool useAlignedInputs = HasExplicitAlignedInputs() || IsStrictComposedValidation();
+        using BrowserPackageCache? packageCache =
+            useAlignedInputs
+                ? RequireAlignedBrowserInputs(generator)
+                : null;
+        DotnetMuxerResult run = useAlignedInputs
+            ? await RunBrowserSdkAsync(
                 $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
                 workingDirectory: generator.TargetAssetPath,
-                failIfReturnValueIsNotZero: false);
-        }
-        else
-        {
-            run = await DotnetCli.RunAsync(
+                failIfReturnValueIsNotZero: false)
+            : await DotnetCli.RunAsync(
                 $"test --project {generator.TargetAssetPath} --configuration Release --framework {TargetFramework}",
                 warnAsError: false,
                 failIfReturnValueIsNotZero: false,
                 cancellationToken: TestContext.CancellationToken);
-        }
 
         string output = NormalizeTerminalOutput(run.StandardOutput + run.StandardError);
         Assert.AreEqual(0, run.ExitCode, run.ToString());
@@ -719,8 +719,15 @@ public sealed class BrowserPackageDesktopTests
             workingDirectory: generator.TargetAssetPath,
             failIfReturnValueIsNotZero: false);
 
-    private Task RequireAlignedBrowserInputsAsync(TestAsset generator)
+    private BrowserPackageCache RequireAlignedBrowserInputs(TestAsset generator)
     {
+        if (_browserPackageCache is not null)
+        {
+            throw new InvalidOperationException(
+                "The composed browser package cache was already initialized for this test.");
+        }
+
+        _browserPackageCache = BrowserPackageCache.Create(generator.TargetAssetPath);
         string packageFeed = GetBrowserPackageFeed(requireExplicit: true);
         string dotnetPath = GetBrowserSdkDotnetPath();
         WriteSdkSelectionGlobalJson(generator.TargetAssetPath, dotnetPath);
@@ -755,7 +762,7 @@ public sealed class BrowserPackageDesktopTests
                 $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1.");
         }
 
-        return Task.CompletedTask;
+        return _browserPackageCache;
     }
 
     private async Task<DotnetMuxerResult> RunBrowserSdkAsync(
@@ -771,11 +778,9 @@ public sealed class BrowserPackageDesktopTests
             environmentVariables[key] = value;
         }
 
-        if (workingDirectory is not null)
+        if (_browserPackageCache is not null)
         {
-            environmentVariables["NUGET_PACKAGES"] = Path.Combine(
-                workingDirectory,
-                ".packages");
+            environmentVariables["NUGET_PACKAGES"] = _browserPackageCache.Path;
         }
 
         return await DotnetCli.RunAsync(
