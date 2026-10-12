@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed class DiagnosticBuffer
@@ -57,12 +59,15 @@ internal sealed class DiagnosticBuffer
         return redacted;
     }
 
+    public static string FormatException(Exception exception, DiagnosticBuffer? diagnostics)
+        => diagnostics?.Redact(exception.ToString()) ?? exception.Message;
+
     public string Format()
     {
         lock (_sync)
         {
             return _entries.Count == 0
-                ? "(no diagnostics captured)"
+                ? ExtensionResources.NoDiagnosticsCaptured
                 : string.Join(Environment.NewLine, _entries);
         }
     }

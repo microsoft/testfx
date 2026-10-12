@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed record BrowserTerminalResult(int ExitCode, string? Error)
@@ -13,8 +15,7 @@ internal sealed record BrowserTerminalResult(int ExitCode, string? Error)
         }
 
         diagnostics.Add("browser", Error);
-        throw new BrowserLauncherException(
-            "The browser supervisor reported a fatal error.");
+        throw new BrowserLauncherException(ExtensionResources.BrowserSupervisorFatalError);
     }
 }
 
@@ -32,7 +33,7 @@ internal static class BrowserBindingCallback
         {
             completion.TrySetException(
                 new BrowserLauncherException(
-                    "The browser supervisor binding request was rejected.",
+                    ExtensionResources.BrowserSupervisorBindingRequestRejected,
                     ex));
             throw;
         }

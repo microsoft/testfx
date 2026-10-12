@@ -25,7 +25,6 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
     private readonly ILogger _logger;
-    private readonly ConcurrentDictionary<string, Task<string>> _exportedArtifactPaths = new(StringComparer.Ordinal);
 #if NET9_0_OR_GREATER
     private readonly Lock _artifactTransferLock = new();
 #else
@@ -651,14 +650,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 transportClient,
                 "A test-host artifact cannot be exported because its path is empty.",
                 cancellationToken)
-            : _exportedArtifactPaths.GetOrAdd(
+            : ExportArtifactPathCoreAsync(
+                transportClient,
+                executionId,
+                instanceId,
                 path,
-                artifactPath => ExportArtifactPathCoreAsync(
-                    transportClient,
-                    executionId,
-                    instanceId,
-                    artifactPath,
-                    cancellationToken));
+                cancellationToken);
 
     private async Task<string> ExportArtifactPathCoreAsync(
         IClient transportClient,

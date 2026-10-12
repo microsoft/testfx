@@ -84,6 +84,11 @@
 
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'">
     <!-- Source-link BCL-only launcher helpers so these tests do not reference the Playwright-carrying package assembly. -->
+    <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\Resources\ExtensionResources.resx"
+                      Link="Browser\Resources\ExtensionResources.resx"
+                      GenerateSource="true"
+                      Generator="MSBuild:_GenerateResxSource"
+                      ManifestResourceName="Microsoft.Testing.Platform.Browser.Resources.ExtensionResources" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BoundedResourceCleanup.cs" Link="Browser\BoundedResourceCleanup.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserLauncherOptions.cs" Link="Browser\BrowserLauncherOptions.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserRunMonitor.cs" Link="Browser\BrowserRunMonitor.cs" />

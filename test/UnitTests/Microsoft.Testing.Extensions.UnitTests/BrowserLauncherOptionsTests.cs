@@ -162,7 +162,21 @@ public sealed class BrowserLauncherOptionsTests
             () => SdkResponseFileExpander.Expand([$"@{missingFile}"]));
 
         Assert.DoesNotContain(BootstrapToken, exception.Message);
+        Assert.DoesNotContain(BootstrapToken, exception.ToString());
         Assert.AreEqual("Unable to read the SDK response file.", exception.Message);
+    }
+
+    [TestMethod]
+    public void DiagnosticBuffer_FormatExceptionDoesNotExposeInnerExceptionWithoutRedactor()
+    {
+        var exception = new BrowserLauncherException(
+            "Unable to read the SDK response file.",
+            new IOException(BootstrapToken));
+
+        string formatted = DiagnosticBuffer.FormatException(exception, diagnostics: null);
+
+        Assert.AreEqual(exception.Message, formatted);
+        Assert.DoesNotContain(BootstrapToken, formatted);
     }
 
     [TestMethod]
@@ -452,25 +466,59 @@ public sealed class BrowserLauncherOptionsTests
     {
         using var cancellationTokenSource = new CancellationTokenSource(
             TimeSpan.FromMilliseconds(100));
+        var completionCanceled = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var hostExitCanceled = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var browserExitCanceled = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         var stopwatch = Stopwatch.StartNew();
 
         await Assert.ThrowsExactlyAsync<OperationCanceledException>(
             () => BrowserRunMonitor.WaitAsync(
-                WaitForCompletionAsync,
-                WaitForExitAsync,
-                WaitForExitAsync,
+                token => WaitForCompletionAsync(token, completionCanceled),
+                token => WaitForExitAsync(token, hostExitCanceled),
+                token => WaitForExitAsync(token, browserExitCanceled),
                 cancellationTokenSource.Token));
 
         Assert.IsLessThan(TimeSpan.FromSeconds(5), stopwatch.Elapsed);
+        await Task.WhenAll(
+            completionCanceled.Task,
+            hostExitCanceled.Task,
+            browserExitCanceled.Task).WaitAsync(
+                TimeSpan.FromSeconds(5),
+                TestContext.CancellationToken);
 
-        static async Task<int> WaitForCompletionAsync(CancellationToken cancellationToken)
+        static async Task<int> WaitForCompletionAsync(
+            CancellationToken cancellationToken,
+            TaskCompletionSource canceled)
         {
-            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
-            return 0;
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                return 0;
+            }
+            catch (OperationCanceledException)
+            {
+                canceled.SetResult();
+                throw;
+            }
         }
 
-        static Task WaitForExitAsync(CancellationToken cancellationToken)
-            => Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+        static async Task WaitForExitAsync(
+            CancellationToken cancellationToken,
+            TaskCompletionSource canceled)
+        {
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                canceled.SetResult();
+                throw;
+            }
+        }
     }
 
     private static string[] SplitPair(string value)

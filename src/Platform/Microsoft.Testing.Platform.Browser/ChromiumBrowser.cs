@@ -4,6 +4,7 @@
 using System.Text.Json;
 
 using Microsoft.Playwright;
+using Microsoft.Testing.Platform.Browser.Resources;
 
 namespace Microsoft.Testing.Platform.Browser;
 
@@ -159,7 +160,10 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 && !cancellationToken.IsCancellationRequested)
             {
                 throw new BrowserLauncherException(
-                    $"The Chromium browser did not become ready within {options.StartupTimeout.TotalSeconds} seconds.",
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.BrowserNotReady,
+                        options.StartupTimeout.TotalSeconds),
                     ex);
             }
 
@@ -169,7 +173,10 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             }
 
             throw new BrowserLauncherException(
-                $"Unable to launch the Chromium browser '{options.BrowserExecutable}'.",
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.BrowserLaunchFailed,
+                    options.BrowserExecutable),
                 ex);
         }
     }
@@ -193,7 +200,10 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         catch (OperationCanceledException) when (timeoutCancellationTokenSource.IsCancellationRequested)
         {
             throw new BrowserLauncherException(
-                $"The browser test application did not complete within {timeout.TotalSeconds} seconds.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.BrowserTestApplicationTimeout,
+                    timeout.TotalSeconds));
         }
     }
 
@@ -215,7 +225,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             || !exitCode.TryGetInt32(out int exitCodeValue))
         {
             throw new BrowserLauncherException(
-                "The browser supervisor returned an invalid terminal result.");
+                ExtensionResources.BrowserSupervisorInvalidTerminalResult);
         }
 
         string? error = null;
@@ -225,7 +235,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
             if (errorElement.ValueKind != JsonValueKind.String)
             {
                 throw new BrowserLauncherException(
-                    "The browser supervisor returned an invalid error value.");
+                    ExtensionResources.BrowserSupervisorInvalidError);
             }
 
             error = errorElement.GetString();
@@ -248,7 +258,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 StringComparison.Ordinal))
         {
             throw new BrowserLauncherException(
-                "The browser supervisor binding was called outside the expected top-level loopback origin.");
+                ExtensionResources.BrowserSupervisorBindingOriginInvalid);
         }
     }
 
@@ -268,7 +278,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 StringComparison.Ordinal))
         {
             throw new BrowserLauncherException(
-                "The browser navigated outside the expected loopback origin before the test application started.");
+                ExtensionResources.BrowserNavigationOutsideOrigin);
         }
     }
 
@@ -280,8 +290,7 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
         {
             _diagnostics.Add("browser exception", error);
             _completion.TrySetException(
-                new BrowserLauncherException(
-                    "The browser page reported an unhandled exception before completing."));
+                new BrowserLauncherException(ExtensionResources.BrowserPageUnhandledException));
         };
         _page.RequestFailed += (_, request)
             => _diagnostics.Add(
@@ -289,9 +298,9 @@ internal sealed class ChromiumBrowser : IAsyncDisposable
                 $"{request.Method} {request.Url}: {request.Failure}");
         _page.Crash += (_, _) =>
         {
-            _diagnostics.Add("browser", "The browser page crashed.");
+            _diagnostics.Add("browser", ExtensionResources.BrowserPageCrashed);
             _completion.TrySetException(
-                new BrowserLauncherException("The browser page crashed before completing."));
+                new BrowserLauncherException(ExtensionResources.BrowserPageCrashedBeforeCompletion));
         };
     }
 

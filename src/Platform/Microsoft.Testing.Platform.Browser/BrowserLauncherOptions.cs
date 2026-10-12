@@ -3,6 +3,8 @@
 
 using System.Net;
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed record BrowserLauncherOptions(
@@ -22,7 +24,7 @@ internal sealed record BrowserLauncherOptions(
         if (separatorIndex < 0)
         {
             throw new BrowserLauncherException(
-                "The launcher command line must contain '--' before the Microsoft Testing Platform arguments.");
+                ExtensionResources.LauncherArgumentSeparatorMissing);
         }
 
         var options = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -30,12 +32,20 @@ internal sealed record BrowserLauncherOptions(
         {
             if (i + 1 >= separatorIndex || !args[i].StartsWith("--", StringComparison.Ordinal))
             {
-                throw new BrowserLauncherException($"Invalid launcher option at position {i + 1}.");
+                throw new BrowserLauncherException(
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.InvalidLauncherOption,
+                        i + 1));
             }
 
             if (!options.TryAdd(args[i], args[i + 1]))
             {
-                throw new BrowserLauncherException($"Launcher option '{args[i]}' was provided more than once.");
+                throw new BrowserLauncherException(
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.DuplicateLauncherOption,
+                        args[i]));
             }
         }
 
@@ -47,7 +57,10 @@ internal sealed record BrowserLauncherOptions(
         if (!File.Exists(browserExecutable))
         {
             throw new BrowserLauncherException(
-                $"The configured browser executable does not exist: '{browserExecutable}'.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.BrowserExecutableNotFound,
+                    browserExecutable));
         }
 
         string nodeExecutableValue = ReadEncodedOption(options, "--node-executable-uri", required: false);
@@ -57,7 +70,10 @@ internal sealed record BrowserLauncherOptions(
         if (nodeExecutable is not null && !File.Exists(nodeExecutable))
         {
             throw new BrowserLauncherException(
-                $"The configured Node.js executable does not exist: '{nodeExecutable}'.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.NodeExecutableNotFound,
+                    nodeExecutable));
         }
 
         TimeSpan startupTimeout = ParseTimeout(options, "--startup-timeout-seconds");
@@ -65,7 +81,10 @@ internal sealed record BrowserLauncherOptions(
         if (options.Count != 0)
         {
             throw new BrowserLauncherException(
-                $"Unknown launcher option '{options.Keys.First()}'.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.UnknownLauncherOption,
+                    options.Keys.First()));
         }
 
         string[] expandedArguments = SdkResponseFileExpander.Expand(args[(separatorIndex + 1)..]);
@@ -91,13 +110,21 @@ internal sealed record BrowserLauncherOptions(
         if (!options.Remove(name, out string? encodedValue))
         {
             return required
-                ? throw new BrowserLauncherException($"Required launcher option '{name}' is missing.")
+                ? throw new BrowserLauncherException(
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.RequiredLauncherOptionMissing,
+                        name))
                 : string.Empty;
         }
 
         string value = Uri.UnescapeDataString(encodedValue);
         return required && string.IsNullOrWhiteSpace(value)
-            ? throw new BrowserLauncherException($"Required launcher option '{name}' is empty.")
+            ? throw new BrowserLauncherException(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.RequiredLauncherOptionEmpty,
+                    name))
             : value;
     }
 
@@ -107,7 +134,10 @@ internal sealed record BrowserLauncherOptions(
             && seconds > 0
                 ? TimeSpan.FromSeconds(seconds)
                 : throw new BrowserLauncherException(
-                    $"Launcher option '{name}' must be a positive integer.");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.LauncherOptionMustBePositiveInteger,
+                        name));
 }
 
 internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
@@ -127,7 +157,10 @@ internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
                 if (++i >= arguments.Count)
                 {
                     throw new BrowserLauncherException(
-                        $"Microsoft Testing Platform option '{argument}' has no value.");
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            ExtensionResources.PlatformOptionMissingValue,
+                            argument));
                 }
 
                 string value = arguments[i];
@@ -164,8 +197,7 @@ internal sealed record DotnetTestHttpBootstrap(Uri Endpoint, string Token)
                 : throw InvalidBootstrap();
 
         static BrowserLauncherException InvalidBootstrap()
-            => new(
-                "The SDK did not provide a valid loopback authenticated HTTP dotnettestcli bootstrap.");
+            => new(ExtensionResources.InvalidBootstrap);
     }
 }
 
@@ -205,7 +237,7 @@ internal static class SdkResponseFileExpander
             || arguments[^1].Length == 1)
         {
             throw new BrowserLauncherException(
-                "The browser experiment requires the SDK HTTP bootstrap response file as the final test application argument.");
+                ExtensionResources.BootstrapResponseFileRequired);
         }
 
         for (int i = 0; i < arguments.Count - 1; i++)
@@ -213,7 +245,7 @@ internal static class SdkResponseFileExpander
             if (arguments[i].StartsWith('@'))
             {
                 throw new BrowserLauncherException(
-                    "User response files are not supported by the browser experiment. Pass those arguments directly.");
+                    ExtensionResources.UserResponseFilesNotSupported);
             }
         }
 
@@ -225,7 +257,7 @@ internal static class SdkResponseFileExpander
             if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
             {
                 throw new BrowserLauncherException(
-                    "The SDK response file must not be a symbolic link or reparse point.");
+                    ExtensionResources.BootstrapResponseFileSymbolicLink);
             }
 
             using var stream = new FileStream(
@@ -265,9 +297,7 @@ internal static class SdkResponseFileExpander
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DecoderFallbackException)
         {
-            throw new BrowserLauncherException(
-                "Unable to read the SDK response file.",
-                ex);
+            throw new BrowserLauncherException(ExtensionResources.BootstrapResponseFileReadFailed);
         }
 
         return [.. expanded];
@@ -291,7 +321,7 @@ internal static class SdkResponseFileExpander
         if ((mode & disallowed) != 0)
         {
             throw new BrowserLauncherException(
-                "The SDK response file is accessible by users other than its owner.");
+                ExtensionResources.BootstrapResponseFileAccessibleByOtherUsers);
         }
     }
 }

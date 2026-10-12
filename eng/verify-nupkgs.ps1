@@ -1,7 +1,11 @@
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory=$true)]
-    [System.String] $configuration
+    [System.String] $configuration,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateSet('full', 'partial', 'none')]
+    [System.String] $mstestPackageSetValidation
 )
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -117,13 +121,7 @@ function Confirm-NugetPackages {
         }
     }
 
-    # Leaf packages can be packed independently through the supported -projects
-    # build option. The umbrella packages identify a complete MSTest product build.
-    $isMSTestProductBuild =
-        $verifiedPackageKeys.Contains("MSTest.Sdk") -or
-        $verifiedPackageKeys.Contains("MSTest")
-
-    if ($isMSTestProductBuild) {
+    if ($mstestPackageSetValidation -eq 'full') {
         foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
             if (!$verifiedPackageKeys.Contains($expectedPackageKey)) {
                 $errors += "Expected package '$expectedPackageKey' was not found"

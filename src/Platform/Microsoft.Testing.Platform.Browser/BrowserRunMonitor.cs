@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal static class BrowserRunMonitor
@@ -17,19 +19,20 @@ internal static class BrowserRunMonitor
         Task hostExit = waitForHostExit(completionCancellationTokenSource.Token);
         Task browserExit = waitForBrowserExit(completionCancellationTokenSource.Token);
 
-        Task completed = await Task.WhenAny(browserCompletion, hostExit, browserExit).ConfigureAwait(false);
-        cancellationToken.ThrowIfCancellationRequested();
-        if (completed == browserCompletion)
+        try
         {
-            int exitCode = await browserCompletion.ConfigureAwait(false);
-            await completionCancellationTokenSource.CancelAsync().ConfigureAwait(false);
-            return exitCode;
+            Task completed = await Task.WhenAny(browserCompletion, hostExit, browserExit).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            return completed == browserCompletion
+                ? await browserCompletion.ConfigureAwait(false)
+                : throw new BrowserLauncherException(
+                    completed == hostExit
+                        ? ExtensionResources.BrowserHostExitedBeforeCompletion
+                        : ExtensionResources.BrowserExitedBeforeCompletion);
         }
-
-        await completionCancellationTokenSource.CancelAsync().ConfigureAwait(false);
-        throw new BrowserLauncherException(
-            completed == hostExit
-                ? "The browser host exited before the test application completed."
-                : "The browser exited before the test application completed.");
+        finally
+        {
+            await completionCancellationTokenSource.CancelAsync().ConfigureAwait(false);
+        }
     }
 }

@@ -17,9 +17,13 @@ internal sealed class BrowserPackageCache : IDisposable
         string basePath =
             Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
             ?? System.IO.Path.GetTempPath();
-        string path = System.IO.Path.Combine(
-            basePath,
-            $"tbp-{Guid.NewGuid():N}");
+        string suffix = $"tbp-{Guid.NewGuid():N}";
+        if (System.IO.Path.IsPathRooted(suffix))
+        {
+            throw new InvalidOperationException("The browser package cache suffix must be relative.");
+        }
+
+        string path = System.IO.Path.Combine(basePath, suffix);
         string fullPath = System.IO.Path.GetFullPath(path);
         string fullProjectPath = System.IO.Path.GetFullPath(projectPath);
         if (fullPath.StartsWith(

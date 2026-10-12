@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal static class BrowserSupervisor
@@ -28,7 +30,10 @@ internal static class BrowserSupervisor
             if (ready != WorkerReadyMarker)
             {
                 throw new BrowserLauncherException(
-                    $"The browser worker did not report readiness. Received '{ready ?? "<end-of-stream>"}'.");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.BrowserWorkerNotReady,
+                        ready ?? "<end-of-stream>"));
             }
 
             containment.Attach(worker);
@@ -81,7 +86,11 @@ internal static class BrowserSupervisor
         }
         catch (Exception ex)
         {
-            await Console.Error.WriteLineAsync($"Microsoft.Testing.Platform.Browser: {ex}").ConfigureAwait(false);
+            await Console.Error.WriteLineAsync(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.ErrorPrefix,
+                    ex)).ConfigureAwait(false);
             if (worker is { HasExited: false })
             {
                 try
@@ -99,7 +108,10 @@ internal static class BrowserSupervisor
                 catch (Exception cleanupException)
                 {
                     await Console.Error.WriteLineAsync(
-                        $"Microsoft.Testing.Platform.Browser: Unable to terminate the browser worker: {cleanupException.Message}").ConfigureAwait(false);
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            ExtensionResources.BrowserWorkerTerminationFailed,
+                            cleanupException.Message)).ConfigureAwait(false);
                 }
             }
 
@@ -116,6 +128,11 @@ internal static class BrowserSupervisor
                 }
                 catch (Exception ex) when (ex is IOException or ObjectDisposedException or TimeoutException)
                 {
+                    await Console.Error.WriteLineAsync(
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            ExtensionResources.BrowserWorkerDiagnosticsReadFailed,
+                            ex.Message)).ConfigureAwait(false);
                 }
             }
 
@@ -127,7 +144,7 @@ internal static class BrowserSupervisor
     private static Process StartWorker(string[] args)
     {
         string processPath = Environment.ProcessPath
-            ?? throw new BrowserLauncherException("Unable to determine the browser launcher process path.");
+            ?? throw new BrowserLauncherException(ExtensionResources.BrowserWorkerProcessPathUnavailable);
         string assemblyPath = Assembly.GetExecutingAssembly().Location;
         var startInfo = new ProcessStartInfo
         {
@@ -155,7 +172,7 @@ internal static class BrowserSupervisor
         }
 
         return Process.Start(startInfo)
-            ?? throw new BrowserLauncherException("The browser worker process did not start.");
+            ?? throw new BrowserLauncherException(ExtensionResources.BrowserWorkerStartFailed);
     }
 
     private static async Task CopyAsync(StreamReader reader, TextWriter writer)
@@ -175,6 +192,7 @@ internal static class BrowserSupervisor
         }
         catch (Exception ex) when (ex is IOException or InvalidOperationException or ObjectDisposedException)
         {
+            // The worker can exit concurrently with a best-effort control command.
         }
     }
 

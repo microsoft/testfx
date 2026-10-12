@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal sealed class HostProcess : IAsyncDisposable
@@ -57,13 +59,19 @@ internal sealed class HostProcess : IAsyncDisposable
         {
             Process process = Process.Start(startInfo)
                 ?? throw new BrowserLauncherException(
-                    $"The browser host command '{options.HostCommand}' did not start.");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.BrowserHostStartReturnedNull,
+                        options.HostCommand));
             return new HostProcess(process, diagnostics);
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             throw new BrowserLauncherException(
-                $"Unable to start the browser host command '{options.HostCommand}'.",
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.BrowserHostStartFailed,
+                    options.HostCommand),
                 ex);
         }
     }
@@ -90,12 +98,18 @@ internal sealed class HostProcess : IAsyncDisposable
 
             linkedCancellationTokenSource.Token.ThrowIfCancellationRequested();
             throw new BrowserLauncherException(
-                $"The browser host exited with code {_process.ExitCode} before reporting readiness.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.BrowserHostExitedBeforeReadiness,
+                    _process.ExitCode));
         }
         catch (OperationCanceledException) when (timeoutCancellationTokenSource.IsCancellationRequested)
         {
             throw new BrowserLauncherException(
-                $"The browser host did not become ready within {timeout.TotalSeconds} seconds.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.BrowserHostNotReady,
+                    timeout.TotalSeconds));
         }
     }
 
@@ -157,7 +171,7 @@ internal sealed class HostProcess : IAsyncDisposable
                 && uri.IsLoopback
                     ? uri
                     : throw new BrowserLauncherException(
-                        "The browser host reported a non-loopback application URL.");
+                        ExtensionResources.BrowserHostNonLoopbackUrl);
 
     private async Task CaptureAsync(
         StreamReader reader,

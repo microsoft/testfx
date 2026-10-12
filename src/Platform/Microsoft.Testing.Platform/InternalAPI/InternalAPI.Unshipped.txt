@@ -1,4 +1,19 @@
 #nullable enable
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.Data = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.FileName = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.IsFinal = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.MessagesSerializerId = 15 -> int
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.Offset = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.TotalLength = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.TransferId = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.Error = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.FullPath = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.MessagesSerializerId = 16 -> int
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.NextOffset = 1 -> ushort
+Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId
+Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId
 Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest
 Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest!
 Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Data.get -> byte[]!

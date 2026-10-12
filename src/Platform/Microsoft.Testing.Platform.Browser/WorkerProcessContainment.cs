@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
 using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.Testing.Platform.Browser;
@@ -18,7 +19,10 @@ internal abstract partial class WorkerProcessContainment : IDisposable
             && Interop.SetProcessGroup(processId: 0, processGroupId: 0) != 0)
         {
             throw new BrowserLauncherException(
-                $"Unable to create the browser worker process group (errno {Marshal.GetLastWin32Error()}).");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.WorkerProcessGroupCreationFailed,
+                    Marshal.GetLastWin32Error()));
         }
     }
 
@@ -46,7 +50,10 @@ internal abstract partial class WorkerProcessContainment : IDisposable
             if (_job.IsInvalid)
             {
                 throw new BrowserLauncherException(
-                    $"Unable to create the browser worker job object (error {Marshal.GetLastWin32Error()}).");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.WorkerJobCreationFailed,
+                        Marshal.GetLastWin32Error()));
             }
 
             var information = new Interop.JobObjectExtendedLimitInformation
@@ -68,7 +75,10 @@ internal abstract partial class WorkerProcessContainment : IDisposable
                     (uint)size))
                 {
                     throw new BrowserLauncherException(
-                        $"Unable to configure the browser worker job object (error {Marshal.GetLastWin32Error()}).");
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            ExtensionResources.WorkerJobConfigurationFailed,
+                            Marshal.GetLastWin32Error()));
                 }
             }
             finally
@@ -82,7 +92,10 @@ internal abstract partial class WorkerProcessContainment : IDisposable
             if (!Interop.AssignProcessToJobObject(_job, worker.SafeHandle))
             {
                 throw new BrowserLauncherException(
-                    $"Unable to assign the browser worker to its job object (error {Marshal.GetLastWin32Error()}).");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.WorkerJobAssignmentFailed,
+                        Marshal.GetLastWin32Error()));
             }
         }
 
@@ -91,7 +104,10 @@ internal abstract partial class WorkerProcessContainment : IDisposable
             if (!Interop.TerminateJobObject(_job, 1))
             {
                 throw new BrowserLauncherException(
-                    $"Unable to terminate the browser worker job object (error {Marshal.GetLastWin32Error()}).");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.WorkerJobTerminationFailed,
+                        Marshal.GetLastWin32Error()));
             }
 
             await worker.WaitForExitAsync().WaitAsync(timeout).ConfigureAwait(false);
@@ -111,7 +127,12 @@ internal abstract partial class WorkerProcessContainment : IDisposable
             if (processGroupId != worker.Id)
             {
                 throw new BrowserLauncherException(
-                    $"The browser worker did not establish its owned process group (expected {worker.Id}, received {processGroupId}, errno {Marshal.GetLastWin32Error()}).");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.WorkerProcessGroupMismatch,
+                        worker.Id,
+                        processGroupId,
+                        Marshal.GetLastWin32Error()));
             }
 
             _processGroupId = processGroupId;
@@ -137,8 +158,9 @@ internal abstract partial class WorkerProcessContainment : IDisposable
             {
                 Signal(Interop.SigKill);
             }
-            catch (BrowserLauncherException)
+            catch (BrowserLauncherException ex)
             {
+                Debug.Fail($"Unable to terminate the browser worker process group during disposal: {ex}");
             }
         }
 
@@ -149,7 +171,12 @@ internal abstract partial class WorkerProcessContainment : IDisposable
                 && Marshal.GetLastWin32Error() != Interop.NoSuchProcess)
             {
                 throw new BrowserLauncherException(
-                    $"Unable to signal browser worker process group {_processGroupId} (signal {signal}, errno {Marshal.GetLastWin32Error()}).");
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        ExtensionResources.WorkerProcessGroupSignalFailed,
+                        _processGroupId,
+                        signal,
+                        Marshal.GetLastWin32Error()));
             }
         }
     }

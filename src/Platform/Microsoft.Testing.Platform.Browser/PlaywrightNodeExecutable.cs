@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Browser.Resources;
+
 namespace Microsoft.Testing.Platform.Browser;
 
 internal static class PlaywrightNodeExecutable
@@ -19,7 +21,10 @@ internal static class PlaywrightNodeExecutable
         if (!File.Exists(nodePath))
         {
             throw new BrowserLauncherException(
-                $"The Playwright Node.js driver was not found at '{nodePath}'.");
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.PlaywrightDriverNotFound,
+                    nodePath));
         }
 
         if (configuredPath is not null)
@@ -52,7 +57,11 @@ internal static class PlaywrightNodeExecutable
             ({ } os, Architecture.Arm64) when os == OSPlatform.OSX => "darwin-arm64",
             ({ } os, _) when os == OSPlatform.Windows => "win32_x64",
             _ => throw new BrowserLauncherException(
-                $"Microsoft.Testing.Platform.Browser does not support Playwright on {operatingSystem}/{architecture}."),
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.PlaywrightPlatformNotSupported,
+                    operatingSystem,
+                    architecture)),
         };
 
         return Path.Combine(

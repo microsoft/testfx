@@ -43,6 +43,7 @@ internal static class WorkerParentMonitor
         }
         catch (ObjectDisposedException)
         {
+            Trace.TraceInformation("The browser worker cancellation source was already disposed.");
         }
     }
 }
