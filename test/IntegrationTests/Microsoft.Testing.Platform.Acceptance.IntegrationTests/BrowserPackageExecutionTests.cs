@@ -14,6 +14,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [DoNotParallelize]
 public sealed class BrowserPackageExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
+    private const string StrictAcceptanceEnvironmentVariable = "TESTINGPLATFORM_BROWSER_REQUIRED";
     private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
     private static readonly Regex AnsiEscapeRegex = new(
         @"\x1B\[[0-?]*[ -/]*[@-~]",
@@ -139,14 +140,10 @@ public sealed class BrowserPackageDesktopTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [TestCategory("BrowserComposedValidation")]
     public async Task BrowserPackage_DotnetTestRunsAndListsTestsThroughSdkHttpGateway()
     {
-        string? browser = LocateBrowser();
-        if (browser is null)
-        {
-            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
-            return;
-        }
+        string browser = RequireBrowser();
 
         string browserPackageVersion = GetBrowserPackageVersion();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -187,6 +184,28 @@ public sealed class BrowserPackageDesktopTests
         await AssertIsTestingPlatformApplicationAsync(
             generator,
             $"-property:TargetFramework={TargetFramework} -property:RuntimeIdentifier={WasmRuntime.BrowserRid}");
+
+        string largeResultsDirectory = Path.Combine(
+            TestContext.TestRunResultsDirectory ?? Path.GetTempPath(),
+            $"browser-large-export-{Guid.NewGuid():N}");
+        DotnetMuxerResult largeArtifact = await RunBrowserTestAsync(
+            generator,
+            $"--results-directory \"{largeResultsDirectory}\" --filter FullyQualifiedName~ProducesLargeArtifact");
+        Assert.AreEqual(0, largeArtifact.ExitCode, largeArtifact.ToString());
+        string exportedLargeArtifact = Assert.ContainsSingle(
+            Directory.EnumerateFiles(
+                largeResultsDirectory,
+                "browser-large-export.bin",
+                SearchOption.AllDirectories));
+        byte[] exportedContent = File.ReadAllBytes(exportedLargeArtifact);
+        Assert.HasCount(1_048_713, exportedContent);
+        byte[] expectedContent = new byte[exportedContent.Length];
+        for (int i = 0; i < expectedContent.Length; i++)
+        {
+            expectedContent[i] = (byte)(i % 251);
+        }
+
+        Assert.AreSequenceEqual(expectedContent, exportedContent);
 
         DotnetMuxerResult projectConfiguredFilter = await RunBrowserTestAsync(
             generator,
@@ -301,14 +320,10 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
+    [TestCategory("BrowserComposedValidation")]
     public async Task BrowserPackage_SdkCancellationStopsManagedBrowserRun()
     {
-        string? browser = LocateBrowser();
-        if (browser is null)
-        {
-            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
-            return;
-        }
+        string browser = RequireBrowser();
 
         string browserPackageVersion = GetBrowserPackageVersion();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -347,14 +362,10 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
+    [TestCategory("BrowserComposedValidation")]
     public async Task BrowserPackage_ArtifactQuotaFailureFailsRun()
     {
-        string? browser = LocateBrowser();
-        if (browser is null)
-        {
-            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
-            return;
-        }
+        string browser = RequireBrowser();
 
         string browserPackageVersion = GetBrowserPackageVersion();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -396,14 +407,10 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
+    [TestCategory("BrowserComposedValidation")]
     public async Task BrowserPackage_HostAssetsAreBuildOnlyConsumerAssets()
     {
-        string? browser = LocateBrowser();
-        if (browser is null)
-        {
-            Assert.Inconclusive("Skipping Microsoft.Testing.Platform.Browser execution: no Chromium-family browser was found.");
-            return;
-        }
+        string browser = RequireBrowser();
 
         string browserPackageVersion = GetBrowserPackageVersion();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -468,6 +475,7 @@ public sealed class BrowserPackageDesktopTests
     }
 
     [TestMethod]
+    [TestCategory("BrowserComposedValidation")]
     public async Task BrowserPackage_DesktopTestApplicationIsUnaffected()
     {
         string browserPackageVersion = GetBrowserPackageVersion();
@@ -479,7 +487,7 @@ public sealed class BrowserPackageDesktopTests
                 .PatchCodeWithReplace("$BrowserPackageVersion$", browserPackageVersion));
 
         DotnetMuxerResult run;
-        if (HasExplicitAlignedInputs())
+        if (HasExplicitAlignedInputs() || IsStrictComposedValidation())
         {
             await RequireAlignedBrowserInputsAsync(generator);
             run = await RunBrowserSdkAsync(
@@ -727,7 +735,7 @@ public sealed class BrowserPackageDesktopTests
             ?.Value;
         if (runArgumentsVersion != "1")
         {
-            Assert.Inconclusive(
+            ReportUnavailableComposedInput(
                 $"The SDK-under-test at '{dotnetPath}' does not expose TestingPlatformRunArgumentsVersion=1.");
         }
 
@@ -797,7 +805,7 @@ public sealed class BrowserPackageDesktopTests
         string? dotnetPath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_SDK_DOTNET");
         if (dotnetPath is null)
         {
-            Assert.Inconclusive(
+            ReportUnavailableComposedInput(
                 "Set TESTINGPLATFORM_BROWSER_SDK_DOTNET to the dotnet executable from the aligned source-built SDK.");
         }
 
@@ -915,7 +923,7 @@ public sealed class BrowserPackageDesktopTests
         {
             if (requireExplicit)
             {
-                Assert.Inconclusive(
+                ReportUnavailableComposedInput(
                     "Set TESTINGPLATFORM_BROWSER_PACKAGE_FEED to the immutable aligned TestFX package directory.");
             }
 
@@ -931,6 +939,36 @@ public sealed class BrowserPackageDesktopTests
     private static bool HasExplicitAlignedInputs()
         => Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_SDK_DOTNET") is not null
             && Environment.GetEnvironmentVariable("TESTINGPLATFORM_BROWSER_PACKAGE_FEED") is not null;
+
+    private static bool IsStrictComposedValidation()
+        => string.Equals(
+            Environment.GetEnvironmentVariable(StrictAcceptanceEnvironmentVariable),
+            "1",
+            StringComparison.Ordinal);
+
+    private static string RequireBrowser()
+    {
+        string? browser = LocateBrowser();
+        if (browser is not null)
+        {
+            return browser;
+        }
+
+        ReportUnavailableComposedInput(
+            "No Chromium-family browser was found. Set TESTINGPLATFORM_BROWSER_EXECUTABLE to an existing executable.");
+        return null!;
+    }
+
+    private static void ReportUnavailableComposedInput(string message)
+    {
+        if (IsStrictComposedValidation())
+        {
+            throw new AssertFailedException(
+                $"{StrictAcceptanceEnvironmentVariable}=1 requires composed browser validation to run: {message}");
+        }
+
+        Assert.Inconclusive($"Skipping Microsoft.Testing.Platform.Browser composed validation: {message}");
+    }
 
     private static string? LocateBrowser()
     {
