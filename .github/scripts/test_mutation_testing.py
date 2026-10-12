@@ -3,8 +3,10 @@
 import importlib.util
 import json
 import pathlib
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import call, patch
 
 
 SCRIPT_PATH = pathlib.Path(__file__).with_name("mutation_testing.py")
@@ -74,8 +76,31 @@ class MutationTestingTests(unittest.TestCase):
                 "src/Platform/Microsoft.Testing.Extensions.*/*.csproj"
             )
         }
+        excluded_projects = {
+            excluded["project"]
+            for excluded in target_manifest.get("excludedProjects", [])
+        }
 
-        self.assertEqual(extension_projects, configured_projects)
+        self.assertEqual(extension_projects, configured_projects | excluded_projects)
+        self.assertEqual(set(), configured_projects & excluded_projects)
+
+    def test_load_manifest_validates_explicit_exclusions(self) -> None:
+        target = module("one", legacy=True)
+        for exclusions, count, message in [
+            ([{"project": "excluded.csproj", "reason": ""}], 2, "project and reason"),
+            ([{"project": target["project"], "reason": "Unsupported"}], 2, "both configured"),
+            ([{"project": "excluded.csproj", "reason": "Unsupported"}], 1, "every module and exclusion"),
+            ([{"project": "excluded.csproj", "reason": "Unsupported"}] * 2, 3, "Duplicate excluded"),
+        ]:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as directory:
+                data = manifest(target) | {
+                    "excludedProjects": exclusions,
+                    "knownTargetCount": count,
+                }
+                path = pathlib.Path(directory) / "manifest.json"
+                path.write_text(json.dumps(data), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, message):
+                    MUTATION_TESTING.load_manifest(path)
 
     def test_load_manifest_requires_one_legacy_module(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -149,6 +174,28 @@ class MutationTestingTests(unittest.TestCase):
             self.assertAlmostEqual(50.0, result["mutationScore"])
             self.assertEqual(1, result["counts"]["CompileError"])
             self.assertTrue((artifact_dir / "module-result.json").is_file())
+
+    def test_record_module_retains_pre_stryker_failure_diagnostics(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            artifact_dir = root / "artifacts" / "example"
+            target_manifest = manifest(module("example", legacy=True))
+            reason = "Mutation execution did not complete (build: failure)."
+            result = MUTATION_TESTING.record_module(
+                target_manifest, "example", artifact_dir, "abc123", 1, 0, reason
+            )
+            report = MUTATION_TESTING.aggregate_results(
+                target_manifest, root / "artifacts", root / "full", "abc123"
+            )
+
+            self.assertEqual("failed", result["status"])
+            self.assertEqual(reason, result["error"])
+            self.assertIsNone(result["reportPath"])
+            self.assertFalse(report["complete"])
+            self.assertEqual(0, report["successfulModules"])
+            self.assertIsNone(report["mutationScore"])
+            self.assertIn(reason, report["problems"][0])
+            self.assertIn(reason, (artifact_dir / "module-summary.md").read_text())
 
     def test_aggregate_results_sums_counts_and_copies_reports(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -224,6 +271,22 @@ class MutationTestingTests(unittest.TestCase):
             self.assertEqual(1, report["successfulModules"])
             self.assertIn("second", report["problems"][0])
 
+    def test_aggregate_results_reports_excluded_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            exclusions = [{"project": "src/Windows.csproj", "reason": "Windows only"}]
+            target_manifest = manifest(module("example", legacy=True)) | {
+                "knownTargetCount": 2,
+                "excludedProjects": exclusions,
+            }
+            report = MUTATION_TESTING.aggregate_results(
+                target_manifest, root / "artifacts", root / "full", "abc123"
+            )
+            self.assertEqual(exclusions, report["excludedProjects"])
+            self.assertEqual(2, report["knownTargetCount"])
+            self.assertIn("`src/Windows.csproj`: Windows only", (root / "full" / "summary.md").read_text())
+            self.assertIn("<code>src/Windows.csproj</code>: Windows only", (root / "full" / "index.html").read_text())
+
     def test_aggregate_results_excludes_commit_mismatch_from_totals(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = pathlib.Path(directory)
@@ -268,6 +331,151 @@ class MutationTestingTests(unittest.TestCase):
             self.assertEqual("commit-mismatch", mismatched["status"])
             self.assertIn("different", report["problems"][0])
             self.assertIn("abc123", report["problems"][0])
+
+    def prepare_input(
+        self, root: pathlib.Path, *, manual: bool = False,
+        conclusion: str = "success", expired: bool = False,
+        missing: bool = False, metadata: dict | list | None = None,
+        corrupt: bool = False, download_error: Exception | None = None,
+        run_changes: dict | None = None,
+    ) -> tuple[dict, object, object]:
+        run = {
+            "id": 42,
+            "run_attempt": 2,
+            "path": ".github/workflows/mutation-testing.yml",
+            "repository": {"full_name": "microsoft/testfx"},
+            "head_repository": {"full_name": "microsoft/testfx"},
+            "head_branch": "main",
+            "head_sha": "a" * 40,
+            "status": "completed",
+            "conclusion": conclusion,
+        } | (run_changes or {})
+        inventory = {
+            "total_count": 0 if missing else 1,
+            "artifacts": [] if missing else [
+                {"id": 99, "name": "mutation-testing-report", "expired": expired}
+            ],
+        }
+        responses = ([{"databaseId": 42}], run, inventory) if manual else (run, inventory)
+        def download(arguments: list[str], **kwargs) -> None:
+            if download_error:
+                raise download_error
+            artifact_dir = pathlib.Path(arguments[-1])
+            report_path = artifact_dir / "reports" / "mutation-report.json"
+            write_mutation_report(report_path, ["Killed", "Survived"])
+            if corrupt:
+                report_path.write_text("\ufffdnot a ZIP or JSON", encoding="utf-8")
+            if metadata is not None:
+                (artifact_dir / "module-result.json").write_text(json.dumps(metadata))
+
+        with patch.object(MUTATION_TESTING, "gh_json", side_effect=responses) as lookup:
+            with patch.object(MUTATION_TESTING.subprocess, "run", side_effect=download) as transfer:
+                prepared = MUTATION_TESTING.prepare_improver_input(
+                    "microsoft/testfx",
+                    "workflow_dispatch" if manual else "workflow_run",
+                    {} if manual else {"workflow_run": {"id": 42}},
+                    root / "input",
+                )
+        self.assertEqual(prepared, json.loads((root / "input" / "input.json").read_text()))
+        return prepared, lookup, transfer
+
+    def test_prepare_improver_stages_legacy_report_for_exact_run(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            prepared, lookup, transfer = self.prepare_input(root)
+            self.assertEqual("available", prepared["artifactStatus"])
+            self.assertEqual((42, 2, "a" * 40, 99), (
+                prepared["runId"], prepared["runAttempt"], prepared["sourceCommit"], prepared["artifactId"]
+            ))
+            self.assertEqual("stryker-report/reports/mutation-report.json", prepared["reportPath"])
+            self.assertEqual([
+                call("api", "repos/microsoft/testfx/actions/runs/42"),
+                call("api", "repos/microsoft/testfx/actions/runs/42/artifacts?per_page=100"),
+            ], lookup.call_args_list)
+            self.assertEqual([
+                "gh", "run", "download", "42", "--repo", "microsoft/testfx",
+                "--name", "mutation-testing-report", "--dir", str(root / "input" / "stryker-report"),
+            ], transfer.call_args.args[0])
+
+    def test_prepare_improver_resolves_manual_run_on_main(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            prepared, lookup, _ = self.prepare_input(pathlib.Path(directory), manual=True)
+            self.assertEqual("available", prepared["artifactStatus"])
+            self.assertEqual(call(
+                "run", "list", "--repo", "microsoft/testfx", "--workflow", "mutation-testing.yml",
+                "--branch", "main", "--status", "completed", "--limit", "1", "--json", "databaseId",
+            ), lookup.call_args_list[0])
+
+    def test_prepare_improver_accepts_successful_module_from_failed_aggregate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            prepared, _, _ = self.prepare_input(
+                pathlib.Path(directory), conclusion="failure", metadata={
+                    "schemaVersion": 1, "module": {"id": "server-mode-client"},
+                    "status": "success", "sourceCommit": "a" * 40,
+                },
+            )
+            self.assertEqual("failure", prepared["conclusion"])
+            self.assertEqual("available", prepared["artifactStatus"])
+
+    def test_prepare_improver_rejects_unproven_or_mismatched_module(self) -> None:
+        valid = {
+            "schemaVersion": 1, "module": {"id": "server-mode-client"},
+            "status": "success", "sourceCommit": "a" * 40,
+        }
+        for metadata in [
+            None, [], valid | {"status": "failed"}, valid | {"sourceCommit": "b" * 40},
+            valid | {"module": {"id": "other"}}, valid | {"schemaVersion": 2},
+        ]:
+            with self.subTest(metadata=metadata), tempfile.TemporaryDirectory() as directory:
+                prepared, _, _ = self.prepare_input(
+                    pathlib.Path(directory), conclusion="failure", metadata=metadata
+                )
+                self.assertEqual("unavailable", prepared["artifactStatus"])
+                self.assertIsNone(prepared["reportPath"])
+                self.assertIn("Invalid mutation artifact:", prepared["error"])
+
+    def test_prepare_improver_missing_or_expired_artifact_is_not_downloaded(self) -> None:
+        for changes in [{"missing": True}, {"expired": True}]:
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as directory:
+                prepared, _, transfer = self.prepare_input(pathlib.Path(directory), **changes)
+                self.assertEqual("unavailable", prepared["artifactStatus"])
+                self.assertEqual("Mutation report artifact is missing or expired", prepared["error"])
+                transfer.assert_not_called()
+
+    def test_prepare_improver_download_failure_or_corruption_preserves_reporting(self) -> None:
+        for changes, expected in [
+            ({"download_error": subprocess.CalledProcessError(4, ["gh"])}, "download failed (exit 4)"),
+            ({"download_error": subprocess.TimeoutExpired(["gh"], 180)}, "download timed out"),
+            ({"corrupt": True}, "Invalid mutation artifact:"),
+        ]:
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as directory:
+                prepared, _, _ = self.prepare_input(pathlib.Path(directory), **changes)
+                self.assertEqual("unavailable", prepared["artifactStatus"])
+                self.assertIsNone(prepared["reportPath"])
+                self.assertIn(expected, prepared["error"])
+                self.assertEqual(42, prepared["runId"])
+
+    def test_prepare_improver_rejects_wrong_run_identity(self) -> None:
+        for changes in [
+            {"head_branch": "other"}, {"head_sha": "not a commit"},
+            {"head_repository": {"full_name": "other/fork"}},
+            {"path": ".github/workflows/other.yml"}, {"status": "in_progress"},
+        ]:
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as directory:
+                root = pathlib.Path(directory)
+                with self.assertRaisesRegex(ValueError, "Upstream run"):
+                    self.prepare_input(root, run_changes=changes)
+                self.assertFalse((root / "input").exists())
+
+    def test_prepare_improver_required_lookup_failure_is_not_empty_data(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            with patch.object(MUTATION_TESTING, "gh_json", side_effect=subprocess.CalledProcessError(4, ["gh"])):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    MUTATION_TESTING.prepare_improver_input(
+                        "microsoft/testfx", "workflow_run", {"workflow_run": {"id": 42}}, root / "input"
+                    )
+            self.assertFalse((root / "input").exists())
 
 
 if __name__ == "__main__":

@@ -151,6 +151,16 @@
                       Encoding="UTF-8" />
   </Target>
 
+  <!-- Mutation builds use open-key friend assemblies. A shipped Microsoft-key
+       adapter cannot access the locally built platform's internals. -->
+  <PropertyGroup Condition="'$(MutationTesting)' == 'true' AND '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true'">
+    <_AddMSTestSourceReferenceForMutation Condition="'$(UseMSTestFromSource)' != 'true'">true</_AddMSTestSourceReferenceForMutation>
+    <UseMSTestFromSource>true</UseMSTestFromSource>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(_AddMSTestSourceReferenceForMutation)' == 'true'">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" IsTestInfrastructure="true" />
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" IsTestInfrastructure="true" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CtrfReport\Microsoft.Testing.Extensions.CtrfReport.csproj" IsTestInfrastructure="true" />

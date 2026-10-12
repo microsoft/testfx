@@ -8,6 +8,7 @@ import argparse
 import html
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -38,14 +39,28 @@ def load_manifest(path: Path) -> dict[str, Any]:
     modules = manifest.get("modules")
     if not isinstance(modules, list) or not modules:
         raise ValueError("Mutation manifest must contain at least one module")
+    excluded_projects = manifest.get("excludedProjects", [])
+    if not isinstance(excluded_projects, list):
+        raise ValueError("Mutation manifest excludedProjects must be a list")
+    excluded_paths: set[str] = set()
+    for excluded in excluded_projects:
+        if not isinstance(excluded, dict) or not all(
+            isinstance(excluded.get(field), str) and excluded[field].strip()
+            for field in ("project", "reason")
+        ):
+            raise ValueError("Excluded mutation projects require a project and reason")
+        if excluded["project"] in excluded_paths:
+            raise ValueError(f"Duplicate excluded mutation project: {excluded['project']}")
+        excluded_paths.add(excluded["project"])
+
     known_target_count = manifest.get("knownTargetCount")
     if (
         not isinstance(known_target_count, int)
         or isinstance(known_target_count, bool)
-        or known_target_count < len(modules)
+        or known_target_count < len(modules) + len(excluded_projects)
     ):
         raise ValueError(
-            "Mutation manifest knownTargetCount must cover every configured module"
+            "Mutation manifest knownTargetCount must cover every module and exclusion"
         )
 
     module_ids: set[str] = set()
@@ -60,6 +75,8 @@ def load_manifest(path: Path) -> dict[str, Any]:
                 raise ValueError(f"Mutation module {index} has an invalid {field}")
 
         module_id = module["id"]
+        if module["project"] in excluded_paths:
+            raise ValueError(f"Mutation project is both configured and excluded: {module['project']}")
         if module_id in module_ids:
             raise ValueError(f"Duplicate mutation module id: {module_id}")
         module_ids.add(module_id)
@@ -125,6 +142,9 @@ def build_matrix(manifest: dict[str, Any], repository_root: Path) -> dict[str, A
     modules = enabled_modules(manifest)
     for module in modules:
         validate_module_paths(module, repository_root)
+    for excluded in manifest.get("excludedProjects", []):
+        if not (repository_root / excluded["project"]).is_file():
+            raise ValueError(f"Excluded mutation project does not exist: {excluded['project']}")
     return {"include": modules}
 
 
@@ -197,12 +217,13 @@ def record_module(
     source_commit: str,
     exit_code: int,
     duration_seconds: int,
+    failure_reason: str | None = None,
 ) -> dict[str, Any]:
     module = find_module(manifest, module_id)
     report_path = find_report(artifact_dir)
     counts = empty_counts()
     status = "failed" if exit_code != 0 else "missing-report"
-    error: str | None = None
+    error = failure_reason
 
     if report_path is not None:
         try:
@@ -257,6 +278,7 @@ def build_module_summary(result: dict[str, Any]) -> str:
             f"**{format_score(result['mutationScore'])}**; duration: "
             f"**{result['durationSeconds']}s**.",
             "",
+            *([f"Failure: {result['error']}", ""] if result["error"] else []),
             "| Killed | Survived | No coverage | Timeout | Compile error | Runtime error | Ignored |",
             "| ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
             f"| {counts['Killed']} | {counts['Survived']} | "
@@ -335,6 +357,13 @@ def build_aggregate_summary(report: dict[str, Any]) -> str:
         lines.extend(["### Incomplete modules", ""])
         lines.extend(f"- {problem}" for problem in report["problems"])
         lines.append("")
+    if report["excludedProjects"]:
+        lines.extend(["### Explicitly excluded targets", ""])
+        lines.extend(
+            f"- `{excluded['project']}`: {excluded['reason']}"
+            for excluded in report["excludedProjects"]
+        )
+        lines.append("")
     lines.append(
         "Download the `mutation-testing-full-report` artifact for the aggregate "
         "JSON, HTML index, module logs, and detailed Stryker reports."
@@ -367,6 +396,14 @@ def build_aggregate_html(report: dict[str, Any]) -> str:
 
     problems = "".join(f"<li>{html.escape(problem)}</li>" for problem in report["problems"])
     problem_section = f"<h2>Incomplete modules</h2><ul>{problems}</ul>" if problems else ""
+    exclusions = "".join(
+        f"<li><code>{html.escape(excluded['project'])}</code>: "
+        f"{html.escape(excluded['reason'])}</li>"
+        for excluded in report["excludedProjects"]
+    )
+    exclusion_section = (
+        f"<h2>Explicitly excluded targets</h2><ul>{exclusions}</ul>" if exclusions else ""
+    )
     completion = "Complete" if report["complete"] else "Partial"
     return f"""<!doctype html>
 <html lang="en">
@@ -393,6 +430,7 @@ def build_aggregate_html(report: dict[str, Any]) -> str:
     <tbody>{''.join(rows)}</tbody>
   </table>
   {problem_section}
+  {exclusion_section}
 </body>
 </html>
 """
@@ -441,7 +479,8 @@ def aggregate_results(
                 f"`{source_commit}`."
             )
         elif status != "success":
-            problems.append(f"`{module_id}` completed with status `{status}`.")
+            detail = f" {result['error']}" if result.get("error") else ""
+            problems.append(f"`{module_id}` completed with status `{status}`.{detail}")
         else:
             successful_results.append(result)
 
@@ -477,6 +516,7 @@ def aggregate_results(
         "complete": not problems,
         "expectedModules": len(expected),
         "knownTargetCount": manifest["knownTargetCount"],
+        "excludedProjects": manifest.get("excludedProjects", []),
         "successfulModules": len(successful_results),
         "totals": totals,
         "mutationScore": mutation_score(totals),
@@ -496,6 +536,133 @@ def aggregate_results(
         encoding="utf-8",
     )
     return report
+
+
+def gh_json(*arguments: str) -> Any:
+    result = subprocess.run(
+        ["gh", *arguments],
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+    )
+    return json.loads(result.stdout)
+
+
+def prepare_improver_input(
+    repository: str, event_name: str, event: dict[str, Any], output_dir: Path
+) -> dict[str, Any]:
+    if event_name == "workflow_run":
+        run_id = event["workflow_run"]["id"]
+    elif event_name == "workflow_dispatch":
+        runs = gh_json(
+            "run", "list", "--repo", repository, "--workflow", "mutation-testing.yml",
+            "--branch", "main", "--status", "completed", "--limit", "1",
+            "--json", "databaseId",
+        )
+        if not isinstance(runs, list) or len(runs) != 1:
+            raise ValueError("No completed main-branch mutation run was found")
+        run_id = runs[0]["databaseId"]
+    else:
+        raise ValueError(f"Unsupported mutation improver event: {event_name}")
+
+    if not isinstance(run_id, int) or isinstance(run_id, bool) or run_id <= 0:
+        raise ValueError("Invalid upstream mutation run id")
+    run = gh_json("api", f"repos/{repository}/actions/runs/{run_id}")
+    if (
+        run.get("id") != run_id
+        or run.get("path") != ".github/workflows/mutation-testing.yml"
+        or run.get("repository", {}).get("full_name") != repository
+        or run.get("head_repository", {}).get("full_name") != repository
+        or run.get("head_branch") != "main"
+        or run.get("status") != "completed"
+    ):
+        raise ValueError("Upstream run is not a completed repository/main mutation run")
+    source_commit = run.get("head_sha")
+    if (
+        not isinstance(source_commit, str)
+        or len(source_commit) != 40
+        or any(character not in "0123456789abcdef" for character in source_commit)
+    ):
+        raise ValueError("Upstream run has an invalid source commit")
+
+    inventory = gh_json(
+        "api", f"repos/{repository}/actions/runs/{run_id}/artifacts?per_page=100"
+    )
+    if (
+        not isinstance(inventory.get("artifacts"), list)
+        or not isinstance(inventory.get("total_count"), int)
+        or inventory["total_count"] != len(inventory["artifacts"])
+    ):
+        raise ValueError("Incomplete upstream artifact inventory (limit: 100)")
+    artifacts = [
+        artifact for artifact in inventory["artifacts"]
+        if artifact["name"] == "mutation-testing-report"
+    ]
+    if len(artifacts) > 1:
+        raise ValueError("Multiple mutation-testing-report artifacts were found")
+    if output_dir.exists():
+        raise ValueError("Mutation input directory must be fresh")
+    output_dir.mkdir(parents=True)
+    prepared = {
+        "repository": repository,
+        "runId": run_id,
+        "runAttempt": run["run_attempt"],
+        "sourceCommit": source_commit,
+        "conclusion": run["conclusion"],
+        "artifactId": artifacts[0]["id"] if artifacts else None,
+        "artifactStatus": "unavailable",
+        "reportPath": None,
+        "error": None,
+    }
+    if not artifacts or artifacts[0]["expired"]:
+        prepared["error"] = "Mutation report artifact is missing or expired"
+    else:
+        artifact_dir = output_dir / "stryker-report"
+        try:
+            # Runs on the trusted runner before gh-aw starts its text-only CLI proxy.
+            subprocess.run(
+                [
+                    "gh", "run", "download", str(run_id), "--repo", repository,
+                    "--name", "mutation-testing-report", "--dir", str(artifact_dir),
+                ],
+                check=True,
+                capture_output=True,
+                timeout=180,
+            )
+            module_result_path = artifact_dir / "module-result.json"
+            if module_result_path.is_file():
+                module_result = json.loads(module_result_path.read_text(encoding="utf-8"))
+                if (
+                    not isinstance(module_result, dict)
+                    or module_result.get("schemaVersion") != SCHEMA_VERSION
+                    or module_result.get("status") != "success"
+                    or module_result.get("sourceCommit") != source_commit
+                    or not isinstance(module_result.get("module"), dict)
+                    or module_result["module"].get("id") != "server-mode-client"
+                ):
+                    raise ValueError("ServerMode module failed or source identity mismatched")
+            elif run["conclusion"] != "success":
+                raise ValueError("Failed upstream run has no successful module metadata")
+            report_path = find_report(artifact_dir)
+            if report_path is None:
+                raise ValueError("Mutation report JSON is missing")
+            parse_report(report_path)
+            prepared["artifactStatus"] = "available"
+            prepared["reportPath"] = report_path.relative_to(output_dir).as_posix()
+        except subprocess.CalledProcessError as error:
+            prepared["error"] = f"Mutation artifact download failed (exit {error.returncode})"
+        except subprocess.TimeoutExpired:
+            prepared["error"] = "Mutation artifact download timed out"
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
+            prepared["error"] = f"Invalid mutation artifact: {error}"
+        if prepared["error"]:
+            print(f"warning: {prepared['error']}", file=sys.stderr)
+    (output_dir / "input.json").write_text(
+        json.dumps(prepared, indent=2) + "\n", encoding="utf-8"
+    )
+    return prepared
 
 
 def main() -> int:
@@ -518,6 +685,7 @@ def main() -> int:
     record_parser.add_argument("--source-commit", required=True)
     record_parser.add_argument("--exit-code", type=int, required=True)
     record_parser.add_argument("--duration-seconds", type=int, required=True)
+    record_parser.add_argument("--failure-reason")
 
     check_parser = subparsers.add_parser("check-module")
     check_parser.add_argument("--result", type=Path, required=True)
@@ -527,6 +695,12 @@ def main() -> int:
     aggregate_parser.add_argument("--artifacts-dir", type=Path, required=True)
     aggregate_parser.add_argument("--output-dir", type=Path, required=True)
     aggregate_parser.add_argument("--source-commit", required=True)
+
+    prepare_parser = subparsers.add_parser("prepare-improver")
+    prepare_parser.add_argument("--repository", required=True)
+    prepare_parser.add_argument("--event-name", required=True)
+    prepare_parser.add_argument("--event-path", type=Path, required=True)
+    prepare_parser.add_argument("--output-dir", type=Path, required=True)
 
     args = parser.parse_args()
     try:
@@ -554,6 +728,7 @@ def main() -> int:
                 args.source_commit,
                 args.exit_code,
                 args.duration_seconds,
+                args.failure_reason,
             )
             return 0
 
@@ -570,6 +745,18 @@ def main() -> int:
                 args.source_commit,
             )
             return 0 if report["complete"] else 1
+        if args.command == "prepare-improver":
+            event = json.loads(args.event_path.read_text(encoding="utf-8"))
+            prepare_improver_input(
+                args.repository, args.event_name, event, args.output_dir
+            )
+            return 0
+    except subprocess.CalledProcessError as error:
+        print(f"error: GitHub lookup failed (exit {error.returncode})", file=sys.stderr)
+        return 1
+    except subprocess.TimeoutExpired:
+        print("error: GitHub lookup timed out", file=sys.stderr)
+        return 1
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
