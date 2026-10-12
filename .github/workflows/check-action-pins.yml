@@ -21,6 +21,7 @@ on:
       - '.github/scripts/check-action-pins-requirements.txt'
       - '.github/scripts/issue-labeler.mjs'
       - '.github/scripts/issue-labeler.test.mjs'
+      - '.github/scripts/test_gh_aw_firewall_footer.py'
       - '.github/scripts/check_unused_package_versions.py'
       - '.github/scripts/test_check_unused_package_versions.py'
       - '**/*.csproj'
@@ -40,6 +41,7 @@ on:
       - '.github/scripts/check-action-pins-requirements.txt'
       - '.github/scripts/issue-labeler.mjs'
       - '.github/scripts/issue-labeler.test.mjs'
+      - '.github/scripts/test_gh_aw_firewall_footer.py'
       - '.github/scripts/check_unused_package_versions.py'
       - '.github/scripts/test_check_unused_package_versions.py'
       - '**/*.csproj'
@@ -79,3 +81,9 @@ jobs:
           python .github/scripts/check_unused_package_versions.py
       - name: Test issue labeler helper
         run: node --test .github/scripts/issue-labeler.test.mjs
+      - name: Setup pinned gh-aw scripts
+        uses: github/gh-aw-actions/setup@924af5fdc64061cfbf66fb584c8b07e2ac230c60 # v0.89.21
+        with:
+          destination: ${{ runner.temp }}/gh-aw/actions
+      - name: Test firewall footer correction
+        run: python .github/scripts/test_gh_aw_firewall_footer.py --module-path "$RUNNER_TEMP/gh-aw/actions/firewall_blocked_domains.cjs"
