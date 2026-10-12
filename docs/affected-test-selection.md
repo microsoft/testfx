@@ -63,7 +63,8 @@ Runner startup diagnostics and process statistics use stderr so they do not surr
 
 Tests must also work independently of prior test execution and the launch directory. Desktop XML data-source tests
 resolve their copied fixture from the application base directory. The AppContainer pipe test loads the framework
-access-control assembly before impersonation, retaining the real restricted-token connection and denial checks.
+access-control and Windows-principal assemblies before impersonation, retaining the real restricted-token connection
+and denial checks.
 
 Regression coverage includes `Serialize_NonAsciiCharacters_ProducesLosslessAsciiJson` and the packed, headless
 consumer test `ListTestsJson_HeadlessProcess_PreservesUnicode`.
