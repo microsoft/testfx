@@ -157,12 +157,14 @@ Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings @(
     'GeneratePathProperty="true"',
-    "_CopyAffectedTestsNetFrameworkRuntimeAssets",
+    "_CopyAffectedTestsRuntimeAssets",
+    "_RegisterAffectedTestsRuntimeAssetsForClean",
+    "'`$(RuntimeIdentifier)' == 'win-x64'",
     "MicrosoftInstrumentationEngine_x64.dll",
     "ctsrun64.dll",
     "Cts_x64.config"
 ) `
-    -ItemMessageFormatter { param($substring) ".NET Framework affected-test applications must preserve '$substring'." }
+    -ItemMessageFormatter { param($substring) ".NET Framework and RID-specific affected-test applications must preserve '$substring'." }
 Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings @(
@@ -329,6 +331,13 @@ if ($collectStep.Contains("PublishCoverageReport") -or
     -not $fullTestStep.Contains("PublishCoverageReport") -or
     $fullTestStep.Contains("--collect-test-map")) {
     throw "Affected-test collection must be followed by the normal full test and coverage run."
+}
+
+$fullTestCondition = $collectBranch.Value.Substring($fullTestStepEnd)
+if (-not $collectStep.Contains("variable=AffectedTestsCollectionStarted]true") -or
+    -not $fullTestCondition.Contains("succeededOrFailed()") -or
+    -not $fullTestCondition.Contains("eq(variables['AffectedTestsCollectionStarted'], 'true')")) {
+    throw "The normal full test and coverage run must execute after failed collection, but not after a failed build."
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or

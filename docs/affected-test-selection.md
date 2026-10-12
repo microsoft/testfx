@@ -37,11 +37,15 @@ builds that contain only the no-handshake fix.
   storage for the public `microsoft.testfx` pipeline.
 - The trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
   retry, or coverage arguments, because collection owns its instrumentation and launches discovery
-  children with `--list-tests`. A normal full test run follows to retain test reporting and coverage.
+  children with `--list-tests`. A normal full test run follows, including after a failed collection step, to retain
+  test reporting and coverage. A collection failure still fails the job; it is not normalized to success.
+  Main-branch Windows jobs have a four-hour budget because collection replays acceptance fixtures in fresh batches
+  before the ordinary full run. PR jobs retain their 90-minute budget.
 - The Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
-  `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework outputs.
+  `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
+  outputs, including the WinUI test-framework unit host.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
@@ -59,7 +63,14 @@ can inherit a legacy console encoding rather than UTF-8. JSON discovery therefor
 including surrogate pairs, so test UIDs and metadata remain lossless after decoding. Escaping only JSON control
 characters is insufficient: a legacy encoding's best-fit fallback can convert Unicode into a raw control character
 after serialization. The schema and decoded values are unchanged, and malformed discovery still fails collection.
-Runner startup diagnostics and process statistics use stderr so they do not surround the JSON document on stdout.
+Runner startup diagnostics and successful-run process statistics use stderr so they do not surround the JSON
+document on stdout. Failed acceptance runs do not print process statistics: the collector prefers nonempty stderr
+over stdout when reporting child failures, and a statistics-only stderr would otherwise hide the actual failure.
+
+[Run 20261012.43](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1632174) exposed the flattened
+WinUI profiler layout. [Run 20261012.44](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1632380)
+confirmed the discovery and test-isolation fixes but hit the old 90-minute job limit during acceptance collection,
+before the normal full test and coverage run. Its child failure messages contained only `Process started` statistics.
 
 Tests must also work independently of prior test execution and the launch directory. Desktop XML data-source tests
 resolve their copied fixture from the application base directory. The AppContainer pipe test loads the framework

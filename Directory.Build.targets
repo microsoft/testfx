@@ -157,32 +157,34 @@
   </ItemGroup>
 
   <!--
-    NuGet flattens native runtime assets into .NET Framework output directories, while the affected-tests
-    collector resolves its x64 profiler from the runtime-specific layout used by modern .NET applications.
+    NuGet flattens native runtime assets into .NET Framework and RID-specific output directories, while the
+    affected-tests collector resolves its x64 profiler from the runtime-specific layout used by portable applications.
     Restore that layout so the same collection command works for every test TFM.
   -->
-  <Target Name="_CopyAffectedTestsNetFrameworkRuntimeAssets"
+  <Target Name="_CopyAffectedTestsRuntimeAssets"
           AfterTargets="CopyFilesToOutputDirectory"
-          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+          Condition=" ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+              or '$(RuntimeIdentifier)' == 'win-x64')
             and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
     <ItemGroup>
-      <_AffectedTestsNetFrameworkRuntimeAsset Include="$(TargetDir)MicrosoftInstrumentationEngine_x64.dll" />
-      <_AffectedTestsNetFrameworkRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\ctsrun64.dll" />
-      <_AffectedTestsNetFrameworkRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\Cts_x64.config" />
+      <_AffectedTestsRuntimeAsset Include="$(TargetDir)MicrosoftInstrumentationEngine_x64.dll" />
+      <_AffectedTestsRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\ctsrun64.dll" />
+      <_AffectedTestsRuntimeAsset Include="$(PkgMicrosoft_Testing_Extensions_AffectedTests)\runtimes\win-x64\native\Cts_x64.config" />
     </ItemGroup>
 
     <MakeDir Directories="$(TargetDir)runtimes\win-x64\native" />
-    <Copy SourceFiles="@(_AffectedTestsNetFrameworkRuntimeAsset)"
+    <Copy SourceFiles="@(_AffectedTestsRuntimeAsset)"
           DestinationFolder="$(TargetDir)runtimes\win-x64\native"
           SkipUnchangedFiles="true" />
     <ItemGroup>
-      <FileWrites Include="@(_AffectedTestsNetFrameworkRuntimeAsset->'$(TargetDir)runtimes\win-x64\native\%(Filename)%(Extension)')" />
+      <FileWrites Include="@(_AffectedTestsRuntimeAsset->'$(TargetDir)runtimes\win-x64\native\%(Filename)%(Extension)')" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_RegisterAffectedTestsNetFrameworkRuntimeAssetsForClean"
+  <Target Name="_RegisterAffectedTestsRuntimeAssetsForClean"
           BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
-          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+          Condition=" ('$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETFramework'
+              or '$(RuntimeIdentifier)' == 'win-x64')
             and '$(PkgMicrosoft_Testing_Extensions_AffectedTests)' != '' ">
     <ItemGroup>
       <FileWrites Include="$(TargetDir)runtimes\win-x64\native\MicrosoftInstrumentationEngine_x64.dll" />
