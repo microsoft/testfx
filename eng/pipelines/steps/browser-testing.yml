@@ -34,6 +34,8 @@ steps:
 
       git init --quiet $sdkRoot
       if ($LASTEXITCODE -ne 0) { throw 'Unable to initialize the SDK checkout.' }
+      git -C $sdkRoot config core.longpaths true
+      if ($LASTEXITCODE -ne 0) { throw 'Unable to enable long paths for the disposable SDK checkout.' }
       git -C $sdkRoot remote add origin "https://github.com/$($pin.repository).git"
       if ($LASTEXITCODE -ne 0) { throw 'Unable to configure the SDK checkout.' }
       git -C $sdkRoot fetch --depth 1 origin $pin.commit
