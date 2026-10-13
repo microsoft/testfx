@@ -18,6 +18,69 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 [TestClass]
 public sealed class MSTestReflectionMetadataGeneratorTests
 {
+    [TestMethod]
+    public void CollectInheritedPropertyAttributes_PreservesOrderMultipleAndNearestSingleApplications()
+    {
+        CSharpCompilation compilation = CreateCompilation(
+            """
+            using System;
+            [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+            public sealed class MultiAttribute(string value) : Attribute { }
+            [AttributeUsage(AttributeTargets.All)]
+            public sealed class SingleAttribute(string value) : Attribute { }
+            [AttributeUsage(AttributeTargets.All, Inherited = false)]
+            public class LocalAttribute : Attribute { }
+            public sealed class DerivedLocalAttribute : LocalAttribute { }
+            public class Grand
+            {
+                [Multi("grand"), Single("grand"), DerivedLocal]
+                public virtual int Value { get; set; }
+            }
+            public class Middle : Grand
+            {
+                [Multi("middle"), Single("middle")]
+                public override int Value { get; set; }
+            }
+            public sealed class Leaf : Middle
+            {
+                [Multi("leaf")]
+                public override int Value { get; set; }
+            }
+            """);
+        compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        IPropertySymbol property = compilation.GetTypeByMetadataName("Leaf")!.GetMembers("Value").OfType<IPropertySymbol>().Single();
+
+        System.Collections.Immutable.ImmutableArray<AttributeData> attributes = AttributeMaterializationHelper.CollectInheritedAttributes(property);
+
+        attributes.Select(attribute => (attribute.AttributeClass!.Name, (string)attribute.ConstructorArguments[0].Value!))
+            .Should().Equal(("MultiAttribute", "leaf"), ("MultiAttribute", "middle"), ("SingleAttribute", "middle"), ("MultiAttribute", "grand"));
+    }
+
+    [TestMethod]
+    public void CollectInheritedPropertyAttributes_NoOverrideKeepsOwnNonInheritedAttributeAndEmptyIsEmpty()
+    {
+        CSharpCompilation compilation = CreateCompilation(
+            """
+            using System;
+            [AttributeUsage(AttributeTargets.All, Inherited = false)]
+            public sealed class LocalAttribute : Attribute { }
+            public sealed class Sample
+            {
+                [Local]
+                public int Own { get; set; }
+                public int Empty { get; set; }
+            }
+            """);
+        compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        INamedTypeSymbol type = compilation.GetTypeByMetadataName("Sample")!;
+        IPropertySymbol own = type.GetMembers("Own").OfType<IPropertySymbol>().Single();
+        IPropertySymbol empty = type.GetMembers("Empty").OfType<IPropertySymbol>().Single();
+
+        AttributeMaterializationHelper.CollectInheritedAttributes(own).Select(attribute => attribute.AttributeClass!.Name)
+            .Should().Equal("LocalAttribute");
+        AttributeMaterializationHelper.CollectInheritedAttributes(empty).Should().BeEmpty();
+    }
+
     /// <summary>
     /// Minimal MSTest attribute stubs so the generator can locate <c>[TestClass]</c> /
     /// <c>[TestMethod]</c> in test fixtures without dragging the real TestFramework

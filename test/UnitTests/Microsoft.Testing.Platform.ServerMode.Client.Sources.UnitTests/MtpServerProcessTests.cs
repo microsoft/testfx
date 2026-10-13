@@ -140,12 +140,14 @@ public sealed class MtpServerProcessTests
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file as the server process.")]
     public async Task StartAsyncDoesNotCaptureSynchronizationContext()
     {
-        using var temp = TempDirectory.Create();
-        string source = CreateConnectingBatchFile(temp, "Connects.cmd");
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromMinutes(1),
+            EnvironmentVariables = { [StandardOutputFloodEnvironmentVariable] = "1" },
+        };
         MtpServerProcess? process = null;
 
         await AssertDoesNotCaptureSynchronizationContextAsync(
@@ -765,36 +767,56 @@ public sealed class MtpServerProcessTests
     public async Task SafeKillTerminatesEntireProcessTree()
     {
         using var temp = TempDirectory.Create();
-        string readyFile = Path.Combine(temp.Path, "child-ready.txt");
+        string childIdFile = Path.Combine(temp.Path, "child-id.txt");
         string survivedFile = Path.Combine(temp.Path, "child-survived.txt");
-        string escapedReadyFile = readyFile.Replace("'", "''");
+        string readyEventName = $"TestFx-ready-{Guid.NewGuid():N}";
+        string releaseEventName = $"TestFx-release-{Guid.NewGuid():N}";
+        using var readyEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readyEventName);
+        using var releaseEvent = new EventWaitHandle(false, EventResetMode.ManualReset, releaseEventName);
+        string escapedChildIdFile = childIdFile.Replace("'", "''");
         string escapedSurvivedFile = survivedFile.Replace("'", "''");
         string source = temp.CreateFile(
             "ProcessTree.cmd",
             "@echo off\r\n"
-            + $"start \"\" /min powershell.exe -NoProfile -Command \"Set-Content -LiteralPath '{escapedReadyFile}' -Value ready; Start-Sleep -Seconds 2; Set-Content -LiteralPath '{escapedSurvivedFile}' -Value survived\"\r\n"
-            + "ping 127.0.0.1 -n 31 > nul\r\n");
+            + $"start \"\" /min powershell.exe -NoProfile -NonInteractive -Command \"[IO.File]::WriteAllText('{escapedChildIdFile}', $PID.ToString()); $ready = [Threading.EventWaitHandle]::OpenExisting('{readyEventName}'); $release = [Threading.EventWaitHandle]::OpenExisting('{releaseEventName}'); $null = $ready.Set(); $null = $release.WaitOne(); [IO.File]::WriteAllText('{escapedSurvivedFile}', 'survived')\"\r\n"
+            + ":wait\r\n"
+            + "ping 127.0.0.1 -n 2 > nul\r\n"
+            + "goto wait\r\n");
         using Process process = Process.Start(new ProcessStartInfo
         {
             FileName = source,
             UseShellExecute = false,
             CreateNoWindow = true,
         })!;
+        Process? child = null;
 
         try
         {
+            // Allow profiled PowerShell startup, but synchronize termination with an explicit rendezvous.
+            var readinessLimit = TimeSpan.FromMinutes(1);
             Assert.IsTrue(
-                SpinWait.SpinUntil(() => File.Exists(readyFile), TimeSpan.FromSeconds(10)),
+                readyEvent.WaitOne(readinessLimit),
                 "The child process did not start before whole-tree termination was exercised.");
+            child = Process.GetProcessById(int.Parse(File.ReadAllText(childIdFile), CultureInfo.InvariantCulture));
 
             bool killed = InvokePrivateStatic<bool>("SafeKill", process, NullMtpClientLogger.Instance);
 
             Assert.IsTrue(killed);
-            await Task.Delay(TimeSpan.FromSeconds(4), TestContext.CancellationToken);
+            releaseEvent.Set();
+            using var completionTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+            completionTimeout.CancelAfter(TimeSpan.FromSeconds(30));
+            await child.WaitForExitAsync(completionTimeout.Token);
             Assert.IsFalse(File.Exists(survivedFile), "Whole-tree termination must not leave the child process running.");
         }
         finally
         {
+            releaseEvent.Set();
+            if (child is not null)
+            {
+                KillProcessIfRunning(child);
+                child.Dispose();
+            }
+
             KillProcessIfRunning(process);
         }
     }
@@ -965,22 +987,6 @@ public sealed class MtpServerProcessTests
         }
     }
 
-    private static string CreateConnectingBatchFile(TempDirectory temp, string fileName)
-        => temp.CreateFile(
-            fileName,
-            "@echo off\r\n"
-            + "set port=\r\n"
-            + ":parse\r\n"
-            + "if \"%~1\"==\"\" exit /b 2\r\n"
-            + "if \"%~1\"==\"--client-port\" (\r\n"
-            + "  set port=%~2\r\n"
-            + "  goto found\r\n"
-            + ")\r\n"
-            + "shift\r\n"
-            + "goto parse\r\n"
-            + ":found\r\n"
-            + "powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); try { Start-Sleep -Seconds 30 } finally { $client.Dispose() }\"\r\n");
-
     private static void KillProcessIfRunning(Process process)
     {
         try
@@ -1022,15 +1028,16 @@ public sealed class MtpServerProcessTests
     private static Process StartLongRunningProcess() => Environment.OSVersion.Platform == PlatformID.Win32NT
             ? Process.Start(new ProcessStartInfo
             {
-                FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
-                Arguments = "/d /c ping 127.0.0.1 -n 31 > nul",
+                FileName = Path.Combine(Environment.SystemDirectory, "ping.exe"),
+                Arguments = "127.0.0.1 -n 31",
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                RedirectStandardOutput = true,
             })!
             : Process.Start(new ProcessStartInfo
             {
-                FileName = "/bin/sh",
-                Arguments = "-c \"sleep 30\"",
+                FileName = "/bin/sleep",
+                Arguments = "30",
                 UseShellExecute = false,
             })!;
 

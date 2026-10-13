@@ -4,6 +4,7 @@
 #if !NETFRAMEWORK
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 
@@ -13,6 +14,79 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class CommandLineInformationalOutputTests
 {
+    private const string IncompleteResponse = "The test host exited without completing the expected help or discovery protocol. No complete informational result was received.";
+
+    [TestMethod]
+    public async Task Help_OrdinalOrderingNullFlagsDescriptionsAndEmptyExtensionFallbackAreExact()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new(Path.Combine("a folder", "Consumer.exe"), ["--help"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: true));
+        await output.WriteHelpAsync(
+        [
+            new("z-last", "second\r\nthird", false, true),
+            new("A-first", null, null, true),
+            new("hidden", "not visible", true, false),
+        ]);
+        output.ValidateCompletion();
+        string expected = string.Join(
+            Environment.NewLine,
+            [
+                "Usage Consumer.exe [option providers] [extension option providers]", string.Empty,
+                "Execute a .NET Test Application.", string.Empty, "Options:",
+                "    --A-first", "        ", string.Empty, "    --z-last", "        second", "        third", string.Empty,
+                string.Empty, "Extension options:", "    No extension registered.", string.Empty, string.Empty,
+            ]);
+        Assert.AreEqual(expected, text.ToString());
+    }
+
+    [TestMethod]
+    public async Task JsonDiscovery_ProjectsRealNodeTraitsWithoutImmediateTextAndInvalidRowsStayInvalid()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests", "json"], text);
+        HandshakeMessage response = output.AcceptHandshake(CreateHandshake(help: false));
+        Assert.AreEqual("True", response.Properties![HandshakeMessagePropertyNames.IsIDE]);
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        await output.WriteDiscoveredTestsAsync(new("execution", "instance",
+        [
+            new("uid", "Actual name", null, null, null, null, null, null, [new("Category", "Fast"), new("Owner", "Team")]),
+            new(null, "missing uid", null, null, null, null, null, null, []),
+            new("missing-name", null, null, null, null, null, null, null, []),
+        ]));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+        var nodes = (List<TestNode>)typeof(CommandLineInformationalOutput)
+            .GetField("_jsonTests", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(output)!;
+        TestNode node = Assert.ContainsSingle(nodes);
+        Assert.AreEqual("uid", node.Uid.Value);
+        Assert.AreEqual("Actual name", node.DisplayName);
+        Assert.AreSequenceEqual(
+            [("Owner", "Team"), ("Category", "Fast")],
+            node.Properties.OfType<TestMetadataProperty>().Select(property => (property.Key, property.Value)));
+        Assert.AreEqual(string.Empty, text.ToString());
+        InvalidOperationException failure = Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion);
+        Assert.AreEqual(IncompleteResponse, failure.Message);
+    }
+
+    [TestMethod]
+    public async Task Discovery_DuplicateHandshakeAndPostCompletionRowsCannotBecomeCompleteAgain()
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--list-tests"], text);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        HandshakeMessage duplicate = output.AcceptHandshake(CreateHandshake(help: false));
+        Assert.AreEqual(string.Empty, duplicate.Properties![HandshakeMessagePropertyNames.SupportedProtocolVersions]);
+        _ = output.AcceptHandshake(CreateHandshake(help: false));
+        output.ObserveSession(new(SessionEventTypes.TestSessionStart, "session", "execution"));
+        output.ObserveSession(new(SessionEventTypes.TestSessionEnd, "session", "execution"));
+        await output.WriteDiscoveredTestsAsync(new("execution", "instance",
+            [new("uid", "must not print", null, null, null, null, null, null, [])]));
+        Assert.AreEqual(string.Empty, text.ToString());
+        Assert.AreEqual(
+            IncompleteResponse,
+            Assert.ThrowsExactly<InvalidOperationException>(output.ValidateCompletion).Message);
+    }
+
     [TestMethod]
     public async Task Help_UsesActualHostOptionsAndHidesInternalOptions()
     {

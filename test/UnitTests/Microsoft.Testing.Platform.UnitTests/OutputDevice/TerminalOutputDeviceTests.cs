@@ -4,6 +4,7 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -24,6 +25,339 @@ public sealed class TerminalOutputDeviceTests
 {
     private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>(
         producer => producer.Uid == "producer");
+
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ActualDisplay_AllMessageKindsPreservePayloadAndOptionalAzureAnnotations(bool azure)
+    {
+        using RecordingDeviceFixture fixture = new(azure);
+        await fixture.Device.InitializeAsync();
+        InvalidOperationException exception = new("exception sentinel");
+
+        await fixture.Device.DisplayAsync(Producer, new SessionMessageOutputDeviceData("session sentinel"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("operation", "progress sentinel"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAsync(Producer, new FormattedTextOutputDeviceData("formatted sentinel") { Padding = 4 }, TestContext.CancellationToken);
+        await fixture.Device.DisplayAsync(Producer, new TextOutputDeviceData("plain sentinel"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAsync(Producer, new WarningMessageOutputDeviceData("warning sentinel"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAsync(Producer, new ErrorMessageOutputDeviceData("error sentinel"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAsync(Producer, new ExceptionOutputDeviceData(exception), TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        Assert.Contains("session sentinel", output);
+        Assert.Contains("    formatted sentinel", output);
+        Assert.Contains("plain sentinel", output);
+        Assert.Contains("warning sentinel", output);
+        Assert.Contains("error sentinel", output);
+        Assert.Contains("exception sentinel", output);
+        Assert.AreEqual(azure ? 3 : 0, CountOccurrences(output, "##vso[task.logissue"));
+        if (azure)
+        {
+            Assert.Contains("type=warning", output);
+            Assert.AreEqual(2, CountOccurrences(output, "type=error"));
+        }
+
+        Assert.DoesNotContain("\u001B[", output, "Explicit ANSI off must avoid emitting terminal escape sequences.");
+    }
+
+    [TestMethod]
+    [DataRow("passed", 0, 1, 0)]
+    [DataRow("failed", 1, 0, 0)]
+    [DataRow("error", 1, 0, 0)]
+    [DataRow("timeout", 1, 0, 0)]
+    [DataRow("cancelled", 1, 0, 0)]
+    [DataRow("skipped", 0, 0, 1)]
+    public async Task ActualConsume_AllTerminalOutcomePartitionsReachActualReporterAndSummary(string outcome, int failures, int passed, int skipped)
+    {
+        using RecordingDeviceFixture fixture = new();
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        InvalidOperationException exception = new("terminal failure sentinel");
+#pragma warning disable CS0618, MTP0001 // Verify retained canceled-state compatibility output.
+        TestNodeStateProperty state = outcome switch
+        {
+            "passed" => PassedTestNodeStateProperty.CachedInstance,
+            "failed" => new FailedTestNodeStateProperty(exception, "explanation sentinel"),
+            "error" => new ErrorTestNodeStateProperty(exception, "explanation sentinel"),
+            "timeout" => new TimeoutTestNodeStateProperty(exception, "explanation sentinel"),
+            "cancelled" => new CancelledTestNodeStateProperty(exception, "explanation sentinel"),
+            _ => new SkippedTestNodeStateProperty("skip sentinel"),
+        };
+#pragma warning restore CS0618, MTP0001
+        TestNodeUpdateMessage update = new(default, new TestNode
+        {
+            Uid = "id",
+            DisplayName = "observed terminal test",
+            Properties = new PropertyBag(state),
+        });
+        update.TestNode.Properties.Add(new StandardOutputProperty("stdout sentinel"));
+        update.TestNode.Properties.Add(new StandardErrorProperty("stderr sentinel"));
+        DateTimeOffset start = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        update.TestNode.Properties.Add(new TimingProperty(new TimingInfo(start, start.AddMilliseconds(10), TimeSpan.FromMilliseconds(10))));
+
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        Assert.Contains("observed terminal test", output);
+        Assert.Contains("stdout sentinel", output);
+        Assert.Contains("stderr sentinel", output);
+        Assert.Contains("total: 1", output);
+        Assert.Contains("failed: " + failures, output);
+        Assert.Contains("succeeded: " + passed, output);
+        Assert.Contains("skipped: " + skipped, output);
+        if (failures > 0)
+        {
+            Assert.Contains("explanation sentinel", output);
+            Assert.DoesNotContain("terminal failure sentinel", output, "Explicit explanation owns the top-level error text.");
+            Assert.Contains("Failed!", output);
+        }
+        else
+        {
+            Assert.Contains("Passed!", output);
+            Assert.DoesNotContain("terminal failure sentinel", output);
+        }
+    }
+
+    [TestMethod]
+    public async Task ActualConsume_AbsentExplanationUsesExceptionMessageAndPreservesInnerChain()
+    {
+        using RecordingDeviceFixture fixture = new();
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        InvalidOperationException exception = new("outer sentinel", new ArgumentException("inner sentinel"));
+        TestNodeUpdateMessage update = new(default, new TestNode
+        {
+            Uid = "exception",
+            DisplayName = "exception-only",
+            Properties = new PropertyBag(new FailedTestNodeStateProperty(exception)),
+        });
+
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        Assert.Contains("outer sentinel", output);
+        Assert.Contains("inner sentinel", output);
+        Assert.Contains("total: 1", output);
+        Assert.Contains("failed: 1", output);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task ActualConsume_AssertionPropertyOwnsBothDiffHalvesAndDuplicatePropertiesSuppressLegacyFallback(int propertyCount)
+    {
+        using RecordingDeviceFixture fixture = new();
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        InvalidOperationException exception = new("assert failure");
+        exception.Data["assert.expected"] = "LEGACY_EXPECTED";
+        exception.Data["assert.actual"] = "LEGACY_ACTUAL";
+        TestNodeUpdateMessage update = new(default, new TestNode
+        {
+            Uid = "assertion",
+            DisplayName = "assertion test",
+            Properties = new PropertyBag(new FailedTestNodeStateProperty(exception)),
+        });
+        if (propertyCount > 0)
+        {
+            update.TestNode.Properties.Add(new AssertionFailureProperty("PROPERTY_EXPECTED", "PROPERTY_ACTUAL"));
+        }
+
+        if (propertyCount > 1)
+        {
+            update.TestNode.Properties.Add(new AssertionFailureProperty("SECOND_EXPECTED", "SECOND_ACTUAL"));
+        }
+
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        if (propertyCount == 0)
+        {
+            Assert.Contains("LEGACY_EXPECTED", output);
+            Assert.Contains("LEGACY_ACTUAL", output);
+        }
+        else if (propertyCount == 1)
+        {
+            Assert.Contains("PROPERTY_EXPECTED", output);
+            Assert.Contains("PROPERTY_ACTUAL", output);
+        }
+        else
+        {
+            Assert.DoesNotContain("PROPERTY_EXPECTED", output);
+            Assert.DoesNotContain("PROPERTY_ACTUAL", output);
+            Assert.DoesNotContain("SECOND_EXPECTED", output);
+            Assert.DoesNotContain("SECOND_ACTUAL", output);
+        }
+
+        if (propertyCount > 0)
+        {
+            Assert.DoesNotContain("LEGACY_EXPECTED", output);
+            Assert.DoesNotContain("LEGACY_ACTUAL", output);
+        }
+
+        Assert.Contains("assertion test", output);
+        Assert.Contains("assert failure", output);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ActualConsume_ServerAndJsonDiscoveryModesCannotRenderTerminalResults(bool server)
+    {
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.DiscoverTestsOptionKey] = [PlatformCommandLineProvider.DiscoverTestsJsonArgument],
+        };
+        if (server)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"];
+        }
+
+        using RecordingDeviceFixture fixture = new(extraOptions: options);
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        TestNodeUpdateMessage discovery = new(default, new TestNode
+        {
+            Uid = "discovered",
+            DisplayName = "discovery sentinel",
+            Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
+        });
+        TestNodeUpdateMessage failure = new(default, new TestNode
+        {
+            Uid = "failed",
+            DisplayName = "failure must not appear",
+            Properties = new PropertyBag(new FailedTestNodeStateProperty("must not render")),
+        });
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), discovery, TestContext.CancellationToken);
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), failure, TestContext.CancellationToken);
+        Assert.AreEqual(string.Empty, fixture.Output.ToString());
+
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        if (server)
+        {
+            Assert.AreEqual(string.Empty, output, "Server mode delegates even discovery JSON rendering to the SDK.");
+        }
+        else
+        {
+            Assert.Contains("discovery sentinel", output);
+            Assert.Contains("discovered", output);
+            Assert.DoesNotContain("failure must not appear", output);
+            Assert.DoesNotContain("must not render", output);
+            Assert.DoesNotContain("Test run summary", output);
+        }
+    }
+
+    [TestMethod]
+    public async Task ActualConsume_EmptyCompletionDoesNotInventPassAndArtifactsKeepActualPaths()
+    {
+        using RecordingDeviceFixture fixture = new();
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        string nodeArtifact = Path.Combine(Path.GetTempPath(), "node-not-opened.trx");
+        string sessionArtifact = Path.Combine(Path.GetTempPath(), "session-not-opened.trx");
+        string runArtifact = Path.Combine(Path.GetTempPath(), "run-not-opened.trx");
+        TestNodeUpdateMessage update = new(default, new TestNode
+        {
+            Uid = "empty",
+            DisplayName = "empty result",
+            Properties = new PropertyBag(TestNodeExecutionCompletedProperty.CachedInstance, new FileArtifactProperty(new FileInfo(nodeArtifact), "node")),
+        });
+
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(new Microsoft.Testing.Platform.TestHost.SessionUid("session"), new FileInfo(sessionArtifact), "session"), TestContext.CancellationToken);
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), new FileArtifact(new FileInfo(runArtifact), "run"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        Assert.Contains(nodeArtifact, output);
+        Assert.Contains(sessionArtifact, output);
+        Assert.Contains(runArtifact, output);
+        Assert.Contains("Zero tests ran", output);
+        Assert.Contains("total: 0", output);
+        Assert.DoesNotContain("passed empty result", output);
+    }
+
+    [TestMethod]
+    public async Task ActualConsume_CancellationPreventsOutcomeAndArtifactEmission()
+    {
+        using RecordingDeviceFixture fixture = new();
+        await fixture.Device.InitializeAsync();
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        FileArtifact artifact = new(new FileInfo(Path.Combine(Path.GetTempPath(), "not-opened.trx")), "artifact");
+
+        OperationCanceledException error = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), artifact, cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, error.CancellationToken);
+        Assert.AreEqual(string.Empty, fixture.Output.ToString());
+    }
+
+    private sealed class RecordingDeviceFixture : IDisposable
+    {
+        public RecordingDeviceFixture(bool azure = false, Dictionary<string, string[]>? extraOptions = null)
+        {
+            var console = new Mock<IConsole>();
+            console.SetupGet(value => value.IsOutputRedirected).Returns(true);
+            console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => Output.Append(value));
+            console.Setup(value => value.Write(It.IsAny<StringBuilder>())).Callback<StringBuilder>(value => Output.Append(value));
+            console.Setup(value => value.Write(It.IsAny<char>())).Callback<char>(value => Output.Append(value));
+            console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => Output.AppendLine(value));
+            console.Setup(value => value.WriteLine()).Callback(() => Output.AppendLine());
+            var module = new Mock<ITestApplicationModuleInfo>();
+            module.Setup(value => value.GetDisplayName()).Returns("fixture.dll");
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(value => value.GetEnvironmentVariable(It.IsAny<string>()))
+                .Returns<string>(name => azure && name == "TF_BUILD" ? "true" : null);
+            var monitor = new Mock<IAsyncMonitor>();
+            monitor.Setup(value => value.LockAsync(It.IsAny<TimeSpan>())).ReturnsAsync(Mock.Of<IDisposable>());
+            var loggerFactory = new Mock<ILoggerFactory>();
+            loggerFactory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+            var policies = new Mock<IStopPoliciesService>();
+            policies.Setup(value => value.RegisterOnAbortCallbackAsync(It.IsAny<Func<Task>>())).Returns(Task.CompletedTask);
+            var cancellation = new Mock<ITestApplicationCancellationTokenSource>();
+            var clock = new Mock<IClock>();
+            clock.SetupGet(value => value.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+            var optionValues = new Dictionary<string, string[]>
+            {
+                [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["off"],
+                [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
+                [TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption] = ["always"],
+                [TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption] = ["always"],
+                [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["all"],
+            };
+            if (extraOptions is not null)
+            {
+                foreach (KeyValuePair<string, string[]> option in extraOptions)
+                {
+                    optionValues[option.Key] = option.Value;
+                }
+            }
+
+            var options = new TestCommandLineOptions(optionValues);
+            Device = new TerminalOutputDevice(console.Object, module.Object, Mock.Of<ITestHostControllerInfo>(), monitor.Object,
+                Mock.Of<IRuntimeFeature>(), environment.Object, Mock.Of<IPlatformInformation>(), options, null,
+                loggerFactory.Object, clock.Object, policies.Object, cancellation.Object, new TestCoverageResult());
+        }
+
+        public StringBuilder Output { get; } = new();
+
+        public TerminalOutputDevice Device { get; }
+
+        public void Dispose() => Device.Dispose();
+    }
 
     [TestMethod]
     public async Task DisplayAsync_ListTestsJsonInAzureDevOps_WritesPlainErrorOnlyToStandardError()

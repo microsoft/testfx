@@ -271,6 +271,75 @@ public sealed class PropertyBagTests
         }
     }
 
+    [TestMethod]
+    public void LinkedProperties_SearchAndFilterTraversePastHead()
+    {
+        DummyProperty tail = new();
+        DummyProperty middle = new();
+        DummyProperty2 head = new();
+        PropertyBag.Property tailNode = new(tail);
+        PropertyBag.Property properties = new(head, new(middle, tailNode));
+
+        // Assert the linked-list operations themselves, not LINQ's enumeration/count alternatives.
+        int singletonCount = tailNode.Count;
+        int linkedCount = properties.Count;
+        bool containsHead = properties.Contains(head);
+        bool containsMiddle = properties.Contains(middle);
+        bool containsTail = properties.Contains(tail);
+        bool containsOtherInstance = properties.Contains(new DummyProperty());
+        Assert.AreEqual(1, singletonCount);
+        Assert.AreEqual(3, linkedCount);
+        Assert.IsTrue(containsHead);
+        Assert.IsTrue(containsMiddle);
+        Assert.IsTrue(containsTail);
+        Assert.IsFalse(containsOtherInstance);
+        Assert.IsTrue(properties.Any<DummyProperty2>());
+        Assert.IsTrue(properties.Any<DummyProperty>());
+        Assert.IsFalse(properties.Any<FailedTestNodeStateProperty>());
+        Assert.AreSequenceEqual([middle, tail], properties.OfType<DummyProperty>());
+        Assert.AreSequenceEqual([head], properties.OfType<DummyProperty2>());
+        Assert.IsEmpty(properties.OfType<FailedTestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Generic enumerator")]
+    [DataRow(false, DisplayName = "Non generic enumerator")]
+    public void LinkedProperties_EnumeratorRejectsInvalidCurrentAndResets(bool generic)
+    {
+        DummyProperty head = new();
+        DummyProperty2 tail = new();
+        PropertyBag.Property properties = new(head, new(tail));
+        IEnumerator enumerator = generic
+            ? properties.GetEnumerator()
+            : ((IEnumerable)properties).GetEnumerator();
+        Func<object> current = generic
+            ? () => ((IEnumerator<IProperty>)enumerator).Current
+            : () => enumerator.Current;
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = current());
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(head, current());
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(tail, current());
+        Assert.IsFalse(enumerator.MoveNext());
+        enumerator.Reset();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = current());
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(head, current());
+        ((IDisposable)enumerator).Dispose();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = current());
+    }
+
+    [TestMethod]
+    public void Add_DuplicateAtTail_IsRejected()
+    {
+        DummyProperty tail = new();
+        PropertyBag properties = new([tail, new DummyProperty2(), new DummyProperty()]);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => properties.Add(tail));
+        Assert.AreEqual(3, properties.Count);
+    }
+
     private sealed class DummyProperty : IProperty;
 
     private sealed class DummyProperty2 : IProperty;

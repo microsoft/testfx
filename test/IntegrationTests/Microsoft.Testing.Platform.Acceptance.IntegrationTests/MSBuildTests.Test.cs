@@ -111,11 +111,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         string msbuildExe = await FindMsbuildWithVsWhereAsync(TestContext.CancellationToken);
-        var commandLine = new TestInfrastructure.CommandLine();
-        string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}.binlog");
-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore", cancellationToken: TestContext.CancellationToken);
+        using var commandLine = new TestInfrastructure.CommandLine();
+        string restoreBinlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}-restore-{{}}.binlog");
+        string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}-build-{{}}.binlog");
+        await commandLine.RunAsync($"\"{msbuildExe}\" \"{testAsset.TargetAssetPath}\" /t:Restore /bl:\"{restoreBinlogFile}\"", cancellationToken: TestContext.CancellationToken);
         await commandLine.RunAsync(
-            $"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"",
+            $"\"{msbuildExe}\" \"{testAsset.TargetAssetPath}\" /t:\"Build;Test\" /p:UseSharedCompilation=false /bl:\"{binlogFile}\"",
             environmentVariables: new Dictionary<string, string?>
             {
                 ["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet"),

@@ -14,6 +14,100 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
 public class MethodInfoExtensionsTests : TestContainer
 {
+    public async Task GenericInvocationInfersReorderedParametersAndSkipsNullArguments()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo reordered = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Reordered))!;
+        (await (Task<string>)reordered.GetInvokeResultAsync(fixture, 7, "text")!).Should().Be("String:Int32:text:7");
+        MethodInfo same = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Same))!;
+        (await (Task<string>)same.GetInvokeResultAsync(fixture, null, "text")!).Should().Be("String::text");
+        (await (Task<string>)same.GetInvokeResultAsync(fixture, "text", null)!).Should().Be("String:text:");
+    }
+
+    public async Task GenericInvocationChoosesAssignableBaseRegardlessOfArgumentOrder()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo method = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Same))!;
+        (await (Task<string>)method.GetInvokeResultAsync(fixture, new ChildValue(), new ParentValue())!).Should().Be("ParentValue:child:parent");
+        (await (Task<string>)method.GetInvokeResultAsync(fixture, new ParentValue(), new ChildValue())!).Should().Be("ParentValue:parent:child");
+    }
+
+    public async Task GenericInvocationInfersArrayElementsAndNestedGenericArguments()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo array = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Array))!;
+        (await (Task<string>)array.GetInvokeResultAsync(fixture, new int[] { 2, 3 })!).Should().Be("Int32:2");
+        MethodInfo nested = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Nested))!;
+        Dictionary<string, List<int>> values = new() { ["key"] = [2, 3] };
+        (await (Task<string>)nested.GetInvokeResultAsync(fixture, values)!).Should().Be("String:Int32:5");
+        MethodInfo enumerable = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Enumerable))!;
+        (await (Task<string>)enumerable.GetInvokeResultAsync(fixture, new List<int> { 2, 3 })!).Should().Be("Int32:5");
+    }
+
+    public void GenericInvocationRejectsConflictingOrUninferableTypePartitions()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo same = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Same))!;
+        Action conflict = () => _ = same.GetInvokeResultAsync(fixture, 7, "text");
+        conflict.Should().Throw<InvalidOperationException>().WithMessage("*System.Int32*System.String*");
+        Action nullOnly = () => _ = same.GetInvokeResultAsync(fixture, new object?[] { null, null });
+        nullOnly.Should().Throw<InvalidOperationException>().WithMessage("*T*");
+        MethodInfo enumerable = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.Enumerable))!;
+        Action differentShape = () => _ = enumerable.GetInvokeResultAsync(fixture, new int[] { 2, 3 });
+        differentShape.Should().Throw<InvalidOperationException>().WithMessage("*T*");
+        MethodInfo noParameters = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.NoParameters))!;
+        Action noArguments = () => _ = noParameters.GetInvokeResultAsync(fixture, arguments: null);
+        noArguments.Should().Throw<TestFailedException>().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+    }
+
+    public void GenericInvocationPreservesConstraintFailureAsTestErrorWithOriginalCause()
+    {
+        GenericInvocationFixture fixture = new();
+        MethodInfo constrained = typeof(GenericInvocationFixture).GetMethod(nameof(GenericInvocationFixture.ClassOnly))!;
+        Action invoke = () => _ = constrained.GetInvokeResultAsync(fixture, 7);
+
+        TestFailedException failure = invoke.Should().Throw<TestFailedException>().Which;
+        failure.Outcome.Should().Be(UnitTestOutcome.Error);
+        failure.InnerException.Should().BeOfType<ArgumentException>();
+        failure.Message.Should().Contain(nameof(GenericInvocationFixture.ClassOnly)).And.Contain("System.Int32");
+    }
+
+    private class ParentValue
+    {
+        public override string ToString() => "parent";
+    }
+
+    private sealed class ChildValue : ParentValue
+    {
+        public override string ToString() => "child";
+    }
+
+    private sealed class GenericInvocationFixture
+    {
+        public Task<string> Same<T>(T first, T second) => Task.FromResult($"{typeof(T).Name}:{first}:{second}");
+
+        public Task<string> Reordered<TFirst, TSecond>(TSecond first, TFirst second)
+            => Task.FromResult($"{typeof(TFirst).Name}:{typeof(TSecond).Name}:{second}:{first}");
+
+        public Task<string> Array<T>(T[] values) => Task.FromResult($"{typeof(T).Name}:{values.Length}");
+
+        public Task<string> Nested<TKey, TValue>(Dictionary<TKey, List<TValue>> values)
+            where TKey : notnull
+            => Task.FromResult($"{typeof(TKey).Name}:{typeof(TValue).Name}:{values.Values.SelectMany(value => value).Sum(value => Convert.ToInt32(value, CultureInfo.InvariantCulture))}");
+
+        public Task<string> Enumerable<T>(IEnumerable<T> values)
+            => Task.FromResult($"{typeof(T).Name}:{values.Sum(value => Convert.ToInt32(value, CultureInfo.InvariantCulture))}");
+
+        public void NoParameters<T>()
+        {
+        }
+
+        public void ClassOnly<T>(T value)
+            where T : class
+        {
+        }
+    }
+
     #region HasCorrectClassOrAssemblyInitializeSignature tests
 
     public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForNonStaticMethods()
