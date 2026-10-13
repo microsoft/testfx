@@ -159,7 +159,7 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdFailedRoundedValues">
         <source>Coverage is below the required threshold (the percentages round to the same value).</source>
-        <target state="new">Coverage is below the required threshold (the percentages round to the same value).</target>
+        <target state="translated">적용 범위가 필요한 임계값(백분율이 동일한 값으로 반올림됨)보다 낮습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">

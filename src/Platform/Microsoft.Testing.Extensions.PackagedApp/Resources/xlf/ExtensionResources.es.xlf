@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
         <source>Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</source>
-        <target state="new">Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</target>
+        <target state="translated">El comando nativo dotnet test no puede conectar un host de prueba de AppContainer a la canalización con nombre del SDK. Use el destino InvokeTestingPlatform de MSBuild para esta aplicación. No se activó ningún host de prueba.</target>
         <note>{Locked="dotnet test"}{Locked="AppContainer"}{Locked="InvokeTestingPlatform"}{Locked="MSBuild"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <target state="translated">Filtra las pruebas mediante la expresión especificada. Para obtener más información, consulte la sección Detalles de la opción Filtrar. Para obtener más información y ejemplos sobre cómo usar el filtrado de pruebas unitarias selectivas, consulte https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
       </trans-unit>
     </body>
