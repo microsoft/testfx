@@ -196,6 +196,21 @@ class ReviewInputTests(unittest.TestCase):
 
 
 class ReportingContractTests(unittest.TestCase):
+    def test_readme_clean_review_policy_matches_evidence_publication(self):
+        readme = (REPO / ".github" / "workflows" / "README.md").read_text(
+            encoding="utf-8"
+        )
+        contract = readme.split("### Test-quality skill contract", 1)[1].split(
+            "### Firewall access", 1
+        )[0]
+        contract = " ".join(contract.split())
+        self.assertIn(
+            "Clean automatic runs still publish revision-bound test-value evidence",
+            contract,
+        )
+        self.assertIn("complete same-head duplicate", contract)
+        self.assertNotIn("Clean automatic runs are silent", contract)
+
     def test_delivery_template_preserves_decision_and_evidence_sections(self):
         template = (REPO / ".github" / "PULL_REQUEST_TEMPLATE.md").read_text(
             encoding="utf-8"

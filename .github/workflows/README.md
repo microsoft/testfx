@@ -48,9 +48,11 @@ grading-weight fork.
 The primary per-test result is `Pass`, `Failed`, or `Uncertain`; a valid empty
 scope is `Not applicable`. Quality bands are secondary: a focused `B / Pass`
 needs no invented improvement, while `A / Failed` still requires a concrete
-action. Clean automatic runs are silent regardless of letter grade; command
-runs always return the requested result, including incomplete evidence and
-applicable parallel-safety analysis.
+action. Clean automatic runs still publish revision-bound test-value evidence,
+regardless of letter grade. Suppress only a complete same-head duplicate when
+no new actionable findings, material evidence, or resolved analysis limitations
+remain. Command runs always return the requested result, including incomplete
+evidence and applicable parallel-safety analysis.
 
 Grading reads the bundled .NET language reference directly and composes
 `test-gap-analysis` in read-only per-test context before scoring. It does not
