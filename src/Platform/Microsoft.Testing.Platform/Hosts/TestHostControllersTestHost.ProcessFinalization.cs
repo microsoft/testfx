@@ -34,8 +34,9 @@ internal sealed partial class TestHostControllersTestHost
             _testHostExitCodeReceived,
             testHostProcessExitCode,
             testHostProcessExitCodeIsAuthoritative);
-        ApplicationStateGuard.Ensure(_testHostPID is not null);
-        TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, reportedTestHostExitCode, _testHostCompletedReceived);
+        int? testHostPid = _testHostPID;
+        ApplicationStateGuard.Ensure(testHostPid is not null);
+        TestHostProcessInformation testHostProcessInformation = new(testHostPid.Value, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         CancellationTokenSource finalizationCancellationTokenSource = EnsureControllerFinalizationCancellationTokenSource();
         RegisterControllerFinalizationTransition(applicationCancellationToken);
