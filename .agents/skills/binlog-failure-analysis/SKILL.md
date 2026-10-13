@@ -33,15 +33,15 @@ Use the available MCP server tools to query the binary log for:
 ## Fallback workflow — text-log replay (when MCP is unavailable)
 
 Use this only when the MCP server cannot be started (for example, on an older
-SDK or in an offline environment without access to the `dotnet-tools` NuGet feed).
+SDK or in an offline environment).
 
 ### Replay the binlog to text logs
 
 ```bash
 dotnet msbuild build.binlog -noconlog \
-  -fl  -flp:v=diag;logfile=full.log;performancesummary \
-  -fl1 -flp1:errorsonly;logfile=errors.log \
-  -fl2 -flp2:warningsonly;logfile=warnings.log
+  -fl  "-flp:v=diag;logfile=full.log;performancesummary" \
+  -fl1 "-flp1:errorsonly;logfile=errors.log" \
+  -fl2 "-flp2:warningsonly;logfile=warnings.log"
 ```
 
 > **PowerShell note:** Use `-flp:"v=diag;logfile=full.log;performancesummary"`

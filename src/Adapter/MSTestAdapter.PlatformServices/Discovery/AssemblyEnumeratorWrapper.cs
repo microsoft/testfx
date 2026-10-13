@@ -24,6 +24,16 @@ internal sealed class AssemblyEnumeratorWrapper
     /// </summary>
     /// <returns> A collection of test elements. </returns>
     internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, string? settingsXml, ITestSourceHandler testSourceHandler, bool isMTP, out List<string> warnings)
+        => GetTests(assemblyFileName, settingsXml, testSourceHandler, isMTP, null, null, out warnings);
+
+    internal static ICollection<UnitTestElement>? GetTests(
+        string? assemblyFileName,
+        string? settingsXml,
+        ITestSourceHandler testSourceHandler,
+        bool isMTP,
+        Type[]? types,
+        Action<Type, IReadOnlyList<UnitTestElement>?>? typeObserver,
+        out List<string> warnings)
     {
         warnings = [];
 
@@ -48,7 +58,7 @@ internal sealed class AssemblyEnumeratorWrapper
         try
         {
             // Load the assembly in isolation if required.
-            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, settingsXml, isMTP);
+            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, settingsXml, isMTP, types, typeObserver);
             warnings.AddRange(result.Warnings);
             return result.TestElements;
         }
@@ -86,7 +96,12 @@ internal sealed class AssemblyEnumeratorWrapper
         }
     }
 
-    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, string? settingsXml, bool isMTP)
+    private static AssemblyEnumerationResult GetTestsInIsolation(
+        string fullFilePath,
+        string? settingsXml,
+        bool isMTP,
+        Type[]? types,
+        Action<Type, IReadOnlyList<UnitTestElement>?>? typeObserver)
     {
         using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, settingsXml);
         if (isolationHost is TestSourceHost { UsesAppDomain: true }
@@ -103,7 +118,7 @@ internal sealed class AssemblyEnumeratorWrapper
         // of strings normally (by reference), and we were mutating that collection in the appdomain.
         // But this does not mutate the collection outside of appdomain, so we lost all warnings that happened inside.
         bool mustSerialize = !isMTP || isolationHost is TestSourceHost { UsesAppDomain: true };
-        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize, useGeneratedDescriptors: isMTP);
+        return assemblyEnumerator.EnumerateAssembly(fullFilePath, mustSerialize, useGeneratedDescriptors: isMTP, types, typeObserver);
     }
 
     private static bool IsManagedAssembly(string fileName)

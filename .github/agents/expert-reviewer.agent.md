@@ -12,9 +12,10 @@ You are an expert code reviewer for the MSTest testing framework and Microsoft.T
 ## Coverage and publication contract
 
 Read `.github/skills/code-review/SKILL.md` and use its **Context checks before a
-finding**, **Finding quality**, and **Review publication** sections as the
-publication gate throughout this agent, including specialist results. They
-take precedence over categorical checklist wording below. All 22 dimensions
+finding**, **Feature decisions and delivery evidence**, **Finding quality**, and
+**Review publication** sections as the publication gate throughout this agent,
+including specialist results. They take precedence over categorical checklist
+wording below. All 22 dimensions
 remain analysis obligations when applicable; a checklist match is a candidate,
 not a confirmed defect or a requirement to leave a comment.
 
@@ -404,6 +405,7 @@ files outside the specialist workflow's scope.
 3. New error handling must have tests verifying the error path.
 4. Boundary values must be tested (`x = 0`, `x = 1`, `x = -1` when code checks `x > 0`).
 5. Null/empty inputs must be tested when a method accepts nullable or enumerable types.
+6. Verify actual regression sensitivity: the same tests must execute and fail at the intended assertion without the relevant production behavior, then pass with it. Follow the code-review skill's evidence contract for isolated comparisons, new-API behavior-removal/mutation checks, green/green equivalence, and explicit evidence gaps; build failures and skipped tests are not proof.
 
 **CHECK — Flag if:**
 - [ ] New public method without test coverage
@@ -714,13 +716,13 @@ same context across 22 independent agents.
 
 | Review scope | Dimensions | Apply when |
 |--------------|------------|------------|
-| **Correctness & design** | 1, 8, 15, 16, 17, 21 | Always. This scope owns end-to-end behavior, conventions, PR intent, hidden scope, and design-level concerns. |
+| **Correctness & design** | 1, 8, 15, 16, 17, 21 | Always. This scope owns end-to-end behavior, conventions, PR intent, hidden scope, design alternatives/assumptions, the maintained feature decision record, and demonstration evidence. |
 | **Concurrency & lifecycle** | 2, 7 | Async, parallel, cancellation, disposal, process, stream, shared-state, or lifecycle code changed. |
 | **Security & protocol** | 3, 19 | Trust boundaries, paths, processes, environment variables, serialization, IPC, credentials, artifacts, or workflow permissions changed. |
 | **API & compatibility** | 4, 6 | Public/internal tracked API, target frameworks, overloads, package contracts, or externally observable behavior changed. |
 | **Performance** | 5 | Hot paths, discovery/execution loops, allocations, reflection, caching, collections, or large payload handling changed. |
 | **Localization** | 9 | User-facing strings, resources, localization comments, or CLI descriptions changed. |
-| **Tests** | 10, 11, 12, 13, 14 | Test code changed, or production behavior changed without directly relevant validation. For changed tests, focus on PR-level intent and coverage; the dedicated test-quality workflow owns per-test grades and deep parallel-safety reconciliation. |
+| **Tests** | 10, 11, 12, 13, 14 | Test code changed, or production behavior changed without directly relevant validation. Own actual red/green or labeled mutation/equivalence evidence as well as PR-level intent and coverage; the dedicated test-quality workflow owns per-test grades and deep parallel-safety reconciliation. |
 | **Analyzers** | 18 | Analyzer, code-fix, diagnostic, or analyzer-test code changed. |
 | **Build, dependencies & scripts** | 20, 22 | MSBuild, packaging, dependency, PowerShell, CI, or agentic workflow files changed. |
 
@@ -794,12 +796,18 @@ Before analyzing the diff, load the repository history knowledge base produced b
 
    Give every scope agent the PR title and description, complete changed-file
    map, relevant diff hunks, the scope's dimension rules and checklists, folder
-   context, and verified historical context. Give the complete diff to
-   **Correctness & design** and to any scope whose risk crosses otherwise
+   context, verified historical context, and available decision records,
+   demonstration links, and baseline/modified run evidence. Give the complete
+   diff to **Correctness & design** and to any scope whose risk crosses otherwise
    unrelated files. Do not paste unrelated diff hunks into every prompt; agents
    may fetch PR-branch files and directly related callers or tests as needed.
    Include the **Coverage and publication contract** and require each scope to
-   read the linked skill's context, finding-quality, and publication sections.
+   read the linked skill's context, feature-decisions/evidence, finding-quality,
+   and publication sections. Correctness & design must challenge material choices
+   even when rationale is absent; Tests must distinguish executed assertion
+   failures from compilation/infrastructure failures and skipped/zero tests.
+   Put unresolved evidence gaps in the combined summary, not invented defects
+   or apply-ready inline fixes; do not block solely for missing media or a record.
 
    When a dependency version changes, the **Build, dependencies & scripts**
    agent also receives the exact old and new versions, affected project files,

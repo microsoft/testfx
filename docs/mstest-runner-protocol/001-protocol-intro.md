@@ -1,5 +1,12 @@
 # 001 - Microsoft.Testing.Platform JSON-RPC Protocol (formerly MSTest Runner Protocol)
 
+> **Current implementation note (2026-10-09):** This protocol remains the JSON-RPC reference.
+> [ServerTestHost](../../src/Platform/Microsoft.Testing.Platform/Hosts/ServerTestHost.RequestExecution.cs)
+> currently advertises `multiRequestSupport: false` and `multiConnectionProvider: false`; the
+> parallel-request/passive-connection possibilities below are not general advertised support.
+> See [MTP-010](../specifications/mtp.md#mtp-010--json-rpc-initialization-and-request-scope).
+> This audit traces initialization/selection/cancellation topics, not every field or IDE behavior.
+
 Microsoft.Testing.Platform projects builds into a self-sufficient executable that can be invoked to run tests.
 The protocol describes the communication between the client (IDE/CLI/CI) and a test runner executable (also referred to as the server).
 
@@ -399,7 +406,7 @@ the test node must be serializable.
 
 > [!NOTE]
 > Additional TestNode's properties are
-> explained in the [IDE integration](./003-protocol-ide-integration-extensions.md#test-nodes-property-extensions).
+> explained in the [IDE integration](./003-protocol-ide-integration-extensions.md#declaring-syntax-reference).
 
 ```typescript
 interface TestNode {

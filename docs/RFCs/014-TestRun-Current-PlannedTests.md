@@ -1,5 +1,21 @@
 # RFC 014 - TestRun.Current ambient run-state API
 
+> **Current implementation note (2026-10-09):** The experimental planned-test slice exists;
+> running/completed snapshots and events remain future work.
+> [TestRun](../../src/TestFramework/TestFramework.Extensions/TestRun.cs) starts with a non-null empty value, and
+> [UnitTestRunner](../../src/Adapter/MSTestAdapter.PlatformServices/Execution/UnitTestRunner.cs) publishes a per-source
+> snapshot before assembly initialization. It is retained until replaced in that process/AppDomain.
+> The snapshot is **host-filter-selected**, not a guarantee that every entry executes:
+> [source execution](../../src/Adapter/MSTestAdapter.PlatformServices/Execution/TestExecutionManager.SourceExecution.cs)
+> constructs it before later programmatic filter decisions, dependency failures or cancellation.
+> Thus `PlannedTests` cannot answer the motivation's “actually executed” cleanup question.
+> [TestRunInfoTests](../../test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestRunInfoTests.cs)
+> maps empty/reset/default-display-name/category/property behavior and public-constructor collection copying;
+> read-only collection interfaces do not establish deep immutability.
+> See the [current architecture](../architecture/mstest.md#execution-and-lifecycle) and
+> [snapshot contract](../specifications/mstest.md#mstest-024--planned-test-snapshots-describe-selection-not-execution).
+> This is source inspection/test mapping only, not executed fixture-visibility or multi-source/AppDomain conformance.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation (initial slice: `PlannedTests`)
@@ -126,7 +142,7 @@ Every property name on `PlannedTest` either mirrors an existing public MSTest AP
 
 ```csharp
 [TestClass]
-public static class GlobalSetup
+public class GlobalSetup
 {
     [AssemblyInitialize]
     public static void Init(TestContext _)

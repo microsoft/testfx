@@ -19,12 +19,21 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// executable, and a zip round trip does not carry POSIX permission bits, so the real extensionless apphost
 /// can arrive without its execute bit. Launching either one aborts the run with <c>Permission denied</c>, so
 /// the launcher has to reject both and fall back to <c>dotnet &lt;dll&gt;</c>.
+/// <para>
+/// Only <see cref="FailedLaunchDisposesProcessHandles"/> carries a method-level
+/// <see cref="DoNotParallelizeAttribute"/>: it measures this ambient, process-wide
+/// <see cref="Process.HandleCount"/> delta on the current test-host process, a resource no other test in this
+/// class or project reads or writes, so no shared <see cref="ResourceLockAttribute"/> key can coordinate it with
+/// another declared observer. Isolating only that method keeps the remaining tests in the parallel set instead of
+/// deferring the whole class to the serial tail.
+/// </para>
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class MtpServerProcessTests
 {
     internal const string StandardOutputFloodEnvironmentVariable = "TESTFX_FLOOD_SERVER_STDOUT";
+    internal const string StartupStandardErrorEnvironmentVariable = "TESTFX_SERVER_STARTUP_STDERR";
+    internal const string StartupStandardError = "expected-startup-error";
 
     // Any value works: BuildLaunch only formats the port into the argument string, it never binds it.
     private const int Port = 12345;
@@ -162,7 +171,7 @@ public sealed class MtpServerProcessTests
     }
 
     [TestMethod]
-    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExitAndStandardError()
+    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExit()
     {
         using var temp = TempDirectory.Create();
         string source = Path.Combine(temp.Path, "Missing.dll");
@@ -179,11 +188,32 @@ public sealed class MtpServerProcessTests
 
         Assert.Contains("exited with code", exception.Message);
         Assert.Contains("before connecting back", exception.Message);
-        Assert.Contains("Standard error:", exception.Message);
         Assert.IsLessThan(
             maximumExpectedDuration,
             stopwatch.Elapsed,
             "A process that exits during startup must be reported immediately instead of waiting for the connection timeout.");
+    }
+
+    [TestMethod]
+    public async Task StartAsyncWhenProcessExitsReportsStandardError()
+    {
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromMinutes(1),
+            EnvironmentVariables =
+            {
+                [StartupStandardErrorEnvironmentVariable] = "1",
+                [StandardOutputFloodEnvironmentVariable] = null,
+            },
+        };
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
+
+        Assert.Contains("exited with code 17 before connecting back", exception.Message);
+        Assert.Contains("Standard error:", exception.Message);
+        Assert.EndsWith(StartupStandardError, exception.Message);
     }
 
     [TestMethod]
@@ -811,6 +841,11 @@ public sealed class MtpServerProcessTests
 #if NET
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses repeated Windows process launches and handle counts.")]
+    // Measures the ambient, process-wide Process.HandleCount delta on the current test-host process. No other
+    // test in this project opens/reads that same OS handle count, so isolation (not a shared ResourceLock key)
+    // is the correct declaration: concurrent handle-opening activity from any other test could otherwise widen
+    // the observed delta and make this assertion flaky.
+    [DoNotParallelize]
     public async Task FailedLaunchDisposesProcessHandles()
     {
         using var temp = TempDirectory.Create();

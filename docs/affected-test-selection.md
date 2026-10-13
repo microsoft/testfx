@@ -7,35 +7,49 @@ builds on the composable filter-provider support from
 
 The repository consumes `Microsoft.Testing.Extensions.AffectedTests` from the `test-tools` feed together with the
 provider-specific `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps` package. Their shared version is
-pinned separately from `Microsoft.Testing.Extensions.CodeCoverage`, allowing the shipping CodeCoverage dependency to
-remain on a stable release while affected-test development continues on preview builds. Test applications that
+pinned separately from `Microsoft.Testing.Extensions.CodeCoverage`, allowing affected-test package updates without
+requiring the shipping CodeCoverage version to change. Test applications that
 register the affected-test provider override their direct CodeCoverage reference to that matching preview version;
-the packages shipped by this repository retain the stable central version. The provider publishes versioned
+the packages shipped by this repository retain the central CodeCoverage version. The provider publishes versioned
 per-module mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder
 hook is registered by the repository's hand-authored MTP entry points.
 
-Package `18.12.0-preview.26479.4` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
-both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
-provider.
+Package `18.13.0-preview.26508.3` is the minimum known-good build for this rollout: it includes the fixed JSON
+discovery path and Azure DevOps upload request, and ships both `netstandard2.0` and `net8.0` assets for the base
+extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
+are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
-Affected-test execution remains temporarily disabled in the pipeline. SDK `12.0.100-alpha.1.26480.103` predates the
-VMR flow containing [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450), so successful collection
-applications can exit `0` while the parent `dotnet test` command reports handshake failures and exits `1`. That
-output is indistinguishable from controller-only or partial handshake failures that must remain failures, so the
-pipeline cannot safely normalize it. Keep the packages and storage configuration dormant until a newer .NET 12 SDK
-containing the fix is published and verified in this repository.
+Affected-test execution is enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
+`907535df2f7eb8e1845571867684244ad04b031b`. It includes both
+[dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450) and
+[dotnet/sdk#56538](https://github.com/dotnet/sdk/pull/56538): successful collection can complete without an ordinary
+reporting handshake, or after the matching `RefreshMappingsOrchestrator` handshake. An empty affected-test selection
+can similarly complete after its `RunAffectedTestsOrchestrator` handshake without launching a test host.
+
+The SDK accepts those exit-`0` completions only in the corresponding collection or selection mode. Nonzero exits,
+controller-only or mixed partial handshakes, and protocol rejection remain failures. Protocol negotiation and the
+orchestrator's server-control cancellation channel are preserved; the pipeline does not suppress handshakes or
+normalize failure output. The rollout validator requires this SDK or newer, preventing rollback to intermediate
+builds that contain only the no-handshake fix.
 
 ## CI layout
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- Once re-enabled, the trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
+- The trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
   retry, or coverage arguments, because collection owns its instrumentation and launches discovery
-  children with `--list-tests`. A normal full test run follows to retain test reporting and coverage.
-- Once re-enabled, the Windows Release PR test runs `--affected-tests`.
+  children with `--list-tests`. A normal full test run follows, including after a failed collection step, to retain
+  test reporting and coverage. A collection failure still fails the job; it is not normalized to success.
+  Main-branch Windows jobs have a four-hour budget because collection replays acceptance fixtures in fresh batches
+  before the ordinary full run. PR jobs retain their 90-minute budget.
+- The Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
-  `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework outputs.
+  `runtimes/win-x64/native`, because NuGet otherwise flattens them for .NET Framework and `win-x64` RID-specific
+  outputs, including the WinUI test-framework unit host.
+  The native symbol reader (`msdia140.dll`) must accompany the profiler; otherwise collection can succeed with
+  test identities but no source associations. The WinUI validation went from 1,598 tests with zero associations
+  to 1,598 tests with 498 associations when the complete native layout was restored.
 - The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
   the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
@@ -45,6 +59,43 @@ containing the fix is published and verified in this repository.
 
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.
+
+## Headless collection compatibility
+
+Collection launches discovery and execution batches in fresh, headless processes. On Windows, a headless process
+can inherit a legacy console encoding rather than UTF-8. JSON discovery therefore escapes non-ASCII characters,
+including surrogate pairs, so test UIDs and metadata remain lossless after decoding. Escaping only JSON control
+characters is insufficient: a legacy encoding's best-fit fallback can convert Unicode into a raw control character
+after serialization. The schema and decoded values are unchanged, and malformed discovery still fails collection.
+Runner startup diagnostics and successful-run process statistics use stderr so they do not surround the JSON
+document on stdout. Failed acceptance runs do not print process statistics: the collector prefers nonempty stderr
+over stdout when reporting child failures, and a statistics-only stderr would otherwise hide the actual failure.
+
+[Run 20261012.43](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1632174) exposed the flattened
+WinUI profiler layout. [Run 20261012.44](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1632380)
+confirmed the discovery and test-isolation fixes but hit the old 90-minute job limit during acceptance collection,
+before the normal full test and coverage run. Its child failure messages contained only `Process started` statistics.
+Restoring the failure output exposed concurrent collection batches contending for acceptance build binlogs.
+Each process started the same counter in the shared testsuite directory, so unrelated builds could open the same
+file and fail with `MSB4104`. Binlog names now include a fresh GUID for every invocation and retry.
+
+`DotnetCli_BinlogsHaveGloballyUniqueNames` guards the GUID namespace, concurrent builds, and actual log creation.
+With the same test retained and the original helper in isolated source state
+`1b85d12ede74827f64215a505ddcde5562eeb9e9`, it executed and failed the GUID assertion (exit 2, one failed test).
+With the corrected helper it passed, together with both MSBuild-server configuration cases (exit 0, three passed
+tests, no skips). After a Release build/pack, reproduce the focused run with:
+
+```powershell
+.\.dotnet\dotnet.exe test --project (Resolve-Path test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj) -c Release --no-build -p:UsingDotNetTest=true -p:TestRunnerAdditionalArguments= '-bl:{}' --filter 'FullyQualifiedName~DotnetCli_BinlogsHaveGloballyUniqueNames|FullyQualifiedName~DotnetCli_MSBuildServer_DefaultsToDisabledAndPreservesExplicitSettings' --show-test-results all
+```
+
+Tests must also work independently of prior test execution and the launch directory. Desktop XML data-source tests
+resolve their copied fixture from the application base directory. The AppContainer pipe test loads the framework
+access-control and Windows-principal assemblies before impersonation, retaining the real restricted-token connection
+and denial checks.
+
+Regression coverage includes `Serialize_NonAsciiCharacters_ProducesLosslessAsciiJson` and the packed, headless
+consumer test `ListTestsJson_HeadlessProcess_PreservesUnicode`.
 
 ## Storage design
 
@@ -64,5 +115,5 @@ manual builds always keep full validation.
 Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
 after collection and full fallback runs still publish complete coverage.
 
-The one-switch rollback is currently active: `enableAffectedTests` is `false`, which keeps the package and dormant
-storage configuration in place while restoring the ordinary full-test command.
+The one-switch rollback remains available: setting `enableAffectedTests` to `false` keeps the package and storage
+configuration in place while restoring the ordinary full-test command.

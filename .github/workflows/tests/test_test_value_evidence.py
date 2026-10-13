@@ -196,6 +196,34 @@ class ReviewInputTests(unittest.TestCase):
 
 
 class ReportingContractTests(unittest.TestCase):
+    def test_delivery_template_preserves_decision_and_evidence_sections(self):
+        template = (REPO / ".github" / "PULL_REQUEST_TEMPLATE.md").read_text(
+            encoding="utf-8"
+        )
+        headings = [
+            "# Pull request",
+            "## Summary",
+            "## Design and decision record",
+            "## Demonstration",
+            "## Validation and regression proof",
+            "### Test-value evidence",
+        ]
+        for heading in headings:
+            self.assertIn(heading, template)
+        positions = [template.index(heading) for heading in headings]
+        self.assertEqual(sorted(positions), positions)
+        self.assertIn(".github/skills/feature-delivery/SKILL.md", template)
+        self.assertIn(".github/skills/testfx-test-value-evidence/SKILL.md", template)
+
+    def test_result_assessment_retains_clean_review_evidence(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        self.assertIn("<th>Result</th><th>Quality</th>", source)
+        self.assertIn("Otherwise publish the evidence even when all results are `Pass`", source)
+        self.assertIn("Likely killed (inferred)", source)
+        self.assertIn("Candidate survivor (unverified)", source)
+        self.assertIn("#### Test-value evidence", source)
+        self.assertNotIn("A clean automatic run is silent.", source)
+
     def test_canonical_survival_rule_distinguishes_measured_and_static(self):
         canonical = REPO / ".agents" / "skills" / "test-value-evidence" / "SKILL.md"
         body = canonical.read_text(encoding="utf-8").split("---", 2)[2]

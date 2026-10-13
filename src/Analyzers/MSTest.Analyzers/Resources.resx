@@ -1343,4 +1343,15 @@ The type declaring these methods should also respect the following rules:
     <value>Host-owned MSTest test-class injection uses reflection-based Microsoft.Extensions.DependencyInjection activation. Remove AddMSTestTestClassInjection or disable the unsupported build mode.</value>
     <comment>{Locked="MSTest"}{Locked="Microsoft.Extensions.DependencyInjection"}{Locked="AddMSTestTestClassInjection"}</comment>
   </data>
+  <data name="AvoidEnumerableAssertionsOnQueryableTitle" xml:space="preserve">
+    <value>Avoid enumerating queries for count or existence assertions</value>
+  </data>
+  <data name="AvoidEnumerableAssertionsOnQueryableMessageFormat" xml:space="preserve">
+    <value>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</value>
+    <comment>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</comment>
+  </data>
+  <data name="AvoidEnumerableAssertionsOnQueryableDescription" xml:space="preserve">
+    <value>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</value>
+    <comment>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</comment>
+  </data>
 </root>

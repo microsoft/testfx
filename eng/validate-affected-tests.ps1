@@ -110,15 +110,15 @@ if ($bootstrappedSdk -ne $selectedSdk) {
 $affectedTestsSdkVersionsWithCollectionHandshakeFailure = @(
     [System.Management.Automation.SemanticVersion]"11.0.100-rc.2.26471.109",
     [System.Management.Automation.SemanticVersion]"11.0.100-rtm.26476.107",
-    [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26480.103"
+    [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26506.125"
 )
 if ($affectedTestsEnabled -and $selectedSdk -in $affectedTestsSdkVersionsWithCollectionHandshakeFailure) {
     throw "Affected-test execution must remain disabled with SDK '$selectedSdk', which reports successful collection children as handshake failures."
 }
 
-$lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
-if ($affectedTestsEnabled -and $bootstrappedSdk -le $lastUnsupportedAffectedTestsSdk) {
-    throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55574."
+$minimumAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"12.0.100-alpha.1.26509.101"
+if ($affectedTestsEnabled -and $bootstrappedSdk -lt $minimumAffectedTestsSdk) {
+    throw "Affected-test execution requires SDK $minimumAffectedTestsSdk or newer with dotnet/sdk#56538."
 }
 
 if ($null -eq $affectedTests.storage) {
@@ -157,12 +157,15 @@ Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings @(
     'GeneratePathProperty="true"',
-    "_CopyAffectedTestsNetFrameworkRuntimeAssets",
+    "_CopyAffectedTestsRuntimeAssets",
+    "_RegisterAffectedTestsRuntimeAssetsForClean",
+    "'`$(RuntimeIdentifier)' == 'win-x64'",
     "MicrosoftInstrumentationEngine_x64.dll",
+    "msdia140.dll",
     "ctsrun64.dll",
     "Cts_x64.config"
 ) `
-    -ItemMessageFormatter { param($substring) ".NET Framework affected-test applications must preserve '$substring'." }
+    -ItemMessageFormatter { param($substring) ".NET Framework and RID-specific affected-test applications must preserve '$substring'." }
 Assert-Containment `
     -Text $directoryBuildTargets `
     -Substrings @(
@@ -329,6 +332,13 @@ if ($collectStep.Contains("PublishCoverageReport") -or
     -not $fullTestStep.Contains("PublishCoverageReport") -or
     $fullTestStep.Contains("--collect-test-map")) {
     throw "Affected-test collection must be followed by the normal full test and coverage run."
+}
+
+$fullTestCondition = $collectBranch.Value.Substring($fullTestStepEnd)
+if (-not $collectStep.Contains("variable=AffectedTestsCollectionStarted]true") -or
+    -not $fullTestCondition.Contains("succeededOrFailed()") -or
+    -not $fullTestCondition.Contains("eq(variables['AffectedTestsCollectionStarted'], 'true')")) {
+    throw "The normal full test and coverage run must execute after failed collection, but not after a failed build."
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or

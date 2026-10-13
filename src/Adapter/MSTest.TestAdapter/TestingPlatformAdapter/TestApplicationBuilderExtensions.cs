@@ -40,6 +40,7 @@ public static class TestApplicationBuilderExtensions
     {
         MSTestTestApplicationBuilderOptions options = Options.GetOrCreateValue(testApplicationBuilder);
         MSTestExtension extension = new();
+        var discoveryCache = new MSTestDiscoveryCache();
 
         // Register MSTest's own command-line options, runsettings configuration source and environment-variable
         // provider natively (identical option names/descriptions to the VSTest bridge), so both the native and the
@@ -71,13 +72,20 @@ public static class TestApplicationBuilderExtensions
 
         // MSTest plugs into Microsoft.Testing.Platform directly (no VSTest bridge object model on the request path).
         testApplicationBuilder.RegisterTestFramework(
-            serviceProvider => new TestFrameworkCapabilities(
-                new MSTestCapabilities(),
-                new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
-                MSTestGracefulStopTestExecutionCapability.Create()),
+            serviceProvider =>
+            {
+                // Root registration survives the server's cloned per-request service providers and is
+                // disposed only when the application closes.
+                ((Microsoft.Testing.Platform.Services.ServiceProvider)serviceProvider).TryAddService(discoveryCache);
+                return new TestFrameworkCapabilities(
+                    new MSTestCapabilities(),
+                    new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
+                    MSTestGracefulStopTestExecutionCapability.Create());
+            },
             (capabilities, serviceProvider) => new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities)
             {
                 TestClassInstanceFactory = options.TestClassInstanceFactory,
+                DiscoveryCache = discoveryCache,
             });
     }
 

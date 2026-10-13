@@ -3,6 +3,9 @@ name: msbuild
 description: "Expert agent for MSBuild and .NET build troubleshooting, optimization, and project file quality. Routes to specialized agents for performance analysis and code review. Verifies MSBuild domain relevance before deep-diving. Specializes in build configuration, error diagnosis, binary log analysis, and resolving common build issues."
 user-invokable: true
 disable-model-invocation: false
+agents:
+  - build-perf
+  - msbuild-code-review
 license: MIT
 ---
 
@@ -39,6 +42,7 @@ Classify the user's request and route to the appropriate specialist:
 | Modernize legacy projects | `msbuild-code-review` agent + `msbuild-modernization` skill |
 | Organize build infrastructure | This agent + `directory-build-organization` skill |
 | Incremental build broken | This agent + `incremental-build` skill |
+| Choosing/fixing CopyToOutputDirectory behavior (`IfDifferent`, `Always` perf hit) | This agent + `copy-to-output-directory` skill |
 
 When routing to a specialized agent, provide context about the user's request so the agent can pick up seamlessly.
 
@@ -82,6 +86,7 @@ This agent has access to a comprehensive set of troubleshooting and optimization
 - `directory-build-organization` — Directory.Build infrastructure
 - `check-bin-obj-clash` — Output path conflict detection
 - `including-generated-files` — Build-generated file inclusion
+- `copy-to-output-directory` — CopyToOutputDirectory mode selection (`Never`/`PreserveNewest`/`Always`/`IfDifferent`)
 
 ## Common Troubleshooting Patterns
 

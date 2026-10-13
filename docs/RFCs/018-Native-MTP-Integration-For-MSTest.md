@@ -1,5 +1,15 @@
 # RFC 018 - Native Microsoft.Testing.Platform integration for MSTest (retire the VSTest bridge)
 
+> **Current implementation note (2026-10-09):** The “current architecture” below is the
+> historical starting point, not the baseline code. `AddMSTest` now registers a native
+> `MSTestTestFramework`; requests call `MSTestEngine` directly and native sinks/recorders emit nodes.
+> The adapter project no longer references `Microsoft.Testing.Extensions.VSTestBridge`, while
+> `Microsoft.TestPlatform.ObjectModel` remains for VSTest-facing contracts/filter infrastructure.
+> See [MSTEST-001](../specifications/mstest.md#mstest-001--native-mtp-and-vstest-share-the-engine-not-a-host-object-model)
+> and the [host architecture](../architecture/mstest.md#host-entry-points).
+> Source inspection and converter-test mapping do not establish completion of each proposed phase,
+> byte-for-byte parity, approval or shipment; the proposal/checklist is preserved.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [ ] Implementation

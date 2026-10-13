@@ -1,5 +1,15 @@
 # RFC 018 - Artifact post-processing for `dotnet test` (MTP)
 
+> **Current implementation note (2026-10-09):** The local processor/dispatcher and TRX merge paths
+> exist; [`ITool`](../../src/Platform/Microsoft.Testing.Platform/Tools/ITool.cs) is now public/experimental,
+> rather than the internal-only starting state described below.
+> [The parser](../../src/Platform/Microsoft.Testing.Platform/CommandLine/Parser.cs) selects a tool by
+> its first positional name (`<testapp> internal-merge-artifacts ...`), not the historical `--tool` syntax.
+> [MTP-012](../specifications/mtp.md#mtp-012--report-artifacts-and-post-processing) records local dispatch;
+> [MTP-016](../specifications/mtp.md#mtp-016--no-handshake-and-undeclared-capability-fallback) records explicit capability/fallback ownership.
+> SDK election, parent exit policy, multi-module aggregation and rollout remain unverified external
+> behavior; the architecture sketches do not establish their shipment or compatibility.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation

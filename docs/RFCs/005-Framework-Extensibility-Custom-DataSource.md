@@ -1,5 +1,14 @@
 # RFC 005 - Framework Extensibility for Custom Test Data Source
 
+> **Current implementation note (2026-10-09):** The “always fail” empty-sequence remark
+> describes the default, not every configuration: `ConsiderEmptyDataSourceAsInconclusive`
+> permits an inconclusive result. Unfolding also has serialization/duplicate-name fallback
+> boundaries; the default does not guarantee that every row becomes independently discoverable.
+> See [MSTEST-007](../specifications/mstest.md#mstest-007--data-source-folding-controls-discovery-granularity)
+> and the [architecture](../architecture/mstest.md#data-source-and-extensibility-boundaries).
+> The added ignore/row-metadata capabilities were compared with the current helpers and runner;
+> no tests were executed.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

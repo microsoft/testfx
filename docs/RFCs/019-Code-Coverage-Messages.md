@@ -1,5 +1,12 @@
 # RFC 019 - Code coverage messages & consumer model for Microsoft.Testing.Platform
 
+> **Current implementation note (2026-10-09):** The message consumer/read model is implemented in
+> [TestCoverageResult](../../src/Platform/Microsoft.Testing.Platform/Services/TestCoverageResult.cs);
+> [CoverageThresholdPolicy](../../src/Platform/Microsoft.Testing.Platform/Services/CoverageThresholdPolicy.cs)
+> also implements overall line/branch gates beyond this RFC's message-only scope.
+> See [MTP-013](../specifications/mtp.md#mtp-013--coverage-gates-consume-measurements-not-report-files).
+> Collector producer/version interoperability and the ecosystem survey are not verified by this audit.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [ ] Implementation

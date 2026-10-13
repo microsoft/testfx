@@ -36,6 +36,30 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+### Test-quality skill contract
+
+The [automatic test reviewer](./test-reviewer-on-pr.agent.md) and
+[`/review-tests` reviewer](./test-reviewer.agent.md) share
+[one prompt](./shared/test-reviewer-shared.md). They consume the upstream
+`grade-tests` and `test-gap-analysis` skills pinned by
+[the curated manifest](../../.copilot/curate/manifest.yml), without a local
+grading-weight fork.
+
+The primary per-test result is `Pass`, `Failed`, or `Uncertain`; a valid empty
+scope is `Not applicable`. Quality bands are secondary: a focused `B / Pass`
+needs no invented improvement, while `A / Failed` still requires a concrete
+action. Clean automatic runs are silent regardless of letter grade; command
+runs always return the requested result, including incomplete evidence and
+applicable parallel-safety analysis.
+
+Grading reads the bundled .NET language reference directly and composes
+`test-gap-analysis` in read-only per-test context before scoring. It does not
+execute tests or mutations. Mutation evidence uses `Likely killed (inferred)`
+or `Candidate survivor (unverified)`, with a distinguishing input and
+original/mutant observations, not empirical kill ratios. Unavailable production
+context is disclosed without a deduction. Existing changed-line anchoring,
+deduplication, parallel-safety, and safe-output publication gates still apply.
+
 ### Firewall access for repository work
 
 `network: defaults` covers infrastructure, not package feeds or Git transport.
@@ -65,6 +89,58 @@ When investigating a blocked request, inspect the downloaded raw firewall
 even when its HTTP status is `200`; some gh-aw summaries count those entries as
 allowed. Add only destinations required by the workflow's task, or eliminate
 unnecessary requests instead of broadening the firewall.
+
+#### Provisional CONNECT records and test-review footers
+
+The warning on [PR #11892](https://github.com/microsoft/testfx/pull/11892#pullrequestreview-5490606840)
+is a reporting defect, not missing GitHub access. In
+[run 38246632006](https://github.com/microsoft/testfx/actions/runs/38246632006),
+`github.com` was already allowlisted. Squid recorded `NONE_NONE:HIER_NONE / 200`
+for the provisional CONNECT and then `TCP_TUNNEL:HIER_DIRECT / 200` for the same
+client connection. There was no `TCP_DENIED` entry in the agent's raw log.
+The v0.89.21 footer classifier nevertheless treats every `NONE_NONE` as blocked.
+
+The two test-review workflows apply a checksum-guarded correction through their
+shared `safe-outputs.steps`, after script setup and before review publication.
+It lets provisional records reach the existing success-status checks while
+preserving explicit `TCP_DENIED` decisions, including status 200, authentication
+failures, and unknown outcomes. This changes only reporting: network access,
+credentials, threat detection, raw logs, and artifacts remain unchanged.
+Unexpected module bytes fail the setup step rather than silently suppressing
+warnings; repeating the correction is harmless.
+
+Adding more domains cannot correct this false positive. Disabling footers would
+also hide real denials. Updating to the upstream status-first classifier is not
+equivalent: it can hide `TCP_DENIED / 200`, which this repository has observed.
+Keep the correction limited to the affected reviewers, and revalidate or remove
+it when updating the pinned gh-aw setup action. The action-pin check runs
+`test_gh_aw_firewall_footer.py` against that action's actual module, with isolated
+module copies and logs, so dependency changes cannot silently invalidate it.
+
+Regression evidence (October 12, 2026): the setup action at
+`924af5fdc64061cfbf66fb584c8b07e2ac230c60` ships the original module with SHA-256
+`3a9edc197333e6447d2ac557328d1e292d3a7816beca6457a161bfb542921284`.
+With identical retained assertions, the isolated uncorrected module fails
+`test_successful_connect_has_no_blocked_domain` because it returns
+`["github.com"]` instead of `[]` (one executed test, exit 1). With the correction,
+that test and the full seven-test suite pass (exit 0). Reproduce after copying the
+pinned setup action's scripts to `$env:RUNNER_TEMP\gh-aw\actions`:
+
+```powershell
+$module = Join-Path $env:RUNNER_TEMP 'gh-aw\actions\firewall_blocked_domains.cjs'
+python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module --without-correction GhAwFirewallFooterTests.test_successful_connect_has_no_blocked_domain
+python .github\scripts\test_gh_aw_firewall_footer.py --module-path $module
+gh aw compile test-reviewer-on-pr.agent test-reviewer.agent --strict --no-check-update --shellcheck
+python .github\scripts\check_action_pins.py
+```
+
+Strict compilation and shellcheck passed for both workflows; the action-pin audit
+passed with no pin changes. An offline replay using the pinned action's real
+parser, dependencies, and Markdown template against the run's unchanged raw logs
+rendered the original warning before correction and no warning afterwards. A
+`TCP_DENIED / 200` fixture still rendered the blocked-domain warning.
+This is local execution evidence, not a live workflow rerun or verification of
+GitHub publication.
 
 ### Compile on the pinned toolchain, and check the pins afterwards
 
