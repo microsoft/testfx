@@ -169,17 +169,17 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
         <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
-        <target state="new">Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</target>
+        <target state="translated">Las aserciones de colección enumeran un IQueryable en lugar de solicitar un resultado escalar de su proveedor. Use Queryable.Count para la cardinalidad o Queryable.Any para el vacío. Materialice los resultados explícitamente al probar su contenido o reutilizar una instantánea, en lugar de capturar todas las filas coincidentes solo para comprobar su recuento o existencia.</target>
         <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
         <source>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</source>
-        <target state="new">Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</target>
+        <target state="translated">Use "Queryable.{1}" en lugar de '{0}' para evitar enumerar los resultados de la consulta para un recuento o una comprobación de existencia.</target>
         <note>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
         <source>Avoid enumerating queries for count or existence assertions</source>
-        <target state="new">Avoid enumerating queries for count or existence assertions</target>
+        <target state="translated">Evitar la enumeración de consultas para las aserciones de recuento o existencia</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">

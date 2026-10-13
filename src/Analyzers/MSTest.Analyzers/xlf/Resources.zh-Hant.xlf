@@ -169,17 +169,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
         <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
-        <target state="new">Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</target>
+        <target state="translated">集合判斷會列舉 IQueryable，而不是向其提供者要求純量結果。請使用 Queryable.Count 來表示基數，或使用 Queryable.Any 來表示清空。在測試其內容或重複使用快照時，請明確具現化結果；不要只是為了檢查數量或是否存在，就擷取所有符合條件的資料列。</target>
         <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
         <source>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</source>
-        <target state="new">Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</target>
+        <target state="translated">請使用 'Queryable.{1}'，而不要使用 '{0}'，以避免列舉查詢結果來進行計數或存在性檢查</target>
         <note>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
         <source>Avoid enumerating queries for count or existence assertions</source>
-        <target state="new">Avoid enumerating queries for count or existence assertions</target>
+        <target state="translated">避免列舉查詢來進行計數或存在性檢查</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
