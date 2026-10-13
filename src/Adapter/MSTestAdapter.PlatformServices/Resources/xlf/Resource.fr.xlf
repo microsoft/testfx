@@ -500,7 +500,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectFSharpTestMethodSignature">
         <source>UTA007: Function {1} defined in F# module {0} does not have a correct signature. A test function marked with the [&lt;TestMethod&gt;] attribute must be static and public, and return void, Task, or non-generic ValueTask. Parameters require test data.</source>
-        <target state="new">UTA007: Function {1} defined in F# module {0} does not have a correct signature. A test function marked with the [&lt;TestMethod&gt;] attribute must be static and public, and return void, Task, or non-generic ValueTask. Parameters require test data.</target>
+        <target state="translated">UTA007 : La fonction {1} définie dans le module F# {0} n’a pas une signature correcte. Une fonction de test marquée avec l’attribut [&lt;TestMethod&gt;] doit être static et public, et retourner void, Task ou une ValueTask non générique. Les paramètres nécessitent des données de test.</target>
         <note>{0} is the F# module full name. {1} is the test function name. {Locked="UTA007"}{Locked="F#"}{Locked="[&lt;TestMethod&gt;]"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
@@ -562,7 +562,7 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
       </trans-unit>
       <trans-unit id="UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature">
         <source>Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</source>
-        <target state="new">Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</target>
+        <target state="translated">La fonction {0}.{1} a une signature incorrecte. Une fonction d’initialisation ou de nettoyage de test F# doit être static et public, ne prendre aucun paramètre et retourner void, Task ou une ValueTask non générique.</target>
         <note>{0} is the F# module full name. {1} is the function name. {Locked="F#"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">
