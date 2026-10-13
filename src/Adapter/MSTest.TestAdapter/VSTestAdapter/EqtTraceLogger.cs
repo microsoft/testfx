@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 
+[ExcludeFromCodeCoverage]
 internal sealed class EqtTraceLogger :
 #if NETFRAMEWORK
     MarshalByRefObject,

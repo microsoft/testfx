@@ -22,6 +22,130 @@ public class DynamicDataAttributeTests : TestContainer
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
     }
 
+    public void ReflectionArgumentsArePassedInSourceOrderWithoutFlatteningReturnedRows()
+    {
+        var attribute = new DynamicDataAttribute(nameof(ReflectionPartitionSources.Arguments), typeof(ReflectionPartitionSources), 7, "label");
+        object[][] actual = attribute.GetData(_testMethodInfo).ToArray();
+        actual.Should().HaveCount(2);
+        actual[0].Should().Equal(7, "label");
+        actual[1].Should().Equal("label", 8);
+    }
+
+    public void ReflectionScalarEnumerablesWrapEachElementAndPreserveNullAndEmptyPartitions()
+    {
+        foreach (string member in new[] { nameof(ReflectionPartitionSources.Scalars), nameof(ReflectionPartitionSources.ScalarMethod) })
+        {
+            object[][] actual = new DynamicDataAttribute(member, typeof(ReflectionPartitionSources)).GetData(_testMethodInfo).ToArray();
+            actual.Should().HaveCount(3);
+            actual[0].Should().Equal(17);
+            actual[1].Should().HaveCount(1);
+            actual[1][0].Should().BeNull();
+            actual[2].Should().Equal("text");
+        }
+
+        new DynamicDataAttribute(nameof(ReflectionPartitionSources.EmptyScalars), typeof(ReflectionPartitionSources)).GetData(_testMethodInfo).Should().BeEmpty();
+    }
+
+    public void ReflectionExplicitMissingMembersAndInvalidKindReportExactSource()
+    {
+        foreach (DynamicDataSourceType kind in new[] { DynamicDataSourceType.Property, DynamicDataSourceType.Method, DynamicDataSourceType.Field })
+        {
+            var attribute = new DynamicDataAttribute("absent", typeof(ReflectionPartitionSources), kind);
+            Action action = () => attribute.GetData(_testMethodInfo);
+            action.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be(kind + " absent");
+        }
+
+        var invalid = new DynamicDataAttribute("invalid-kind", typeof(ReflectionPartitionSources), (DynamicDataSourceType)999);
+        Action unsupported = () => invalid.GetData(_testMethodInfo);
+        unsupported.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be(
+            string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataValueNull, "invalid-kind", typeof(ReflectionPartitionSources).FullName));
+    }
+
+    public void ReflectionMethodsRejectInstanceOpenGenericAndParamsLayoutsBeforeInvocation()
+    {
+        foreach (string member in new[]
+        {
+            nameof(ReflectionPartitionSources.InstanceMethod),
+            nameof(ReflectionPartitionSources.GenericMethod),
+            nameof(ReflectionPartitionSources.ParamsMethod),
+#if NET9_0_OR_GREATER
+            nameof(ReflectionPartitionSources.ParamsCollection),
+#endif
+        })
+        {
+            var attribute = new DynamicDataAttribute(member, typeof(ReflectionPartitionSources), DynamicDataSourceType.Method);
+            Action action = () => attribute.GetData(_testMethodInfo);
+            action.Should().ThrowExactly<NotSupportedException>().Which.Message
+                .Should().Contain(nameof(ReflectionPartitionSources) + "." + member);
+        }
+    }
+
+    public void ReflectionPropertiesRejectInstanceOrSetterOnlyLayoutsAndPreserveInvokedExceptions()
+    {
+        foreach (string member in new[] { nameof(ReflectionPartitionSources.InstanceProperty), nameof(ReflectionPartitionSources.SetterOnly) })
+        {
+            var attribute = new DynamicDataAttribute(member, typeof(ReflectionPartitionSources), DynamicDataSourceType.Property);
+            Action action = () => attribute.GetData(_testMethodInfo);
+            action.Should().ThrowExactly<NotSupportedException>().Which.Message.Should().Contain(member);
+        }
+
+        foreach (string member in new[] { nameof(ReflectionPartitionSources.ThrowingProperty), nameof(ReflectionPartitionSources.ThrowingMethod) })
+        {
+            var attribute = new DynamicDataAttribute(member, typeof(ReflectionPartitionSources));
+            Action action = () => attribute.GetData(_testMethodInfo);
+            action.Should().ThrowExactly<TargetInvocationException>().Which.InnerException!
+                .Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be("source sentinel");
+        }
+    }
+
+    public void ReflectionPlainNonEnumerableSourceCannotBeInventedAsOneScalarRow()
+    {
+        var attribute = new DynamicDataAttribute(nameof(ReflectionPartitionSources.NonEnumerable), typeof(ReflectionPartitionSources));
+        Action action = () => attribute.GetData(_testMethodInfo);
+
+        ArgumentNullException error = action.Should().ThrowExactly<ArgumentNullException>().Which;
+
+        error.ParamName.Should().Be(string.Format(
+            CultureInfo.InvariantCulture,
+            FrameworkMessages.DynamicDataIEnumerableNull,
+            nameof(ReflectionPartitionSources.NonEnumerable),
+            typeof(ReflectionPartitionSources).FullName));
+    }
+
+    private sealed class ReflectionPartitionSources
+    {
+        public static IEnumerable<object[]> Arguments(int number, string label) => [[number, label], [label, number + 1]];
+
+        public static IEnumerable Scalars => new object?[] { 17, null, "text" };
+
+        public static IEnumerable ScalarMethod() => new object?[] { 17, null, "text" };
+
+        public static IEnumerable EmptyScalars => Array.Empty<int>();
+
+        public static object NonEnumerable => new();
+
+        public IEnumerable<object[]> InstanceMethod() => throw new InvalidOperationException("Must be rejected before invocation.");
+
+        public static IEnumerable<object[]> GenericMethod<T>() => throw new InvalidOperationException("Must be rejected before invocation.");
+
+        public static IEnumerable<object[]> ParamsMethod(params int[] values) => throw new InvalidOperationException("Must be rejected before invocation.");
+
+#if NET9_0_OR_GREATER
+        public static IEnumerable<object[]> ParamsCollection(params IEnumerable<int> values) => throw new InvalidOperationException("Must be rejected before invocation.");
+#endif
+
+        public IEnumerable<object[]> InstanceProperty => throw new InvalidOperationException("Must be rejected before invocation.");
+
+        public static IEnumerable<object[]> SetterOnly
+        {
+            set => throw new InvalidOperationException("Must be rejected before invocation.");
+        }
+
+        public static IEnumerable<object[]> ThrowingProperty => throw new InvalidOperationException("source sentinel");
+
+        public static IEnumerable<object[]> ThrowingMethod() => throw new InvalidOperationException("source sentinel");
+    }
+
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
     {
         _dynamicDataAttribute = new DynamicDataAttribute("ABC");

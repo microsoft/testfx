@@ -116,6 +116,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             if (protocolVersion is null)
             {
                 TestHostResult result = await host.ExecuteAsync(arguments, environment, cancellationToken: token);
+                TestContext.WriteLine($"Module {module}: {result}");
                 result.AssertExitCodeIs(expectedExitCode);
                 if (module == "B")
                 {
@@ -126,6 +127,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             else
             {
                 FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(host, arguments, environment, protocolVersion, cancellationToken: token);
+                TestContext.WriteLine($"Module {module}: {result.TestHostResult}");
                 result.TestHostResult.AssertExitCodeIs(expectedExitCode);
                 Assert.AreEqual(protocolVersion, result.NegotiatedProtocolVersion);
                 string?[] warnings = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)

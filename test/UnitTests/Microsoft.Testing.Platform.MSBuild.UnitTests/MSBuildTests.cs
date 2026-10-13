@@ -17,6 +17,8 @@ public sealed class MSBuildTests
     private readonly List<BuildErrorEventArgs> _errors = [];
     private readonly List<BuildMessageEventArgs> _messages = [];
 
+    public TestContext TestContext { get; set; } = null!;
+
     public MSBuildTests()
     {
         _buildEngine.Setup(x => x.LogErrorEvent(It.IsAny<BuildErrorEventArgs>())).Callback<BuildErrorEventArgs>(e => _errors.Add(e));
@@ -825,6 +827,151 @@ namespace SomeNamespace
         Assert.IsEmpty(_errors);
     }
 
+    [TestMethod]
+    [DataRow("", "non-empty option name", DisplayName = "Empty option name")]
+    [DataRow("   ", "non-empty option name", DisplayName = "Whitespace option name")]
+    public void ConfigurationFileTask_RejectsEmptyNamesWithoutWritingOutput(string name, string expectedError)
+    {
+        InMemoryFileSystem fileSystem = new();
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, Path.Combine("root", "project"));
+        task.TestingPlatformCommandLineOptionDefault = [new CustomTaskItem(name).Add("Value", "value")];
+
+        Assert.IsFalse(task.Execute());
+        Assert.Contains(expectedError, Assert.ContainsSingle(_errors).Message!);
+        Assert.IsNull(task.FinalTestingPlatformConfigurationFile);
+        Assert.IsEmpty(fileSystem.Files);
+    }
+
+    [TestMethod]
+    [DataRow("null", "top-level element", DisplayName = "Null root")]
+    [DataRow("[]", "top-level element", DisplayName = "Array root")]
+    [DataRow("{", "Failed to parse", DisplayName = "Malformed JSON")]
+    [DataRow("""{"commandLineOptionDefaults":null}""", "section", DisplayName = "Null section")]
+    [DataRow("""{"commandLineOptionDefaults":[]}""", "section", DisplayName = "Array section")]
+    [DataRow("""{"commandLineOptionDefaults":{"filter":"a","FILTER":"b"}}""", "duplicate", DisplayName = "Case duplicate options")]
+    public void ConfigurationFileTask_RejectsInvalidSourceAndDoesNotPublishOutput(string source, string expectedError)
+    {
+        string projectDirectory = Path.Combine("root", "project");
+        InMemoryFileSystem fileSystem = new();
+        fileSystem.Files[Path.Combine(projectDirectory, "testconfig.json")] = source;
+        ConfigurationFileTask task = CreateConfigurationFileTask(fileSystem, projectDirectory);
+        task.TestingPlatformCommandLineOptionDefault = [new CustomTaskItem("filter").Add("Value", "default")];
+
+        Assert.IsFalse(task.Execute());
+        Assert.Contains(expectedError, Assert.ContainsSingle(_errors).Message!, StringComparison.OrdinalIgnoreCase);
+        Assert.IsNull(task.FinalTestingPlatformConfigurationFile);
+        Assert.AreSequenceEqual([Path.Combine(projectDirectory, "testconfig.json")], fileSystem.Files.Keys);
+    }
+
+    [TestMethod]
+    public void ConfigurationFileTask_LegacyTarget_MergesCaseInsensitiveOverridesAndOrderedValues()
+    {
+        string directory = TestContext.TestTempDirectory!;
+        string source = Path.Combine(directory, "testconfig.json");
+        File.WriteAllText(
+            source,
+            """
+            {
+              // The legacy parser must accept the same authored configuration.
+              "platformOptions": {"exitProcessOnUnhandledException": false,},
+              "CommandLineOptionDefaults": {"FILTER": "from-json",},
+            }
+            """);
+        using var context = new IsolatedAssemblyLoadContext();
+        ITaskItem[] buildDefaults =
+        [
+            new CustomTaskItem(" filter ").Add("Value", "from-build"),
+            new CustomTaskItem("filter-uid").Add("Value", "first"),
+            new CustomTaskItem("FILTER-UID").Add("Value", "second"),
+            new CustomTaskItem("report-trx").Add("Value", string.Empty),
+        ];
+        object task = CreateLegacyConfigurationTask(context, directory, buildDefaults);
+
+        Assert.IsTrue((bool)task.GetType().GetMethod("Execute")!.Invoke(task, null)!);
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "Tests.testconfig.json")));
+        JsonElement root = json.RootElement;
+        Assert.IsFalse(root.GetProperty("platformOptions").GetProperty("exitProcessOnUnhandledException").GetBoolean());
+        JsonElement defaults = root.GetProperty("CommandLineOptionDefaults");
+        Assert.AreEqual("from-json", defaults.GetProperty("FILTER").GetString());
+        Assert.AreSequenceEqual(["first", "second"], defaults.GetProperty("filter-uid").EnumerateArray().Select(value => value.GetString()));
+        Assert.AreEqual(string.Empty, defaults.GetProperty("report-trx").GetString());
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    [DataRow(null, DisplayName = "Missing source")]
+    [DataRow("{}", DisplayName = "Missing defaults section")]
+    public void ConfigurationFileTask_LegacyTarget_CreatesAbsentDefaults(string? source)
+    {
+        string directory = TestContext.TestTempDirectory!;
+        if (source is not null)
+        {
+            File.WriteAllText(Path.Combine(directory, "testconfig.json"), source);
+        }
+
+        using var context = new IsolatedAssemblyLoadContext();
+        object task = CreateLegacyConfigurationTask(context, directory, [new CustomTaskItem("show-test-results").Add("Value", "failed")]);
+        Assert.IsTrue((bool)task.GetType().GetMethod("Execute")!.Invoke(task, null)!);
+        using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "Tests.testconfig.json")));
+        Assert.AreEqual("failed", json.RootElement.GetProperty("commandLineOptionDefaults").GetProperty("show-test-results").GetString());
+        Assert.IsEmpty(_errors);
+    }
+
+    [TestMethod]
+    [DataRow("null", "top-level element", DisplayName = "Legacy null root")]
+    [DataRow("[]", "top-level element", DisplayName = "Legacy array root")]
+    [DataRow("{", "Failed to parse", DisplayName = "Legacy malformed JSON")]
+    [DataRow("""{"commandLineOptionDefaults":null}""", "section", DisplayName = "Legacy null section")]
+    [DataRow("""{"commandLineOptionDefaults":{"filter":"a","FILTER":"b"}}""", "duplicate", DisplayName = "Legacy case duplicate options")]
+    [DataRow("""{"commandLineOptionDefaults":{},"CommandLineOptionDefaults":{}}""", "duplicate", DisplayName = "Legacy case duplicate sections")]
+    public void ConfigurationFileTask_LegacyTarget_RejectsInvalidConfigurationWithoutOutput(string source, string expectedError)
+    {
+        string directory = TestContext.TestTempDirectory!;
+        File.WriteAllText(Path.Combine(directory, "testconfig.json"), source);
+        using var context = new IsolatedAssemblyLoadContext();
+        object task = CreateLegacyConfigurationTask(context, directory, [new CustomTaskItem("filter").Add("Value", "default")]);
+
+        Assert.IsFalse((bool)task.GetType().GetMethod("Execute")!.Invoke(task, null)!);
+        Assert.Contains(expectedError, Assert.ContainsSingle(_errors).Message!, StringComparison.OrdinalIgnoreCase);
+        Assert.IsFalse(File.Exists(Path.Combine(directory, "Tests.testconfig.json")));
+        Assert.IsNull(task.GetType().GetProperty("FinalTestingPlatformConfigurationFile")!.GetValue(task));
+    }
+
+    private object CreateLegacyConfigurationTask(IsolatedAssemblyLoadContext context, string directory, ITaskItem[] defaults)
+    {
+        // Coverage comparisons can supply an independent copy instead of instrumenting shared build outputs.
+        string localAssembly = Path.Combine(AppContext.BaseDirectory, "LegacyMSBuild", "Microsoft.Testing.Platform.MSBuild.dll");
+        string assemblyPath = File.Exists(localAssembly) ? localAssembly : Path.Combine(
+            FindRepositoryRoot(), "artifacts", "bin", "Microsoft.Testing.Platform.MSBuild", "Debug", "netstandard2.0", "Microsoft.Testing.Platform.MSBuild.dll");
+        Assembly assembly = context.LoadFromAssemblyPath(assemblyPath);
+        Type type = assembly.GetType(typeof(ConfigurationFileTask).FullName!, throwOnError: true)!;
+        object task = Activator.CreateInstance(type)!;
+        type.GetProperty("BuildEngine")!.SetValue(task, _buildEngine.Object);
+        type.GetProperty("TestingPlatformConfigurationFileSource")!.SetValue(task, new CustomTaskItem(Path.Combine(directory, "testconfig.json")));
+        type.GetProperty("MSBuildProjectDirectory")!.SetValue(task, new CustomTaskItem(directory));
+        type.GetProperty("AssemblyName")!.SetValue(task, new CustomTaskItem("Tests"));
+        type.GetProperty("OutputPath")!.SetValue(task, new CustomTaskItem("."));
+        type.GetProperty("TestingPlatformCommandLineOptionDefault")!.SetValue(task, defaults);
+        return task;
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            string marker = Path.Combine(directory.FullName, ".git");
+            if (File.Exists(marker) || Directory.Exists(marker))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("The test output must remain inside its worktree.");
+    }
+
     private ConfigurationFileTask CreateConfigurationFileTask(InMemoryFileSystem fileSystem, string projectDirectory)
         => new(fileSystem)
         {
@@ -886,12 +1033,14 @@ namespace SomeNamespace
         public void SetMetadata(string metadataName, string metadataValue) => throw new NotImplementedException();
     }
 
-    private sealed class IsolatedAssemblyLoadContext : AssemblyLoadContext
+    private sealed class IsolatedAssemblyLoadContext : AssemblyLoadContext, IDisposable
     {
         public IsolatedAssemblyLoadContext()
             : base(isCollectible: true)
         {
         }
+
+        public void Dispose() => Unload();
 
         protected override Assembly? Load(AssemblyName assemblyName)
             => Default.Assemblies.FirstOrDefault(

@@ -254,6 +254,76 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task ControllerProcessEarlyExitPreservesActualDiagnosticAndDoesNotStartWaitOrTermination(bool pidUnavailable, bool telemetry)
+    {
+        var process = new Mock<IProcess>();
+        process.SetupGet(value => value.HasExited).Returns(true);
+        process.SetupGet(value => value.ExitCode).Returns(17);
+        if (pidUnavailable)
+        {
+            process.SetupGet(value => value.Id).Throws(new InvalidOperationException("No process associated."));
+        }
+        else
+        {
+            process.SetupGet(value => value.Id).Returns(37);
+        }
+
+        var launcher = new Mock<IProcessHandler>();
+        launcher.Setup(value => value.Start(It.IsAny<ProcessStartInfo>())).Returns(process.Object);
+        ServiceProvider services = new();
+        using var cancellation = new CTRLPlusCCancellationTokenSource(environment: Mock.Of<IEnvironment>());
+        services.AddService(cancellation);
+        services.AddService(new SystemTask());
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        var clock = new Mock<IClock>();
+        clock.SetupGet(value => value.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 3, 4, 5, TimeSpan.Zero).AddMilliseconds(123));
+        using var host = new TestHostControllersTestHost(
+            new([], [], [], testHostLauncher: null, requireProcessRestart: true),
+            services,
+            passiveNode: null,
+            Mock.Of<IEnvironment>(),
+            loggerFactory.Object,
+            clock.Object);
+        var output = new Mock<IPlatformOutputDevice>();
+        var messages = new List<IOutputDeviceData>();
+        var tokens = new List<CancellationToken>();
+        output.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, message, token) =>
+            {
+                messages.Add(message);
+                tokens.Add(token);
+            }).Returns(Task.CompletedTask);
+        var telemetryInfo = new Mock<ITelemetryInformation>();
+        telemetryInfo.SetupGet(value => value.IsEnabled).Returns(telemetry);
+        ProcessStartInfo startInfo = new("not-launched");
+
+        (int exit, TestHostProcessInformation info, string? extensions) = await RunTestHostProcessAsync(
+            host, startInfo, [], 42, launcher.Object, Mock.Of<IConfiguration>(),
+            testHostControllerIpc: null!, testHostControllerCancellationServer: null!,
+            new ProxyOutputDevice(output.Object, serverModeOutputDevice: null), telemetryInfo.Object, CancellationToken.None);
+
+        Assert.AreEqual(1, exit);
+        Assert.AreEqual(pidUnavailable ? 0 : 37, info.PID);
+        Assert.AreEqual(1, info.ExitCode);
+        Assert.IsFalse(info.HasExitedGracefully);
+        Assert.AreEqual(telemetry ? "[]" : null, extensions);
+        Assert.AreEqual(
+            "The test host process did not connect to the controller's named pipe after '0' seconds. The test host process exited with code '17'.",
+            Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(messages)).Message);
+        Assert.AreEqual(CancellationToken.None, Assert.ContainsSingle(tokens));
+        Assert.AreEqual("03:04:05.123", startInfo.EnvironmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME + "_42"]);
+        process.Verify(value => value.Kill(), Times.Never);
+        process.Verify(value => value.WaitForExitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        process.Verify(value => value.Dispose(), Times.Once);
+        launcher.Verify(value => value.Start(startInfo), Times.Once);
+    }
+
+    [TestMethod]
     public void TestHostControllerProcessExit_DisposedCancellationTokenSourceIsIgnored()
     {
         var cancellationTokenSource = new CancellationTokenSource();
@@ -336,6 +406,20 @@ public sealed class TestApplicationBuilderTests
     }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    [TestMethod]
+    public void ControllerRegistration_NullOrdinaryFactoriesAreRejectedWithExactParameterNames()
+    {
+        TestHostControllersManager manager = new();
+        Assert.AreEqual("environmentVariableProviderFactory", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddEnvironmentVariableProvider(null!)).ParamName);
+        Assert.AreEqual("environmentVariableProviderFactory", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddEnvironmentVariableProviderFirst(null!)).ParamName);
+        Assert.AreEqual("lifetimeHandler", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddProcessLifetimeHandler(null!)).ParamName);
+        Assert.AreEqual("testHostLauncherFactory", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddTestHostLauncher(null!)).ParamName);
+    }
+
     [TestMethod]
     public void TestHostControllerProcessExit_NonAuthoritativeAbortedExitCodePreservesSuccessfulIpcResult()
     {
@@ -693,6 +777,179 @@ public sealed class TestApplicationBuilderTests
     }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    [TestMethod]
+    [DataRow("environment")]
+    [DataRow("lifetime")]
+    [DataRow("launcher")]
+    [DataRow("consumer")]
+    public void ControllerRegistration_NullCompositeFactoryIsRejectedBeforeBuild(string kind)
+    {
+        TestHostControllersManager manager = new();
+        Action register = kind switch
+        {
+            "environment" => () => manager.AddEnvironmentVariableProvider((CompositeExtensionFactory<TestHostEnvironmentVariableProvider>)null!),
+            "lifetime" => () => manager.AddProcessLifetimeHandler((CompositeExtensionFactory<TestHostProcessLifetimeHandler>)null!),
+            "launcher" => () => manager.AddTestHostLauncher((CompositeExtensionFactory<TestHostLauncher>)null!),
+            _ => () => manager.AddDataConsumer((CompositeExtensionFactory<Consumer>)null!),
+        };
+        ArgumentNullException error = Assert.ThrowsExactly<ArgumentNullException>(register);
+        Assert.AreEqual("compositeServiceFactory", error.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow("environment")]
+    [DataRow("lifetime")]
+    [DataRow("launcher")]
+    [DataRow("consumer")]
+    public void ControllerRegistration_SameCompositeFactoryCannotBeRegisteredTwiceInOneCategory(string kind)
+    {
+        TestHostControllersManager manager = new();
+        Action register;
+        if (kind == "environment")
+        {
+            CompositeExtensionFactory<TestHostEnvironmentVariableProvider> factory = new(() => new TestHostEnvironmentVariableProvider("environment"));
+            register = () => manager.AddEnvironmentVariableProvider(factory);
+        }
+        else if (kind == "lifetime")
+        {
+            CompositeExtensionFactory<TestHostProcessLifetimeHandler> factory = new(() => new TestHostProcessLifetimeHandler("lifetime"));
+            register = () => manager.AddProcessLifetimeHandler(factory);
+        }
+        else if (kind == "launcher")
+        {
+            CompositeExtensionFactory<TestHostLauncher> factory = new(() => new TestHostLauncher("launcher"));
+            register = () => manager.AddTestHostLauncher(factory);
+        }
+        else
+        {
+            CompositeExtensionFactory<Consumer> factory = new(() => new Consumer("consumer"));
+            register = () => manager.AddDataConsumer(factory);
+        }
+
+        register();
+        ArgumentException error = Assert.ThrowsExactly<ArgumentException>(register);
+        Assert.Contains("already", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("registered", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerRegistration_CompositeLauncherIsInitializedAndStoredOnlyWhenEnabled(bool enabled)
+    {
+        TestHostControllersManager manager = new();
+        var launcher = new Mock<ITestHostLauncher>();
+        launcher.SetupGet(value => value.Uid).Returns("composite.launcher");
+        launcher.Setup(value => value.IsEnabledAsync()).ReturnsAsync(enabled);
+        Mock<IAsyncInitializableExtension> initialization = launcher.As<IAsyncInitializableExtension>();
+        initialization.Setup(value => value.InitializeAsync()).Returns(Task.CompletedTask);
+        int constructions = 0;
+        CompositeExtensionFactory<ITestHostLauncher> factory = new(serviceProvider =>
+        {
+            Assert.AreSame(_serviceProvider, serviceProvider);
+            constructions++;
+            return launcher.Object;
+        });
+        manager.AddTestHostLauncher(factory);
+
+        TestHostControllerConfiguration first = await manager.BuildAsync(_serviceProvider);
+        TestHostControllerConfiguration second = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual(enabled, first.RequireProcessRestart);
+        Assert.AreEqual(enabled, second.RequireProcessRestart);
+        Assert.AreSame(enabled ? launcher.Object : null, first.TestHostLauncher);
+        Assert.AreSame(first.TestHostLauncher, second.TestHostLauncher);
+        Assert.AreEqual(1, constructions);
+        initialization.Verify(value => value.InitializeAsync(), enabled ? Times.Once : Times.Never);
+        Assert.HasCount(enabled ? 1 : 0, _serviceProvider.Services.Where(value => ReferenceEquals(value, launcher.Object)));
+        launcher.Verify(value => value.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerRegistration_CompositeLaunchersRejectDuplicateIdentityAndMultipleEnabledInstances(bool sameIdentity)
+    {
+        TestHostControllersManager manager = new();
+        CompositeExtensionFactory<TestHostLauncher> first = new(() => new TestHostLauncher("first"));
+        CompositeExtensionFactory<TestHostLauncher> second = new(() => new TestHostLauncher(sameIdentity ? "first" : "second"));
+        manager.AddTestHostLauncher(first);
+        manager.AddTestHostLauncher(second);
+
+        InvalidOperationException error = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(_serviceProvider));
+
+        if (sameIdentity)
+        {
+            Assert.Contains("first", error.Message);
+            Assert.Contains(typeof(TestHostLauncher).ToString(), error.Message);
+        }
+        else
+        {
+            Assert.Contains("one", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("launcher", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerRegistration_CompositeAndOrdinaryFactoriesPreserveRelativeOrderAndFirstProviderPriority()
+    {
+        TestHostControllersManager manager = new();
+        manager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("ordinary.first"));
+        CompositeExtensionFactory<TestHostEnvironmentVariableProvider> composite = new(() => new TestHostEnvironmentVariableProvider("composite"));
+        manager.AddEnvironmentVariableProvider(composite);
+        manager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("ordinary.last"));
+        manager.AddEnvironmentVariableProviderFirst(_ => new TestHostEnvironmentVariableProvider("priority"));
+        manager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("ordinary.handler"));
+        CompositeExtensionFactory<TestHostProcessLifetimeHandler> handler = new(() => new TestHostProcessLifetimeHandler("composite.handler"));
+        manager.AddProcessLifetimeHandler(handler);
+        Consumer? createdConsumer = null;
+        CompositeExtensionFactory<Consumer> consumer = new(() => createdConsumer = new Consumer("controller.consumer"));
+        manager.AddDataConsumer(consumer);
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreSequenceEqual(
+            ["priority", "ordinary.first", "composite", "ordinary.last"],
+            configuration.EnvironmentVariableProviders.Select(value => value.Uid));
+        Assert.AreSequenceEqual(["ordinary.handler", "composite.handler"], configuration.LifetimeHandlers.Select(value => value.Uid));
+        Assert.AreEqual("controller.consumer", Assert.ContainsSingle(configuration.DataConsumer).Uid);
+        Assert.AreSame(createdConsumer, configuration.DataConsumer[0], "Data consumer registration clones its composite factory but must register the actual produced instance.");
+        Assert.IsTrue(configuration.RequireProcessRestart);
+        Assert.IsNull(configuration.TestHostLauncher);
+    }
+
+    [TestMethod]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task ControllerRegistration_CompletionObserversDoNotIntroduceControllerAndHonorEnabledState(bool controller, bool enabled)
+    {
+        TestHostControllersManager manager = new();
+        var observer = new Mock<ITestHostControllerRunCompletionHandler>();
+        observer.SetupGet(value => value.Uid).Returns("completion.observer");
+        observer.Setup(value => value.IsEnabledAsync()).ReturnsAsync(enabled);
+        int constructions = 0;
+        manager.AddRunCompletionHandler(_ =>
+        {
+            constructions++;
+            return observer.Object;
+        });
+        if (controller)
+        {
+            manager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("existing.controller"));
+        }
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual(controller, configuration.RequireProcessRestart);
+        Assert.AreEqual(controller ? 1 : 0, constructions);
+        Assert.HasCount(controller && enabled ? 1 : 0, configuration.RunCompletionHandlers);
+        if (controller && enabled)
+        {
+            Assert.AreSame(observer.Object, configuration.RunCompletionHandlers[0]);
+        }
+    }
+
     [TestMethod]
     public async Task TestHostLauncher_WhenRegistered_ForcesProcessRestartAndIsStored()
     {

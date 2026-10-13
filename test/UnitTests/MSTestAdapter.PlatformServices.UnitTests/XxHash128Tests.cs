@@ -14,6 +14,27 @@ namespace System.IO.Hashing.Tests;
 // Ported from https://github.com/dotnet/runtime/blob/513ff1acc981118e4b981e965dce614c3b8770f5/src/libraries/System.IO.Hashing/tests/XxHash128Tests.cs
 public class XxHash128Tests : TestContainer
 {
+    public void ScalarMixingPinsOverflowSignAndLengthContributions()
+    {
+        XxHashShared.Rrmxmx(0, 0).Should().Be(0);
+        XxHashShared.Rrmxmx(1, 3).Should().Be(0xbe25a3745a27a47dUL);
+        XxHashShared.Rrmxmx(0x0123456789abcdefUL, 241).Should().Be(0x9dc647e11c05869bUL);
+        XxHashShared.Rrmxmx(ulong.MaxValue, uint.MaxValue).Should().Be(0xd936f41feea49a4aUL);
+    }
+
+#if NETFRAMEWORK
+    public void ScalarRotationsPreserveBitsAndUseModuloWordSizeOffsets()
+    {
+        System.Numerics.BitOperations.RotateRight(0x81234567U, 0).Should().Be(0x81234567U);
+        System.Numerics.BitOperations.RotateRight(0x81234567U, 4).Should().Be(0x78123456U);
+        System.Numerics.BitOperations.RotateRight(0x81234567U, 32).Should().Be(0x81234567U);
+        System.Numerics.BitOperations.RotateRight(0x81234567U, 36).Should().Be(0x78123456U);
+        System.Numerics.BitOperations.RotateRight(0x81234567U, -4).Should().Be(0x12345678U);
+        System.Numerics.BitOperations.RotateLeft(0x81234567U, 4).Should().Be(0x12345678U);
+        System.Numerics.BitOperations.RotateLeft(0x8123456789abcdefUL, 4).Should().Be(0x123456789abcdef8UL);
+    }
+#endif
+
     public void Hash_InvalidInputs_Throws()
     {
         Action action = () => XxHash128.Hash(null!);

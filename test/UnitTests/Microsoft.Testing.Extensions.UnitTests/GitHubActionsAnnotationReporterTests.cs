@@ -7,10 +7,13 @@ using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -19,6 +22,232 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class GitHubActionsAnnotationReporterTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow("failed")]
+    [DataRow("error")]
+    [DataRow("timeout")]
+    [DataRow("cancelled")]
+    public async Task ConsumeAsync_FailureStatesEmitEscapedSourceAnnotationAndOriginalToken(string kind)
+    {
+        AnnotationExecutionFixture fixture = new(trace: true);
+        const string explanation = "boom\nnext%line";
+#pragma warning disable CS0618, MTP0001 // Exercise the supported legacy cancellation wire outcome.
+        TestNodeStateProperty state = kind switch
+        {
+            "failed" => new FailedTestNodeStateProperty(explanation),
+            "error" => new ErrorTestNodeStateProperty(explanation),
+            "timeout" => new TimeoutTestNodeStateProperty(explanation),
+            _ => new CancelledTestNodeStateProperty(explanation),
+        };
+#pragma warning restore CS0618, MTP0001
+        TestNode node = fixture.CreateNode(state);
+
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);
+
+        Assert.AreEqual("\n::error file=source.cs,line=42,col=1,title=Test failed%3A Tests.Sample::boom%0Anext%25line", Assert.ContainsSingle(fixture.Output));
+        Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.Tokens));
+        Assert.Contains(invocation => invocation.Method.Name == nameof(ILogger.LogAsync) && (LogLevel)invocation.Arguments[0] == LogLevel.Trace, fixture.Logger.Invocations);
+    }
+
+    [TestMethod]
+    [DataRow("explicit", "\n::warning file=source.cs,line=42,col=1,title=Test skipped%3A Tests.Sample::not available%0Ahere")]
+    [DataRow("missing", "\n::warning file=source.cs,line=42,col=1,title=Test skipped%3A Tests.Sample::The test was skipped without providing a reason.")]
+    public async Task ConsumeAsync_SkippedStatesEmitDeclaredLocationAndReason(string partition, string expected)
+    {
+        AnnotationExecutionFixture fixture = new(trace: true);
+        TestNode node = fixture.CreateNode(new SkippedTestNodeStateProperty(partition == "explicit" ? "not available\nhere" : null));
+
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);
+
+        Assert.AreEqual(expected, Assert.ContainsSingle(fixture.Output));
+        Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.Tokens));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_IgnoresUnrelatedNonterminalAndSupersededResults()
+    {
+        AnnotationExecutionFixture fixture = new();
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), Mock.Of<IData>(), TestContext.CancellationToken);
+        foreach (TestNode node in new[]
+        {
+            fixture.CreateNode(PassedTestNodeStateProperty.CachedInstance),
+            fixture.CreateNode(InProgressTestNodeStateProperty.CachedInstance),
+            new TestNode { Uid = "no-state", DisplayName = "NoState" },
+            fixture.CreateNode(new FailedTestNodeStateProperty("not final")),
+        })
+        {
+            if (node.Properties.FirstOrDefault<FailedTestNodeStateProperty>() is not null)
+            {
+                node.Properties.Add(new RetryAttemptProperty(1, isSuperseded: true));
+            }
+
+            await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);
+        }
+
+        Assert.IsEmpty(fixture.Output);
+        Assert.IsEmpty(fixture.Tokens);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_HistoryEnrichmentUsesObservedFailureAndActualAnnotationDelivery()
+    {
+        AnnotationExecutionFixture fixture = new(history: new FakeHistoryService(new GitHubActionsHistoryStats(7, 3), 14));
+        TestNode node = fixture.CreateNode(new FailedTestNodeStateProperty("boom"));
+
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);
+
+        Assert.AreEqual(
+            "\n::error file=source.cs,line=42,col=1,title=Test failed%3A Tests.Sample::boom Historical context: failed 3 and flaked 0 of 10 prior runs within the 14-day history window.",
+            Assert.ContainsSingle(fixture.Output));
+    }
+
+    [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(2, false)]
+    [DataRow(8, true)]
+    [DataRow(9, true)]
+    [DataRow(17, true)]
+    public async Task OnTestSessionFinishingAsync_EmitsOnlyNonResultExitAnnotation(int exitCode, bool expectedAnnotation)
+    {
+        AnnotationExecutionFixture fixture = new(trace: true);
+        fixture.ExitCode.Setup(value => value.GetProcessExitCode()).Returns(exitCode);
+        var session = new Mock<ITestSessionContext>();
+        session.SetupGet(value => value.CancellationToken).Returns(TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionStartingAsync(session.Object);
+        await fixture.Reporter.OnTestSessionFinishingAsync(session.Object);
+
+        if (expectedAnnotation)
+        {
+            Assert.AreEqual("\n" + GitHubActionsAnnotationReporter.GetExitCodeAnnotation(exitCode), Assert.ContainsSingle(fixture.Output));
+            Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.Tokens));
+        }
+        else
+        {
+            Assert.IsEmpty(fixture.Output);
+            Assert.IsEmpty(fixture.Tokens);
+        }
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_DisabledReporterDoesNotReadExitOrEmit()
+    {
+        AnnotationExecutionFixture fixture = new(enabled: false);
+        fixture.ExitCode.Setup(value => value.GetProcessExitCode()).Throws(new InvalidOperationException("must not inspect exit"));
+
+        Assert.IsFalse(await fixture.Reporter.IsEnabledAsync());
+        await fixture.Reporter.OnTestSessionFinishingAsync(Mock.Of<ITestSessionContext>());
+
+        fixture.ExitCode.Verify(value => value.GetProcessExitCode(), Times.Never);
+        Assert.IsEmpty(fixture.Output);
+        Assert.AreSequenceEqual([typeof(TestNodeUpdateMessage)], fixture.Reporter.DataTypesConsumed);
+        Assert.AreEqual(nameof(GitHubActionsAnnotationReporter), fixture.Reporter.Uid);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ReporterCallbacks_PropagateCancellationWithoutOutput(bool finish)
+    {
+        AnnotationExecutionFixture fixture = new();
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        var session = new Mock<ITestSessionContext>();
+        session.SetupGet(value => value.CancellationToken).Returns(cancellation.Token);
+        OperationCanceledException actual = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => finish
+                ? fixture.Reporter.OnTestSessionFinishingAsync(session.Object)
+                : fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), Mock.Of<IData>(), cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, actual.CancellationToken);
+        Assert.IsEmpty(fixture.Output);
+        Assert.IsEmpty(fixture.Logger.Invocations);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ReporterCallbacks_UnexpectedOutputFailureIsReportedWithoutEscaping(bool finish)
+    {
+        AnnotationExecutionFixture fixture = new();
+        IOException expected = new("output unavailable");
+        fixture.OutputDevice.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Throws(expected);
+        fixture.ExitCode.Setup(value => value.GetProcessExitCode()).Returns(8);
+        if (finish)
+        {
+            await fixture.Reporter.OnTestSessionFinishingAsync(Mock.Of<ITestSessionContext>());
+        }
+        else
+        {
+            await fixture.Reporter.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                new TestNodeUpdateMessage(new SessionUid("session"), fixture.CreateNode(new FailedTestNodeStateProperty("boom"))),
+                TestContext.CancellationToken);
+        }
+
+        Assert.IsEmpty(fixture.Output);
+        Assert.Contains(
+            invocation => invocation.Method.Name == nameof(ILogger.Log)
+                && invocation.Arguments[1].ToString()!.Contains("output unavailable", StringComparison.Ordinal)
+                && invocation.Arguments[1].ToString()!.Contains(finish ? nameof(GitHubActionsAnnotationReporter.OnTestSessionFinishingAsync) : nameof(GitHubActionsAnnotationReporter.ConsumeAsync), StringComparison.Ordinal),
+            fixture.Logger.Invocations);
+    }
+
+    private sealed class AnnotationExecutionFixture
+    {
+        private readonly string _workspace = Path.Combine(Path.GetTempPath(), "annotation-workspace");
+
+        public AnnotationExecutionFixture(bool enabled = true, bool trace = false, IGitHubActionsHistoryService? history = null)
+        {
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(value => value.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(enabled ? "true" : "false");
+            environment.Setup(value => value.GetEnvironmentVariable("GITHUB_WORKSPACE")).Returns(_workspace);
+            var fileSystem = new Mock<IFileSystem>();
+            fileSystem.Setup(value => value.ExistFile(It.IsAny<string>())).Returns(true);
+            Logger.Setup(value => value.IsEnabled(LogLevel.Trace)).Returns(trace);
+            Logger.Setup(value => value.IsEnabled(LogLevel.Warning)).Returns(true);
+            var factory = new Mock<ILoggerFactory>();
+            factory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(Logger.Object);
+            OutputDevice.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+                .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, token) =>
+                {
+                    Output.Add(((FormattedTextOutputDeviceData)data).Text);
+                    Tokens.Add(token);
+                }).Returns(Task.CompletedTask);
+            Reporter = new(
+                new TestCommandLineOptions(new() { [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [] }),
+                environment.Object, fileSystem.Object, OutputDevice.Object, ExitCode.Object, factory.Object, history);
+        }
+
+        public GitHubActionsAnnotationReporter Reporter { get; }
+
+        public Mock<IOutputDevice> OutputDevice { get; } = new();
+
+        public Mock<ITestApplicationProcessExitCode> ExitCode { get; } = new();
+
+        public Mock<ILogger> Logger { get; } = new();
+
+        public List<string> Output { get; } = [];
+
+        public List<CancellationToken> Tokens { get; } = [];
+
+        public TestNode CreateNode(TestNodeStateProperty state)
+        {
+            var position = new LinePosition(42, 1);
+            return new TestNode
+            {
+                Uid = "sample",
+                DisplayName = "Tests.Sample",
+                Properties = new PropertyBag(
+                    state,
+                    new TestFileLocationProperty(Path.Combine(_workspace, "source.cs"), new LinePositionSpan(position, position))),
+            };
+        }
+    }
+
     [TestMethod]
     public void AppendHistoryContext_AddsPriorFailureCounts()
     {

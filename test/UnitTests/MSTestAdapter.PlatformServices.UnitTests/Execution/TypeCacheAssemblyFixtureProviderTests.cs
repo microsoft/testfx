@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -17,6 +18,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TypeCacheAssemblyFixtureProviderTests : TestContainer
 {
+    public void ProviderMarkerFailureKeepsOriginalCauseWhenAssemblyNameCannotBeInspected()
+    {
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        foreach (Exception nameFailure in new Exception[]
+        {
+            new FileNotFoundException("name unavailable"),
+            new FileLoadException("name unavailable"),
+            new BadImageFormatException("name unavailable"),
+            new System.Security.SecurityException("name unavailable"),
+            new NotSupportedException("name unavailable"),
+        })
+        {
+            NameUnavailableAssembly assembly = new(nameFailure);
+            TypeLoadException cause = new("attribute unavailable");
+            _testablePlatformServiceProvider.MockReflectionOperations
+                .Setup(value => value.GetCustomAttributes(assembly, typeof(AssemblyFixtureProviderAttribute)))
+                .Throws(cause);
+            Action load = () => TypeCache.LoadProviderMarkers(assembly);
+
+            TypeInspectionException actual = load.Should().ThrowExactly<TypeInspectionException>().Which;
+            actual.Message.Should().Be(string.Format(
+                CultureInfo.CurrentCulture, Resource.UTA_AssemblyFixtureProviderLoadFailed, "<unknown>", "attribute unavailable"));
+            actual.InnerException.Should().BeSameAs(cause);
+            assembly.NameReads.Should().Be(1);
+        }
+    }
+
     private readonly TypeCache _typeCache;
     private readonly Mock<ReflectHelper> _mockReflectHelper;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
@@ -325,6 +353,19 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         act.Should().Throw<TypeInspectionException>()
             .WithMessage("*UTA072*")
             .WithInnerException(typeof(TypeLoadException));
+    }
+
+    private sealed class NameUnavailableAssembly(Exception failure) : Assembly
+    {
+        public int NameReads { get; private set; }
+
+        public override string FullName => "name-unavailable-fixture";
+
+        public override AssemblyName GetName()
+        {
+            NameReads++;
+            throw failure;
+        }
     }
 
     private static TestMethod CreateTestMethod(string methodName, string className, string assemblyName)

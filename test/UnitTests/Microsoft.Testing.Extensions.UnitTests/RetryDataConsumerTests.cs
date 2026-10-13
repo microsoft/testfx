@@ -6,10 +6,12 @@
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -21,6 +23,109 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class RetryDataConsumerTests
 {
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(0.0, 0, 0, 0, false, 0.0, DisplayName = "Empty run")]
+    [DataRow(20.0, 10, 1, 1, false, 10.0, DisplayName = "Below percentage boundary")]
+    [DataRow(20.0, 10, 2, 1, false, 20.0, DisplayName = "At percentage boundary")]
+    [DataRow(20.0, 10, 3, 1, true, 30.0, DisplayName = "Folded failures above percentage boundary")]
+    [DataRow(0.0, 10, 1, 1, true, 10.0, DisplayName = "Zero percentage rejects a failure")]
+    [DataRow(100.0, 3, 3, 1, false, 100.0, DisplayName = "All failures at maximum percentage")]
+    [DataRow(66.66, 3, 2, 1, true, 66.67, DisplayName = "Fractional boundary and rounded explanation")]
+    public async Task EvaluateThreshold_Percentage_UsesResultCountsAndStrictBoundary(
+        double threshold, int executed, int failedResults, int distinctFailures, bool shouldDisable, double expectedPercentage)
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+            using ConnectedConsumer fixture = await CreateThresholdFixtureAsync(executed, failedResults, distinctFailures);
+            var options = new TestCommandLineOptions(new()
+            {
+                [RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName] = [threshold.ToString(CultureInfo.InvariantCulture)],
+            });
+            List<ErrorMessageOutputDeviceData> messages = [];
+            IOutputDevice output = CreateThresholdOutput(messages);
+
+            bool actual = await RetryThresholdPolicy.EvaluateAsync(
+                options, Mock.Of<IOutputDeviceDataProducer>(), output, fixture.Server, TestContext.CancellationToken);
+
+            Assert.AreEqual(shouldDisable, actual);
+            if (shouldDisable)
+            {
+                string expected = FormattableString.Invariant($"""
+                    Failure threshold policy is enabled, failed tests will not be restarted.
+                    Percentage failed threshold is {threshold}% and {expectedPercentage}% tests failed ({failedResults}/{executed})
+
+                    """);
+                Assert.AreEqual(expected.Replace("\r\n", "\n"), Assert.ContainsSingle(messages).Message.Replace("\r\n", "\n"));
+            }
+            else
+            {
+                Assert.IsEmpty(messages);
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    [TestMethod]
+    [DataRow(2, 3, 1, false, DisplayName = "Below distinct test boundary")]
+    [DataRow(1, 3, 1, false, DisplayName = "Folded rows at distinct test boundary")]
+    [DataRow(1, 3, 2, true, DisplayName = "Above distinct test boundary")]
+    [DataRow(0, 1, 1, true, DisplayName = "Zero count rejects a failure")]
+    public async Task EvaluateThreshold_MaxTests_UsesDistinctTestsAndStrictBoundary(
+        int threshold, int failedResults, int distinctFailures, bool shouldDisable)
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+            using ConnectedConsumer fixture = await CreateThresholdFixtureAsync(5, failedResults, distinctFailures);
+            var options = new TestCommandLineOptions(new()
+            {
+                [RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName] = [threshold.ToString(CultureInfo.InvariantCulture)],
+            });
+            List<ErrorMessageOutputDeviceData> messages = [];
+
+            bool actual = await RetryThresholdPolicy.EvaluateAsync(
+                options, Mock.Of<IOutputDeviceDataProducer>(), CreateThresholdOutput(messages), fixture.Server, TestContext.CancellationToken);
+
+            Assert.AreEqual(shouldDisable, actual);
+            if (shouldDisable)
+            {
+                string expected = FormattableString.Invariant($"""
+                    Failure threshold policy is enabled, failed tests will not be restarted.
+                    Maximum failed tests threshold is {threshold} and {distinctFailures} tests failed
+
+                    """);
+                Assert.AreEqual(expected.Replace("\r\n", "\n"), Assert.ContainsSingle(messages).Message.Replace("\r\n", "\n"));
+            }
+            else
+            {
+                Assert.IsEmpty(messages);
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
+    }
+
+    [TestMethod]
+    public async Task EvaluateThreshold_NoPolicy_DoesNotDisableRetries()
+    {
+        using ConnectedConsumer fixture = await CreateThresholdFixtureAsync(5, 3, 2);
+        List<ErrorMessageOutputDeviceData> messages = [];
+
+        bool actual = await RetryThresholdPolicy.EvaluateAsync(
+            new TestCommandLineOptions([]), Mock.Of<IOutputDeviceDataProducer>(), CreateThresholdOutput(messages), fixture.Server, TestContext.CancellationToken);
+
+        Assert.IsFalse(actual);
+        Assert.IsEmpty(messages);
+    }
 
     [TestMethod]
     public async Task ConsumeAsync_SupersededRetryAttempt_IsIgnored()
@@ -377,6 +482,39 @@ public sealed class RetryDataConsumerTests
 
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => consumer.OnTestSessionFinishingAsync(CreateSessionContext(TestContext.CancellationToken)));
+    }
+
+    private async Task<ConnectedConsumer> CreateThresholdFixtureAsync(int executed, int failedResults, int distinctFailures)
+    {
+        ConnectedConsumer fixture = await ConnectedConsumer.CreateAsync([], TestContext.CancellationToken);
+        try
+        {
+            for (int index = 0; index < executed; index++)
+            {
+                bool failed = index < failedResults;
+                string uid = failed ? $"failed-{index % distinctFailures}" : $"passed-{index}";
+                await fixture.Consumer.ConsumeAsync(
+                    null!, CreateUpdate(uid, failed ? new FailedTestNodeStateProperty() : PassedTestNodeStateProperty.CachedInstance), TestContext.CancellationToken);
+            }
+
+            await fixture.FinishAsync(TestContext.CancellationToken);
+            return fixture;
+        }
+        catch
+        {
+            fixture.Dispose();
+            throw;
+        }
+    }
+
+    private static IOutputDevice CreateThresholdOutput(List<ErrorMessageOutputDeviceData> messages)
+    {
+        var output = new Mock<IOutputDevice>();
+        output.Setup(device => device.DisplayAsync(
+            It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) => messages.Add((ErrorMessageOutputDeviceData)data))
+            .Returns(Task.CompletedTask);
+        return output.Object;
     }
 
     private static TestNodeUpdateMessage CreateUpdate(string uid, params IProperty[] properties)

@@ -3,6 +3,8 @@
 
 extern alias ghactions;
 
+using System.Text.Json.Nodes;
+
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
@@ -36,6 +38,127 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class CiRunSummaryAggregationTests
 {
+    [TestMethod]
+    [DataRow("assemblyName")]
+    [DataRow("modulePath")]
+    [DataRow("targetFramework")]
+    [DataRow("architecture")]
+    [DataRow("sessionUid")]
+    [DataRow("attemptNumber")]
+    [DataRow("totalTests")]
+    [DataRow("passedTests")]
+    [DataRow("failedTests")]
+    [DataRow("skippedTests")]
+    [DataRow("testDurationTicks")]
+    [DataRow("inconsistentCounts")]
+    [DataRow("failures")]
+    [DataRow("flakyTests")]
+    [DataRow("slowestTests")]
+    [DataRow("topFailingClasses")]
+    [DataRow("coverage")]
+    [DataRow("coverageMetrics")]
+    [DataRow("coverageThresholds")]
+    public async Task ReadAndAggregate_InvalidModulePartitionsAreRejectedByBothProviders(string partition)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule azure = CreateModule("Azure", passed: 1, failed: 0);
+            GitHubCiRunSummaryModule github = CreateGitHubModule("GitHub");
+            string azurePath = await CiRunSummaryAggregation.WriteFragmentAsync(directory, "azure-devops", "azure-devops", azure);
+            string githubPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(directory, "github-actions", "github-actions", github);
+            foreach (string path in new[] { azurePath, githubPath })
+            {
+                JsonObject root = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+                JsonObject module = root["module"]!.AsObject();
+                switch (partition)
+                {
+                    case "assemblyName":
+                    case "modulePath":
+                    case "targetFramework":
+                    case "architecture":
+                    case "sessionUid":
+                        module[partition] = " ";
+                        break;
+                    case "attemptNumber":
+                        module[partition] = 0;
+                        break;
+                    case "totalTests":
+                    case "passedTests":
+                    case "failedTests":
+                    case "skippedTests":
+                    case "testDurationTicks":
+                        module[partition] = -1;
+                        break;
+                    case "inconsistentCounts":
+                        module["totalTests"] = 99;
+                        break;
+                    case "coverageMetrics":
+                        module["coverage"]!["metrics"] = null;
+                        break;
+                    case "coverageThresholds":
+                        module["coverage"]!["thresholds"] = null;
+                        break;
+                    default:
+                        module[partition] = null;
+                        break;
+                }
+
+                File.WriteAllText(path, root.ToJsonString());
+            }
+
+            FormatException azureError = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(azurePath, azure)], "azure-devops",
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+            FormatException githubError = Assert.ThrowsExactly<FormatException>(() => GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [CreateGitHubInput(githubPath, github)], "github-actions",
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+            Assert.AreEqual($"Invalid CI summary module in '{azurePath}'.", azureError.Message);
+            Assert.AreEqual($"Invalid CI summary module in '{githubPath}'.", githubError.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("version")]
+    [DataRow("provider")]
+    [DataRow("module")]
+    public async Task ReadAndAggregate_InvalidFragmentHeadersAreRejectedBeforeAggregation(string partition)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("Header", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(directory, "azure-devops", "azure-devops", module);
+            JsonObject root = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            if (partition == "version")
+            {
+                root["schemaVersion"] = 2;
+            }
+            else if (partition == "provider")
+            {
+                root["provider"] = "github-actions";
+            }
+            else
+            {
+                root["module"] = null;
+            }
+
+            File.WriteAllText(path, root.ToJsonString());
+            FormatException error = Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [CreateInput(path, module)], "azure-devops",
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+            Assert.AreEqual($"Invalid azure-devops summary fragment '{path}'.", error.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [TestMethod]
     [DataRow("")]
     [DataRow(" ")]

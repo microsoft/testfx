@@ -244,6 +244,99 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
         tracker.ScopeDisposeCount.Should().Be(1);
     }
 
+    public async Task DisposeAsyncSyncScopeFallbackPreservesInstanceAndRequiresCleanup()
+    {
+        List<string> events = [];
+        var instance = new Mock<IDisposable>();
+        instance.Setup(value => value.Dispose()).Callback(() => events.Add("instance"));
+        var scope = new Mock<IServiceScope>();
+        scope.Setup(value => value.Dispose()).Callback(() => events.Add("scope"));
+        var lease = new MicrosoftExtensionsTestClassInstanceLease(instance.Object, scope.Object);
+
+        lease.Instance.Should().BeSameAs(instance.Object);
+        lease.RequiresCleanup.Should().BeTrue();
+        await lease.DisposeAsync();
+        events.Should().Equal("instance", "scope");
+    }
+
+    public async Task DisposeAsyncSingleFailurePreservesExceptionAndStillDisposesScope()
+    {
+        var failure = new InvalidOperationException("instance disposal failure");
+        var instance = new Mock<IDisposable>();
+        instance.Setup(value => value.Dispose()).Throws(failure);
+        var scope = new Mock<IServiceScope>();
+        var lease = new MicrosoftExtensionsTestClassInstanceLease(instance.Object, scope.Object);
+
+        Func<Task> dispose = () => lease.DisposeAsync();
+        (await dispose.Should().ThrowAsync<InvalidOperationException>()).Which.Should().BeSameAs(failure);
+        scope.Verify(value => value.Dispose(), Times.Once);
+    }
+
+    public async Task DisposeAsyncAggregatesEveryFailureInDisposalOrder()
+    {
+        var asynchronous = new InvalidOperationException("async instance");
+        var synchronous = new InvalidOperationException("sync instance");
+        var scopeFailure = new InvalidOperationException("async scope");
+        var instance = new Mock<IDisposable>();
+        instance.Setup(value => value.Dispose()).Throws(synchronous);
+        instance.As<IAsyncDisposable>().Setup(value => value.DisposeAsync()).Throws(asynchronous);
+        var scope = new Mock<IServiceScope>();
+        scope.As<IAsyncDisposable>().Setup(value => value.DisposeAsync()).Throws(scopeFailure);
+        var lease = new MicrosoftExtensionsTestClassInstanceLease(instance.Object, scope.Object);
+
+        Func<Task> dispose = () => lease.DisposeAsync();
+        AggregateException aggregate = (await dispose.Should().ThrowAsync<AggregateException>()).Which;
+#if NET6_0_OR_GREATER
+        aggregate.InnerExceptions.Should().Equal(asynchronous, synchronous, scopeFailure);
+        instance.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Once);
+#else
+        aggregate.InnerExceptions.Should().Equal(synchronous, scopeFailure);
+        instance.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Never);
+#endif
+        instance.Verify(value => value.Dispose(), Times.Once);
+        scope.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Once);
+        scope.Verify(value => value.Dispose(), Times.Never);
+    }
+
+    public void CreateInstanceSelectionAndScopeFailuresAreBothRetained()
+    {
+        var disposalFailure = new InvalidOperationException("scope failure");
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(value => value.ServiceProvider).Returns(Mock.Of<IServiceProvider>());
+        scope.Setup(value => value.Dispose()).Throws(disposalFailure);
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        scopeFactory.Setup(value => value.CreateScope()).Returns(scope.Object);
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(scopeFactory.Object);
+
+        Action create = () => factory.CreateInstance(typeof(MultiplePreferredConstructorsTestClass), CreateTestContext());
+        AggregateException aggregate = create.Should().Throw<AggregateException>().Which;
+        aggregate.InnerExceptions.Count.Should().Be(2);
+        aggregate.InnerExceptions[0].Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain("multiple public constructors");
+        aggregate.InnerExceptions[1].Should().BeSameAs(disposalFailure);
+        scope.Verify(value => value.Dispose(), Times.Once);
+    }
+
+    public void CreateInstanceActivationAndScopeFailuresAreBothRetained()
+    {
+        var disposalFailure = new InvalidOperationException("scope failure");
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(value => value.ServiceProvider).Returns(new StubServiceProvider(new ScopedService()));
+        scope.Setup(value => value.Dispose()).Throws(disposalFailure);
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        scopeFactory.Setup(value => value.CreateScope()).Returns(scope.Object);
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(scopeFactory.Object);
+
+        Action create = () => factory.CreateInstance(typeof(ThrowingServiceConstructorTestClass), CreateTestContext());
+        AggregateException aggregate = create.Should().Throw<AggregateException>().Which;
+        aggregate.InnerExceptions.Count.Should().Be(2);
+        aggregate.InnerExceptions[0].Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain(typeof(ThrowingServiceConstructorTestClass).FullName);
+        aggregate.InnerExceptions[0].GetBaseException().Message.Should().Be("activation failure");
+        aggregate.InnerExceptions[1].Should().BeSameAs(disposalFailure);
+        scope.Verify(value => value.Dispose(), Times.Once);
+    }
+
     public void FactoryProviderRestoresPreviousFactory()
     {
         var first = new StubFactory();
