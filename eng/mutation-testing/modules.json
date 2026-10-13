@@ -308,6 +308,7 @@
         "test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj",
         "test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj"
       ],
+      "targetFramework": "net9.0",
       "timeoutMinutes": 360,
       "enabled": true,
       "legacyReport": false

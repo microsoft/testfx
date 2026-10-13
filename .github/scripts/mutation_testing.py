@@ -16,6 +16,7 @@ from xml.sax.saxutils import escape
 
 
 SCHEMA_VERSION = 1
+DEFAULT_TARGET_FRAMEWORK = "net8.0"
 MUTANT_STATUSES = (
     "Killed",
     "Survived",
@@ -89,6 +90,16 @@ def load_manifest(path: Path) -> dict[str, Any]:
         ):
             raise ValueError(
                 f"Mutation module {module_id} must have one or more test projects"
+            )
+
+        target_framework = module.get("targetFramework", DEFAULT_TARGET_FRAMEWORK)
+        if (
+            not isinstance(target_framework, str)
+            or not target_framework
+            or target_framework != target_framework.strip()
+        ):
+            raise ValueError(
+                f"Mutation module {module_id} has an invalid targetFramework"
             )
 
         timeout = module.get("timeoutMinutes")
@@ -185,7 +196,16 @@ def build_matrix(manifest: dict[str, Any], repository_root: Path) -> dict[str, A
     for excluded in manifest.get("excludedProjects", []):
         if not (repository_root / excluded["project"]).is_file():
             raise ValueError(f"Excluded mutation project does not exist: {excluded['project']}")
-    return {"include": modules}
+    return {
+        "include": [
+            module | {
+                "targetFramework": module.get(
+                    "targetFramework", DEFAULT_TARGET_FRAMEWORK
+                )
+            }
+            for module in modules
+        ]
+    }
 
 
 def write_solution(module: dict[str, Any], output: Path) -> None:
