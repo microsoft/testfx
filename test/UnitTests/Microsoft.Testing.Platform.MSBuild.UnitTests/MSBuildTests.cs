@@ -941,8 +941,13 @@ namespace SomeNamespace
     {
         // Coverage comparisons can supply an independent copy instead of instrumenting shared build outputs.
         string localAssembly = Path.Combine(AppContext.BaseDirectory, "LegacyMSBuild", "Microsoft.Testing.Platform.MSBuild.dll");
+#if DEBUG
+        const string Configuration = "Debug";
+#else
+        const string Configuration = "Release";
+#endif
         string assemblyPath = File.Exists(localAssembly) ? localAssembly : Path.Combine(
-            FindRepositoryRoot(), "artifacts", "bin", "Microsoft.Testing.Platform.MSBuild", "Debug", "netstandard2.0", "Microsoft.Testing.Platform.MSBuild.dll");
+            FindRepositoryRoot(), "artifacts", "bin", "Microsoft.Testing.Platform.MSBuild", Configuration, "netstandard2.0", "Microsoft.Testing.Platform.MSBuild.dll");
         Assembly assembly = context.LoadFromAssemblyPath(assemblyPath);
         Type type = assembly.GetType(typeof(ConfigurationFileTask).FullName!, throwOnError: true)!;
         object task = Activator.CreateInstance(type)!;

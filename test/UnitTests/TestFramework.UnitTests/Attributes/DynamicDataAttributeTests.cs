@@ -138,7 +138,11 @@ public class DynamicDataAttributeTests : TestContainer
 
         public static IEnumerable<object[]> SetterOnly
         {
-            set => throw new InvalidOperationException("Must be rejected before invocation.");
+            set
+            {
+                _ = value;
+                throw new InvalidOperationException("Must be rejected before invocation.");
+            }
         }
 
         public static IEnumerable<object[]> ThrowingProperty => throw new InvalidOperationException("source sentinel");
