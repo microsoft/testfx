@@ -507,6 +507,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                 {{(multiTarget ? "<TargetFrameworks>net8.0;net9.0</TargetFrameworks>" : "<TargetFramework>net8.0</TargetFramework>")}}
                 <OutputType>Exe</OutputType>
                 <EnableMSTestRunner>true</EnableMSTestRunner>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
                 <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
                 <NoWarn>$(NoWarn);NU1507</NoWarn>
                 {{properties}}

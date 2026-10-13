@@ -14,9 +14,10 @@ the packages shipped by this repository retain the central CodeCoverage version.
 per-module mapping shards to the `TestFx_AffectedTestsMaps` artifact produced by pipeline definition 209. Its builder
 hook is registered by the repository's hand-authored MTP entry points.
 
-Package `18.13.0-preview.26508.3` includes the fixed JSON discovery path and Azure DevOps upload request, and ships
-both `netstandard2.0` and `net8.0` assets for the base extension, collector, CodeCoverage extension, and Azure DevOps
-provider.
+Package `18.13.0-preview.26508.3` is the minimum known-good build for this rollout: it includes the fixed JSON
+discovery path and Azure DevOps upload request, and ships both `netstandard2.0` and `net8.0` assets for the base
+extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
+are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
 Affected-test execution is enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
 `907535df2f7eb8e1845571867684244ad04b031b`. It includes both
