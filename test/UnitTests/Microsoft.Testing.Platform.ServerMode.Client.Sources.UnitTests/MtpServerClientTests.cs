@@ -1173,6 +1173,72 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public void TestNodesUpdated_MixedChanges_PreservesDuplicatesAndOrder()
+    {
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var client = new MtpServerClient(connection);
+        var updates = new List<MtpTestNodeUpdateEventArgs>();
+        client.TestNodesUpdated += (_, args) => updates.Add(args);
+        var node = new Dictionary<string, object?> { [JsonRpcStrings.Uid] = "duplicate" };
+        var change = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Node] = node,
+            [JsonRpcStrings.Parent] = "parent",
+        };
+        var parameters = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.RunId] = "not-a-guid",
+            [JsonRpcStrings.Changes] = new object[]
+            {
+                "not-a-change",
+                new Dictionary<string, object?>(),
+                new Dictionary<string, object?> { [JsonRpcStrings.Node] = "not-a-node" },
+                change,
+                new Dictionary<string, object?>
+                {
+                    [JsonRpcStrings.Node] = new Dictionary<string, object?> { [JsonRpcStrings.Uid] = "middle" },
+                    [JsonRpcStrings.Parent] = 42,
+                },
+                change,
+            },
+        };
+
+        InvokeNotificationDecoder(client, "RaiseTestNodesUpdated", parameters);
+
+        Assert.HasCount(1, updates);
+        Assert.AreEqual(Guid.Empty, updates[0].RunId);
+        Assert.AreSequenceEqual(new[] { "duplicate", "middle", "duplicate" }, updates[0].Changes.Select(update => update.Uid));
+        Assert.AreSequenceEqual(new string?[] { "parent", null, "parent" }, updates[0].Changes.Select(update => update.ParentUid));
+        Assert.AreNotSame(node, updates[0].Changes[0].Node);
+        Assert.AreNotSame(updates[0].Changes[0].Node, updates[0].Changes[2].Node);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void TestNodesUpdated_MalformedChanges_RaisesEmptyUpdate(bool wrongCollectionType)
+    {
+        using var handler = new ControlledMessageHandler();
+        using var connection = new MtpJsonRpcConnection(handler);
+        using var client = new MtpServerClient(connection);
+        var updates = new List<MtpTestNodeUpdateEventArgs>();
+        client.TestNodesUpdated += (_, args) => updates.Add(args);
+        var parameters = new Dictionary<string, object?>
+        {
+            [JsonRpcStrings.Changes] = wrongCollectionType
+                ? "not-a-collection"
+                : new object[] { "not-a-change", new Dictionary<string, object?> { [JsonRpcStrings.Node] = 42 } },
+        };
+
+        InvokeNotificationDecoder(client, "RaiseTestNodesUpdated", parameters);
+
+        Assert.HasCount(1, updates);
+        Assert.AreEqual(Guid.Empty, updates[0].RunId);
+        Assert.IsEmpty(updates[0].Changes);
+    }
+
+    [TestMethod]
     public async Task Dispose_DetachesNotificationAndServerRequestHandlers()
     {
         var firstRead = new TaskCompletionSource<RpcMessage?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -1853,10 +1919,10 @@ public sealed class MtpServerClientTests
             methodName,
             BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(connection, arguments)!;
 
-    private static void InvokeNotificationDecoder(MtpServerClient client, string methodName)
+    private static void InvokeNotificationDecoder(MtpServerClient client, string methodName, IDictionary<string, object?>? parameters = null)
         => typeof(MtpServerClient).GetMethod(
             methodName,
-            BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(client, new object?[] { null });
+            BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(client, new object?[] { parameters });
 
     private static T GetSingleRequestParams<T>(FakeMtpServer server, string method)
         where T : class
