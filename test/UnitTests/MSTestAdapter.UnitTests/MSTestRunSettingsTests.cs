@@ -21,6 +21,64 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public sealed class MSTestRunSettingsTests : TestContainer
 {
+    public void TestParametersOverrideExactNamesPreserveEqualsAndRetainUnchangedXml()
+    {
+        const string Settings = """
+            <RunSettings>
+              <RunConfiguration>
+                <DesignMode>false</DesignMode>
+                <CollectSourceInformation>true</CollectSourceInformation>
+                <ResultsDirectory>chosen-results</ResultsDirectory>
+              </RunConfiguration>
+              <TestRunParameters>
+                <!-- preserved -->
+                <Parameter name="existing" value="old" custom="retained" />
+                <Parameter name="untouched" value="original" />
+                <Parameter value="nameless" />
+              </TestRunParameters>
+            </RunSettings>
+            """;
+        var logger = new Mock<IMessageLogger>(MockBehavior.Strict);
+        MSTestRunSettings settings = CreateRunSettings(
+            Settings, logger.Object, testRunParameters: ["existing=first=second", "new=one=two", "Existing=case-sensitive"]);
+        var document = XDocument.Parse(settings.SettingsXml!);
+        XElement configuration = document.Root!.Element("RunConfiguration")!;
+        configuration.Elements().Select(element => (element.Name.LocalName, element.Value)).Should().Equal(
+            ("DesignMode", "false"), ("CollectSourceInformation", "true"), ("ResultsDirectory", "chosen-results"));
+        configuration.Nodes().OfType<XComment>().Should().BeEmpty();
+        XElement parameters = document.Root.Element("TestRunParameters")!;
+        parameters.Elements().Select(element => (element.Attribute("name")?.Value, element.Attribute("value")!.Value)).Should().Equal(
+            ("existing", "first=second"), ("untouched", "original"), (null, "nameless"),
+            ("new", "one=two"), ("Existing", "case-sensitive"));
+        parameters.Element("Parameter")!.Attribute("custom")!.Value.Should().Be("retained");
+        parameters.Nodes().OfType<XComment>().Select(comment => comment.Value.Trim()).Should().Equal("preserved");
+        logger.VerifyNoOtherCalls();
+    }
+
+    public void TestParametersCreateMissingSectionWithoutReplacingMtpDefaults()
+    {
+        MSTestRunSettings settings = CreateRunSettings(
+            "<RunSettings />", new Mock<IMessageLogger>(MockBehavior.Strict).Object,
+            testRunParameters: ["empty=", "url=value=tail"]);
+        var document = XDocument.Parse(settings.SettingsXml!);
+        document.Root!.Elements().Select(element => element.Name.LocalName).Should().Equal("RunConfiguration", "TestRunParameters");
+        document.Root.Element("TestRunParameters")!.Elements()
+            .Select(element => (element.Attribute("name")!.Value, element.Attribute("value")!.Value))
+            .Should().Equal(("empty", string.Empty), ("url", "value=tail"));
+        XElement configuration = document.Root.Element("RunConfiguration")!;
+        configuration.Element("DesignMode")!.Value.Should().Be("false");
+        configuration.Element("CollectSourceInformation")!.Value.Should().Be("false");
+        configuration.Element("ResultsDirectory")!.Value.Should().Be("TestResults");
+        configuration.Nodes().OfType<XComment>().Select(comment => comment.Value).Should().Equal(
+            "Default configuration added by Microsoft Testing Platform", "End");
+    }
+
+    public void MissingRunSettingsRootReportsExactContractError()
+    {
+        Action construct = () => CreateRunSettings("<Unexpected />", new Mock<IMessageLogger>(MockBehavior.Strict).Object);
+        construct.Should().ThrowExactly<InvalidOperationException>().WithMessage(PlatformAdapterResources.MissingRunSettingsAttribute);
+    }
+
     public void StatefulNonVisualStudioClientSetsDesignMode()
         => GetDesignMode("custom-client", isStateful: true).Should().BeTrue();
 
@@ -142,7 +200,7 @@ public sealed class MSTestRunSettingsTests : TestContainer
         return bool.Parse(document.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value);
     }
 
-    private static MSTestRunSettings CreateRunSettings(string settingsXml, IMessageLogger messageLogger, string clientId = "custom-client", bool? isStateful = null)
+    private static MSTestRunSettings CreateRunSettings(string settingsXml, IMessageLogger messageLogger, string clientId = "custom-client", bool? isStateful = null, string[]? testRunParameters = null)
     {
         const string RunSettingsFilePath = "settings.runsettings";
         string[]? runSettingsFilePaths = [RunSettingsFilePath];
@@ -152,6 +210,9 @@ public sealed class MSTestRunSettingsTests : TestContainer
                 MSTestRunSettingsCommandLineOptionsProvider.RunSettingsOptionName,
                 out runSettingsFilePaths))
             .Returns(true);
+        commandLineOptions.Setup(options => options.TryGetOptionArgumentList(
+            MSTestTestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName, out testRunParameters))
+            .Returns(testRunParameters is not null);
 
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(fileSystem => fileSystem.ExistFile(RunSettingsFilePath)).Returns(true);

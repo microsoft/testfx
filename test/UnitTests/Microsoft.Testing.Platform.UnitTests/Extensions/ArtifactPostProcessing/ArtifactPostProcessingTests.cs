@@ -2,9 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.UnitTests.Helpers;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests.Extensions.ArtifactPostProcessing;
 
@@ -13,6 +20,282 @@ namespace Microsoft.Testing.Platform.UnitTests.Extensions.ArtifactPostProcessing
 [TestClass]
 public sealed class ArtifactPostProcessingTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DispatcherRun_RequiresServerProtocolBeforeReadingManifest(bool protocolPresent)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsServerMode).Returns(false);
+        int exit = await fixture.Create([], protocolPresent ? fixture.Protocol.Object : null).RunAsync(TestContext.CancellationToken);
+        Assert.AreEqual(5, exit);
+        ErrorMessageOutputDeviceData error = Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.Output));
+        Assert.Contains("pipe", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.OutputTokens));
+        Assert.IsEmpty(fixture.Published);
+        Assert.IsFalse(Directory.Exists(fixture.OutputDirectory));
+    }
+
+    [TestMethod]
+    [DataRow("missing")]
+    [DataRow("malformed")]
+    [DataRow("output-file")]
+    public async Task DispatcherRun_InvalidManifestOrOutputDirectoryProducesInvalidCommandLineWithoutProcessorCalls(string failure)
+    {
+        using DispatcherFixture fixture = new();
+        if (failure == "malformed")
+        {
+            File.WriteAllText(fixture.ManifestPath, "{broken");
+        }
+        else if (failure == "output-file")
+        {
+            File.WriteAllText(fixture.OutputDirectory, "a file, not a directory");
+            fixture.WriteManifest("[]");
+        }
+
+        Mock<IArtifactPostProcessor> processor = CreateProcessor("unused", ["kind"], []);
+
+        int exit = await fixture.Create([processor.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(5, exit);
+        ErrorMessageOutputDeviceData error = Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.Output));
+        Assert.Contains("manifest", error.Message, StringComparison.OrdinalIgnoreCase);
+        processor.Verify(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), It.IsAny<string>(), It.IsAny<ArtifactPostProcessingContext>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.IsEmpty(fixture.Published);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DispatcherRun_FirstProcessorOwnsKindAndLegacyMatchesAndPublishesOnlyValidatedOutput(bool produceOutput)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.WriteManifest("""
+            [
+              { "path": "tagged.other", "kind": "kind.a", "producingTestModule": "module.dll" },
+              { "path": "legacy.TRX", "kind": null },
+              { "path": "wrong-kind.trx", "kind": "different" },
+              { "path": "case-kind.trx", "kind": "KIND.A" }
+            ]
+            """);
+        Mock<IArtifactPostProcessor> first = CreateProcessor("first", ["kind.a"], [".trx"]);
+        Mock<IArtifactPostProcessor> second = CreateProcessor("second", ["kind.a"], [".TRX"]);
+        IReadOnlyList<InputArtifact>? observed = null;
+        ArtifactPostProcessingContext? context = null;
+        string outputPath = Path.Combine(fixture.OutputDirectory, "merged.trx");
+        first.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .Callback<IReadOnlyList<InputArtifact>, string, ArtifactPostProcessingContext, CancellationToken>((inputs, _, value, _) =>
+            {
+                observed = inputs;
+                context = value;
+            })
+            .Returns(() =>
+            {
+                if (produceOutput)
+                {
+                    File.WriteAllText(outputPath, "merged contents");
+                }
+
+                return Task.FromResult(produceOutput ? new ProcessedArtifact(outputPath, "merged.kind", "merged display", "merged description") : null);
+            });
+
+        int exit = await fixture.Create([first.Object, second.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exit);
+        Assert.AreSequenceEqual(["tagged.other", "legacy.TRX"], observed!.Select(value => value.Path));
+        Assert.AreEqual("module.dll", observed![0].ProducingTestModule);
+        Assert.AreEqual(ArtifactPostProcessingMode.TestModules, context!.Mode);
+        Assert.IsFalse(context.IsTruncated);
+        second.Verify(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), It.IsAny<string>(), It.IsAny<ArtifactPostProcessingContext>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.HasCount(2, fixture.Output);
+        Assert.Contains("kind.a", ((WarningMessageOutputDeviceData)fixture.Output[0]).Message);
+        Assert.Contains("first", ((WarningMessageOutputDeviceData)fixture.Output[0]).Message);
+        Assert.Contains(".trx", ((WarningMessageOutputDeviceData)fixture.Output[1]).Message);
+        if (produceOutput)
+        {
+            object message = Assert.ContainsSingle(fixture.Published);
+            Assert.AreEqual("Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages", message.GetType().FullName);
+            Assert.AreEqual("execution", ReadModel<string>(message, "ExecutionId"));
+            Assert.AreEqual("instance", ReadModel<string>(message, "InstanceId"));
+            object artifact = Assert.ContainsSingle(ReadModel<Array>(message, "FileArtifacts")!.Cast<object>());
+            Assert.AreEqual(outputPath, ReadModel<string>(artifact, "FullPath"));
+            Assert.AreEqual("merged.kind", ReadModel<string>(artifact, "Kind"));
+            Assert.AreEqual("merged display", ReadModel<string>(artifact, "DisplayName"));
+            Assert.AreEqual("merged description", ReadModel<string>(artifact, "Description"));
+            Assert.AreSequenceEqual(["tagged.other", "legacy.TRX"], ReadModel<string[]>(artifact, "InputArtifactPaths"));
+            Assert.IsNull(ReadModel<string>(artifact, "TestUid"));
+            Assert.IsNull(ReadModel<string>(artifact, "SessionUid"));
+            Assert.AreEqual("merged contents", File.ReadAllText(outputPath));
+        }
+        else
+        {
+            Assert.IsEmpty(fixture.Published);
+            Assert.IsFalse(File.Exists(outputPath));
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DispatcherRun_EligibilityHonorsModeAndTruncationWithoutConsumingSkippedInputs(bool truncated)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.WriteManifest("""[{ "path": "input.any", "kind": "kind" }]""", truncated ? "timeout" : null);
+        Mock<IArtifactPostProcessor> wrongMode = CreateProcessor("retry-only", ["kind"], [], modes: [ArtifactPostProcessingMode.RetryAttempts]);
+        Mock<IArtifactPostProcessor> ordinary = CreateProcessor("complete-only", ["kind"], []);
+        Mock<IArtifactPostProcessor> recovery = CreateProcessor("recovery", ["kind"], [], supportsTruncated: true);
+        IReadOnlyList<InputArtifact>? observed = null;
+        ArtifactPostProcessingContext? observedContext = null;
+        Mock<IArtifactPostProcessor> selected = truncated ? recovery : ordinary;
+        selected.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .Callback<IReadOnlyList<InputArtifact>, string, ArtifactPostProcessingContext, CancellationToken>((inputs, _, context, _) =>
+            {
+                observed = inputs;
+                observedContext = context;
+            }).ReturnsAsync((ProcessedArtifact?)null);
+
+        int exit = await fixture.Create([wrongMode.Object, ordinary.Object, recovery.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exit);
+        Assert.AreEqual("input.any", Assert.ContainsSingle(observed!).Path);
+        Assert.AreEqual(truncated, observedContext!.IsTruncated);
+        Assert.AreEqual(truncated ? ArtifactPostProcessingTruncationReason.Timeout : ArtifactPostProcessingTruncationReason.None, observedContext.TruncationReason);
+        wrongMode.Verify(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), It.IsAny<string>(), It.IsAny<ArtifactPostProcessingContext>(), It.IsAny<CancellationToken>()), Times.Never);
+        (truncated ? ordinary : recovery).Verify(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), It.IsAny<string>(), It.IsAny<ArtifactPostProcessingContext>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.IsEmpty(fixture.Published);
+    }
+
+    [TestMethod]
+    [DataRow("exception")]
+    [DataRow("uncanceled")]
+    [DataRow("missing")]
+    public async Task DispatcherRun_ProcessorFailureKeepsLaterValidOutputButReturnsFailure(string failure)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.WriteManifest("""[{ "path": "bad.any", "kind": "bad" }, { "path": "good.any", "kind": "good" }]""");
+        Mock<IArtifactPostProcessor> first = CreateProcessor("failed.processor", ["bad"], []);
+        Mock<IArtifactPostProcessor> later = CreateProcessor("later.processor", ["good"], []);
+        first.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .Returns(() => failure switch
+            {
+                "exception" => Task.FromException<ProcessedArtifact?>(new IOException("processing sentinel")),
+                "uncanceled" => Task.FromException<ProcessedArtifact?>(new OperationCanceledException("processing sentinel")),
+                _ => Task.FromResult<ProcessedArtifact?>(new ProcessedArtifact(Path.Combine(fixture.OutputDirectory, "not-created.trx"), "bad", "bad", null)),
+            });
+        string path = Path.Combine(fixture.OutputDirectory, "good.trx");
+        later.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .Returns(() =>
+            {
+                File.WriteAllText(path, "good output");
+                return Task.FromResult<ProcessedArtifact?>(new ProcessedArtifact(path, "good.output", "good display", null));
+            });
+
+        int exit = await fixture.Create([first.Object, later.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, exit);
+        WarningMessageOutputDeviceData warning = Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(Assert.ContainsSingle(fixture.Output));
+        Assert.Contains("failed.processor", warning.Message);
+        Assert.Contains(failure == "missing" ? "output" : "processing sentinel", warning.Message, StringComparison.OrdinalIgnoreCase);
+        object published = Assert.ContainsSingle(ReadModel<Array>(Assert.ContainsSingle(fixture.Published), "FileArtifacts")!.Cast<object>());
+        Assert.AreEqual(path, ReadModel<string>(published, "FullPath"));
+        Assert.AreSequenceEqual(["good.any"], ReadModel<string[]>(published, "InputArtifactPaths"));
+        Assert.AreEqual("good output", File.ReadAllText(path));
+    }
+
+    [TestMethod]
+    public async Task DispatcherRun_CallerCancellationPropagatesWithoutWarningOrPublishing()
+    {
+        using DispatcherFixture fixture = new();
+        fixture.WriteManifest("""[{ "path": "input.any", "kind": "kind" }]""");
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        Mock<IArtifactPostProcessor> processor = CreateProcessor("canceled", ["kind"], []);
+        processor.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), cancellation.Token))
+            .Returns(Task.FromCanceled<ProcessedArtifact?>(cancellation.Token));
+
+        OperationCanceledException error = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => fixture.Create([processor.Object]).RunAsync(cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, error.CancellationToken);
+        Assert.IsEmpty(fixture.Output);
+        Assert.IsEmpty(fixture.Published);
+    }
+
+    private static Mock<IArtifactPostProcessor> CreateProcessor(
+        string uid, IReadOnlyList<string> kinds, IReadOnlyList<string> extensions,
+        bool supportsTruncated = false, IReadOnlyList<ArtifactPostProcessingMode>? modes = null)
+    {
+        var processor = new Mock<IArtifactPostProcessor>();
+        processor.SetupGet(value => value.Uid).Returns(uid);
+        processor.SetupGet(value => value.SupportedKinds).Returns(kinds);
+        processor.SetupGet(value => value.SupportedFileExtensionsFallback).Returns(extensions);
+        processor.SetupGet(value => value.SupportsTruncatedRuns).Returns(supportsTruncated);
+        processor.SetupGet(value => value.SupportedModes).Returns(modes ?? [ArtifactPostProcessingMode.TestModules]);
+        return processor;
+    }
+
+    private static T? ReadModel<T>(object value, string name)
+        => (T?)value.GetType().GetProperty(name)!.GetValue(value);
+
+    private sealed class DispatcherFixture : IDisposable
+    {
+        public DispatcherFixture()
+        {
+            Directory.CreateDirectory(Root);
+            Protocol.SetupGet(value => value.IsServerMode).Returns(true);
+            Protocol.SetupGet(value => value.InstanceId).Returns("instance");
+            Environment.Setup(value => value.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)).Returns("execution");
+            Device.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+                .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, value, token) =>
+                {
+                    Output.Add(value);
+                    OutputTokens.Add(token);
+                }).Returns(Task.CompletedTask);
+        }
+
+        public string Root { get; } = Path.Combine(Path.GetTempPath(), "dispatcher-coverage-" + Guid.NewGuid().ToString("N"));
+
+        public string ManifestPath => Path.Combine(Root, "manifest.json");
+
+        public string OutputDirectory => Path.Combine(Root, "out");
+
+        public Mock<IPushOnlyProtocol> Protocol { get; } = new();
+
+        public Mock<IEnvironment> Environment { get; } = new();
+
+        public Mock<IOutputDevice> Device { get; } = new();
+
+        // The production protocol's embedded IRequest/models have the same names as the linked
+        // test copies but distinct assembly identities. Capture the actual invocation objects.
+        public object[] Published => [.. Protocol.Invocations
+            .Where(value => value.Method.Name == nameof(IPushOnlyProtocol.SendMessageAsync))
+            .Select(value => value.Arguments[0])];
+
+        public List<IOutputDeviceData> Output { get; } = [];
+
+        public List<CancellationToken> OutputTokens { get; } = [];
+
+        public ArtifactPostProcessingDispatcherTool Create(IReadOnlyList<IArtifactPostProcessor> processors)
+            => Create(processors, Protocol.Object);
+
+        public ArtifactPostProcessingDispatcherTool Create(IReadOnlyList<IArtifactPostProcessor> processors, IPushOnlyProtocol? protocol)
+            => new(new TestCommandLineOptions(new() { ["manifest"] = [ManifestPath] }), processors, protocol, Environment.Object, Device.Object);
+
+        public void WriteManifest(string inputs, string? truncation = null)
+            => File.WriteAllText(ManifestPath, $$"""
+                {
+                  "schemaVersion": 1,
+                  "outputDirectory": "{{OutputDirectory.Replace("\\", "\\\\")}}",
+                  "inputs": {{inputs}}
+                  {{(truncation is null ? string.Empty : ", \"truncationReason\": \"" + truncation + "\"")}}
+                }
+                """);
+
+        public void Dispose() => Directory.Delete(Root, recursive: true);
+    }
+
     [TestMethod]
     public void HandshakeProperties_AreSortedAndDeduplicated()
     {

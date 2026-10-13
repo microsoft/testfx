@@ -169,17 +169,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
         <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
-        <target state="new">Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</target>
+        <target state="translated">Les assertions sur les collections énumèrent un IQueryable au lieu de demander un résultat scalaire à son fournisseur. Utilisez Queryable.Count pour obtenir le nombre d’éléments ou Queryable.Any pour vérifier qu’une collection n’est pas vide. Matérialisez explicitement les résultats lorsque vous testez leur contenu ou réutilisez un instantané, plutôt que de récupérer toutes les lignes correspondantes simplement pour vérifier leur nombre ou leur existence.</target>
         <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
         <source>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</source>
-        <target state="new">Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</target>
+        <target state="translated">Utilisez « Queryable.{1} » au lieu de « {0} » pour éviter d’énumérer les résultats de la requête lors d’une vérification du nombre d’éléments ou de l’existence</target>
         <note>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
         <source>Avoid enumerating queries for count or existence assertions</source>
-        <target state="new">Avoid enumerating queries for count or existence assertions</target>
+        <target state="translated">Évitez d’énumérer les requêtes lors des assertions de comptage ou d’existence</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
@@ -342,17 +342,17 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesDescription">
         <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
-        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <target state="translated">Spécifiez soit « DisplayName » pour un nom complet de cas de test, soit « ArgumentsDisplayName » pour une étiquette d’argument qui conserve le nom d’affichage de la méthode, mais pas les deux. Supprimez « ArgumentsDisplayName » ignoré pour conserver le nom actuel, ou supprimez « DisplayName » pour utiliser l’étiquette d’argument.</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
         <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
-        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <target state="translated">« ArgumentsDisplayName » est ignoré, car « DisplayName » remplace entièrement le nom du cas de test</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesTitle">
         <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
-        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <target state="translated">Ne combinez pas « DisplayName » et « ArgumentsDisplayName »</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
@@ -822,7 +822,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
         <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
-        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <target state="translated">MSTest initialise la propriété TestContext modifiable d’une classe de test, qui n’a donc pas besoin d’être initialisée dans le constructeur.</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">

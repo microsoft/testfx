@@ -56,6 +56,206 @@ public sealed class AzureDevOpsHistoryClientTests
         Assert.Contains("$top=50", secondRequestUri.Query);
     }
 
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    public async Task GetRunsAsync_NonPositiveLimitDoesNotSendRequests(int maximum)
+    {
+        ScriptedHandler handler = new();
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+
+        Assert.IsEmpty(await client.GetRunsAsync(CreateQuery(), maximum, CancellationToken.None));
+        Assert.IsEmpty(handler.Requests);
+    }
+
+    [TestMethod]
+    public async Task GetRunsAsync_RepeatedContinuationStopsAndPreservesObservedRuns()
+    {
+        ScriptedHandler handler = new(
+            () => WithContinuation(CreateRunsResponse("https://example/run/first"), "next & token"),
+            () => WithContinuation(CreateRunsResponse("https://example/run/second"), "next & token"));
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+
+        IReadOnlyList<AzureDevOpsTestRun> runs = await client.GetRunsAsync(CreateQuery(), 10, CancellationToken.None);
+
+        Assert.AreSequenceEqual(["https://example/run/first", "https://example/run/second"], runs.Select(run => run.Url));
+        Assert.HasCount(2, handler.Requests);
+        Assert.Contains("continuationToken=next%20%26%20token", handler.Requests[1].RequestUri!.Query);
+        Assert.DoesNotContain("$skip", handler.Requests[1].RequestUri!.Query);
+    }
+
+    [TestMethod]
+    [DataRow("null", DisplayName = "Null payload")]
+    [DataRow("{}", DisplayName = "Missing values")]
+    [DataRow("""{"value":null}""", DisplayName = "Null values")]
+    [DataRow("""{"value":[{"url":""},{"url":" "},{}]}""", DisplayName = "Invalid run URLs")]
+    public async Task GetRunsAsync_EmptyAndInvalidPayloadsReturnNoRuns(string body)
+    {
+        ScriptedHandler handler = new(() => Response(HttpStatusCode.OK, body));
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+
+        Assert.IsEmpty(await client.GetRunsAsync(CreateQuery(), 10, CancellationToken.None));
+        Assert.HasCount(1, handler.Requests);
+    }
+
+    [TestMethod]
+    public async Task GetResultsAsync_FiltersIncompleteRowsAndPreservesDurationAndContinuation()
+    {
+        string body =
+            """
+            {"value":[
+              {"automatedTestName":"Namespace.First","outcome":"Passed","durationInMs":12.5},
+              {"automatedTestName":"","outcome":"Failed"},
+              {"automatedTestName":"Namespace.MissingOutcome","outcome":" "},
+              {"automatedTestName":"Namespace.Second","outcome":"Failed"}
+            ]}
+            """;
+        ScriptedHandler handler = new(() => WithContinuation(Response(HttpStatusCode.OK, body), "result token"));
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+
+        AzureDevOpsTestResultsPage page = await client.GetResultsAsync(CreateQuery(), "https://example/run///", 7, 20, null, CancellationToken.None);
+
+        Assert.AreSequenceEqual(["Namespace.First", "Namespace.Second"], page.Results.Select(result => result.AutomatedTestName));
+        Assert.AreSequenceEqual(["Passed", "Failed"], page.Results.Select(result => result.Outcome));
+        Assert.AreEqual(12.5, page.Results[0].DurationMilliseconds);
+        Assert.IsNull(page.Results[1].DurationMilliseconds);
+        Assert.AreEqual("result token", page.ContinuationToken);
+        Assert.AreEqual("https://example/run/results?outcomes=Failed,Passed&$top=20&$skip=7&api-version=7.1", handler.Requests[0].RequestUri!.OriginalString);
+        Assert.AreEqual("Basic", handler.Requests[0].Headers.Authorization!.Scheme);
+        Assert.AreEqual("OnRva2Vu", handler.Requests[0].Headers.Authorization!.Parameter);
+    }
+
+    [TestMethod]
+    [DataRow("null", DisplayName = "Null result payload")]
+    [DataRow("{}", DisplayName = "Missing result values")]
+    public async Task GetResultsAsync_EmptyPayloadUsesEncodedContinuationInsteadOfSkip(string body)
+    {
+        ScriptedHandler handler = new(() => Response(HttpStatusCode.OK, body));
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+        AzureDevOpsTestResultsPage page = await client.GetResultsAsync(CreateQuery(), "https://example/run", 99, 3, "a+b", CancellationToken.None);
+
+        Assert.IsEmpty(page.Results);
+        Assert.IsNull(page.ContinuationToken);
+        Assert.Contains("continuationToken=a%2Bb", handler.Requests[0].RequestUri!.Query);
+        Assert.DoesNotContain("$skip", handler.Requests[0].RequestUri!.Query);
+    }
+
+    [TestMethod]
+    [DataRow(408)]
+    [DataRow(429)]
+    [DataRow(500)]
+    [DataRow(502)]
+    [DataRow(503)]
+    [DataRow(504)]
+    public async Task GetResultsAsync_TransientStatusUsesExponentialDelayAndFreshRequest(int status)
+    {
+        ScriptedHandler handler = new(
+            () => Response((HttpStatusCode)status, string.Empty),
+            () => Response((HttpStatusCode)status, string.Empty),
+            () => Response(HttpStatusCode.OK, """{"value":[]}"""));
+        using HttpClient http = new(handler);
+        TestTask task = new();
+        AzureDevOpsHistoryClient client = new(task, new TestClock(), http);
+
+        Assert.IsEmpty((await client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None)).Results);
+        Assert.AreSequenceEqual([TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(1000)], task.Delays);
+        Assert.HasCount(3, handler.Requests);
+        Assert.AreNotSame(handler.Requests[0], handler.Requests[1]);
+    }
+
+    [TestMethod]
+    [DataRow(0, DisplayName = "Delta retry after")]
+    [DataRow(1, DisplayName = "Future date retry after")]
+    [DataRow(2, DisplayName = "Past date fallback")]
+    public async Task GetResultsAsync_RetryAfterUsesClockAndFallsBackForPastDate(int kind)
+    {
+        TestClock clock = new();
+        ScriptedHandler handler = new(
+            () =>
+            {
+                HttpResponseMessage response = Response(HttpStatusCode.ServiceUnavailable, string.Empty);
+                response.Headers.RetryAfter = kind == 0
+                    ? new RetryConditionHeaderValue(TimeSpan.FromSeconds(3))
+                    : new RetryConditionHeaderValue(clock.UtcNow.AddSeconds(kind == 1 ? 7 : -1));
+                return response;
+            },
+            () => Response(HttpStatusCode.OK, """{"value":[]}"""));
+        using HttpClient http = new(handler);
+        TestTask task = new();
+        AzureDevOpsHistoryClient client = new(task, clock, http);
+
+        await client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None);
+        Assert.AreEqual(kind == 0 ? TimeSpan.FromSeconds(3) : kind == 1 ? TimeSpan.FromSeconds(7) : TimeSpan.FromMilliseconds(500), Assert.ContainsSingle(task.Delays));
+    }
+
+    [TestMethod]
+    public async Task GetResultsAsync_NetworkFailuresRetryThenPropagateOriginalException()
+    {
+        HttpRequestException failure = new("network unavailable");
+        ScriptedHandler handler = new(() => throw failure, () => throw failure, () => throw failure);
+        using HttpClient http = new(handler);
+        TestTask task = new();
+        AzureDevOpsHistoryClient client = new(task, new TestClock(), http);
+
+        HttpRequestException actual = await Assert.ThrowsExactlyAsync<HttpRequestException>(
+            () => client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None));
+        Assert.AreSame(failure, actual);
+        Assert.HasCount(3, handler.Requests);
+        Assert.AreSequenceEqual([TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(1000)], task.Delays);
+    }
+
+    [TestMethod]
+    public async Task GetResultsAsync_TimeoutExhaustionIsDistinctFromCallerCancellation()
+    {
+        ScriptedHandler handler = new(
+            () => throw new OperationCanceledException(),
+            () => throw new OperationCanceledException(),
+            () => throw new OperationCanceledException());
+        using HttpClient http = new(handler);
+        TestTask task = new();
+        AzureDevOpsHistoryClient client = new(task, new TestClock(), http);
+
+        HttpRequestException error = await Assert.ThrowsExactlyAsync<HttpRequestException>(
+            () => client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None));
+        Assert.AreEqual("Azure DevOps history request timed out.", error.Message);
+        Assert.IsInstanceOfType<OperationCanceledException>(error.InnerException);
+        Assert.HasCount(3, handler.Requests);
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, cancellation.Token));
+        Assert.HasCount(3, handler.Requests);
+    }
+
+    [TestMethod]
+    public async Task GetResultsAsync_TerminalErrorUsesFallbackReasonAndTruncatesContentExactly()
+    {
+        string content = new('x', 501);
+        ScriptedHandler handler = new(
+            () => new HttpResponseMessage(HttpStatusCode.BadRequest) { ReasonPhrase = string.Empty, Content = new StringContent(content) },
+            () => new HttpResponseMessage(HttpStatusCode.BadRequest) { ReasonPhrase = string.Empty, Content = new StringContent(content) },
+            () => new HttpResponseMessage(HttpStatusCode.BadRequest) { ReasonPhrase = string.Empty, Content = new StringContent(content) });
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+
+        HttpRequestException error = await Assert.ThrowsExactlyAsync<HttpRequestException>(
+            () => client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None));
+        Assert.AreEqual("Azure DevOps history request failed with status code 400 (BadRequest). " + new string('x', 500), error.Message);
+    }
+
+    private static HttpResponseMessage Response(HttpStatusCode status, string body) => new(status) { Content = new StringContent(body) };
+
+    private static HttpResponseMessage WithContinuation(HttpResponseMessage response, string token)
+    {
+        response.Headers.Add("x-ms-continuationtoken", token);
+        return response;
+    }
+
     private static AzureDevOpsHistoryQuery CreateQuery()
         => new("https://dev.azure.com/example/", "testfx", "token", "123", new DateTimeOffset(2025, 05, 01, 0, 0, 0, TimeSpan.Zero), new DateTimeOffset(2025, 05, 16, 0, 0, 0, TimeSpan.Zero));
 
@@ -85,11 +285,16 @@ public sealed class AzureDevOpsHistoryClientTests
 
     private sealed class TestTask : ITask
     {
+        public List<TimeSpan> Delays { get; } = [];
+
         public Task Delay(int millisecondDelay)
             => Task.CompletedTask;
 
         public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            Delays.Add(timeSpan);
+            return Task.CompletedTask;
+        }
 
         public Task Run(Action action)
         {
@@ -108,5 +313,18 @@ public sealed class AzureDevOpsHistoryClientTests
 
         public Task WhenAll(params Task[] tasks)
             => Task.WhenAll(tasks);
+    }
+
+    private sealed class ScriptedHandler(params Func<HttpResponseMessage>[] responses) : HttpMessageHandler
+    {
+        private readonly Queue<Func<HttpResponseMessage>> _responses = new(responses);
+
+        public List<HttpRequestMessage> Requests { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Requests.Add(request);
+            return Task.FromResult(_responses.Dequeue()());
+        }
     }
 }

@@ -28,7 +28,9 @@ tests to understand the changed behavior before commenting.
    stated motivation, behavior change, compatibility impact, and validation
    match what the code does. Apply **Feature decisions and delivery evidence**
    below, including when the PR provides no design rationale.
-4. Check changed tests against the test-review guidance below.
+4. Check changed behavior and related tests against the test-review guidance
+   below, including unchanged tests protecting source-only changes. Include
+   revision-bound test-value evidence in the review summary.
 5. Report only actionable findings caused by the PR. Prefer a small number of
    high-confidence findings over broad summaries or praise.
 6. If the change is correct, do not invent a finding merely to leave feedback.
@@ -96,7 +98,9 @@ not automatic instructions to comment.
   do not add assertions, churn, or unsupported modernizations just to raise it.
 - For automatic specialist checks that are fully clean, prefer `noop` when the
   main review already covers that dimension. Explicit slash-command reviews may
-  still publish an informational `COMMENT` review.
+  still publish an informational `COMMENT` review. The test-quality workflow
+  also reports test-value evidence for each eligible PR head, even without
+  actionable findings; only a duplicate report for that head may be suppressed.
 
 These instructions govern reviewers that load this repository guidance.
 Separate code-quality-service findings may not consume it; identify the
@@ -269,7 +273,16 @@ comments or PR metadata. Leave at most a minimal public note and follow
 
 ## Test changes
 
-For changed test code, apply the relevant rules from:
+For changed behavior and related test code, apply
+[testfx-test-value-evidence](../testfx-test-value-evidence/SKILL.md), which applies
+the vendored upstream skill. Report whether a concrete
+pre-fix behavior or buildable feature ablation is detected, and whether the
+correct implementation passes. Read-only reviewers use explicitly labeled
+static predictions unless matching execution evidence is available. Missing
+evidence is a summary limitation, not automatically a defect. Do not publish
+predicted mutation kills as executed measurements.
+
+For changed test code, also apply the relevant rules from:
 
 - `.agents/skills/test-anti-patterns/SKILL.md`
 - `.agents/skills/assertion-quality/SKILL.md`

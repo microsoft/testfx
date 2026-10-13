@@ -267,23 +267,4 @@ internal sealed partial class TestHostControllersTestHost
 
         return (exitCode, testHostProcessInformation, extensionInformation);
     }
-
-    internal static (bool TestExecutionCanceled, int ReportedTestHostExitCode) ResolveTestHostExitState(
-        bool applicationCancellationRequested,
-        int? testHostUnfilteredExitCodeReceived,
-        int? testHostExitCodeReceived,
-        int testHostProcessExitCode,
-        bool testHostProcessExitCodeIsAuthoritative)
-    {
-        bool testExecutionCanceled = applicationCancellationRequested
-            || testHostUnfilteredExitCodeReceived is (int)ExitCode.TestSessionAborted
-            || (testHostProcessExitCodeIsAuthoritative && testHostProcessExitCode == (int)ExitCode.TestSessionAborted);
-        int reportedTestHostExitCode = testExecutionCanceled
-            ? (int)ExitCode.TestSessionAborted
-            : !testHostProcessExitCodeIsAuthoritative && testHostExitCodeReceived.HasValue
-                ? testHostExitCodeReceived.Value
-                : testHostProcessExitCode;
-
-        return (testExecutionCanceled, reportedTestHostExitCode);
-    }
 }

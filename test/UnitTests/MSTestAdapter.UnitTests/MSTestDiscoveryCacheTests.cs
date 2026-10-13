@@ -23,6 +23,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public sealed class MSTestDiscoveryCacheTests : TestContainer
 {
+    public void MetadataFailurePartitionsKeepLiveDiscoveryAndRecoveryWithoutHidingOrdinaryFailures()
+    {
+        foreach (Exception failure in new Exception[]
+        {
+            new TypeLoadException("type metadata"),
+            new ReflectionTypeLoadException([typeof(object)], [new TypeLoadException("loader metadata")]),
+            new FileLoadException("file metadata"),
+            new FileNotFoundException("missing metadata"),
+            new BadImageFormatException("image metadata"),
+            new CustomAttributeFormatException("attribute metadata"),
+        })
+        {
+            using var fixture = new DiscoveryFixture(typeof(StaticA), typeof(StaticB));
+            fixture.MetadataFailure = failure;
+            using var cache = new MSTestDiscoveryCache();
+            TestNodeUid[] selection = [fixture.Uid<StaticB>(nameof(StaticB.B))];
+            fixture.Discover(cache, selection, out int firstTotal).Select(test => test.TestMethod.Name).Should().Equal("A", "B");
+            fixture.Discover(cache, selection, out int secondTotal).Select(test => test.TestMethod.Name).Should().Equal("A", "B");
+            firstTotal.Should().Be(2);
+            secondTotal.Should().Be(2);
+            fixture.FullScans.Should().Be(2);
+
+            fixture.MetadataFailure = null;
+            fixture.Discover(cache, selection, out _).Select(test => test.TestMethod.Name).Should().Equal("A", "B");
+            fixture.Discover(cache, selection, out int cachedTotal).Select(test => test.TestMethod.Name).Should().Equal("B");
+            cachedTotal.Should().Be(2);
+            fixture.FullScans.Should().Be(3);
+        }
+
+        using var ordinaryFixture = new DiscoveryFixture(typeof(StaticA));
+        using var ordinaryCache = new MSTestDiscoveryCache();
+        InvalidOperationException ordinaryFailure = new("ordinary policy failure");
+        ordinaryFixture.MetadataFailure = ordinaryFailure;
+        Action discover = () => ordinaryFixture.Discover(ordinaryCache, [], out _);
+        discover.Should().ThrowExactly<InvalidOperationException>().Which.Should().BeSameAs(ordinaryFailure);
+        ordinaryFixture.FullScans.Should().Be(0);
+    }
+
     public void NeutralResourceAssemblyMetadataAllowsCatalogHits()
     {
         using var fixture = new DiscoveryFixture(typeof(StaticA), typeof(StaticB));

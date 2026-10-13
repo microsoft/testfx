@@ -1,10 +1,11 @@
 ---
 name: "Test Quality Review on PR (command)"
 description: >-
-  Re-reviews changed tests and parallelization configuration when a maintainer
-  comments `/review-tests`. Grades new and modified test methods, audits
-  cross-test parallel-safety, and posts one consolidated COMMENT review with
-  apply-ready inline suggestions.
+  Reports revision-bound test-value evidence and re-reviews changed tests and
+  parallelization configuration when a maintainer comments `/review-tests`.
+  Includes source-only changes, distinguishes static predictions from executed
+  proof, and posts one consolidated advisory COMMENT review with apply-ready
+  inline suggestions for verified findings.
 
 # The automatic on-open / on-synchronize variant lives in
 # `test-reviewer-on-pr.agent.md`. They must remain separate workflows

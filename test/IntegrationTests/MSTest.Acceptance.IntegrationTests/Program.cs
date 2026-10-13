@@ -42,5 +42,10 @@ builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
 builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 int returnValue = await app.RunAsync();
-Console.Error.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");
+// Collection prefers stderr on failure, so successful-run statistics must not hide the test failure on stdout.
+if (returnValue == 0)
+{
+    Console.Error.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");
+}
+
 return returnValue;

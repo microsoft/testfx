@@ -500,7 +500,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectFSharpTestMethodSignature">
         <source>UTA007: Function {1} defined in F# module {0} does not have a correct signature. A test function marked with the [&lt;TestMethod&gt;] attribute must be static and public, and return void, Task, or non-generic ValueTask. Parameters require test data.</source>
-        <target state="new">UTA007: Function {1} defined in F# module {0} does not have a correct signature. A test function marked with the [&lt;TestMethod&gt;] attribute must be static and public, and return void, Task, or non-generic ValueTask. Parameters require test data.</target>
+        <target state="translated">UTA007：F# 模組 {0} 中定義的函式 {1} 沒有正確的簽章。使用 [&lt;TestMethod&gt;] 屬性標記的測試函式必須是 static 且 public，並傳回 void、Task 或非泛型 ValueTask。參數必須提供測試資料。</target>
         <note>{0} is the F# module full name. {1} is the test function name. {Locked="UTA007"}{Locked="F#"}{Locked="[&lt;TestMethod&gt;]"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
@@ -562,7 +562,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature">
         <source>Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</source>
-        <target state="new">Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</target>
+        <target state="translated">函式 {0}。{1} 的簽章錯誤。F# 測試初始化或清除函式必須是 static 且 public、不接受任何參數，並傳回 void、Task 或非泛型 ValueTask。</target>
         <note>{0} is the F# module full name. {1} is the function name. {Locked="F#"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">

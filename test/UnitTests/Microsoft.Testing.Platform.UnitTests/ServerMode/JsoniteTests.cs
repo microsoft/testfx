@@ -9,6 +9,62 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class JsoniteTests
 {
     [TestMethod]
+    [DataRow("{}")]
+    [DataRow("[]")]
+    [DataRow("""{"items":[true,false,null,17,{"text":"\u0041"}]}""")]
+    [DataRow("17")]
+    public void Validate_StringAndReaderAcceptValidDocumentWithoutReplacingCallerReader(string input)
+    {
+        Jsonite.Json.Validate(input, new Jsonite.JsonSettings());
+        using StringReader reader = new(input);
+        Jsonite.Json.Validate(reader, new Jsonite.JsonSettings());
+        Assert.AreEqual(-1, reader.Peek(), "The actual validator consumes the document but does not dispose its caller-owned reader.");
+    }
+
+    [TestMethod]
+    [DataRow("[1,]", 3, 0, 3, "Unexpected character ']' while parsing an array. Expecting a STRING, NUMBER, OBJECT, ARRAY, true, false or null after a comma ','")]
+    [DataRow("{\n\"x\": 01}", 8, 1, 6, "Unexpected character '1' while parsing a number. The number '0' must followed by '.' or by an exponent or nothing")]
+    public void Validate_MalformedDocumentPreservesExactDiagnosticInBothEntryPoints(string input, int offset, int line, int column, string message)
+    {
+        Jsonite.JsonException fromText = Assert.ThrowsExactly<Jsonite.JsonException>(
+            () => Jsonite.Json.Validate(input, new Jsonite.JsonSettings()));
+        using StringReader reader = new(input);
+        Jsonite.JsonException fromReader = Assert.ThrowsExactly<Jsonite.JsonException>(
+            () => Jsonite.Json.Validate(reader, new Jsonite.JsonSettings()));
+        foreach (Jsonite.JsonException error in new[] { fromText, fromReader })
+        {
+            Assert.AreEqual(offset, error.Offset);
+            Assert.AreEqual(line, error.Line);
+            Assert.AreEqual(column, error.Column);
+            Assert.AreEqual(message, error.Message);
+        }
+    }
+
+    [TestMethod]
+    public void Validate_ReaderNullAndDepthLimitsRemainDistinctErrors()
+    {
+        ArgumentNullException missing = Assert.ThrowsExactly<ArgumentNullException>(
+            () => Jsonite.Json.Validate((TextReader)null!, new Jsonite.JsonSettings()));
+        Assert.AreEqual("reader", missing.ParamName);
+        Jsonite.JsonException depth = Assert.ThrowsExactly<Jsonite.JsonException>(
+            () => Jsonite.Json.Validate("[[]]", new Jsonite.JsonSettings { MaxDepth = 1 }));
+        Assert.AreEqual(1, depth.Offset);
+        Assert.AreEqual(0, depth.Line);
+        Assert.AreEqual(1, depth.Column);
+        Assert.AreEqual("The maximum allowed depth [{settings.MaxDepth}] level has been reached. The object graph is too deep", depth.Message);
+    }
+
+    [TestMethod]
+    public void Validate_CommentPolicyUsesOnlyCallerSettings()
+    {
+        const string input = "{/* comment */\"value\":true}";
+        Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Validate(input, new Jsonite.JsonSettings()));
+        Jsonite.Json.Validate(input, new Jsonite.JsonSettings { AllowComments = true });
+        // A previous opt-in must not make a subsequent independent validation accept comments.
+        Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Validate(input, new Jsonite.JsonSettings()));
+    }
+
+    [TestMethod]
     public void Serialize_DateTimeOffset()
     {
         string actual = Jsonite.Json.Serialize(new DateTimeOffset(2023, 01, 01, 01, 01, 01, 01, TimeSpan.Zero));

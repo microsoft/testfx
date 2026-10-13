@@ -2,8 +2,8 @@
 # Shared frontmatter and prompt body for the test-quality review workflows.
 #
 # Two consumers import this file:
-#   - test-reviewer-on-pr.agent.md  → runs automatically on PRs that touch tests
-#                                      or parallelization configuration
+#   - test-reviewer-on-pr.agent.md  → runs automatically on eligible PR heads,
+#                                      including changes without new tests
 #   - test-reviewer.agent.md        → runs on the /review-tests slash command
 #
 # Both consumers contribute their own trigger configuration (`on:`) and
@@ -19,15 +19,15 @@
 # the agent on every `pull_request` invocation.
 
 intent: >-
-  Surface actionable quality and parallel-safety problems in changed tests
-  without creating duplicate attention for clean pull requests.
+  Show maintainers whether tests protect each changed contract against missing
+  or incorrect behavior, distinguish proof from evidence gaps, and surface
+  actionable test-quality and parallel-safety problems without duplicate findings.
 
 description: >-
-  Expert-reviews changed tests and parallelization configuration in a pull
-  request. Grades new and modified test methods for correctness, effectiveness,
-  reliability, maintainability, and repository conventions; separately audits
-  assembly-wide parallel-safety; and submits one consolidated COMMENT review
-  with apply-ready inline suggestions.
+  Reports revision-bound counterfactual test evidence for a pull request,
+  including source-only changes. Grades changed tests, separately audits
+  assembly-wide parallel-safety, and submits one consolidated advisory COMMENT
+  review with apply-ready inline suggestions for verified findings.
 
 permissions:
   contents: read
@@ -204,11 +204,13 @@ steps:
       CONFIG_OUT="$RUNNER_TEMP/changed-config-files.txt"
       CS_CANDIDATES="$RUNNER_TEMP/changed-cs-candidates.txt"
       RANGES_OUT="$RUNNER_TEMP/changed-test-regions.tsv"
+      CHANGES_OUT="$RUNNER_TEMP/changed-review-files.txt"
       : > "$TEST_OUT"
       : > "$SRC_OUT"
       : > "$CONFIG_OUT"
       : > "$CS_CANDIDATES"
       : > "$RANGES_OUT"
+      : > "$CHANGES_OUT"
 
       # The pull_request base SHA is the base branch tip at event time. Use the
       # merge-base so changed files and HEAD-side ranges match GitHub's PR diff.
@@ -216,10 +218,17 @@ steps:
       echo "Base tip $BASE_SHA; merge-base $MERGE_BASE; head $HEAD_SHA"
       echo "merge_base=$MERGE_BASE" >> "$GITHUB_OUTPUT"
 
-      git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
-        | grep -E '\.cs$' > "$TEST_OUT" || true
-      git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'src/' \
-        | grep -E '\.cs$' > "$SRC_OUT" || true
+      # Preserve deleted paths and both sides of renames. The full inventory
+      # also covers behavior in scripts, packages, and configuration outside src.
+      git diff --name-status --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" \
+        | awk -F'\t' '{ for (i = 2; i <= NF; i++) if ($i != "") print $i }' \
+        | sort -u > "$CHANGES_OUT"
+      git diff --name-status --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+        | awk -F'\t' '{ for (i = 2; i <= NF; i++) if ($i ~ /\.cs$/) print $i }' \
+        | sort -u > "$TEST_OUT"
+      git diff --name-status --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'src/' \
+        | awk -F'\t' '{ for (i = 2; i <= NF; i++) if ($i != "") print $i }' \
+        | sort -u > "$SRC_OUT"
 
       # Include both sides of renames and every file that can change effective
       # MSTest parallelization. Repository-root Directory.Build files flow into
@@ -294,28 +303,33 @@ steps:
       echo "src_files_path=$SRC_OUT" >> "$GITHUB_OUTPUT"
       echo "config_files_path=$CONFIG_OUT" >> "$GITHUB_OUTPUT"
       echo "test_regions_path=$RANGES_OUT" >> "$GITHUB_OUTPUT"
+      echo "changed_files_path=$CHANGES_OUT" >> "$GITHUB_OUTPUT"
 ---
 
 # Expert Test Quality Review on PR
 
 You are the coordinating expert test reviewer for pull request
-#${{ steps.resolve.outputs.pr_number }} of ${{ github.repository }}. Combine two
+#${{ steps.resolve.outputs.pr_number }} of ${{ github.repository }}. Combine three
 bounded analyses into one coherent review:
 
-1. Per-test grading of new and modified test methods.
-2. Assembly-scoped parallel-safety analysis delegated to the
+1. Counterfactual test-value evidence for every distinct changed contract.
+2. Per-test grading of new and modified test methods.
+3. Assembly-scoped parallel-safety analysis delegated to the
    `parallel-safety-reviewer` specialist.
 
 Produce two kinds of output:
 
-1. **One** COMMENT review holding a concise combined summary, parallel-safety
-   findings when applicable, and the per-test letter-grade scorecard.
+1. **One** COMMENT review holding revision-bound test-value evidence, a concise
+   combined summary, parallel-safety findings when applicable, and the per-test
+   result/quality scorecard. A clean result still reports the evidence.
 2. **Inline improvement comments** only for verified, actionable findings,
    grouped by root cause, anchored on a line the PR changed, and carrying a
    complete GitHub `suggestion` block when the edit is safe and directly
    applicable. A below-A grade alone does not require an inline comment.
 
 You are **read-only and advisory**. Do not edit any files. Do not push.
+Do not execute PR code, builds, tests, or mutation tools. This workflow provides
+static analysis and can inspect available evidence, not generate execution proof.
 Do not request changes — your role is to inform, not to block. Inline
 `suggestion` blocks are proposals the author may apply with one click; they
 are not commits you make yourself.
@@ -325,6 +339,10 @@ are not commits you make yourself.
 A deterministic pre-step has already resolved the PR snapshot and identified
 the files needed by both analyses:
 
+- **Complete changed-file inventory**, including deletions and both sides of
+  renames, at `${{ steps.extract.outputs.changed_files_path }}`. Use this for
+  contract coverage beyond C# files or `src/` (build/package/configuration and
+  script changes can be behavioral).
 - **Changed test files** (${{ steps.extract.outputs.test_count }}) at
   `${{ steps.extract.outputs.test_files_path }}`.
 - **Changed test line ranges** at
@@ -355,7 +373,8 @@ test attributes (e.g. `[STATestMethod]`, `[UITestMethod]`,
 subclasses) that a regex extractor would silently miss.
 
 If the changed test ranges file is empty, record that there are no test methods
-to grade and continue to Step 4B. Parallelization configuration can make an
+to grade; still complete Step 0 and Step 4B. Source-only changes may rely on
+unchanged tests or lack protection. Parallelization configuration can make an
 entire assembly newly concurrent without changing a test method.
 
 ## Instructions
@@ -381,6 +400,37 @@ Group the same root cause across tests/files, and read existing threads and
 replies before publishing. A grade, valid anchor, or suggested replacement is
 not sufficient evidence on its own. This workflow controls only reviewers
 that load its guidance, not separate code-quality-service findings.
+
+### Step 0 — Assess counterfactual test-value evidence
+
+Read `.agents/skills/test-value-evidence/SKILL.md` and the TestFx adapter at
+`.github/skills/testfx-test-value-evidence/SKILL.md`. Apply their read-only mode to
+the complete diff from `${{ steps.extract.outputs.merge_base }}` to
+`${{ steps.resolve.outputs.head_sha }}`. Do this even without changed tests.
+Inspect removed code/tests on the old side and trace existing unchanged tests
+before declaring a contract unprotected.
+
+For every distinct changed contract, retain the scenario, independent expected
+outcome, named test/data case and decisive assertion, concrete counterfactual,
+and the correct-implementation result. Bug fixes use the pre-fix behavior;
+features use a buildable behavioral ablation, not deletion of a required API.
+Refactor tests are expected to pass before and after. Non-executable changes
+receive `not applicable` with a reason, not invented regression tests.
+
+Clearly distinguish executed detection/survival, static predictions, unverified
+results, and not-applicable contracts using the skill's report. This workflow
+does not run tests: default to static predictions or unverified evidence.
+An author claim or green CI status is not paired execution proof. Only accessible
+records matching the exact revisions/variants, test cases, counts, and
+assertion-level outcomes can establish executed evidence. State missing records
+instead of claiming red-green. Do not aggregate predicted kills into an executed
+mutation score. Label the grading scorecard's mutation values as predictions too.
+
+Assess changed contracts only, grouping related tests and data cases; record
+unassessed groups and the reason if the review budget prevents full coverage.
+Missing execution proof alone is an evidence gap in the summary, not an inline
+defect. Publish an assertion improvement only for a concrete wrong behavior
+that survives and contradicts the independently established contract.
 
 ### Step 1 — Identify changed test methods
 
@@ -412,6 +462,7 @@ For each row in the TSV:
 If after filtering no test methods remain, record an empty grading result and
 skip Steps 2–4. Continue to Step 4B so configuration-only changes and modified
 lifecycle/helpers still receive the parallel-safety analysis.
+Keep the Step 0 evidence result even when grading is empty.
 
 ### Step 2 — Review and grade each test method
 
@@ -751,34 +802,44 @@ Validate the returned envelope before using it:
 
 ### Step 5 — Submit one combined test-quality review
 
-First reconcile both analyses under the publication contract. Group candidates
-across their scopes, retain one representative inline edit per root cause, and
-refresh the existing-thread check before posting. Then publish qualifying
-prepared inline comments with the `create_pull_request_review_comment`
-safe-output tool, using Step 4's recorded anchors, format, and cap. Never
-publish a grading-derived comment before the parallel-safety result has been
-considered.
+First reconcile all three analyses under the publication contract. Group
+candidates across their scopes and retain one representative inline edit per
+root cause. Before queuing any inline comment or review,
+read the PR's live state and head. If it is no longer open or its head differs
+from the resolved SHA, call `noop`
+with that stale/closed reason and stop; do not attach old evidence to a new head.
+For an automatic run, read existing reviews with pagination and suppress only a
+duplicate report carrying the exact marker
+`<!-- test-value-evidence:${{ steps.resolve.outputs.head_sha }} -->`.
+Require a report from this workflow with a matching GitHub review `commit_id`
+and the evidence section; a marker alone is not a complete report. Only if such
+a report exists and there are no new actionable findings, material evidence,
+or resolved analysis limitations, call `noop` with its reference and stop.
+If duplicate lookup is unavailable, disclose it rather than claiming no
+previous report exists.
 
-For an automatic `pull_request` run, call `noop` and stop without publishing
-only when **all** of these are true:
+Otherwise publish the evidence even when all results are `Pass` and no inline
+findings exist. For slash-command runs, always publish the requested current
+result. A `PARTIAL` analysis is visible: never hide incomplete coverage behind
+an otherwise-clean grading result.
 
-- every requested test has result `Pass`, or the grading scope is
-  `Not applicable`;
-- no separate correctness/reliability finding requires attention;
-- the parallel-safety status is `CLEAN` or `NOT_APPLICABLE`;
-- no material grading, evidence, or deduplication limitation remains;
-- no inline suggestion was posted.
+Refresh the existing-thread check, then publish qualifying prepared inline
+comments with the `create_pull_request_review_comment` safe-output tool, using
+Step 4's recorded anchors, format, and cap. Never publish a grading-derived
+comment before the parallel-safety result has been considered.
 
-For slash-command runs, always publish the requested combined result. A
-`PARTIAL` parallel-safety result is visible: never hide incomplete coverage
-behind an otherwise-clean grading result.
-
-Otherwise, use **exactly one** `submit-pull-request-review` call with
+Use **exactly one** `submit-pull-request-review` call with
 `event: "COMMENT"`. The inline comments published in this step are bundled into this
 review. Structure the body as follows:
 
 ```markdown
 ### 🧪 Test quality review — PR #${{ steps.resolve.outputs.pr_number }}
+
+<!-- test-value-evidence:${{ steps.resolve.outputs.head_sha }} -->
+
+Compared merge base `${{ steps.extract.outputs.merge_base }}` with head
+`${{ steps.resolve.outputs.head_sha }}`. Evidence applies to this head, not
+every intermediate commit.
 
 <!-- 2–4 sentences covering: tests assessed, result counts and quality distribution; the most
 important correctness/effectiveness signal; parallel-safety status and highest
@@ -789,6 +850,15 @@ Aggregate grading results using Failed -> Uncertain -> Pass -> Not applicable;
 keep this distinct from parallel-safety status and publication decisions.
 When prepared inline suggestions were posted,
 state how many can be applied from the Files changed tab. -->
+
+#### Test-value evidence
+
+<!-- Use the skill's compact contract/test-case table. Include the concrete
+counterfactual, without-behavior outcome, correct-implementation outcome, and
+evidence/gap. Identify static predictions explicitly; include exact commands,
+exits, executed counts, and records only when verified. If nothing executable
+changed, give a one-sentence not-applicable reason instead of an empty table.
+Do not omit this section for source-only changes or all-Pass results. -->
 
 #### 🧵 Parallel safety
 
@@ -802,6 +872,8 @@ the evidence returned by the specialist.
 NOT_APPLICABLE: omit this section entirely. -->
 
 #### Per-test assessment
+
+Pseudo-mutation evidence below consists of static predictions, not executed mutation results.
 
 <!-- If no test methods were graded, say:
 No new or modified test methods were identified in the changed regions.
@@ -898,7 +970,8 @@ clean parallel-safety when the specialist returned `PARTIAL`.
 
 - A B-grade test's single exact assertion protects its narrow contract:
   retain `Pass`, quality and notes, `None` for improvements, and zero inline
-  demands for additional assertions. A clean automatic run is silent.
+  demands for additional assertions. Report test-value evidence even for a clean
+  automatic run unless the same-head report is already complete.
 - An A-grade test has actionable debug output: retain `Failed` and the exact
   removal action despite its high quality.
 - A changed test asserts only non-null while wrong contents survive: retain
@@ -919,9 +992,10 @@ clean parallel-safety when the specialist returned `PARTIAL`.
 
 ### Step 6 — Stop
 
-After the Step 5 inline comments and the single review submission, call `noop`
+After queuing the Step 5 inline comments and the single review submission, call `noop`
 with a brief status such as:
 
-`"Posted test quality review for PR #N (M tests graded, parallel-safety=<status>, S inline suggestions)."`
+`"Queued test quality review for PR #N at <head SHA> (M tests graded, parallel-safety=<status>, S inline suggestions)."`
 
-Then stop. Do not call any other tools.
+Safe outputs apply after the agent finishes; a queued request is not verified
+publication. Then stop. Do not call any other tools.

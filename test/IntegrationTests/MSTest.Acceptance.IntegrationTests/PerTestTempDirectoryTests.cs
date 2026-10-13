@@ -113,18 +113,23 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
     public async Task TestTempDirectory_IsCreatedLazily()
     {
         string recordDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(recordDirectory);
+        string resultsDirectory = Path.Combine(recordDirectory, "results");
+        Directory.CreateDirectory(resultsDirectory);
         try
         {
             var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+            string[] directoriesBefore = Directory.GetDirectories(testHost.DirectoryName);
 
             // Retain everything so the accessor's directory survives for inspection.
             TestHostResult testHostResult = await testHost.ExecuteAsync(
-                "--filter ClassName~Lazy",
+                $"--filter ClassName~Lazy --results-directory \"{resultsDirectory}\"",
                 environmentVariables: new()
                 {
                     ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
                     ["MSTEST_TEST_TEMP_DIRECTORY_RETAIN"] = "1",
+                    ["TEMP"] = resultsDirectory,
+                    ["TMP"] = resultsDirectory,
+                    ["TMPDIR"] = resultsDirectory,
                 },
                 cancellationToken: TestContext.CancellationToken);
 
@@ -136,12 +141,15 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
             string accessorPath = Assert.ContainsSingle(records["accessor"]);
             Assert.IsTrue(Directory.Exists(accessorPath), $"Accessor test temp directory should exist: '{accessorPath}'.");
 
-            // The non-accessor test never touched the property, so no directory is created for it.
-            string? resultsDirectory = Path.GetDirectoryName(accessorPath);
-            Assert.IsNotNull(resultsDirectory);
-            string[] siblings = Directory.GetDirectories(resultsDirectory);
-            Assert.IsTrue(siblings.Any(d => Path.GetFileName(d).StartsWith("AccessorTest", StringComparison.Ordinal)), "Accessor test directory should be present.");
-            Assert.IsFalse(siblings.Any(d => Path.GetFileName(d).StartsWith("NonAccessorTest", StringComparison.Ordinal)), "No directory should be created for a test that never accesses TestTempDirectory.");
+            Assert.AreEqual("NONE", Assert.ContainsSingle(records["nonaccessor"]));
+            string? actualBaseDirectory = Path.GetDirectoryName(accessorPath);
+            Assert.IsNotNull(actualBaseDirectory);
+            Assert.IsTrue(actualBaseDirectory == testHost.DirectoryName || actualBaseDirectory == resultsDirectory);
+            string[] createdDirectories = Directory.GetDirectories(actualBaseDirectory).Except(directoriesBefore, StringComparer.Ordinal).ToArray();
+            Assert.AreEqual(
+                accessorPath,
+                Assert.ContainsSingle(createdDirectories),
+                "Only the test that accesses TestTempDirectory should create a directory.");
         }
         finally
         {

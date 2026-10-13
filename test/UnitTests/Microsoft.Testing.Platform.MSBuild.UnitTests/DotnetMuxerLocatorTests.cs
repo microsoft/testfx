@@ -19,6 +19,26 @@ public sealed class DotnetMuxerLocatorTests
     private const uint MachOMagicFatBigEndian = 0xcafebabe;
 
     [TestMethod]
+    public void TryGetDotnetPathByArchitecture_CurrentMuxerWinsWithoutEnvironmentSearch()
+    {
+        List<string> logs = [];
+        DotnetMuxerLocator locator = new(logs.Add);
+        string name = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
+        string expectedPath = Path.Combine("isolated", "current", name);
+        typeof(DotnetMuxerLocator).GetField("_currentProcessFileName", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(locator, expectedPath);
+        DotnetMuxerLocator.PlatformArchitecture architecture = InvokeStaticMethod<DotnetMuxerLocator.PlatformArchitecture>("GetCurrentProcessArchitecture");
+
+        bool found = locator.TryGetDotnetPathByArchitecture(architecture, out string? path);
+
+        Assert.IsTrue(found);
+        Assert.AreEqual(expectedPath, path);
+        Assert.AreEqual(
+            $"DotnetHostHelper.TryGetDotnetPathByArchitecture: Target architecture is the same as the current process architecture '{architecture}', and the current process is a muxer, using that: '{expectedPath}'",
+            Assert.ContainsSingle(logs));
+    }
+
+    [TestMethod]
     [DataRow(0x014c, (int)DotnetMuxerLocator.PlatformArchitecture.X86)]
     [DataRow(0x8664, (int)DotnetMuxerLocator.PlatformArchitecture.X64)]
     [DataRow(0x0200, (int)DotnetMuxerLocator.PlatformArchitecture.X64)]

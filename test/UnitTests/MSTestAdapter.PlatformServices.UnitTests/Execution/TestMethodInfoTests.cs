@@ -1684,6 +1684,99 @@ public class TestMethodInfoTests : TestContainer
 
     #region TestMethod invoke setup order
 
+    public async Task RetainedFixtureContextFlowsThroughActivationInvocationAndCleanupWithoutLeakingToCaller()
+    {
+        Action previousConstructor = DummyTestClass.TestConstructorMethodBody;
+        Action<object> previousSetter = DummyTestClass.TestContextSetterBody;
+        Action<DummyTestClass> previousInitialize = DummyTestClass.TestInitializeMethodBody;
+        Action<DummyTestClass> previousBody = DummyTestClass.TestMethodBody;
+        Action<DummyTestClass> previousCleanup = DummyTestClass.TestCleanupMethodBody;
+        Func<Task>? previousAsyncBody = DummyTestClass.DummyAsyncTestMethodBody;
+        try
+        {
+            _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethod))!;
+            _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+            foreach ((bool asyncMethod, bool failure) in new[] { (false, false), (true, false), (false, true), (true, true) })
+            {
+                AsyncLocal<string?> ambient = new() { Value = "fixture" };
+                using ExecutionContext captured = ExecutionContext.Capture()!;
+                ambient.Value = "caller";
+                List<string> transitions = [];
+                IOException cause = new("user body failed");
+                DummyTestClass.TestConstructorMethodBody = () =>
+                {
+                    transitions.Add("constructor:" + ambient.Value);
+                    ambient.Value = "constructed";
+                };
+                DummyTestClass.TestContextSetterBody = _ =>
+                {
+                    transitions.Add("context:" + ambient.Value);
+                    ambient.Value = "context-set";
+                };
+                DummyTestClass.TestInitializeMethodBody = _ =>
+                {
+                    transitions.Add("initialize:" + ambient.Value);
+                    ambient.Value = "initialized";
+                };
+                DummyTestClass.TestCleanupMethodBody = _ =>
+                {
+                    transitions.Add("cleanup:" + ambient.Value);
+                    ambient.Value = "cleaned";
+                };
+                DummyTestClass.TestMethodBody = _ =>
+                {
+                    transitions.Add("sync:" + ambient.Value);
+                    ambient.Value = "body";
+                    if (failure)
+                    {
+                        throw cause;
+                    }
+                };
+                DummyTestClass.DummyAsyncTestMethodBody = () =>
+                {
+                    transitions.Add("async:" + ambient.Value);
+                    ambient.Value = "body";
+                    return failure ? Task.FromException(cause) : Task.CompletedTask;
+                };
+                MethodInfo method = asyncMethod
+                    ? typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!
+                    : _methodInfo;
+                TestMethodInfo invocation = new(method, _testClassInfo)
+                {
+                    TimeoutInfo = TimeoutInfo.FromTimeout(0),
+                    Executor = _testMethodAttribute,
+                    TestContext = _testContextImplementation,
+                };
+                typeof(TestMethodInfo).GetField("_executionContext", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(invocation, captured);
+
+                TestResult result = await invocation.InvokeAsync(null);
+
+                transitions.Should().Equal(
+                    "constructor:fixture", "context:constructed", "initialize:context-set",
+                    (asyncMethod ? "async:" : "sync:") + "initialized", "cleanup:body");
+                ambient.Value.Should().Be("caller");
+                result.Outcome.Should().Be(failure ? UnitTestOutcome.Failed : UnitTestOutcome.Passed);
+                if (failure)
+                {
+                    result.TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException.Should().BeSameAs(cause);
+                }
+                else
+                {
+                    result.TestFailureException.Should().BeNull();
+                }
+            }
+        }
+        finally
+        {
+            DummyTestClass.TestConstructorMethodBody = previousConstructor;
+            DummyTestClass.TestContextSetterBody = previousSetter;
+            DummyTestClass.TestInitializeMethodBody = previousInitialize;
+            DummyTestClass.TestMethodBody = previousBody;
+            DummyTestClass.TestCleanupMethodBody = previousCleanup;
+            DummyTestClass.DummyAsyncTestMethodBody = previousAsyncBody!;
+        }
+    }
+
     public async Task TestMethodInfoInvokeShouldInitializeClassInstanceTestInitializeAndTestCleanupInOrder()
     {
         var callOrder = new List<string>();

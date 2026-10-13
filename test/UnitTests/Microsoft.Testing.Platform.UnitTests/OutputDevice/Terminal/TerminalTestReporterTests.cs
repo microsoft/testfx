@@ -19,6 +19,107 @@ public sealed class TerminalTestReporterTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    [TestMethod]
+    [DataRow(null, null, "")]
+    [DataRow("net8.0", null, " (net8.0|)")]
+    [DataRow(null, "x64", " (x64)")]
+    [DataRow("net8.0", "x64", " (net8.0|x64)")]
+    public void ActualSimpleTerminalProgressPinsCountsIdentityAndActiveDetail(string? framework, string? architecture, string identity)
+    {
+        var fixture = new SimpleTerminalFixture();
+        var state = new TestProgressState(1, "execution.dll", framework, architecture, new StubStopwatch(), isDiscovery: false);
+        state.NotifyHandshake("instance", attemptNumber: 1);
+        state.ReportPassingTest("pass", "Passed", "instance");
+        state.ReportFailedTest("fail", "Failed", "instance");
+        state.ReportSkippedTest("skip", "Skipped", "instance");
+        state.GetOrCreateTestNodeResultsState(() => new(1))
+            .AddRunningTestNode(1, "active", "Active detail", new StubStopwatch());
+
+        fixture.Terminal.RenderProgress([null, state, null], []);
+
+        Assert.AreEqual($"[+1/x1/?1] execution.dll{identity} - Active detail (0s){Environment.NewLine}{Environment.NewLine}", fixture.Text.ToString());
+        Assert.AreSequenceEqual(
+            [ConsoleColor.DarkGreen, ConsoleColor.DarkCyan, ConsoleColor.DarkRed, ConsoleColor.DarkCyan, ConsoleColor.DarkYellow, ConsoleColor.DarkCyan],
+            fixture.Colors);
+    }
+
+    [TestMethod]
+    public void ActualSimpleTerminalDiscoveryAndEmptyRowsPreserveBlankLinePolicy()
+    {
+        var fixture = new SimpleTerminalFixture();
+        var discovery = new TestProgressState(2, "discovery.dll", null, null, new StubStopwatch(), isDiscovery: true)
+        {
+            DiscoveredTests = 7,
+        };
+        fixture.Terminal.RenderProgress([], []);
+        fixture.Terminal.RenderProgress([null, null], []);
+        Assert.AreEqual(string.Empty, fixture.Text.ToString());
+        fixture.Terminal.RenderProgress([null, discovery], []);
+        Assert.AreEqual($"[+7] discovery.dll(0s){Environment.NewLine}{Environment.NewLine}", fixture.Text.ToString());
+        Assert.AreSequenceEqual([ConsoleColor.DarkMagenta, ConsoleColor.DarkCyan], fixture.Colors);
+    }
+
+    [TestMethod]
+    public void ActualSimpleTerminalAppendLinkDimensionsAndColorsUseOnlySuppliedConsole()
+    {
+        var fixture = new SimpleTerminalFixture();
+        fixture.Console.SetupGet(value => value.WindowWidth).Returns(83);
+        fixture.Console.SetupGet(value => value.WindowHeight).Returns(27);
+        Assert.AreEqual(83, fixture.Terminal.Width);
+        Assert.AreEqual(27, fixture.Terminal.Height);
+        fixture.Console.SetupGet(value => value.IsOutputRedirected).Returns(true);
+        Assert.AreEqual(int.MaxValue, fixture.Terminal.Width);
+        Assert.AreEqual(int.MaxValue, fixture.Terminal.Height);
+        fixture.Terminal.Append('a');
+        fixture.Terminal.Append("b");
+        fixture.Terminal.AppendLine();
+        fixture.Terminal.AppendLine("line");
+        fixture.Terminal.AppendLink("path", null);
+        fixture.Terminal.AppendLink("source", 17);
+        Assert.AreEqual($"ab{Environment.NewLine}line{Environment.NewLine}pathsource:17", fixture.Text.ToString());
+        foreach ((TerminalColor input, ConsoleColor expected) in new[]
+        {
+            (TerminalColor.Black, ConsoleColor.Black), (TerminalColor.DarkRed, ConsoleColor.DarkRed),
+            (TerminalColor.DarkGreen, ConsoleColor.DarkGreen), (TerminalColor.DarkYellow, ConsoleColor.DarkYellow),
+            (TerminalColor.DarkBlue, ConsoleColor.DarkBlue), (TerminalColor.DarkMagenta, ConsoleColor.DarkMagenta),
+            (TerminalColor.DarkCyan, ConsoleColor.DarkCyan), (TerminalColor.Gray, ConsoleColor.White),
+            (TerminalColor.Default, ConsoleColor.DarkCyan), (TerminalColor.DarkGray, ConsoleColor.Gray),
+            (TerminalColor.Red, ConsoleColor.Red), (TerminalColor.Green, ConsoleColor.Green),
+            (TerminalColor.Yellow, ConsoleColor.Yellow), (TerminalColor.Blue, ConsoleColor.Blue),
+            (TerminalColor.Magenta, ConsoleColor.Magenta), (TerminalColor.Cyan, ConsoleColor.Cyan),
+            (TerminalColor.White, ConsoleColor.White), ((TerminalColor)999, ConsoleColor.DarkCyan),
+        })
+        {
+            fixture.Terminal.SetColor(input);
+            Assert.AreEqual(expected, fixture.Colors[fixture.Colors.Count - 1]);
+        }
+
+        fixture.Terminal.ResetColor();
+        Assert.AreEqual(ConsoleColor.DarkCyan, fixture.Colors[fixture.Colors.Count - 1]);
+    }
+
+    private sealed class SimpleTerminalFixture
+    {
+        public SimpleTerminalFixture()
+        {
+            Console.Setup(value => value.GetForegroundColor()).Returns(ConsoleColor.DarkCyan);
+            Console.Setup(value => value.SetForegroundColor(It.IsAny<ConsoleColor>())).Callback<ConsoleColor>(Colors.Add);
+            Console.Setup(value => value.Write(It.IsAny<char>())).Callback<char>(value => Text.Append(value));
+            Console.Setup(value => value.Write(It.IsAny<string>())).Callback<string>(value => Text.Append(value));
+            Console.Setup(value => value.WriteLine()).Callback(() => Text.AppendLine());
+            Console.Setup(value => value.WriteLine(It.IsAny<string>())).Callback<string>(value => Text.AppendLine(value));
+            Terminal = new(Console.Object);
+        }
+
+        public Mock<IConsole> Console { get; } = new();
+
+        public StringBuilder Text { get; } = new();
+
+        public List<ConsoleColor> Colors { get; } = [];
+
+        public NonAnsiTerminal Terminal { get; }
+    }
+
     // When BOTH retry mechanisms are active the attempt pair advances on either component, so the number of
     // executions cannot be derived from the final pair alone: (host 1, retry 1) -> (host 1, retry 2) ->
     // (host 2, retry 1) is three executions, but the final pair is (2, 1) and its maximum is 2. The count is

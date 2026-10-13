@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.Emit;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -8,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,6 +34,128 @@ public sealed class UnitTestRunnerTests : TestContainer
         _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
+
+#pragma warning disable MSTESTEXP // Exercise the actual adapter programmatic test-filter bridge.
+    public void FilterContextPreservesHierarchyGenericsParametersAndDuplicateTraitOrder()
+    {
+        TestMethod method = new(
+            "Method`2(System.Int32,System.String[])",
+            ["assembly", "Actual.Namespace", "Outer+Inner`1", "Method"],
+            "Method",
+            "Actual.Namespace.Outer+Inner`1[[System.Int32, Framework]]",
+            "metadata.dll",
+            "display method",
+            null);
+        UnitTestElement element = new(method)
+        {
+            TestCategory = ["fast", "unit"],
+            Traits = [new TestTrait("case", "one"), new TestTrait("case", "two")],
+            Priority = 42,
+        };
+
+        TestFilterContext context = CreateActualFilterContext(element);
+
+        context.FullyQualifiedName.Should().Be("Actual.Namespace.Outer+Inner`1[[System.Int32, Framework]].Method");
+        context.DisplayName.Should().Be("display method");
+        context.MethodName.Should().Be("Method");
+        context.Source.Should().Be("metadata.dll");
+        context.Namespace.Should().Be("Actual.Namespace");
+        context.ClassName.Should().Be("Outer+Inner`1");
+        context.ManagedTypeName.Should().Be("Actual.Namespace.Outer+Inner`1");
+        context.ManagedMethodName.Should().Be("Method`2(System.Int32,System.String[])");
+        context.MethodArity.Should().Be(2);
+        context.ParameterTypeFullNames.Should().Equal("System.Int32", "System.String[]");
+        context.Categories.Should().Equal("fast", "unit");
+        context.Traits.Should().Equal(new KeyValuePair<string, string?>("case", "one"), new KeyValuePair<string, string?>("case", "two"));
+        context.Priority.Should().Be(42);
+    }
+
+    public void FilterContextMissingAndMalformedMetadataDoesNotInventStructuredNamesOrParameters()
+    {
+        foreach (string? managed in new[] { null, "Method`x()" })
+        {
+            foreach (string?[]? hierarchy in new string?[]?[] { null, [], ["short"] })
+            {
+                TestMethod method = new(managed, hierarchy, "Method", "Namespace.Class", "source.dll", null, null);
+                TestFilterContext context = CreateActualFilterContext(new UnitTestElement(method));
+                context.FullyQualifiedName.Should().Be("Namespace.Class.Method");
+                context.DisplayName.Should().Be("Method");
+                context.Namespace.Should().BeNull();
+                context.ClassName.Should().BeNull();
+                context.ManagedTypeName.Should().Be("Namespace.Class");
+                context.MethodArity.Should().BeNull();
+                context.ParameterTypeFullNames.Should().BeNull();
+                context.Categories.Should().BeEmpty();
+                context.Traits.Should().BeEmpty();
+                context.Priority.Should().BeNull();
+            }
+        }
+
+        TestFilterContext parameterless = CreateActualFilterContext(
+            new UnitTestElement(new TestMethod("Method", null, "Method", "Class", "source.dll", null, null)));
+        parameterless.MethodArity.Should().Be(0);
+        parameterless.ParameterTypeFullNames.Should().BeEmpty();
+    }
+
+    public void ApplyActualFilterDistinguishesRunDropSkipAndOriginalExceptionDiagnostics()
+    {
+        const string source = "scoped-filter.dll";
+        AssemblyName name = new("ScopedFilter" + Guid.NewGuid().ToString("N"));
+#if NETFRAMEWORK
+        AssemblyBuilder assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#else
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#endif
+        ConstructorInfo constructor = typeof(TestFilterProviderAttribute).GetConstructor([typeof(Type)])!;
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(constructor, [typeof(ObservedProgrammaticFilter)]));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(source)).Returns(assembly);
+        var reflection = new Mock<IReflectionOperations>();
+        reflection.Setup(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)))
+            .Returns([new TestFilterProviderAttribute(typeof(ObservedProgrammaticFilter))]);
+        _testablePlatformServiceProvider.SetupMockReflectionOperations(reflection);
+        TestMethod method = CreateTestMethod("Method", "Namespace.Class", source, "display");
+        UnitTestElement element = new(method);
+        UnitTestRunner runner = CreateUnitTestRunner([element]);
+        var cache = (TypeCache)typeof(UnitTestRunner).GetField("_typeCache", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(runner)!;
+        var filter = (ObservedProgrammaticFilter)cache.GetOrLoadTestFilter(source)!;
+        MethodInfo apply = typeof(UnitTestRunner).GetMethod("ApplyTestFilter", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        TestResult[]? Invoke() => (TestResult[]?)apply.Invoke(runner, [element]);
+
+        filter.Result = TestFilterResult.Run;
+        Invoke().Should().BeNull();
+        filter.Result = TestFilterResult.Drop;
+        Invoke().Should().BeEmpty();
+        filter.Result = TestFilterResult.Skip("explicit skip");
+        TestResult skipped = Invoke()!.Should().ContainSingle().Subject;
+        skipped.Outcome.Should().Be(UnitTestOutcome.Ignored);
+        skipped.IgnoreReason.Should().Be("explicit skip");
+        filter.Error = new InvalidOperationException("filter sentinel");
+        TestResult failed = Invoke()!.Should().ContainSingle().Subject;
+        failed.Outcome.Should().Be(UnitTestOutcome.Error);
+        failed.TestFailureException!.Message.Should().Contain("filter sentinel").And.Contain("Namespace.Class.Method").And.Contain(nameof(ObservedProgrammaticFilter));
+        filter.Context!.FullyQualifiedName.Should().Be("Namespace.Class.Method");
+        filter.Context.DisplayName.Should().Be("display");
+        filter.Context.Source.Should().Be(source);
+    }
+
+    private static TestFilterContext CreateActualFilterContext(UnitTestElement element)
+        => (TestFilterContext)typeof(UnitTestRunner).GetMethod("CreateFilterContext", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [element])!;
+
+    public sealed class ObservedProgrammaticFilter : ITestFilter
+    {
+        public TestFilterResult Result { get; set; }
+
+        public Exception? Error { get; set; }
+
+        public TestFilterContext? Context { get; private set; }
+
+        public TestFilterResult Filter(TestFilterContext context)
+        {
+            Context = context;
+            return Error is null ? Result : throw Error;
+        }
+    }
+#pragma warning restore MSTESTEXP
 
     private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
         => new(methodName, null, methodName, typeFullName, assemblyName, displayName, null);

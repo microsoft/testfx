@@ -158,6 +158,54 @@ public partial class AssertTests : TestContainer
         Assert.AreNotSequenceEqual(notExpected, actual);
     }
 
+    public void AreNotSequenceEqual_SpanAndMemory_OrderAndComparerArePreserved()
+    {
+        string[] notExpected = ["a", "a", "b"];
+        string[] actual = ["B", "A", "A"];
+        Action[] equivalent =
+        [
+            () => Assert.AreNotSequenceEqual((ReadOnlySpan<string>)notExpected, actual, StringComparer.OrdinalIgnoreCase, SequenceOrder.InAnyOrder, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual(notExpected.AsSpan(), actual.AsSpan(), StringComparer.OrdinalIgnoreCase, SequenceOrder.InAnyOrder, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual((ReadOnlyMemory<string>)notExpected, actual.AsMemory(), StringComparer.OrdinalIgnoreCase, SequenceOrder.InAnyOrder, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual(notExpected.AsMemory(), actual.AsMemory(), StringComparer.OrdinalIgnoreCase, SequenceOrder.InAnyOrder, "coverage sentinel"),
+        ];
+        foreach (Action action in equivalent)
+        {
+            action.Should().Throw<AssertFailedException>().WithMessage("*coverage sentinel*");
+        }
+
+        // Both ordering and comparer change the answer for these same non-degenerate inputs.
+        Assert.AreNotSequenceEqual((ReadOnlySpan<string>)notExpected, actual, StringComparer.OrdinalIgnoreCase, SequenceOrder.InOrder);
+        Assert.AreNotSequenceEqual(notExpected.AsSpan(), actual.AsSpan(), StringComparer.OrdinalIgnoreCase, SequenceOrder.InOrder);
+        Assert.AreNotSequenceEqual((ReadOnlyMemory<string>)notExpected, actual.AsMemory(), StringComparer.OrdinalIgnoreCase, SequenceOrder.InOrder);
+        Assert.AreNotSequenceEqual(notExpected.AsMemory(), actual.AsMemory(), StringComparer.OrdinalIgnoreCase, SequenceOrder.InOrder);
+        Assert.AreNotSequenceEqual((ReadOnlySpan<string>)notExpected, actual, SequenceOrder.InAnyOrder);
+        Assert.AreNotSequenceEqual(notExpected.AsSpan(), actual.AsSpan(), SequenceOrder.InAnyOrder);
+        Assert.AreNotSequenceEqual((ReadOnlyMemory<string>)notExpected, actual.AsMemory(), SequenceOrder.InAnyOrder);
+        Assert.AreNotSequenceEqual(notExpected.AsMemory(), actual.AsMemory(), SequenceOrder.InAnyOrder);
+    }
+
+    public void AreNotSequenceEqual_SpanAndMemory_EqualValuesReportMessage()
+    {
+        int[] notExpected = [1, 2, 3];
+        int[] actual = [1, 2, 3];
+        Action[] equivalent =
+        [
+            () => Assert.AreNotSequenceEqual((ReadOnlySpan<int>)notExpected, actual, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual(notExpected.AsSpan(), actual.AsSpan(), "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual((ReadOnlyMemory<int>)notExpected, actual.AsMemory(), "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual(notExpected.AsMemory(), actual.AsMemory(), "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual((ReadOnlySpan<int>)notExpected, actual, comparer: null, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual(notExpected.AsSpan(), actual.AsSpan(), comparer: null, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual((ReadOnlyMemory<int>)notExpected, actual.AsMemory(), comparer: null, "coverage sentinel"),
+            () => Assert.AreNotSequenceEqual(notExpected.AsMemory(), actual.AsMemory(), comparer: null, "coverage sentinel"),
+        ];
+        foreach (Action action in equivalent)
+        {
+            action.Should().Throw<AssertFailedException>().WithMessage("*coverage sentinel*");
+        }
+    }
+
     #endregion
 }
 

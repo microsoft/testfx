@@ -6,7 +6,10 @@ using System.Reflection;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -14,6 +17,261 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class DotnetTestDataConsumerTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ConsumeAsync_DiscoveryNegotiationControlsFullMetadataAndOrderedTraits(bool ide)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.3.0",
+                [HandshakeMessagePropertyNames.IsIDE] = ide.ToString(),
+            }), TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        List<DiscoveredTestMessages> sent = [];
+        fixture.Client.RespondVoid<DiscoveredTestMessages>(TestContext.CancellationToken, sent.Add);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        TestNodeUpdateMessage message = CreateUpdate(
+            DiscoveredTestNodeStateProperty.CachedInstance,
+            new TestFileLocationProperty("source.cs", new LinePositionSpan(new(12, 3), new(14, 5))),
+            new TestMethodIdentifierProperty("assembly", "Sample.Namespace", "SampleType", "SampleMethod", 0, ["System.Int32"], "System.Void"),
+            new TestMetadataProperty("category", "first"),
+            new TestMetadataProperty("category", "second"));
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), message, TestContext.CancellationToken);
+
+        DiscoveredTestMessages batch = Assert.ContainsSingle(sent);
+        Assert.AreEqual("execution", batch.ExecutionId);
+        Assert.AreEqual(DotnetTestConnection.InstanceId, batch.InstanceId);
+        DiscoveredTestMessage discovered = Assert.ContainsSingle(batch.DiscoveredMessages);
+        Assert.AreEqual("uid", discovered.Uid);
+        Assert.AreEqual("DisplayName", discovered.DisplayName);
+        Assert.AreEqual(ide ? "source.cs" : null, discovered.FilePath);
+        Assert.AreEqual(ide ? 12 : null, discovered.LineNumber);
+        Assert.AreEqual(ide ? "Sample.Namespace" : null, discovered.Namespace);
+        Assert.AreEqual(ide ? "SampleType" : null, discovered.TypeName);
+        Assert.AreEqual(ide ? "SampleMethod" : null, discovered.MethodName);
+        if (ide)
+        {
+            Assert.AreSequenceEqual(["System.Int32"], discovered.ParameterTypeFullNames);
+            // PropertyBag prepends constructor inputs; preserve its traversal order on the wire.
+            Assert.AreSequenceEqual([new TraitMessage("category", "second"), new TraitMessage("category", "first")], discovered.Traits);
+        }
+        else
+        {
+            Assert.IsNull(discovered.ParameterTypeFullNames);
+            Assert.IsEmpty(discovered.Traits);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("passed", TestStates.Passed, true)]
+    [DataRow("skipped", TestStates.Skipped, false)]
+    [DataRow("progress", TestStates.InProgress, false)]
+    public async Task ConsumeAsync_SuccessfulStatesPreserveOutputsRetryAndStateSpecificDuration(string outcome, byte expectedState, bool hasDuration)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.3.0",
+                [HandshakeMessagePropertyNames.IsIDE] = "true",
+            }), TestContext.CancellationToken);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        List<TestResultMessages> sent = [];
+        fixture.Client.RespondVoid<TestResultMessages>(TestContext.CancellationToken, sent.Add);
+        TestNodeStateProperty state = outcome switch
+        {
+            "passed" => new PassedTestNodeStateProperty("passed reason"),
+            "skipped" => new SkippedTestNodeStateProperty("skipped reason"),
+            _ => new InProgressTestNodeStateProperty("progress reason"),
+        };
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        TestNodeUpdateMessage message = CreateUpdate(
+            state, FixedTiming(), new StandardOutputProperty("stdout"), new StandardErrorProperty("stderr"), new RetryAttemptProperty(3, true));
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), message, TestContext.CancellationToken);
+
+        TestResultMessages batch = Assert.ContainsSingle(sent);
+        Assert.AreEqual("execution", batch.ExecutionId);
+        Assert.IsEmpty(batch.FailedTestMessages);
+        SuccessfulTestResultMessage result = Assert.ContainsSingle(batch.SuccessfulTestMessages);
+        Assert.AreEqual("uid", result.Uid);
+        Assert.AreEqual("DisplayName", result.DisplayName);
+        Assert.AreEqual("session", result.SessionUid);
+        Assert.AreEqual(expectedState, result.State);
+        Assert.AreEqual(hasDuration ? 123L : null, result.Duration);
+        Assert.AreEqual(outcome == "progress" ? string.Empty : outcome + " reason", result.Reason);
+        Assert.AreEqual("stdout", result.StandardOutput);
+        Assert.AreEqual("stderr", result.ErrorOutput);
+        Assert.AreEqual(3, result.RetryAttemptNumber);
+        Assert.IsTrue(result.IsSuperseded);
+    }
+
+    [TestMethod]
+    [DataRow("failed", TestStates.Failed)]
+    [DataRow("error", TestStates.Error)]
+    [DataRow("timeout", TestStates.Timeout)]
+    [DataRow("cancelled", TestStates.Cancelled)]
+    public async Task ConsumeAsync_UnsuccessfulStatesForwardExceptionChainAndOnlyFailuresCarryDiff(string outcome, byte expectedState)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        List<TestResultMessages> sent = [];
+        fixture.Client.RespondVoid<TestResultMessages>(TestContext.CancellationToken, sent.Add);
+        var exception = new InvalidOperationException("outer", new ArgumentException("inner"));
+#pragma warning disable CS0618, MTP0001 // Exercise the still-supported cancelled wire outcome.
+        TestNodeStateProperty state = outcome switch
+        {
+            "failed" => new FailedTestNodeStateProperty(exception, "reason"),
+            "error" => new ErrorTestNodeStateProperty(exception, "reason"),
+            "timeout" => new TimeoutTestNodeStateProperty(exception, "reason"),
+            _ => new CancelledTestNodeStateProperty(exception, "reason"),
+        };
+#pragma warning restore CS0618, MTP0001
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), CreateUpdate(
+            state, FixedTiming(), new StandardOutputProperty("out"), new StandardErrorProperty("err"),
+            new AssertionFailureProperty("expected", "actual"), new RetryAttemptProperty(2, false)), TestContext.CancellationToken);
+
+        TestResultMessages batch = Assert.ContainsSingle(sent);
+        Assert.IsEmpty(batch.SuccessfulTestMessages);
+        FailedTestResultMessage result = Assert.ContainsSingle(batch.FailedTestMessages);
+        Assert.AreEqual(expectedState, result.State);
+        Assert.AreEqual(123L, result.Duration);
+        Assert.AreEqual("reason", result.Reason);
+        Assert.AreEqual("uid", result.Uid);
+        Assert.AreEqual("DisplayName", result.DisplayName);
+        Assert.AreEqual("session", result.SessionUid);
+        Assert.AreEqual("out", result.StandardOutput);
+        Assert.AreEqual("err", result.ErrorOutput);
+        Assert.AreEqual(2, result.RetryAttemptNumber);
+        Assert.IsFalse(result.IsSuperseded);
+        string? expectedDiff = outcome == "failed" ? "expected" : null;
+        string? expectedActualText = outcome == "failed" ? "actual" : null;
+        Assert.AreEqual(expectedDiff, result.Expected);
+        Assert.AreEqual(expectedActualText, result.Actual);
+        Assert.IsNotNull(result.Exceptions);
+        Assert.AreSequenceEqual(["reason", "inner"], result.Exceptions.Select(value => value.ErrorMessage));
+        Assert.AreSequenceEqual(["System.InvalidOperationException", "System.ArgumentException"], result.Exceptions.Select(value => value.ErrorType));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_CompletionOverridesFailureAndArtifactsFollowDiscoveryInOrder()
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        List<object> sent = [];
+        fixture.Client.RespondVoid<DiscoveredTestMessages>(TestContext.CancellationToken, value => sent.Add(value));
+        fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, value => sent.Add(value));
+        var first = new FileInfo(Path.Combine(Path.GetTempPath(), "first-consumer-artifact.txt"));
+        var second = new FileInfo(Path.Combine(Path.GetTempPath(), "second-consumer-artifact.txt"));
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), CreateUpdate(
+            new FailedTestNodeStateProperty("failure"), TestNodeExecutionCompletedProperty.CachedInstance,
+            new FileArtifactProperty(first, "first"), new FileArtifactProperty(second, "second", "detail")),
+            TestContext.CancellationToken);
+
+        Assert.HasCount(3, sent);
+        DiscoveredTestMessages discovery = Assert.IsInstanceOfType<DiscoveredTestMessages>(sent[0]);
+        Assert.AreEqual("uid", Assert.ContainsSingle(discovery.DiscoveredMessages).Uid);
+        FileArtifactMessage secondArtifact = Assert.ContainsSingle(Assert.IsInstanceOfType<FileArtifactMessages>(sent[1]).FileArtifacts);
+        FileArtifactMessage firstArtifact = Assert.ContainsSingle(Assert.IsInstanceOfType<FileArtifactMessages>(sent[2]).FileArtifacts);
+        Assert.AreEqual(first.FullName, firstArtifact.FullPath);
+        Assert.AreEqual("first", firstArtifact.DisplayName);
+        Assert.AreEqual(string.Empty, firstArtifact.Description);
+        Assert.AreEqual(second.FullName, secondArtifact.FullPath);
+        Assert.AreEqual("detail", secondArtifact.Description);
+        foreach (FileArtifactMessage artifact in new[] { firstArtifact, secondArtifact })
+        {
+            Assert.AreEqual("uid", artifact.TestUid);
+            Assert.AreEqual("DisplayName", artifact.TestDisplayName);
+            Assert.AreEqual("session", artifact.SessionUid);
+            Assert.IsNull(artifact.Kind);
+        }
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SessionAndUnscopedArtifactsPreserveWireIdentityWithoutAccessingFiles()
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        List<FileArtifactMessages> sent = [];
+        fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, sent.Add);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        var file = new FileInfo(Path.Combine(Path.GetTempPath(), "consumer-report.trx"));
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(new SessionUid("session"), file, "report", "description", "microsoft.testing.trx"), TestContext.CancellationToken);
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), new FileArtifact(file, "unscoped"), TestContext.CancellationToken);
+
+        Assert.HasCount(2, sent);
+        Assert.AreEqual("execution", sent[0].ExecutionId);
+        Assert.AreEqual(DotnetTestConnection.InstanceId, sent[0].InstanceId);
+        FileArtifactMessage scoped = Assert.ContainsSingle(sent[0].FileArtifacts);
+        FileArtifactMessage unscoped = Assert.ContainsSingle(sent[1].FileArtifacts);
+        Assert.AreEqual(file.FullName, scoped.FullPath);
+        Assert.AreEqual("report", scoped.DisplayName);
+        Assert.AreEqual("description", scoped.Description);
+        Assert.AreEqual("session", scoped.SessionUid);
+        Assert.AreEqual("microsoft.testing.trx", scoped.Kind);
+        Assert.AreEqual(string.Empty, scoped.TestUid);
+        Assert.AreEqual(string.Empty, scoped.TestDisplayName);
+        Assert.AreEqual(file.FullName, unscoped.FullPath);
+        Assert.AreEqual("unscoped", unscoped.DisplayName);
+        Assert.AreEqual(string.Empty, unscoped.SessionUid);
+        Assert.AreEqual(string.Empty, unscoped.Description);
+        Assert.IsNull(unscoped.Kind);
+    }
+
+    [TestMethod]
+    public async Task SessionCallbacks_SendStartAndEndWithOriginalApplicationToken()
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        List<TestSessionEvent> sent = [];
+        fixture.Client.RespondVoid<TestSessionEvent>(TestContext.CancellationToken, sent.Add);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        var context = new Mock<ITestSessionContext>();
+        context.SetupGet(value => value.SessionUid).Returns(new SessionUid("actual-session"));
+
+        await consumer.OnTestSessionStartingAsync(context.Object);
+        await consumer.OnTestSessionFinishingAsync(context.Object);
+
+        Assert.AreSequenceEqual(
+            [new TestSessionEvent(SessionEventTypes.TestSessionStart, "actual-session", "execution"), new TestSessionEvent(SessionEventTypes.TestSessionEnd, "actual-session", "execution")],
+            sent);
+        Assert.IsTrue(await consumer.IsEnabledAsync());
+        Assert.AreSequenceEqual([typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact), typeof(FileArtifact)], consumer.DataTypesConsumed);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_OutcomeLessUpdateAndUnrelatedDataDoNotSendRequests()
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), CreateUpdate(new TestMetadataProperty("category", "value")), TestContext.CancellationToken);
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), Mock.Of<IData>(), TestContext.CancellationToken);
+
+        Assert.IsEmpty(fixture.Client.Mock.Invocations);
+    }
+
+    private static TestNodeUpdateMessage CreateUpdate(params IProperty[] properties)
+        => new(new SessionUid("session"), new TestNode
+        {
+            Uid = new TestNodeUid("uid"),
+            DisplayName = "DisplayName",
+            Properties = new PropertyBag(properties),
+        });
+
+    private static TimingProperty FixedTiming()
+    {
+        DateTimeOffset start = new(2024, 1, 2, 3, 4, 5, TimeSpan.Zero);
+        return new TimingProperty(new TimingInfo(start, start.AddTicks(123), TimeSpan.FromTicks(123)));
+    }
+
     [TestMethod]
     [DynamicData(nameof(DuplicateSingleOrDefaultProperties))]
     public void GetTestNodeDetails_WithDuplicateSingleOrDefaultProperty_ThrowsInvalidOperationException(Type propertyType, IProperty firstProperty, IProperty secondProperty)

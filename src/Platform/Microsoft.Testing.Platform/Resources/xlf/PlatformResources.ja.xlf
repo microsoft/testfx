@@ -384,22 +384,22 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdAmbiguous">
         <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
-        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
+        <target state="translated">要求されたメトリックについて、複数のカバレッジ プロデューサーまたはセッションから全体の測定値が報告されたため、'--{0}' を評価できません。要求されたメトリックの全体の測定値が 1 つだけになるようにしてください。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdEmptyMeasurement">
         <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
-        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <target state="translated">'--{0}' には、要求されたメトリックの空でない全体カバレッジ データが必要です。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdMissingMeasurement">
         <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
-        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <target state="translated">'--{0}' には、要求されたメトリックの全体カバレッジ測定値が必要です。互換性のあるカバレッジ コレクターを有効にします。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdNotMet">
         <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
-        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <target state="translated">'--{0}' のカバレッジしきい値に達していません: {1}% &lt; {2}%。</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
@@ -661,7 +661,7 @@
       </trans-unit>
       <trans-unit id="IncompleteInformationalResponse">
         <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
-        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <target state="translated">テスト ホストは、想定されていたヘルプまたは検出プロトコルを完了しないまま終了しました。完全な情報の結果を受信できませんでした。</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -821,27 +821,27 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
         <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">全体の分岐カバレッジの最小パーセンテージを、0 から 100 の範囲で指定します。互換性のあるコレクターから空でないカバレッジ データが必要です。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
         <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <target state="translated">カバレッジのしきい値を '--list-tests' と組み合わせることはできません。</target>
         <note>{Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
         <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <target state="translated">カバレッジのしきい値を '--retry-failed-tests' と組み合わせることはできません。全体のしきい値を評価する前に、個別のプロセス試行のカバレッジをマージする必要があります。</target>
         <note>{Locked="--retry-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
         <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
-        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <target state="translated">'--{0}' には、ドットを小数点の区切り記号として使用した、0 から 100 までのパーセンテージが必要です。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
         <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">全体の行カバレッジの最小パーセンテージを、0 から 100 の範囲で指定します。互換性のあるコレクターから空でないカバレッジ データが必要です。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">

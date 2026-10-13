@@ -45,3 +45,16 @@ For package/acceptance changes, repack each compared state and verify the consum
 uses those bits. State what was not run and any remaining evidence gap.
 See .github/skills/feature-delivery/SKILL.md for the full evidence contract.
 -->
+
+### Test-value evidence
+
+<!--
+For behavior changes, identify the tested revision, contract/test case, and
+counterfactual (pre-fix behavior or a buildable disabled/wrong feature).
+Report the result without the behavior and with the correct implementation.
+Include exact commands, results, executed test counts, and artifacts when run.
+Distinguish executed proof from static predictions or unavailable evidence.
+For refactors, passing on both revisions is expected. If not applicable,
+explain why no executable behavior changed.
+See .github/skills/testfx-test-value-evidence/SKILL.md.
+-->
