@@ -34,9 +34,8 @@ internal sealed partial class TestHostControllersTestHost
             _testHostExitCodeReceived,
             testHostProcessExitCode,
             testHostProcessExitCodeIsAuthoritative);
-        int? testHostPid = _testHostPID;
-        ApplicationStateGuard.Ensure(testHostPid is not null);
-        TestHostProcessInformation testHostProcessInformation = new(testHostPid.Value, reportedTestHostExitCode, _testHostCompletedReceived);
+        int testHostPid = _testHostPID ?? throw new InvalidOperationException("Test host PID must be available during finalization.");
+        TestHostProcessInformation testHostProcessInformation = new(testHostPid, reportedTestHostExitCode, _testHostCompletedReceived);
         var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
         CancellationTokenSource finalizationCancellationTokenSource = EnsureControllerFinalizationCancellationTokenSource();
         RegisterControllerFinalizationTransition(applicationCancellationToken);
@@ -209,7 +208,7 @@ internal sealed partial class TestHostControllersTestHost
                    OS exit code authoritative: '{testHostProcessExitCodeIsAuthoritative}'
                    IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
                    TestHostCompletedRequest received: '{_testHostCompletedReceived}'
-                   PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}'
+                   PID: '{(_testHostPID.HasValue ? _testHostPID.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
                    CancellationRequested: '{testExecutionCanceled}'
                  """)
                 .ConfigureAwait(false);
