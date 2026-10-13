@@ -127,6 +127,7 @@ When making change to resource files, you MUST:
 
 ## Testing Guidelines
 
+- For every behavior-changing PR or commit you implement or review, use [testfx-test-value-evidence](skills/testfx-test-value-evidence/SKILL.md), which applies the vendored upstream `test-value-evidence` skill, and include a compact **Test-value evidence** section in the handoff or authorized PR review/description, bound to the exact revision. Bug fixes need a test that fails for the reported defect without the fix and passes with it; features need a buildable counterfactual that exposes the missing or wrong behavior. Do not count compilation/setup failures, skipped tests, or green CI alone as proof. Distinguish executed evidence, static predictions, surviving faults, and unavailable evidence. Existing tests may suffice; behavior-preserving refactors should pass on both revisions. Read-only reviewers must not mutate or execute untrusted PR code to manufacture evidence.
 - Tests for MTP and the MSTest analyzers MUST use MSTest.
 - Unit tests for MSTest itself MUST use the internal test framework in [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) (a `TestContainer`-based framework where any public parameterless method is a test).
 - The assertion style is project-specific and enforced by each project's `BannedSymbols.txt`. Check it before writing assertions:
