@@ -138,7 +138,47 @@ def validate_module_paths(module: dict[str, Any], repository_root: Path) -> None
         )
 
 
+def validate_project_coverage(
+    manifest: dict[str, Any], repository_root: Path
+) -> None:
+    source_root = repository_root / "src"
+    source_projects = {
+        project.relative_to(repository_root).as_posix()
+        for project in source_root.rglob("*.csproj")
+    }
+    manifest_projects = [
+        module["project"] for module in manifest["modules"]
+    ] + [
+        excluded["project"] for excluded in manifest.get("excludedProjects", [])
+    ]
+    configured_projects = set(manifest_projects)
+    unconfigured_projects = sorted(source_projects - configured_projects)
+    unknown_projects = sorted(configured_projects - source_projects)
+    duplicate_projects = sorted(
+        project
+        for project in configured_projects
+        if manifest_projects.count(project) > 1
+    )
+
+    if unconfigured_projects or unknown_projects or duplicate_projects:
+        details = []
+        if unconfigured_projects:
+            details.append("unconfigured src projects: " + ", ".join(unconfigured_projects))
+        if unknown_projects:
+            details.append("projects not found under src: " + ", ".join(unknown_projects))
+        if duplicate_projects:
+            details.append("duplicate manifest projects: " + ", ".join(duplicate_projects))
+        raise ValueError("Mutation manifest project inventory mismatch (" + "; ".join(details) + ")")
+
+    if manifest["knownTargetCount"] != len(source_projects):
+        raise ValueError(
+            "Mutation manifest knownTargetCount must match the "
+            f"{len(source_projects)} projects under src"
+        )
+
+
 def build_matrix(manifest: dict[str, Any], repository_root: Path) -> dict[str, Any]:
+    validate_project_coverage(manifest, repository_root)
     modules = enabled_modules(manifest)
     for module in modules:
         validate_module_paths(module, repository_root)

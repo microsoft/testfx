@@ -79,10 +79,63 @@ class MutationTestingTests(unittest.TestCase):
         excluded_projects = {
             excluded["project"]
             for excluded in target_manifest.get("excludedProjects", [])
+            if excluded["project"].startswith(
+                "src/Platform/Microsoft.Testing.Extensions."
+            )
         }
 
         self.assertEqual(extension_projects, configured_projects | excluded_projects)
         self.assertEqual(set(), configured_projects & excluded_projects)
+
+    def test_repository_manifest_covers_every_source_project(self) -> None:
+        target_manifest = MUTATION_TESTING.load_manifest(
+            REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
+        )
+        source_projects = {
+            project.relative_to(REPOSITORY_ROOT).as_posix()
+            for project in (REPOSITORY_ROOT / "src").rglob("*.csproj")
+        }
+        manifest_projects = {
+            module["project"] for module in target_manifest["modules"]
+        } | {
+            excluded["project"]
+            for excluded in target_manifest.get("excludedProjects", [])
+        }
+
+        self.assertEqual(source_projects, manifest_projects)
+        self.assertEqual(len(source_projects), target_manifest["knownTargetCount"])
+
+    def test_build_matrix_rejects_unconfigured_source_projects(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("configured", legacy=True)
+            for path in [target["project"], *target["testProjects"]]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+            unconfigured = root / "src" / "unconfigured" / "unconfigured.csproj"
+            unconfigured.parent.mkdir(parents=True, exist_ok=True)
+            unconfigured.touch()
+
+            with self.assertRaisesRegex(
+                ValueError, "unconfigured src projects: src/unconfigured/unconfigured.csproj"
+            ):
+                MUTATION_TESTING.build_matrix(manifest(target), root)
+
+    def test_build_matrix_rejects_stale_known_target_count(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("configured", legacy=True)
+            for path in [target["project"], *target["testProjects"]]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+
+            with self.assertRaisesRegex(ValueError, "knownTargetCount must match"):
+                MUTATION_TESTING.build_matrix(
+                    manifest(target) | {"knownTargetCount": 2},
+                    root,
+                )
 
     def test_load_manifest_validates_explicit_exclusions(self) -> None:
         target = module("one", legacy=True)
