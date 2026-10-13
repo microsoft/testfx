@@ -26,15 +26,10 @@ public sealed class InvokeTestingPlatformTaskTests
     {
         using AppHostTaskFixture fixture = new();
         StubFileSystem fileSystem = new();
-        string target = Path.Combine(fixture.DotnetRoot, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "apphost.exe" : "apphost");
-        fileSystem.ExistingPaths.Add(target);
-        using TestableInvokeTestingPlatformTask task = new(fileSystem)
-        {
-            TargetPath = new TaskItem(target),
-            TestingPlatformUseDirectExecutable = direct,
-            SimulatedExitCode = exitCode,
-            TargetFrameworkIdentifier = new TaskItem(".NETFramework"),
-        };
+        using TestableInvokeTestingPlatformTask task = CreateSimulatedTask(fixture, fileSystem);
+        string target = task.TargetPath.ItemSpec;
+        task.TestingPlatformUseDirectExecutable = direct;
+        task.SimulatedExitCode = exitCode;
         List<BuildMessageEventArgs> messages = [];
         List<BuildErrorEventArgs> errors = [];
         var engine = new Mock<IBuildEngine>();

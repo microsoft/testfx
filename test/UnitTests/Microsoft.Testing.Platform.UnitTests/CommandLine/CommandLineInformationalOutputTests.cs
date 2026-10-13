@@ -20,7 +20,7 @@ public sealed class CommandLineInformationalOutputTests
     public async Task Help_OrdinalOrderingNullFlagsDescriptionsAndEmptyExtensionFallbackAreExact()
     {
         using StringWriter text = new();
-        await using CommandLineInformationalOutput output = new("a folder\\Consumer.exe", ["--help"], text);
+        await using CommandLineInformationalOutput output = new(Path.Combine("a folder", "Consumer.exe"), ["--help"], text);
         _ = output.AcceptHandshake(CreateHandshake(help: true));
         await output.WriteHelpAsync(
         [
