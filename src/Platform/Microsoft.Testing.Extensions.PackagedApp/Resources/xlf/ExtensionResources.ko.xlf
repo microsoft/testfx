@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <target state="translated">지정된 식을 사용하여 테스트를 필터링합니다. 자세한 내용은 필터 옵션 세부 정보 섹션을 참조하세요. 선택적 단위 테스트 필터링을 사용하는 방법에 관한 자세한 내용과 예시는 https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests를 참조하세요.</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
       </trans-unit>
     </body>

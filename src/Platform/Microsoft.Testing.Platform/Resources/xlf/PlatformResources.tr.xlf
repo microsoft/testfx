@@ -384,22 +384,22 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdAmbiguous">
         <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
-        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
+        <target state="translated">'--{0}' değerlendirilemiyor çünkü birden çok kapsam üreticisi veya oturumu, istenen metrik için genel ölçümler bildirdi. İstenen metrik için tam olarak bir genel ölçüm bulunduğundan emin olun.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdEmptyMeasurement">
         <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
-        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <target state="translated">'--{0}', istenen ölçüm için boş olmayan genel kapsam verileri gerektirir.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdMissingMeasurement">
         <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
-        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <target state="translated">'--{0}' seçeneği, istenen metrik için genel kapsam ölçümü gerektirir. Uyumlu bir kapsam toplayıcısını etkinleştirin.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdNotMet">
         <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
-        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <target state="translated">'--{0}' için kapsam eşiği başarısız oldu: {1}% &lt; {2}%.</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
@@ -661,7 +661,7 @@
       </trans-unit>
       <trans-unit id="IncompleteInformationalResponse">
         <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
-        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <target state="translated">Test konağından, beklenen yardım veya bulma protokolü tamamlanmadan çıkıldı. Eksiksiz bir bilgi sonucu alınmadı.</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -821,27 +821,27 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
         <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">0 ile 100 arasında minimum genel dal kapsamı yüzdesini belirtir. Uyumlu bir toplayıcıdan boş olmayan kapsam verileri gerektirir.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
         <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <target state="translated">Kapsam eşikleri '--list-tests' ile birlikte kullanılamaz.</target>
         <note>{Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
         <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <target state="translated">Kapsam eşikleri '--retry-failed-tests' ile birleştirilemiyor. Genel bir eşik değerlendirilmeden önce ayrı işlem denemelerinden alınan kapsam verileri birleştirilmelidir.</target>
         <note>{Locked="--retry-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
         <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
-        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <target state="translated">'--{0}' ondalık ayırıcı olarak nokta kullanılan, 0 ile 100 arasında bir yüzde bekler.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
         <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">0 ile 100 arasında minimum genel satır kapsamı yüzdesini belirtir. Uyumlu bir toplayıcıdan boş olmayan kapsam verileri gerektirir.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">

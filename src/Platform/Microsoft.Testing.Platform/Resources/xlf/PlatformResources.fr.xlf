@@ -384,22 +384,22 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdAmbiguous">
         <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
-        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
+        <target state="translated">Nous ne pouvons pas évaluer « --{0} », car plusieurs producteurs de couverture ou sessions ont fourni des mesures globales pour la métrique demandée. Veillez à ce que la métrique demandée possède exactement une mesure globale.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdEmptyMeasurement">
         <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
-        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <target state="translated">« --{0} » nécessite des données de couverture globale non vides pour la métrique demandée.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdMissingMeasurement">
         <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
-        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <target state="translated">« --{0} » nécessite une mesure de couverture globale pour la métrique demandée. Activez un collecteur de couverture compatible.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdNotMet">
         <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
-        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <target state="translated">Échec du seuil de couverture pour « --{0} » : {1} % &lt; {2} %.</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
@@ -661,7 +661,7 @@
       </trans-unit>
       <trans-unit id="IncompleteInformationalResponse">
         <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
-        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <target state="translated">L’hôte de test s’est arrêté sans terminer le protocole d’aide ou de découverte attendu. Aucun résultat informatif complet n’a été reçu.</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -821,27 +821,27 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
         <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">Permet de spécifier le pourcentage minimal de couverture globale des branches, de 0 à 100. Nécessite des données de couverture non vides provenant d’un collecteur compatible.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
         <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <target state="translated">Vous ne pouvez pas associer des seuils de couverture avec « --list-tests ».</target>
         <note>{Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
         <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <target state="translated">Vous ne pouvez pas associer des seuils de couverture avec « --retry-failed-tests ». Vous devez fusionner la couverture issue de tentatives d’exécution dans des processus distincts avant l’évaluation d’un seuil global.</target>
         <note>{Locked="--retry-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
         <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
-        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <target state="translated">« --{0} » attend un pourcentage compris entre 0 et 100, avec un point comme séparateur décimal.</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
         <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">Permet de spécifier le pourcentage minimal de couverture globale des lignes, de 0 à 100. Nécessite des données de couverture non vides provenant d’un collecteur compatible.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">

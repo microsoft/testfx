@@ -384,22 +384,22 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdAmbiguous">
         <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
-        <target state="new">'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</target>
+        <target state="translated">無法評估 '--{0}'，因為多個涵蓋範圍產生者或工作階段回報了要求計量的整體測量結果。請確保要求的計量只有一個整體測量結果。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdEmptyMeasurement">
         <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
-        <target state="new">'--{0}' requires non-empty overall coverage data for the requested metric.</target>
+        <target state="translated">'--{0}' 需要非空的整體涵蓋範圍資料，才能取得要求的計量。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdMissingMeasurement">
         <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
-        <target state="new">'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</target>
+        <target state="translated">'--{0}' 需要要求的計量具有整體涵蓋範圍測量結果。請啟用相容的涵蓋範圍收集器。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdNotMet">
         <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
-        <target state="new">Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</target>
+        <target state="translated">'--{0}' 的涵蓋範圍閾值未達標: {1}% &lt; {2}%。</target>
         <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
@@ -821,27 +821,27 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
         <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">指定 0 到 100 之間的最低整體分支涵蓋率百分比。需要相容收集器提供非空的涵蓋範圍資料。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
         <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--list-tests'.</target>
+        <target state="translated">涵蓋範圍閾值不能與 '--list-tests' 搭配使用。</target>
         <note>{Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
         <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
-        <target state="new">Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</target>
+        <target state="translated">涵蓋範圍閾值不能與 '--retry-failed-tests' 搭配使用。評估整體閾值之前，必須先合併個別處理序嘗試所產生的涵蓋範圍資料。</target>
         <note>{Locked="--retry-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
         <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
-        <target state="new">'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</target>
+        <target state="translated">'--{0}' 必須指定 0 到 100 之間的百分比，並使用句點作為小數分隔符號。</target>
         <note>{0} is the command-line option name.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
         <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
-        <target state="new">Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</target>
+        <target state="translated">指定 0 到 100 之間的最低整體行涵蓋率百分比。需要相容收集器提供非空的涵蓋範圍資料。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
