@@ -208,7 +208,7 @@ internal sealed partial class TestHostControllersTestHost
                    OS exit code authoritative: '{testHostProcessExitCodeIsAuthoritative}'
                    IPC-reported exit code: '{(_testHostExitCodeReceived.HasValue ? _testHostExitCodeReceived.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
                    TestHostCompletedRequest received: '{_testHostCompletedReceived}'
-                   PID: '{(_testHostPID.HasValue ? _testHostPID.Value.ToString(CultureInfo.InvariantCulture) : "<not received>")}'
+                   PID: '{_testHostPID.Value.ToString(CultureInfo.InvariantCulture)}'
                    CancellationRequested: '{testExecutionCanceled}'
                  """)
                 .ConfigureAwait(false);
