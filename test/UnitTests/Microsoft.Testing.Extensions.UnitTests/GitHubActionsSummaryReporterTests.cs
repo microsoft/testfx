@@ -5,8 +5,6 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
-using System.Linq;
-
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
@@ -67,12 +65,12 @@ public sealed class GitHubActionsSummaryReporterTests
     {
         using SummaryExecutionFixture fixture = new(historyOnly: true);
         await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
-        foreach (TestNodeStateProperty state in new[] { first, second }.Select(outcome => outcome switch
-                 {
-                     "failed" => new FailedTestNodeStateProperty("failure"),
-                     "skipped" => SkippedTestNodeStateProperty.CachedInstance,
-                     _ => PassedTestNodeStateProperty.CachedInstance,
-                 }))
+        foreach (TestNodeStateProperty state in new[] { first, second }.Select<string, TestNodeStateProperty>(static outcome => outcome switch
+            {
+                "failed" => new FailedTestNodeStateProperty("failure"),
+                "skipped" => SkippedTestNodeStateProperty.CachedInstance,
+                _ => PassedTestNodeStateProperty.CachedInstance,
+            }))
         {
             await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(state, 1, false, "Tests.Folded"), TestContext.CancellationToken);
         }
