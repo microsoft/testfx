@@ -159,7 +159,7 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdFailedRoundedValues">
         <source>Coverage is below the required threshold (the percentages round to the same value).</source>
-        <target state="new">Coverage is below the required threshold (the percentages round to the same value).</target>
+        <target state="translated">La copertura è al di dotto della soglia richiesta (le percentuali vengono arrotondate allo stesso valore).</target>
         <note />
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">
