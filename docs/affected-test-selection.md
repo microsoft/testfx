@@ -72,11 +72,15 @@ entry in the existing Windows matrix reuses the same Release build, packing, Win
 toolchain on its own agent. The ordinary Release entry runs full tests and publishes coverage without waiting for
 collection. Each entry owns its workspace and diagnostic artifacts; only the collection entry publishes test maps.
 Collection failures remain blocking and visible, but cannot cancel another matrix entry by consuming its timeout.
+Azure DevOps' [matrix contract](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/jobs-job-strategy)
+creates a separate copy of the job for each entry.
 
 The root `EnableAffectedTests` parameter controls both the collection matrix entry and PR selection. The collection
 entry is also compile-time gated by `SkipTests=false` and the main branch. Disabling affected tests retains the
 ordinary Release and Debug entries without creating a redundant collection build. PR selection, conservative
 fallbacks, SDK/package versions, and the collection command's exit semantics are unchanged.
+The selected parameter value is also passed to the rollout validator, so its compatibility gates use the actual
+run setting rather than the parameter's source-file default.
 
 Increasing the shared timeout again would not isolate required validation from slow or stuck collection. Running
 ordinary tests first would still share cancellation and artifact-publication deadlines. Downloading another job's
@@ -92,8 +96,8 @@ claim that a package update fixes the disconnect.
 The retained `CollectionUsesIndependentJob` guard detects the original shared-job layout on base
 `c6a0b06f75b8bd02512976a2c2af4b0312eeecf2`: running the updated validator with the unchanged pipeline and template
 in an isolated comparison exits 1 at that assertion. With the isolated collection layout, the same command exits
-0 and all 12 isolation self-tests pass. The comparison retains only the validator patch, SHA-256
-`E8D7BA937663A48656A9F3E258E623438F0E4195F7721A709FC5A85BE3D86700`. Reproduce the configuration checks with:
+0 and all 13 isolation self-tests pass. The comparison retains only the validator patch, SHA-256
+`4C8C117CAD3D9211DF7760CDD6FF3BA7D296F5E6DC2CE27D4AEAE2BFA03A2E54`. Reproduce the configuration checks with:
 
 ```powershell
 pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest
@@ -103,6 +107,25 @@ These are executable configuration assertions, not a simulated claim of running 
 cover collection/validation exclusion, main/`SkipTests`/rollback gates, blocking collection failure, and separate
 result/binlog/dump artifact names. Live main-branch collection and full-test execution remain CI validation.
 No SDK, package, launcher, or test-assembly implementation changes are part of this repair.
+
+Runtime rollback was also checked with a deliberately known-bad storage-version configuration in the isolated
+comparison: `-EnableAffectedTests False` passes, while `True` retains the existing `Content-Range` rejection.
+A targeted counterfactual that keeps the parameter but ignores its runtime value makes the disabled invocation
+fail at that compatibility guard (exit 1); honoring it passes (exit 0). This is configuration-gate evidence, not
+a claim that the deliberately incompatible package was restored or executed.
+
+Azure DevOps' non-executing `previewRun=true` API successfully compiled the initial implementation commit
+`1c6c1eec3fd177f26dd3aa953a6dd3e72b2ecf48` in four configurations:
+
+| Configuration | Windows matrix entries | Per-entry budget | Expanded test behavior |
+| --- | --- | --- | --- |
+| Main, affected tests enabled | Release, Debug, AffectedTests | 240 minutes | Collection and full testing have opposite `_CollectAffectedTests` conditions. |
+| PR, affected tests enabled | Release, Debug | 90 minutes | Selection, full fallback, and Debug unit tests; no collection. |
+| Main, affected tests disabled | Release, Debug | 240 minutes | Ordinary full testing and Debug unit tests; no collection or selection. |
+| Main, `SkipTests=true` | Release, Debug | 240 minutes | No Windows test steps or collection entry. |
+
+The previews validate Azure template expansion and job ownership without queuing builds. They are not proof of
+test execution or of the upstream collector's dependency completeness.
 
 ## Headless collection compatibility
 

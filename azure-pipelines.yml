@@ -126,7 +126,7 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: false
-    - pwsh: ./eng/validate-affected-tests.ps1 -SelfTest
+    - pwsh: ./eng/validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }}
       displayName: Validate affected-test rollout
     - bash: |
         set -euo pipefail

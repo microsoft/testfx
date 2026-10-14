@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [switch]$SelfTest
+    [switch]$SelfTest,
+    [ValidateSet("true", "false")]
+    [string]$EnableAffectedTests
 )
 
 function Assert-Containment {
@@ -56,7 +58,8 @@ function Assert-CollectionJobIsolation {
         throw "CollectionHonorsRolloutGates: the collection matrix entry must require main, enabled tests, and enabled affected tests."
     }
 
-    if (-not $windowsJob.Contains('enableAffectedTests: ${{ parameters.EnableAffectedTests }}')) {
+    if (-not $windowsJob.Contains('enableAffectedTests: ${{ parameters.EnableAffectedTests }}') -or
+        -not $Pipeline.Contains('validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }}')) {
         throw "AffectedTestsRollbackControlsAllJobs: the root affected-test parameter must control collection and selection."
     }
 
@@ -130,6 +133,12 @@ function Invoke-CollectionJobIsolationSelfTest {
         @{
             Name = "DisconnectedRollbackIsRejected"
             Pipeline = $Pipeline.Replace('enableAffectedTests: ${{ parameters.EnableAffectedTests }}', "enableAffectedTests: true")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
+        },
+        @{
+            Name = "DisconnectedValidatorRollbackIsRejected"
+            Pipeline = $Pipeline.Replace(' -EnableAffectedTests ${{ parameters.EnableAffectedTests }}', "")
             CollectBranch = $CollectBranch
             ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
         },
@@ -240,7 +249,9 @@ if (-not $affectedTestsCall.Success) {
     throw "The pipeline must route the Windows test call site to collection on main and selection on PRs."
 }
 
-$affectedTestsEnabled = if ($affectedTestsCall.Groups["enabled"].Value -in "true", "false") {
+$affectedTestsEnabled = if ($PSBoundParameters.ContainsKey("EnableAffectedTests")) {
+    [bool]::Parse($EnableAffectedTests)
+} elseif ($affectedTestsCall.Groups["enabled"].Value -in "true", "false") {
     $affectedTestsCall.Groups["enabled"].Value -eq "true"
 } else {
     $affectedTestsParameter = [regex]::Match(
