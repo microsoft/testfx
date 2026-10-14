@@ -62,6 +62,12 @@ original/mutant observations, not empirical kill ratios. Unavailable production
 context is disclosed without a deduction. Existing changed-line anchoring,
 deduplication, parallel-safety, and safe-output publication gates still apply.
 
+The trusted extraction step writes its revision, PR identity, counts, and file
+paths to `/tmp/gh-aw/test-review/review-inputs.json`, alongside the input files
+inside the agent-visible tree. The agent reads this manifest after extraction.
+Do not interpolate custom-step outputs into the prompt: gh-aw renders it before
+those steps run. Missing inputs are incomplete analysis, not an empty scope.
+
 ### Firewall access for repository work
 
 `network: defaults` covers infrastructure, not package feeds or Git transport.
@@ -516,6 +522,7 @@ fixtures, not live model output or safe-output publication.
 | [`enable-auto-merge.yml`](./enable-auto-merge.yml) | `pull_request_target` | Enables auto-merge on eligible PRs. |
 | [`markdownlint.yml`](./markdownlint.yml) | PR | Runs `markdownlint` on changed Markdown files. |
 | [`test-build-failure-analysis.yml`](./test-build-failure-analysis.yml) | PR + push + manual | Runs the Build Failure Analysis archive-validation regression suite when its workflow sources or tests change. |
+| [`test-test-review-inputs.yml`](./test-test-review-inputs.yml) | PR + push + manual | Runs test-review input-handoff and revision-bound reporting regressions when their sources or tests change. |
 
 ## Shared components
 

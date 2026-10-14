@@ -1,0 +1,54 @@
+name: Test quality review inputs
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shared/test-reviewer-shared.md'
+      - '.github/workflows/test-reviewer*.md'
+      - '.github/workflows/test-reviewer*.lock.yml'
+      - '.github/workflows/tests/test_test_value_evidence.py'
+      - '.github/workflows/test-test-review-inputs.yml'
+      - '.github/workflows/README.md'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.agents/skills/test-value-evidence/SKILL.md'
+      - '.github/skills/testfx-test-value-evidence/SKILL.md'
+      - 'eng/vendored-files.json'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/shared/test-reviewer-shared.md'
+      - '.github/workflows/test-reviewer*.md'
+      - '.github/workflows/test-reviewer*.lock.yml'
+      - '.github/workflows/tests/test_test_value_evidence.py'
+      - '.github/workflows/test-test-review-inputs.yml'
+      - '.github/workflows/README.md'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.agents/skills/test-value-evidence/SKILL.md'
+      - '.github/skills/testfx-test-value-evidence/SKILL.md'
+      - 'eng/vendored-files.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-test-review-inputs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test review input handoff
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Test runtime inputs and revision-bound review contracts
+        run: python -m unittest discover -s .github/workflows/tests -p test_test_value_evidence.py -v

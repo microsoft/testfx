@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -77,15 +78,19 @@ class ReviewInputTests(unittest.TestCase):
         self.git("commit", "--quiet", "-m", "Fixture revision")
         return self.git("rev-parse", "HEAD")
 
-    def extract(self, base=None, head=None, expected_exit=0):
+    def extract(self, base=None, head=None, expected_exit=0, pr_number="11927"):
         output = self.root / "outputs.txt"
         runner_temp = self.root / "runner-temp"
         runner_temp.mkdir()
+        self.inputs_root = runner_temp / "test-review"
         env = {
             **self.env,
             "BASE_SHA": base or self.base,
             "HEAD_SHA": head or self.git("rev-parse", "HEAD"),
+            "PR_NUMBER": pr_number,
+            "GITHUB_REPOSITORY": "microsoft/testfx",
             "RUNNER_TEMP": runner_temp.as_posix(),
+            "INPUTS_DIR": self.inputs_root.as_posix(),
             "GITHUB_OUTPUT": output.as_posix(),
         }
         result = subprocess.run(
@@ -104,6 +109,71 @@ class ReviewInputTests(unittest.TestCase):
             for key, value in outputs.items() if key.endswith("_path")
         }
         return {**outputs, **files}
+
+    def inputs_manifest(self):
+        manifest = self.inputs_root / "review-inputs.json"
+        self.assertTrue(manifest.is_file(), "The agent-visible review input manifest is missing.")
+        return json.loads(manifest.read_text(encoding="utf-8"))
+
+    def test_manifest_preserves_revision_identity_and_review_paths(self):
+        self.write("src/Product.cs", "class Product { int Value => 2; }\n")
+        self.write("test/ProductTests.cs", "class ProductTests { void ChangedTest() { } }\n")
+        self.write("Directory.Build.props", "<Project />\n")
+        head = self.commit()
+        self.extract()
+        self.assertEqual(
+            {
+                "schema_version": 1,
+                "repository": "microsoft/testfx",
+                "pr_number": 11927,
+                "base_sha": self.base,
+                "merge_base": self.base,
+                "head_sha": head,
+                "test_count": 1,
+                "src_count": 1,
+                "config_count": 1,
+                "has_parallel_scope": True,
+                "changed_files_path": (self.inputs_root / "changed-review-files.txt").as_posix(),
+                "test_files_path": (self.inputs_root / "changed-test-files.txt").as_posix(),
+                "test_regions_path": (self.inputs_root / "changed-test-regions.tsv").as_posix(),
+                "src_files_path": (self.inputs_root / "changed-src-files.txt").as_posix(),
+                "config_files_path": (self.inputs_root / "changed-config-files.txt").as_posix(),
+            },
+            self.inputs_manifest(),
+        )
+
+    def test_inputs_remain_readable_when_prompt_is_rendered_before_extraction(self):
+        source = SOURCE.read_text(encoding="utf-8")
+        prompt = source.split("---", 2)[2]
+        early_prompt = re.sub(r"\$\{\{\s*steps\.[^}]+\}\}", "", prompt)
+        self.assertTrue(
+            "      INPUTS_DIR: /tmp/gh-aw/test-review\n" in source,
+            "The extractor must write inputs inside the agent-visible tree.",
+        )
+        self.assertTrue(
+            "`/tmp/gh-aw/test-review/review-inputs.json`" in early_prompt,
+            "The early-rendered prompt must retain the agent-visible manifest path.",
+        )
+        self.assertFalse(
+            "${{ steps." in prompt,
+            "The prompt must not interpolate outputs from custom steps that have not run.",
+        )
+        self.write("src/Product.cs", "class Product { int Value => 2; }\n")
+        head = self.commit()
+        self.extract()
+        manifest = self.inputs_manifest()
+        self.assertEqual(head, manifest["head_sha"])
+        self.assertEqual(
+            ["src/Product.cs"],
+            Path(manifest["changed_files_path"]).read_text().splitlines(),
+        )
+        for key, value in manifest.items():
+            if key.endswith("_path"):
+                self.assertTrue(Path(value).is_file(), key)
+
+    def test_missing_pr_identity_does_not_publish_a_manifest_or_success_outputs(self):
+        self.extract(expected_exit=1, pr_number="")
+        self.assertFalse((self.inputs_root / "review-inputs.json").exists())
 
     def test_source_only_change_keeps_evidence_scope_without_parallel_audit(self):
         self.write("src/Product.cs", "class Product\n{\n    int Value => 2;\n}\n")
@@ -190,6 +260,15 @@ class ReviewInputTests(unittest.TestCase):
         self.assertEqual([], outputs["test_files_path"])
         self.assertEqual([], outputs.get("changed_files_path"))
         self.assertEqual("false", outputs["has_parallel_scope"])
+        manifest = self.inputs_manifest()
+        self.assertEqual(self.base, manifest["head_sha"])
+        self.assertEqual(0, manifest["test_count"])
+        self.assertEqual(0, manifest["src_count"])
+        self.assertEqual(0, manifest["config_count"])
+        self.assertFalse(manifest["has_parallel_scope"])
+        for key, value in manifest.items():
+            if key.endswith("_path"):
+                self.assertEqual("", Path(value).read_text(), key)
 
     def test_invalid_revision_is_failure_not_empty_success(self):
         self.extract(base="not-a-revision", expected_exit=1)
@@ -311,7 +390,14 @@ class ReportingContractTests(unittest.TestCase):
         source = SOURCE.read_text(encoding="utf-8")
         self.assertIn("### Step 0 — Assess counterfactual test-value evidence", source)
         self.assertIn("#### Test-value evidence", source)
-        self.assertIn("test-value-evidence:${{ steps.resolve.outputs.head_sha }}", source)
+        self.assertTrue(
+            "test-value-evidence:<head_sha>" in source,
+            "Report markers must use the runtime-resolved head SHA.",
+        )
+        self.assertTrue(
+            "Replace `<pr_number>`, `<merge_base>`, and `<head_sha>`" in source,
+            "Report placeholders must be replaced with exact manifest values.",
+        )
         self.assertIn("Do not execute PR code, builds, tests, or mutation tools.", source)
         self.assertIn("static predictions, not executed mutation results", source)
 
