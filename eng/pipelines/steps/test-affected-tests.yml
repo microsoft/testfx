@@ -1,0 +1,57 @@
+parameters:
+- name: solution
+  type: string
+  values:
+  - TestFx.slnx
+  - NonWindowsTests.slnf
+- name: affectedTestsMode
+  type: string
+  values:
+  - collect
+  - run
+
+steps:
+# The SDK owns DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
+- ${{ if eq(parameters.affectedTestsMode, 'collect') }}:
+  - pwsh: |
+      dotnet test --solution ${{ parameters.solution }} -c $(_BuildConfig) --no-build "-bl:$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/TestCollect.binlog" -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map
+      exit $LASTEXITCODE
+    name: CollectAffectedTests
+    displayName: Test and collect affected-test map
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))
+    env:
+      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      CTS_ACCESSTOKEN: $(System.AccessToken)
+      CTS_COLLECTIONURI: $(System.CollectionUri)
+      CTS_TEMPDIRECTORY: $(Agent.TempDirectory)
+      CTS_BUILDID: $(Build.BuildId)
+      BUILD_CONTAINERID: $(Build.ContainerId)
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- ${{ if eq(parameters.affectedTestsMode, 'run') }}:
+  - pwsh: |
+      dotnet test --solution ${{ parameters.solution }} -c $(_BuildConfig) --no-build "-bl:$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/TestAffected.binlog" -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestRunnerAdditionalArguments= --show-test-results failed --affected-tests
+      $exitCode = $LASTEXITCODE
+      if ($exitCode -eq 0) {
+        Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
+        exit 0
+      }
+
+      if ($exitCode -in 2, 8) {
+        Write-Host "##vso[task.logissue type=error]Affected-test execution failed with exit code $exitCode."
+        exit $exitCode
+      }
+
+      Write-Host "##vso[task.logissue type=warning]Affected-test selection failed; running the full test suite."
+      exit 0
+    name: TestAffected
+    displayName: Test affected changes
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
+    env:
+      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
+      CTS_ACCESSTOKEN: $(System.AccessToken)
+      CTS_COLLECTIONURI: $(System.CollectionUri)
+      CTS_TEMPDIRECTORY: $(Agent.TempDirectory)
+      CTS_BUILDID: $(Build.BuildId)
+      BUILD_CONTAINERID: $(Build.ContainerId)
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
