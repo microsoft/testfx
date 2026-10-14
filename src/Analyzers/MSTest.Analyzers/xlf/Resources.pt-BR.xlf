@@ -169,7 +169,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
         <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
-        <target state="new">Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</target>
+        <target state="translated">As asserções de coleções enumeram um IQueryable em vez de solicitar um resultado escalar ao seu provedor. Use Queryable.Count para obter a cardinalidade ou Queryable.Any para verificar se a coleção está vazia. Materialize os resultados explicitamente ao testar o conteúdo ou reutilizar um instantâneo, em vez de buscar todas as linhas correspondentes apenas para verificar a contagem ou a existência de resultados.</target>
         <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
@@ -179,7 +179,7 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
         <source>Avoid enumerating queries for count or existence assertions</source>
-        <target state="new">Avoid enumerating queries for count or existence assertions</target>
+        <target state="translated">Evite enumerar consultas para verificar contagens ou existência</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
