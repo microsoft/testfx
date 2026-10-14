@@ -86,16 +86,21 @@ general `PropertyInfo` enumeration or name lookup reflection-free.
 
 The following user-code shapes are skipped by the generator. They keep working when
 source-gen is not active (because reflection sees them), but are invisible to the
-source-gen registry. Where applicable, an `AOTSG` warning describes the limitation:
+source-gen registry. In `ReflectionFree` mode, an `AOTSG` warning describes the
+applicable limitation. Diagnostic help links point to the ID-specific headings
+in [this repository's diagnostics guide](diagnostics.md), keeping the guidance
+versioned with the generator instead of linking to nonexistent `AOTSG` pages in
+the `MSTEST` analyzer documentation. A shared descriptor factory supplies the
+same URL scheme for every `AOTSG` rule.
 
 | Shape | Skipped because | Workaround | Warning |
 |---|---|---|---|
 | Inherited `[TestClass]` (attribute applied only to the base) | `SyntaxValueProvider.ForAttributeWithMetadataName` does not follow inheritance | Apply `[TestClass]` directly to the derived class | MSTEST0069 |
-| Open generic test class (`class Foo<T>`) | `typeof(Foo<T>)` is invalid at module-initializer scope | Make the class non-generic, or instantiate a concrete derived class | [AOTSG0002](diagnostics.md#aotsg0002) |
-| Generic test method (`void Test<T>(T value)`) | `typeof(T)` is invalid at module-initializer scope | Use a non-generic test method that constructs the type itself | [AOTSG0004](diagnostics.md#aotsg0004) |
-| Test method with `ref` / `out` / `in` / `ref readonly` parameter | `typeof(T)` for by-ref parameters round-trips as `T&` and the resolver's `typeof(T) == ParameterType` check would fail | Use a wrapper type or a non-by-ref signature | [AOTSG0005](diagnostics.md#aotsg0005) |
-| `file`-local test class | The generated module initializer lives in a different file | Move the class out of file scope | [AOTSG0003](diagnostics.md#aotsg0003) |
-| Private / protected nested test class | The generated `internal` module initializer cannot reference it (CS0122) | Make the type `internal` or more visible | [AOTSG0003](diagnostics.md#aotsg0003) |
+| Open generic test class (`class Foo<T>`) or enclosing type | The generated registry requires a closed type at module-initializer scope | Apply `[TestClass]` directly to a non-generic concrete subclass outside any open generic enclosing type, or make the class non-generic | [AOTSG0002](diagnostics.md#aotsg0002) |
+| Generic method on a test class (`void Test<T>(T value)`) | `typeof(T)` is invalid at module-initializer scope | Use a non-generic method that constructs the type itself | [AOTSG0004](diagnostics.md#aotsg0004) |
+| Method or constructor with `ref` / `out` / `in` / `ref readonly` parameter | `typeof(T)` for by-ref parameters round-trips as `T&` and the resolver's `typeof(T) == ParameterType` check would fail | Use a wrapper type or a non-by-ref signature | [AOTSG0005](diagnostics.md#aotsg0005) |
+| `file`-local test class or enclosing type | The generated module initializer lives in a different file | Remove the `file` modifier from the test class and any file-local enclosing type | [AOTSG0003](diagnostics.md#aotsg0003) |
+| Test class or enclosing type is `private`, `protected`, or `private protected` | The generated `internal` module initializer cannot reference it (CS0122) | Make the test class and every enclosing type accessible from the same assembly (`public`, `internal`, or `protected internal` for nested types) | [AOTSG0003](diagnostics.md#aotsg0003) |
 | Static test class | Source-gen models instance-based test execution | Make the class non-static | [AOTSG0001](diagnostics.md#aotsg0001) |
 | Abstract test class | Not directly runnable; but its members are still rooted via `[DynamicDependency]` because of the per-base chain emission | Annotate a concrete derived class with `[TestClass]` | — |
 
