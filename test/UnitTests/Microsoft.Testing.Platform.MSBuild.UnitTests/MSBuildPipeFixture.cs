@@ -39,14 +39,10 @@ internal sealed class MSBuildPipeFixture : IAsyncDisposable
         // Independent cleanup cancellation is not the already-cancelled operation token.
         // Join the original worker before disposing its stream or cancellation source.
         await _lifetime.CancelAsync();
-        try
+        using (_lifetime)
+        using (_server)
         {
             await _worker.WaitAsync(CleanupLimit);
-        }
-        finally
-        {
-            _server.Dispose();
-            _lifetime.Dispose();
         }
     }
 

@@ -340,11 +340,13 @@ internal sealed class ControllerHostFixture : IDisposable
             _exited.TrySetResult(true);
             Process.Raise(x => x.Exited += null!, EventArgs.Empty);
         }
-        catch (OperationCanceledException) when (_peerLifetime.IsCancellationRequested)
+        catch (OperationCanceledException exception) when (_peerLifetime.IsCancellationRequested)
         {
+            Trace.WriteLine($"Controller fixture peer canceled during teardown: {exception}");
         }
-        catch (IOException) when (_peerLifetime.IsCancellationRequested || _run?.IsFaulted == true)
+        catch (IOException exception) when (_peerLifetime.IsCancellationRequested || _run?.IsFaulted is true)
         {
+            Trace.WriteLine($"Controller fixture peer disconnected during teardown or after a host failure: {exception}");
         }
     }
 
