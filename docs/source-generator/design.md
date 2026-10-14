@@ -16,7 +16,8 @@
 This document describes the design, scope and current limitations of the MSTest source
 generator that ships in the `MSTest.SourceGeneration` package. It is intentionally
 opinionated: where there is a deliberate gap, the gap and its rationale are documented so
-that adding new code paths does not silently change the contract.
+that adding new code paths does not silently change the contract. See the
+[AOT source-generator diagnostics](diagnostics.md) guide for details about the `AOTSG0001`–`AOTSG0005` warnings.
 
 ## Goals
 
@@ -83,19 +84,19 @@ general `PropertyInfo` enumeration or name lookup reflection-free.
 
 ## Discovery limitations
 
-The following user-code shapes are silently skipped by the generator. They keep working
-when source-gen is not active (because reflection sees them), but are invisible to the
-source-gen registry. Where applicable, an analyzer warns about the limitation:
+The following user-code shapes are skipped by the generator. They keep working when
+source-gen is not active (because reflection sees them), but are invisible to the
+source-gen registry. Where applicable, an `AOTSG` warning describes the limitation:
 
 | Shape | Skipped because | Workaround | Warning |
 |---|---|---|---|
 | Inherited `[TestClass]` (attribute applied only to the base) | `SyntaxValueProvider.ForAttributeWithMetadataName` does not follow inheritance | Apply `[TestClass]` directly to the derived class | MSTEST0069 |
-| Open generic test class (`class Foo<T>`) | `typeof(Foo<T>)` is invalid at module-initializer scope | Make the class non-generic, or instantiate a concrete derived class | — |
-| Generic test method (`void Test<T>(T value)`) | `typeof(T)` is invalid at module-initializer scope | Use a non-generic test method that constructs the type itself | — |
-| Test method with `ref` / `out` / `in` / `ref readonly` parameter | `typeof(T)` for by-ref parameters round-trips as `T&` and the resolver's `typeof(T) == ParameterType` check would fail | Use a wrapper type or a non-by-ref signature | — |
-| `file`-local test class | The generated module initializer lives in a different file | Move the class out of file scope | — |
-| Private / protected nested test class | The generated `internal` module initializer cannot reference it (CS0122) | Make the type `internal` or more visible | — |
-| Static test class | Source-gen models instance-based test execution | Make the class non-static | — |
+| Open generic test class (`class Foo<T>`) | `typeof(Foo<T>)` is invalid at module-initializer scope | Make the class non-generic, or instantiate a concrete derived class | [AOTSG0002](diagnostics.md#aotsg0002) |
+| Generic test method (`void Test<T>(T value)`) | `typeof(T)` is invalid at module-initializer scope | Use a non-generic test method that constructs the type itself | [AOTSG0004](diagnostics.md#aotsg0004) |
+| Test method with `ref` / `out` / `in` / `ref readonly` parameter | `typeof(T)` for by-ref parameters round-trips as `T&` and the resolver's `typeof(T) == ParameterType` check would fail | Use a wrapper type or a non-by-ref signature | [AOTSG0005](diagnostics.md#aotsg0005) |
+| `file`-local test class | The generated module initializer lives in a different file | Move the class out of file scope | [AOTSG0003](diagnostics.md#aotsg0003) |
+| Private / protected nested test class | The generated `internal` module initializer cannot reference it (CS0122) | Make the type `internal` or more visible | [AOTSG0003](diagnostics.md#aotsg0003) |
+| Static test class | Source-gen models instance-based test execution | Make the class non-static | [AOTSG0001](diagnostics.md#aotsg0001) |
 | Abstract test class | Not directly runnable; but its members are still rooted via `[DynamicDependency]` because of the per-base chain emission | Annotate a concrete derived class with `[TestClass]` | — |
 
 ### Future direction: inherited `[TestClass]`
