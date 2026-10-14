@@ -49,8 +49,9 @@ builds that contain only the no-handshake fix.
   The native symbol reader (`msdia140.dll`) must accompany the profiler; otherwise collection can succeed with
   test identities but no source associations. The WinUI validation went from 1,598 tests with zero associations
   to 1,598 tests with 498 associations when the complete native layout was restored.
-- The shared Windows test call site selects the mode from the source branch, supplies Azure DevOps build identity and
-  the scoped system access token, and sets `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
+- The Windows and gated non-Windows call sites select the mode from the source branch. Their shared
+  `test-affected-tests.yml` template supplies Azure DevOps build identity and the scoped system access token, and sets
+  `DOTNET_CLI_ENABLE_AFFECTED_TESTS=1` only for affected-test commands.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
   test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
@@ -126,6 +127,108 @@ Azure DevOps' non-executing `previewRun=true` API successfully compiled the init
 
 The previews validate Azure template expansion and job ownership without queuing builds. They are not proof of
 test execution or of the upstream collector's dependency completeness.
+
+## Cross-platform rollout readiness
+
+The requested next step is main-branch map collection on Windows, Linux, and macOS, with Linux PRs consuming their
+own baseline. macOS remains excluded from PR validation; collecting there would exercise the collector rather
+than reduce today's PR execution time.
+
+Package inspection on 2026-10-14 found an upstream prerequisite, not merely missing pipeline wiring. Both the
+repository-pinned `Microsoft.Testing.Extensions.AffectedTests` package `18.13.0-preview.26513.2` and the newest
+available preview `18.13.0-preview.26514.4` explicitly reject non-Windows collection before test discovery, returning
+exit 1. Their packaged README states that collection uses the Windows x64 CTS runtime; neither supplies a Unix CTS
+runtime. These are inspections of the distributed packages, not Linux/macOS execution evidence.
+
+The map's storage key includes the runtime description and runtime identifier. Windows shards therefore cannot
+stand in for Linux or macOS baselines. The Azure DevOps provider uploads each shard at its distinct object path in
+the build's shared container, tolerates an artifact-publication HTTP 409, then reads the artifact back and verifies
+its container identity. Its file lock coordinates processes on one agent, not separate OS agents; real multi-agent
+publication must still be validated when a compatible collector becomes available.
+
+Collection is also not authoritative test validation: the inspected orchestrator accepts failed-test batch exit 2,
+reports those failures, and can still save a map and return 0. Ordinary full testing must therefore retain its own
+job and failure outcome, on every OS that collects maps.
+
+The safe implementation is rollout-ready wiring behind a separate, off-by-default
+`EnableNonWindowsAffectedTests` parameter, subordinate to the root `EnableAffectedTests` rollback. The validator
+currently rejects every Unix activation; its support guard must be deliberately updated after a compatible package
+has been verified, rather than assuming an untested newer version supports Unix. The existing full Linux/macOS runs remain
+unchanged while that gate is off. Once support is established, main gets independent Release and collection
+entries on those OSes, Linux PRs get selection with the existing conservative full fallback, and nightly/manual
+validation remains authoritative. Collection entries own distinct diagnostic artifacts and do not enable live
+test-result publishing.
+
+Enabling the current collector, treating its non-Windows exit as success, reusing Windows maps, or substituting
+collection for full validation were rejected because they respectively break CI, conceal missing baselines, violate
+map compatibility, or lose test-failure enforcement. No dependency update or upstream implementation is included.
+Unix activation remains blocked until collector support, actual OS-specific mappings and selection, concurrent
+publication, cancellation, and failure behavior have been validated with the aligned shipping packages and SDK.
+This is unofficial-main pipeline preparation only; it does not require a product servicing backport.
+
+### Readiness validation and test-value evidence
+
+The implementation was tested against base `1317c31eefe77c6a824e162a31119c4a60dca0aa`. Its six-file implementation
+patch (YAML and validator, excluding this decision record) has SHA-256
+`9030F4915D847C01CB2F3A84C84C79B66CE7DD6166C4659453BAAE40B0B66601`. Validation used PowerShell 7.6.7 and
+`powershell-yaml` 0.4.12; no shipping SDK/package versions changed.
+
+```powershell
+pwsh -NoLogo -NoProfile -NonInteractive -File .\eng\validate-affected-tests.ps1 -SelfTest
+pwsh -NoLogo -NoProfile -NonInteractive -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests True -EnableNonWindowsAffectedTests False
+pwsh -NoLogo -NoProfile -NonInteractive -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests False -EnableNonWindowsAffectedTests True
+pwsh -NoLogo -NoProfile -NonInteractive -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests True -EnableNonWindowsAffectedTests True
+git --no-pager diff --check
+git --no-pager diff --cached --check
+```
+
+The first three validator configurations passed with exit 0: 13 existing Windows isolation cases and 30 Unix
+readiness cases, no skips. The fourth was correctly rejected with exit 1 at `NonWindowsCollectorSupportRequired`,
+before running self-tests. Both whitespace checks passed with exit 0. The original Windows-only baseline executed
+and passed all 13 existing isolation cases before implementation.
+
+| Contract / case | Retained-assertion counterfactual | Without behavior | Correct implementation |
+| --- | --- | --- | --- |
+| Independent Linux collection / `NonWindowsCollectionUsesIndependentJob` | Restore only the original Linux job from the base above in an owned configuration fixture; retain the final validator and templates. | Exit 1 at the intended Linux topology assertion after the 13 Windows cases pass. Unix cases beyond that assertion are not reached. | The same command passes all 43 cases, exit 0, both before and after the comparison. |
+| Explicit support gate / `WindowsOnlyCollectorActivationIsRejected` | Change only `Assert-NonWindowsCollectorSupport`'s enabled condition to `if ($false)` in the fixture; retain its self-test body unchanged. | Exit 1 at the named self-test after 41 passing cases; the final unverified-version case is not reached. | Restore the guard: all 43 cases pass, exit 0. |
+| Main/skip/rollback/solution/fallback/artifact contracts | Named mutation cases inside `Invoke-NonWindowsAffectedTestsSelfTest`, including `LinuxWrongModeIsRejected`, `MacOSCollectionJobRemovedIsRejected`, `UnixFullFallbackRemovedIsRejected`, and `UnixCollectionLivePublishingIsRejected`. | Each altered configuration is rejected at its required guard. | All 30 Unix readiness cases pass; this is configuration proof, not Unix test execution. |
+
+The comparison command was the second validator command above in each fixture state. The final validator's
+assertions were preserved between the green/red/green Linux comparison. For the support-guard mutation, the
+`Invoke-NonWindowsAffectedTestsSelfTest` body was checked for exact equality before execution. Fixture source hashes,
+exit codes and logs are retained in session artifacts; neither counterfactual changed the delivery worktree.
+
+The session-owned script `verify-affected-pipeline.ps1` passed 25 script probes, exit 0. Twenty execute the actual
+shared PowerShell step bodies for both solution paths with a native `dotnet.cmd` fixture returning exits 0, 1, 2, 3
+and 8. They verify the native-bound arguments, collection exit propagation, selected-test failure preservation, and
+explicit fallback messages without falsely setting `AffectedTestsSucceeded`. Five execute the live-publishing
+configuration with present/absent synthetic tokens and ordinary/collection/unspecified ownership. These probes do
+not execute the SDK, collector, or product tests.
+
+The session-owned `preview-affected-pipeline.ps1` also passed six non-executing Azure DevOps previews, exit 0.
+It inlines the four local step templates into a root YAML override, preserving ordered Azure discriminator keys,
+and leaves unchanged repository templates resolved at the base revision. Main and non-main contexts use actual
+repository refs; no system variable is overridden. The API requests set `previewRun=true`, so no builds are queued.
+
+| Preview | Root affected tests | Unix gate | Skip tests | Windows matrix | Linux/macOS matrix | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| Main default | true | false | false | Release, Debug, AffectedTests | Release | Passed; Unix ordinary testing remains unchanged. |
+| Non-main default | true | false | false | Release, Debug | Release | Passed; Windows selection/fallback and Unix ordinary testing. |
+| Main Unix wiring only | true | true | false | Release, Debug, AffectedTests | Release, AffectedTests | Passed; separate collection/full-test conditions. Actual activation is rejected by the validator. |
+| Non-main Unix wiring only | true | true | false | Release, Debug | Release | Passed; selection/full fallback present. macOS still excludes PRs at runtime. Actual activation is rejected by the validator. |
+| Main root rollback | false | true | false | Release, Debug | Release | Passed; no affected-test steps or extra collection entries. |
+| Main skip tests | true | false | true | Release, Debug | Release | Passed; no test steps or extra collection entries. |
+
+Initial local harness attempts exposed PowerShell-function argument tokenization, unordered Azure mapping
+serialization, and a prohibited system-variable override. The harness was corrected to use a native command
+fixture, ordered mappings and actual source refs, then rerun successfully. Those harness failures are not counted
+as regression red-phase proof.
+
+No test-assembly parallelization or lifecycle code changed. Matrix entries retain separate agent workspaces,
+caches, temporary directories and diagnostic artifact names. Real Linux/macOS collection, OS-specific associations
+and selection, multi-agent artifact publication, and real worker completion remain **unverified and blocked by
+upstream support**, not established by the configuration checks or previews. No .NET build/pack was run because no
+shipping source or package layout changed. The Unix gate must remain off until composed-product proof is available.
 
 ## Headless collection compatibility
 

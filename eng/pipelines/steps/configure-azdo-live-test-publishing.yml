@@ -6,7 +6,7 @@ parameters:
 steps:
 - pwsh: |
     $accessToken = $env:SYSTEM_ACCESSTOKEN
-    $enabled = [bool]::Parse('${{ parameters.enabled }}') -and -not [string]::IsNullOrWhiteSpace($accessToken)
+    $enabled = [bool]::Parse('${{ parameters.enabled }}') -and $env:_COLLECTAFFECTEDTESTS -ne 'true' -and -not [string]::IsNullOrWhiteSpace($accessToken)
     if ($enabled) {
       $runName = "testfx-live-$($env:SYSTEM_JOBID)-attempt-$($env:SYSTEM_JOBATTEMPT)"
       Write-Host 'A pipeline OAuth token is available; enabling Azure DevOps live test-result publishing.'

@@ -2,7 +2,9 @@
 param(
     [switch]$SelfTest,
     [ValidateSet("true", "false")]
-    [string]$EnableAffectedTests
+    [string]$EnableAffectedTests,
+    [ValidateSet("true", "false")]
+    [string]$EnableNonWindowsAffectedTests
 )
 
 function Assert-Containment {
@@ -37,7 +39,8 @@ function Assert-Containment {
 function Assert-CollectionJobIsolation {
     param(
         [string]$Pipeline,
-        [string]$CollectBranch
+        [string]$CollectBranch,
+        [string]$SharedCollectBranch
     )
 
     $windowsJob = [regex]::Match(
@@ -63,13 +66,13 @@ function Assert-CollectionJobIsolation {
         throw "AffectedTestsRollbackControlsAllJobs: the root affected-test parameter must control collection and selection."
     }
 
-    if (-not $CollectBranch.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))") -or
+    if (-not $SharedCollectBranch.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))") -or
         -not $CollectBranch.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'))") -or
         $CollectBranch.Contains("AffectedTestsCollectionStarted")) {
         throw "CollectionAndValidationAreExclusive: collection and full validation must execute only in their own matrix entries."
     }
 
-    if ($CollectBranch -match '(?m)^\s*continueOnError:\s*true\s*$') {
+    if ($SharedCollectBranch -match '(?m)^\s*continueOnError:\s*true\s*$') {
         throw "CollectionFailureRemainsBlocking: collection failures must not be ignored."
     }
 
@@ -87,10 +90,11 @@ function Assert-CollectionJobIsolation {
 function Invoke-CollectionJobIsolationSelfTest {
     param(
         [string]$Pipeline,
-        [string]$CollectBranch
+        [string]$CollectBranch,
+        [string]$SharedCollectBranch
     )
 
-    Assert-CollectionJobIsolation $Pipeline $CollectBranch
+    Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch
     Write-Output "PASS CollectionUsesIndependentJob"
 
     $cases = @(
@@ -109,7 +113,8 @@ function Invoke-CollectionJobIsolationSelfTest {
         @{
             Name = "CollectionInValidationJobIsRejected"
             Pipeline = $Pipeline
-            CollectBranch = $CollectBranch.Replace("eq(variables._CollectAffectedTests, 'true')", "ne(variables._CollectAffectedTests, 'true')")
+            CollectBranch = $CollectBranch
+            SharedCollectBranch = $SharedCollectBranch.Replace("eq(variables._CollectAffectedTests, 'true')", "ne(variables._CollectAffectedTests, 'true')")
             ExpectedFailure = "CollectionAndValidationAreExclusive"
         },
         @{
@@ -145,7 +150,8 @@ function Invoke-CollectionJobIsolationSelfTest {
         @{
             Name = "IgnoredCollectionFailureIsRejected"
             Pipeline = $Pipeline
-            CollectBranch = $CollectBranch.Replace("displayName: Test and collect affected-test map", "displayName: Test and collect affected-test map`n    continueOnError: true")
+            CollectBranch = $CollectBranch
+            SharedCollectBranch = $SharedCollectBranch.Replace("displayName: Test and collect affected-test map", "displayName: Test and collect affected-test map`n    continueOnError: true")
             ExpectedFailure = "CollectionFailureRemainsBlocking"
         },
         @{
@@ -172,13 +178,14 @@ function Invoke-CollectionJobIsolationSelfTest {
     )
 
     foreach ($case in $cases) {
-        if ($case.Pipeline -eq $Pipeline -and $case.CollectBranch -eq $CollectBranch) {
+        $caseSharedCollectBranch = if ($case.ContainsKey("SharedCollectBranch")) { $case.SharedCollectBranch } else { $SharedCollectBranch }
+        if ($case.Pipeline -eq $Pipeline -and $case.CollectBranch -eq $CollectBranch -and $caseSharedCollectBranch -eq $SharedCollectBranch) {
             throw "Self-test '$($case.Name)' did not change the configuration under test."
         }
 
         $rejected = $false
         try {
-            Assert-CollectionJobIsolation $case.Pipeline $case.CollectBranch
+            Assert-CollectionJobIsolation $case.Pipeline $case.CollectBranch $caseSharedCollectBranch
         } catch {
             if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
                 throw
@@ -197,11 +204,286 @@ function Invoke-CollectionJobIsolationSelfTest {
     Write-Output "Collection isolation self-tests: $($cases.Count + 1) passed."
 }
 
+function Assert-NonWindowsCollectorSupport {
+    param(
+        [bool]$AffectedTestsEnabled,
+        [bool]$NonWindowsAffectedTestsEnabled,
+        [string]$PackageVersion
+    )
+
+    if ($AffectedTestsEnabled -and $NonWindowsAffectedTestsEnabled) {
+        throw "NonWindowsCollectorSupportRequired: collector '$PackageVersion' has no verified Linux/macOS collection support. Keep EnableNonWindowsAffectedTests=false until a compatible collector and composed OS-specific runs have been validated."
+    }
+}
+
+function Assert-NonWindowsAffectedTestsWiring {
+    param(
+        [string]$Pipeline,
+        [string]$NonWindowsTemplate,
+        [string]$SharedTemplate,
+        [string]$LivePublishingTemplate
+    )
+
+    if ($Pipeline -notmatch '(?s)- name: EnableNonWindowsAffectedTests\s+displayName:[^\r\n]+\s+type: boolean\s+default:\s*false' -or
+        -not $Pipeline.Contains(' -EnableNonWindowsAffectedTests ${{ parameters.EnableNonWindowsAffectedTests }}')) {
+        throw "NonWindowsRolloutIsExplicit: Unix affected tests must default off and pass the actual parameter to the validator."
+    }
+
+    $collectionGate = '${{ if and(eq(variables[''Build.SourceBranch''], ''refs/heads/main''), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:'
+    foreach ($osName in "Linux", "MacOS") {
+        $job = [regex]::Match(
+            $Pipeline,
+            '(?ms)^      - job: ' + $osName + '\r?\n(?<job>.*?)(?=^      - job: |^  - template: |\z)').Groups["job"].Value
+        $matrix = [regex]::Match(
+            $job,
+            '(?ms)^        strategy:\r?\n          matrix:\r?\n(?<matrix>.*?)(?=^        steps:)').Groups["matrix"].Value
+        if ($matrix -notmatch 'Release:\s+_BuildConfig:\s*Release\s+_CollectAffectedTests:\s*false\s+_TestArtifactsName:\s*Release' -or
+            $matrix -notmatch 'AffectedTests:\s+_BuildConfig:\s*Release\s+_CollectAffectedTests:\s*true\s+_TestArtifactsName:\s*AffectedTests' -or
+            [regex]::Matches($matrix, '_CollectAffectedTests:\s*true').Count -ne 1) {
+            throw "NonWindowsCollectionUsesIndependentJob: $osName validation and collection must have separate matrix entries."
+        }
+
+        if (-not $matrix.Contains($collectionGate) -or
+            $job -notmatch ([regex]::Escape($collectionGate) + '\r?\n          timeoutInMinutes: 240')) {
+            throw "NonWindowsCollectionHonorsRolloutGates: $osName collection and its independent budget must require main, enabled tests, and both rollout parameters."
+        }
+
+        if (-not $job.Contains('enableAffectedTests: ${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}')) {
+            throw "NonWindowsRollbackControlsAllJobs: $osName selection must honor both rollout parameters."
+        }
+
+        if ($job -notmatch '(?s)- \$\{\{ if eq\(parameters\.SkipTests, False\) \}\}:\s+- template: /eng/pipelines/steps/test-non-windows.yml' -or
+            $job -notmatch ('(?s)osName:\s*' + $osName + '\s+enableAffectedTests:[^\r\n]+\s+\$\{\{ if eq\(variables\[''Build\.SourceBranch''\], ''refs/heads/main''\) \}\}:\s+affectedTestsMode:\s*collect\s+\$\{\{ else \}\}:\s+affectedTestsMode:\s*run')) {
+            throw "NonWindowsModeRoutesByBranch: $osName must collect on main and select on PRs inside the SkipTests guard."
+        }
+    }
+
+    if (-not $NonWindowsTemplate.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._CollectAffectedTests, 'true'))") -or
+        -not $SharedTemplate.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))")) {
+        throw "NonWindowsCollectionAndValidationAreExclusive: collection cannot execute ordinary validation or consume its failure state."
+    }
+
+    if (-not $NonWindowsTemplate.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsSucceeded'], 'true')))") -or
+        -not $NonWindowsTemplate.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))")) {
+        throw "NonWindowsFullFallbackIsRequired: disabled, scheduled, manual, and failed-selection runs must retain ordinary full testing."
+    }
+
+    if (-not $NonWindowsTemplate.Contains("solution: NonWindowsTests.slnf") -or
+        -not $NonWindowsTemplate.Contains('affectedTestsMode: ${{ parameters.affectedTestsMode }}') -or
+        -not $NonWindowsTemplate.Contains("eq(parameters.enableAffectedTests, true), ne(parameters.affectedTestsMode, 'disabled')") -or
+        -not $NonWindowsTemplate.Contains("dotnet test --solution NonWindowsTests.slnf") -or
+        -not $SharedTemplate.Contains('dotnet test --solution ${{ parameters.solution }}')) {
+        throw "NonWindowsExecutionUsesSharedCommands: Unix must use its solution filter and the shared collection/selection contract."
+    }
+
+    $invalidModeGuard = $NonWindowsTemplate.IndexOf('- pwsh: throw "affectedTestsMode must be ''collect'' or ''run'' when enableAffectedTests is true."', [System.StringComparison]::Ordinal)
+    $fullTestCommand = $NonWindowsTemplate.IndexOf("- script: dotnet test --solution NonWindowsTests.slnf", [System.StringComparison]::Ordinal)
+    if ($invalidModeGuard -lt 0 -or $invalidModeGuard -gt $fullTestCommand) {
+        throw "NonWindowsInvalidModeFailsBeforeTesting: invalid enabled configurations must be rejected before ordinary tests run."
+    }
+
+    foreach ($artifact in @(
+        'ArtifactName: TestResults_${{ parameters.osName }}_$(_TestArtifactsName)_Attempt$(System.JobAttempt)',
+        'ArtifactName: Integration_Tests_${{ parameters.osName }}_Binlogs_$(_TestArtifactsName)'
+    )) {
+        if (-not $NonWindowsTemplate.Contains($artifact)) {
+            throw "NonWindowsArtifactsAreIsolated: validation and collection must have distinct test-result and binlog artifacts."
+        }
+    }
+
+    if (-not $NonWindowsTemplate.Contains("condition: and(always(), ne(variables._CollectAffectedTests, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))") -or
+        -not $LivePublishingTemplate.Contains("`$env:_COLLECTAFFECTEDTESTS -ne 'true'")) {
+        throw "NonWindowsCollectionSuppressesReporting: collection must not enable live publishing or attempt TRX fallback."
+    }
+
+    if ($SharedTemplate -match '(?m)^\s*continueOnError:\s*true\s*$' -or
+        -not $SharedTemplate.Contains('exit $LASTEXITCODE') -or
+        -not $SharedTemplate.Contains('$exitCode -in 2, 8')) {
+        throw "SharedAffectedTestExitsRemainBlocking: collection exits and real selected-test failures must not be normalized to success."
+    }
+}
+
+function Invoke-NonWindowsAffectedTestsSelfTest {
+    param(
+        [string]$Pipeline,
+        [string]$NonWindowsTemplate,
+        [string]$SharedTemplate,
+        [string]$LivePublishingTemplate,
+        [string]$PackageVersion
+    )
+
+    Assert-NonWindowsAffectedTestsWiring $Pipeline $NonWindowsTemplate $SharedTemplate $LivePublishingTemplate
+    Write-Output "PASS NonWindowsAffectedTestsWiring"
+
+    $cases = @(
+        @{
+            Name = "UnixRolloutEnabledByDefaultIsRejected"
+            Pipeline = [regex]::Replace($Pipeline, '(?s)(- name: EnableNonWindowsAffectedTests\s+displayName:[^\r\n]+\s+type: boolean\s+default:\s*)false', '${1}true')
+            ExpectedFailure = "NonWindowsRolloutIsExplicit"
+        },
+        @{
+            Name = "DisconnectedUnixValidatorRollbackIsRejected"
+            Pipeline = $Pipeline.Replace(' -EnableNonWindowsAffectedTests ${{ parameters.EnableNonWindowsAffectedTests }}', "")
+            ExpectedFailure = "NonWindowsRolloutIsExplicit"
+        },
+        @{
+            Name = "UnixValidationInCollectionJobIsRejected"
+            NonWindowsTemplate = $NonWindowsTemplate.Replace("ne(variables._CollectAffectedTests, 'true')", "eq(variables._CollectAffectedTests, 'true')")
+            ExpectedFailure = "NonWindowsCollectionAndValidationAreExclusive"
+        },
+        @{
+            Name = "UnixFullFallbackRemovedIsRejected"
+            NonWindowsTemplate = $NonWindowsTemplate.Replace("ne(variables['AffectedTestsSucceeded'], 'true')", "eq(variables['AffectedTestsSucceeded'], 'true')")
+            ExpectedFailure = "NonWindowsFullFallbackIsRequired"
+        },
+        @{
+            Name = "UnixSolutionFilterRemovedIsRejected"
+            NonWindowsTemplate = $NonWindowsTemplate.Replace("solution: NonWindowsTests.slnf", "solution: TestFx.slnx")
+            ExpectedFailure = "NonWindowsExecutionUsesSharedCommands"
+        },
+        @{
+            Name = "UnixInvalidModeGuardRemovedIsRejected"
+            NonWindowsTemplate = $NonWindowsTemplate.Replace('  - pwsh: throw "affectedTestsMode', '  - pwsh: Write-Host "affectedTestsMode')
+            ExpectedFailure = "NonWindowsInvalidModeFailsBeforeTesting"
+        },
+        @{
+            Name = "UnixTestResultArtifactCollisionIsRejected"
+            NonWindowsTemplate = $NonWindowsTemplate.Replace('TestResults_${{ parameters.osName }}_$(_TestArtifactsName)', 'TestResults_${{ parameters.osName }}_$(_BuildConfig)')
+            ExpectedFailure = "NonWindowsArtifactsAreIsolated"
+        },
+        @{
+            Name = "UnixBinlogArtifactCollisionIsRejected"
+            NonWindowsTemplate = $NonWindowsTemplate.Replace('Binlogs_$(_TestArtifactsName)', 'Binlogs_$(_BuildConfig)')
+            ExpectedFailure = "NonWindowsArtifactsAreIsolated"
+        },
+        @{
+            Name = "UnixCollectionLivePublishingIsRejected"
+            LivePublishingTemplate = $LivePublishingTemplate.Replace(" -and `$env:_COLLECTAFFECTEDTESTS -ne 'true'", "")
+            ExpectedFailure = "NonWindowsCollectionSuppressesReporting"
+        },
+        @{
+            Name = "IgnoredSharedCollectionFailureIsRejected"
+            SharedTemplate = $SharedTemplate.Replace("displayName: Test and collect affected-test map", "displayName: Test and collect affected-test map`n    continueOnError: true")
+            ExpectedFailure = "SharedAffectedTestExitsRemainBlocking"
+        },
+        @{
+            Name = "IgnoredSelectedTestFailureIsRejected"
+            SharedTemplate = $SharedTemplate.Replace('$exitCode -in 2, 8', '$exitCode -in 8')
+            ExpectedFailure = "SharedAffectedTestExitsRemainBlocking"
+        }
+    )
+
+    foreach ($osName in "Linux", "MacOS") {
+        $job = [regex]::Match(
+            $Pipeline,
+            '(?ms)^      - job: ' + $osName + '\r?\n(?<job>.*?)(?=^      - job: |^  - template: |\z)').Groups["job"].Value
+        foreach ($mutation in @(
+            @{
+                Name = "${osName}CollectionJobRemovedIsRejected"
+                Job = $job.Replace("              AffectedTests:", "              RemovedCollection:")
+                ExpectedFailure = "NonWindowsCollectionUsesIndependentJob"
+            },
+            @{
+                Name = "${osName}NonMainCollectionIsRejected"
+                Job = $job.Replace("eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False)", "eq(parameters.SkipTests, False)")
+                ExpectedFailure = "NonWindowsCollectionHonorsRolloutGates"
+            },
+            @{
+                Name = "${osName}SkipTestsBypassIsRejected"
+                Job = $job.Replace("eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)", "eq(parameters.EnableAffectedTests, true)")
+                ExpectedFailure = "NonWindowsCollectionHonorsRolloutGates"
+            },
+            @{
+                Name = "${osName}RootRollbackBypassIsRejected"
+                Job = $job.Replace("eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)", "eq(parameters.EnableNonWindowsAffectedTests, true)")
+                ExpectedFailure = "NonWindowsCollectionHonorsRolloutGates"
+            },
+            @{
+                Name = "${osName}UnixRollbackBypassIsRejected"
+                Job = $job.Replace(", eq(parameters.EnableNonWindowsAffectedTests, true)", "")
+                ExpectedFailure = "NonWindowsCollectionHonorsRolloutGates"
+            },
+            @{
+                Name = "${osName}SelectionRollbackBypassIsRejected"
+                Job = $job.Replace('enableAffectedTests: ${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}', "enableAffectedTests: true")
+                ExpectedFailure = "NonWindowsRollbackControlsAllJobs"
+            },
+            @{
+                Name = "${osName}WrongModeIsRejected"
+                Job = $job.Replace("affectedTestsMode: collect", "affectedTestsMode: run")
+                ExpectedFailure = "NonWindowsModeRoutesByBranch"
+            }
+        )) {
+            $cases += @{
+                Name = $mutation.Name
+                Pipeline = $Pipeline.Replace($job, $mutation.Job)
+                ExpectedFailure = $mutation.ExpectedFailure
+            }
+        }
+    }
+
+    foreach ($case in $cases) {
+        $casePipeline = if ($case.ContainsKey("Pipeline")) { $case.Pipeline } else { $Pipeline }
+        $caseNonWindowsTemplate = if ($case.ContainsKey("NonWindowsTemplate")) { $case.NonWindowsTemplate } else { $NonWindowsTemplate }
+        $caseSharedTemplate = if ($case.ContainsKey("SharedTemplate")) { $case.SharedTemplate } else { $SharedTemplate }
+        $caseLivePublishingTemplate = if ($case.ContainsKey("LivePublishingTemplate")) { $case.LivePublishingTemplate } else { $LivePublishingTemplate }
+        if ($casePipeline -eq $Pipeline -and $caseNonWindowsTemplate -eq $NonWindowsTemplate -and $caseSharedTemplate -eq $SharedTemplate -and $caseLivePublishingTemplate -eq $LivePublishingTemplate) {
+            throw "Self-test '$($case.Name)' did not change the configuration under test."
+        }
+
+        $rejected = $false
+        try {
+            Assert-NonWindowsAffectedTestsWiring $casePipeline $caseNonWindowsTemplate $caseSharedTemplate $caseLivePublishingTemplate
+        } catch {
+            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
+                throw
+            }
+
+            $rejected = $true
+        }
+
+        if (-not $rejected) {
+            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
+        }
+
+        Write-Output "PASS $($case.Name)"
+    }
+
+    foreach ($case in @(
+        @{ Name = "UnixDisabledKeepsFullTests"; Root = $true; Unix = $false; Version = $PackageVersion; Reject = $false },
+        @{ Name = "RootRollbackOverridesUnixOptIn"; Root = $false; Unix = $true; Version = $PackageVersion; Reject = $false },
+        @{ Name = "WindowsOnlyCollectorActivationIsRejected"; Root = $true; Unix = $true; Version = $PackageVersion; Reject = $true },
+        @{ Name = "UnverifiedCollectorActivationIsRejected"; Root = $true; Unix = $true; Version = "unverified-version"; Reject = $true }
+    )) {
+        $rejected = $false
+        try {
+            Assert-NonWindowsCollectorSupport $case.Root $case.Unix $case.Version
+        } catch {
+            if (-not $case.Reject -or -not $_.Exception.Message.StartsWith("NonWindowsCollectorSupportRequired:", [System.StringComparison]::Ordinal)) {
+                throw
+            }
+
+            $rejected = $true
+        }
+
+        if ($rejected -ne $case.Reject) {
+            throw "Self-test '$($case.Name)' did not enforce the collector support gate."
+        }
+
+        Write-Output "PASS $($case.Name)"
+    }
+
+    Write-Output "Non-Windows rollout self-tests: $($cases.Count + 5) passed."
+}
+
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $versionsPropsPath = Join-Path $repoRoot "eng/Versions.props"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
 $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
+$sharedTestTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-affected-tests.yml"
+$nonWindowsTestTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-non-windows.yml"
+$livePublishingTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/configure-azdo-live-test-publishing.yml"
 $accessDatabaseInstallerPath = Join-Path $repoRoot "eng/install-access-database-engine.ps1"
 $wellKnownEnvironmentVariablesPath = Join-Path $repoRoot "test/Utilities/Microsoft.Testing.TestInfrastructure/WellKnownEnvironmentVariables.cs"
 
@@ -273,6 +555,20 @@ if (-not $affectedTestsPackageVersionMatch.Success) {
 }
 
 $affectedTestsPackageVersion = $affectedTestsPackageVersionMatch.Groups["version"].Value
+$nonWindowsAffectedTestsEnabled = if ($PSBoundParameters.ContainsKey("EnableNonWindowsAffectedTests")) {
+    [bool]::Parse($EnableNonWindowsAffectedTests)
+} else {
+    $nonWindowsParameter = [regex]::Match(
+        $pipeline,
+        '(?s)- name: EnableNonWindowsAffectedTests\s+displayName:[^\r\n]+\s+type: boolean\s+default:\s*(?<enabled>true|false)')
+    if (-not $nonWindowsParameter.Success) {
+        throw "NonWindowsRolloutIsExplicit: the root pipeline must define the EnableNonWindowsAffectedTests boolean parameter."
+    }
+
+    [bool]::Parse($nonWindowsParameter.Groups["enabled"].Value)
+}
+Assert-NonWindowsCollectorSupport $affectedTestsEnabled $nonWindowsAffectedTestsEnabled $affectedTestsPackageVersion
+
 $azureDevOpsStorageVersionsMissingContentRange = @(
     "18.12.0-preview.26473.3",
     "18.12.0-preview.26474.2"
@@ -385,8 +681,11 @@ if (-not $accessDatabaseInstaller.Contains("[System.IO.Path]::GetTempPath()") -o
 }
 
 $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
+$sharedTestTemplate = Get-Content -LiteralPath $sharedTestTemplatePath -Raw
+$nonWindowsTestTemplate = Get-Content -LiteralPath $nonWindowsTestTemplatePath -Raw
+$livePublishingTemplate = Get-Content -LiteralPath $livePublishingTemplatePath -Raw
 Assert-Containment `
-    -Text $testTemplate `
+    -Text $sharedTestTemplate `
     -Substrings @(
     "DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1",
     'CTS_ACCESSTOKEN: $(System.AccessToken)',
@@ -396,7 +695,6 @@ Assert-Containment `
     'BUILD_CONTAINERID: $(Build.ContainerId)',
     "--collect-test-map",
     "--affected-tests",
-    "enableAffectedTests",
     "affectedTestsMode"
 ) `
     -ItemMessageFormatter { param($substring) "The affected-test template is missing '$substring'." }
@@ -424,7 +722,10 @@ Assert-Containment `
     -ItemMessageFormatter { param($substring) "$substring must be scoped to the affected-test template." } `
     -Absent
 
-$templateWithoutComments = $testTemplate -split '\r?\n' |
+$templateWithoutComments = $sharedTestTemplate -split '\r?\n' |
+    Where-Object { -not $_.TrimStart().StartsWith("#") } |
+    Join-String -Separator "`n"
+$windowsTemplateWithoutComments = $testTemplate -split '\r?\n' |
     Where-Object { -not $_.TrimStart().StartsWith("#") } |
     Join-String -Separator "`n"
 if ($templateWithoutComments.Contains("DOTNET_CLI_TEST_AFFECTED_TESTS_MODE")) {
@@ -461,15 +762,23 @@ if ($templateWithoutComments.Contains("AffectedTestsCoreOnly") -or
 
 $collectBranch = [regex]::Match(
     $templateWithoutComments,
-    "(?s)eq\(parameters\.affectedTestsMode, 'collect'\).*?(?=\r?\n- \$\{\{)")
+    "(?s)eq\(parameters\.affectedTestsMode, 'collect'\).*?(?=\r?\n- \$\{\{|\z)")
 $runBranch = [regex]::Match(
     $templateWithoutComments,
-    "(?s)eq\(parameters\.affectedTestsMode, 'run'\).*?(?=\r?\n- \$\{\{)")
+    "(?s)eq\(parameters\.affectedTestsMode, 'run'\).*?(?=\r?\n- \$\{\{|\z)")
 if (-not $collectBranch.Success -or
     -not $collectBranch.Value.Contains("DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1") -or
     -not $runBranch.Success -or
     -not $runBranch.Value.Contains("DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1")) {
     throw "The affected-test gate must be scoped to the enabled collect and run branches."
+}
+$windowsCollectBranch = [regex]::Match(
+    $windowsTemplateWithoutComments,
+    "(?s)eq\(parameters\.affectedTestsMode, 'collect'\).*?(?=\r?\n- \$\{\{)")
+if (-not $windowsCollectBranch.Success -or
+    -not $windowsCollectBranch.Value.Contains("solution: TestFx.slnx") -or
+    [regex]::Matches($testTemplate, '/eng/pipelines/steps/test-affected-tests.yml').Count -ne 2) {
+    throw "Windows collection and selection must use the shared affected-test commands with TestFx.slnx."
 }
 
 foreach ($requiredCollectArgument in @(
@@ -485,7 +794,7 @@ if (-not $runBranch.Value.Contains("-p:TestRunnerAdditionalArguments=")) {
     throw "Affected-test execution must suppress the repository's retry arguments."
 }
 
-$collectStepStart = $collectBranch.Value.IndexOf("- script: |", [System.StringComparison]::Ordinal)
+$collectStepStart = $collectBranch.Value.IndexOf("- pwsh: |", [System.StringComparison]::Ordinal)
 if ($collectStepStart -lt 0) {
     throw "The affected-test collection step is missing."
 }
@@ -495,18 +804,18 @@ if ($collectStepEnd -lt 0) {
     throw "The affected-test collection step must be named CollectAffectedTests."
 }
 
-$fullTestStepStart = $collectBranch.Value.IndexOf("- script: |", $collectStepEnd, [System.StringComparison]::Ordinal)
+$fullTestStepStart = $windowsCollectBranch.Value.IndexOf("- script: |", [System.StringComparison]::Ordinal)
 if ($fullTestStepStart -lt 0) {
     throw "The ordinary Release full test step is missing."
 }
 
-$fullTestStepEnd = $collectBranch.Value.IndexOf("name: Test", $fullTestStepStart, [System.StringComparison]::Ordinal)
+$fullTestStepEnd = $windowsCollectBranch.Value.IndexOf("name: Test", $fullTestStepStart, [System.StringComparison]::Ordinal)
 if ($fullTestStepEnd -lt 0) {
     throw "The ordinary Release full test step must be named Test."
 }
 
 $collectStep = $collectBranch.Value[$collectStepStart..($collectStepEnd - 1)] -join ""
-$fullTestStep = $collectBranch.Value[$fullTestStepStart..($fullTestStepEnd - 1)] -join ""
+$fullTestStep = $windowsCollectBranch.Value[$fullTestStepStart..($fullTestStepEnd - 1)] -join ""
 if ($collectStep.Contains("PublishCoverageReport") -or
     -not $collectStep.Contains("--collect-test-map") -or
     -not $fullTestStep.Contains("PublishCoverageReport") -or
@@ -515,9 +824,11 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 }
 
 if ($SelfTest) {
-    Invoke-CollectionJobIsolationSelfTest $pipeline $collectBranch.Value
+    Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $collectBranch.Value
+    Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $affectedTestsPackageVersion
 } else {
-    Assert-CollectionJobIsolation $pipeline $collectBranch.Value
+    Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $collectBranch.Value
+    Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
@@ -526,7 +837,7 @@ if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
 }
 
 $runFallback = [regex]::Match(
-    $templateWithoutComments,
+    $windowsTemplateWithoutComments,
     "(?s)displayName:\s*Test \(affected-test fallback\).*?condition:.*?Build\.Reason.*?AffectedTestsSucceeded")
 if (-not $runFallback.Success) {
     throw "The run branch must retain a full-test fallback for non-PR runs and affected-test failures."

@@ -2,6 +2,7 @@
 #
 # Assumes the consuming job declares:
 #   - the matrix variable `_BuildConfig` (Release)
+#   - `_CollectAffectedTests` and `_TestArtifactsName` for independent collection jobs
 #   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
 parameters:
 - name: osName
@@ -9,6 +10,16 @@ parameters:
   values:
   - Linux
   - MacOS
+- name: enableAffectedTests
+  type: boolean
+  default: false
+- name: affectedTestsMode
+  type: string
+  default: disabled
+  values:
+  - disabled
+  - collect
+  - run
 
 steps:
 # Because the build step is using -ci flag, restore is done in a local .packages directory.
@@ -20,10 +31,27 @@ steps:
 # by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
 # output is buffered into a per-module .log file and only surfaced on failure, so no live progress
 # is visible during long-running test sessions.
+- ${{ if and(eq(parameters.enableAffectedTests, true), ne(parameters.affectedTestsMode, 'disabled')) }}:
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: NonWindowsTests.slnf
+      affectedTestsMode: ${{ parameters.affectedTestsMode }}
+
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'disabled')) }}:
+  - pwsh: throw "affectedTestsMode must be 'collect' or 'run' when enableAffectedTests is true."
+    displayName: Reject invalid affected-test configuration
+
 - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
   name: Test
-  displayName: Test
-  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+  ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
+    displayName: Test (full validation)
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._CollectAffectedTests, 'true'))
+  ${{ elseif and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
+    displayName: Test (affected-test fallback)
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsSucceeded'], 'true')))
+  ${{ else }}:
+    displayName: Test
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
   env:
     # Expose the build's OAuth token so the report-azdo history options (slow-test-history / flaky-history
     # injected by test/Directory.Build.targets) can query this pipeline's own test-result history. Secret
@@ -41,7 +69,7 @@ steps:
     searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
     testRunTitle: '$(System.JobName)-trx'
   continueOnError: true
-  condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
+  condition: and(always(), ne(variables._CollectAffectedTests, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
 # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
 # PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies before the tests run
@@ -62,7 +90,7 @@ steps:
   displayName: 'Publish Test Results folders'
   inputs:
     PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-    ArtifactName: TestResults_${{ parameters.osName }}_$(_BuildConfig)_Attempt$(System.JobAttempt)
+    ArtifactName: TestResults_${{ parameters.osName }}_$(_TestArtifactsName)_Attempt$(System.JobAttempt)
   condition: and(always(), eq(variables.HasTestResults, 'true'))
 
 # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and CopyFiles@2
@@ -96,5 +124,5 @@ steps:
   displayName: 'Publish integration tests binlogs'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
-    ArtifactName: Integration_Tests_${{ parameters.osName }}_Binlogs_$(_BuildConfig)
+    ArtifactName: Integration_Tests_${{ parameters.osName }}_Binlogs_$(_TestArtifactsName)
   condition: and(always(), eq(variables._BuildConfig, 'Release'), eq(variables.HasIntegrationTestBinlogs, 'true'))
