@@ -1,5 +1,9 @@
 [CmdletBinding()]
-param()
+param(
+    [switch]$SelfTest,
+    [ValidateSet("true", "false")]
+    [string]$EnableAffectedTests
+)
 
 function Assert-Containment {
     [CmdletBinding(DefaultParameterSetName = "LiteralMessage")]
@@ -28,6 +32,169 @@ function Assert-Containment {
             throw $formattedMessage
         }
     }
+}
+
+function Assert-CollectionJobIsolation {
+    param(
+        [string]$Pipeline,
+        [string]$CollectBranch
+    )
+
+    $windowsJob = [regex]::Match(
+        $Pipeline,
+        '(?ms)^      - job: Windows\r?\n(?<job>.*?)(?=^      - job: )').Groups["job"].Value
+    $matrix = [regex]::Match(
+        $windowsJob,
+        '(?ms)^        strategy:\r?\n          matrix:\r?\n(?<matrix>.*?)(?=^        steps:)').Groups["matrix"].Value
+    if ($matrix -notmatch 'Release:\s+_BuildConfig:\s*Release\s+_CollectAffectedTests:\s*false\s+_TestArtifactsName:\s*Release' -or
+        $matrix -notmatch 'Debug:\s+_BuildConfig:\s*Debug\s+_CollectAffectedTests:\s*false\s+_TestArtifactsName:\s*Debug' -or
+        $matrix -notmatch 'AffectedTests:\s+_BuildConfig:\s*Release\s+_CollectAffectedTests:\s*true\s+_TestArtifactsName:\s*AffectedTests' -or
+        [regex]::Matches($matrix, '_CollectAffectedTests:\s*true').Count -ne 1) {
+        throw "CollectionUsesIndependentJob: Release validation and affected-test collection must use separate Windows matrix entries."
+    }
+
+    $collectionGate = '${{ if and(eq(variables[''Build.SourceBranch''], ''refs/heads/main''), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)) }}:'
+    if (-not $matrix.Contains($collectionGate)) {
+        throw "CollectionHonorsRolloutGates: the collection matrix entry must require main, enabled tests, and enabled affected tests."
+    }
+
+    if (-not $windowsJob.Contains('enableAffectedTests: ${{ parameters.EnableAffectedTests }}') -or
+        -not $Pipeline.Contains('validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }}')) {
+        throw "AffectedTestsRollbackControlsAllJobs: the root affected-test parameter must control collection and selection."
+    }
+
+    if (-not $CollectBranch.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))") -or
+        -not $CollectBranch.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'))") -or
+        $CollectBranch.Contains("AffectedTestsCollectionStarted")) {
+        throw "CollectionAndValidationAreExclusive: collection and full validation must execute only in their own matrix entries."
+    }
+
+    if ($CollectBranch -match '(?m)^\s*continueOnError:\s*true\s*$') {
+        throw "CollectionFailureRemainsBlocking: collection failures must not be ignored."
+    }
+
+    foreach ($artifact in @(
+        'ArtifactName: TestResults_Windows_$(_TestArtifactsName)_Attempt$(System.JobAttempt)',
+        'ArtifactName: Integration_Tests_Windows_Binlogs_$(_TestArtifactsName)',
+        'ArtifactName: TestResults_Windows_$(_TestArtifactsName)'
+    )) {
+        if ($windowsJob -notmatch ('(?m)^\s*' + [regex]::Escape($artifact) + '\r?$')) {
+            throw "WindowsArtifactsAreIsolated: each matrix entry must have distinct test-result, binlog, and dump artifact names."
+        }
+    }
+}
+
+function Invoke-CollectionJobIsolationSelfTest {
+    param(
+        [string]$Pipeline,
+        [string]$CollectBranch
+    )
+
+    Assert-CollectionJobIsolation $Pipeline $CollectBranch
+    Write-Output "PASS CollectionUsesIndependentJob"
+
+    $cases = @(
+        @{
+            Name = "MissingCollectionJobIsRejected"
+            Pipeline = $Pipeline.Replace("              AffectedTests:", "              RemovedCollection:")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "CollectionUsesIndependentJob"
+        },
+        @{
+            Name = "FullValidationInCollectionJobIsRejected"
+            Pipeline = $Pipeline
+            CollectBranch = $CollectBranch.Replace("ne(variables._CollectAffectedTests, 'true')", "eq(variables._CollectAffectedTests, 'true')")
+            ExpectedFailure = "CollectionAndValidationAreExclusive"
+        },
+        @{
+            Name = "CollectionInValidationJobIsRejected"
+            Pipeline = $Pipeline
+            CollectBranch = $CollectBranch.Replace("eq(variables._CollectAffectedTests, 'true')", "ne(variables._CollectAffectedTests, 'true')")
+            ExpectedFailure = "CollectionAndValidationAreExclusive"
+        },
+        @{
+            Name = "NonMainCollectionIsRejected"
+            Pipeline = $Pipeline.Replace("eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False)", "eq(parameters.SkipTests, False)")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "CollectionHonorsRolloutGates"
+        },
+        @{
+            Name = "SkipTestsBypassIsRejected"
+            Pipeline = $Pipeline.Replace("eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)", "eq(parameters.EnableAffectedTests, true)")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "CollectionHonorsRolloutGates"
+        },
+        @{
+            Name = "DisabledRolloutBypassIsRejected"
+            Pipeline = $Pipeline.Replace("eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)", "eq(parameters.SkipTests, False)")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "CollectionHonorsRolloutGates"
+        },
+        @{
+            Name = "DisconnectedRollbackIsRejected"
+            Pipeline = $Pipeline.Replace('enableAffectedTests: ${{ parameters.EnableAffectedTests }}', "enableAffectedTests: true")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
+        },
+        @{
+            Name = "DisconnectedValidatorRollbackIsRejected"
+            Pipeline = $Pipeline.Replace(' -EnableAffectedTests ${{ parameters.EnableAffectedTests }}', "")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
+        },
+        @{
+            Name = "IgnoredCollectionFailureIsRejected"
+            Pipeline = $Pipeline
+            CollectBranch = $CollectBranch.Replace("displayName: Test and collect affected-test map", "displayName: Test and collect affected-test map`n    continueOnError: true")
+            ExpectedFailure = "CollectionFailureRemainsBlocking"
+        },
+        @{
+            Name = "ArtifactCollisionIsRejected"
+            Pipeline = $Pipeline.Replace('ArtifactName: Integration_Tests_Windows_Binlogs_$(_TestArtifactsName)', 'ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)')
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "WindowsArtifactsAreIsolated"
+        },
+        @{
+            Name = "TestResultArtifactCollisionIsRejected"
+            Pipeline = $Pipeline.Replace('ArtifactName: TestResults_Windows_$(_TestArtifactsName)_Attempt$(System.JobAttempt)', 'ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)')
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "WindowsArtifactsAreIsolated"
+        },
+        @{
+            Name = "DumpArtifactCollisionIsRejected"
+            Pipeline = [regex]::Replace(
+                $Pipeline,
+                '(?m)^(?<indent> +)ArtifactName: TestResults_Windows_\$\(_TestArtifactsName\)(?<ending>\r?)$',
+                '${indent}ArtifactName: TestResults_Windows_$(_BuildConfig)${ending}')
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "WindowsArtifactsAreIsolated"
+        }
+    )
+
+    foreach ($case in $cases) {
+        if ($case.Pipeline -eq $Pipeline -and $case.CollectBranch -eq $CollectBranch) {
+            throw "Self-test '$($case.Name)' did not change the configuration under test."
+        }
+
+        $rejected = $false
+        try {
+            Assert-CollectionJobIsolation $case.Pipeline $case.CollectBranch
+        } catch {
+            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
+                throw
+            }
+
+            $rejected = $true
+        }
+
+        if (-not $rejected) {
+            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
+        }
+
+        Write-Output "PASS $($case.Name)"
+    }
+
+    Write-Output "Collection isolation self-tests: $($cases.Count + 1) passed."
 }
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -77,12 +244,25 @@ if ($globalJsonText -match '(?i)"[^"]*(token|secret|password|connectionString|sa
 $pipeline = Get-Content -LiteralPath $pipelinePath -Raw
 $affectedTestsCall = [regex]::Match(
     $pipeline,
-    '(?s)enableAffectedTests:\s*(?<enabled>true|false)\s+\$\{\{ if eq\(variables\[''Build\.SourceBranch''\], ''refs/heads/main''\) \}\}:\s+affectedTestsMode:\s*collect\s+\$\{\{ else \}\}:\s+affectedTestsMode:\s*run')
+    '(?s)enableAffectedTests:\s*(?<enabled>true|false|\$\{\{\s*parameters\.EnableAffectedTests\s*\}\})\s+\$\{\{ if eq\(variables\[''Build\.SourceBranch''\], ''refs/heads/main''\) \}\}:\s+affectedTestsMode:\s*collect\s+\$\{\{ else \}\}:\s+affectedTestsMode:\s*run')
 if (-not $affectedTestsCall.Success) {
     throw "The pipeline must route the Windows test call site to collection on main and selection on PRs."
 }
 
-$affectedTestsEnabled = $affectedTestsCall.Groups["enabled"].Value -eq "true"
+$affectedTestsEnabled = if ($PSBoundParameters.ContainsKey("EnableAffectedTests")) {
+    [bool]::Parse($EnableAffectedTests)
+} elseif ($affectedTestsCall.Groups["enabled"].Value -in "true", "false") {
+    $affectedTestsCall.Groups["enabled"].Value -eq "true"
+} else {
+    $affectedTestsParameter = [regex]::Match(
+        $pipeline,
+        '(?s)- name: EnableAffectedTests\s+displayName:[^\r\n]+\s+type: boolean\s+default:\s*(?<enabled>true|false)')
+    if (-not $affectedTestsParameter.Success) {
+        throw "The root pipeline must define the EnableAffectedTests boolean parameter."
+    }
+
+    $affectedTestsParameter.Groups["enabled"].Value -eq "true"
+}
 
 $versionsProps = Get-Content -LiteralPath $versionsPropsPath -Raw
 $affectedTestsPackageVersionMatch = [regex]::Match(
@@ -317,12 +497,12 @@ if ($collectStepEnd -lt 0) {
 
 $fullTestStepStart = $collectBranch.Value.IndexOf("- script: |", $collectStepEnd, [System.StringComparison]::Ordinal)
 if ($fullTestStepStart -lt 0) {
-    throw "The normal full test step after affected-test collection is missing."
+    throw "The ordinary Release full test step is missing."
 }
 
 $fullTestStepEnd = $collectBranch.Value.IndexOf("name: Test", $fullTestStepStart, [System.StringComparison]::Ordinal)
 if ($fullTestStepEnd -lt 0) {
-    throw "The normal full test step after affected-test collection must be named Test."
+    throw "The ordinary Release full test step must be named Test."
 }
 
 $collectStep = $collectBranch.Value[$collectStepStart..($collectStepEnd - 1)] -join ""
@@ -331,14 +511,13 @@ if ($collectStep.Contains("PublishCoverageReport") -or
     -not $collectStep.Contains("--collect-test-map") -or
     -not $fullTestStep.Contains("PublishCoverageReport") -or
     $fullTestStep.Contains("--collect-test-map")) {
-    throw "Affected-test collection must be followed by the normal full test and coverage run."
+    throw "Affected-test collection must retain the independent full test and coverage command."
 }
 
-$fullTestCondition = $collectBranch.Value.Substring($fullTestStepEnd)
-if (-not $collectStep.Contains("variable=AffectedTestsCollectionStarted]true") -or
-    -not $fullTestCondition.Contains("succeededOrFailed()") -or
-    -not $fullTestCondition.Contains("eq(variables['AffectedTestsCollectionStarted'], 'true')")) {
-    throw "The normal full test and coverage run must execute after failed collection, but not after a failed build."
+if ($SelfTest) {
+    Invoke-CollectionJobIsolationSelfTest $pipeline $collectBranch.Value
+} else {
+    Assert-CollectionJobIsolation $pipeline $collectBranch.Value
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
