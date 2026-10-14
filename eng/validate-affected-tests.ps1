@@ -221,7 +221,8 @@ function Assert-NonWindowsAffectedTestsWiring {
         [string]$Pipeline,
         [string]$NonWindowsTemplate,
         [string]$SharedTemplate,
-        [string]$LivePublishingTemplate
+        [string]$LivePublishingTemplate,
+        [string]$FinalizePublishingTemplate
     )
 
     if ($Pipeline -notmatch '(?s)- name: EnableNonWindowsAffectedTests\s+displayName:[^\r\n]+\s+type: boolean\s+default:\s*false' -or
@@ -230,6 +231,7 @@ function Assert-NonWindowsAffectedTestsWiring {
     }
 
     $collectionGate = '${{ if and(eq(variables[''Build.SourceBranch''], ''refs/heads/main''), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:'
+    $preflightGate = 'or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, ''Succeeded''))'
     foreach ($osName in "Linux", "MacOS") {
         $job = [regex]::Match(
             $Pipeline,
@@ -246,6 +248,11 @@ function Assert-NonWindowsAffectedTestsWiring {
         if (-not $matrix.Contains($collectionGate) -or
             $job -notmatch ([regex]::Escape($collectionGate) + '\r?\n          timeoutInMinutes: 240')) {
             throw "NonWindowsCollectionHonorsRolloutGates: $osName collection and its independent budget must require main, enabled tests, and both rollout parameters."
+        }
+
+        $condition = [regex]::Match($job, '(?m)^        condition: (?<condition>[^\r\n]+)').Groups["condition"].Value
+        if (-not $condition.StartsWith("and(succeededOrFailed(), $preflightGate, ", [System.StringComparison]::Ordinal)) {
+            throw "NonWindowsOptInRequiresSuccessfulPreflight: $osName must require successful DetectChanges for affected tests and retain ordinary full-validation behavior when either rollout parameter is disabled."
         }
 
         if (-not $job.Contains('enableAffectedTests: ${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}')) {
@@ -296,6 +303,11 @@ function Assert-NonWindowsAffectedTestsWiring {
         throw "NonWindowsCollectionSuppressesReporting: collection must not enable live publishing or attempt TRX fallback."
     }
 
+    if (-not $LivePublishingTemplate.Contains("Write-Host 'Azure DevOps live test-result publishing is disabled for this job or its OAuth token is unavailable.'") -or
+        -not $FinalizePublishingTemplate.Contains("Write-Host 'Azure DevOps live test publishing was not configured.'")) {
+        throw "CollectionPublishingMessagesAreAccurate: disabled-publishing messages must not promise TRX fallback for collection jobs."
+    }
+
     if ($SharedTemplate -match '(?m)^\s*continueOnError:\s*true\s*$' -or
         -not $SharedTemplate.Contains('exit $LASTEXITCODE') -or
         -not $SharedTemplate.Contains('$exitCode -in 2, 8')) {
@@ -309,10 +321,11 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
         [string]$NonWindowsTemplate,
         [string]$SharedTemplate,
         [string]$LivePublishingTemplate,
+        [string]$FinalizePublishingTemplate,
         [string]$PackageVersion
     )
 
-    Assert-NonWindowsAffectedTestsWiring $Pipeline $NonWindowsTemplate $SharedTemplate $LivePublishingTemplate
+    Assert-NonWindowsAffectedTestsWiring $Pipeline $NonWindowsTemplate $SharedTemplate $LivePublishingTemplate $FinalizePublishingTemplate
     Write-Output "PASS NonWindowsAffectedTestsWiring"
 
     $cases = @(
@@ -362,6 +375,16 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
             ExpectedFailure = "NonWindowsCollectionSuppressesReporting"
         },
         @{
+            Name = "CollectionConfigureFallbackPromiseIsRejected"
+            LivePublishingTemplate = $LivePublishingTemplate.Replace("its OAuth token is unavailable.'", "its OAuth token is unavailable. The PublishTestResults fallback will be used.'")
+            ExpectedFailure = "CollectionPublishingMessagesAreAccurate"
+        },
+        @{
+            Name = "CollectionFinalizeFallbackPromiseIsRejected"
+            FinalizePublishingTemplate = $FinalizePublishingTemplate.Replace("live test publishing was not configured.'", "live test publishing was not configured. The PublishTestResults fallback will be used.'")
+            ExpectedFailure = "CollectionPublishingMessagesAreAccurate"
+        },
+        @{
             Name = "IgnoredSharedCollectionFailureIsRejected"
             SharedTemplate = $SharedTemplate.Replace("displayName: Test and collect affected-test map", "displayName: Test and collect affected-test map`n    continueOnError: true")
             ExpectedFailure = "SharedAffectedTestExitsRemainBlocking"
@@ -374,6 +397,7 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
     )
 
     foreach ($osName in "Linux", "MacOS") {
+        $preflightGate = 'or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, ''Succeeded''))'
         $job = [regex]::Match(
             $Pipeline,
             '(?ms)^      - job: ' + $osName + '\r?\n(?<job>.*?)(?=^      - job: |^  - template: |\z)').Groups["job"].Value
@@ -409,6 +433,16 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
                 ExpectedFailure = "NonWindowsRollbackControlsAllJobs"
             },
             @{
+                Name = "${osName}FailedPreflightBypassIsRejected"
+                Job = $job.Replace("$preflightGate, ", "")
+                ExpectedFailure = "NonWindowsOptInRequiresSuccessfulPreflight"
+            },
+            @{
+                Name = "${osName}PreflightGateIgnoresRollbackIsRejected"
+                Job = $job.Replace($preflightGate, $preflightGate.Replace("and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests)", "parameters.EnableNonWindowsAffectedTests"))
+                ExpectedFailure = "NonWindowsOptInRequiresSuccessfulPreflight"
+            },
+            @{
                 Name = "${osName}WrongModeIsRejected"
                 Job = $job.Replace("affectedTestsMode: collect", "affectedTestsMode: run")
                 ExpectedFailure = "NonWindowsModeRoutesByBranch"
@@ -427,13 +461,14 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
         $caseNonWindowsTemplate = if ($case.ContainsKey("NonWindowsTemplate")) { $case.NonWindowsTemplate } else { $NonWindowsTemplate }
         $caseSharedTemplate = if ($case.ContainsKey("SharedTemplate")) { $case.SharedTemplate } else { $SharedTemplate }
         $caseLivePublishingTemplate = if ($case.ContainsKey("LivePublishingTemplate")) { $case.LivePublishingTemplate } else { $LivePublishingTemplate }
-        if ($casePipeline -eq $Pipeline -and $caseNonWindowsTemplate -eq $NonWindowsTemplate -and $caseSharedTemplate -eq $SharedTemplate -and $caseLivePublishingTemplate -eq $LivePublishingTemplate) {
+        $caseFinalizePublishingTemplate = if ($case.ContainsKey("FinalizePublishingTemplate")) { $case.FinalizePublishingTemplate } else { $FinalizePublishingTemplate }
+        if ($casePipeline -eq $Pipeline -and $caseNonWindowsTemplate -eq $NonWindowsTemplate -and $caseSharedTemplate -eq $SharedTemplate -and $caseLivePublishingTemplate -eq $LivePublishingTemplate -and $caseFinalizePublishingTemplate -eq $FinalizePublishingTemplate) {
             throw "Self-test '$($case.Name)' did not change the configuration under test."
         }
 
         $rejected = $false
         try {
-            Assert-NonWindowsAffectedTestsWiring $casePipeline $caseNonWindowsTemplate $caseSharedTemplate $caseLivePublishingTemplate
+            Assert-NonWindowsAffectedTestsWiring $casePipeline $caseNonWindowsTemplate $caseSharedTemplate $caseLivePublishingTemplate $caseFinalizePublishingTemplate
         } catch {
             if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
                 throw
@@ -484,6 +519,7 @@ $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-config
 $sharedTestTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-affected-tests.yml"
 $nonWindowsTestTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-non-windows.yml"
 $livePublishingTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/configure-azdo-live-test-publishing.yml"
+$finalizePublishingTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/finalize-azdo-live-test-publishing.yml"
 $accessDatabaseInstallerPath = Join-Path $repoRoot "eng/install-access-database-engine.ps1"
 $wellKnownEnvironmentVariablesPath = Join-Path $repoRoot "test/Utilities/Microsoft.Testing.TestInfrastructure/WellKnownEnvironmentVariables.cs"
 
@@ -684,6 +720,7 @@ $testTemplate = Get-Content -LiteralPath $testTemplatePath -Raw
 $sharedTestTemplate = Get-Content -LiteralPath $sharedTestTemplatePath -Raw
 $nonWindowsTestTemplate = Get-Content -LiteralPath $nonWindowsTestTemplatePath -Raw
 $livePublishingTemplate = Get-Content -LiteralPath $livePublishingTemplatePath -Raw
+$finalizePublishingTemplate = Get-Content -LiteralPath $finalizePublishingTemplatePath -Raw
 Assert-Containment `
     -Text $sharedTestTemplate `
     -Substrings @(
@@ -825,10 +862,10 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 
 if ($SelfTest) {
     Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $collectBranch.Value
-    Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $affectedTestsPackageVersion
+    Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate $affectedTestsPackageVersion
 } else {
     Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $collectBranch.Value
-    Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate
+    Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate
 }
 
 if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or

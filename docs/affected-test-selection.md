@@ -230,6 +230,61 @@ and selection, multi-agent artifact publication, and real worker completion rema
 upstream support**, not established by the configuration checks or previews. No .NET build/pack was run because no
 shipping source or package layout changed. The Unix gate must remain off until composed-product proof is available.
 
+### Review correction: downstream preflight enforcement
+
+Review on 2026-10-14 identified that the initial support check failed `DetectChanges`, but Linux/macOS still used
+`succeededOrFailed()` and treated absent classification outputs conservatively. Consequently, rejecting Unix opt-in
+did not actually prevent those jobs from executing unsupported collection. The earlier configuration checks and
+previews established the validator's rejection and matrix wiring, not the downstream runtime gate.
+
+Require `DetectChanges.result == Succeeded` whenever both affected-test parameters are enabled. Keep
+`succeededOrFailed()` and missing-output full-validation behavior when either rollout parameter is disabled. An
+unconditional `succeeded()` condition would also block ordinary full validation on classification uncertainty; a
+new output variable is unnecessary because the existing dependency result already expresses successful preflight.
+Apply the same gate to main collection and non-main selection, and retain existing change-scope and macOS PR gates.
+
+Collection suppresses TRX fallback as well as live publishing. The configure and finalize helpers must therefore
+not promise TRX fallback when publishing is simply disabled; the consuming job continues to own fallback policy.
+
+The correction was compared with review base `8783751cb9ecd7fffb484dccf11b6a02bf45d89f`. The four-file implementation
+patch (pipeline, validator, configure and finalize helpers, excluding this record) has SHA-256
+`8F4F106ABA72F5D0BBF3A24C6CD8BC110BAF16D8B38E83088398DACCEBABB0DB`. The original head passed 43 configuration
+cases; it did not detect this downstream bypass. With the correction, this command passes 49 cases, exit 0:
+
+```powershell
+pwsh -NoLogo -NoProfile -NonInteractive -File .\eng\validate-affected-tests.ps1 -SelfTest
+```
+
+The same explicit root/Unix parameter commands documented above retain exit 0 for `True`/`False` and
+`False`/`True`, and the intended `NonWindowsCollectorSupportRequired` rejection, exit 1, for `True`/`True`.
+
+| Contract / retained case | Actual pre-fix source in the isolated fixture | Intended red result | Corrected result |
+| --- | --- | --- | --- |
+| Successful downstream preflight / `LinuxFailedPreflightBypassIsRejected`, `MacOSFailedPreflightBypassIsRejected` | Restore only `azure-pipelines.yml` from the review base; retain the corrected validator and all templates. | Validator exits 1 at `NonWindowsOptInRequiresSuccessfulPreflight` after the 13 Windows cases pass. | Same validator command passes 49 cases, exit 0, before and after the comparison. |
+| Accurate configure output / `CollectionSuppressesPublishing` script probe | Restore only the original configure helper; retain the publishing probe assertions. | Probe exits 1 at the assertion that collection must not promise TRX fallback, after one preceding publishing case passes. | Publishing-only probe passes all eight cases, exit 0. |
+| Accurate finalize output / `CollectionSuppressesPublishing-Finalize` script probe | Restore only the original finalize helper. | Probe exits 1 at the disabled-publishing fallback-output assertion, after two preceding publishing cases pass. | Same eight publishing cases pass, exit 0. |
+
+The session-owned comparison commands were:
+
+```powershell
+pwsh -NoLogo -NoProfile -NonInteractive -File <session-artifacts>\verify-review-regressions.ps1
+pwsh -NoLogo -NoProfile -NonInteractive -File <session-artifacts>\verify-affected-pipeline.ps1
+pwsh -NoLogo -NoProfile -NonInteractive -File <session-artifacts>\preview-affected-pipeline.ps1
+```
+
+All three commands completed with exit 0. The comparison runner verified unchanged validator/probe hashes across
+the source states and retained the expected red assertions, not setup failures. The full script probe executed 28
+passing cases: the unchanged 20 native-command-fixture cases, five configure cases, and three disabled-publishing
+finalize cases. It checked both collection helpers' actual output rather than only matching their source text.
+
+Seven `previewRun=true` Azure previews passed, with both rollout parameters disabled added to the previous six
+scenarios and the modified finalize template also inlined. For each server-expanded Linux/macOS job condition,
+ten local eligibility cases cover successful, failed, partial-success, skipped and canceled preflight; missing
+classification outputs; product/XML scope; and PR/manual triggers. All 140 local evaluations passed, including
+rejection of failed preflight under Unix opt-in and preservation of ordinary full validation under either rollback.
+These are local evaluations of the server-expanded expressions, not evidence of actual Azure worker scheduling.
+No builds were queued, Unix was not enabled, and real cross-OS collector execution remains unverified.
+
 ## Headless collection compatibility
 
 Collection launches discovery and execution batches in fresh, headless processes. On Windows, a headless process
