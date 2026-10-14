@@ -68,6 +68,18 @@ runtime or package-selection proof.
   than implicitly retargeting it when the newest desktop acceptance TFM changes.
   New BCL nullability and async text-writer overloads need small compatibility
   adjustments, without weakening analyzer enforcement or diagnostic cleanup.
+- Review follow-up: scope the identifier workaround to the four Windows
+  projects that explicitly opt into MSBuild.Sdk.Extras before importing its
+  props. Only unset, unknown, or mis-inferred identifiers are corrected, and an
+  explicit framework version is preserved. Native SDK projects do not opt in.
+- Review follow-up: metadata inspection of the compiled .NET 10 and .NET 11
+  OpenTelemetry assemblies confirms both null-tag branches call
+  `System.Array.Empty<T>()`; the empty collection expression does not allocate
+  a new array. Retain the non-null fallback required by the newer BCL annotations.
+- Follow-up validation: all four Extras projects and the native-SDK platform
+  retain the expected .NET 10/11 identifiers and versions. The affected producer
+  graph and repacked framework/adapter packages build with zero warnings/errors;
+  both unchanged packed-consumer cases execute and pass again with no skips.
 
 ## Alternatives and decision
 

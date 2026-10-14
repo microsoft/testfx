@@ -43,9 +43,11 @@
   </PropertyGroup>
 
   <!-- MSBuild.Sdk.Extras infers modern .NET from the first version digit and misidentifies net10.0+. -->
-  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
+  <PropertyGroup Condition=" '$(_UsesMSBuildSdkExtras)' == 'true'
+    AND ('$(TargetFrameworkIdentifier)' == '' OR '$(TargetFrameworkIdentifier)' == '_' OR '$(TargetFrameworkIdentifier)' == '.NETFramework')
+    AND $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0')) ">
     <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))</TargetFrameworkVersion>
   </PropertyGroup>
 
   <!-- Build config -->

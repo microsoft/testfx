@@ -1,5 +1,9 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
