@@ -14,7 +14,7 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 verbosity='minimal'
 warn_as_error=true
-# Empty means "not specified"; tools.sh defaults these to on for local builds and off on CI.
+# Empty means "not specified"; tools.sh defaults both options on locally, and msbuild_multi_threaded on (node_reuse off) on CI.
 node_reuse=''
 msbuild_multi_threaded=''
 prepare_machine=false
