@@ -9,6 +9,12 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
+  <!-- Stryker supports delay signing, not PublicSign; override Arcade while retaining the core's Microsoft identity. -->
+  <PropertyGroup Condition="'$(MutationTesting)' == 'true' and '$(MSBuildProjectName)' == 'Microsoft.Testing.Platform'">
+    <PublicSign>false</PublicSign>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+
   <!-- Pack config -->
   <PropertyGroup>
     <PackageTags Condition=" '$(PackageTags)' == '' ">$(CommonPackageTags)</PackageTags>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "knownTargetCount": 28,
+  "knownTargetCount": 41,
   "excludedProjects": [
     {
       "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.Controller/Microsoft.Testing.Extensions.PackagedApp.Controller.csproj",
@@ -9,6 +9,30 @@
     {
       "project": "src/Platform/Microsoft.Testing.Extensions.PackagedApp.MSBuild/Microsoft.Testing.Extensions.PackagedApp.MSBuild.csproj",
       "reason": "Build-only packaging project with no compiled production assembly; its MSBuild targets and packaged controller are covered by acceptance tests, not Stryker."
+    },
+    {
+      "project": "src/Package/MSTest.Sdk/MSTest.Sdk.csproj",
+      "reason": "MSBuild SDK packaging project that ships props and targets rather than a production assembly; validate its package layout with SDK acceptance tests, not Stryker."
+    },
+    {
+      "project": "src/Package/MSTest/MSTest.csproj",
+      "reason": "Meta-package project that composes existing packages without a production assembly; validate dependency and package behavior with acceptance tests, not Stryker."
+    },
+    {
+      "project": "src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj",
+      "reason": "Packaging project that assembles analyzer assets and global configs but contains no independent production code; validate the packaged analyzer with acceptance tests, not Stryker."
+    },
+    {
+      "project": "src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj",
+      "reason": "Build-time executable invoked by the analyzer package to generate global configs, with no dedicated test project; validate its output through package acceptance tests, not Stryker."
+    },
+    {
+      "project": "src/TestFramework/TestFramework.SourceGeneration/TestFramework.SourceGeneration.csproj",
+      "reason": "Internal, non-packable source generator with no dedicated test project; its generated framework behavior is exercised by consumer tests, not as a standalone Stryker module."
+    },
+    {
+      "project": "src/TestFramework/TestFramework.Windows.UIAutomation/TestFramework.Windows.UIAutomation.csproj",
+      "reason": "Windows desktop UI Automation project requiring the WPF framework; it cannot execute in the Ubuntu/net8.0 mutation shards."
     }
   ],
   "modules": [
@@ -266,6 +290,74 @@
       "legacyReport": false
     },
     {
+      "id": "platform-ai",
+      "displayName": "Microsoft.Testing.Platform.AI",
+      "project": "src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "platform-core",
+      "displayName": "Microsoft.Testing.Platform",
+      "project": "src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj",
+      "testProjects": [
+        "test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj",
+        "test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj"
+      ],
+      "targetFramework": "net9.0",
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "adapter-hosting",
+      "displayName": "MSTest.Extensions.Hosting",
+      "project": "src/Adapter/MSTest.Extensions.Hosting/MSTest.Extensions.Hosting.csproj",
+      "testProjects": [
+        "test/UnitTests/MSTestAdapter.UnitTests/MSTestAdapter.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "mstest-adapter",
+      "displayName": "MSTest.TestAdapter",
+      "project": "src/Adapter/MSTest.TestAdapter/MSTest.TestAdapter.csproj",
+      "testProjects": [
+        "test/UnitTests/MSTestAdapter.UnitTests/MSTestAdapter.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "analyzer-code-fixes",
+      "displayName": "MSTest.Analyzers.CodeFixes",
+      "project": "src/Analyzers/MSTest.Analyzers.CodeFixes/MSTest.Analyzers.CodeFixes.csproj",
+      "testProjects": [
+        "test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "mstest-source-generation",
+      "displayName": "MSTest.SourceGeneration",
+      "project": "src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj",
+      "testProjects": [
+        "test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTest.SourceGeneration.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
       "id": "mstest-analyzers",
       "displayName": "MSTest.Analyzers",
       "project": "src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj",
@@ -280,6 +372,17 @@
       "id": "test-framework",
       "displayName": "MSTest.TestFramework",
       "project": "src/TestFramework/TestFramework/TestFramework.csproj",
+      "testProjects": [
+        "test/UnitTests/TestFramework.UnitTests/TestFramework.UnitTests.csproj"
+      ],
+      "timeoutMinutes": 360,
+      "enabled": true,
+      "legacyReport": false
+    },
+    {
+      "id": "test-framework-extensions",
+      "displayName": "MSTest.TestFramework.Extensions",
+      "project": "src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj",
       "testProjects": [
         "test/UnitTests/TestFramework.UnitTests/TestFramework.UnitTests.csproj"
       ],

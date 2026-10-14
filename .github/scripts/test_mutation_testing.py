@@ -6,6 +6,7 @@ import pathlib
 import subprocess
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from unittest.mock import call, patch
 
 
@@ -35,6 +36,17 @@ def manifest(*modules: dict) -> dict:
         "schemaVersion": 1,
         "knownTargetCount": len(modules),
         "modules": list(modules),
+    }
+
+
+def declared_target_frameworks(project: ET.Element) -> set[str]:
+    return {
+        framework.strip()
+        for declaration in project.iter()
+        if declaration.tag in ("TargetFramework", "TargetFrameworks")
+        and declaration.text is not None
+        for framework in declaration.text.split(";")
+        if framework.strip()
     }
 
 
@@ -79,10 +91,282 @@ class MutationTestingTests(unittest.TestCase):
         excluded_projects = {
             excluded["project"]
             for excluded in target_manifest.get("excludedProjects", [])
+            if excluded["project"].startswith(
+                "src/Platform/Microsoft.Testing.Extensions."
+            )
         }
 
         self.assertEqual(extension_projects, configured_projects | excluded_projects)
         self.assertEqual(set(), configured_projects & excluded_projects)
+
+    def test_repository_manifest_covers_every_source_project(self) -> None:
+        target_manifest = MUTATION_TESTING.load_manifest(
+            REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
+        )
+        source_projects = {
+            project.relative_to(REPOSITORY_ROOT).as_posix()
+            for project in (REPOSITORY_ROOT / "src").rglob("*.csproj")
+        }
+        manifest_projects = {
+            module["project"] for module in target_manifest["modules"]
+        } | {
+            excluded["project"]
+            for excluded in target_manifest.get("excludedProjects", [])
+        }
+
+        self.assertEqual(source_projects, manifest_projects)
+        self.assertEqual(len(source_projects), target_manifest["knownTargetCount"])
+
+    def test_declared_target_frameworks_handles_project_layouts(self) -> None:
+        for case, xml, expected in [
+            (
+                "multi-target",
+                "<Project><PropertyGroup><TargetFrameworks>net8.0;net9.0</TargetFrameworks></PropertyGroup></Project>",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "later-conditioned-group",
+                """<Project>
+                  <PropertyGroup><TargetFrameworks>net8.0</TargetFrameworks></PropertyGroup>
+                  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+                    <TargetFrameworks>net9.0</TargetFrameworks>
+                  </PropertyGroup>
+                </Project>""",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "nested-conditioned-group",
+                """<Project><Choose><When Condition="'$(OS)' != 'Windows_NT'">
+                  <PropertyGroup><TargetFrameworks>net8.0;net9.0</TargetFrameworks></PropertyGroup>
+                </When></Choose></Project>""",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "single-target",
+                "<Project><PropertyGroup><TargetFramework>net9.0</TargetFramework></PropertyGroup></Project>",
+                {"net9.0"},
+            ),
+            (
+                "formatted-declaration",
+                "<Project><PropertyGroup><TargetFrameworks> net8.0 ; net9.0 ; </TargetFrameworks></PropertyGroup></Project>",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "empty-declaration",
+                "<Project><PropertyGroup><TargetFrameworks /></PropertyGroup></Project>",
+                set(),
+            ),
+            (
+                "missing-declaration",
+                "<Project><PropertyGroup /></Project>",
+                set(),
+            ),
+        ]:
+            with self.subTest(case=case):
+                self.assertEqual(expected, declared_target_frameworks(ET.fromstring(xml)))
+
+    def test_repository_platform_core_uses_net9_direct_reference_tests(self) -> None:
+        target_manifest = MUTATION_TESTING.load_manifest(
+            REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
+        )
+        matrix = MUTATION_TESTING.build_matrix(target_manifest, REPOSITORY_ROOT)
+        core = next(target for target in matrix["include"] if target["id"] == "platform-core")
+        direct_test_project = (
+            "test/UnitTests/MSTest.SelfRealExamples.UnitTests/"
+            "MSTest.SelfRealExamples.UnitTests.csproj"
+        )
+
+        self.assertEqual("net9.0", core.get("targetFramework"))
+        self.assertIn(direct_test_project, core["testProjects"])
+        project = ET.parse(REPOSITORY_ROOT / direct_test_project).getroot()
+        self.assertIn(core["targetFramework"], declared_target_frameworks(project))
+        self.assertIn(
+            "$(RepoRoot)" + core["project"].replace("/", "\\"),
+            [
+                reference.get("Include")
+                for reference in project.findall("ItemGroup/ProjectReference")
+            ],
+        )
+
+    def test_workflow_uses_module_target_framework(self) -> None:
+        workflow = (
+            REPOSITORY_ROOT / ".github" / "workflows" / "mutation-testing.yml"
+        ).read_text(encoding="utf-8")
+        framework_options = [
+            line.strip()
+            for line in workflow.splitlines()
+            if line.strip().startswith("--target-framework")
+        ]
+
+        self.assertEqual(
+            ['--target-framework "$MutationTestingTargetFramework" \\'],
+            framework_options,
+        )
+        self.assertIn(
+            "MutationTestingTargetFramework: ${{ matrix.targetFramework }}",
+            workflow,
+        )
+
+    def test_mutation_build_uses_module_target_framework(self) -> None:
+        project = ET.parse(REPOSITORY_ROOT / "test" / "Directory.Build.targets").getroot()
+        framework = next(
+            property
+            for property in project.findall("PropertyGroup/TargetFrameworks")
+            if property.get("Condition") == "'$(MutationTesting)' == 'true'"
+        )
+
+        self.assertEqual("$(MutationTestingTargetFramework)", framework.text)
+        default = project.find("PropertyGroup/MutationTestingTargetFramework")
+        self.assertIsNotNone(default)
+        self.assertEqual("net8.0", default.text)
+        self.assertEqual(
+            "'$(MutationTesting)' == 'true' AND '$(MutationTestingTargetFramework)' == ''",
+            default.get("Condition"),
+        )
+
+    def test_mutation_build_retains_mstest_analyzers_from_source(self) -> None:
+        project = ET.parse(REPOSITORY_ROOT / "test" / "Directory.Build.targets").getroot()
+        analyzer_project = (
+            "$(RepoRoot)src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj"
+        )
+        references = [
+            reference.attrib
+            for group in project.findall("ItemGroup")
+            if group.get("Condition") == "'$(_AddMSTestSourceReferenceForMutation)' == 'true'"
+            for reference in group.findall("ProjectReference")
+            if reference.get("Include") == analyzer_project
+        ]
+
+        self.assertEqual(
+            [{
+                "Include": analyzer_project,
+                "IsTestInfrastructure": "true",
+                "PrivateAssets": "all",
+                "ReferenceOutputAssembly": "false",
+                "OutputItemType": "Analyzer",
+            }],
+            references,
+        )
+
+    def test_mutation_build_delay_signs_platform_core(self) -> None:
+        project = ET.parse(REPOSITORY_ROOT / "Directory.Build.targets").getroot()
+        condition = (
+            "'$(MutationTesting)' == 'true' and "
+            "'$(MSBuildProjectName)' == 'Microsoft.Testing.Platform'"
+        )
+        signing_options = {
+            property.tag: property.text
+            for group in project.findall("PropertyGroup")
+            if group.get("Condition") == condition
+            for property in group
+            if property.tag in ("PublicSign", "DelaySign")
+        }
+
+        self.assertEqual(
+            {"PublicSign": "false", "DelaySign": "true"},
+            signing_options,
+        )
+
+    def test_build_matrix_rejects_unconfigured_source_projects(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("configured", legacy=True)
+            for path in [target["project"], *target["testProjects"]]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+            unconfigured = root / "src" / "unconfigured" / "unconfigured.csproj"
+            unconfigured.parent.mkdir(parents=True, exist_ok=True)
+            unconfigured.touch()
+
+            with self.assertRaisesRegex(
+                ValueError, "unconfigured src projects: src/unconfigured/unconfigured.csproj"
+            ):
+                MUTATION_TESTING.build_matrix(manifest(target), root)
+
+    def test_build_matrix_rejects_unknown_source_projects(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("unknown", legacy=True)
+            for path in target["testProjects"]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+
+            with self.assertRaises(ValueError) as error:
+                MUTATION_TESTING.build_matrix(manifest(target), root)
+
+            self.assertEqual(
+                "Mutation manifest project inventory mismatch "
+                "(projects not found under src: src/unknown/unknown.csproj)",
+                str(error.exception),
+            )
+
+    def test_build_matrix_rejects_duplicate_source_projects(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("configured", legacy=True)
+            duplicate = module("duplicate") | {"project": target["project"]}
+            for path in [
+                target["project"],
+                *target["testProjects"],
+                *duplicate["testProjects"],
+            ]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+
+            with self.assertRaises(ValueError) as error:
+                MUTATION_TESTING.build_matrix(manifest(target, duplicate), root)
+
+            self.assertEqual(
+                "Mutation manifest project inventory mismatch "
+                "(duplicate manifest projects: src/configured/configured.csproj)",
+                str(error.exception),
+            )
+
+    def test_build_matrix_reports_multiple_duplicate_projects_in_order(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            zulu = module("zulu", legacy=True)
+            alpha = module("alpha")
+            targets = [
+                zulu,
+                module("zulu-duplicate") | {"project": zulu["project"]},
+                alpha,
+                module("alpha-duplicate") | {"project": alpha["project"]},
+                module("alpha-third") | {"project": alpha["project"]},
+                module("unique"),
+            ]
+            for target in targets:
+                for path in [target["project"], *target["testProjects"]]:
+                    project = root / path
+                    project.parent.mkdir(parents=True, exist_ok=True)
+                    project.touch()
+
+            with self.assertRaises(ValueError) as error:
+                MUTATION_TESTING.build_matrix(manifest(*targets), root)
+
+            self.assertEqual(
+                "Mutation manifest project inventory mismatch "
+                "(duplicate manifest projects: src/alpha/alpha.csproj, src/zulu/zulu.csproj)",
+                str(error.exception),
+            )
+
+    def test_build_matrix_rejects_stale_known_target_count(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("configured", legacy=True)
+            for path in [target["project"], *target["testProjects"]]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+
+            with self.assertRaisesRegex(ValueError, "knownTargetCount must match"):
+                MUTATION_TESTING.build_matrix(
+                    manifest(target) | {"knownTargetCount": 2},
+                    root,
+                )
 
     def test_load_manifest_validates_explicit_exclusions(self) -> None:
         target = module("one", legacy=True)
@@ -100,6 +384,25 @@ class MutationTestingTests(unittest.TestCase):
                 path = pathlib.Path(directory) / "manifest.json"
                 path.write_text(json.dumps(data), encoding="utf-8")
                 with self.assertRaisesRegex(ValueError, message):
+                    MUTATION_TESTING.load_manifest(path)
+
+    def test_load_manifest_rejects_invalid_target_framework(self) -> None:
+        for case, framework in [
+            ("null", None),
+            ("empty", ""),
+            ("whitespace", " "),
+            ("leading-whitespace", " net9.0"),
+            ("trailing-whitespace", "net9.0 "),
+            ("number", 9),
+            ("boolean", True),
+            ("list", ["net9.0"]),
+        ]:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                target = module("one", legacy=True) | {"targetFramework": framework}
+                path = pathlib.Path(directory) / "manifest.json"
+                path.write_text(json.dumps(manifest(target)), encoding="utf-8")
+
+                with self.assertRaisesRegex(ValueError, "invalid targetFramework"):
                     MUTATION_TESTING.load_manifest(path)
 
     def test_load_manifest_requires_one_legacy_module(self) -> None:
@@ -134,7 +437,29 @@ class MutationTestingTests(unittest.TestCase):
                 root,
             )
 
-            self.assertEqual([enabled], matrix["include"])
+            self.assertEqual(
+                [enabled | {"targetFramework": "net8.0"}],
+                matrix["include"],
+            )
+            self.assertNotIn("targetFramework", enabled)
+
+    def test_build_matrix_uses_module_target_framework(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            target = module("example", legacy=True) | {"targetFramework": "net9.0"}
+            for path in [target["project"], *target["testProjects"]]:
+                project = root / path
+                project.parent.mkdir(parents=True, exist_ok=True)
+                project.touch()
+            path = root / "manifest.json"
+            path.write_text(json.dumps(manifest(target)), encoding="utf-8")
+
+            matrix = MUTATION_TESTING.build_matrix(
+                MUTATION_TESTING.load_manifest(path),
+                root,
+            )
+
+            self.assertEqual([target], matrix["include"])
 
     def test_write_solution_contains_source_and_test_projects(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

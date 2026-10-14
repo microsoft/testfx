@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import collections
 import html
 import json
 import shutil
@@ -16,6 +17,7 @@ from xml.sax.saxutils import escape
 
 
 SCHEMA_VERSION = 1
+DEFAULT_TARGET_FRAMEWORK = "net8.0"
 MUTANT_STATUSES = (
     "Killed",
     "Survived",
@@ -91,6 +93,16 @@ def load_manifest(path: Path) -> dict[str, Any]:
                 f"Mutation module {module_id} must have one or more test projects"
             )
 
+        target_framework = module.get("targetFramework", DEFAULT_TARGET_FRAMEWORK)
+        if (
+            not isinstance(target_framework, str)
+            or not target_framework
+            or target_framework != target_framework.strip()
+        ):
+            raise ValueError(
+                f"Mutation module {module_id} has an invalid targetFramework"
+            )
+
         timeout = module.get("timeoutMinutes")
         if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
             raise ValueError(
@@ -138,14 +150,64 @@ def validate_module_paths(module: dict[str, Any], repository_root: Path) -> None
         )
 
 
+def validate_project_coverage(
+    manifest: dict[str, Any], repository_root: Path
+) -> None:
+    source_root = repository_root / "src"
+    source_projects = {
+        project.relative_to(repository_root).as_posix()
+        for project in source_root.rglob("*.csproj")
+    }
+    manifest_projects = [
+        module["project"] for module in manifest["modules"]
+    ] + [
+        excluded["project"] for excluded in manifest.get("excludedProjects", [])
+    ]
+    project_counts = collections.Counter(manifest_projects)
+    configured_projects = set(project_counts)
+    unconfigured_projects = sorted(source_projects - configured_projects)
+    unknown_projects = sorted(configured_projects - source_projects)
+    duplicate_projects = sorted(
+        project
+        for project, count in project_counts.items()
+        if count > 1
+    )
+
+    if unconfigured_projects or unknown_projects or duplicate_projects:
+        details = []
+        if unconfigured_projects:
+            details.append("unconfigured src projects: " + ", ".join(unconfigured_projects))
+        if unknown_projects:
+            details.append("projects not found under src: " + ", ".join(unknown_projects))
+        if duplicate_projects:
+            details.append("duplicate manifest projects: " + ", ".join(duplicate_projects))
+        raise ValueError("Mutation manifest project inventory mismatch (" + "; ".join(details) + ")")
+
+    if manifest["knownTargetCount"] != len(source_projects):
+        raise ValueError(
+            "Mutation manifest knownTargetCount must match the "
+            f"{len(source_projects)} projects under src"
+        )
+
+
 def build_matrix(manifest: dict[str, Any], repository_root: Path) -> dict[str, Any]:
+    validate_project_coverage(manifest, repository_root)
     modules = enabled_modules(manifest)
     for module in modules:
         validate_module_paths(module, repository_root)
     for excluded in manifest.get("excludedProjects", []):
         if not (repository_root / excluded["project"]).is_file():
             raise ValueError(f"Excluded mutation project does not exist: {excluded['project']}")
-    return {"include": modules}
+    return {
+        "include": [
+            module | {
+                "targetFramework": module.get(
+                    "targetFramework", DEFAULT_TARGET_FRAMEWORK
+                )
+            }
+            for module in modules
+        ]
+    }
 
 
 def write_solution(module: dict[str, Any], output: Path) -> None:

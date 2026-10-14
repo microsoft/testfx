@@ -4,7 +4,8 @@
   <Import Project="../Directory.Build.targets" />
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(MutationTesting)' == 'true'">net8.0</TargetFrameworks>
+    <MutationTestingTargetFramework Condition="'$(MutationTesting)' == 'true' AND '$(MutationTestingTargetFramework)' == ''">net8.0</MutationTestingTargetFramework>
+    <TargetFrameworks Condition="'$(MutationTesting)' == 'true'">$(MutationTestingTargetFramework)</TargetFrameworks>
     <GenerateProgramFile>false</GenerateProgramFile>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
@@ -152,13 +153,16 @@
   </Target>
 
   <!-- Mutation builds use open-key friend assemblies. A shipped Microsoft-key
-       adapter cannot access the locally built platform's internals. -->
+       adapter cannot access the locally built platform's internals. Keep the
+       source analyzer too, including its injected TestContext suppressor. -->
   <PropertyGroup Condition="'$(MutationTesting)' == 'true' AND '$(EnableMSTestRunner)' == 'true' AND '$(UseInternalTestFramework)' != 'true'">
     <_AddMSTestSourceReferenceForMutation Condition="'$(UseMSTestFromSource)' != 'true'">true</_AddMSTestSourceReferenceForMutation>
     <UseMSTestFromSource>true</UseMSTestFromSource>
   </PropertyGroup>
   <ItemGroup Condition="'$(_AddMSTestSourceReferenceForMutation)' == 'true'">
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" IsTestInfrastructure="true" />
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj" IsTestInfrastructure="true"
+                      PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">

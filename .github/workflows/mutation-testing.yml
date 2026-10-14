@@ -43,6 +43,7 @@ jobs:
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       MutationTesting: true
+      MutationTestingTargetFramework: ${{ matrix.targetFramework }}
     strategy:
       fail-fast: false
       max-parallel: 6
@@ -93,7 +94,7 @@ jobs:
             --config-file "$GITHUB_WORKSPACE/stryker-config.json" \
             --solution "$GITHUB_WORKSPACE/MutationTesting.generated.slnx" \
             --project "$(basename "${{ matrix.project }}")" \
-            --target-framework net8.0 \
+            --target-framework "$MutationTestingTargetFramework" \
             --output "$output" \
             --skip-version-check \
             2>&1 | tee "$output/stryker-console.log"
