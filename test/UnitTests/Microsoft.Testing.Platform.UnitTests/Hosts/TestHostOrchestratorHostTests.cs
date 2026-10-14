@@ -227,6 +227,50 @@ public sealed class TestHostOrchestratorHostTests
         Assert.AreEqual(1, lifetime.DisposeCount);
     }
 
+    [TestMethod]
+    public async Task RunAsync_NormalCompletionCleanupFailures_PreserveFirstFailureAndDisposeEveryLifetime()
+    {
+        InvalidOperationException expectedFailure = new("first cleanup failed");
+        RecordingLifetime first = new(afterRunException: expectedFailure);
+        RecordingLifetime second = new(afterRunException: new ArgumentException("second cleanup failed"));
+        RecordingLifetime healthy = new();
+        TestHostOrchestratorHost host = CreateHost(new RecordingOrchestrator(exitCode: 7), [first, second, healthy], out FakeApplicationCancellationTokenSource cancellation);
+        using (cancellation)
+        {
+            InvalidOperationException actualFailure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+            Assert.AreSame(expectedFailure, actualFailure);
+            foreach (RecordingLifetime lifetime in new[] { first, second, healthy })
+            {
+                Assert.AreEqual(1, lifetime.BeforeRunCount);
+                Assert.AreEqual(1, lifetime.AfterRunCount);
+                Assert.AreEqual(7, lifetime.LastExitCode);
+                Assert.AreEqual(1, lifetime.DisposeCount);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task RunAsync_UnrelatedCancellationException_DoesNotBecomeAnApplicationCancellationVerdict()
+    {
+        OperationCanceledException expectedFailure = new("extension canceled its own work");
+        RecordingLifetime lifetime = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: _ => throw expectedFailure),
+            lifetime,
+            out FakeApplicationCancellationTokenSource cancellation);
+        using (cancellation)
+        {
+            OperationCanceledException actualFailure = await Assert.ThrowsExactlyAsync<OperationCanceledException>(host.RunAsync);
+
+            Assert.AreSame(expectedFailure, actualFailure);
+            Assert.IsFalse(cancellation.CancellationToken.IsCancellationRequested);
+            Assert.AreEqual((int)ExitCode.GenericFailure, lifetime.LastExitCode);
+            Assert.AreEqual(1, lifetime.AfterRunCount);
+            Assert.AreEqual(1, lifetime.DisposeCount);
+        }
+    }
+
     private static TestHostOrchestratorHost CreateHost(
         RecordingOrchestrator orchestrator,
         RecordingLifetime lifetime,

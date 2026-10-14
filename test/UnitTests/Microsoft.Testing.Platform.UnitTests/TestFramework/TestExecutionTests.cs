@@ -516,6 +516,94 @@ public sealed class TestExecutionTests
         activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Once);
     }
 
+    [TestMethod]
+    [DataRow("session", DisplayName = "Different session")]
+    [DataRow("node", DisplayName = "Different node")]
+    [DataRow("parent", DisplayName = "Different parent")]
+    [DataRow("state", DisplayName = "Nonterminal state")]
+    [DataRow("null", DisplayName = "Null result entry")]
+    public async Task CompleteAsync_InvalidResult_DoesNotPublishOrPoisonLaterValidCompletion(string invalidPart)
+    {
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> bus = CreateMessageBus(published);
+        TestNodeUpdateMessage start = CreateInProgressMessage();
+        using TestExecution execution = await StartExecutionAsync(bus.Object, Mock.Of<IDataProducer>(), broker: null, start);
+        TestNodeUpdateMessage? invalid = invalidPart == "null"
+            ? null
+            : new(
+                invalidPart == "session" ? new SessionUid("other-session") : start.SessionUid,
+                new TestNode
+                {
+                    Uid = invalidPart == "node" ? new TestNodeUid("other-node") : start.TestNode.Uid,
+                    DisplayName = "Test",
+                    Properties = new PropertyBag(invalidPart == "state" ? InProgressTestNodeStateProperty.CachedInstance : PassedTestNodeStateProperty.CachedInstance),
+                },
+                invalidPart == "parent" ? new TestNodeUid("other-parent") : start.ParentTestNodeUid);
+
+        ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
+            () => execution.CompleteAsync([invalid!], DateTimeOffset.MinValue));
+
+        Assert.AreEqual("resultMessages", exception.ParamName);
+        Assert.HasCount(1, published);
+        TestNodeUpdateMessage valid = CreateResultMessage(start, PassedTestNodeStateProperty.CachedInstance);
+        await execution.CompleteAsync([valid], DateTimeOffset.MinValue);
+        Assert.HasCount(2, published);
+        Assert.AreSame(valid, published[1].Data);
+    }
+
+    [TestMethod]
+    public async Task CompleteAsync_PublishFailure_ClosesExecutionAndPreservesOriginalFailure()
+    {
+        InvalidOperationException expectedFailure = new("result publication failed");
+        List<(IDataProducer Producer, IData Data)> published = [];
+        Mock<IMessageBus> bus = CreateMessageBus(published, (_, data) =>
+            ((TestNodeUpdateMessage)data).TestNode.Properties.Any<PassedTestNodeStateProperty>()
+                ? Task.FromException(expectedFailure)
+                : Task.CompletedTask);
+        TestNodeUpdateMessage start = CreateInProgressMessage();
+        using TestExecution execution = await StartExecutionAsync(bus.Object, Mock.Of<IDataProducer>(), broker: null, start);
+        TestNodeUpdateMessage result = CreateResultMessage(start, PassedTestNodeStateProperty.CachedInstance);
+
+        InvalidOperationException actualFailure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => execution.CompleteAsync([result], DateTimeOffset.MinValue));
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => execution.CompleteAsync([result], DateTimeOffset.MinValue));
+        bool callbackInvoked = false;
+        Assert.ThrowsExactly<InvalidOperationException>(() => execution.Run(() => callbackInvoked = true));
+
+        Assert.AreSame(expectedFailure, actualFailure);
+        Assert.HasCount(2, published);
+        Assert.IsFalse(callbackInvoked);
+    }
+
+    [TestMethod]
+    public async Task RunCallbacks_AfterDispose_RejectsEveryOverloadBeforeInvokingUserCode()
+    {
+        Mock<IMessageBus> bus = CreateMessageBus([]);
+        TestExecution execution = await StartExecutionAsync(bus.Object, Mock.Of<IDataProducer>(), broker: null);
+        execution.Dispose();
+        bool invoked = false;
+
+        Assert.ThrowsExactly<ObjectDisposedException>(() => execution.Run(() => { invoked = true; }));
+        Assert.ThrowsExactly<ObjectDisposedException>(() => execution.Run(() =>
+        {
+            invoked = true;
+            return 42;
+        }));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => execution.RunAsync(() =>
+        {
+            invoked = true;
+            return Task.CompletedTask;
+        }));
+        await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => execution.RunAsync(() =>
+        {
+            invoked = true;
+            return Task.FromResult(42);
+        }));
+
+        Assert.IsFalse(invoked);
+    }
+
     private static ExecuteRequestContext CreateContext(
         IMessageBus messageBus,
         TestExecutionActivityBroker? broker,

@@ -340,6 +340,45 @@ public sealed class PropertyBagTests
         Assert.AreEqual(3, properties.Count);
     }
 
+    [TestMethod]
+    public void Enumeration_CombinesCachedStateWithAllAncillaryPropertiesInTheirDocumentedOrder()
+    {
+        FailedTestNodeStateProperty state = new("failure");
+        TestMetadataProperty first = new("Category", "first");
+        TestMetadataProperty last = new("Owner", "last");
+        PropertyBag bag = new(first, state, last);
+        List<IProperty> enumerated = [];
+
+        foreach (IProperty property in bag)
+        {
+            enumerated.Add(property);
+        }
+
+        Assert.AreSequenceEqual(new IProperty[] { last, first, state }, enumerated);
+        Assert.AreSequenceEqual(new[] { last, first }, bag.OfType<TestMetadataProperty>());
+        Assert.AreSame(state, bag.Single<TestNodeStateProperty>());
+        Assert.IsTrue(bag.Any<FailedTestNodeStateProperty>());
+        Assert.IsFalse(bag.Any<PassedTestNodeStateProperty>());
+        Assert.AreEqual(3, bag.Count);
+    }
+
+    [TestMethod]
+    public void Add_RejectedSecondState_PreservesOriginalStateAndAllowsSubsequentAncillaryProperties()
+    {
+        FailedTestNodeStateProperty original = new("original failure");
+        TestMetadataProperty first = new("Category", "first");
+        PropertyBag bag = new(original, first);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => bag.Add(PassedTestNodeStateProperty.CachedInstance));
+        TestMetadataProperty last = new("Owner", "last");
+        bag.Add(last);
+
+        Assert.AreSame(original, bag.Single<TestNodeStateProperty>());
+        Assert.AreEqual("original failure", bag.Single<FailedTestNodeStateProperty>().Explanation);
+        Assert.AreSequenceEqual(new[] { last, first }, bag.OfType<TestMetadataProperty>());
+        Assert.AreEqual(3, bag.Count);
+    }
+
     private sealed class DummyProperty : IProperty;
 
     private sealed class DummyProperty2 : IProperty;

@@ -77,15 +77,36 @@
   </PropertyGroup>
   <PropertyGroup>
     <_CodeCoverageSourceRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)src'))</_CodeCoverageSourceRoot>
-    <_CodeCoverageNuGetPackagesRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(NuGetPackageRoot)'))</_CodeCoverageNuGetPackagesRootPattern>
-    <_CodeCoverageArtifactsRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(ArtifactsDir)'))</_CodeCoverageArtifactsRootPattern>
     <_CodeCoverageTestInfrastructureRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure'))</_CodeCoverageTestInfrastructureRoot>
-    <_CodeCoverageTestInfrastructureRootPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_CodeCoverageTestInfrastructureRoot)'))</_CodeCoverageTestInfrastructureRootPattern>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableCodeCoverage)' == 'True' ">
     <FileWrites Include="$(CodeCoverageSettingsFile)" />
   </ItemGroup>
+
+  <UsingTask TaskName="WriteCodeCoverageSettings"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <FileName ParameterType="System.String" Required="true" />
+      <Lines ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        string path = System.IO.Path.GetFullPath(FileName);
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
+        string[] values = new string[Lines.Length];
+        for (int index = 0; index < Lines.Length; index++)
+        {
+            values[index] = Lines[index].GetMetadata("Value");
+        }
+
+        System.IO.File.WriteAllLines(path, values, new System.Text.UTF8Encoding(true));
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
 
   <Target Name="_GenerateCodeCoverageSettings"
           AfterTargets="Build"
@@ -101,54 +122,93 @@
         <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework' ">MSTest.TestFramework</CoverageAssemblyName>
         <CoverageAssemblyName Condition=" '%(ProjectReference.Filename)' == 'TestFramework.Extensions' ">MSTest.TestFramework.Extensions</CoverageAssemblyName>
       </_CodeCoverageProjectReference>
+      <!-- Some unit suites compile product implementations as linked sources under test-only conditional symbols. -->
+      <_CodeCoverageProjectReference Include="$(MSBuildProjectFullPath)"
+                                     Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'">
+        <CoverageAssemblyName>$(AssemblyName)</CoverageAssemblyName>
+        <CoverageAssemblyExtension>$(TargetExt)</CoverageAssemblyExtension>
+      </_CodeCoverageProjectReference>
       <_CodeCoverageProjectReference Update="@(_CodeCoverageProjectReference)">
         <CoverageAssemblyPattern>$([System.String]::Copy('%(_CodeCoverageProjectReference.CoverageAssemblyName)').Replace('.', '\.'))</CoverageAssemblyPattern>
+        <CoverageAssemblyExtensionPattern>\.dll</CoverageAssemblyExtensionPattern>
+        <CoverageAssemblyExtensionPattern Condition="'%(_CodeCoverageProjectReference.CoverageAssemblyExtension)' == '.exe'">\.exe</CoverageAssemblyExtensionPattern>
       </_CodeCoverageProjectReference>
+      <_CodeCoverageIncludedSource Include="Production"
+                                  Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'">
+        <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_CodeCoverageSourceRoot)').Insert(0, '^')).*</Pattern>
+      </_CodeCoverageIncludedSource>
+      <_CodeCoverageIncludedSource Include="MappedProduction"
+                                  Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'">
+        <Pattern>^[\\/]_[\\/]src[\\/].*</Pattern>
+      </_CodeCoverageIncludedSource>
+      <_CodeCoverageIncludedSource Update="@(_CodeCoverageIncludedSource)">
+        <XmlPattern>$([System.String]::Copy('%(_CodeCoverageIncludedSource.Pattern)').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+      </_CodeCoverageIncludedSource>
+      <!-- Anchor inside the function so its result is not normalized as an absolute path on Unix. -->
       <_CodeCoverageExcludedSource Include="Packages" Condition=" '$(NuGetPackageRoot)' != '' ">
-        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageNuGetPackagesRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+        <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(NuGetPackageRoot)').Insert(0, '^')).*</Pattern>
       </_CodeCoverageExcludedSource>
       <_CodeCoverageExcludedSource Include="Artifacts">
-        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageArtifactsRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+        <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(ArtifactsDir)').Insert(0, '^')).*</Pattern>
       </_CodeCoverageExcludedSource>
       <_CodeCoverageExcludedSource Include="TestInfrastructure">
-        <XmlPattern>$([System.String]::Copy('^$(_CodeCoverageTestInfrastructureRootPattern).*').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
+        <Pattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_CodeCoverageTestInfrastructureRoot)').Insert(0, '^')).*</Pattern>
       </_CodeCoverageExcludedSource>
       <!-- Keep repository-owned validation and process-lifetime logic measurable while excluding BCL compatibility shims. -->
       <_CodeCoverageExcludedSource Include="Polyfills">
-        <XmlPattern>(^|[\\/])Polyfills[\\/](?!Ensure\.cs$|ProcessExtensions\.cs$).*\.cs$</XmlPattern>
+        <Pattern>(^|[\\/])Polyfills[\\/](?!Ensure\.cs$|ProcessExtensions\.cs$).*\.cs$</Pattern>
+      </_CodeCoverageExcludedSource>
+      <_CodeCoverageExcludedSource Update="@(_CodeCoverageExcludedSource)">
+        <XmlPattern>$([System.String]::Copy('%(_CodeCoverageExcludedSource.Pattern)').Replace('&amp;', '&amp;amp;').Replace('&lt;', '&amp;lt;').Replace('&gt;', '&amp;gt;'))</XmlPattern>
       </_CodeCoverageExcludedSource>
     </ItemGroup>
 
+    <!-- Keep regex text in metadata: MSBuild normalizes backslashes in item identities and path-like property values on Unix. -->
     <ItemGroup>
-      <_CodeCoverageSettingsLine Include="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
-      <_CodeCoverageSettingsLine Include="&lt;Configuration&gt;" />
-      <_CodeCoverageSettingsLine Include="  &lt;CodeCoverage&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;ModulePaths mergeDefaults=&quot;False&quot;&gt;" />
-      <_CodeCoverageSettingsLine Include="      &lt;Include&gt;" />
-      <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference->'        &lt;ModulePath&gt;.*%(CoverageAssemblyPattern)\.dll$&lt;/ModulePath&gt;')" />
-      <_CodeCoverageSettingsLine Include="      &lt;/Include&gt;" />
-      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="        &lt;ModulePath&gt;.*Microsoft\.Testing\.TestInfrastructure\.dll$&lt;/ModulePath&gt;" />
-      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;/ModulePaths&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;Sources&gt;" />
-      <_CodeCoverageSettingsLine Include="      &lt;Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource->'        &lt;Source&gt;%(XmlPattern)&lt;/Source&gt;')" />
-      <_CodeCoverageSettingsLine Include="      &lt;/Exclude&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;/Sources&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;EnableStaticNativeInstrumentation&gt;False&lt;/EnableStaticNativeInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;EnableDynamicNativeInstrumentation&gt;False&lt;/EnableDynamicNativeInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;EnableStaticManagedInstrumentation&gt;False&lt;/EnableStaticManagedInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="    &lt;EnableDynamicManagedInstrumentation&gt;True&lt;/EnableDynamicManagedInstrumentation&gt;" />
-      <_CodeCoverageSettingsLine Include="  &lt;/CodeCoverage&gt;" />
-      <_CodeCoverageSettingsLine Include="&lt;/Configuration&gt;" />
+      <_CodeCoverageSettingsLine Include="Declaration" Value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
+      <_CodeCoverageSettingsLine Include="ConfigurationStart" Value="&lt;Configuration&gt;" />
+      <_CodeCoverageSettingsLine Include="IncludeSourceLinkedTestAssembly"
+                                 Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
+                                 Value="  &lt;IncludeTestAssembly&gt;True&lt;/IncludeTestAssembly&gt;" />
+      <_CodeCoverageSettingsLine Include="CodeCoverageStart" Value="  &lt;CodeCoverage&gt;" />
+      <_CodeCoverageSettingsLine Include="ModulePathsStart" Value="    &lt;ModulePaths mergeDefaults=&quot;False&quot;&gt;" />
+      <_CodeCoverageSettingsLine Include="ModuleIncludeStart" Value="      &lt;Include&gt;" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageProjectReference)">
+        <Value>        &lt;ModulePath&gt;.*%(_CodeCoverageProjectReference.CoverageAssemblyPattern)%(_CodeCoverageProjectReference.CoverageAssemblyExtensionPattern)$&lt;/ModulePath&gt;</Value>
+      </_CodeCoverageSettingsLine>
+      <_CodeCoverageSettingsLine Include="ModuleIncludeEnd" Value="      &lt;/Include&gt;" />
+      <_CodeCoverageSettingsLine Include="ModuleExcludeStart" Value="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="TestInfrastructure" Value="        &lt;ModulePath&gt;.*Microsoft\.Testing\.TestInfrastructure\.dll$&lt;/ModulePath&gt;" />
+      <_CodeCoverageSettingsLine Include="ModuleExcludeEnd" Value="      &lt;/Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="ModulePathsEnd" Value="    &lt;/ModulePaths&gt;" />
+      <_CodeCoverageSettingsLine Include="SourcesStart" Value="    &lt;Sources&gt;" />
+      <_CodeCoverageSettingsLine Include="SourceIncludeStart"
+                                 Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
+                                 Value="      &lt;Include&gt;" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageIncludedSource)">
+        <Value>        &lt;Source&gt;%(_CodeCoverageIncludedSource.XmlPattern)&lt;/Source&gt;</Value>
+      </_CodeCoverageSettingsLine>
+      <_CodeCoverageSettingsLine Include="SourceIncludeEnd"
+                                 Condition="'$(CodeCoverageIncludeSourceLinkedProductionCode)' == 'true'"
+                                 Value="      &lt;/Include&gt;" />
+      <_CodeCoverageSettingsLine Include="SourceExcludeStart" Value="      &lt;Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="@(_CodeCoverageExcludedSource)">
+        <Value>        &lt;Source&gt;%(_CodeCoverageExcludedSource.XmlPattern)&lt;/Source&gt;</Value>
+      </_CodeCoverageSettingsLine>
+      <_CodeCoverageSettingsLine Include="SourceExcludeEnd" Value="      &lt;/Exclude&gt;" />
+      <_CodeCoverageSettingsLine Include="SourcesEnd" Value="    &lt;/Sources&gt;" />
+      <_CodeCoverageSettingsLine Include="VerifiableInstrumentation" Value="    &lt;UseVerifiableInstrumentation&gt;False&lt;/UseVerifiableInstrumentation&gt;" />
+      <_CodeCoverageSettingsLine Include="StaticNativeInstrumentation" Value="    &lt;EnableStaticNativeInstrumentation&gt;False&lt;/EnableStaticNativeInstrumentation&gt;" />
+      <_CodeCoverageSettingsLine Include="DynamicNativeInstrumentation" Value="    &lt;EnableDynamicNativeInstrumentation&gt;False&lt;/EnableDynamicNativeInstrumentation&gt;" />
+      <_CodeCoverageSettingsLine Include="StaticManagedInstrumentation" Value="    &lt;EnableStaticManagedInstrumentation&gt;False&lt;/EnableStaticManagedInstrumentation&gt;" />
+      <_CodeCoverageSettingsLine Include="DynamicManagedInstrumentation" Value="    &lt;EnableDynamicManagedInstrumentation&gt;True&lt;/EnableDynamicManagedInstrumentation&gt;" />
+      <_CodeCoverageSettingsLine Include="CodeCoverageEnd" Value="  &lt;/CodeCoverage&gt;" />
+      <_CodeCoverageSettingsLine Include="ConfigurationEnd" Value="&lt;/Configuration&gt;" />
     </ItemGroup>
 
-    <WriteLinesToFile File="$(CodeCoverageSettingsFile)"
-                      Lines="@(_CodeCoverageSettingsLine)"
-                      Overwrite="true"
-                      Encoding="UTF-8" />
+    <!-- WriteLinesToFile also normalizes transformed metadata when binding its ITaskItem[] Lines parameter. -->
+    <WriteCodeCoverageSettings FileName="$(CodeCoverageSettingsFile)"
+                               Lines="@(_CodeCoverageSettingsLine)" />
   </Target>
 
   <!-- Mutation builds use open-key friend assemblies. A shipped Microsoft-key

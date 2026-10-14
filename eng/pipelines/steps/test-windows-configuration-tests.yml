@@ -16,6 +16,10 @@ parameters:
   - run
 
 steps:
+- pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+  displayName: Validate generated coverage settings
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
 # Because the build step is using -ci, restore is done in a local .packages directory.
 # NUGET_PACKAGES must point to that directory so test project evaluation imports the restored package props/targets.
 #
