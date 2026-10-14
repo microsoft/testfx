@@ -132,8 +132,12 @@ SDK. The source state is the uncommitted change from base
 `5e6f70ef160e1d73c6c490866053ab5d51d3b382`; the complete saved patch and its
 SHA-256 are recorded with the session evidence rather than a fictitious head SHA.
 
+The commands below use a portable repository-local evidence directory. The
+original run retained the same artifact filenames in task-owned session storage.
+
 ```powershell
-$evidence = 'C:\Users\amauryleve\.copilot\session-state\f35576e5-2153-4b60-ab0b-5cb2684a46ab\files'
+$evidence = Join-Path (Get-Location).Path 'artifacts\log\net10-net11-validation'
+New-Item -ItemType Directory -Path $evidence -Force | Out-Null
 $env:NUGET_PACKAGES = Join-Path (Get-Location).Path '.packages'
 $env:DOTNET_ROOT = Join-Path (Get-Location).Path '.dotnet'
 .\eng\build.ps1 -restore -build -pack -binaryLog "/bl:$evidence\expanded-repository-verified.binlog"
