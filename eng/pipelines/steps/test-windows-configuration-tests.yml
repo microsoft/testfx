@@ -2,6 +2,7 @@
 #
 # Assumes the consuming job declares:
 #   - the matrix variable `_BuildConfig` (Debug or Release)
+#   - `_CollectAffectedTests=true` only for the dedicated main collection matrix entry
 #   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
 parameters:
 - name: enableAffectedTests
@@ -37,11 +38,10 @@ steps:
 # DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
   - script: |
-      echo ##vso[task.setvariable variable=AffectedTestsCollectionStarted]true
       dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map
     name: CollectAffectedTests
     displayName: Test and collect affected-test map
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))
     env:
       DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
       CTS_ACCESSTOKEN: $(System.AccessToken)
@@ -52,14 +52,14 @@ steps:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
   # Map collection owns code-coverage instrumentation and launches discovery children with --list-tests, so
-  # ordinary coverage and report options cannot participate in that invocation. Keep the normal Release run
-  # separate to retain test reporting and the repository's required coverage publication.
+  # ordinary coverage and report options cannot participate in that invocation. The ordinary Release matrix
+  # entry owns full testing and coverage; it does not share the collection entry's timeout or failure state.
   - script: |
       echo ##vso[task.setvariable variable=PublishCoverageReport]true
       dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
     name: Test
     displayName: Test
-    condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['AffectedTestsCollectionStarted'], 'true'))
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'))
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -135,7 +135,7 @@ steps:
     searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
     testRunTitle: '$(System.JobName)-trx'
   continueOnError: true
-  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
+  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
 
 # Publish a portable, compact report separately from the large TestResults artifact so external consumers can
 # retrieve it without downloading every test result and binary .coverage file.

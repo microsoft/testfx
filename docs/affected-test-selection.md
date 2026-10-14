@@ -36,12 +36,11 @@ builds that contain only the no-handshake fix.
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- The trusted main-branch Windows Release test runs `--collect-test-map` without the normal report,
-  retry, or coverage arguments, because collection owns its instrumentation and launches discovery
-  children with `--list-tests`. A normal full test run follows, including after a failed collection step, to retain
-  test reporting and coverage. A collection failure still fails the job; it is not normalized to success.
-  Main-branch Windows jobs have a four-hour budget because collection replays acceptance fixtures in fresh batches
-  before the ordinary full run. PR jobs retain their 90-minute budget.
+- The trusted main-branch Windows Release entry runs full tests and publishes coverage. A separate `AffectedTests`
+  Windows matrix entry runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
+  collection owns its instrumentation and launches discovery children with `--list-tests`. A collection failure
+  still fails its job; it is not normalized to success or allowed to consume the Release entry's time budget.
+  Main-branch Windows entries each have a four-hour budget. PR jobs retain their 90-minute budget.
 - The Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
@@ -55,10 +54,55 @@ builds that contain only the no-handshake fix.
 - The test infrastructure removes the ambient affected-test mode and per-module exit-code normalization from nested
   test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
-  nested-process isolation, command names, and fallbacks.
+  nested-process isolation, command names, and fallbacks. Its `-SelfTest` mode, run by `DetectChanges`, also rejects
+  shared collection/validation jobs, bypassed rollout gates, ignored collection failures, and artifact collisions.
 
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.
+
+## Collection budget isolation
+
+[Run 20261013.16](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1633662&view=logs), from commit
+`41b5f5343b23ab07df82f3339dc73a790ab5a066`, completed map collection in 3 hours 33 minutes. The normal full test run
+then had less than 10 minutes before the shared four-hour Windows job timed out. Collection produced 45 shards,
+but the required full test and coverage validation did not complete.
+
+Collection therefore needs an independent job budget, not merely a separate step. A main-only `AffectedTests`
+entry in the existing Windows matrix reuses the same Release build, packing, Windows prerequisites, and pinned
+toolchain on its own agent. The ordinary Release entry runs full tests and publishes coverage without waiting for
+collection. Each entry owns its workspace and diagnostic artifacts; only the collection entry publishes test maps.
+Collection failures remain blocking and visible, but cannot cancel another matrix entry by consuming its timeout.
+
+The root `EnableAffectedTests` parameter controls both the collection matrix entry and PR selection. The collection
+entry is also compile-time gated by `SkipTests=false` and the main branch. Disabling affected tests retains the
+ordinary Release and Debug entries without creating a redundant collection build. PR selection, conservative
+fallbacks, SDK/package versions, and the collection command's exit semantics are unchanged.
+
+Increasing the shared timeout again would not isolate required validation from slow or stuck collection. Running
+ordinary tests first would still share cancellation and artifact-publication deadlines. Downloading another job's
+outputs was not selected: an independently built matrix entry preserves the existing packing, native layout, and
+acceptance-fixture setup without introducing an artifact-transfer contract. The cost is one additional Release
+build on main. This repair is limited to the unofficial pipeline; it does not change shipping products or require
+a release-branch product backport.
+
+The collector's broken-pipe diagnostic is a separate upstream issue. A successful shard and mapped test identities
+do not prove that every dependency event was received. This pipeline repair does not suppress collector errors or
+claim that a package update fixes the disconnect.
+
+The retained `CollectionUsesIndependentJob` guard detects the original shared-job layout on base
+`c6a0b06f75b8bd02512976a2c2af4b0312eeecf2`: running the updated validator with the unchanged pipeline and template
+in an isolated comparison exits 1 at that assertion. With the isolated collection layout, the same command exits
+0 and all 12 isolation self-tests pass. The comparison retains only the validator patch, SHA-256
+`E8D7BA937663A48656A9F3E258E623438F0E4195F7721A709FC5A85BE3D86700`. Reproduce the configuration checks with:
+
+```powershell
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest
+```
+
+These are executable configuration assertions, not a simulated claim of running the Windows test suite. They
+cover collection/validation exclusion, main/`SkipTests`/rollback gates, blocking collection failure, and separate
+result/binlog/dump artifact names. Live main-branch collection and full-test execution remain CI validation.
+No SDK, package, launcher, or test-assembly implementation changes are part of this repair.
 
 ## Headless collection compatibility
 
@@ -112,8 +156,9 @@ A missing, stale, incompatible, or inaccessible artifact is an expected state, n
 runs all tests. The pipeline's explicit full-test fallback remains for extension/process failures, while scheduled and
 manual builds always keep full validation.
 
-Selected-test runs do not publish their partial coverage as the repository coverage report. The normal full run
-after collection and full fallback runs still publish complete coverage.
+Selected-test runs and map collection do not publish partial coverage as the repository coverage report. The
+independent normal Release entry and full fallback runs still publish complete coverage.
 
-The one-switch rollback remains available: setting `enableAffectedTests` to `false` keeps the package and storage
-configuration in place while restoring the ordinary full-test command.
+The one-switch rollback remains available: setting the root `EnableAffectedTests` pipeline parameter to `false`
+keeps the package and storage configuration in place, omits the collection entry, and restores the ordinary
+full-test command.
