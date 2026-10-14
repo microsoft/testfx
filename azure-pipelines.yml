@@ -61,6 +61,10 @@ parameters:
   displayName: "Enable affected tests"
   type: boolean
   default: true
+- name: EnableNonWindowsAffectedTests
+  displayName: "Enable Linux/macOS affected tests (requires verified collector support)"
+  type: boolean
+  default: false
 
 variables:
   # Cannot use key:value syntax in root defined variables
@@ -126,7 +130,7 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: false
-    - pwsh: ./eng/validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }}
+    - pwsh: ./eng/validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }} -EnableNonWindowsAffectedTests ${{ parameters.EnableNonWindowsAffectedTests }}
       displayName: Validate affected-test rollout
     - bash: |
         set -euo pipefail
@@ -403,8 +407,11 @@ stages:
 
       - job: Linux
         dependsOn: DetectChanges
-        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
-        timeoutInMinutes: 90
+        condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
+          timeoutInMinutes: 240
+        ${{ else }}:
+          timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals build.ubuntu.2204.amd64.open
@@ -414,6 +421,13 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _CollectAffectedTests: false
+              _TestArtifactsName: Release
+            ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
+              AffectedTests:
+                _BuildConfig: Release
+                _CollectAffectedTests: true
+                _TestArtifactsName: AffectedTests
         steps:
         - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
           parameters:
@@ -432,14 +446,22 @@ stages:
           - template: /eng/pipelines/steps/test-non-windows.yml
             parameters:
               osName: Linux
+              enableAffectedTests: ${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}
+              ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+                affectedTestsMode: collect
+              ${{ else }}:
+                affectedTestsMode: run
 
       - job: MacOS
         dependsOn: DetectChanges
         # Hosted macOS agents have substantially longer and less predictable queue times than the public
         # Linux and Windows pools. Keep macOS coverage on main CI, nightly, and manually queued builds, but
         # exclude it from PR validation so agent availability does not delay the required PR status.
-        condition: and(succeededOrFailed(), ne(variables['Build.Reason'], 'PullRequest'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
-        timeoutInMinutes: 90
+        condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(variables['Build.Reason'], 'PullRequest'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
+          timeoutInMinutes: 240
+        ${{ else }}:
+          timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
           vmImage: macos-latest
@@ -450,6 +472,13 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
+              _CollectAffectedTests: false
+              _TestArtifactsName: Release
+            ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
+              AffectedTests:
+                _BuildConfig: Release
+                _CollectAffectedTests: true
+                _TestArtifactsName: AffectedTests
         steps:
         - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml
           parameters:
@@ -468,6 +497,11 @@ stages:
           - template: /eng/pipelines/steps/test-non-windows.yml
             parameters:
               osName: MacOS
+              enableAffectedTests: ${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}
+              ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+                affectedTestsMode: collect
+              ${{ else }}:
+                affectedTestsMode: run
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

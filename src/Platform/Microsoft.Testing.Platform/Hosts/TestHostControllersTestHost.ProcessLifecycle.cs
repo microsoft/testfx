@@ -28,6 +28,13 @@ internal sealed partial class TestHostControllersTestHost
         Stopwatch consoleRunStarted,
         CancellationToken applicationCancellationToken)
     {
+        (int ExitCode, TestHostProcessInformation ProcessInformation, string? ExtensionInformation) CreateFailureResult(
+            int? testHostProcessId, ExitCode exitCode, bool testHostCompletedReceived = false)
+            => (
+                (int)exitCode,
+                new TestHostProcessInformation(testHostProcessId ?? 0, (int)exitCode, testHostCompletedReceived),
+                telemetryInformation.IsEnabled ? "[]" : null);
+
         // Launch the test host process
         string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);
@@ -79,11 +86,7 @@ internal sealed partial class TestHostControllersTestHost
                     timeout: null,
                     testHostProcess)),
                 CancellationToken.None).ConfigureAwait(false);
-            int fallbackPid = testHostProcessId ?? 0;
-            return (
-                (int)ExitCode.GenericFailure,
-                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
-                telemetryInformation.IsEnabled ? "[]" : null);
+            return CreateFailureResult(testHostProcessId, ExitCode.GenericFailure);
         }
         else
         {
@@ -210,40 +213,18 @@ internal sealed partial class TestHostControllersTestHost
         if (testHostControllerConnectionTimedOut)
         {
             await TerminateTestHostAfterConnectionFailureAsync(testHostProcess, _logger, TestHostTerminationTimeout).ConfigureAwait(false);
-            int fallbackPid = testHostProcessId ?? 0;
-            return (
-                (int)ExitCode.GenericFailure,
-                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
-                telemetryInformation.IsEnabled ? "[]" : null);
+            return CreateFailureResult(testHostProcessId, ExitCode.GenericFailure);
         }
 
-        if (_testHostPID is null && applicationCancellationToken.IsCancellationRequested)
-        {
-            int fallbackPid = testHostProcessId ?? 0;
-            var canceledProcessInformation = new TestHostProcessInformation(
-                fallbackPid,
-                (int)ExitCode.TestSessionAborted,
-                testHostCompletedReceived: false);
-            return (
-                (int)ExitCode.TestSessionAborted,
-                canceledProcessInformation,
-                telemetryInformation.IsEnabled ? "[]" : null);
-        }
-
-        if (_testHostPID is null)
-        {
-            int fallbackPid = testHostProcessId ?? 0;
-            return (
-                (int)ExitCode.GenericFailure,
-                new TestHostProcessInformation(fallbackPid, (int)ExitCode.GenericFailure, testHostCompletedReceived: false),
-                telemetryInformation.IsEnabled ? "[]" : null);
-        }
-
-        return await FinalizeTestHostProcessAsync(
-            testHostProcess,
-            outputDevice,
-            telemetryInformation,
-            consoleRunStarted,
-            applicationCancellationToken).ConfigureAwait(false);
+        return _testHostPID is null
+            ? CreateFailureResult(
+                testHostProcessId,
+                applicationCancellationToken.IsCancellationRequested ? ExitCode.TestSessionAborted : ExitCode.GenericFailure)
+            : await FinalizeTestHostProcessAsync(
+                testHostProcess,
+                outputDevice,
+                telemetryInformation,
+                consoleRunStarted,
+                applicationCancellationToken).ConfigureAwait(false);
     }
 }

@@ -197,14 +197,17 @@ steps:
     env:
       BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
       HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
+      PR_NUMBER: ${{ steps.resolve.outputs.pr_number }}
+      INPUTS_DIR: /tmp/gh-aw/test-review
     run: |
       set -euo pipefail
-      TEST_OUT="$RUNNER_TEMP/changed-test-files.txt"
-      SRC_OUT="$RUNNER_TEMP/changed-src-files.txt"
-      CONFIG_OUT="$RUNNER_TEMP/changed-config-files.txt"
-      CS_CANDIDATES="$RUNNER_TEMP/changed-cs-candidates.txt"
-      RANGES_OUT="$RUNNER_TEMP/changed-test-regions.tsv"
-      CHANGES_OUT="$RUNNER_TEMP/changed-review-files.txt"
+      mkdir -p "$INPUTS_DIR"
+      TEST_OUT="$INPUTS_DIR/changed-test-files.txt"
+      SRC_OUT="$INPUTS_DIR/changed-src-files.txt"
+      CONFIG_OUT="$INPUTS_DIR/changed-config-files.txt"
+      CS_CANDIDATES="$INPUTS_DIR/changed-cs-candidates.txt"
+      RANGES_OUT="$INPUTS_DIR/changed-test-regions.tsv"
+      CHANGES_OUT="$INPUTS_DIR/changed-review-files.txt"
       : > "$TEST_OUT"
       : > "$SRC_OUT"
       : > "$CONFIG_OUT"
@@ -216,7 +219,6 @@ steps:
       # merge-base so changed files and HEAD-side ranges match GitHub's PR diff.
       MERGE_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
       echo "Base tip $BASE_SHA; merge-base $MERGE_BASE; head $HEAD_SHA"
-      echo "merge_base=$MERGE_BASE" >> "$GITHUB_OUTPUT"
 
       # Preserve deleted paths and both sides of renames. The full inventory
       # also covers behavior in scripts, packages, and configuration outside src.
@@ -291,11 +293,41 @@ steps:
       CONFIG_COUNT=$(wc -l < "$CONFIG_OUT" | tr -d ' ')
       echo "Changed test files: $TEST_COUNT; changed src files: $SRC_COUNT; changed config files: $CONFIG_COUNT"
 
+      HAS_PARALLEL_SCOPE=false
       if [[ "$TEST_COUNT" -gt 0 || "$CONFIG_COUNT" -gt 0 ]]; then
-        echo "has_parallel_scope=true" >> "$GITHUB_OUTPUT"
-      else
-        echo "has_parallel_scope=false" >> "$GITHUB_OUTPUT"
+        HAS_PARALLEL_SCOPE=true
       fi
+
+      # The prompt is rendered before custom steps run. Resolve these values
+      # at agent runtime from a manifest inside its mounted input directory.
+      jq -n \
+        --arg repository "$GITHUB_REPOSITORY" \
+        --argjson pr_number "$PR_NUMBER" \
+        --arg base_sha "$BASE_SHA" \
+        --arg merge_base "$MERGE_BASE" \
+        --arg head_sha "$HEAD_SHA" \
+        --argjson test_count "$TEST_COUNT" \
+        --argjson src_count "$SRC_COUNT" \
+        --argjson config_count "$CONFIG_COUNT" \
+        --argjson has_parallel_scope "$HAS_PARALLEL_SCOPE" \
+        --arg changed_files_path "$CHANGES_OUT" \
+        --arg test_files_path "$TEST_OUT" \
+        --arg test_regions_path "$RANGES_OUT" \
+        --arg src_files_path "$SRC_OUT" \
+        --arg config_files_path "$CONFIG_OUT" \
+        '{
+          schema_version: 1, repository: $repository, pr_number: $pr_number,
+          base_sha: $base_sha, merge_base: $merge_base, head_sha: $head_sha,
+          test_count: $test_count, src_count: $src_count, config_count: $config_count,
+          has_parallel_scope: $has_parallel_scope,
+          changed_files_path: $changed_files_path, test_files_path: $test_files_path,
+          test_regions_path: $test_regions_path, src_files_path: $src_files_path,
+          config_files_path: $config_files_path
+        }' > "$INPUTS_DIR/review-inputs.json.tmp"
+      mv "$INPUTS_DIR/review-inputs.json.tmp" "$INPUTS_DIR/review-inputs.json"
+
+      echo "merge_base=$MERGE_BASE" >> "$GITHUB_OUTPUT"
+      echo "has_parallel_scope=$HAS_PARALLEL_SCOPE" >> "$GITHUB_OUTPUT"
       echo "test_count=$TEST_COUNT" >> "$GITHUB_OUTPUT"
       echo "src_count=$SRC_COUNT" >> "$GITHUB_OUTPUT"
       echo "config_count=$CONFIG_COUNT" >> "$GITHUB_OUTPUT"
@@ -308,9 +340,9 @@ steps:
 
 # Expert Test Quality Review on PR
 
-You are the coordinating expert test reviewer for pull request
-#${{ steps.resolve.outputs.pr_number }} of ${{ github.repository }}. Combine three
-bounded analyses into one coherent review:
+You are the coordinating expert test reviewer for the pull request identified
+by `/tmp/gh-aw/test-review/review-inputs.json` of ${{ github.repository }}.
+Combine three bounded analyses into one coherent review:
 
 1. Counterfactual test-value evidence for every distinct changed contract.
 2. Per-test grading of new and modified test methods.
@@ -337,21 +369,26 @@ are not commits you make yourself.
 ## Inputs you have
 
 A deterministic pre-step has already resolved the PR snapshot and identified
-the files needed by both analyses:
+the files needed by both analyses. Before analyzing anything, read
+`/tmp/gh-aw/test-review/review-inputs.json` with `jq`. The prompt is rendered
+before custom steps run, so PR identity, revisions, paths, counts, and scope
+must come from this runtime manifest, not prompt-time step outputs.
+
+Require `schema_version` 1, repository `${{ github.repository }}`, a positive
+`pr_number`, nonempty `base_sha`, `merge_base`, and `head_sha`, and all five
+input files. Verify `git rev-parse HEAD` matches `head_sha`. Missing or malformed
+required inputs are incomplete analysis, never an empty scope or an all-clear.
+An existing empty input file is valid when its corresponding count is zero.
 
 - **Complete changed-file inventory**, including deletions and both sides of
-  renames, at `${{ steps.extract.outputs.changed_files_path }}`. Use this for
+  renames, at the manifest's `changed_files_path`. Use this for
   contract coverage beyond C# files or `src/` (build/package/configuration and
   script changes can be behavioral).
-- **Changed test files** (${{ steps.extract.outputs.test_count }}) at
-  `${{ steps.extract.outputs.test_files_path }}`.
-- **Changed test line ranges** at
-  `${{ steps.extract.outputs.test_regions_path }}`.
-- **Changed source files** (${{ steps.extract.outputs.src_count }}) at
-  `${{ steps.extract.outputs.src_files_path }}`.
-- **Changed parallelization configuration candidates**
-  (${{ steps.extract.outputs.config_count }}) at
-  `${{ steps.extract.outputs.config_files_path }}`.
+- **Changed test files** (`test_count`) at `test_files_path`.
+- **Changed test line ranges** at `test_regions_path`.
+- **Changed source files** (`src_count`) at `src_files_path`.
+- **Changed parallelization configuration candidates** (`config_count`) at
+  `config_files_path`.
 
 The changed test ranges file is tab-separated. Each row is:
 
@@ -405,8 +442,8 @@ that load its guidance, not separate code-quality-service findings.
 
 Read `.agents/skills/test-value-evidence/SKILL.md` and the TestFx adapter at
 `.github/skills/testfx-test-value-evidence/SKILL.md`. Apply their read-only mode to
-the complete diff from `${{ steps.extract.outputs.merge_base }}` to
-`${{ steps.resolve.outputs.head_sha }}`. Do this even without changed tests.
+the complete diff from the manifest's `merge_base` to `head_sha`. Do this even
+without changed tests.
 Inspect removed code/tests on the old side and trace existing unchanged tests
 before declaring a contract unprotected.
 
@@ -494,7 +531,7 @@ refusal branch:
    resolved, explicitly pass `production code unavailable` rather than
    guessing.
 4. The diff context for this PR — the
-   `${{ steps.extract.outputs.test_regions_path }}` rows already give the changed
+   manifest's `test_regions_path` rows already give the changed
    line ranges per file.
 5. The bundled language-reference path above and the TestFx-specific
    conventions below.
@@ -736,7 +773,7 @@ methods, fixture helpers, assembly attributes, `.runsettings`,
 `testconfig.json`, and imported MSBuild properties can change parallel safety
 without producing a gradable method.
 
-If `${{ steps.extract.outputs.has_parallel_scope }}` is `false`, record:
+If the manifest's `has_parallel_scope` is `false`, record:
 
 ```text
 PARALLEL-SAFETY RESULT
@@ -767,16 +804,14 @@ subtask prompt with this contract:
 Then provide all of:
 
 - repository `${{ github.repository }}`;
-- pull request `${{ steps.resolve.outputs.pr_number }}`;
-- merge base `${{ steps.extract.outputs.merge_base }}` and head
-  `${{ steps.resolve.outputs.head_sha }}`; require the specialist to use this
+- pull request from `pr_number`;
+- merge base from `merge_base` and head from `head_sha`; require the specialist to use this
   merge base for every old-side comparison;
-- changed test files `${{ steps.extract.outputs.test_files_path }}`;
-- changed test ranges `${{ steps.extract.outputs.test_regions_path }}`;
-- changed source files `${{ steps.extract.outputs.src_files_path }}`;
-- changed configuration candidates
-  `${{ steps.extract.outputs.config_files_path }}`;
-- the corresponding counts from the extraction step.
+- changed test files from `test_files_path`;
+- changed test ranges from `test_regions_path`;
+- changed source files from `src_files_path`;
+- changed configuration candidates from `config_files_path`;
+- the corresponding counts from the manifest.
 
 The specialist is read-only and must return its structured result to you. It
 must not call any safe output. Preserve its assembly rows, counts, top actions,
@@ -810,7 +845,8 @@ from the resolved SHA, call `noop`
 with that stale/closed reason and stop; do not attach old evidence to a new head.
 For an automatic run, read existing reviews with pagination and suppress only a
 duplicate report carrying the exact marker
-`<!-- test-value-evidence:${{ steps.resolve.outputs.head_sha }} -->`.
+`<!-- test-value-evidence:<head_sha> -->`, replacing `<head_sha>` with the
+manifest's exact resolved head SHA.
 Require a report from this workflow with a matching GitHub review `commit_id`
 and the evidence section; a marker alone is not a complete report. Only if such
 a report exists and there are no new actionable findings, material evidence,
@@ -831,14 +867,16 @@ comment before the parallel-safety result has been considered.
 Use **exactly one** `submit-pull-request-review` call with
 `event: "COMMENT"`. The inline comments published in this step are bundled into this
 review. Structure the body as follows:
+Replace `<pr_number>`, `<merge_base>`, and `<head_sha>` below with the exact
+manifest values; never publish the placeholders.
 
 ```markdown
-### 🧪 Test quality review — PR #${{ steps.resolve.outputs.pr_number }}
+### 🧪 Test quality review — PR #<pr_number>
 
-<!-- test-value-evidence:${{ steps.resolve.outputs.head_sha }} -->
+<!-- test-value-evidence:<head_sha> -->
 
-Compared merge base `${{ steps.extract.outputs.merge_base }}` with head
-`${{ steps.resolve.outputs.head_sha }}`. Evidence applies to this head, not
+Compared merge base `<merge_base>` with head
+`<head_sha>`. Evidence applies to this head, not
 every intermediate commit.
 
 <!-- 2–4 sentences covering: tests assessed, result counts and quality distribution; the most

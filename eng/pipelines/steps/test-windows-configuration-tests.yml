@@ -34,22 +34,12 @@ steps:
       # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-# These branches implement affected-test collection and selection. The SDK owns
-# DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
+# These branches share affected-test execution with the non-Windows template.
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
-  - script: |
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestCollect.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestingPlatformCommandLineArguments= -p:TestRunnerAdditionalArguments= --show-test-results failed --collect-test-map
-    name: CollectAffectedTests
-    displayName: Test and collect affected-test map
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))
-    env:
-      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
-      CTS_ACCESSTOKEN: $(System.AccessToken)
-      CTS_COLLECTIONURI: $(System.CollectionUri)
-      CTS_TEMPDIRECTORY: $(Agent.TempDirectory)
-      CTS_BUILDID: $(Build.BuildId)
-      BUILD_CONTAINERID: $(Build.ContainerId)
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: TestFx.slnx
+      affectedTestsMode: collect
 
   # Map collection owns code-coverage instrumentation and launches discovery children with --list-tests, so
   # ordinary coverage and report options cannot participate in that invocation. The ordinary Release matrix
@@ -64,32 +54,10 @@ steps:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
-  - pwsh: |
-      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestAffected.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false -p:TestRunnerAdditionalArguments= --show-test-results failed --affected-tests
-      $exitCode = $LASTEXITCODE
-      if ($exitCode -eq 0) {
-        Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
-        exit 0
-      }
-
-      if ($exitCode -in 2, 8) {
-        Write-Host "##vso[task.logissue type=error]Affected-test execution failed with exit code $exitCode."
-        exit $exitCode
-      }
-
-      Write-Host "##vso[task.logissue type=warning]Affected-test selection failed; running the full test suite."
-      exit 0
-    name: TestAffected
-    displayName: Test affected changes
-    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables['Build.Reason'], 'PullRequest'))
-    env:
-      DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1
-      CTS_ACCESSTOKEN: $(System.AccessToken)
-      CTS_COLLECTIONURI: $(System.CollectionUri)
-      CTS_TEMPDIRECTORY: $(Agent.TempDirectory)
-      CTS_BUILDID: $(Build.BuildId)
-      BUILD_CONTAINERID: $(Build.ContainerId)
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: TestFx.slnx
+      affectedTestsMode: run
 
   # Scheduled and manual runs keep their full-validation contract. PRs use this explicit fallback only when the
   # affected-test command fails; missing, stale, incompatible, or inaccessible maps are handled inside the extension
