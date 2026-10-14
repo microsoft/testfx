@@ -17,6 +17,7 @@ namespace Microsoft.Testing.Extensions.Policy;
 /// waits for the retry pipe connection (with hang timeout), and returns the attempt's exit code.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal static class RetryTestHostRunner
 {
     private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);

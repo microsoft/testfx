@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.TestHostOrchestrator;
 namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed partial class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutputDeviceDataProducer, ITestHostControllerConnectionAuthorizationConsumer
 {
     private readonly IServiceProvider _serviceProvider;

@@ -87,6 +87,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private NamedPipeClient CreateNamedPipeClient()
     {
         ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments));
@@ -318,6 +319,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task ConnectAndListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -342,6 +344,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task ListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -410,7 +413,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         // Framework cancellation of an already-parked overlapped read is not reliable - disposing the stream is
         // what forces it to unblock. We cancelled first (above) so the listener treats the resulting failure as
         // shutdown rather than "host gone => cancel".
-        if (!OperatingSystem.IsBrowser())
+        if (!OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi())
         {
             _serverControlPipeClient?.Dispose();
         }
@@ -431,7 +434,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         _serverControlListenerCts?.Cancel();
 
         // Disposing the pipe client forces a parked read to abort even where token cancellation alone would not.
-        if (!OperatingSystem.IsBrowser())
+        if (!OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi())
         {
             _serverControlPipeClient?.Dispose();
         }

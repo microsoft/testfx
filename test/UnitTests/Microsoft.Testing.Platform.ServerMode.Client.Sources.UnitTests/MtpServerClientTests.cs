@@ -1884,7 +1884,11 @@ public sealed class MtpServerClientTests
     private sealed class QueueingSynchronizationContext : SynchronizationContext
     {
         private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = new();
+#if NET9_0_OR_GREATER
+        private readonly Lock _lock = new();
+#else
         private readonly object _lock = new();
+#endif
         private int _postCount;
 
         public int PostCount => Volatile.Read(ref _postCount);

@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Resources;
 namespace Microsoft.Testing.Platform.CommandLine;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class CommandLineInformationalOutput : IAsyncDisposable
 {
     private static readonly TimeSpan DisconnectTimeout = TimeSpan.FromSeconds(10);

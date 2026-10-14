@@ -381,6 +381,11 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInWasi);
+            }
+
             _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
             ApplicationStateGuard.Ensure(pid is not null);
             RoslynDebug.Assert(pid.Length == 1);

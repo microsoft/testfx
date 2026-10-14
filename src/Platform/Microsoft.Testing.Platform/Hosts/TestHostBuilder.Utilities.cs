@@ -31,7 +31,7 @@ internal sealed partial class TestHostBuilder
             return null;
         }
 
-        if (OperatingSystem.IsBrowser())
+        if (OperatingSystem.IsBrowser() || OperatingSystem.IsWasi())
         {
             await logger.LogWarningAsync($"Test Host Controller connection is not supported on WebAssembly targets.").ConfigureAwait(false);
             return null;
@@ -66,7 +66,7 @@ internal sealed partial class TestHostBuilder
         TestHostControllerInfo testHostControllerInfo,
         SystemEnvironment environment)
     {
-        if (!testHostControllerInfo.HasTestHostController || OperatingSystem.IsBrowser())
+        if (!testHostControllerInfo.HasTestHostController || OperatingSystem.IsBrowser() || OperatingSystem.IsWasi())
         {
             return null;
         }

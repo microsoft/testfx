@@ -25,12 +25,12 @@ public static class TestingPlatformBuilderHook
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
     {
         // The MSBuild extension provides the `dotnet test` / MSBuild-node integration, which relies on
-        // named-pipe IPC that is unavailable on browser-wasm. This hook is auto-registered for every
+        // named-pipe IPC that is unavailable on WebAssembly. This hook is auto-registered for every
         // MSTest runner app (via the generated SelfRegisteredExtensions, because MSTest.TestAdapter
-        // references Microsoft.Testing.Platform.MSBuild), so skip it on browser instead of throwing —
+        // references Microsoft.Testing.Platform.MSBuild), so skip it on WebAssembly instead of throwing —
         // otherwise every browser-wasm test app crashes at startup. See
         // https://github.com/microsoft/testfx/issues/2196.
-        if (OperatingSystem.IsBrowser())
+        if (OperatingSystem.IsBrowser() || OperatingSystem.IsWasi())
         {
             return;
         }

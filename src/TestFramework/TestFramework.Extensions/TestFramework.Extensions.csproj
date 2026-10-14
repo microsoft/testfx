@@ -96,6 +96,11 @@ $(CommonProductDescription)]]></PackageDescription>
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_ApiTargetFramework>$(TargetFramework)</_ApiTargetFramework>
+    <_ApiTargetFramework Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0')) AND !$(TargetFramework.Contains('-'))">net9.0</_ApiTargetFramework>
+  </PropertyGroup>
+
   <ItemGroup>
     <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
     <!-- API that is common to all frameworks that we build for. -->
@@ -104,10 +109,10 @@ $(CommonProductDescription)]]></PackageDescription>
     <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" />
     <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" />
     <!-- Framework specific API -->
-    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
-    <AdditionalFiles Include="InternalAPI\$(TargetFramework)\InternalAPI.Shipped.txt" />
-    <AdditionalFiles Include="InternalAPI\$(TargetFramework)\InternalAPI.Unshipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(_ApiTargetFramework)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(_ApiTargetFramework)\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\$(_ApiTargetFramework)\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\$(_ApiTargetFramework)\InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <!--
@@ -120,10 +125,14 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="build\netstandard2.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\netstandard2.0\" />
     <None Include="build\net8.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net8.0\" />
     <None Include="build\net9.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net9.0\" />
+    <None Include="build\net10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net10.0\" />
+    <None Include="build\net11.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net11.0\" />
 
     <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\netstandard2.0\" />
     <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
     <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
   </ItemGroup>
 
   <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
@@ -193,7 +202,7 @@ $(CommonProductDescription)]]></PackageDescription>
     exist. Placement differs per TFM:
       - core MSTest.TestFramework.dll/.xml/resources -> lib/<tfm> (except the WinUI/UWP only passes)
       - MSTest.TestFramework.Extensions.dll/.xml     -> lib/<tfm> for netstandard2.0/net462/uap10.0
-                                                     -> buildTransitive/<tfm> for net8.0/net9.0
+                                                     -> buildTransitive/<tfm> for supported .NET frameworks
                                                      -> buildTransitive/net8.0/winui (WinUI pass)
                                                      -> buildTransitive/net9.0/uwp   (ModernUwp pass)
   -->
@@ -209,7 +218,7 @@ $(CommonProductDescription)]]></PackageDescription>
 
       <!-- Destination of the Extensions assembly and whether the core assembly is bundled in lib for this TFM. -->
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' ">lib\$(_PackageTfm)\</_ExtensionsPackagePath>
-      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' ">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_ExtensionsPackagePath>
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_ExtensionsPackagePath>
 
