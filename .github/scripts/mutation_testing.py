@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import collections
 import html
 import json
 import shutil
@@ -162,13 +163,14 @@ def validate_project_coverage(
     ] + [
         excluded["project"] for excluded in manifest.get("excludedProjects", [])
     ]
-    configured_projects = set(manifest_projects)
+    project_counts = collections.Counter(manifest_projects)
+    configured_projects = set(project_counts)
     unconfigured_projects = sorted(source_projects - configured_projects)
     unknown_projects = sorted(configured_projects - source_projects)
     duplicate_projects = sorted(
         project
-        for project in configured_projects
-        if manifest_projects.count(project) > 1
+        for project, count in project_counts.items()
+        if count > 1
     )
 
     if unconfigured_projects or unknown_projects or duplicate_projects:

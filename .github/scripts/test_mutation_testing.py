@@ -39,6 +39,17 @@ def manifest(*modules: dict) -> dict:
     }
 
 
+def declared_target_frameworks(project: ET.Element) -> set[str]:
+    return {
+        framework.strip()
+        for declaration in project.iter()
+        if declaration.tag in ("TargetFramework", "TargetFrameworks")
+        and declaration.text is not None
+        for framework in declaration.text.split(";")
+        if framework.strip()
+    }
+
+
 def write_mutation_report(path: pathlib.Path, statuses: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -106,6 +117,54 @@ class MutationTestingTests(unittest.TestCase):
         self.assertEqual(source_projects, manifest_projects)
         self.assertEqual(len(source_projects), target_manifest["knownTargetCount"])
 
+    def test_declared_target_frameworks_handles_project_layouts(self) -> None:
+        for case, xml, expected in [
+            (
+                "multi-target",
+                "<Project><PropertyGroup><TargetFrameworks>net8.0;net9.0</TargetFrameworks></PropertyGroup></Project>",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "later-conditioned-group",
+                """<Project>
+                  <PropertyGroup><TargetFrameworks>net8.0</TargetFrameworks></PropertyGroup>
+                  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+                    <TargetFrameworks>net9.0</TargetFrameworks>
+                  </PropertyGroup>
+                </Project>""",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "nested-conditioned-group",
+                """<Project><Choose><When Condition="'$(OS)' != 'Windows_NT'">
+                  <PropertyGroup><TargetFrameworks>net8.0;net9.0</TargetFrameworks></PropertyGroup>
+                </When></Choose></Project>""",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "single-target",
+                "<Project><PropertyGroup><TargetFramework>net9.0</TargetFramework></PropertyGroup></Project>",
+                {"net9.0"},
+            ),
+            (
+                "formatted-declaration",
+                "<Project><PropertyGroup><TargetFrameworks> net8.0 ; net9.0 ; </TargetFrameworks></PropertyGroup></Project>",
+                {"net8.0", "net9.0"},
+            ),
+            (
+                "empty-declaration",
+                "<Project><PropertyGroup><TargetFrameworks /></PropertyGroup></Project>",
+                set(),
+            ),
+            (
+                "missing-declaration",
+                "<Project><PropertyGroup /></Project>",
+                set(),
+            ),
+        ]:
+            with self.subTest(case=case):
+                self.assertEqual(expected, declared_target_frameworks(ET.fromstring(xml)))
+
     def test_repository_platform_core_uses_net9_direct_reference_tests(self) -> None:
         target_manifest = MUTATION_TESTING.load_manifest(
             REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
@@ -120,9 +179,7 @@ class MutationTestingTests(unittest.TestCase):
         self.assertEqual("net9.0", core.get("targetFramework"))
         self.assertIn(direct_test_project, core["testProjects"])
         project = ET.parse(REPOSITORY_ROOT / direct_test_project).getroot()
-        frameworks = project.findtext("PropertyGroup/TargetFrameworks")
-        self.assertIsNotNone(frameworks)
-        self.assertIn(core["targetFramework"], frameworks.split(";"))
+        self.assertIn(core["targetFramework"], declared_target_frameworks(project))
         self.assertIn(
             "$(RepoRoot)" + core["project"].replace("/", "\\"),
             [
@@ -265,6 +322,34 @@ class MutationTestingTests(unittest.TestCase):
             self.assertEqual(
                 "Mutation manifest project inventory mismatch "
                 "(duplicate manifest projects: src/configured/configured.csproj)",
+                str(error.exception),
+            )
+
+    def test_build_matrix_reports_multiple_duplicate_projects_in_order(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = pathlib.Path(directory)
+            zulu = module("zulu", legacy=True)
+            alpha = module("alpha")
+            targets = [
+                zulu,
+                module("zulu-duplicate") | {"project": zulu["project"]},
+                alpha,
+                module("alpha-duplicate") | {"project": alpha["project"]},
+                module("alpha-third") | {"project": alpha["project"]},
+                module("unique"),
+            ]
+            for target in targets:
+                for path in [target["project"], *target["testProjects"]]:
+                    project = root / path
+                    project.parent.mkdir(parents=True, exist_ok=True)
+                    project.touch()
+
+            with self.assertRaises(ValueError) as error:
+                MUTATION_TESTING.build_matrix(manifest(*targets), root)
+
+            self.assertEqual(
+                "Mutation manifest project inventory mismatch "
+                "(duplicate manifest projects: src/alpha/alpha.csproj, src/zulu/zulu.csproj)",
                 str(error.exception),
             )
 
