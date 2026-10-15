@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.IPC;
 namespace Microsoft.Testing.Extensions.MSBuild;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class MSBuildOrchestratorLifetime : MSBuildLifecycleCallbacksBase, ITestHostOrchestratorApplicationLifetime
 {
     public MSBuildOrchestratorLifetime(

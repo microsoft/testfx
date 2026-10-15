@@ -8,7 +8,7 @@
          activate path via the PackageManager WinRT projection; the plain flavors keep the loose-layout
          deployment and fail fast for a packaged layout. NuGet serves the Windows asset to a consumer
          that targets a matching Windows TFM and the plain asset to everyone else. -->
-    <TargetFrameworks>$(SupportedNetFrameworks);net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks);net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0;net11.0-windows10.0.19041.0</TargetFrameworks>
     <!-- Allow the Windows TFMs to build (restore the Windows targeting packs) on non-Windows CI legs;
          the produced Windows assets are just compiled there, not run. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>

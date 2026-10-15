@@ -1,0 +1,49 @@
+<Project>
+
+  <!-- Early .NET 12 SDKs map net11.0 to .NET 12 packs. Keep net11.0 binaries runnable on .NET 11. -->
+  <PropertyGroup>
+    <Net11RuntimeVersion Condition=" '$(Net11RuntimeVersion)' == '' ">11.0.0-rc.2.26504.105</Net11RuntimeVersion>
+  </PropertyGroup>
+
+  <Target Name="_UseNet11CompatibilityPacks"
+          BeforeTargets="ProcessFrameworkReferences"
+          Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' == 'v11.0' ">
+    <ItemGroup>
+      <KnownFrameworkReference Update="@(KnownFrameworkReference)"
+                               Condition=" '%(KnownFrameworkReference.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownFrameworkReference.TargetingPackVersion)').StartsWith('12.')) ">
+        <DefaultRuntimeFrameworkVersion>$(Net11RuntimeVersion)</DefaultRuntimeFrameworkVersion>
+        <LatestRuntimeFrameworkVersion>$(Net11RuntimeVersion)</LatestRuntimeFrameworkVersion>
+        <TargetingPackVersion>$(Net11RuntimeVersion)</TargetingPackVersion>
+      </KnownFrameworkReference>
+      <KnownAppHostPack Update="@(KnownAppHostPack)"
+                        Condition=" '%(KnownAppHostPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownAppHostPack.AppHostPackVersion)').StartsWith('12.')) ">
+        <AppHostPackVersion>$(Net11RuntimeVersion)</AppHostPackVersion>
+      </KnownAppHostPack>
+      <KnownCrossgen2Pack Update="@(KnownCrossgen2Pack)"
+                         Condition=" '%(KnownCrossgen2Pack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownCrossgen2Pack.Crossgen2PackVersion)').StartsWith('12.')) ">
+        <Crossgen2PackVersion>$(Net11RuntimeVersion)</Crossgen2PackVersion>
+      </KnownCrossgen2Pack>
+      <KnownILCompilerPack Update="@(KnownILCompilerPack)"
+                          Condition=" '%(KnownILCompilerPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownILCompilerPack.ILCompilerPackVersion)').StartsWith('12.')) ">
+        <ILCompilerPackVersion>$(Net11RuntimeVersion)</ILCompilerPackVersion>
+      </KnownILCompilerPack>
+      <KnownRuntimePack Update="@(KnownRuntimePack)"
+                        Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownRuntimePack.LatestRuntimeFrameworkVersion)').StartsWith('12.')) ">
+        <LatestRuntimeFrameworkVersion>$(Net11RuntimeVersion)</LatestRuntimeFrameworkVersion>
+      </KnownRuntimePack>
+      <KnownILLinkPack Update="@(KnownILLinkPack)"
+                      Condition=" '%(KnownILLinkPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownILLinkPack.ILLinkPackVersion)').StartsWith('12.')) ">
+        <ILLinkPackVersion>$(Net11RuntimeVersion)</ILLinkPackVersion>
+      </KnownILLinkPack>
+      <KnownWebAssemblySdkPack Update="@(KnownWebAssemblySdkPack)"
+                              Condition=" '%(KnownWebAssemblySdkPack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownWebAssemblySdkPack.WebAssemblySdkPackVersion)').StartsWith('12.')) ">
+        <WebAssemblySdkPackVersion>$(Net11RuntimeVersion)</WebAssemblySdkPackVersion>
+      </KnownWebAssemblySdkPack>
+      <KnownAspNetCorePack Update="@(KnownAspNetCorePack)"
+                          Condition=" '%(KnownAspNetCorePack.TargetFramework)' == 'net11.0' AND $([System.String]::Copy('%(KnownAspNetCorePack.AspNetCorePackVersion)').StartsWith('12.')) ">
+        <AspNetCorePackVersion>$(Net11RuntimeVersion)</AspNetCorePackVersion>
+      </KnownAspNetCorePack>
+    </ItemGroup>
+  </Target>
+
+</Project>

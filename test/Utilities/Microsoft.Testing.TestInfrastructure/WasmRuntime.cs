@@ -24,6 +24,11 @@ namespace Microsoft.Testing.TestInfrastructure;
 public static class WasmRuntime
 {
     /// <summary>
+    /// The target framework supported by the repository's pinned WebAssembly workloads.
+    /// </summary>
+    public const string TargetFramework = "net10.0";
+
+    /// <summary>
     /// The wasm runtime identifier that the mono wasi runtime pack targets.
     /// </summary>
     public const string WasiRid = "wasi-wasm";

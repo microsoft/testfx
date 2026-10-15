@@ -12,10 +12,12 @@ namespace Microsoft.Testing.Extensions;
 internal static class NamedPipeServerFactory
 {
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public static NamedPipeServerEndpoint CreateEndpoint()
         => new(NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N")).Name);
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public static NamedPipeServer CreateAndBind(
         NamedPipeServerEndpoint endpoint,
         Func<IRequest, Task<IResponse>> callback,

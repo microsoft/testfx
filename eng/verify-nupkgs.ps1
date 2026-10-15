@@ -20,13 +20,13 @@ function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
         "MSTest.Sdk"                                  = 16
-        "MSTest.TestFramework"                        = 105
-        "MSTest.TestAdapter"                          = 76
-        "MSTest.Extensions.Hosting"                   = 57
-        "MSTest"                                      = 10
+        "MSTest.TestFramework"                        = 143
+        "MSTest.TestAdapter"                          = 90
+        "MSTest.Extensions.Hosting"                   = 87
+        "MSTest"                                      = 12
         "MSTest.Analyzers"                            = 56
         "MSTest.SourceGeneration"                     = 8
-        "MSTest.Windows.UIAutomation"                 = 36
+        "MSTest.Windows.UIAutomation"                 = 66
     }
     # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
     $packagesWithOptionalPdbFiles = @("MSTest.Extensions.Hosting", "MSTest.Sdk", "MSTest.Windows.UIAutomation")
