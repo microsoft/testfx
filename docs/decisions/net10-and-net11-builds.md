@@ -437,6 +437,101 @@ the completed-run summaries, canceled artifact-copy log, and validation JSON.
 The old 90-minute cancellation is observed evidence; completion with the new
 120-minute budget remains unverified until the next required CI run.
 
+## Build 1636814: peer-reset investigation
+
+At source head `d78b460b6ec14bd6df6d030b63be59f2c6428680`, Azure build `1636814`
+reported two .NET Framework 4.7.2 unit-test stalls and one Linux .NET 11
+hang-dump acceptance failure. The two unchanged unit cases passed locally, as
+did the complete unchanged module (2,461 passed, five existing skipped cases).
+Their pipe disposal/dump scheduling implementations are unchanged by this PR;
+they are not being weakened or assigned a speculative root cause.
+
+The Linux `HangDump_AbsoluteDeadline_CreateDump` consumer wrote its dump, then
+the controller's named-pipe read received `IOException` wrapping
+`SocketException(ConnectionReset)`. The server treated that peer closure as
+an unexpected exception and called `FailFast`, replacing expected hang-dump
+exit `7` with `134`. The framing layer already treats clean and partial EOF
+as peer closure. Treat reset/aborted-connection reads equivalently, preserving
+the existing caller-owned disconnect diagnostics, required-channel failure
+handling, and auxiliary-channel fallback. Other I/O and malformed-frame errors
+must still propagate. Keep this narrow: do not broadly swallow transport or
+serializer failures.
+
+Add deterministic framing tests for reset/aborted reads before a header,
+mid-header, and mid-body, plus non-disconnect error preservation and buffer
+recovery. Run them against the unchanged implementation first, then the repair.
+Repack all linked shipping consumers before composed validation. Local
+Windows execution cannot substitute for fresh Linux CI evidence.
+
+The complete deterministic baseline compiles and executes on .NET 11:
+13 selected/executed cases, six peer-reset cases failed with the expected
+`IOException`, seven other-I/O/malformed-length cases passed, zero skipped,
+process exit `2`. A prior test-fixture build error from array range slicing on
+.NET Framework was corrected with portable prefix copies before this baseline;
+that compiler failure is not counted as regression evidence.
+
+The repair maps only an `IOException` whose inner `SocketException` reports
+`ConnectionReset` or `ConnectionAborted` to the existing EOF result. Generic
+I/O errors, access failures, malformed lengths and cancellation retain their
+existing failure paths; the existing final buffer cleanup remains in place.
+No public or protected API signature, serializer registry, frame layout, test
+exit expectation, or test scheduling setting is changed.
+
+An initial unscoped reset catch also intercepted a deserializer's own socket
+exception. Two additional preservation cases exposed that mistake (both
+executed and failed because no exception escaped). The final catch is restricted
+to the incomplete-frame phase; once a complete frame is available, all
+deserializer exceptions propagate. These are labeled counterfactual safety
+checks, not a claim that the original implementation swallowed serializer
+errors.
+
+The final full Windows Debug build/pack exited `0`, with zero warnings/errors.
+The final 15-case framing matrix and existing real IPC tests passed on
+.NET 8/9/10/11 and .NET Framework: 31 cases per host, 155 passed, zero failed
+or skipped. The six original peer-reset cases now pass with the same inputs
+and assertions. Generic I/O, socket access failures, malformed lengths and
+deserializer faults all retain their asserted exceptions.
+
+After that final pack, five real
+`HangDump_AbsoluteDeadline_CreateDump` consumers passed on the same framework
+set, each asserting exit `7` and one dump file. Separate discovery and the
+execution verifier reconciled all five outer cases. Ten loaded platform/
+hang-dump DLLs were compared with their exact current NuGet entries; all matched.
+Five nonempty physical dump artifacts were recorded, small consumer metadata
+was retained, and the two exact task-owned fixture roots (including large
+dumps) were cleaned. The two normal `FrameworkTargetingTests` consumers also
+passed, verifying matching package bits, runtimes, and successful child exits.
+Thus the focused final selection is 162 passed, zero failed/skipped.
+
+The unchanged full .NET Framework 4.7.2 extension module was also rerun against
+the final build: 2,461 passed, five existing skips, exit `0`. Both previously
+failing unit identities passed; their assertions and scheduling remain
+unchanged. That is local preservation evidence, not a diagnosis or claimed fix
+for their non-reproduced CI timing failures.
+
+Representative recorded commands (each final command exited `0`, using separate
+result directories and unique binlogs):
+
+```powershell
+.\eng\build.ps1 -restore -build -pack -binaryLog "/bl:$evidence\peer-reset-final-full-build-pack-{}.binlog"
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.UnitTests\Debug\net11.0\Microsoft.Testing.Platform.UnitTests.dll --filter 'FullyQualifiedName~Microsoft.Testing.Platform.UnitTests.IPCTests|FullyQualifiedName~NamedPipeConnectionTests' --report-trx --results-directory $evidence --show-test-results failed
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug -f net11.0 --no-build --filter 'FullyQualifiedName~HangDumpTests.HangDump_AbsoluteDeadline_CreateDump' -p:UsingDotNetTest=true -p:EnableCodeCoverage=false "-p:ArtifactsTestResultsDir=$evidence" "-bl:$evidence\final-hangdump-green-execution-{}.binlog" --show-test-results all
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Debug -f net11.0 --no-build --filter 'FullyQualifiedName~FrameworkTargetingTests' -p:UsingDotNetTest=true -p:EnableCodeCoverage=false "-p:ArtifactsTestResultsDir=$evidence" "-bl:$evidence\normal-packed-consumers-{}.binlog" --show-test-results all
+.\artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net472\Microsoft.Testing.Extensions.UnitTests.exe --report-trx --results-directory $evidence --show-test-results failed
+```
+
+The original Linux acceptance crash is observed CI evidence. The final composed
+runs above are Windows runs; Linux resolution remains unproven until fresh
+current-head CI executes. No servicing/backport or downstream activation is
+included in this repair.
+
+Separately, this source head's offline action-pin audit passes (2,567 references
+across 58 files). The GitHub merge checkout incorporates newer main-branch
+action updates whose generated `uses:` values no longer match embedded
+manifests. No workflow files were changed by this PR. The coordinator confirms
+that broader main maintenance is separate; do not hand-edit generated locks
+or mix that unrelated repair into this framework branch.
+
 ## Open questions
 
 This change is scoped to `main`; no downstream rollout or servicing/backport is
