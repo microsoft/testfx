@@ -23,7 +23,7 @@ internal sealed class MSBuildPipeFixture : IAsyncDisposable
 
     public MSBuildPipeFixture()
     {
-        PipeName = $"testfx-msbuild-{Guid.NewGuid():N}";
+        PipeName = Guid.NewGuid().ToString("N");
         _server = new(PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
         _worker = ServeAsync();
     }

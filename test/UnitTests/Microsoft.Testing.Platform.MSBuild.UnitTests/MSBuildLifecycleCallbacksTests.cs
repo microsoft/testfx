@@ -117,6 +117,25 @@ public sealed class MSBuildLifecycleCallbacksTests
     }
 
     [TestMethod]
+    public async Task PipeFixture_UsesUniqueNamesWithinMacOSSocketPathLimit()
+    {
+        await using MSBuildPipeFixture first = new();
+        await using MSBuildPipeFixture second = new();
+        const string macOSTemporaryDirectory = "/var/folders/xx/0123456789012345678901234567890/T/";
+        const int maximumSocketPathLength = 103;
+
+        Assert.AreNotEqual(first.PipeName, second.PipeName);
+
+        // .NET adds CoreFxPipe_ beneath the temporary directory for relative pipe names on Unix.
+        Assert.IsLessThanOrEqualTo(
+            maximumSocketPathLength,
+            Encoding.UTF8.GetByteCount($"{macOSTemporaryDirectory}CoreFxPipe_{first.PipeName}"));
+        Assert.IsLessThanOrEqualTo(
+            maximumSocketPathLength,
+            Encoding.UTF8.GetByteCount($"{macOSTemporaryDirectory}CoreFxPipe_{second.PipeName}"));
+    }
+
+    [TestMethod]
     [DataRow(true, true)]
     [DataRow(true, false)]
     [DataRow(false, true)]
