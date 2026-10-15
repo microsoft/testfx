@@ -1361,10 +1361,13 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [DataRow("Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("Unix", "", "", "")]
+    [DataRow("net8.0", "Windows_NT", "mstest-appmodel-controller.exe", "net8.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net9.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net10.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0", "Unix", "", "", "")]
     public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
-        string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
+        string targetFramework, string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "PackagedWinUISdk",
@@ -1372,7 +1375,8 @@ namespace MSTestWebTest
             <UseWinUI>true</UseWinUI>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             <OS>{{operatingSystem}}</OS>
-            """);
+            """,
+            targetFramework: targetFramework);
 
         result.AssertOutputContains(
             "WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true;OutputType=Exe;");
@@ -1413,7 +1417,8 @@ namespace MSTestWebTest
         string assetName,
         string applicationModelProperties,
         bool failIfReturnValueIsNotZero = true,
-        string target = "PrintWindowsTestContract")
+        string target = "PrintWindowsTestContract",
+        string? targetFramework = null)
     {
         const string Source = """
             #file $AssetName$.csproj
@@ -1447,7 +1452,7 @@ namespace MSTestWebTest
             Source
                 .PatchCodeWithReplace("$AssetName$", assetName)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$TargetFramework$", targetFramework ?? TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
         string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 

@@ -49,4 +49,12 @@
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
   </ItemGroup>
 
+  <Target Name="_AddAnalyzerTestReferencePackMetadata"
+          BeforeTargets="GetAssemblyAttributes"
+          Condition="'$(TargetFramework)' == 'net11.0'">
+    <ItemGroup>
+      <AssemblyMetadata Include="Net11RuntimeVersion" Value="$(Net11RuntimeVersion)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

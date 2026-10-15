@@ -3293,15 +3293,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     private static readonly MetadataReference[] FrameworkReferences = ResolveFrameworkReferences();
 
     private static MetadataReference[] ResolveFrameworkReferences()
-    {
-        string nuGetConfig = Path.Combine(RootFinder.Find(), "NuGet.config");
-#if NET462
-        ReferenceAssemblies referenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default.WithNuGetConfigFilePath(nuGetConfig);
-#else
-        ReferenceAssemblies referenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfig);
-#endif
-        return referenceAssemblies.ResolveAsync(LanguageNames.CSharp, System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToArray();
-    }
+        => AnalyzerTestReferenceAssemblies.Default.ResolveAsync(LanguageNames.CSharp, System.Threading.CancellationToken.None)
+            .GetAwaiter().GetResult().ToArray();
 
     // The MSTest attribute surface a v3-compiled base library would have been compiled against, in an assembly named
     // like the legacy framework so its type identity differs from the current MSTest.TestFramework.

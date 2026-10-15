@@ -203,13 +203,135 @@ Build and package transcripts are a more useful demonstration than screenshots
 for this framework-support expansion. Live CI and release-branch validation are
 not implied by local results. No artifacts have been uploaded or published.
 
+## CI follow-up: reference and application-model contracts
+
+Azure build `1635514` failed at head
+`5e92781259824528ddb5fb22165eaf3c95a0c17c`. Three bounded regressions were
+identified; no test, analyzer diagnostic, or CI gate will be disabled:
+
+- The C# and Visual Basic analyzer verifiers compile against .NET 8 reference
+  assemblies while referencing the source-built MSTest assembly from their
+  executing target. The unchanged conditional-access code-fix test executed on
+  .NET 11 and failed with unexpected `CS1705` diagnostics. Reference assemblies
+  must be at least as new as the referenced source assembly, while preserving
+  tests that explicitly require a newer BCL.
+- The packaged-app targets recognize only `net9.*` and `net10.*` when selecting
+  the existing .NET 9 controller. A real packed .NET 11 SDK consumer restored
+  and evaluated successfully but selected the .NET 8 controller; both unchanged
+  Windows routing assertions failed. Extend the compatibility condition without
+  changing the controller payloads or the .NET 8/.NET 9 deployment contract.
+- Modern UWP .NET 10 consumers correctly resolve the newly shipped ordinary
+  `lib/net10.0/MSTest.TestFramework.dll`, alongside the existing specialized
+  .NET 9 UWP adapter/extensions. The asset assertion incorrectly requires the
+  ordinary .NET 9 framework for every consumer. Bind that expectation to the
+  independently specified consumer TFM, retaining all specialized-asset checks.
+
+The unchanged in-flight cancellation-observer test also executed on .NET 11 and
+failed its exact diagnostic assertion. Its reflection walker does not inspect
+private fields inherited by continuation tasks. Investigate that runtime-shape
+boundary while preserving the diagnostic assertion, assembly scheduling,
+process-wide debug-flag restoration, and bounded worker cleanup.
+
+The local baseline runs used the pinned SDK/runtime and Debug outputs, with
+fresh reports under the task-owned evidence directory: analyzer `1 failed`,
+cancellation observer `1 failed`, and packed SDK routing `2 failed / 1 passed`,
+all with zero skips and process exit `2`. These are executed assertion/harness
+failures, not restore or compilation failures of the test hosts. Green evidence
+follows below.
+
+### Repair decisions and executed validation
+
+The analyzer fixtures now share host-compatible .NET references; the .NET 11
+reference-pack version is supplied by the project's effective build metadata,
+not duplicated in source. Emitted legacy assemblies use matching references.
+The intentionally mixed-version architecture case separately compiles a .NET 8
+MSTest surface and a .NET 9 consumer, with an exact X64 diagnostic/code-fix
+positive control to prove the analyzer remains active.
+
+An expanded .NET 11 analyzer run executed 1,994 cases and found three additional
+`Task.WaitAll` snippet failures: newer BCL overload resolution selected a
+params-collection overload requiring a newer compiler language mode. Explicit
+`Task[]` arguments preserve those snippets' legacy blocking-call contract and
+their original diagnostic/scope assertions. No preview mode or suppression was
+added. Both complete .NET 10 and .NET 11 analyzer modules subsequently passed
+all 1,994 cases.
+
+The packaged-app controller selection now uses TFM compatibility with .NET 9:
+.NET 8 consumers retain the .NET 8 controller, while .NET 9/10/11 consumers
+retain the .NET 9 controller. Five packed WinUI evaluation rows pin the four
+Windows selections and the non-Windows no-controller path. The unchanged
+Modern UWP SDK assertion that failed before the fix now passes.
+
+UWP report expectations take the declared consumer TFM. Reports also record
+that TFM explicitly; the ordinary framework must match it while all three
+specialized adapter/extensions remain the .NET 9 UWP payload. Two focused
+report tests reject both a mismatching ordinary framework and ordinary adapter
+payloads. Real x86/ARM64 builds and .NET 9/.NET 10 activation passed using the
+configuration-matched packed packages, including both plain and UI child tests.
+
+The cancellation diagnostic probe walks inherited private fields, preserving
+its exact description assertion. It now joins the original cancellation task
+after releasing the registration and before restoring process-wide debug
+tracking. Its existing `[DoNotParallelize]` exclusion remains unchanged.
+
+| Validation | Executed/passed | Failed/skipped | Exit |
+| --- | ---: | ---: | ---: |
+| Full analyzer module, .NET 11 | 1,994 | 0/0 | 0 |
+| Full analyzer module, .NET 10 | 1,994 | 0/0 | 0 |
+| Focused analyzer preservation, .NET 8/.NET 9/.NET Framework | 56 | 0/0 | 0 |
+| Full in-process client class, .NET 8/9/10/11 and .NET Framework | 245 | 0/0 | 0 |
+| Packed SDK/package/framework selection | 11 | 0/0 | 0 |
+| Real Modern UWP architecture and activation cases | 4 | 0/0 | 0 |
+
+The combined validation matrix is 4,304 passing outer cases, excluding duplicate
+focused runs and child test counts. The full Windows Debug build/pack and the
+final acceptance-project build both exited `0`, with zero warnings/errors.
+Acceptance discovery and the independent execution verifier reconciled
+`11/11/11/11` and `4/4/4/4` planned/selected/executed/passed counts. All five
+client TRX reports contain the repaired exact-diagnostic case once, 49 passing
+results, and no skips. The full analyzer reports preserve the same 1,994-case
+identity multiset as the expanded pre-fix run.
+
+Representative reproduction commands, using the repository-pinned toolchain
+and a task-owned evidence directory, are:
+
+```powershell
+.\eng\build.ps1 -restore -build -pack -binaryLog "/bl:$evidence\ci-fixes-full-debug-build-pack.binlog"
+.\eng\build.ps1 -build -projects test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -msbuildEngine dotnet -binaryLog "/bl:$evidence\ci-fixes-acceptance-build.binlog" /p:SkipUapTargetFramework=true /p:EnableCodeCoverage=false
+.\.dotnet\dotnet.exe artifacts\bin\MSTest.Analyzers.UnitTests\Debug\net11.0\MSTest.Analyzers.UnitTests.dll --report-trx --results-directory $evidence
+.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests\Debug\net11.0\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests.dll --filter "FullyQualifiedName~MtpServerClientInProcessTests" --report-trx --results-directory $evidence
+$env:TESTFX_RUN_WINDOWS_APP_MODEL_TESTS = '1'
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Debug -f net11.0 --no-build --filter "FullyQualifiedName~ModernUwpTests" -p:UsingDotNetTest=true -p:EnableCodeCoverage=false "-p:ArtifactsTestResultsDir=$evidence" "-bl:$evidence\ci-modern-uwp.binlog" --show-test-results all
+```
+
+Actual runs used separate result/log directories and explicit report filenames.
+Retained evidence includes the unchanged baseline failures, analyzer worker
+commands and full-suite reports, five client reports, shipping package hashes,
+consumer `project.assets.json`, resolved UWP assets, manifests, child TRX reports,
+and desktop-MSBuild/outer binlogs. All four exact run-owned UWP registrations
+were verified absent after cleanup. No machine policy or borrowed package
+registration was changed. This is Windows Debug local evidence, not CI or
+Release/Linux/macOS validation.
+
+**Test-value evidence:** the unchanged Modern UWP routing assertion failed on a
+successful packed evaluation with controller `net8.0` and passed with `net9.0`
+after the target fix. Unchanged compiler-fixture expectations rejected
+`CS1705`/`BC32207` before reference alignment; the three blocking-call expectations
+rejected `CS8652` before the argument repair and passed afterward. These are
+executed fixture corrections, not shipping-product mutation claims. The
+unchanged cancellation diagnostic assertion failed before the reflection repair
+and passed afterward on all five hosts. Strict UWP positive/negative report
+cases and real activation protect the actual asset-selection contract.
+
 ## Open questions
 
 This change is scoped to `main`; no downstream rollout or servicing/backport is
 authorized. The .NET 11 runtime remains prerelease and must continue to flow
 with future dependency updates.
 
-Linux/macOS CI, Windows application activation and WASI runtime execution were
-not run locally. `wasmtime` is unavailable; the selected WASI regressions do not
-skip because they are build assertions. No new scheduling opt-in, controller
-routing, runtime thread-detection behavior or public product API was introduced.
+Linux/macOS CI, Release validation and WASI runtime execution were not run
+locally. `wasmtime` is unavailable; the selected WASI regressions do not skip
+because they are build assertions. Windows Modern UWP activation was subsequently
+validated during the CI follow-up above. The existing .NET 8/.NET 9 controller
+deployment contract is preserved; no new scheduling opt-in, runtime
+thread-detection behavior or public product API was introduced.
