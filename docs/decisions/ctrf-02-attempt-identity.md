@@ -77,7 +77,7 @@ The baseline suite had one Windows-inapplicable, case-sensitive-filesystem test.
 That existing case was explicitly excluded from the applicable unit selection;
 it is not reported as executed. This was not a full repository test run.
 
-**Test-value evidence**
+### Test-value evidence
 
 | Contract and named cases | Without the behavior | Correct implementation |
 | --- | --- | --- |
