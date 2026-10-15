@@ -983,11 +983,6 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
         <target state="translated">Die Option „--exit-on-process-exit“ wird in Browserumgebungen nicht unterstützt.</target>
         <note>{Locked="--exit-on-process-exit"}</note>
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
-        <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
-        <target state="new">The '--exit-on-process-exit' option is not supported in WASI environments.</target>
-        <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
-      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Beenden Sie den Testprozess, wenn der abhängige Prozess beendet ist. Die PID muss angegeben werden.</target>

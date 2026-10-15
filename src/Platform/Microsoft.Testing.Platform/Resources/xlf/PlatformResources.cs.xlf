@@ -983,11 +983,6 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
         <target state="translated">Možnost --exit-on-process-exit není v prostředích prohlížeče podporována.</target>
         <note>{Locked="--exit-on-process-exit"}</note>
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
-        <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
-        <target state="new">The '--exit-on-process-exit' option is not supported in WASI environments.</target>
-        <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
-      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Pokud se závislý proces ukončí, ukončete testovací proces. Je nutné zadat identifikátor PID.</target>
