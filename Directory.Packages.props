@@ -121,9 +121,6 @@
          use through Microsoft.Extensions.Resilience is exempt.
          https://thepollyproject.org/2026/07/14/polly-osmf-announcement.html -->
     <PackageVersion Include="Microsoft.Extensions.Resilience" Version="10.11.0" />
-    <!-- Used by Microsoft.Testing.Platform acceptance tests, which consume the released MSTest packages
-         rather than MSTest from source. -->
-    <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.3.246" />
