@@ -355,32 +355,22 @@ public sealed class MtpServerClientInProcessTests
         listener.Start();
         using var client = new TcpClient();
         using var cancellation = new CancellationTokenSource();
-        Task<int> serverTask = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(Timeout.Infinite, cancellation.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                await Task.Delay(100, TestContext.CancellationToken);
-            }
-
-            return 0;
-        });
+        var serverCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         Task cleanup = InvokeWithSynchronizationContext(
             () => MtpServerInProcessHost.CleanupFailedStartAsync(
                 listener,
                 client,
                 cancellation,
-                serverTask,
+                serverCompletion.Task,
                 NullMtpClientLogger.Instance),
             out QueueingSynchronizationContext context);
 
-        bool completedWithoutPumping = await CompletesQuicklyAsync(cleanup);
-        DrainContextUntilCompleted(context, cleanup);
+        bool cleanupWasPending = !cleanup.IsCompleted;
+        serverCompletion.SetResult(0);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(cleanup, context);
         await cleanup;
 
+        Assert.IsTrue(cleanupWasPending, "The pending server task must exercise asynchronous cleanup.");
         Assert.IsTrue(completedWithoutPumping, "Failed-launch cleanup must not capture the calling synchronization context.");
     }
 
@@ -447,8 +437,7 @@ public sealed class MtpServerClientInProcessTests
                 TestContext.CancellationToken),
             out QueueingSynchronizationContext context);
 
-        bool completedWithoutPumping = await CompletesQuicklyAsync(launch);
-        DrainContextUntilCompleted(context, launch);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(launch, context);
         MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
             () => launch);
 
@@ -715,8 +704,7 @@ public sealed class MtpServerClientInProcessTests
         Task shutdown = InvokeWithSynchronizationContext(
             () => InvokeShutdownCoreAsync(host),
             out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(shutdown);
-        DrainContextUntilCompleted(context, shutdown);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(shutdown, context);
         await WithTimeoutAsync(shutdown);
 
         Assert.IsTrue(completedWithoutPumping, "Awaiting the server shutdown task must not capture the calling synchronization context.");
@@ -764,8 +752,7 @@ public sealed class MtpServerClientInProcessTests
                 TimeSpan.Zero,
                 new DelegateMtpClientLogger((level, message) => log.Add((level, message)))),
             out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(shutdown);
-        DrainContextUntilCompleted(context, shutdown);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(shutdown, context);
         bool stopped = await shutdown;
 
         Assert.IsTrue(stopped);
@@ -789,8 +776,7 @@ public sealed class MtpServerClientInProcessTests
                 TimeSpan.FromMilliseconds(100),
                 NullMtpClientLogger.Instance),
             out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(shutdown);
-        DrainContextUntilCompleted(context, shutdown);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(shutdown, context);
 
         Assert.IsTrue(await shutdown);
         Assert.IsTrue(completedWithoutPumping, "The graceful wait must not capture the calling synchronization context.");
@@ -1465,8 +1451,7 @@ public sealed class MtpServerClientInProcessTests
     private static async Task<T> AssertCompletesWithoutPumpingAsync<T>(Func<Task<T>> action)
     {
         Task<T> task = InvokeWithSynchronizationContext(action, out QueueingSynchronizationContext context);
-        bool completedWithoutPumping = await CompletesQuicklyAsync(task);
-        DrainContextUntilCompleted(context, task);
+        bool completedWithoutPumping = await CompletesWithoutPumpingAsync(task, context);
 
         T result = await task.ConfigureAwait(false);
         Assert.IsTrue(
@@ -1511,6 +1496,21 @@ public sealed class MtpServerClientInProcessTests
 
     private static async Task<bool> CompletesQuicklyAsync(Task task)
         => await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false) == task;
+
+    private static async Task<bool> CompletesWithoutPumpingAsync(Task task, QueueingSynchronizationContext context)
+    {
+        try
+        {
+            Task completed = await WithTimeoutAsync(Task.WhenAny(task, context.ContinuationPosted)).ConfigureAwait(false);
+            return completed == task && context.PostCount == 0;
+        }
+        finally
+        {
+            DrainContextUntilCompleted(context, task);
+            // Join completion without rethrowing faults that the caller asserts separately.
+            _ = await WithTimeoutAsync(Task.WhenAny(task)).ConfigureAwait(false);
+        }
+    }
 
     private static void DrainContextUntilCompleted(QueueingSynchronizationContext context, Task task)
     {
@@ -1817,9 +1817,12 @@ public sealed class MtpServerClientInProcessTests
     {
         private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = new();
         private readonly object _lock = new();
+        private readonly TaskCompletionSource<bool> _continuationPosted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private int _postCount;
 
         public int PostCount => Volatile.Read(ref _postCount);
+
+        public Task ContinuationPosted => _continuationPosted.Task;
 
         public override void Post(SendOrPostCallback d, object? state)
         {
@@ -1828,6 +1831,8 @@ public sealed class MtpServerClientInProcessTests
             {
                 _callbacks.Enqueue((d, state));
             }
+
+            _continuationPosted.TrySetResult(true);
         }
 
         public bool TryRunOne()
