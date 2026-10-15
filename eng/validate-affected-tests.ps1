@@ -87,6 +87,47 @@ function Assert-CollectionJobIsolation {
     }
 }
 
+function Invoke-SelfTestCases {
+    param(
+        $Cases,
+        [System.Collections.IDictionary]$BaselineConfiguration,
+        [scriptblock]$Validator
+    )
+
+    foreach ($case in $Cases) {
+        $caseConfiguration = @{}
+        $configurationChanged = $false
+        foreach ($argumentName in $BaselineConfiguration.Keys) {
+            $value = if ($case.ContainsKey($argumentName)) { $case[$argumentName] } else { $BaselineConfiguration[$argumentName] }
+            $caseConfiguration[$argumentName] = $value
+            if ($value -ne $BaselineConfiguration[$argumentName]) {
+                $configurationChanged = $true
+            }
+        }
+
+        if (-not $configurationChanged) {
+            throw "Self-test '$($case.Name)' did not change the configuration under test."
+        }
+
+        $rejected = $false
+        try {
+            & $Validator @caseConfiguration
+        } catch {
+            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
+                throw
+            }
+
+            $rejected = $true
+        }
+
+        if (-not $rejected) {
+            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
+        }
+
+        Write-Output "PASS $($case.Name)"
+    }
+}
+
 function Invoke-CollectionJobIsolationSelfTest {
     param(
         [string]$Pipeline,
@@ -177,28 +218,13 @@ function Invoke-CollectionJobIsolationSelfTest {
         }
     )
 
-    foreach ($case in $cases) {
-        $caseSharedCollectBranch = if ($case.ContainsKey("SharedCollectBranch")) { $case.SharedCollectBranch } else { $SharedCollectBranch }
-        if ($case.Pipeline -eq $Pipeline -and $case.CollectBranch -eq $CollectBranch -and $caseSharedCollectBranch -eq $SharedCollectBranch) {
-            throw "Self-test '$($case.Name)' did not change the configuration under test."
-        }
-
-        $rejected = $false
-        try {
-            Assert-CollectionJobIsolation $case.Pipeline $case.CollectBranch $caseSharedCollectBranch
-        } catch {
-            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
-                throw
-            }
-
-            $rejected = $true
-        }
-
-        if (-not $rejected) {
-            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
-        }
-
-        Write-Output "PASS $($case.Name)"
+    Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{
+        Pipeline = $Pipeline
+        CollectBranch = $CollectBranch
+        SharedCollectBranch = $SharedCollectBranch
+    } -Validator {
+        param($Pipeline, $CollectBranch, $SharedCollectBranch)
+        Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch
     }
 
     Write-Output "Collection isolation self-tests: $($cases.Count + 1) passed."
@@ -456,32 +482,15 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
         }
     }
 
-    foreach ($case in $cases) {
-        $casePipeline = if ($case.ContainsKey("Pipeline")) { $case.Pipeline } else { $Pipeline }
-        $caseNonWindowsTemplate = if ($case.ContainsKey("NonWindowsTemplate")) { $case.NonWindowsTemplate } else { $NonWindowsTemplate }
-        $caseSharedTemplate = if ($case.ContainsKey("SharedTemplate")) { $case.SharedTemplate } else { $SharedTemplate }
-        $caseLivePublishingTemplate = if ($case.ContainsKey("LivePublishingTemplate")) { $case.LivePublishingTemplate } else { $LivePublishingTemplate }
-        $caseFinalizePublishingTemplate = if ($case.ContainsKey("FinalizePublishingTemplate")) { $case.FinalizePublishingTemplate } else { $FinalizePublishingTemplate }
-        if ($casePipeline -eq $Pipeline -and $caseNonWindowsTemplate -eq $NonWindowsTemplate -and $caseSharedTemplate -eq $SharedTemplate -and $caseLivePublishingTemplate -eq $LivePublishingTemplate -and $caseFinalizePublishingTemplate -eq $FinalizePublishingTemplate) {
-            throw "Self-test '$($case.Name)' did not change the configuration under test."
-        }
-
-        $rejected = $false
-        try {
-            Assert-NonWindowsAffectedTestsWiring $casePipeline $caseNonWindowsTemplate $caseSharedTemplate $caseLivePublishingTemplate $caseFinalizePublishingTemplate
-        } catch {
-            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
-                throw
-            }
-
-            $rejected = $true
-        }
-
-        if (-not $rejected) {
-            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
-        }
-
-        Write-Output "PASS $($case.Name)"
+    Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{
+        Pipeline = $Pipeline
+        NonWindowsTemplate = $NonWindowsTemplate
+        SharedTemplate = $SharedTemplate
+        LivePublishingTemplate = $LivePublishingTemplate
+        FinalizePublishingTemplate = $FinalizePublishingTemplate
+    } -Validator {
+        param($Pipeline, $NonWindowsTemplate, $SharedTemplate, $LivePublishingTemplate, $FinalizePublishingTemplate)
+        Assert-NonWindowsAffectedTestsWiring $Pipeline $NonWindowsTemplate $SharedTemplate $LivePublishingTemplate $FinalizePublishingTemplate
     }
 
     foreach ($case in @(
