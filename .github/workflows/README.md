@@ -68,6 +68,44 @@ inside the agent-visible tree. The agent reads this manifest after extraction.
 Do not interpolate custom-step outputs into the prompt: gh-aw renders it before
 those steps run. Missing inputs are incomplete analysis, not an empty scope.
 
+#### Category-specific threat-detection evidence
+
+[Run 38707575125](https://github.com/microsoft/testfx/actions/runs/38707575125)
+reported the warning tracked by [#11950](https://github.com/microsoft/testfx/issues/11950).
+The detector classified a Cyrillic U+043B character in ordinary generated review
+prose as `secret_leak=true`, without identifying sensitive data or a disclosure
+path. The pinned threat-detect v0.5.2 binary installed and recorded its result
+correctly; this was a classification false positive, not a reporting failure.
+The agent and safe-output jobs were cancelled, so this run does not establish
+review publication or a detection-caused publication block.
+
+Both reviewers now require category-specific evidence in their shared custom
+detection prompt. A secret leak needs non-public sensitive data and a disclosure
+path; prompt injection needs a concrete hostile instruction from untrusted
+content. A typo or Unicode character alone establishes neither. This is not a
+Unicode exemption: encoded secrets and obfuscated hostile instructions still
+require analysis of their decoded meaning and context. Positive findings carry
+artifact locations and category-specific reasons via `--reasons-file`, without
+reproducing secret values.
+
+Keep detection, its maintained model alias, eligibility, credentials, firewall,
+and safe-output policy unchanged. Do not strip Unicode, suppress warnings, or
+close the automatically managed tracker to hide a false positive. Recompile both
+reviewers strictly and audit action pins after changing the shared prompt.
+Compilation checks prompt delivery and workflow controls, not the model's
+classification; behavioral regression sensitivity needs a matching detector
+replay. The pinned gh-aw v0.89.21 compiler does not support `--dry-run`.
+
+Local validation on October 15, 2026 used the catalog-aligned pinned compiler
+described below: both workflows compiled strictly with zero warnings, including
+116 ShellCheck resources. A parsed-YAML comparison verified both prompt delivery
+steps in each workflow and equality of every other executable field against the
+base revision. The existing pin auditor checked the two reviewers plus
+`check-action-pins.yml`: three stale-header/manifest findings before regeneration,
+zero afterwards. The repository-wide audit still reports 36 pre-existing findings
+outside these reviewers (38 before this change). No live detector replay or
+workflow dispatch was performed; the model's regression sensitivity is unproven.
+
 ### Firewall access for repository work
 
 `network: defaults` covers infrastructure, not package feeds or Git transport.
