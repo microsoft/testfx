@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="2.6.0" />[2.6.0] - Unreleased
 
+### Changed
+
+* Align the experimental CTRF reporter with specification 0.2.0 by emitting native final-attempt identities, retaining legacy retry identity support, and keeping compatible mixed-version merges correctly versioned and identified.
+
 ### Fixed
 
 * Preserve the invocation working directory for ordinary controller-launched test hosts so relative paths such as `--coverage-settings test.runsettings` keep working under `dotnet run`, while retaining the configured working directory for custom test host launchers.

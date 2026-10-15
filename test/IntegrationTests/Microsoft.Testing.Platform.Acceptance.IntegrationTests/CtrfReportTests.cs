@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -324,6 +325,62 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         Assert.IsTrue(tests.All(test => !test.TryGetProperty("retryAttempts", out _)));
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Ctrf_MergingLegacyAndCurrentReports_PreservesVersionAndAttemptIdentities(bool currentFirst)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        var expectedAttemptIds = new List<string>();
+        for (int index = 1; index <= 2; index++)
+        {
+            string fileName = $"attempt-{index}.ctrf.json";
+            TestHostResult result = await testHost.ExecuteAsync(
+                $"--report-ctrf --report-ctrf-filename {fileName} --results-directory \"{resultDirectory}\"",
+                new() { ["CRASHPROCESS"] = null, ["ONLYPASSINGTESTS"] = null },
+                cancellationToken: TestContext.CancellationToken);
+            result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+            string path = Path.Combine(resultDirectory, fileName);
+            JsonObject report = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            Assert.AreEqual("0.2.0", (string?)report["specVersion"]);
+            JsonArray tests = report["results"]!["tests"]!.AsArray();
+            Assert.HasCount(4, tests);
+            expectedAttemptIds.AddRange(tests.Select(test => (string)test!["attemptId"]!));
+            if (index == (currentFirst ? 2 : 1))
+            {
+                report["specVersion"] = "0.1.0";
+                foreach (JsonObject legacyTest in tests.Select(test => test!.AsObject()))
+                {
+                    legacyTest["extra"]!["mtpAttemptId"] = (string)legacyTest["attemptId"]!;
+                    legacyTest.Remove("attemptId");
+                }
+
+                File.WriteAllText(path, report.ToJsonString());
+            }
+        }
+
+        string mergedPath = Path.Combine(resultDirectory, "merged.ctrf.json");
+        TestHostResult mergeResult = await testHost.ExecuteAsync(
+            $"--merge-ctrf \"{resultDirectory}\" \"{mergedPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+        mergeResult.AssertExitCodeIs(ExitCode.Success);
+        mergeResult.AssertOutputContains($"MERGER_LOCATION={Path.Combine(testHost.DirectoryName, "Microsoft.Testing.Extensions.CtrfReport.dll")}");
+
+        using var merged = JsonDocument.Parse(File.ReadAllText(mergedPath));
+        Assert.AreEqual("0.2.0", merged.RootElement.GetProperty("specVersion").GetString());
+        JsonElement[] mergedTests = [.. merged.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
+        Assert.HasCount(8, mergedTests);
+        Assert.HasCount(4, mergedTests.Where(test => test.TryGetProperty("attemptId", out _)));
+        Assert.HasCount(8, expectedAttemptIds.Distinct(StringComparer.Ordinal));
+        Assert.AreSequenceEqual(
+            expectedAttemptIds,
+            mergedTests.Select(test => test.TryGetProperty("attemptId", out JsonElement attemptId)
+                ? attemptId.GetString()!
+                : test.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!).ToArray());
+    }
+
     private static void AssertCtrfReportShape(string filePath)
     {
         // Snapshot the full CTRF JSON against an exact expected document. Runtime-variable
@@ -350,6 +407,10 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
             Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
             Assert.HasCount(4, executionIds.Distinct());
+            string[] attemptIds = [.. tests.Select(test => test.GetProperty("attemptId").GetString()!)];
+            Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+            Assert.HasCount(4, attemptIds.Distinct());
+            Assert.IsEmpty(attemptIds.Intersect(executionIds, StringComparer.Ordinal));
         }
 
         string normalized = NormalizeCtrfReport(actual);
@@ -357,7 +418,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         const string expected = """
 {
   "reportFormat": "CTRF",
-  "specVersion": "0.1.0",
+  "specVersion": "0.2.0",
   "reportId": "<GUID>",
   "runId": "<RUN_ID>",
   "timestamp": "<TIMESTAMP>",
@@ -401,17 +462,18 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
       {
         "testId": "test-1",
         "executionId": "<EXECUTION_ID>",
+        "attemptId": "<ATTEMPT_ID>",
         "name": "PassingTest",
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-1",
-          "mtpAttemptId": "<ATTEMPT_ID>"
+          "uid": "test-1"
         }
       },
       {
         "testId": "test-2",
         "executionId": "<EXECUTION_ID>",
+        "attemptId": "<ATTEMPT_ID>",
         "name": "FailingTest",
         "status": "failed",
         "duration": <DURATION_MS>,
@@ -427,31 +489,30 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
           }
         ],
         "extra": {
-          "uid": "test-2",
-          "mtpAttemptId": "<ATTEMPT_ID>"
+          "uid": "test-2"
         }
       },
       {
         "testId": "test-3",
         "executionId": "<EXECUTION_ID>",
+        "attemptId": "<ATTEMPT_ID>",
         "name": "DuplicateUidFailure",
         "status": "failed",
         "duration": <DURATION_MS>,
         "message": "Transient failure",
         "extra": {
-          "uid": "test-3",
-          "mtpAttemptId": "<ATTEMPT_ID>"
+          "uid": "test-3"
         }
       },
       {
         "testId": "test-3",
         "executionId": "<EXECUTION_ID>",
+        "attemptId": "<ATTEMPT_ID>",
         "name": "DuplicateUidPass",
         "status": "passed",
         "duration": <DURATION_MS>,
         "extra": {
-          "uid": "test-3",
-          "mtpAttemptId": "<ATTEMPT_ID>"
+          "uid": "test-3"
         }
       }
     ]
@@ -473,7 +534,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
         normalized = Regex.Replace(normalized, @"""runId"": ""[^""]+""", @"""runId"": ""<RUN_ID>""");
         normalized = Regex.Replace(normalized, @"""executionId"": ""[^""]+""", @"""executionId"": ""<EXECUTION_ID>""");
-        normalized = Regex.Replace(normalized, @"""mtpAttemptId"": ""[^""]+""", @"""mtpAttemptId"": ""<ATTEMPT_ID>""");
+        normalized = Regex.Replace(normalized, @"""attemptId"": ""[^""]+""", @"""attemptId"": ""<ATTEMPT_ID>""");
         normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
         normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
         normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");
