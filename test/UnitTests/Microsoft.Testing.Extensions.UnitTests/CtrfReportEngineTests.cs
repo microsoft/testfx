@@ -66,7 +66,7 @@ public class CtrfReportEngineTests
         JsonElement root = document.RootElement;
 
         Assert.AreEqual("CTRF", root.GetProperty("reportFormat").GetString());
-        Assert.AreEqual("0.1.0", root.GetProperty("specVersion").GetString());
+        Assert.AreEqual("0.2.0", root.GetProperty("specVersion").GetString());
         Assert.IsGreaterThan(0, root.GetProperty("reportId").GetString()!.Length);
         Assert.IsGreaterThan(0, root.GetProperty("timestamp").GetString()!.Length);
         Assert.IsTrue(root.GetProperty("generatedBy").GetString()!.StartsWith("Microsoft.Testing.Extensions.CtrfReport", StringComparison.Ordinal));
@@ -583,9 +583,10 @@ public class CtrfReportEngineTests
         Assert.AreSequenceEqual(
             ["first failure", "second failure"],
             priorAttempts.Select(attempt => attempt.GetProperty("message").GetString()!).ToArray());
-        string[] attemptIds = [.. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
+        Assert.IsTrue(retry.TryGetProperty("attemptId", out JsonElement finalAttemptId), "The final attempt must have a native CTRF identity.");
+        string[] attemptIds = [finalAttemptId.GetString()!, .. priorAttempts.Select(attempt => attempt.GetProperty("attemptId").GetString()!)];
         Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
-        Assert.HasCount(2, attemptIds.Distinct());
+        Assert.HasCount(3, attemptIds.Distinct());
         Assert.DoesNotContain(executionId, attemptIds);
 
         JsonElement attachment = Assert.ContainsSingle(priorAttempts[0].GetProperty("attachments").EnumerateArray());
@@ -1358,17 +1359,19 @@ public class CtrfReportEngineTests
         using var second = JsonDocument.Parse(secondReport);
         JsonElement firstCase = first.RootElement.GetProperty("results").GetProperty("tests")[0];
         JsonElement secondCase = second.RootElement.GetProperty("results").GetProperty("tests")[0];
+        Assert.IsTrue(firstCase.TryGetProperty("attemptId", out JsonElement firstAttempt), "CTRF 0.2.0 must expose the final attempt identity.");
+        Assert.IsTrue(secondCase.TryGetProperty("attemptId", out JsonElement secondAttempt), "CTRF 0.2.0 must expose the final attempt identity.");
         string firstExecutionId = firstCase.GetProperty("executionId").GetString()!;
         string secondExecutionId = secondCase.GetProperty("executionId").GetString()!;
-        string firstAttemptId = firstCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!;
-        string secondAttemptId = secondCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!;
+        string firstAttemptId = firstAttempt.GetString()!;
+        string secondAttemptId = secondAttempt.GetString()!;
 
         Assert.IsTrue(Guid.TryParse(firstExecutionId, out _));
         Assert.IsTrue(Guid.TryParse(firstAttemptId, out _));
         Assert.IsTrue(Guid.TryParse(secondAttemptId, out _));
         Assert.AreNotEqual(firstAttemptId, secondAttemptId);
         Assert.AreNotEqual(firstExecutionId, firstAttemptId);
-        Assert.IsFalse(firstCase.TryGetProperty("attemptId", out _), "CTRF 0.1.0 forbids top-level attemptId.");
+        Assert.IsFalse(firstCase.GetProperty("extra").TryGetProperty("mtpAttemptId", out _));
         Assert.AreNotEqual(first.RootElement.GetProperty("reportId").GetString(), second.RootElement.GetProperty("reportId").GetString());
         Assert.AreNotEqual(firstExecutionId, first.RootElement.GetProperty("results").GetProperty("tests")[1].GetProperty("executionId").GetString());
         if (!isRetryChild || string.IsNullOrEmpty(retryScope))
@@ -1381,7 +1384,7 @@ public class CtrfReportEngineTests
             using var merged = JsonDocument.Parse(CtrfReportMerger.Merge([firstReport, secondReport], CtrfMergeMode.CollapseRetryAttempts));
             JsonElement mergedCase = merged.RootElement.GetProperty("results").GetProperty("tests")[0];
             Assert.AreEqual(firstExecutionId, mergedCase.GetProperty("executionId").GetString());
-            Assert.AreEqual(secondAttemptId, mergedCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString());
+            Assert.AreEqual(secondAttemptId, mergedCase.GetProperty("attemptId").GetString());
             Assert.AreEqual(firstAttemptId, mergedCase.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString());
         }
     }
