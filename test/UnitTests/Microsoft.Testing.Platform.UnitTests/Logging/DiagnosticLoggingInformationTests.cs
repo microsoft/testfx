@@ -41,7 +41,7 @@ public sealed class DiagnosticLoggingInformationTests
 
         Assert.AreSame(logTask, completedTask, "Recursive logging from a formatter deadlocked.");
         await logTask;
-        provider.Dispose();
+        await DisposeHelper.DisposeAsync(provider);
 
         string FormatAndLogNested(string state, Exception? exception)
         {
