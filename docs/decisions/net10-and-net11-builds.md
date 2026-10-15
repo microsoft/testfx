@@ -401,6 +401,42 @@ This follow-up therefore has ten passing outer cases: eight SDK-summary cases
 across both modes and two generated-language cases. It does not rerun or
 relabel the previous 4,304-case matrix as current-head CI proof.
 
+## CI follow-up: Windows PR completion budget
+
+Azure build `1636645`, at
+`7e528d44bbe773df04e4e3782aa5dfa3b2e6864b`, passed its Windows Debug, Linux
+Release, and real Windows application-model jobs. The Windows Release test step
+also succeeded after approximately 62 minutes, and its test-result publication
+completed. The job was canceled at its configured 90-minute deadline while
+`Gather binaries for publish to artifacts` was copying build outputs.
+
+The complete timeline has no failed test task. All 167 recorded test-run
+summaries are completed: their totals reconcile to passed or not-applicable
+results, with no remaining failures/incomplete results. Those publishing records
+may overlap, so they are not reported as a unique executed-test count. The
+aggregate required check still failed because artifact collection was canceled;
+passing test stages do not make that check green.
+
+Increase only the Windows PR matrix's finite job budget from 90 to 120 minutes
+to accommodate the expanded framework graph and normal publication. Main's
+240-minute budget and every other job remain unchanged. The shared matrix
+definition gives both Windows PR configurations the same budget; avoid
+duplicating the job or introducing an unverified matrix-dependent timeout
+expression for this small capacity adjustment. No tests, filters, cancellation
+timeouts, caches, artifact collection, or required checks are disabled.
+
+This pipeline-only correction needs YAML parsing and a structural before/after
+comparison, not another local product test run. The next required CI run must
+prove completion under the new budget; local parsing is not execution evidence.
+
+PyYAML `6.0.2` parsing and structural comparison passed. Restoring the single
+Windows PR timeout scalar from `120` to `90` makes the parsed pipeline identical
+to its parent, proving that main's `240` and all other jobs, matrices, conditions,
+steps, tests and artifact policies are unchanged. Retained evidence includes
+the completed-run summaries, canceled artifact-copy log, and validation JSON.
+The old 90-minute cancellation is observed evidence; completion with the new
+120-minute budget remains unverified until the next required CI run.
+
 ## Open questions
 
 This change is scoped to `main`; no downstream rollout or servicing/backport is
