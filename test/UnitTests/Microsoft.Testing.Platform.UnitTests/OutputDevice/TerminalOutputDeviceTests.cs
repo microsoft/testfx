@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.UnitTests.Helpers;
@@ -290,6 +291,112 @@ public sealed class TerminalOutputDeviceTests
     }
 
     [TestMethod]
+    [DataRow(null, null, 31)]
+    [DataRow("8", null, 39)]
+    [DataRow(null, "8", 39)]
+    [DataRow("2; 8;9", null, 39)]
+    [DataRow("18", null, 31)]
+    [DataRow("8", "2", 31)]
+    [DataRow("2", "8", 39)]
+    [DataRow("8", "", 39)]
+    public async Task ActualSummary_ZeroTests_HonorsIgnorePolicy(string? commandLineIgnore, string? environmentIgnore, int expectedColor)
+    {
+        Dictionary<string, string[]> options = new()
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["on"],
+        };
+        if (commandLineIgnore is not null)
+        {
+            options[PlatformCommandLineProvider.IgnoreExitCodeOptionKey] = [commandLineIgnore];
+        }
+
+        using RecordingDeviceFixture fixture = new(
+            extraOptions: options,
+            environmentVariables: new() { [EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE] = environmentIgnore });
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString();
+        Assert.Contains($"\u001B[{expectedColor}mTest run summary: Zero tests ran", output);
+        Assert.AreEqual(1, CountOccurrences(output, "Test run summary: Zero tests ran"));
+        Assert.DoesNotContain("Test run summary: Passed!", output);
+    }
+
+    [TestMethod]
+    [DataRow(false, 31)]
+    [DataRow(true, 39)]
+    public async Task ActualSummary_StrictAllSkipped_HonorsZeroTestsOptOut(bool ignoreZeroTests, int expectedColor)
+    {
+        Dictionary<string, string[]> options = new()
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["on"],
+            [PlatformCommandLineProvider.ZeroTestsPolicyOptionKey] = ["strict"],
+        };
+        if (ignoreZeroTests)
+        {
+            options[PlatformCommandLineProvider.IgnoreExitCodeOptionKey] = ["8"];
+        }
+
+        using RecordingDeviceFixture fixture = new(extraOptions: options);
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(default, new TestNode
+        {
+            Uid = "skipped",
+            DisplayName = "skipped test",
+            Properties = new PropertyBag(new SkippedTestNodeStateProperty("skip reason")),
+        }), TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        Assert.Contains($"\u001B[{expectedColor}mTest run summary: Zero tests ran", fixture.Output.ToString());
+        Assert.Contains("  skipped: 1", fixture.Output.ToString());
+    }
+
+    [TestMethod]
+    [DataRow("failed")]
+    [DataRow("minimum")]
+    [DataRow("cancelled")]
+    public async Task ActualSummary_IgnoredZeroTests_DoesNotHideOtherFailures(string scenario)
+    {
+        Dictionary<string, string[]> options = new()
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["on"],
+            [PlatformCommandLineProvider.IgnoreExitCodeOptionKey] = ["8"],
+        };
+        if (scenario == "minimum")
+        {
+            options[PlatformCommandLineProvider.MinimumExpectedTestsOptionKey] = ["1"];
+        }
+
+        using RecordingDeviceFixture fixture = new(extraOptions: options, wasCancelled: scenario == "cancelled");
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        if (scenario == "failed")
+        {
+            await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(default, new TestNode
+            {
+                Uid = "failed",
+                DisplayName = "failed test",
+                Properties = new PropertyBag(new FailedTestNodeStateProperty("failure reason")),
+            }), TestContext.CancellationToken);
+        }
+
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string expectedVerdict = scenario switch
+        {
+            "failed" => "Failed!",
+            "minimum" => string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, 0, 1),
+            _ => PlatformResources.Aborted,
+        };
+        Assert.Contains($"\u001B[31mTest run summary: {expectedVerdict}", fixture.Output.ToString());
+    }
+
+    [TestMethod]
     public async Task ActualConsume_CancellationPreventsOutcomeAndArtifactEmission()
     {
         using RecordingDeviceFixture fixture = new();
@@ -305,9 +412,40 @@ public sealed class TerminalOutputDeviceTests
         Assert.AreEqual(string.Empty, fixture.Output.ToString());
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ActualSummary_IgnoredZeroTests_DoesNotHideMinimumAfterSkipping(bool strict)
+    {
+        using RecordingDeviceFixture fixture = new(extraOptions: new()
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["on"],
+            [PlatformCommandLineProvider.IgnoreExitCodeOptionKey] = ["8"],
+            [PlatformCommandLineProvider.MinimumExpectedTestsOptionKey] = ["1"],
+            [PlatformCommandLineProvider.ZeroTestsPolicyOptionKey] = [strict ? "strict" : "allow-skipped"],
+        });
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(default, new TestNode
+        {
+            Uid = "skipped",
+            DisplayName = "skipped test",
+            Properties = new PropertyBag(new SkippedTestNodeStateProperty("skip reason")),
+        }), TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        string expectedVerdict = string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, 0, 1);
+        Assert.Contains($"\u001B[31mTest run summary: {expectedVerdict}", fixture.Output.ToString());
+    }
+
     private sealed class RecordingDeviceFixture : IDisposable
     {
-        public RecordingDeviceFixture(bool azure = false, Dictionary<string, string[]>? extraOptions = null)
+        public RecordingDeviceFixture(
+            bool azure = false,
+            Dictionary<string, string[]>? extraOptions = null,
+            Dictionary<string, string?>? environmentVariables = null,
+            bool wasCancelled = false)
         {
             var console = new Mock<IConsole>();
             console.SetupGet(value => value.IsOutputRedirected).Returns(true);
@@ -320,7 +458,9 @@ public sealed class TerminalOutputDeviceTests
             module.Setup(value => value.GetDisplayName()).Returns("fixture.dll");
             var environment = new Mock<IEnvironment>();
             environment.Setup(value => value.GetEnvironmentVariable(It.IsAny<string>()))
-                .Returns<string>(name => azure && name == "TF_BUILD" ? "true" : null);
+                .Returns<string>(name => environmentVariables is not null && environmentVariables.TryGetValue(name, out string? value)
+                    ? value
+                    : azure && name == "TF_BUILD" ? "true" : null);
             var monitor = new Mock<IAsyncMonitor>();
             monitor.Setup(value => value.LockAsync(It.IsAny<TimeSpan>())).ReturnsAsync(Mock.Of<IDisposable>());
             var loggerFactory = new Mock<ILoggerFactory>();
@@ -328,6 +468,7 @@ public sealed class TerminalOutputDeviceTests
             var policies = new Mock<IStopPoliciesService>();
             policies.Setup(value => value.RegisterOnAbortCallbackAsync(It.IsAny<Func<Task>>())).Returns(Task.CompletedTask);
             var cancellation = new Mock<ITestApplicationCancellationTokenSource>();
+            cancellation.SetupGet(value => value.CancellationToken).Returns(new CancellationToken(wasCancelled));
             var clock = new Mock<IClock>();
             clock.SetupGet(value => value.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
             var optionValues = new Dictionary<string, string[]>

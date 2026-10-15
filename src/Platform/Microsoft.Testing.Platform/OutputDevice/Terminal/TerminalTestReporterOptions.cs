@@ -26,6 +26,11 @@ internal sealed class TerminalTestReporterOptions
     public CommandLine.ZeroTestsPolicy ZeroTestsPolicy { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether an otherwise-successful zero-test run is expected.
+    /// </summary>
+    public bool AllowZeroTests { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
     /// When ANSI is not allowed we never have progress.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean

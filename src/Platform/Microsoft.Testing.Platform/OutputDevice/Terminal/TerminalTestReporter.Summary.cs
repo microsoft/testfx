@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 [UnsupportedOSPlatform("browser")]
@@ -94,8 +96,9 @@ internal sealed partial class TerminalTestReporter
         // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
         bool hasFailedAssemblies = _options.ShowAssembly && anyAssemblyFailed;
 
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy) || HasHandshakeFailure || hasFailedAssemblies;
-        terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy, _options.AllowZeroTests) || HasHandshakeFailure || hasFailedAssemblies;
+        bool ranZeroTests = totalTests == 0 || (totalTests == totalSkippedTests && _options.ZeroTestsPolicy == ZeroTestsPolicy.Strict);
+        terminal.SetColor(runFailed ? TerminalColor.DarkRed : ranZeroTests ? TerminalColor.Default : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');

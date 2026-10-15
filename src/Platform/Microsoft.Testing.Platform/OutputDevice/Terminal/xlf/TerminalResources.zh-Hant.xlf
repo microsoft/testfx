@@ -367,6 +367,11 @@
         <target state="translated">正在執行 {0} 個測試</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NoAffectedTestsSelected">
+        <source>No affected tests selected</source>
+        <target state="new">No affected tests selected</target>
+        <note>Neutral module status when affected-test selection succeeds without starting a test host. This is not the skipped test outcome and no test count is known.</note>
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">產生的流程外檔案成品：</target>

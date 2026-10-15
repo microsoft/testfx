@@ -2743,6 +2743,129 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain(secondAssembly, output);
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AssemblyRunNotSelected_ReportsStatusWithoutInventingResults(bool showAssembly)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = showAssembly,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+
+        string identity = showAssembly ? "unaffected.dll (net8.0|x64) " : string.Empty;
+        Assert.AreEqual($"{identity}No affected tests selected{Environment.NewLine}", console.Output);
+        Assert.AreEqual(0, reporter.TotalTests);
+        Assert.IsFalse(reporter.HasHandshakeFailure);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AssemblyRunNotSelected_UsesNeutralColor(bool simpleAnsi)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = simpleAnsi ? AnsiMode.SimpleAnsi : AnsiMode.ForceAnsi,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+
+        Assert.AreEqual($"\u001B[39mNo affected tests selected{Environment.NewLine}\u001B[m", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, false)]
+    [DataRow(false, true, false)]
+    [DataRow(false, false, true)]
+    public void AssemblyRunNotSelected_InformationalOrCancelledRun_StaysSilent(bool discovery, bool help, bool cancelled)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, () => cancelled, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, discovery, help, isRetry: false);
+
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+
+        Assert.AreEqual(string.Empty, console.Output);
+        Assert.AreEqual(0, reporter.TotalTests);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict(bool failed)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunNotSelected("unaffected.dll", "net8.0", "x64");
+        reporter.AssemblyRunStarted("selected.dll", "net8.0", "x64", "selected", "selected");
+        reporter.TestCompleted("selected", "test", "selected test", failed ? TestOutcome.Fail : TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        reporter.AssemblyRunCompleted("selected", failed ? 2 : 0, outputData: null, errorData: null);
+        Assert.AreEqual(1, reporter.TotalTests);
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, failed ? 2 : 0);
+
+        string output = console.Output;
+        Assert.Contains(failed ? "\u001B[31mTest run summary: Failed!" : "\u001B[32mTest run summary: Passed!", output);
+        string plainOutput = Regex.Replace(output, @"\x1B\[[0-9;]*m", string.Empty).Replace("\r\n", "\n");
+        string counts = $"""
+              total: 1
+              failed: {(failed ? 1 : 0)}
+              succeeded: {(failed ? 0 : 1)}
+              skipped: 0
+              duration: 0ms
+            """;
+        Assert.Contains(counts.Replace("\r\n", "\n"), plainOutput);
+        Assert.AreEqual(1, plainOutput.Split(["No affected tests selected"], StringSplitOptions.None).Length - 1);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ExpectedZeroTests_HandshakeAndProcessFailures_StayRed(bool handshakeFailure)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            AllowZeroTests = true,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        if (!handshakeFailure)
+        {
+            reporter.AssemblyRunStarted("failed.dll", "net8.0", "x64", "failed", "failed");
+        }
+
+        reporter.AssemblyRunCompleted("failed", 1, outputData: null, errorData: null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 1);
+
+        string verdict = handshakeFailure ? "Failed!" : "Zero tests ran";
+        Assert.Contains($"\u001B[31mTest run summary: {verdict}", console.Output);
+    }
+
     // Ported from the dotnet/sdk TerminalTestReporterTests (regression for dotnet/sdk#51608) to validate the
     // orchestrator handshake-failure surface of the shared reporter: if a child test host process exits before a
     // session was ever started (so the execution id is never registered), the orchestrator overload of

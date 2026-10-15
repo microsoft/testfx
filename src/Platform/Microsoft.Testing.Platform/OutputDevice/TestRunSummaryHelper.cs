@@ -20,14 +20,15 @@ internal static class TestRunSummaryHelper
     /// <paramref name="zeroTestsPolicy"/> controls whether an all-skipped run is treated as a failed "zero tests"
     /// run. Under <see cref="ZeroTestsPolicy.AllowSkipped"/> (the default) only a run that discovered no test at all
     /// fails as zero tests; under <see cref="ZeroTestsPolicy.Strict"/> skipped tests don't count as run, so an
-    /// all-skipped run also fails. A run where no test was found is always treated as failed regardless of policy.
+    /// all-skipped run also fails. <paramref name="allowZeroTests"/> suppresses only this zero-test failure,
+    /// not failed tests, cancellation or an explicit minimum. Skipped tests never satisfy an explicit minimum.
     /// </remarks>
-    internal static bool IsRunFailed(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, ZeroTestsPolicy zeroTestsPolicy = ZeroTestsPolicy.AllowSkipped)
+    internal static bool IsRunFailed(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, ZeroTestsPolicy zeroTestsPolicy = ZeroTestsPolicy.AllowSkipped, bool allowZeroTests = false)
     {
-        bool notEnoughTests = totalTests < minimumExpectedTests;
+        bool notEnoughTests = totalTests - skippedTests < minimumExpectedTests;
         bool noTestsWereFound = totalTests == 0;
         bool allTestsWereSkipped = totalTests > 0 && totalTests == skippedTests;
-        bool ranZeroTests = noTestsWereFound || (allTestsWereSkipped && zeroTestsPolicy == ZeroTestsPolicy.Strict);
+        bool ranZeroTests = !allowZeroTests && (noTestsWereFound || (allTestsWereSkipped && zeroTestsPolicy == ZeroTestsPolicy.Strict));
         bool anyTestFailed = failedTests > 0;
 
         return anyTestFailed || notEnoughTests || ranZeroTests || wasCancelled;
@@ -45,7 +46,7 @@ internal static class TestRunSummaryHelper
     /// or returned a non-zero exit code) even though its tests passed. This escalates the verdict wording to "Failed!"
     /// but only AFTER the "Zero tests ran" branch, so a project that legitimately contains zero tests (which exits
     /// non-zero by design) keeps the "Zero tests ran" wording rather than "Failed!". Note this only affects the displayed
-    /// verdict text: <see cref="IsRunFailed"/> still treats a zero-test run as a failed run.</item>
+    /// verdict text: <see cref="IsRunFailed"/> still treats an unexpected zero-test run as a failed run.</item>
     /// </list>
     /// In-process callers never have either condition and pass <see langword="false"/>, so their verdict is unchanged.
     /// <paramref name="zeroTestsPolicy"/> mirrors <see cref="IsRunFailed"/>: under
@@ -56,7 +57,7 @@ internal static class TestRunSummaryHelper
         => true switch
         {
             _ when wasCancelled => TerminalResources.Aborted,
-            _ when totalTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests),
+            _ when totalTests - skippedTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, totalTests - skippedTests, minimumExpectedTests),
             _ when failedTests > 0 => $"{TerminalResources.Failed}!",
             _ when hasHandshakeFailures => $"{TerminalResources.Failed}!",
             _ when totalTests == 0 => TerminalResources.ZeroTestsRan,

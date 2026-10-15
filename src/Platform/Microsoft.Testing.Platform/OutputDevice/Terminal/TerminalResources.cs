@@ -263,5 +263,7 @@ internal static partial class TerminalResources
 
     internal static string @ZeroTestsRan => GetResourceString("ZeroTestsRan");
 
+    internal static string @NoAffectedTestsSelected => GetResourceString("NoAffectedTestsSelected");
+
 #endif
 }
