@@ -569,7 +569,7 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
                 {
                     Task t1 = Task.CompletedTask;
                     Task t2 = Task.CompletedTask;
-                    [|Task.WaitAll(t1, t2)|];
+                    [|Task.WaitAll(new Task[] { t1, t2 })|];
                 }
             }
             """;
@@ -613,7 +613,7 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
                 private void Helper()
                 {
                     Task t1 = Task.CompletedTask;
-                    Task.WaitAll(t1);
+                    Task.WaitAll(new Task[] { t1 });
                 }
 
                 [TestMethod]
@@ -763,7 +763,7 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzerTests
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Action action = () => [|Task.WaitAll(Task.CompletedTask)|];
+                    Action action = () => [|Task.WaitAll(new Task[] { Task.CompletedTask })|];
                     action();
                 }
             }

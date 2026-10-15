@@ -27,7 +27,7 @@
           BeforeTargets="_CalculateGenerateTestingPlatformEntryPoint;PrepareForBuild;InvokeTestingPlatform"
           Condition="'$(OS)' == 'Windows_NT' AND '$(IsTestingPlatformApplication)' == 'true' AND '$(IsTestApplication)' != 'false' AND '$(OutputType)' != 'Library' AND '$(UseVSTest)' != 'true' AND '$(EnableMicrosoftTestingExtensionsPackagedApp)' != 'false' AND '$(TargetFramework)' != '' AND (('$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None') OR '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') OR $(TargetFramework.StartsWith('uap')))">
     <PropertyGroup>
-      <_TestingPlatformPackagedAppControllerTfm Condition="$(TargetFramework.StartsWith('net9.')) OR $(TargetFramework.StartsWith('net10.'))">net9.0</_TestingPlatformPackagedAppControllerTfm>
+      <_TestingPlatformPackagedAppControllerTfm Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))">net9.0</_TestingPlatformPackagedAppControllerTfm>
       <_TestingPlatformPackagedAppControllerTfm Condition="'$(_TestingPlatformPackagedAppControllerTfm)' == ''">net8.0</_TestingPlatformPackagedAppControllerTfm>
       <_TestingPlatformPackagedAppControllerPath>$(_TestingPlatformPackagedAppPackageRoot)tools\AppModelController\$(_TestingPlatformPackagedAppControllerTfm)\mstest-appmodel-controller.exe</_TestingPlatformPackagedAppControllerPath>
       <TestingPlatformExecutablePath Condition="'$(TestingPlatformExecutablePath)' == ''">$(_TestingPlatformPackagedAppControllerPath)</TestingPlatformExecutablePath>

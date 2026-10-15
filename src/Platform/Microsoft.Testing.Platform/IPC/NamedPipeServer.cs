@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Platform.IPC;
 [Embedded]
 #if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+[UnsupportedOSPlatform("wasi")]
+#endif
 #endif
 internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 {

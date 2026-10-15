@@ -213,6 +213,17 @@ The final validation package remains in an isolated evidence feed. Ordinary `Shi
 one `Microsoft.Testing.Platform.2.6.0-dev.nupkg`, whose three MTP binary assets were verified byte-for-byte against
 the validated package; validation-version siblings were removed to avoid ambiguous acceptance-package discovery.
 
+### Main-branch integration (2026-10-15)
+
+Merged `origin/main` at `8718afe9b99b11e5b36be7dbc8d9e9ca959b3982` after Azure Pipelines reported
+`Skipped due to merge conflicts`, not a build or test failure. The only conflict was additive entries in
+`InternalAPI.Unshipped.txt`; both the reporting entries and main's `ShutdownProgressReporter` constructor entry
+were retained. The incoming .NET 11 runtime configuration was restored through the pinned repository build.
+The merged net8.0 unit project builds without warnings/errors, and the combined reporting, exit-policy and
+shutdown-reporter selection executes 334 cases with zero failures/skips (exit 0). The earlier packed-product
+and SDK composition results above remain bound to their recorded revisions; they are not presented as reruns
+or CI proof for this integration commit.
+
 ## Collection budget isolation
 
 [Run 20261013.16](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1633662&view=logs), from commit

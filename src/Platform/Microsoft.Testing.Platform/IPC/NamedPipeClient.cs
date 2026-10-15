@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Platform.IPC;
 [Embedded]
 #if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+[UnsupportedOSPlatform("wasi")]
+#endif
 #endif
 internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
 {
@@ -133,7 +136,12 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
                 // that may be flowing through stdout.
                 try
                 {
-                    await Console.Error.WriteLineAsync($"[NamedPipeClient] Pipe '{PipeName}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.").ConfigureAwait(false);
+                    string message = $"[NamedPipeClient] Pipe '{PipeName}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.";
+#if NETCOREAPP
+                    await Console.Error.WriteLineAsync(message.AsMemory(), CancellationToken.None).ConfigureAwait(false);
+#else
+                    await Console.Error.WriteLineAsync(message).ConfigureAwait(false);
+#endif
                 }
                 catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException or NotSupportedException or ArgumentException or OperationCanceledException)
                 {

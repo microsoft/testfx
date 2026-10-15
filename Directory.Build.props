@@ -33,13 +33,21 @@
       to work around https://github.com/dotnet/msbuild/issues/13739, so it sets
       $(SkipUapTargetFramework)=true to opt out of the UAP target. UAP-specific
       code paths are still source-scanned via the other TFMs that the affected
-      projects multi-target (net462, net8.0, net9.0).
+      projects multi-target (net462 and the supported .NET frameworks).
     -->
     <UwpMinimum Condition=" '$(SkipUapTargetFramework)' != 'true' ">uap10.0.16299</UwpMinimum>
     <ModernUwpMinimum>net9.0-windows10.0.17763.0</ModernUwpMinimum>
     <WinUiMinimum>net8.0-windows10.0.18362.0</WinUiMinimum>
 
-    <SupportedNetFrameworks>net8.0;net9.0</SupportedNetFrameworks>
+    <SupportedNetFrameworks>net8.0;net9.0;net10.0;net11.0</SupportedNetFrameworks>
+  </PropertyGroup>
+
+  <!-- MSBuild.Sdk.Extras infers modern .NET from the first version digit and misidentifies net10.0+. -->
+  <PropertyGroup Condition=" '$(_UsesMSBuildSdkExtras)' == 'true'
+    AND ('$(TargetFrameworkIdentifier)' == '' OR '$(TargetFrameworkIdentifier)' == '_' OR '$(TargetFrameworkIdentifier)' == '.NETFramework')
+    AND $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0')) ">
+    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v$([MSBuild]::GetTargetFrameworkVersion('$(TargetFramework)'))</TargetFrameworkVersion>
   </PropertyGroup>
 
   <!-- Build config -->

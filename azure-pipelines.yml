@@ -232,12 +232,12 @@ stages:
         # XML-documentation-only PRs use it only for compiler and package validation. Debug remains
         # skippable for samples-only and XML-doc-only PRs.
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
-        # Main collection has its own matrix entry and budget, independent of full testing and coverage.
-        # Keep the ordinary PR budget unchanged.
+        # Keep the existing main collection budget. PR builds now cover four modern TFMs, so leave
+        # headroom for full Release validation and artifact collection after tests complete.
         ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
           timeoutInMinutes: 240
         ${{ else }}:
-          timeoutInMinutes: 90
+          timeoutInMinutes: 120
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open

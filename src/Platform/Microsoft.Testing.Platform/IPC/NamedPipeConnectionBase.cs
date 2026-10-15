@@ -6,6 +6,7 @@ using System.Buffers;
 #endif
 
 using System.IO.Pipes;
+using System.Net.Sockets;
 
 using Microsoft.CodeAnalysis;
 #if NET
@@ -124,7 +125,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
 
     /// <summary>
     /// Reads one complete framed message from <paramref name="stream"/>, deserializes it, and returns
-    /// the result.  Returns <see langword="null"/> when the stream reaches EOF (peer disconnected).
+    /// the result. Returns <see langword="null"/> when the peer disconnects through EOF, reset, or abort.
     /// </summary>
     protected async Task<object?> ReadNextMessageAsync(
         Stream stream,
@@ -132,6 +133,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
         int maximumFrameSize = int.MaxValue)
     {
         _messageBuffer.SetLength(0);
+        bool frameComplete = false;
 
         try
         {
@@ -189,12 +191,24 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
                 missingBytesToReadOfWholeMessage -= n;
             }
 
+            frameComplete = true;
+
             // Full message received – deserialize and return
             _messageBuffer.Position = 0;
             int serializerId = BitConverter.ToInt32(_messageBuffer.GetBuffer(), 0);
             INamedPipeSerializer namedPipeSerializer = GetSerializer(serializerId);
             _messageBuffer.Position += sizeof(int); // skip the serializer ID
             return namedPipeSerializer.Deserialize(_messageBuffer);
+        }
+        catch (IOException ex) when (
+            !frameComplete
+            && ex.InnerException is SocketException
+            {
+                SocketErrorCode: SocketError.ConnectionReset or SocketError.ConnectionAborted,
+            })
+        {
+            // A terminated peer can reset the underlying Unix socket instead of producing EOF.
+            return null;
         }
         finally
         {
