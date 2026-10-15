@@ -351,9 +351,8 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
             if (index == (currentFirst ? 2 : 1))
             {
                 report["specVersion"] = "0.1.0";
-                foreach (JsonNode? test in tests)
+                foreach (JsonObject legacyTest in tests.Select(test => test!.AsObject()))
                 {
-                    JsonObject legacyTest = test!.AsObject();
                     legacyTest["extra"]!["mtpAttemptId"] = (string)legacyTest["attemptId"]!;
                     legacyTest.Remove("attemptId");
                 }
