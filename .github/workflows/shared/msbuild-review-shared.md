@@ -68,7 +68,7 @@ Review the MSBuild authoring quality of this repository using the
 ## Instructions
 
 1. Launch the `msbuild-reviewer` agent in **`scan` mode** as a **background** task
-   (`task` tool, `agent_type: "general-purpose"`, `model: "claude-sonnet-5"`,
+   (`task` tool, `agent_type: "general-purpose"`, `model: "gpt-5.6-sol"`,
    `mode: "background"`). In the sub-agent prompt include:
    - The string `MODE: scan` on the first line so the agent picks the correct
      operating mode.
