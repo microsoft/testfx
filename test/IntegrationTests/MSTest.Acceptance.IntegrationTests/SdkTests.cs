@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -60,6 +62,60 @@ namespace MSTestSdkTest
         """;
 
     public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CtrfReport_UsesPlatformVersion_WhenOptedIn(bool useCentralPackageManagement)
+    {
+        string sourceCode = SingleTestSourceCode
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$ExtraProperties$", """
+                <TestingExtensionsProfile>None</TestingExtensionsProfile>
+                <EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>
+                """);
+        if (useCentralPackageManagement)
+        {
+            sourceCode += """
+
+                #file Directory.Packages.props
+                <Project>
+                  <PropertyGroup>
+                    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+                    <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+                  </PropertyGroup>
+                </Project>
+                """;
+        }
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, sourceCode);
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build \"{testAsset.TargetAssetPath}\" -c Release",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        using var assets = JsonDocument.Parse(
+            await File.ReadAllTextAsync(Path.Combine(testAsset.TargetAssetPath, "obj", "project.assets.json"), TestContext.CancellationToken));
+        const string packagePrefix = "Microsoft.Testing.Extensions.CtrfReport/";
+        JsonProperty package = Assert.ContainsSingle(
+            assets.RootElement.GetProperty("libraries").EnumerateObject()
+                .Where(property => property.Name.StartsWith(packagePrefix, StringComparison.Ordinal)));
+        Assert.AreEqual(MicrosoftTestingPlatformVersion, package.Name[packagePrefix.Length..]);
+
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult result = await testHost.ExecuteAsync(
+            $"--report-ctrf --report-ctrf-filename version.ctrf.json --results-directory \"{resultsDirectory}\"",
+            cancellationToken: TestContext.CancellationToken);
+        result.AssertExitCodeIs(ExitCode.Success);
+        result.AssertOutputContainsSummary(0, 1, 0);
+
+        using var report = JsonDocument.Parse(
+            await File.ReadAllTextAsync(Path.Combine(resultsDirectory, "version.ctrf.json"), TestContext.CancellationToken));
+        Assert.AreEqual($"Microsoft.Testing.Extensions.CtrfReport@{MicrosoftTestingPlatformVersion}", report.RootElement.GetProperty("generatedBy").GetString());
+        Assert.AreEqual("0.2.0", report.RootElement.GetProperty("specVersion").GetString());
+    }
 
     [TestMethod]
     [DataRow(false)]

@@ -75,8 +75,6 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <MicrosoftTestingExtensionsCtrfReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsCtrfReportVersionPrefix>
-
     <MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
 
     <!--

@@ -28,7 +28,7 @@ Both runs write a CTRF JSON file. Open them side by side (e.g.
 `code -d ./out/mtp/<file>.ctrf.json ./out/xunit/ctrf-report.json`) to compare the two outputs.
 
 > [!NOTE]
-> The stable 1.x CTRF producer is pinned to CTRF 0.2.0. Framework UID stability and
+> The stable CTRF producer shares MTP's package version and is pinned to CTRF 0.2.0. Framework UID stability and
 > producer-specific diagnostic metadata retain the limitations in the
 > [package compatibility policy](../../src/Platform/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md#compatibility).
 

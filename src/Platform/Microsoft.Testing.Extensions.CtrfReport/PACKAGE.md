@@ -19,11 +19,11 @@ This package extends Microsoft.Testing.Platform with:
 
 ## Compatibility
 
-The stable 1.x package line supports the public registration API, existing CLI options, and documented CTRF 0.2.0 report semantics with backward compatibility. Reports remain pinned to the immutable 0.2.0 schema; a future upstream pre-1.0 specification is not adopted automatically. An incompatible schema or identity change requires a package major version or a separate explicit opt-in. Additive report fields must remain valid for the declared schema.
+The stable 2.x package line supports the public registration API, existing CLI options, and documented CTRF 0.2.0 report semantics with backward compatibility. New execution reports remain pinned to the immutable 0.2.0 schema; a future upstream pre-1.0 specification is not adopted automatically. An incompatible schema or identity change requires a package major version or a separate explicit opt-in. Additive report fields must remain valid for the declared schema.
 
 This commitment does not make the upstream CTRF working draft immutable, add cross-run identity guarantees to framework-provided UIDs, or turn producer-specific `extra` metadata into a stable interchange protocol. The identity and merge limitations below still apply.
 
-The package follows the normal Microsoft.Testing.Platform prerelease and final-release cadence while retaining its own 1.x version line. Prerelease builds remain prerelease; the normal final release produces a stable package with aligned stable platform dependencies.
+The package uses the same version number and prerelease/final-release cadence as Microsoft.Testing.Platform. For example, the aligned final release produces version 2.6.0 of both packages. Prerelease builds remain prerelease; the normal final release produces stable packages with aligned stable platform dependencies.
 
 ## Usage
 
