@@ -12,13 +12,18 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
-public sealed class ShutdownProgressReporterTests : IDisposable
+public sealed class ShutdownProgressReporterTests : IAsyncDisposable
 {
+    private static readonly TimeSpan TestWaitTimeout = TimeSpan.FromSeconds(30);
+
     private readonly Mock<ITestApplicationCancellationTokenSource> _cancellationTokenSource = new();
     private readonly CancellationTokenSource _cts = new();
     private readonly CapturingOutputDevice _outputDevice = new();
     private readonly Mock<IClock> _clock = new();
+    private readonly Mock<ITask> _task = new();
     private readonly DateTimeOffset _now = new(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
+    private TaskCompletionSource<PendingDelay> _nextDelay = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private Task _watchdogTask = Task.CompletedTask;
 
     public TestContext TestContext { get; set; } = null!;
 
@@ -27,9 +32,23 @@ public sealed class ShutdownProgressReporterTests : IDisposable
     {
         _cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(_cts.Token);
         _clock.SetupGet(c => c.UtcNow).Returns(() => _now);
+        _task.Setup(task => task.Run(It.IsAny<Func<Task>>(), CancellationToken.None))
+            .Returns<Func<Task>, CancellationToken>((run, _) => _watchdogTask = run());
+        _task.Setup(task => task.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .Returns<TimeSpan, CancellationToken>(DelayAsync);
     }
 
-    public void Dispose() => _cts.Dispose();
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await _watchdogTask.WaitAsync(TestWaitTimeout, CancellationToken.None);
+        }
+        finally
+        {
+            _cts.Dispose();
+        }
+    }
 
     [TestMethod]
     public void Track_AddsEntry_Snapshot_ReturnsIt()
@@ -60,42 +79,47 @@ public sealed class ShutdownProgressReporterTests : IDisposable
     }
 
     [TestMethod]
-    public async Task Watchdog_DoesNotEmit_BeforeCancellation()
+    public void Watchdog_DoesNotEmit_BeforeCancellation()
     {
-        using ShutdownProgressReporter reporter = CreateReporter(quietWindow: TimeSpan.FromMilliseconds(20), pollInterval: TimeSpan.FromMilliseconds(20));
+        using ShutdownProgressReporter reporter = CreateReporter();
         using IDisposable tracker = reporter.Track("uid-1", "Display 1", "Phase 1");
 
-        await Task.Delay(120, TestContext.CancellationToken);
-
         Assert.IsEmpty(_outputDevice.Messages);
+        _task.Verify(task => task.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _task.Verify(task => task.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [TestMethod]
     public async Task Watchdog_EmitsAfterQuietWindow_WhenStillTracking()
     {
-        using ShutdownProgressReporter reporter = CreateReporter(quietWindow: TimeSpan.FromMilliseconds(40), pollInterval: TimeSpan.FromMilliseconds(30));
+        using ShutdownProgressReporter reporter = CreateReporter();
         using IDisposable tracker = reporter.Track("uid-1", "Display 1", "Phase 1");
 
         CancelTokenSource();
+        Assert.IsEmpty(_outputDevice.Messages);
 
-        await WaitForMessageAsync(TimeSpan.FromSeconds(5));
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
 
         IReadOnlyList<string> messages = _outputDevice.Messages;
-        Assert.IsGreaterThanOrEqualTo(1, messages.Count, $"Expected at least one message, got {messages.Count}");
+        Assert.HasCount(1, messages);
         Assert.Contains("Display 1", messages[0]);
         Assert.Contains("Phase 1", messages[0]);
+
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultPollInterval);
+        Assert.HasCount(2, _outputDevice.Messages);
     }
 
     [TestMethod]
     public async Task Watchdog_DoesNotEmit_IfAllTrackersDisposedBeforeQuietWindow()
     {
-        using ShutdownProgressReporter reporter = CreateReporter(quietWindow: TimeSpan.FromMilliseconds(100), pollInterval: TimeSpan.FromMilliseconds(30));
+        using ShutdownProgressReporter reporter = CreateReporter();
         IDisposable handle = reporter.Track("uid-1", "Display 1", "Phase 1");
 
         CancelTokenSource();
         handle.Dispose();
 
-        await Task.Delay(300, TestContext.CancellationToken);
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultPollInterval);
 
         Assert.IsEmpty(_outputDevice.Messages);
     }
@@ -103,19 +127,19 @@ public sealed class ShutdownProgressReporterTests : IDisposable
     [TestMethod]
     public async Task Watchdog_StopsEmitting_OnceAllTrackersDisposed()
     {
-        using ShutdownProgressReporter reporter = CreateReporter(quietWindow: TimeSpan.FromMilliseconds(20), pollInterval: TimeSpan.FromMilliseconds(20));
+        using ShutdownProgressReporter reporter = CreateReporter();
         IDisposable handle = reporter.Track("uid-1", "Display 1", "Phase 1");
 
         CancelTokenSource();
-        await WaitForMessageAsync(TimeSpan.FromSeconds(5));
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
+        Assert.HasCount(1, _outputDevice.Messages);
 
         handle.Dispose();
-        int countAfterDispose = _outputDevice.Messages.Count;
 
-        await Task.Delay(200, TestContext.CancellationToken);
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultPollInterval);
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultPollInterval);
 
-        // Allow at most one extra in-flight emission that was already running when we disposed.
-        Assert.IsLessThanOrEqualTo(countAfterDispose + 1, _outputDevice.Messages.Count);
+        Assert.HasCount(1, _outputDevice.Messages);
     }
 
     [TestMethod]
@@ -133,49 +157,88 @@ public sealed class ShutdownProgressReporterTests : IDisposable
     [TestMethod]
     public async Task Watchdog_EmitsForLateTracking_WhenQuietWindowElapsedWithNoWork()
     {
-        // Repro: cancellation fires, the quiet window elapses with zero tracked work
-        // (e.g. extensions only start their shutdown handlers afterwards), then tracking
-        // begins. The watchdog must keep polling and report the late work instead of
-        // exiting after the first empty snapshot.
-        using ShutdownProgressReporter reporter = CreateReporter(quietWindow: TimeSpan.FromMilliseconds(40), pollInterval: TimeSpan.FromMilliseconds(30));
+        using ShutdownProgressReporter reporter = CreateReporter();
 
         CancelTokenSource();
 
-        // Wait past the quiet window so the watchdog has observed at least one empty snapshot.
-        await Task.Delay(200, TestContext.CancellationToken);
+        // Reaching the poll delay proves that the watchdog processed an empty snapshot.
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
         Assert.IsEmpty(_outputDevice.Messages);
 
         using IDisposable tracker = reporter.Track("uid-late", "Display Late", "Phase Late");
 
-        await WaitForMessageAsync(TimeSpan.FromSeconds(5));
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultPollInterval);
 
         IReadOnlyList<string> messages = _outputDevice.Messages;
-        Assert.IsGreaterThanOrEqualTo(1, messages.Count, $"Expected at least one message, got {messages.Count}");
+        Assert.HasCount(1, messages);
         Assert.Contains("Display Late", messages[0]);
         Assert.Contains("Phase Late", messages[0]);
     }
 
-    private ShutdownProgressReporter CreateReporter(TimeSpan? quietWindow = null, TimeSpan? pollInterval = null)
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Watchdog_Dispose_StopsPolling(bool quietWindowElapsed)
+    {
+        using ShutdownProgressReporter reporter = CreateReporter();
+        CancelTokenSource();
+        await WaitForDelayAsync();
+
+        if (quietWindowElapsed)
+        {
+            await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
+        }
+
+        reporter.Dispose();
+        await _watchdogTask.WaitAsync(TestWaitTimeout, TestContext.CancellationToken);
+
+        Assert.AreEqual(TaskStatus.RanToCompletion, _watchdogTask.Status);
+        Assert.IsEmpty(_outputDevice.Messages);
+        _task.Verify(
+            task => task.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(quietWindowElapsed ? 2 : 1));
+    }
+
+    private ShutdownProgressReporter CreateReporter()
         => new(
             _cancellationTokenSource.Object,
             _outputDevice,
             new NullLoggerFactory(),
             _clock.Object,
-            quietWindow ?? ShutdownProgressReporter.DefaultQuietWindow,
-            pollInterval ?? ShutdownProgressReporter.DefaultPollInterval);
+            ShutdownProgressReporter.DefaultQuietWindow,
+            ShutdownProgressReporter.DefaultPollInterval,
+            _task.Object);
 
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - CancellationTokenSource.CancelAsync is unavailable on net462.
     private void CancelTokenSource() => _cts.Cancel();
 #pragma warning restore VSTHRD103
 
-    private async Task WaitForMessageAsync(TimeSpan timeout)
+    private async Task DelayAsync(TimeSpan duration, CancellationToken cancellationToken)
     {
-        DateTime deadline = DateTime.UtcNow + timeout;
-        while (DateTime.UtcNow < deadline && _outputDevice.Messages.Count == 0)
-        {
-            await Task.Delay(20, TestContext.CancellationToken);
-        }
+        TaskCompletionSource<bool> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration registration = cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken));
+        _nextDelay.SetResult(new PendingDelay(duration, completion));
+        await completion.Task.ConfigureAwait(false);
     }
+
+    private async Task AdvanceDelayAsync(TimeSpan expectedDuration)
+    {
+        PendingDelay delay = await WaitForDelayAsync();
+        Assert.AreEqual(expectedDuration, delay.Duration);
+        _nextDelay = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        delay.Completion.SetResult(true);
+        await WaitForDelayAsync();
+    }
+
+    private async Task<PendingDelay> WaitForDelayAsync()
+    {
+        Task completed = await Task.WhenAny(_nextDelay.Task, _watchdogTask)
+            .WaitAsync(TestWaitTimeout, TestContext.CancellationToken);
+        Assert.AreSame(_nextDelay.Task, completed, "The watchdog exited before requesting the next delay.");
+        return await _nextDelay.Task;
+    }
+
+    private sealed record PendingDelay(TimeSpan Duration, TaskCompletionSource<bool> Completion);
 
     private sealed class CapturingOutputDevice : IOutputDevice
     {
