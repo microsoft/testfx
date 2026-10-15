@@ -1,5 +1,9 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
@@ -146,13 +150,23 @@ $(CommonProductDescription)]]></PackageDescription>
     <None Include="build\net8.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net8.0\" />
     <None Include="build\net9.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net9.0\" />
     <None Include="build\net9.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net9.0\" />
+    <None Include="build\net10.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net10.0\" />
+    <None Include="build\net10.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net10.0\" />
+    <None Include="build\net11.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net11.0\" />
+    <None Include="build\net11.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net11.0\" />
 
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net8.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net9.0\" />
     <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net11.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
     <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
+    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
   </ItemGroup>
 
   <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
@@ -182,8 +196,7 @@ $(CommonProductDescription)]]></PackageDescription>
   <Target Name="_AddTestAdapterPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
     <PropertyGroup>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">buildTransitive\net462\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == 'net8.0' ">buildTransitive\net8.0\</_BuildTransitiveDir>
-      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == 'net9.0' ">buildTransitive\net9.0\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">buildTransitive\$(TargetFramework)\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">buildTransitive\uap10.0\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_BuildTransitiveDir>

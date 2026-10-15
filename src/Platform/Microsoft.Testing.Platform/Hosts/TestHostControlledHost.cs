@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.Hosts;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 [StackTraceHidden]
 internal sealed class TestHostControlledHost : IHost, IDisposable
 #if NETCOREAPP

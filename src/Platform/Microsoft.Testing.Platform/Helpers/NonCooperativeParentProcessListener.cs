@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 namespace Microsoft.Testing.Platform.Helpers;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class NonCooperativeParentProcessListener : IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;

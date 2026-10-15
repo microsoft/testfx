@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
@@ -238,22 +239,14 @@ namespace MSTestSdkTest
         // writes: the 'Passed!  - Failed: ...' counts, then the ' - MSTestSdk.dll (<tfm>)' suffix. Those writes
         // interleave, so the two halves of one framework's summary are not guaranteed to share an output line. Assert
         // the two independent facts instead: every expected framework ran, and every framework reported a clean result.
-        List<string> expectedTargetFrameworks = ["net10.0"];
-#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        expectedTargetFrameworks.Add("net8.0");
-#endif
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            expectedTargetFrameworks.Add("net462");
-        }
+        string[] expectedTargetFrameworks = multiTfm.Split(';');
 
         foreach (string targetFramework in expectedTargetFrameworks)
         {
             compilationResult.AssertOutputContains($" - MSTestSdk.dll ({targetFramework})");
         }
 
-        compilationResult.AssertOutputMatchesRegexTimes("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1", expectedTargetFrameworks.Count);
+        compilationResult.AssertOutputMatchesRegexTimes("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1", expectedTargetFrameworks.Length);
         compilationResult.AssertOutputDoesNotContain("Failed!");
     }
 
@@ -271,14 +264,16 @@ namespace MSTestSdkTest
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --progress off --no-ansi", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net10\.0\|x64\) passed");
-#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net8\.0\|x64\) passed");
-#endif
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        foreach (string targetFramework in multiTfm.Split(';'))
         {
-            compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net48\|x64\) passed");
+            bool isNetFramework = targetFramework.StartsWith("net4", StringComparison.Ordinal);
+            string modulePath = Path.Combine(
+                "bin",
+                buildConfiguration.ToString(),
+                targetFramework,
+                $"{AssetName}.{(isNetFramework ? "exe" : "dll")}");
+            string reportedFrameworkPattern = isNetFramework ? @"net4\d+" : Regex.Escape(targetFramework);
+            compilationResult.AssertOutputMatchesRegex($@"{Regex.Escape(modulePath)} \({reportedFrameworkPattern}\|x64\) passed");
         }
     }
 
@@ -1417,10 +1412,13 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    [DataRow("Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
-    [DataRow("Unix", "", "", "")]
+    [DataRow("net8.0", "Windows_NT", "mstest-appmodel-controller.exe", "net8.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net9.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net10.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0", "Windows_NT", "mstest-appmodel-controller.exe", "net9.0", "msbuild;packagedapp;codecoverage;trx;mstest")]
+    [DataRow("net11.0", "Unix", "", "", "")]
     public async Task MSTestSdk_PackagedWinUI_SelectsLauncherOnlyOnWindows(
-        string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
+        string targetFramework, string operatingSystem, string controller, string controllerTfm, string controllerExtensions)
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "PackagedWinUISdk",
@@ -1428,7 +1426,8 @@ namespace MSTestWebTest
             <UseWinUI>true</UseWinUI>
             <_IncludeApplicationDefinition>true</_IncludeApplicationDefinition>
             <OS>{{operatingSystem}}</OS>
-            """);
+            """,
+            targetFramework: targetFramework);
 
         result.AssertOutputContains(
             "WindowsTestContract:UseVSTest=false;GenerateEntryPoint=false;GenerateHelper=true;PackagedApp=true;OutputType=Exe;");
@@ -1469,7 +1468,8 @@ namespace MSTestWebTest
         string assetName,
         string applicationModelProperties,
         bool failIfReturnValueIsNotZero = true,
-        string target = "PrintWindowsTestContract")
+        string target = "PrintWindowsTestContract",
+        string? targetFramework = null)
     {
         const string Source = """
             #file $AssetName$.csproj
@@ -1503,7 +1503,7 @@ namespace MSTestWebTest
             Source
                 .PatchCodeWithReplace("$AssetName$", assetName)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$TargetFramework$", targetFramework ?? TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$ApplicationModelProperties$", applicationModelProperties));
         string binlogPath = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.binlog");
 

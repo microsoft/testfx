@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Logging;
 namespace Microsoft.Testing.Platform.Hosts;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class TestHostControllerCancellationServer : IDisposable
 #if NET
 #pragma warning disable SA1001 // Commas should be spaced correctly

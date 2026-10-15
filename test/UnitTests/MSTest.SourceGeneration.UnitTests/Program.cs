@@ -6,6 +6,8 @@ using Microsoft.Testing.Extensions;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
+[assembly: Parallelize(Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel, Workers = 4)]
+
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddAffectedTestsProvider();
 

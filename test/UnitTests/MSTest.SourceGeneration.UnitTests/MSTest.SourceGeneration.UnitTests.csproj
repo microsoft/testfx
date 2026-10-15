@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.UnitTests</RootNamespace>
     <UseMSTestFromSource>true</UseMSTestFromSource>
     <EnableMSTestRunner>true</EnableMSTestRunner>

@@ -4,6 +4,7 @@
 namespace Microsoft.Testing.Platform.Helpers;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class SystemProcess : IProcess, IDisposable
 {
     private readonly Process _process;

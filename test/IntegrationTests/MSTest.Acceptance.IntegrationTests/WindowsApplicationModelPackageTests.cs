@@ -14,6 +14,44 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class WindowsApplicationModelPackageTests
 {
     [TestMethod]
+    [DataRow("net9.0-windows10.0.26100.0", "net9.0", "net10.0")]
+    [DataRow("net10.0-windows10.0.26100.0", "net10.0", "net9.0")]
+    public void ModernUwp_ResolvedAssetsRequireMatchingFrameworkAndSpecializedPayloads(
+        string targetFramework,
+        string frameworkAsset,
+        string wrongFrameworkAsset)
+    {
+        using var directory = new TempDirectory();
+        string reportPath = Path.Combine(directory.Path, "resolved-mstest-assets.txt");
+        string report = $$"""
+            TargetFramework={{targetFramework}}
+            UseUwpTools=true
+            /lib/{{frameworkAsset}}/MSTest.TestFramework.dll
+            /buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll
+            /buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll
+            /buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll
+            """;
+        File.WriteAllText(reportPath, report);
+
+        WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+            reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework);
+
+        File.WriteAllText(
+            reportPath,
+            report.Replace($"/lib/{frameworkAsset}/", $"/lib/{wrongFrameworkAsset}/", StringComparison.Ordinal));
+        AssertFailedException wrongFramework = Assert.ThrowsExactly<AssertFailedException>(() =>
+            WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+                reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
+        Assert.Contains($"/lib/{frameworkAsset}/MSTest.TestFramework.dll", wrongFramework.Message);
+
+        File.WriteAllText(reportPath, report.Replace("/uwp/", "/", StringComparison.Ordinal));
+        AssertFailedException ordinaryPayload = Assert.ThrowsExactly<AssertFailedException>(() =>
+            WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+                reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
+        Assert.Contains("/buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll", ordinaryPayload.Message);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public void NativeSdkEnvironment_AlignsSdkPathsAndPreservesSharedTooling(bool inheritedSdk)

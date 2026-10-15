@@ -334,6 +334,11 @@ internal sealed partial class TestHostBuilder
                 throw new PlatformNotSupportedException(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInWasi);
+            }
+
             serviceProvider.AddService(new NonCooperativeParentProcessListener(commandLineOptions, _environment));
         }
 
