@@ -268,6 +268,162 @@ public sealed class MSBuildConsumerTests
         Assert.AreEqual(expected, (string?)method.Invoke(null, [duration]));
     }
 
+    [TestMethod]
+    [DataRow("failed", false, DisplayName = "Failure explanation")]
+    [DataRow("failed", true, DisplayName = "Failure exception")]
+    [DataRow("error", false, DisplayName = "Error explanation")]
+    [DataRow("error", true, DisplayName = "Error exception")]
+    [DataRow("timeout", false, DisplayName = "Timeout explanation")]
+    [DataRow("timeout", true, DisplayName = "Timeout exception")]
+    [DataRow("canceled", false, DisplayName = "Legacy cancellation explanation")]
+    [DataRow("canceled", true, DisplayName = "Legacy cancellation exception")]
+    public async Task ConsumeAsync_TerminalFailure_SendsConcreteFailurePayload(string state, bool includeException)
+    {
+        await using MSBuildPipeFixture peer = new();
+        using CancellationTokenSource operation = new(MSBuildPipeFixture.OperationLimit);
+        using MSBuildTestApplicationLifecycleCallbacks lifecycle = CreateConnectedLifecycle(peer.PipeName);
+        await lifecycle.BeforeRunAsync(operation.Token);
+        MSBuildConsumer consumer = CreateConsumer(lifecycle, Mock.Of<ICommandLineOptions>());
+        await consumer.OnTestSessionStartingAsync(Mock.Of<ITestSessionContext>());
+        Exception exception = new InvalidOperationException("exception-message");
+        TestNodeStateProperty failure = state switch
+        {
+            "failed" => includeException ? new FailedTestNodeStateProperty(exception, "explanation") : new FailedTestNodeStateProperty("explanation"),
+            "error" => includeException ? new ErrorTestNodeStateProperty(exception, "explanation") : new ErrorTestNodeStateProperty("explanation"),
+            "timeout" => includeException ? new TimeoutTestNodeStateProperty(exception, "explanation") : new TimeoutTestNodeStateProperty("explanation"),
+#pragma warning disable CS0618, MTP0001 // Preserve wire compatibility with legacy cancellation producers.
+            "canceled" => includeException ? new CancelledTestNodeStateProperty(exception, "explanation") : new CancelledTestNodeStateProperty("explanation"),
+#pragma warning restore CS0618, MTP0001
+            _ => throw new ArgumentOutOfRangeException(nameof(state)),
+        };
+        TestNodeUpdateMessage update = CreateUpdate(
+            failure,
+            new TimingProperty(new TimingInfo(DateTimeOffset.MinValue, DateTimeOffset.MinValue, TimeSpan.FromMilliseconds(61002))),
+            new TestFileLocationProperty("tests with spaces.cs", new LinePositionSpan(new LinePosition(42, 3), new LinePosition(43, 7))));
+
+        await consumer.ConsumeAsync(null!, update, operation.Token);
+
+        MSBuildFailureInfo request = Assert.ContainsSingle(peer.Received<MSBuildFailureInfo>());
+        bool expectedCanceled = state is "timeout" or "canceled";
+        string actualAssertionExpectation = request.Expected;
+        Assert.AreEqual("Test", request.DisplayName);
+        Assert.AreEqual(expectedCanceled, request.IsCanceled);
+        Assert.AreEqual("1m 01s 002ms", request.Duration);
+        Assert.AreEqual(includeException ? "exception-message" : "explanation", request.ErrorMessage);
+        Assert.AreEqual(string.Empty, request.ErrorStackTrace);
+        Assert.AreEqual(string.Empty, actualAssertionExpectation);
+        Assert.AreEqual(string.Empty, request.Actual);
+        Assert.AreEqual("tests with spaces.cs", request.CodeFilePath);
+        Assert.AreEqual(42, request.LineNumber);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Exception assertion data fallback")]
+    [DataRow(true, DisplayName = "Assertion property overrides exception data")]
+    public async Task ConsumeAsync_FailedAssertion_PreservesStackAndExpectedActualPrecedence(bool assertionProperty)
+    {
+        await using MSBuildPipeFixture peer = new();
+        using CancellationTokenSource operation = new(MSBuildPipeFixture.OperationLimit);
+        using MSBuildTestApplicationLifecycleCallbacks lifecycle = CreateConnectedLifecycle(peer.PipeName);
+        await lifecycle.BeforeRunAsync(operation.Token);
+        MSBuildConsumer consumer = CreateConsumer(lifecycle, Mock.Of<ICommandLineOptions>());
+        await consumer.OnTestSessionStartingAsync(Mock.Of<ITestSessionContext>());
+        Exception failure = CaptureFailure();
+        failure.Data["assert.expected"] = "fallback-expected";
+        failure.Data["assert.actual"] = "fallback-actual";
+        List<IProperty> properties = [new FailedTestNodeStateProperty(failure, "ignored-explanation")];
+        if (assertionProperty)
+        {
+            properties.Add(new AssertionFailureProperty("property-expected", "property-actual"));
+        }
+
+        await consumer.ConsumeAsync(null!, CreateUpdate([.. properties]), operation.Token);
+
+        MSBuildFailureInfo request = Assert.ContainsSingle(peer.Received<MSBuildFailureInfo>());
+        string? expectedStackTrace = failure.StackTrace;
+        string expectedAssertionExpectation = assertionProperty ? "property-expected" : "fallback-expected";
+        string actualAssertionExpectation = request.Expected;
+        Assert.AreEqual("captured failure", request.ErrorMessage);
+        Assert.AreEqual(expectedStackTrace, request.ErrorStackTrace);
+        Assert.Contains(nameof(CaptureFailure), request.ErrorStackTrace);
+        Assert.AreEqual(expectedAssertionExpectation, actualAssertionExpectation);
+        Assert.AreEqual(assertionProperty ? "property-actual" : "fallback-actual", request.Actual);
+        Assert.AreEqual(string.Empty, request.Duration);
+        Assert.AreEqual(string.Empty, request.CodeFilePath);
+        Assert.AreEqual(0, request.LineNumber);
+    }
+
+    [TestMethod]
+    [DataRow(null, true, DisplayName = "Default skipped policy")]
+    [DataRow("allow-skipped", true, DisplayName = "Explicit allow-skipped policy")]
+    [DataRow("STRICT", false, DisplayName = "Case-insensitive strict policy")]
+    public async Task OnTestSessionFinishingAsync_SendsSummaryOfFinalOutcomesAndSkippedPolicy(string? zeroTestsPolicy, bool allowSkipped)
+    {
+        await using MSBuildPipeFixture peer = new();
+        using CancellationTokenSource operation = new(MSBuildPipeFixture.OperationLimit);
+        using MSBuildTestApplicationLifecycleCallbacks lifecycle = CreateConnectedLifecycle(peer.PipeName);
+        await lifecycle.BeforeRunAsync(operation.Token);
+        Mock<ICommandLineOptions> options = new(MockBehavior.Strict);
+        string[]? arguments = zeroTestsPolicy is null ? null : [zeroTestsPolicy];
+        options.Setup(x => x.TryGetOptionArgumentList("zero-tests-policy", out arguments)).Returns(zeroTestsPolicy is not null);
+        MSBuildConsumer consumer = CreateConsumer(lifecycle, options.Object);
+        await consumer.OnTestSessionStartingAsync(Mock.Of<ITestSessionContext>());
+        await ConsumeAsync(consumer, DiscoveredTestNodeStateProperty.CachedInstance);
+        await ConsumeAsync(consumer, InProgressTestNodeStateProperty.CachedInstance);
+        await ConsumeAsync(consumer, new FailedTestNodeStateProperty("superseded"), new RetryAttemptProperty(1, isSuperseded: true));
+        await ConsumeAsync(consumer, PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false));
+        await ConsumeAsync(consumer, PassedTestNodeStateProperty.CachedInstance);
+        await ConsumeAsync(consumer, SkippedTestNodeStateProperty.CachedInstance);
+        await ConsumeAsync(consumer, new ErrorTestNodeStateProperty("final-error"));
+        Mock<ITestSessionContext> session = new();
+        session.SetupGet(x => x.CancellationToken).Returns(operation.Token);
+
+        await consumer.OnTestSessionFinishingAsync(session.Object);
+        await ConsumeAsync(consumer, new FailedTestNodeStateProperty("late-failure"));
+        await ConsumeAsync(consumer, PassedTestNodeStateProperty.CachedInstance);
+
+        MSBuildSummaryInfo summary = Assert.ContainsSingle(peer.Received<MSBuildSummaryInfo>());
+        Assert.AreEqual(4, summary.Total);
+        Assert.AreEqual(1, summary.Failed);
+        Assert.AreEqual(2, summary.Passed);
+        Assert.AreEqual(1, summary.Skipped);
+        Assert.AreEqual(allowSkipped, summary.AllowSkipped);
+        Assert.Contains("ms", summary.Duration);
+        MSBuildFailureInfo failure = Assert.ContainsSingle(peer.Received<MSBuildFailureInfo>());
+        Assert.AreEqual("final-error", failure.ErrorMessage);
+        options.VerifyAll();
+        options.VerifyNoOtherCalls();
+    }
+
+    private static MSBuildTestApplicationLifecycleCallbacks CreateConnectedLifecycle(string pipeName)
+    {
+        Mock<IConfiguration> configuration = new();
+        configuration.Setup(x => x["platformOptions:resultDirectory"]).Returns("consumer-results");
+        Mock<ICommandLineOptions> options = new();
+        string[]? arguments = [pipeName];
+        options.Setup(x => x.TryGetOptionArgumentList(MSBuildNodeOptionKey, out arguments)).Returns(true);
+        return new(configuration.Object, options.Object);
+    }
+
+    private static MSBuildConsumer CreateConsumer(MSBuildTestApplicationLifecycleCallbacks lifecycle, ICommandLineOptions options)
+    {
+        Mock<IServiceProvider> services = new();
+        services.Setup(x => x.GetService(typeof(MSBuildTestApplicationLifecycleCallbacks))).Returns(lifecycle);
+        return new(services.Object, options);
+    }
+
+    private static Exception CaptureFailure()
+    {
+        try
+        {
+            throw new InvalidOperationException("captured failure");
+        }
+        catch (InvalidOperationException exception)
+        {
+            return exception;
+        }
+    }
+
     private static MSBuildConsumer CreateConsumer()
         => new(Mock.Of<IServiceProvider>(), Mock.Of<ICommandLineOptions>());
 

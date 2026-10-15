@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -35,6 +39,304 @@ public sealed class TestApplicationBuilderTests
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, "capabilitiesFactory", DisplayName = "Null capabilities factory")]
+    [DataRow(false, true, "frameworkFactory", DisplayName = "Null framework factory")]
+    [DataRow(true, true, "frameworkFactory", DisplayName = "Both factories null")]
+    public void RegisterTestFramework_InvalidFactories_DoNotPoisonSubsequentRegistration(bool nullCapabilities, bool nullFramework, string expectedParameter)
+    {
+        TestApplicationBuilder builder = CreateRegistrationBuilder();
+        bool factoryInvoked = false;
+        Func<IServiceProvider, ITestFrameworkCapabilities> capabilities = _ =>
+        {
+            factoryInvoked = true;
+            return Mock.Of<ITestFrameworkCapabilities>();
+        };
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> framework = (_, _) =>
+        {
+            factoryInvoked = true;
+            return Mock.Of<ITestFramework>();
+        };
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => builder.RegisterTestFramework(nullCapabilities ? null! : capabilities, nullFramework ? null! : framework));
+        ITestApplicationBuilder registered = builder.RegisterTestFramework(capabilities, framework);
+
+        Assert.AreEqual(expectedParameter, exception.ParamName);
+        Assert.AreSame(builder, registered);
+        Assert.IsFalse(factoryInvoked, "Registration is lazy, even after rejected invalid input.");
+        Assert.ThrowsExactly<InvalidOperationException>(() => builder.RegisterTestFramework(capabilities, framework));
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_WithoutRegisteredFramework_RejectsBeforeBuildingHost()
+    {
+        TestApplicationBuilder builder = CreateRegistrationBuilder();
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(builder.BuildAsync);
+
+        Assert.Contains("test framework", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("registered", exception.Message, StringComparison.OrdinalIgnoreCase);
+        await ((IAsyncCleanableExtension)builder).CleanupAsync();
+    }
+
+    private static TestApplicationBuilder CreateRegistrationBuilder()
+        => new(
+            new ApplicationLoggingState(LogLevel.None, CommandLineParseResult.Empty),
+            DateTimeOffset.MinValue,
+            new TestApplicationOptions(),
+            Mock.Of<IUnhandledExceptionsHandler>(),
+            []);
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Prepared ordinary process")]
+    [DataRow(true, DisplayName = "Prepared custom launcher")]
+    public async Task ControllerHost_RunAsync_PreparesEnvironmentAndCompletesRealIpcLifecycleWithoutLaunchingAProcess(bool customLauncher)
+    {
+        ControllerHostFixture fixture = new(customLauncher: customLauncher);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(0, await run);
+            Assert.AreSequenceEqual(
+                new[] { "before-process", "update-environment", "validate-environment", "launch", "process-started", "process-exited", "output-finalized", "run-completed" },
+                fixture.Events.Where(value => !value.StartsWith("dispose-", StringComparison.Ordinal)));
+            Assert.AreEqual(606, fixture.StartedInformation!.PID);
+            Assert.ThrowsExactly<InvalidOperationException>(() => fixture.StartedInformation.ExitCode);
+            Assert.AreEqual(606, fixture.ExitedInformation!.PID);
+            Assert.AreEqual(0, fixture.ExitedInformation.ExitCode);
+            Assert.IsTrue(fixture.ExitedInformation.HasExitedGracefully);
+            Assert.AreEqual(0, fixture.CompletionExitCode);
+            SessionFileArtifact artifact = Assert.ContainsSingle(fixture.CompletionArtifacts);
+            Assert.AreEqual("child summary", artifact.DisplayName);
+            Assert.AreEqual("child artifact", artifact.Description);
+            Assert.AreEqual("microsoft.testing.trx", artifact.Kind);
+            Assert.AreEqual("controller-session", artifact.SessionUid.Value);
+            Assert.AreSequenceEqual(
+                new[] { "dispose-lifetime", "dispose-environment" },
+                fixture.Events.Where(value => value is "dispose-lifetime" or "dispose-environment"));
+            fixture.Environment.Verify(x => x.Exit(It.IsAny<int>()), Times.Never);
+            fixture.Environment.Verify(x => x.FailFast(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
+            if (customLauncher)
+            {
+                Assert.IsNotNull(fixture.LaunchContext);
+                Assert.AreEqual("fake-host", fixture.LaunchContext.FileName);
+                Assert.AreEqual("controller-workspace", fixture.LaunchContext.WorkingDirectory);
+                Assert.AreSequenceEqual(new[] { "--filter", "name with spaces", "--internal-testhostcontroller-pid", "42" }, fixture.LaunchContext.Arguments);
+                Assert.AreEqual("false", fixture.LaunchContext.EnvironmentVariables["TF_BUILD"]);
+                Assert.AreEqual("provider-value", fixture.LaunchContext.EnvironmentVariables["CUSTOM"]);
+                Assert.AreEqual("03:04:05.000", fixture.LaunchContext.EnvironmentVariables["TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME_42"]);
+                fixture.ProcessHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
+                fixture.Handle.Verify(x => x.Dispose(), Times.Once);
+            }
+            else
+            {
+                Assert.IsNotNull(fixture.StartInfo);
+                Assert.AreEqual("fake-host", fixture.StartInfo.FileName);
+                Assert.AreEqual(string.Empty, fixture.StartInfo.WorkingDirectory);
+                Assert.IsFalse(fixture.StartInfo.UseShellExecute);
+                Assert.AreEqual("false", fixture.StartInfo.EnvironmentVariables["TF_BUILD"]);
+                Assert.AreEqual("provider-value", fixture.StartInfo.EnvironmentVariables["CUSTOM"]);
+#if NETCOREAPP
+                Assert.AreSequenceEqual(new[] { "--filter", "name with spaces", "--internal-testhostcontroller-pid", "42" }, fixture.StartInfo.ArgumentList);
+#else
+                Assert.AreEqual("--filter \"name with spaces\" --internal-testhostcontroller-pid 42", fixture.StartInfo.Arguments);
+#endif
+                fixture.Process.Verify(x => x.Dispose(), Times.Once);
+            }
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerHost_RunAsync_EnvironmentValidationFailurePreventsLaunchAndStillDisposesExtensions()
+    {
+        ControllerHostFixture fixture = new(validEnvironment: false);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(4, await run);
+            fixture.ProcessHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
+            fixture.Launcher.Verify(x => x.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            string error = Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.OutputMessages)).Message;
+            Assert.Contains("provider rejected", error);
+            Assert.Contains("environment", error);
+            Assert.AreSequenceEqual(
+                new[] { "before-process", "update-environment", "validate-environment", "dispose-lifetime", "dispose-environment" },
+                fixture.Events);
+            Assert.IsNull(fixture.CompletionExitCode);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(90L, 0, DisplayName = "Passing controller-owned coverage")]
+    [DataRow(79L, 14, DisplayName = "Failing controller-owned coverage")]
+    public async Task ControllerHost_RunAsync_ControllerCoverageIsCollectedAfterChildExitAndSetsFinalVerdict(long coveredLines, int expectedExit)
+    {
+        ControllerHostFixture fixture = new(ownsCoverage: true, lineThreshold: "80", coveredLines: coveredLines);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(expectedExit, await run);
+            Assert.AreEqual(expectedExit, fixture.CompletionExitCode);
+            Assert.AreEqual("1", fixture.StartInfo!.EnvironmentVariables["TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY_42"]);
+            TestCoverageResult coverage = fixture.Services.GetRequiredService<TestCoverageResult>();
+            Assert.AreEqual(coveredLines < 80, coverage.HasThresholdFailure);
+            if (expectedExit == 14)
+            {
+                Assert.Contains("80", Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.OutputMessages)).Message);
+            }
+            else
+            {
+                Assert.IsEmpty(fixture.OutputMessages);
+            }
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Authoritative process exit mismatch")]
+    [DataRow(true, DisplayName = "Nonauthoritative custom handle exit")]
+    public async Task ControllerHost_RunAsync_ExitAuthorityAndCompletionHandshakeDeterminePublicVerdict(bool nonauthoritative)
+    {
+        ControllerHostFixture fixture = new(
+            customLauncher: nonauthoritative, osExitCode: 17, reportedExitCode: 0, authoritativeExitCode: !nonauthoritative);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(nonauthoritative ? 0 : 7, await run);
+            Assert.AreEqual(nonauthoritative ? 0 : 7, fixture.CompletionExitCode);
+            Assert.IsTrue(fixture.ExitedInformation!.HasExitedGracefully);
+            if (nonauthoritative)
+            {
+                Assert.IsEmpty(fixture.OutputMessages);
+            }
+            else
+            {
+                Assert.Contains("17", Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.OutputMessages)).Message);
+            }
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerHost_RunAsync_MissingCompletionMessageRejectsZeroOsExitAndReportsNonGracefulVerdict()
+    {
+        ControllerHostFixture fixture = new(sendCompletion: false);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(7, await run);
+            Assert.IsFalse(fixture.ExitedInformation!.HasExitedGracefully);
+            Assert.AreEqual(7, fixture.CompletionExitCode);
+            Assert.HasCount(1, fixture.OutputMessages);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerHost_RunAsync_TelemetryRecordsTheActualControllerVerdictAndExtensionIdentity()
+    {
+        ControllerHostFixture fixture = new(telemetry: true, osExitCode: 2, reportedExitCode: 2);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(2, await run);
+            (string name, IDictionary<string, object> values) = Assert.ContainsSingle(fixture.TelemetryEvents);
+            Assert.AreEqual(TelemetryEvents.TestHostControllersTestHostExitEventName, name);
+            Assert.AreEqual("2", values[TelemetryProperties.HostProperties.ExitCodePropertyName]);
+            Assert.AreEqual("true", values[TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName]);
+            string extensions = (string)values[TelemetryProperties.HostProperties.ExtensionsPropertyName];
+            Assert.Contains("1.2.3", extensions);
+            Assert.AreEqual(2, fixture.CompletionExitCode);
+            Assert.IsEmpty(fixture.OutputMessages);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerRegistration_InitializationFailureStopsBeforeRegisteringOrBuildingLaterProviders()
+    {
+        TestHostControllersManager manager = new();
+        InvalidOperationException expectedFailure = new("controller initialization failed");
+        Mock<ITestHostEnvironmentVariableProvider> broken = new();
+        broken.SetupGet(x => x.Uid).Returns("broken");
+        broken.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+        broken.As<IAsyncInitializableExtension>().Setup(x => x.InitializeAsync()).ThrowsAsync(expectedFailure);
+        bool laterProviderBuilt = false;
+        bool observerBuilt = false;
+        manager.AddEnvironmentVariableProvider(_ => broken.Object);
+        manager.AddEnvironmentVariableProvider(_ =>
+        {
+            laterProviderBuilt = true;
+            return new TestHostEnvironmentVariableProvider("later");
+        });
+        manager.AddRunCompletionHandler(_ =>
+        {
+            observerBuilt = true;
+            return Mock.Of<ITestHostControllerRunCompletionHandler>();
+        });
+
+        InvalidOperationException actualFailure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(_serviceProvider));
+
+        Assert.AreSame(expectedFailure, actualFailure);
+        Assert.IsFalse(laterProviderBuilt);
+        Assert.IsFalse(observerBuilt);
+        Assert.IsEmpty(_serviceProvider.GetServicesInternal(typeof(ITestHostEnvironmentVariableProvider)));
+    }
+
+    [TestMethod]
+    public async Task ControllerRegistration_DisabledCompositeConsumerDoesNotInitializeOrIntroduceAController()
+    {
+        TestHostControllersManager manager = new();
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(x => x.Uid).Returns("disabled-consumer");
+        consumer.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        Mock<IAsyncInitializableExtension> initialization = consumer.As<IAsyncInitializableExtension>();
+        initialization.Setup(x => x.InitializeAsync()).Returns(Task.CompletedTask);
+        manager.AddDataConsumer(new CompositeExtensionFactory<IDataConsumer>(() => consumer.Object));
+        bool observerBuilt = false;
+        manager.AddRunCompletionHandler(_ =>
+        {
+            observerBuilt = true;
+            return Mock.Of<ITestHostControllerRunCompletionHandler>();
+        });
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsFalse(configuration.RequireProcessRestart);
+        Assert.IsEmpty(configuration.DataConsumer);
+        Assert.IsEmpty(configuration.RunCompletionHandlers);
+        Assert.IsFalse(observerBuilt);
+        initialization.Verify(x => x.InitializeAsync(), Times.Never);
     }
 
     [TestMethod]

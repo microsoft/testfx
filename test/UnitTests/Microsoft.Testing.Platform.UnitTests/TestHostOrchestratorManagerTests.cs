@@ -611,6 +611,39 @@ public sealed class TestHostOrchestratorManagerTests
         capability.Verify(x => x.AddTestHostExecutionOrchestratorMiddleware(factory), Moq.Times.Once);
     }
 
+    [TestMethod]
+    [DataRow("orchestrator", DisplayName = "Orchestrator enabled subset")]
+    [DataRow("middleware", DisplayName = "Middleware enabled subset")]
+    [DataRow("lifetime", DisplayName = "Lifetime enabled subset")]
+    public async Task Build_DisabledThenEnabledSameUid_InitializesAndReturnsOnlyEnabledInstance(string kind)
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        List<string> events = [];
+        InitializableExtension disabled = new("shared-uid", events, enabled: false);
+        InitializableExtension enabled = new("shared-uid", events);
+        Register(kind, manager, _ => disabled);
+        Register(kind, manager, _ => enabled);
+
+        IExtension[] result = await BuildAsync(kind, manager);
+
+        Assert.AreSequenceEqual(new IExtension[] { enabled }, result);
+        Assert.AreSequenceEqual(new[] { "enabled:shared-uid", "enabled:shared-uid", "initialize:shared-uid" }, events);
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_PublicAndLegacyRegistrationsShareDuplicateIdentityValidation()
+    {
+        PublicApi.TestHostOrchestratorManager manager = new();
+        manager.AddTestHostOrchestrator(_ => new FakeOrchestrator("same-identity"));
+        ((BackCompat.ITestHostOrchestratorManager)manager).AddTestHostOrchestrator(_ => new FakeOrchestrator("same-identity"));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(_serviceProvider));
+
+        Assert.Contains("same-identity", exception.Message);
+        Assert.Contains(typeof(FakeOrchestrator).ToString(), exception.Message);
+    }
+
     private static async Task JoinForCleanupAsync(Task work, Exception? assertionFailure)
     {
         try

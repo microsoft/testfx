@@ -49,4 +49,81 @@ public sealed class ConfigurationExtensionsTests
         Exception exception = Assert.Throws<Exception>(() => GetActualValueFromConfiguration(configuration.Object, key));
         Assert.AreEqual(typeof(global::System.Diagnostics.UnreachableException).FullName, exception.GetType().FullName);
     }
+
+    [TestMethod]
+    [DataRow(null, false, DisplayName = "Absent option")]
+    [DataRow("false", false, DisplayName = "Explicit disabled option")]
+    [DataRow("TRUE", true, DisplayName = "Case-insensitive presence marker")]
+    [DataRow("literal", true, DisplayName = "Scalar argument")]
+    [DataRow("", true, DisplayName = "Empty scalar argument")]
+    public void CommandLineOptionFallback_InterpretsBarePresenceAndScalarValues(string? bare, bool expectedPresent)
+    {
+        IConfiguration configuration = CreateFallbackConfiguration(new() { ["commandLineOptions:filter"] = bare });
+
+        Assert.AreEqual(expectedPresent, configuration.IsCommandLineOptionSet("--filter"));
+        Assert.AreEqual(expectedPresent, configuration.TryGetCommandLineOptionArguments("--filter", out string[]? arguments));
+        if (!expectedPresent)
+        {
+            Assert.IsNull(arguments);
+        }
+        else
+        {
+            string[] expectedArguments = bare == "TRUE" ? [] : [bare!];
+            Assert.AreSequenceEqual(expectedArguments, arguments);
+        }
+    }
+
+    [TestMethod]
+    public void CommandLineOptionFallback_IndexedArgumentsOverrideBareDisableAndStopAtFirstGap()
+    {
+        IConfiguration configuration = CreateFallbackConfiguration(new()
+        {
+            ["commandLineOptions:filter"] = "false",
+            ["commandLineOptions:filter:0"] = string.Empty,
+            ["commandLineOptions:filter:1"] = "second",
+            ["commandLineOptions:filter:3"] = "must not leak past gap",
+        });
+
+        Assert.IsTrue(configuration.IsCommandLineOptionSet("filter"));
+        Assert.IsTrue(configuration.TryGetCommandLineOptionArguments("filter", out string[]? arguments));
+        Assert.AreSequenceEqual(new[] { string.Empty, "second" }, arguments);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Scalar passive default")]
+    [DataRow(true, DisplayName = "Indexed passive default")]
+    public void CommandLineOptionDefaults_FallbackDoesNotActivateOptionAndExplicitArgumentsWin(bool indexed)
+    {
+        Dictionary<string, string?> values = new()
+        {
+            ["commandLineOptionDefaults:filter"] = "false",
+        };
+        if (indexed)
+        {
+            values["commandLineOptionDefaults:filter:0"] = "first";
+            values["commandLineOptionDefaults:filter:1"] = "second";
+            values["commandLineOptionDefaults:filter:3"] = "ignored";
+        }
+
+        IConfiguration configuration = CreateFallbackConfiguration(values);
+        string[] expectedDefault = indexed ? ["first", "second"] : ["false"];
+
+        Assert.IsFalse(configuration.IsCommandLineOptionSet("filter"));
+        Assert.IsFalse(configuration.TryGetCommandLineOptionArguments("filter", out _));
+        Assert.IsTrue(configuration.TryGetCommandLineOptionDefaultArguments("--filter", out string[]? defaults));
+        Assert.AreSequenceEqual(expectedDefault, defaults);
+        Assert.IsTrue(configuration.TryGetCommandLineOptionArgumentsOrDefault("filter", out string[]? resolved));
+        Assert.AreSequenceEqual(expectedDefault, resolved);
+
+        values["commandLineOptions:filter:0"] = "explicit";
+        Assert.IsTrue(configuration.TryGetCommandLineOptionArgumentsOrDefault("--filter", out resolved));
+        Assert.AreSequenceEqual(new[] { "explicit" }, resolved);
+    }
+
+    private static IConfiguration CreateFallbackConfiguration(Dictionary<string, string?> values)
+    {
+        Mock<IConfiguration> configuration = new();
+        configuration.Setup(x => x[It.IsAny<string>()]).Returns<string>(key => values.TryGetValue(key, out string? value) ? value : null);
+        return configuration.Object;
+    }
 }
