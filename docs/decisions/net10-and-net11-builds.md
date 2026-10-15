@@ -323,6 +323,84 @@ unchanged cancellation diagnostic assertion failed before the reflection repair
 and passed afterward on all five hosts. Strict UWP positive/negative report
 cases and real activation protect the actual asset-selection contract.
 
+## CI follow-up: requested-framework summary assertions
+
+Azure build `1636544`, at
+`5067002afa555465aedd4a1c8bff7362cba4a5e1`, completed the previously repaired
+analyzer and application-model paths but exposed stale framework names in
+`SdkTests.RunTests_With_VSTest` and
+`SdkTests.RunTests_With_MSTestRunner_DotnetTest`. Both child commands exited `0`
+and successfully ran the requested .NET 11 consumer; the outer tests still
+required .NET 10 output.
+
+The unchanged fast-mode selection was reproduced locally using the existing
+verified Debug shipping packages: four outer cases executed, all four failed
+their summary assertions, zero skipped, process exit `2`. Debug and Release
+child configurations both requested `net11.0;net462`; no restore, compilation,
+launch, or child test failure was mistaken for this expected assertion failure.
+
+Use each test's independent `multiTfm` input as the expectation, rather than
+maintaining a second compile-time list. Preserve VSTest's clean-result count for
+every requested TFM and the native runner's successful-module assertion for
+every TFM. The native assertion also binds each result to its exact requested
+module path and configuration. A first local run passed both VSTest rows but
+showed that this machine reports the .NET Framework runtime as `net481`, rather
+than CI's `net48`. Match that runtime family without pinning an incidental
+installed patch version; keep the `net462` asset path, modern runtime TFMs, x64
+architecture, and passed status exact. Validate both fast and full framework
+selections without changing product code, package bytes, scheduling, or runner
+output.
+
+Both final selections passed: four fast-mode and four full-mode outer cases,
+zero failures/skips, process exit `0` in each run. Fast mode exercises
+`net11.0;net462`; full mode exercises
+`net11.0;net10.0;net9.0;net8.0;net462`. Each includes both named runner tests and
+Debug/Release child configurations. The outer host is Windows Debug on .NET 11.
+Independent discovery and the execution verifier reconcile `4/4/4/4`
+planned/selected/executed/passed identities for each mode. The builds exited `0`
+with zero warnings/errors.
+
+Commands, with separate evidence/result directories per mode:
+
+```powershell
+$filter = 'FullyQualifiedName~SdkTests.RunTests_With_VSTest|FullyQualifiedName~SdkTests.RunTests_With_MSTestRunner_DotnetTest'
+foreach ($fast in @('true', 'false')) {
+    .\eng\build.ps1 -build -projects test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -msbuildEngine dotnet -binaryLog "/bl:$evidence\summary-build-{}.binlog" /p:SkipUapTargetFramework=true /p:EnableCodeCoverage=false "/p:FastAcceptanceTest=$fast"
+    .\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Debug -f net11.0 --no-build --filter $filter "-p:FastAcceptanceTest=$fast" -p:UsingDotNetTest=true -p:EnableCodeCoverage=false "-p:ArtifactsTestResultsDir=$evidence" "-bl:$evidence\summary-execution-{}.binlog" --show-test-results all
+}
+```
+
+The existing shipping packages were byte-for-byte unchanged from the verified
+pack; only the acceptance source and this record changed. Method-level
+parallelization and per-test asset/cache isolation remain unchanged. Retained
+evidence includes baseline, first-attempt, and final logs/TRX/binlogs plus exact
+expected/discovered identities. This is a test-expectation correction, not a
+production mutation claim. Linux execution remains for the next CI run.
+
+The same build's triage identified two generated-language fixture failures:
+`GeneratedHostedLanguageEntryPointTests.VisualBasicGeneratedHostedEntryPointBuildsAndRuns`
+and `FSharpGeneratedHostedEntryPointBuildsAndRuns` built hard-coded .NET 10
+projects but looked for `TargetFrameworks.NetCurrent` (.NET 11) outputs. Both
+failures were reproduced locally after successful child builds; these are setup
+path mismatches, not behavioral red-phase proof. Both project templates now
+receive the same current TFM already used by host lookup. Package versions and
+the exit/pass/host-started/host-stopped assertions remain unchanged.
+
+Both repaired VB/F# cases executed and passed, with zero failures/skips and
+process exit `0`. Their Debug outer project build and Release generated-consumer
+builds passed; each generated host started, ran its test, stopped, and exited
+successfully. Separate discovery and the execution verifier reconciled both
+expected identities. The focused command was:
+
+```powershell
+.\eng\build.ps1 -build -projects test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -msbuildEngine dotnet -binaryLog "/bl:$evidence\hosted-green-build-{}.binlog" /p:SkipUapTargetFramework=true /p:EnableCodeCoverage=false /p:FastAcceptanceTest=false
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj -c Debug -f net11.0 --no-build --filter 'FullyQualifiedName~GeneratedHostedLanguageEntryPointTests' -p:UsingDotNetTest=true -p:EnableCodeCoverage=false "-p:ArtifactsTestResultsDir=$evidence" "-bl:$evidence\hosted-green-execution-{}.binlog" --show-test-results all
+```
+
+This follow-up therefore has ten passing outer cases: eight SDK-summary cases
+across both modes and two generated-language cases. It does not rerun or
+relabel the previous 4,304-case matrix as current-head CI proof.
+
 ## Open questions
 
 This change is scoped to `main`; no downstream rollout or servicing/backport is
