@@ -117,9 +117,6 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
-    <!-- Used by Microsoft.Testing.Platform acceptance tests, which consume the released MSTest packages
-         rather than MSTest from source. -->
-    <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.3.246" />
