@@ -52,11 +52,13 @@ internal static class TestRunSummaryHelper
     /// <paramref name="zeroTestsPolicy"/> mirrors <see cref="IsRunFailed"/>: under
     /// <see cref="ZeroTestsPolicy.AllowSkipped"/> (the default) an all-skipped run is reported as "Passed!" instead of
     /// "Zero tests ran". Under <see cref="ZeroTestsPolicy.Strict"/> an all-skipped run is reported as "Zero tests ran".
+    /// <paramref name="hasTestSessionFailure"/> reports a framework session failure even when no individual test failed.
     /// </remarks>
-    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, ZeroTestsPolicy zeroTestsPolicy = ZeroTestsPolicy.AllowSkipped)
+    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, ZeroTestsPolicy zeroTestsPolicy = ZeroTestsPolicy.AllowSkipped, bool hasTestSessionFailure = false)
         => true switch
         {
             _ when wasCancelled => TerminalResources.Aborted,
+            _ when hasTestSessionFailure => $"{TerminalResources.Failed}!",
             _ when totalTests - skippedTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, totalTests - skippedTests, minimumExpectedTests),
             _ when failedTests > 0 => $"{TerminalResources.Failed}!",
             _ when hasHandshakeFailures => $"{TerminalResources.Failed}!",

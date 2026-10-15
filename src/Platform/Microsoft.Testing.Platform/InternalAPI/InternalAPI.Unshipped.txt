@@ -1,4 +1,10 @@
 #nullable enable
+Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
+Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.get -> System.Func<bool>!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.init -> void
+*REMOVED*static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped) -> string!
+static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped, bool hasTestSessionFailure = false) -> string!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunNotSelected(string! assembly, string? targetFramework, string? architecture) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.AllowZeroTests.get -> bool
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.AllowZeroTests.init -> void

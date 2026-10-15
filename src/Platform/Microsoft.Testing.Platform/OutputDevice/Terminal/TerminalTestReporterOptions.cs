@@ -31,6 +31,11 @@ internal sealed class TerminalTestReporterOptions
     public bool AllowZeroTests { get; init; }
 
     /// <summary>
+    /// Gets a callback indicating whether the framework session failed independently of individual test results.
+    /// </summary>
+    public Func<bool> HasTestSessionFailure { get; init; } = static () => false;
+
+    /// <summary>
     /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
     /// When ANSI is not allowed we never have progress.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean

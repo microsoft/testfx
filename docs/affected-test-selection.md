@@ -224,6 +224,34 @@ shutdown-reporter selection executes 334 cases with zero failures/skips (exit 0)
 and SDK composition results above remain bound to their recorded revisions; they are not presented as reruns
 or CI proof for this integration commit.
 
+### Session-failure review correction (2026-10-15)
+
+Review identified a separate zero-count failure: a framework can fail session creation or closure without
+publishing any test outcomes. Ignoring exit 8 must not neutralize that session's exit-10 failure. The terminal
+device now supplies a deferred reader of `ITestApplicationProcessExitCode.HasTestAdapterTestSessionFailure`;
+the reporter checks it at summary time, after session lifecycle callbacks, and displays a red `Failed!` verdict.
+The reader is deferred because the result service is registered after the output device. Existing zero-test
+opt-outs, cancellation, test counts and process exit policies are unchanged.
+
+The correction is based on `451b1bfb34575469b56c66aa71c2c28b4b7ac84c`; its source/test patch excluding this record
+has SHA-256 `B0193AC322654E59E21ECD8BDBEC09B1F5A3EEE72BF40CF10C8651829F5CF748`. The unchanged
+`ActualSummary_IgnoredZeroTests_FrameworkSessionFailureRemainsRed` regression executes real create/close
+callbacks through `TestHostTestFrameworkInvoker` and the actual default output-device factory. Its four cases
+cover both lifecycle phases and CLI/environment exit-8 opt-outs. Before the fix all four reached exit 10 but
+failed the intended red-summary assertion (outer exit 2); after the fix all four pass (outer exit 0). The retained
+test patch is SHA-256 `844CBC186F4E115AA3CBF1C23ECE81242D8377F1EA86525AD515F679DBCBAF01`.
+
+The net8.0 focused reporting/exit/shutdown selection passes all 338 cases with no skips, and the standalone
+reporter contract passes both cases. The corrected package
+`Microsoft.Testing.Platform.2.6.0-validation.20261015.3.nupkg`, SHA-256
+`73260538E631AED3AE26311B0097C2A8771DAC2F73409C9E4D2AAB8F1EF0D21B`, builds all five current shipping targets.
+The package-only consumer passes 32 process checks on net8.0/net472, including all eight real create/close
+failure variants: exit 10, red ANSI 31, and honest zero test counters. The final harness exits 0.
+An earlier harness leaked its last intentionally nonzero child exit, and a retry ran out of C: space while
+writing a binlog; neither is counted as behavioral red proof. Moving only task-owned logs/scratch to Q: and
+returning an explicit harness success after all assertions produced the clean final result without changing CI
+settings or clearing shared caches.
+
 ## Collection budget isolation
 
 [Run 20261013.16](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1633662&view=logs), from commit

@@ -3,19 +3,27 @@
 
 using System.Reflection;
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.UnitTests.Helpers;
 
 using Moq;
+
+using TestSessionContext = Microsoft.Testing.Platform.TestHost.TestSessionContext;
 
 namespace Microsoft.Testing.Platform.UnitTests.OutputDevice;
 
@@ -439,6 +447,66 @@ public sealed class TerminalOutputDeviceTests
         Assert.Contains($"\u001B[31mTest run summary: {expectedVerdict}", fixture.Output.ToString());
     }
 
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task ActualSummary_IgnoredZeroTests_FrameworkSessionFailureRemainsRed(bool failCreation, bool ignoreViaEnvironment)
+    {
+        Dictionary<string, string[]> options = new()
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.AnsiOption] = ["on"],
+        };
+        if (!ignoreViaEnvironment)
+        {
+            options[PlatformCommandLineProvider.IgnoreExitCodeOptionKey] = ["8"];
+        }
+
+        using RecordingDeviceFixture fixture = new(
+            extraOptions: options,
+            environmentVariables: new()
+            {
+                [EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE] = ignoreViaEnvironment ? "8" : null,
+            });
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeSessionStartAsync(TestContext.CancellationToken);
+        Assert.IsFalse(fixture.ApplicationResult.HasTestAdapterTestSessionFailure);
+
+        var framework = new Mock<ITestFramework>();
+        framework.SetupGet(value => value.Uid).Returns("session-failure-framework");
+        framework.SetupGet(value => value.Version).Returns("1.0.0");
+        framework.SetupGet(value => value.DisplayName).Returns("Session failure framework");
+        framework.Setup(value => value.CreateTestSessionAsync(It.IsAny<CreateTestSessionContext>()))
+            .ReturnsAsync(new CreateTestSessionResult { IsSuccess = !failCreation, ErrorMessage = failCreation ? "creation failed" : null });
+        framework.Setup(value => value.CloseTestSessionAsync(It.IsAny<CloseTestSessionContext>()))
+            .ReturnsAsync(new CloseTestSessionResult { IsSuccess = failCreation, ErrorMessage = failCreation ? null : "closure failed" });
+        framework.Setup(value => value.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
+            .Callback<ExecuteRequestContext>(context => context.Complete())
+            .Returns(Task.CompletedTask);
+        var session = new Mock<ITestSessionContext>();
+        session.SetupGet(value => value.SessionUid).Returns(new SessionUid("failed-session"));
+        var requests = new Mock<ITestExecutionRequestFactory>();
+        requests.Setup(value => value.CreateRequestAsync(It.IsAny<TestSessionContext>(), It.IsAny<CancellationToken>()))
+            .Returns<TestSessionContext, CancellationToken>((context, _) =>
+                Task.FromResult<TestExecutionRequest>(new RunTestExecutionRequest(context, new NopFilter())));
+        var messageBus = new Mock<IMessageBus>();
+        messageBus.Setup(value => value.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
+            .Returns(Task.CompletedTask);
+        fixture.Services.AddServices([new TestFrameworkCapabilities(), session.Object, requests.Object, messageBus.Object]);
+
+        await new TestHostTestFrameworkInvoker(fixture.Services)
+            .ExecuteAsync(framework.Object, new ClientInfo("session-failure-client", "1.0.0"), TestContext.CancellationToken);
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual((int)ExitCode.TestAdapterTestSessionFailure, fixture.ApplicationResult.GetProcessExitCode());
+        Assert.IsTrue(fixture.ApplicationResult.HasTestAdapterTestSessionFailure);
+        Assert.Contains("\u001B[31mTest run summary: Failed!", fixture.Output.ToString());
+        Assert.DoesNotContain("\u001B[39mTest run summary:", fixture.Output.ToString());
+        Assert.DoesNotContain("Test run summary: Passed!", fixture.Output.ToString());
+    }
+
     private sealed class RecordingDeviceFixture : IDisposable
     {
         public RecordingDeviceFixture(
@@ -461,8 +529,6 @@ public sealed class TerminalOutputDeviceTests
                 .Returns<string>(name => environmentVariables is not null && environmentVariables.TryGetValue(name, out string? value)
                     ? value
                     : azure && name == "TF_BUILD" ? "true" : null);
-            var monitor = new Mock<IAsyncMonitor>();
-            monitor.Setup(value => value.LockAsync(It.IsAny<TimeSpan>())).ReturnsAsync(Mock.Of<IDisposable>());
             var loggerFactory = new Mock<ILoggerFactory>();
             loggerFactory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
             var policies = new Mock<IStopPoliciesService>();
@@ -488,16 +554,41 @@ public sealed class TerminalOutputDeviceTests
             }
 
             var options = new TestCommandLineOptions(optionValues);
-            Device = new TerminalOutputDevice(console.Object, module.Object, Mock.Of<ITestHostControllerInfo>(), monitor.Object,
-                Mock.Of<IRuntimeFeature>(), environment.Object, Mock.Of<IPlatformInformation>(), options, null,
-                loggerFactory.Object, clock.Object, policies.Object, cancellation.Object, new TestCoverageResult());
+            var coverage = new TestCoverageResult();
+            Services.AddServices(
+            [
+                console.Object,
+                module.Object,
+                Mock.Of<ITestHostControllerInfo>(),
+                new SystemMonitorAsyncFactory(),
+                Mock.Of<IRuntimeFeature>(),
+                environment.Object,
+                Mock.Of<IPlatformInformation>(),
+                options,
+                loggerFactory.Object,
+                clock.Object,
+                policies.Object,
+                cancellation.Object,
+                coverage,
+            ]);
+            Device = Assert.IsInstanceOfType<TerminalOutputDevice>(PlatformOutputDeviceManager.GetDefaultTerminalOutputDevice(Services));
+            ApplicationResult = new TestApplicationResult(new ProxyOutputDevice(Device, serverModeOutputDevice: null), options, environment.Object, policies.Object, otelService: null, coverage);
+            Services.AddService(ApplicationResult);
         }
 
         public StringBuilder Output { get; } = new();
 
         public TerminalOutputDevice Device { get; }
 
-        public void Dispose() => Device.Dispose();
+        public ServiceProvider Services { get; } = new();
+
+        public TestApplicationResult ApplicationResult { get; }
+
+        public void Dispose()
+        {
+            Device.Dispose();
+            ApplicationResult.Dispose();
+        }
     }
 
     [TestMethod]

@@ -151,6 +151,7 @@ internal sealed partial class TerminalOutputDevice
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             ZeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions),
             AllowZeroTests = ExitCodeIgnorePolicy.Apply((int)ExitCode.ZeroTests, _commandLineOptions, _environment) == 0,
+            HasTestSessionFailure = TestSessionFailureProvider,
             AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,

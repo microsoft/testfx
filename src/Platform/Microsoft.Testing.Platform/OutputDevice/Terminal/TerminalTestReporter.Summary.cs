@@ -95,14 +95,15 @@ internal sealed partial class TerminalTestReporter
         // tests is still a run failure. Gated on ShowAssembly (the orchestrator marker): the in-process host leaves
         // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
         bool hasFailedAssemblies = _options.ShowAssembly && anyAssemblyFailed;
+        bool hasTestSessionFailure = _options.HasTestSessionFailure();
 
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy, _options.AllowZeroTests) || HasHandshakeFailure || hasFailedAssemblies;
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy, _options.AllowZeroTests) || HasHandshakeFailure || hasFailedAssemblies || hasTestSessionFailure;
         bool ranZeroTests = totalTests == 0 || (totalTests == totalSkippedTests && _options.ZeroTestsPolicy == ZeroTestsPolicy.Strict);
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : ranZeroTests ? TerminalColor.Default : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy));
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy, hasTestSessionFailure));
 
         // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
         // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
