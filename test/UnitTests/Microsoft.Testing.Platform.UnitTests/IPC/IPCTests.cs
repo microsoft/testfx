@@ -123,6 +123,26 @@ public sealed class IPCTests
     }
 
     [TestMethod]
+    public async Task WaitForDisconnectAsync_WhenNeverConnected_ReturnsTrueBeforeAndAfterDisposal()
+    {
+        using NamedPipeServer server = new(
+            NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N")),
+            _ => throw new UnreachableException(),
+            new SystemEnvironment(),
+            new Mock<ILogger>().Object,
+            new SystemTask(),
+            _testContext.CancellationToken);
+
+        Assert.IsFalse(server.WasConnected);
+        Assert.IsTrue(await server.WaitForDisconnectAsync(TimeSpan.Zero));
+
+        server.Dispose();
+
+        Assert.IsFalse(server.WasConnected);
+        Assert.IsTrue(await server.WaitForDisconnectAsync(TimeSpan.Zero));
+    }
+
+    [TestMethod]
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
