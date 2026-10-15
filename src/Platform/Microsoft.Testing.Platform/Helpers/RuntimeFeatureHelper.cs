@@ -46,6 +46,11 @@ internal static class RuntimeFeatureHelper
     ///   </item>
     /// </list>
     /// <para>
+    /// Disposal follows the same rule: teardown reachable on single-threaded WebAssembly must not block.
+    /// A blocking <see cref="IDisposable.Dispose"/> implementation is only safe when every caller is
+    /// guaranteed to prefer asynchronous disposal, as <see cref="DisposeHelper.DisposeAsync"/> does.
+    /// </para>
+    /// <para>
     /// .NET 11 exposes <c>System.Runtime.CompilerServices.RuntimeFeature.IsMultithreadingSupported</c>
     /// for exactly this purpose (approved and implemented via
     /// <see href="https://github.com/dotnet/runtime/issues/77541"/>), and it is additionally a trimming

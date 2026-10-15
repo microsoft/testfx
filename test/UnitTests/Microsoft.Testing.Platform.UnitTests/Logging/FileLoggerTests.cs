@@ -586,6 +586,40 @@ public sealed class FileLoggerTests : IDisposable
         Assert.IsTrue(fileLogger.IsFileHandleReleased);
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task FileLoggerProvider_DisposeHelper_DrainsLogsUsingAsyncDispose()
+    {
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        await using FileLoggerProvider provider = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            customDirectory: true,
+            _mockClock.Object,
+            new SystemTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object);
+
+        provider.CreateLogger(Category).LogTrace(Message);
+
+        await DisposeHelper.DisposeAsync(provider);
+
+        string expected = """
+            0001-01-01T00:00:00.0000000+00:00 Test TRACE Message
+
+            """;
+        Assert.AreEqual(expected.ReplaceLineEndings(), Encoding.UTF8.GetString(_memoryStream.ToArray()).ReplaceLineEndings());
+        Assert.IsTrue(provider.FileLogger.IsFileHandleReleased);
+        _mockStream.Verify(x => x.DisposeAsync(), Times.Once);
+        _mockStream.Verify(x => x.Dispose(), Times.Never);
+        _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
+    }
+#endif
+
     // Deterministic non-fatal-timeout test: the consumer loop never completes (simulating a hung flush), and a short
     // injected flush timeout forces the timeout branch. Dispose must NOT throw, must warn, and must report that the
     // file handle was not released so callers (e.g. FileLoggerProvider) can skip the file move.
