@@ -1,9 +1,72 @@
 #nullable enable
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.Data = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.FileName = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.IsFinal = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.MessagesSerializerId = 15 -> int
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.Offset = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.TotalLength = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId.TransferId = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.Error = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.FullPath = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.MessagesSerializerId = 16 -> int
+const Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId.NextOffset = 1 -> ushort
+Microsoft.Testing.Platform.IPC.FileArtifactTransferRequestFieldsId
+Microsoft.Testing.Platform.IPC.FileArtifactTransferResponseFieldsId
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest!
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Data.get -> byte[]!
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Data.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Deconstruct(out string? ExecutionId, out string? InstanceId, out string? TransferId, out string? FileName, out long TotalLength, out long Offset, out byte[]! Data, out bool IsFinal) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Equals(Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.ExecutionId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.ExecutionId.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.FileArtifactTransferRequest(string? ExecutionId, string? InstanceId, string? TransferId, string? FileName, long TotalLength, long Offset, byte[]! Data, bool IsFinal) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.FileName.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.FileName.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.InstanceId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.InstanceId.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.IsFinal.get -> bool
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.IsFinal.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Offset.get -> long
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Offset.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.TotalLength.get -> long
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.TotalLength.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.TransferId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.TransferId.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse!
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.Deconstruct(out long NextOffset, out string? FullPath, out string? Error) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.Equals(Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.Error.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.Error.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.FileArtifactTransferResponse(long NextOffset, string? FullPath, string? Error) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.FullPath.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.FullPath.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.NextOffset.get -> long
+Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.NextOffset.init -> void
+Microsoft.Testing.Platform.IPC.Serializers.FileArtifactTransferRequestSerializer
+Microsoft.Testing.Platform.IPC.Serializers.FileArtifactTransferRequestSerializer.FileArtifactTransferRequestSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.FileArtifactTransferResponseSerializer
+Microsoft.Testing.Platform.IPC.Serializers.FileArtifactTransferResponseSerializer.FileArtifactTransferResponseSerializer() -> void
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler.OnRunCompletedAsync(int exitCode, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>! artifacts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler![]!
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.set -> void
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddRunCompletionHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler!>! factory) -> void
+override Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Serializers.FileArtifactTransferRequestSerializer.Id.get -> int
+override Microsoft.Testing.Platform.IPC.Serializers.FileArtifactTransferResponseSerializer.Id.get -> int
+static Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.operator !=(Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest? left, Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest.operator ==(Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest? left, Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferRequest? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.operator !=(Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse? left, Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse.operator ==(Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse? left, Microsoft.Testing.Platform.IPC.Models.FileArtifactTransferResponse? right) -> bool
 static Microsoft.Testing.Platform.Services.CoverageThresholdPolicy.IsDeferredToController(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> bool
 Microsoft.Testing.Platform.Services.TestCoverageResult.ControllerSummaryArtifacts.get -> Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]!
 Microsoft.Testing.Platform.Services.TestCoverageResult.DeferToController() -> void

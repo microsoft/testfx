@@ -7,6 +7,7 @@ Param(
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
+  [bool][Alias('mt')]$msbuildMultiThreaded = $true,
   [switch][Alias('r')]$restore,
   [switch] $deployDeps,
   [switch][Alias('b')]$build,
@@ -20,6 +21,7 @@ Param(
   [switch] $publish,
   [switch] $clean,
   [switch][Alias('bl')]$binaryLog,
+  [string][Alias('bln')]$binaryLogName = '',
   [switch][Alias('nobl')]$excludeCIBinarylog,
   [switch] $ci,
   [switch] $prepareMachine,
@@ -83,3 +85,4 @@ $null = $PSBoundParameters.Remove("vs")
 $null = $PSBoundParameters.Remove("installWindowsSdk")
 
 & $PSScriptRoot\common\Build.ps1 @PSBoundParameters
+exit $LASTEXITCODE

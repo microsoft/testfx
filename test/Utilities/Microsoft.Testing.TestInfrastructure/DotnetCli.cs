@@ -96,6 +96,7 @@ public static class DotnetCli
         bool warnAsError = true,
         bool suppressPreviewDotNetMessage = true,
         bool useMultithreadedMSBuild = true,
+        string? dotnetPath = null,
         [CallerMemberName] string callerMemberName = "",
         CancellationToken cancellationToken = default)
     {
@@ -163,7 +164,7 @@ public static class DotnetCli
                 args += extraArgs;
             }
 
-            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, callerMemberName, cancellationToken);
+            return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, dotnetPath, callerMemberName, cancellationToken);
         }
         finally
         {
@@ -278,11 +279,11 @@ public static class DotnetCli
         }
     }
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string? dotnetPath, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
             .Handle<InvalidOperationException>(IsRetriableBuildFailure)
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
-            .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
+            .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, dotnetPath, binlogBaseFileName, ct), cancellationToken);
 
     // Some build failures are transient tooling/environment issues rather than real product failures, so retrying
     // the whole muxer invocation (which regenerates the binlog file name, see CallTheMuxerCoreAsync) is safe:
@@ -294,7 +295,7 @@ public static class DotnetCli
         => ex.Message.Contains("MSB4236")
             || ex.Message.Contains("exited prematurely. Shutting down.");
 
-    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
+    private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string? dotnetPath, string binlogBaseFileName, CancellationToken cancellationToken)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
@@ -317,7 +318,9 @@ public static class DotnetCli
             }
         }
 
-        using DotnetMuxer dotnet = new(environmentVariables);
+        using DotnetMuxer dotnet = dotnetPath is null
+            ? new(environmentVariables)
+            : new(dotnetPath, environmentVariables);
         int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, cancellationToken);
 
         if (dotnet.StandardError.Contains("Invalid runtimeconfig.json"))

@@ -39,7 +39,22 @@ public class DotnetMuxer : IDisposable
               DefaultEnvironmentVariables,
               environmentVariables,
               mergeEnvironmentVariables,
-              useDefaultArtifactPackages)
+              useDefaultArtifactPackages,
+              dotnetPath: null)
+    {
+    }
+
+    public DotnetMuxer(
+        string dotnetPath,
+        IDictionary<string, string?> environmentVariables,
+        bool mergeEnvironmentVariables = true,
+        bool useDefaultArtifactPackages = true)
+        : this(
+              DefaultEnvironmentVariables,
+              environmentVariables,
+              mergeEnvironmentVariables,
+              useDefaultArtifactPackages,
+              dotnetPath)
     {
     }
 
@@ -47,9 +62,10 @@ public class DotnetMuxer : IDisposable
         IDictionary<string, string?> defaultEnvironmentVariables,
         IDictionary<string, string?> environmentVariables,
         bool mergeDefaultEnvironmentVariables = true,
-        bool useDefaultArtifactsPackages = true)
+        bool useDefaultArtifactsPackages = true,
+        string? dotnetPath = null)
     {
-        _dotnet = $"{Root}/.dotnet/dotnet{Constants.ExecutableExtension}";
+        _dotnet = dotnetPath ?? $"{Root}/.dotnet/dotnet{Constants.ExecutableExtension}";
 
         _commandLine = new CommandLine();
         _environmentVariables = mergeDefaultEnvironmentVariables

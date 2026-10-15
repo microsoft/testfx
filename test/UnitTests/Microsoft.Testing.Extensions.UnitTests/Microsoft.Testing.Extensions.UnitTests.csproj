@@ -9,6 +9,7 @@
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462;net472</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'">true</AllowUnsafeBlocks>
     <!-- Use full PDBs on .NET Framework so that stack traces include file paths and line numbers even on net462 -->
     <DebugType Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETFramework'">full</DebugType>
   </PropertyGroup>
@@ -79,6 +80,25 @@
     <!-- The PackagedApp extension only targets .NET (net8.0/net9.0), so it is referenced only for those TFMs. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.PackagedApp\Microsoft.Testing.Extensions.PackagedApp.csproj"
                       Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'">
+    <!-- Source-link BCL-only launcher helpers so these tests do not reference the Playwright-carrying package assembly. -->
+    <EmbeddedResource Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\Resources\ExtensionResources.resx"
+                      Link="Browser\Resources\ExtensionResources.resx"
+                      GenerateSource="true"
+                      Generator="MSBuild:_GenerateResxSource"
+                      ManifestResourceName="Microsoft.Testing.Platform.Browser.Resources.ExtensionResources" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BoundedResourceCleanup.cs" Link="Browser\BoundedResourceCleanup.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserLauncherOptions.cs" Link="Browser\BrowserLauncherOptions.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserRunMonitor.cs" Link="Browser\BrowserRunMonitor.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\BrowserTerminalResult.cs" Link="Browser\BrowserTerminalResult.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\DiagnosticBuffer.cs" Link="Browser\DiagnosticBuffer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\HostProcess.cs" Link="Browser\HostProcess.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\PlaywrightNodeExecutable.cs" Link="Browser\PlaywrightNodeExecutable.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.Browser\WorkerProcessContainment.cs"
+             Link="Browser\WorkerProcessContainment.cs"
+             Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp'" />
   </ItemGroup>
 
   <ItemGroup>

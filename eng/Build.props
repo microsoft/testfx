@@ -2,7 +2,14 @@
 
   <PropertyGroup>
     <ProductsToBuild Condition=" '$(ProductsToBuild)' == '' ">all</ProductsToBuild>
+    <TestFxMSTestPackageSetValidation Condition=" '$(TestFxMSTestPackageSetValidation)' == '' AND '$(Projects)' != '' ">partial</TestFxMSTestPackageSetValidation>
+    <TestFxMSTestPackageSetValidation Condition=" '$(TestFxMSTestPackageSetValidation)' == '' AND '$(ProductsToBuild)' == 'testing-platform' ">none</TestFxMSTestPackageSetValidation>
+    <TestFxMSTestPackageSetValidation Condition=" '$(TestFxMSTestPackageSetValidation)' == '' ">full</TestFxMSTestPackageSetValidation>
   </PropertyGroup>
+
+  <ItemGroup>
+    <_CommonProps Include="TestFxMSTestPackageSetValidation=$(TestFxMSTestPackageSetValidation)" />
+  </ItemGroup>
 
   <!-- When building all products on windows OS -->
   <ItemGroup Condition=" '$(ProductsToBuild)' == 'all' AND '$(OS)' == 'Windows_NT' ">

@@ -24,6 +24,8 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * DisplayMessageSerializer: 12
  * WaitForServerControlRequestSerializer: 13
  * ServerControlMessageSerializer: 14
+ * FileArtifactTransferRequestSerializer: 15
+ * FileArtifactTransferResponseSerializer: 16
 */
 
 [Embedded]
@@ -45,5 +47,7 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new DisplayMessageSerializer(), typeof(DisplayMessage));
         namedPipeBase.RegisterSerializer(new WaitForServerControlRequestSerializer(), typeof(WaitForServerControlRequest));
         namedPipeBase.RegisterSerializer(new ServerControlMessageSerializer(), typeof(ServerControlMessage));
+        namedPipeBase.RegisterSerializer(new FileArtifactTransferRequestSerializer(), typeof(FileArtifactTransferRequest));
+        namedPipeBase.RegisterSerializer(new FileArtifactTransferResponseSerializer(), typeof(FileArtifactTransferResponse));
     }
 }

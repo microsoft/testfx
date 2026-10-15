@@ -1,0 +1,13 @@
+[
+  "BrowserPackage_DotnetTestRunsAndListsTestsThroughSdkHttpGateway",
+  "BrowserPackage_DefinesDedicatedBrowserRunArguments",
+  "BrowserPackage_SdkCancellationStopsManagedBrowserRun",
+  "BrowserPackage_ArtifactQuotaFailureFailsRun",
+  "BrowserPackage_HostAssetsAreBuildOnlyConsumerAssets",
+  "BrowserPackage_DesktopTestApplicationIsUnaffected",
+  "BrowserPackage_ContainsPrivateCrossPlatformPlaywrightRuntime",
+  "BrowserPackage_PackNoBuildPreservesRuntimePayload",
+  "BrowserPackage_PackWithoutBundledNodePreservesPrivateDriverAndLicenses",
+  "BrowserPackage_InvalidExplicitBrowserPathFails",
+  "BrowserPackage_EvaluatedPropertyIgnoresTelemetryBanner"
+]

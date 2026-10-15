@@ -276,6 +276,25 @@ public sealed class DotnetTestProtocolSerializerTests
     }
 
     [TestMethod]
+    public void FileArtifactTransferFieldIds_AreStable()
+    {
+        Assert.AreEqual((ushort)1, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.ExecutionId)));
+        Assert.AreEqual((ushort)2, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.InstanceId)));
+        Assert.AreEqual((ushort)3, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.TransferId)));
+        Assert.AreEqual((ushort)4, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.FileName)));
+        Assert.AreEqual((ushort)5, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.TotalLength)));
+        Assert.AreEqual((ushort)6, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.Offset)));
+        Assert.AreEqual((ushort)7, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.Data)));
+        Assert.AreEqual((ushort)8, GetConstantValue(typeof(FileArtifactTransferRequestFieldsId), nameof(FileArtifactTransferRequestFieldsId.IsFinal)));
+        Assert.AreEqual((ushort)1, GetConstantValue(typeof(FileArtifactTransferResponseFieldsId), nameof(FileArtifactTransferResponseFieldsId.NextOffset)));
+        Assert.AreEqual((ushort)2, GetConstantValue(typeof(FileArtifactTransferResponseFieldsId), nameof(FileArtifactTransferResponseFieldsId.FullPath)));
+        Assert.AreEqual((ushort)3, GetConstantValue(typeof(FileArtifactTransferResponseFieldsId), nameof(FileArtifactTransferResponseFieldsId.Error)));
+
+        static ushort GetConstantValue(Type declaringType, string fieldName)
+            => (ushort)declaringType.GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
     public void DiscoveredTestMessages_RoundTripsWithTraitsAndParameters()
     {
         var message = new DiscoveredTestMessages(
@@ -429,6 +448,85 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.IsNull(actual.FileArtifacts[1].Description);
         Assert.AreEqual("microsoft.testing.coverage", actual.FileArtifacts[1].Kind);
         Assert.AreSequenceEqual(["input/coverage.txt"], actual.FileArtifacts[1].InputArtifactPaths);
+    }
+
+    [TestMethod]
+    public void FileArtifactTransferRequest_RoundTrips()
+    {
+        var message = new FileArtifactTransferRequest(
+            "executionId",
+            "instanceId",
+            "transferId",
+            "results.trx",
+            1234567890123,
+            1048576,
+            [0, 1, 2, 255],
+            true);
+
+        FileArtifactTransferRequest actual = RoundTrip(new FileArtifactTransferRequestSerializer(), message);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.AreEqual(message.TransferId, actual.TransferId);
+        Assert.AreEqual(message.FileName, actual.FileName);
+        Assert.AreEqual(message.TotalLength, actual.TotalLength);
+        Assert.AreEqual(message.Offset, actual.Offset);
+        Assert.AreSequenceEqual(message.Data, actual.Data);
+        Assert.AreEqual(message.IsFinal, actual.IsFinal);
+    }
+
+    [TestMethod]
+    public void FileArtifactTransferResponse_RoundTrips()
+    {
+        var message = new FileArtifactTransferResponse(
+            1234567890123,
+            @"C:\results\results.trx",
+            null);
+
+        FileArtifactTransferResponse actual = RoundTrip(new FileArtifactTransferResponseSerializer(), message);
+
+        Assert.AreEqual(message.NextOffset, actual.NextOffset);
+        Assert.AreEqual(message.FullPath, actual.FullPath);
+        Assert.IsNull(actual.Error);
+    }
+
+    [TestMethod]
+    public void FileArtifactTransferRequest_RejectsOversizedChunkBeforeAllocation()
+    {
+        const int OversizedChunkLength = 1_048_577;
+        var serializer = new FileArtifactTransferRequestSerializer();
+        var message = new FileArtifactTransferRequest(
+            "executionId",
+            "instanceId",
+            "transferId",
+            "results.trx",
+            OversizedChunkLength,
+            0,
+            new byte[OversizedChunkLength],
+            true);
+        using var stream = new MemoryStream();
+        serializer.Serialize(message, stream);
+        stream.Position = 0;
+
+        Assert.ThrowsExactly<InvalidDataException>(() => serializer.Deserialize(stream));
+    }
+
+    [TestMethod]
+    public void FileArtifactTransferRequest_RejectsMissingRequiredFields()
+    {
+        using var stream = new MemoryStream(BitConverter.GetBytes((ushort)0));
+
+        Assert.ThrowsExactly<InvalidDataException>(
+            () => new FileArtifactTransferRequestSerializer().Deserialize(stream));
+    }
+
+    [TestMethod]
+    public void FileArtifactTransferResponse_RejectsMissingNextOffset()
+    {
+        using var stream = new MemoryStream(BitConverter.GetBytes((ushort)0));
+
+        Assert.ThrowsExactly<InvalidDataException>(
+            () => new FileArtifactTransferResponseSerializer().Deserialize(stream));
     }
 
     [TestMethod]

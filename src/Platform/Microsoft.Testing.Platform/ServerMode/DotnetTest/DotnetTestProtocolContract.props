@@ -1,11 +1,12 @@
 <Project>
 
   <!--
-    Shared-source manifest for the 'dotnet test' named-pipe protocol.
+    Shared-source manifest for the framed 'dotnet test' protocol.
 
     PURPOSE
-      The 'dotnet test' <-> Microsoft.Testing.Platform integration talks over a named pipe using a small, versioned
-      binary protocol. This .props is the single canonical list of the source files that make up that protocol - the
+      The 'dotnet test' <-> Microsoft.Testing.Platform integration uses a small, versioned binary protocol over
+      named pipes or authenticated HTTP. This .props is the single canonical list of the source files that make up
+      that protocol - the
       wire contract (serializer ids + field ids + handshake/session/state constants), the message models, the
       serializers, and the small serializer-registry + base infrastructure they need. The same files are compiled
       into Microsoft.Testing.Platform (the host side, via its default globbing) AND VENDORED (hand-copied) into the
@@ -27,7 +28,7 @@
           IPC/NamedPipeBase.cs (registry only).
         - Serializer infrastructure: IPC/Serializers/BaseSerializer.cs, NamedPipeSerializer.cs, RegisterSerializers.cs
           and the base request/response serializers (VoidResponse/TestHostCompletedRequest/TestHostProcessPIDRequest).
-        - Message models + serializers for serializer ids 0-12 (Models/*.cs + Serializers/*.cs under this folder,
+        - Message models + serializers for serializer ids 0-16 (Models/*.cs + Serializers/*.cs under this folder,
           plus the base models under IPC/Models/*.cs).
 
       Deliberately NOT shared (kept local to Microsoft.Testing.Platform, transport differs per repo):
@@ -71,7 +72,7 @@
     <!-- Base request/response models (all files in the platform IPC/Models folder). Same "every file is shared" note as above. -->
     <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\Models\*.cs" />
 
-    <!-- 'dotnet test' message models + serializers for serializer ids 0-12. -->
+    <!-- 'dotnet test' message models + serializers for serializer ids 0-16. -->
     <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Models\*.cs" />
     <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Serializers\*.cs" />
   </ItemGroup>
