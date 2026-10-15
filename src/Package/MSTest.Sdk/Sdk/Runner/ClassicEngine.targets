@@ -47,8 +47,8 @@
     <MicrosoftTestingExtensionsHtmlReportVersion Condition=" '$(MicrosoftTestingExtensionsHtmlReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHtmlReportVersion>
 
     <!--
-      CTRF report (experimental / opt-in only).
-      Not auto-enabled by any profile - it has its own pre-release version line
+      CTRF report (opt-in only).
+      Not auto-enabled by any profile - it has its own 1.x version line
       (see MicrosoftTestingExtensionsCtrfReportVersion flowed through MSTest.Sdk.csproj
       and seeded by Sdk.props.template).
     -->

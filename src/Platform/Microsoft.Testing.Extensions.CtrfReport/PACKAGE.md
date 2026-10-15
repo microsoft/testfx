@@ -12,16 +12,24 @@ dotnet add package Microsoft.Testing.Extensions.CtrfReport
 
 ## About
 
-> **⚠️ Experimental:** This extension is currently experimental. The API, CLI options and on-disk format may change in future releases without notice. The CTRF specification itself is also pre-1.0 and may evolve.
-
 This package extends Microsoft.Testing.Platform with:
 
 - **CTRF (Common Test Report Format) report**: a single JSON file conforming to the immutable [CTRF 0.2.0 schema](https://github.com/ctrf-io/ctrf/blob/v0.2.0/schema/ctrf.schema.json) that can be consumed by tools supporting that specification (dashboards, CI integrations, AI agents, etc.) without requiring a TRX or JUnit XML parser.
 - **Cross-tool interoperability**: same shape as outputs produced by other testing frameworks that adopt CTRF, so results from multiple test runs can be aggregated by a single consumer.
 
+## Compatibility
+
+The stable 1.x package line supports the public registration API, existing CLI options, and documented CTRF 0.2.0 report semantics with backward compatibility. Reports remain pinned to the immutable 0.2.0 schema; a future upstream pre-1.0 specification is not adopted automatically. An incompatible schema or identity change requires a package major version or a separate explicit opt-in. Additive report fields must remain valid for the declared schema.
+
+This commitment does not make the upstream CTRF working draft immutable, add cross-run identity guarantees to framework-provided UIDs, or turn producer-specific `extra` metadata into a stable interchange protocol. The identity and merge limitations below still apply.
+
+The package follows the normal Microsoft.Testing.Platform prerelease and final-release cadence while retaining its own 1.x version line. Prerelease builds remain prerelease; the normal final release produces a stable package with aligned stable platform dependencies.
+
 ## Usage
 
 Enable the report via the `--report-ctrf` command line option. The report file name can be overridden with `--report-ctrf-filename <name>.json`.
+
+When using MSTest.Sdk, the extension remains opt-in and is not enabled by any profile. Add `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>` to the project to include it.
 
 ## Identity and attachment semantics
 
@@ -56,7 +64,7 @@ For a retried test, the test object represents the final attempt, including its 
 
 ## Merge lineage and consumer behavior
 
-Producer-owned metadata lives under the root `extra["microsoft.testingplatform"]` object. It is experimental extension data, not a standardized CTRF provenance field:
+Producer-owned metadata lives under the root `extra["microsoft.testingplatform"]` object. It is diagnostic extension data, not a standardized CTRF provenance field or a stable interchange contract:
 
 | Field | Meaning |
 | --- | --- |

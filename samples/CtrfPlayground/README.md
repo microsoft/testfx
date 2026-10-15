@@ -6,7 +6,7 @@ from the same set of tests using two different CTRF generators that both target
 
 | Project | Test framework | CTRF generator |
 | ------- | -------------- | -------------- |
-| [`Mtp`](./Mtp) | MSTest | `Microsoft.Testing.Extensions.CtrfReport` (this repository, **experimental**) |
+| [`Mtp`](./Mtp) | MSTest | `Microsoft.Testing.Extensions.CtrfReport` (this repository) |
 | [`XunitMtp`](./XunitMtp) | [`xunit.v3`](https://www.nuget.org/packages/xunit.v3) | `xunit.v3`'s built-in `-ctrf <file>` reporter |
 
 The tests in each project are intentionally equivalent (pass / fail / skip / theory / throw)
@@ -28,8 +28,9 @@ Both runs write a CTRF JSON file. Open them side by side (e.g.
 `code -d ./out/mtp/<file>.ctrf.json ./out/xunit/ctrf-report.json`) to compare the two outputs.
 
 > [!NOTE]
-> The CTRF extension shipped by this repository is currently marked **experimental**
-> (`[Experimental("TPEXP")]`). API shape and report content may change.
+> The stable 1.x CTRF producer is pinned to CTRF 0.2.0. Framework UID stability and
+> producer-specific diagnostic metadata retain the limitations in the
+> [package compatibility policy](../../src/Platform/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md#compatibility).
 
 <!-- markdownlint-disable-next-line MD028 -->
 > [!TIP]
