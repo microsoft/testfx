@@ -11,8 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polly" />
-    <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+    <PackageReference Include="Microsoft.Extensions.Resilience" />
   </ItemGroup>
 
   <ItemGroup>
