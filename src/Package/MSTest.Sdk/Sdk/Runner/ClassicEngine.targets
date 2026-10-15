@@ -46,12 +46,8 @@
     <EnableMicrosoftTestingExtensionsHtmlReport Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHtmlReport>
     <MicrosoftTestingExtensionsHtmlReportVersion Condition=" '$(MicrosoftTestingExtensionsHtmlReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHtmlReportVersion>
 
-    <!--
-      CTRF report (experimental / opt-in only).
-      Not auto-enabled by any profile - it has its own pre-release version line
-      (see MicrosoftTestingExtensionsCtrfReportVersion flowed through MSTest.Sdk.csproj
-      and seeded by Sdk.props.template).
-    -->
+    <!-- CTRF report is opt-in only, not auto-enabled by any profile. -->
+    <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsCtrfReportVersion>
 
     <!-- OpenTelemetry is API-only and opt-in. The Enable property adds the package; users activate
          it from Program.cs via builder.AddOpenTelemetryProvider(...). -->
