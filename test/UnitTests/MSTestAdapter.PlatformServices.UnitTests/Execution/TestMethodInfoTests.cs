@@ -180,6 +180,333 @@ public class TestMethodInfoTests : TestContainer
         ((int?)_testMethodInfo.Arguments[2]).Should().Be(30);
     }
 
+    public async Task InvokeAsyncInjectsCurrentCancellationTokenForSupportedReturnTypes()
+    {
+        string[] methodNames =
+        [
+            nameof(CancellationTokenInvocationFixture.TokenOnly),
+            nameof(CancellationTokenInvocationFixture.TaskTokenOnly),
+            nameof(CancellationTokenInvocationFixture.ValueTaskTokenOnly),
+        ];
+        foreach (string methodName in methodNames)
+        {
+            foreach (object?[]? arguments in new object?[]?[] { null, [] })
+            {
+                CancellationToken expectedToken = _testContextImplementation.CancellationToken;
+                int bodyCalls = 0;
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    Body = token =>
+                    {
+                        bodyCalls++;
+                        token.Should().Be(expectedToken);
+                        token.IsCancellationRequested.Should().BeFalse();
+                        using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+
+                        _testContextImplementation.CancellationTokenSource.Cancel();
+
+                        cancellations.Should().Be(1);
+                        token.IsCancellationRequested.Should().BeTrue();
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync(arguments);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                bodyCalls.Should().Be(1);
+                cancellations.Should().Be(1);
+                method.Arguments.Should().BeNull();
+                _testContextImplementation.TestData.Should().BeNull();
+            }
+        }
+    }
+
+    public async Task InvokeAsyncBindsCancellationTokenAfterInitializeAndInsideTimeoutScope()
+    {
+        foreach (bool cooperativeTimeout in new[] { false, true })
+        {
+            foreach (bool retainedExecutionContext in new[] { false, true })
+            {
+                CancellationToken originalToken = _testContextImplementation.CancellationToken;
+                using CancellationTokenSource initializedSource = new();
+                int bodyCalls = 0;
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    InitializeBody = () => _testContextImplementation.CancellationTokenSource = initializedSource,
+                    Body = token =>
+                    {
+                        bodyCalls++;
+                        token.Should().Be(initializedSource.Token).And.NotBe(originalToken);
+                        token.Should().Be(_testContextImplementation.CancellationToken);
+                        using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+
+                        initializedSource.Cancel();
+
+                        cancellations.Should().Be(1);
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.TokenOnly));
+                method.Parent.TestInitializeMethod = typeof(CancellationTokenInvocationFixture).GetMethod(nameof(CancellationTokenInvocationFixture.Initialize))!;
+                if (cooperativeTimeout)
+                {
+                    method.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(60_000) { CooperativeCancellation = true });
+                }
+
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+                if (retainedExecutionContext)
+                {
+                    typeof(TestMethodInfo).GetField("_executionContext", BindingFlags.Instance | BindingFlags.NonPublic)!
+                        .SetValue(method, ExecutionContext.Capture()!);
+                }
+
+                TestResult result = await method.InvokeAsync(null);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                bodyCalls.Should().Be(1, "cooperative timeout: {0}, retained context: {1}", cooperativeTimeout, retainedExecutionContext);
+                cancellations.Should().Be(1);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncRefreshesInjectedCancellationTokenForRepeatedRows()
+    {
+        List<CancellationToken> observedTokens = [];
+        int cancellations = 0;
+        Action<CancellationToken> body = token =>
+        {
+            token.Should().Be(_testContextImplementation.CancellationToken);
+            token.IsCancellationRequested.Should().BeFalse();
+            observedTokens.Add(token);
+            using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+            _testContextImplementation.CancellationTokenSource.Cancel();
+        };
+        CancellationTokenInvocationFixture first = new() { Body = body };
+        CancellationTokenInvocationFixture second = new() { Body = body };
+        TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.DataAndToken));
+        object?[] userData = [41];
+        method.SetArguments(userData);
+        _testContextImplementation.SetTestData(userData);
+        using IDisposable factoryScope = UseCancellationTokenInstances(first, second);
+
+        TestResult firstResult = await method.InvokeAsync(null);
+        TestResult secondResult = await method.InvokeAsync(null);
+
+        firstResult.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", firstResult.TestFailureException);
+        secondResult.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", secondResult.TestFailureException);
+        first.ReceivedData.Should().Equal(41);
+        second.ReceivedData.Should().Equal(41);
+        observedTokens.Should().HaveCount(2);
+        observedTokens[1].Should().NotBe(observedTokens[0]);
+        cancellations.Should().Be(2);
+        userData.Should().Equal(41);
+        method.Arguments.Should().Equal(41);
+        _testContextImplementation.TestData.Should().Equal(41);
+    }
+
+    public async Task InvokeAsyncPreservesExplicitCancellationTokenArguments()
+    {
+        (string Method, object Data, object?[] ExpectedData)[] cases =
+        [
+            (nameof(CancellationTokenInvocationFixture.DataAndToken), 43, [43]),
+            (nameof(CancellationTokenInvocationFixture.SingleArrayAndToken), new object?[] { 17, "array" }, [17, "array"]),
+        ];
+        foreach ((string methodName, object data, object?[] expectedData) in cases)
+        {
+            using CancellationTokenSource suppliedSource = new();
+            foreach (object? suppliedValue in new object?[] { suppliedSource.Token, CancellationToken.None, null })
+            {
+                CancellationToken expectedToken = suppliedValue is CancellationToken token ? token : CancellationToken.None;
+                int bodyCalls = 0;
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    Body = actualToken =>
+                    {
+                        bodyCalls++;
+                        actualToken.Should().Be(expectedToken).And.NotBe(_testContextImplementation.CancellationToken);
+                        using CancellationTokenRegistration registration = actualToken.Register(() => cancellations++);
+
+                        suppliedSource.Cancel();
+
+                        cancellations.Should().Be(expectedToken.CanBeCanceled ? 1 : 0);
+                        _testContextImplementation.CancellationToken.IsCancellationRequested.Should().BeFalse();
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync([data, suppliedValue]);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                instance.ReceivedData.Should().Equal(expectedData);
+                bodyCalls.Should().Be(1);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncResolvesOptionalDataButInjectsOmittedOptionalCancellationToken()
+    {
+        (object?[] Data, object?[] Expected)[] cases =
+        [
+            ([], [7, "fallback"]),
+            ([11], [11, "fallback"]),
+            ([13, "provided"], [13, "provided"]),
+        ];
+        foreach ((object?[] data, object?[] expected) in cases)
+        {
+            foreach (bool storedArguments in new[] { false, true })
+            {
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    Body = token =>
+                    {
+                        token.Should().Be(_testContextImplementation.CancellationToken).And.NotBe(CancellationToken.None);
+                        using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+                        _testContextImplementation.CancellationTokenSource.Cancel();
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.OptionalDataAndToken));
+                if (storedArguments)
+                {
+                    method.SetArguments(data);
+                }
+
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync(storedArguments ? null : data);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                instance.ReceivedData.Should().Equal(expected);
+                cancellations.Should().Be(1);
+                data.Should().NotContain(item => item is CancellationToken);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncPreservesSingleObjectArrayDataBeforeInjectingCancellationToken()
+    {
+        CancellationToken? receivedToken = null;
+        CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+        TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.SingleArrayAndToken));
+        object?[] userData = [17, "array"];
+        method.SetArguments(userData);
+        _testContextImplementation.SetTestData(userData);
+        using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        instance.ReceivedData.Should().Equal(17, "array");
+        receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+        userData.Should().Equal(17, "array");
+        method.Arguments.Should().Equal(17, "array");
+        _testContextImplementation.TestData.Should().Equal(17, "array");
+    }
+
+    public async Task InvokeAsyncInfersGenericDataBeforeInjectingCancellationToken()
+    {
+        foreach ((object value, Type expectedType) in new (object, Type)[] { (19, typeof(int)), ("generic", typeof(string)) })
+        {
+            CancellationToken? receivedToken = null;
+            CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.GenericDataAndToken));
+            method.SetArguments([value]);
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+            instance.ReceivedData.Should().Equal(value);
+            instance.GenericType.Should().Be(expectedType);
+            receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+        }
+    }
+
+    public async Task InvokeAsyncPreservesParamsCancellationTokenArrays()
+    {
+        using CancellationTokenSource suppliedSource = new();
+        object?[][] rows = [[], [CancellationToken.None], [suppliedSource.Token, new CancellationToken(canceled: true)]];
+        foreach (object?[] data in rows)
+        {
+            int bodyCalls = 0;
+            CancellationTokenInvocationFixture instance = new() { Body = _ => bodyCalls++ };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.ParamsTokens));
+            method.SetArguments(data);
+            _testContextImplementation.SetTestData(data);
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+            bodyCalls.Should().Be(1);
+            instance.ReceivedData.Should().ContainSingle().Which.Should().BeOfType<CancellationToken[]>()
+                .Which.Should().Equal(data.Cast<CancellationToken>());
+            method.Arguments.Should().ContainSingle().Which.Should().BeOfType<CancellationToken[]>()
+                .Which.Should().Equal(data.Cast<CancellationToken>());
+            _testContextImplementation.TestData.Should().Equal(data);
+            _testContextImplementation.CancellationToken.IsCancellationRequested.Should().BeFalse();
+        }
+    }
+
+    public async Task InvokeAsyncDoesNotInjectUnsupportedShapesOrRepairInvalidData()
+    {
+        (string Method, object?[]? Data)[] cases =
+        [
+            (nameof(CancellationTokenInvocationFixture.NullableToken), null),
+            (nameof(CancellationTokenInvocationFixture.TokenSource), null),
+            (nameof(CancellationTokenInvocationFixture.ByRefToken), null),
+            (nameof(CancellationTokenInvocationFixture.NonTrailingToken), [23]),
+            (nameof(CancellationTokenInvocationFixture.TwoDataAndToken), [23]),
+            (nameof(CancellationTokenInvocationFixture.DataAndToken), ["wrong"]),
+            (nameof(CancellationTokenInvocationFixture.DataAndToken), [23, CancellationToken.None, "extra"]),
+        ];
+        foreach ((string methodName, object?[]? data) in cases)
+        {
+            int bodyCalls = 0;
+            CancellationTokenInvocationFixture instance = new() { Body = _ => bodyCalls++ };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(data);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Error, "invalid case {0}: {1}", methodName, result.TestFailureException);
+            result.TestFailureException.Should().BeOfType<TestFailedException>().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+            bodyCalls.Should().Be(0, "invalid case {0} must not reach user code", methodName);
+        }
+    }
+
+    public async Task InvokeAsyncDoesNotInjectCancellationTokenIntoLifecycleMethods()
+    {
+        foreach (bool initialize in new[] { false, true })
+        {
+            int bodyCalls = 0;
+            CancellationTokenInvocationFixture instance = new() { Body = _ => bodyCalls++ };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.TokenOnly));
+            MethodInfo tokenMethod = typeof(CancellationTokenInvocationFixture).GetMethod(nameof(CancellationTokenInvocationFixture.TokenOnly))!;
+            if (initialize)
+            {
+                method.Parent.TestInitializeMethod = tokenMethod;
+            }
+            else
+            {
+                method.Parent.TestCleanupMethod = tokenMethod;
+            }
+
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Error);
+            result.TestFailureException.Should().BeOfType<TestFailedException>().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+            bodyCalls.Should().Be(initialize ? 0 : 1, "the lifecycle method must not receive an injected token");
+        }
+    }
+
     public void TestMethodInfoCtorShouldSetRetryAttributeToNullWhenNoRetryAttributeExists()
     {
         TestMethodInfo testMethodInfo = CreateTestMethodInfoForRetryAttributeTests(nameof(DummyTestClassWithRetryAttributeMethods.MethodWithoutRetryAttribute));
@@ -2180,6 +2507,22 @@ public class TestMethodInfoTests : TestContainer
 
     #region helper methods
 
+    private TestMethodInfo CreateCancellationTokenTestMethod(string methodName)
+    {
+        Type type = typeof(CancellationTokenInvocationFixture);
+        TestClassInfo parent = new(type, type.GetConstructor([])!, true, _classAttribute, _testAssemblyInfo);
+        return new TestMethodInfo(type.GetMethod(methodName)!, parent)
+        {
+            TestContext = _testContextImplementation,
+            TimeoutInfo = TimeoutInfo.FromTimeout(0),
+            Executor = _testMethodAttribute,
+        };
+    }
+
+    private static IDisposable UseCancellationTokenInstances(params CancellationTokenInvocationFixture[] instances)
+        => TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(
+            [.. instances.Select(instance => new CountingTestClassInstanceLease(instance))]));
+
     private static async Task RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Func<Task> action)
     {
         try
@@ -2255,6 +2598,89 @@ public class TestMethodInfoTests : TestContainer
     #endregion
 
     #region Test data
+
+    public sealed class CancellationTokenInvocationFixture
+    {
+        public TestContext TestContext { get; set; } = null!;
+
+        public Action<CancellationToken> Body { get; set; } = _ => { };
+
+        public Action InitializeBody { get; set; } = () => { };
+
+        public object?[]? ReceivedData { get; private set; }
+
+        public Type? GenericType { get; private set; }
+
+        public void Initialize() => InitializeBody();
+
+        [TestMethod]
+        public void TokenOnly(CancellationToken token) => Body(token);
+
+        [TestMethod]
+        public async Task TaskTokenOnly(CancellationToken token)
+        {
+            await Task.CompletedTask.ConfigureAwait(false);
+            Body(token);
+        }
+
+        [TestMethod]
+        public ValueTask ValueTaskTokenOnly(CancellationToken token)
+        {
+            Body(token);
+            return default;
+        }
+
+        [TestMethod]
+        public void DataAndToken(int value, CancellationToken token)
+        {
+            ReceivedData = [value];
+            Body(token);
+        }
+
+        [TestMethod]
+        public void OptionalDataAndToken(int value = 7, string label = "fallback", CancellationToken token = default)
+        {
+            ReceivedData = [value, label];
+            Body(token);
+        }
+
+        [TestMethod]
+        public void SingleArrayAndToken(object?[] data, CancellationToken token)
+        {
+            ReceivedData = data;
+            Body(token);
+        }
+
+        [TestMethod]
+        public void GenericDataAndToken<T>(T value, CancellationToken token)
+        {
+            ReceivedData = [value];
+            GenericType = typeof(T);
+            Body(token);
+        }
+
+        [TestMethod]
+        public void ParamsTokens(params CancellationToken[] tokens)
+        {
+            ReceivedData = [tokens];
+            Body(CancellationToken.None);
+        }
+
+        [TestMethod]
+        public void NullableToken(CancellationToken? token) => Body(token ?? default);
+
+        [TestMethod]
+        public void TokenSource(CancellationTokenSource source) => Body(source.Token);
+
+        [TestMethod]
+        public void ByRefToken(ref CancellationToken token) => Body(token);
+
+        [TestMethod]
+        public void NonTrailingToken(CancellationToken token, int value) => Body(token);
+
+        [TestMethod]
+        public void TwoDataAndToken(int first, int second, CancellationToken token) => Body(token);
+    }
 
     private sealed class SequencedTestClassInstanceFactory(
         ITestClassInstanceLease firstLease,
