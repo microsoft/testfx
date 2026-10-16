@@ -36,7 +36,8 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// SDK the corresponding lines are swallowed exactly like the no-op device, so no unknown message id is ever
 /// sent. Plain informational output (<see cref="TextOutputDeviceData"/> /
 /// <see cref="FormattedTextOutputDeviceData"/>) is still discarded; only explicitly durable session messages,
-/// warnings, and errors cross the wire. The
+/// warnings, and errors cross the wire. Before the connection is registered, warnings and errors are written
+/// to the console so the SDK can relay startup failures that occur before the handshake. The
 /// <see cref="DotnetTestConnection"/> and the dotnet test execution id are resolved lazily because both become
 /// available only after the output device is built (the connection is created and the execution id env var is
 /// set during <c>AfterCommonServiceSetupAsync</c>).
@@ -98,8 +99,18 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
 
     private async Task ForwardDisplayMessageAsync(byte level, string text, CancellationToken cancellationToken)
     {
-        if (_serviceProvider.GetService<IPushOnlyProtocol>() is not DotnetTestConnection connection
-            || !connection.IsDisplayMessageForwardingSupported)
+        if (_serviceProvider.GetService<IPushOnlyProtocol>() is not DotnetTestConnection connection)
+        {
+            if (level is DisplayMessageLevels.Error or DisplayMessageLevels.Warning)
+            {
+                // The SDK captures process output for failures that occur before the pipe handshake.
+                _serviceProvider.GetConsole().WriteLine(text);
+            }
+
+            return;
+        }
+
+        if (!connection.IsDisplayMessageForwardingSupported)
         {
             return;
         }
