@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.UnitTests;
@@ -18,6 +19,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 [TestClass]
 public sealed class MSTestReflectionMetadataGeneratorTests
 {
+    [TestMethod]
+    public void AotSourceGeneratorDiagnostics_HaveDocumentationLinks() =>
+        new[]
+        {
+            DiagnosticDescriptors.StaticTestClass,
+            DiagnosticDescriptors.GenericTestClass,
+            DiagnosticDescriptors.InaccessibleTestClass,
+            DiagnosticDescriptors.GenericTestMethod,
+            DiagnosticDescriptors.ByRefParameter,
+        }
+            .Select(descriptor => descriptor.HelpLinkUri)
+            .Should()
+            .Equal(
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0001",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0002",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0003",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0004",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0005");
+
     /// <summary>
     /// Minimal MSTest attribute stubs so the generator can locate <c>[TestClass]</c> /
     /// <c>[TestMethod]</c> in test fixtures without dragging the real TestFramework
