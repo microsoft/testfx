@@ -131,56 +131,71 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // No constructor arguments and no method parameters -> nothing to check.
-        if (attribute.ConstructorArguments.Length == 0 && methodSymbol.Parameters.Length == 0)
-        {
-            return;
-        }
-
-        // Count mismatch since there's zero method parameters but there's at least one DataRow
-        // constructor argument.
-        if (methodSymbol.Parameters.Length == 0)
-        {
-            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
-                ArgumentCountMismatchRule,
-                attribute.ConstructorArguments.Length,
-                methodSymbol.Parameters.Length));
-            return;
-        }
-
-        // Possible count mismatch depending on whether last method parameter is an array or not.
-        if (attribute.ConstructorArguments.Length == 0)
-        {
-            if (methodSymbol.Parameters[^1].Type.Kind != SymbolKind.ArrayType)
-            {
-                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
-                    ArgumentCountMismatchRule,
-                    attribute.ConstructorArguments.Length,
-                    methodSymbol.Parameters.Length));
-            }
-
-            return;
-        }
-
-        // DataRow constructors have either zero or one argument(s). If we get here, we are
-        // on the one argument case. Check if we match either of the array argument constructors
-        // and expand the array argument if we do.
+        int constructorArgumentCount = attribute.ConstructorArguments.Length;
         ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
         if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams == true)
         {
             constructorArguments = constructorArguments[0].Values;
         }
 
-        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters))
+        ImmutableArray<IParameterSymbol> methodParameters = methodSymbol.Parameters;
+        if (methodParameters.Length > 0
+            && methodParameters[^1].RefKind == RefKind.None
+            && SymbolEqualityComparer.Default.Equals(
+                methodParameters[^1].Type,
+                context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingCancellationToken))
+            && !(constructorArguments.Length == methodParameters.Length && constructorArguments[^1].IsNull
+                && (methodParameters is not [{ Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } }, _]
+                    || constructorArguments[0].IsNull
+                    || constructorArguments[0].Type.IsAssignableTo(methodParameters[0].Type, context.Compilation))))
+        {
+            methodParameters = methodParameters.RemoveAt(methodParameters.Length - 1);
+            constructorArgumentCount = constructorArguments.Length;
+        }
+
+        // An omitted token does not prevent optional data parameters from using their defaults.
+        if (constructorArgumentCount == 0
+            && (methodParameters.Length == 0
+                || (methodParameters.Length < methodSymbol.Parameters.Length && methodParameters.All(parameter => parameter.IsOptional))))
+        {
+            return;
+        }
+
+        // Count mismatch since there's zero method parameters but there's at least one DataRow
+        // constructor argument.
+        if (methodParameters.Length == 0)
+        {
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
+                ArgumentCountMismatchRule,
+                constructorArgumentCount,
+                methodParameters.Length));
+            return;
+        }
+
+        // Possible count mismatch depending on whether last method parameter is an array or not.
+        if (constructorArgumentCount == 0)
+        {
+            if (methodParameters[^1].Type.Kind != SymbolKind.ArrayType)
+            {
+                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
+                    ArgumentCountMismatchRule,
+                    constructorArgumentCount,
+                    methodParameters.Length));
+            }
+
+            return;
+        }
+
+        if (IsArgumentCountMismatch(constructorArguments.Length, methodParameters))
         {
             context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
                 constructorArguments.Length,
-                methodSymbol.Parameters.Length));
+                methodParameters.Length));
             return;
         }
 
-        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, constructorArguments);
+        AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, methodParameters, constructorArguments);
 
         // Check constructor argument types match method parameter types.
         List<(string ParameterName, string ExpectedType, string ActualType)> typeMismatches = [];
@@ -193,7 +208,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
-            ITypeSymbol paramType = GetParameterType(methodSymbol.Parameters, currentArgumentIndex, constructorArguments.Length);
+            ITypeSymbol paramType = GetParameterType(methodParameters, currentArgumentIndex, constructorArguments.Length);
             if (paramType.TypeKind == TypeKind.TypeParameter ||
                 paramType is IArrayTypeSymbol { ElementType.TypeKind: TypeKind.TypeParameter })
             {
@@ -204,8 +219,8 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                int parameterIndex = Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1);
-                string parameterName = methodSymbol.Parameters[parameterIndex].Name;
+                int parameterIndex = Math.Min(currentArgumentIndex, methodParameters.Length - 1);
+                string parameterName = methodParameters[parameterIndex].Name;
                 string expectedType = paramType.ToDisplayString();
                 string actualType = argumentType.ToDisplayString();
                 typeMismatches.Add((parameterName, expectedType, actualType));
@@ -277,6 +292,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         SymbolAnalysisContext context,
         SyntaxNode dataRowSyntax,
         IMethodSymbol methodSymbol,
+        ImmutableArray<IParameterSymbol> methodParameters,
         ImmutableArray<TypedConstant> constructorArguments)
     {
         if (!methodSymbol.IsGenericMethod)
@@ -285,8 +301,13 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         var parameterTypesSubstitutions = new Dictionary<ITypeSymbol, (ITypeSymbol Symbol, Type SystemType)>(SymbolEqualityComparer.Default);
-        foreach (IParameterSymbol parameter in methodSymbol.Parameters)
+        foreach (IParameterSymbol parameter in methodParameters)
         {
+            if (parameter.Ordinal >= constructorArguments.Length)
+            {
+                break;
+            }
+
             TypedConstant constructorArgument = constructorArguments[parameter.Ordinal];
 
             // This happens for [DataRow(null)] which ends up being resolved

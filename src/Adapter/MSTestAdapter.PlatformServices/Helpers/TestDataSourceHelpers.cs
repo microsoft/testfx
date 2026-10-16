@@ -7,11 +7,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class TestDataSourceHelpers
 {
+    internal static int GetDataParameterCount(ParameterInfo[] parameters)
+        => parameters.Length > 0 && parameters[^1].ParameterType == typeof(CancellationToken)
+            ? parameters.Length - 1
+            : parameters.Length;
+
     public static bool IsDataConsideredSingleArgumentValue(object?[]? data, ParameterInfo[] parameters)
         => data is not null
             && (data.Length != 1 || data[0] is not null)
-            && parameters.Length == 1
-            && parameters[0].ParameterType == typeof(object[]);
+            && GetDataParameterCount(parameters) == 1
+            && parameters[0].ParameterType == typeof(object[])
+            && !(parameters.Length == 2 && data.Length == 2
+                && data[0] is null or object[]
+                && (data[1] is null or CancellationToken || data[1] == Type.Missing));
 
     public static bool TryHandleITestDataRow(
         object?[] d,
@@ -64,7 +72,7 @@ internal static class TestDataSourceHelpers
 
     public static bool TryHandleTupleDataSource(object? data, ParameterInfo[] testMethodParameters, out object?[] array)
     {
-        if (testMethodParameters.Length == 1 &&
+        if (GetDataParameterCount(testMethodParameters) == 1 &&
             testMethodParameters[0].ParameterType?.IsAssignableFrom(data?.GetType()) == true)
         {
             array = [];
