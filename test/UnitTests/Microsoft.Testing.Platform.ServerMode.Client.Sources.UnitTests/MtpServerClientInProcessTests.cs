@@ -1723,7 +1723,7 @@ public sealed class MtpServerClientInProcessTests
         public FakeMtpServer Value => _server ?? throw new InvalidOperationException("The callback has not connected yet.");
 
         /// <summary>
-        /// Completes once the callback has published its server. The client's accept can complete while the
+        /// Completes once the callback has published its server and connection count. The client's accept can complete while the
         /// callback is still inside its own connect call, so a test must await this before touching
         /// <see cref="Value"/> rather than assuming the launch returning means the callback finished setting
         /// itself up.
@@ -1773,8 +1773,8 @@ public sealed class MtpServerClientInProcessTests
             ServerToken = cancellationToken;
             FakeMtpServer server = ConnectBack(serverArguments);
             _server = server;
-            _connected.TrySetResult(server);
             _ = Interlocked.Increment(ref _connectionCount);
+            _connected.TrySetResult(server);
 
             try
             {
