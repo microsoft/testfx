@@ -465,6 +465,36 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_ExplainsModuleAndRunExitCodes()
+    {
+        const int zeroTestsExitCode = 8;
+        const string zeroTestsReason = "No tests were found to run. This often means a test filter matched nothing.";
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Empty",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = zeroTestsExitCode,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: zeroTestsExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains($"exit code **8** (ZeroTests — {zeroTestsReason})", markdown);
+        Assert.Contains($"> Module exit code: `8` (ZeroTests — {zeroTestsReason})", markdown);
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_RendersFailureFlakinessDurationAndDependencyInsights()
     {
         var module = new CiRunSummaryModule
