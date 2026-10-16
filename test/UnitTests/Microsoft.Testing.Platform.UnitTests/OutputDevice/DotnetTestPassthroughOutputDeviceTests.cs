@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
@@ -50,31 +52,27 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
     }
 
     [TestMethod]
-    public async Task DisplayAsync_WithWarningButNoConnection_IsSwallowedWithoutThrowing()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DisplayAsync_WithDiagnosticButNoConnection_WritesToConsole(bool isError)
     {
-        // A warning message is recognized as forwardable (so the connection is looked up), but with no dotnet
-        // test connection resolved there is nothing to forward to and the message is dropped.
-        var serviceProvider = new Mock<IServiceProvider>();
-        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
-        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+        const string message = """
+            Invalid command line arguments:
+                A diagnostic produced before the pipe connection exists.
+            """;
+        var console = new Mock<IConsole>(MockBehavior.Strict);
+        console.Setup(c => c.WriteLine(message));
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(console.Object);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider);
+        IOutputDeviceData data = isError
+            ? new ErrorMessageOutputDeviceData(message)
+            : new WarningMessageOutputDeviceData(message);
 
-        await device.DisplayAsync(Producer, new WarningMessageOutputDeviceData("a warning"), CancellationToken.None);
+        await device.DisplayAsync(Producer, data, CancellationToken.None);
 
-        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
-    }
-
-    [TestMethod]
-    public async Task DisplayAsync_WithErrorButNoConnection_IsSwallowedWithoutThrowing()
-    {
-        // An error message is recognized as forwardable (so the connection is looked up), but with no dotnet
-        // test connection resolved there is nothing to forward to and the message is dropped.
-        var serviceProvider = new Mock<IServiceProvider>();
-        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
-        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
-
-        await device.DisplayAsync(Producer, new ErrorMessageOutputDeviceData("an error"), CancellationToken.None);
-
-        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+        console.Verify(c => c.WriteLine(message), Times.Once);
+        console.VerifyNoOtherCalls();
     }
 
     [TestMethod]

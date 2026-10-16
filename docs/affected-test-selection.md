@@ -61,6 +61,197 @@ builds that contain only the no-handshake fix.
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.
 
+## Selection reporting
+
+An unaffected module is **not selected**, not skipped: skipped is already a test-result state, and the selector
+does not necessarily know how many tests an unlaunched module contains. Successful empty affected-test selections
+need a module-level entry explaining that no affected tests were selected, without inventing passed or skipped
+test results. The SDK owns this entry because the selection orchestrator can finish without launching a test host.
+Collection, discovery, missing required handshakes, partial handshakes, cancellation and nonzero exits must retain
+their existing contracts; merely enabling affected-test mode is not evidence that an empty run was expected.
+
+The in-process MTP summary separately needs to honor an explicit zero-test opt-out. When exit code 8 is ignored
+through `--ignore-exit-code` or `TESTINGPLATFORM_EXITCODE_IGNORE`, retain the honest `Zero tests ran` wording and
+zero counters, but render that verdict neutrally rather than in red or as a green pass. The existing shared
+exit-code policy, including environment-variable precedence, defines this opt-out. It must not hide failed tests,
+minimum-expected-test violations, cancellation, process failures or handshake failures.
+
+Treating every zero-test run as successful, reclassifying unselected tests as skipped, and parsing captured child
+output were rejected: they respectively conceal broken discovery/filtering, corrupt test counts, and make the
+contract dependent on localized presentation. Regression and composed-product validation are recorded with the
+implementation; SDK source-vendoring and the independently shipped affected-test extension remain separate
+delivery boundaries.
+
+### Reporting validation (2026-10-15)
+
+The TestFx implementation is based on `4bb976b571a50c0811671a87044435d6e9198ed7`. Its source, test and generated
+localization patch, excluding this record, has SHA-256
+`BD7837621A526387BD7129FCAC9B2A9E3F41E7355619208CF3E03AB7B7D95CE4`. The reporter-only subpatch, before the two
+hosting-test output corrections below, is retained as
+`9CAFC7BCE890619AE6E9C51F261BFE89EFE15A5424A768C6819792CBFBAAE03F`. Validation used the repository SDK
+`12.0.100-alpha.1.26509.101`, Debug, Windows x64, and the existing method-parallel schedule with 32 workers.
+The 236-case existing reporting baseline passed before implementation; the final focused suite passes 265 cases.
+The unchanged `TestApplicationResultTests` selection also passes all 59 exit-policy cases. The standalone net8.0
+and platform-linked net9.0 reporter contract hosts each pass both tests.
+
+| Contract / retained cases | Counterfactual | Executed result without the behavior | Correct implementation |
+| --- | --- | --- | --- |
+| Explicit zero-test opt-out / `ActualSummary_ZeroTests_HonorsIgnorePolicy`, `ActualSummary_StrictAllSkipped_HonorsZeroTestsOptOut` | Restore the base summary and initialization behavior, retaining the final assertions. | Expected neutral ANSI 39, observed red ANSI 31. | Same assertions pass; ordinary unexpected zero-test runs stay red. |
+| Failure preservation / `ActualSummary_IgnoredZeroTests_DoesNotHideOtherFailures`, `ActualSummary_IgnoredZeroTests_DoesNotHideMinimumAfterSkipping` | Base minimum-count behavior, which incorrectly includes skipped outcomes. | The skipped/minimum cases report a green pass or the wrong zero-test verdict instead of the red explicit-minimum violation. | Failed tests, cancellation and unmet minima remain red; skipped tests do not satisfy an explicit minimum, matching `TestApplicationResult`'s existing exit policy. |
+| Module status / `AssemblyRunNotSelected_ReportsStatusWithoutInventingResults`, `AssemblyRunNotSelected_UsesNeutralColor`, `AssemblyRunNotSelected_MixedRun_PreservesActualTestCountsAndVerdict` | Retain the new API but replace its body with a no-op. | Six assertion failures among nine executed notification cases; the three informational/cancellation suppression cases still pass. | All nine pass, including unchanged real-test counts and the passing/failing mixed-run verdicts. |
+| Supplied-log noise / `RunTestingPlatformAsync_ForwardsMtpLogsToHostLoggerFactory`, `RunTestingPlatformAsync_AfterRunCompletes_DisconnectsHostLifetimeBridge` | Omit their existing per-application `SuppressOutput` helper. | The 24-case hosting suite passes but emits two unrelated nested `Zero tests ran` summaries; the captured-output guard rejects it with exit 1. | The same 24 cases pass without either nested summary on net8.0 and net472; the guard exits 0. |
+
+The summary comparison executes exactly the same 15 cases in both states: eight intended assertion failures
+before the fix (process exit 2), then 15 passes (exit 0), with no skips. The notification comparison similarly
+executes the same nine cases (exit 2 versus exit 0). Both changed test files were verified byte-identical in the
+comparison and delivery worktrees. The API-retaining comparison patch has SHA-256
+`DB2497E538CE1DBB420930D3B5B7ABA9ABBEAE0B60BEA15F9AE178EF49542104`; its unrelated no-op notification does not
+change the base summary behavior. Its only configuration adjustment gives the identical local `.globalconfig`
+values higher precedence, avoiding duplicate analyzer settings inherited from the enclosing worktree.
+
+The minimum/skip interaction was also reproduced against the initial implementation: both policy variants failed
+the intended assertion before the count correction. Compilation failures, the initial nested-configuration
+problem, and an initial stale-import `UpdateXlf` failure are not counted as behavioral red evidence.
+
+The `hosting-failure` diagnostics in the supplied example come from deliberately empty applications created
+inside passing hosting tests, not from the affected selector excluding that outer module. Two tests had omitted
+the same output-suppression helper already used by their neighbours. Applying that per-application helper removes
+the misleading nested summaries while retaining the exit-8, logging and host-lifetime assertions. It neither
+redirects process-global console streams nor weakens the real product's zero-test failure policy. The two-line
+test-only patch has SHA-256 `D48995DE8B747B3A773360C8A38AAC7ACA88261DDD5704F1FBD853D45B7C554D`.
+
+The exact runner selections are:
+
+```powershell
+$hostPath = '.\artifacts\bin\Microsoft.Testing.Platform.UnitTests\Debug\net8.0\Microsoft.Testing.Platform.UnitTests.dll'
+$reporting = 'FullyQualifiedName~TerminalOutputDeviceTests|FullyQualifiedName~TerminalTestReporterTests|FullyQualifiedName~TestRunSummaryHelperTests'
+$summary = 'FullyQualifiedName~TerminalOutputDeviceTests.ActualSummary_'
+$notification = 'FullyQualifiedName~TerminalTestReporterTests.AssemblyRunNotSelected_'
+# Set $evidence to a task-owned artifact directory.
+.\.dotnet\dotnet.exe $hostPath --filter $reporting --report-trx --report-trx-filename final-reporting.trx --results-directory "$evidence\final" --show-test-results failed --progress off --ansi off
+.\.dotnet\dotnet.exe $hostPath --filter $summary --report-trx --report-trx-filename final-paired-green.trx --results-directory "$evidence\final" --show-test-results failed --progress off --ansi off
+.\.dotnet\dotnet.exe $hostPath --filter $notification --report-trx --report-trx-filename final-not-selected-green.trx --results-directory "$evidence\final" --show-test-results failed --progress off --ansi off
+```
+
+All three final commands exit 0, with 265, 15 and nine passes respectively. Red logs/TRX, binary logs, patches and
+package provenance are retained in the task-owned artifact directory.
+All 364 localization catalogs pass the localization guard, and its 41 regression cases pass.
+
+The direct hosting-log checks also exit 0 with 24 passed, zero failed and zero skipped cases per target:
+
+```powershell
+.\.dotnet\dotnet.exe .\artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net8.0\Microsoft.Testing.Extensions.UnitTests.dll --filter 'FullyQualifiedName~MicrosoftExtensionsHostingExtensionsTests' --report-trx --report-trx-filename hosting-after.trx --results-directory "$evidence\hosting-after" --show-test-results failed --progress off --ansi off
+.\artifacts\bin\Microsoft.Testing.Extensions.UnitTests\Debug\net472\Microsoft.Testing.Extensions.UnitTests.exe --filter 'FullyQualifiedName~MicrosoftExtensionsHostingExtensionsTests' --report-trx --report-trx-filename hosting-net472.trx --results-directory "$evidence\hosting-net472" --show-test-results failed --progress off --ansi off
+```
+
+Shipping validation uses freshly packed MTP with a small package-only consumer, not the source-linked reporter
+alone. The final package is `Microsoft.Testing.Platform.2.6.0-validation.20261015.2.nupkg`, SHA-256
+`C91039A0545C2BAE329B1C3B5F9A33E0D1E91257BDA335CF140813B8FEB0D8BF`, containing net8.0, net9.0 and netstandard2.0
+assets. The validation-only version satisfies the affected provider's preview minimum without suppressing
+NuGet downgrade checks; it does not change the repository's dependency versions or represent a published release.
+The base package has SHA-256 `2779D235AAAA6BADE5B4EE77618D374856FDEA26D23E131A4612862289E13656`.
+
+The same 24 process probes run against separate base/fixed consumers and caches: 12 paths each on net8.0 and
+net472, including CLI/environment opt-out and precedence, unexpected zero, strict/default skips, explicit minimum
+violations with zero/skipped results, failed tests, passing tests, and an ignored failed-test exit that must still
+render red. All 24 pass on the fixed package (harness exit 0); ten fail their intended summary assertions on the
+base package (harness exit 1). Each child exit and count block is asserted independently, and the actual loaded
+MTP binary hashes match the selected package asset. The generated projects' effective feeds, package folders and
+resolved assets were inspected; equal package versions or a global cache listing were not treated as provenance.
+The retained `validate-packed-reporting.ps1` harness and consumer sources reproduce these checks. A readable
+transcript communicates the actual ANSI color/count differences better than a screenshot.
+
+### SDK shipping-layout validation
+
+The coordinated SDK implementation was built with its pinned `12.0.100-alpha.1.26480.102` toolchain and exercised
+in an isolated copy of the published SDK layout using the aligned MTP validation package above and
+`Microsoft.Testing.Extensions.AffectedTests` `18.13.0-preview.26514.5`. The real collector produced two mapping
+shards, each with two test UIDs and three source paths. The focused SDK tests pass all 163 cases, with no skips.
+Its source base/head is `54bdffb71caf1f2b6aec2417e105f361f1137cbd`, with persistent local changes on
+`dev/amauryleve/affected-selection-reporting`; the final SDK patch has SHA-256
+`9A9E735C7350B6B709C5D6ECD3B5BE1D6001E1A6AD1059D63E66E6354C15AAD0`. Neither repository change is published
+to GitHub by this work.
+
+Checking the actual loaded CLI matters: the initial published-layout copy still contained the old Native AOT
+library. Its valid empty selections returned 0 but failed the retained assertion requiring module status entries.
+The newly built managed CLI passed that assertion under `DOTNET_CLI_ENABLEAOT=false`, but that did not prove
+the default muxer path. The updated native component was therefore published and deployed too; its SHA-256 is
+`8152FCD44A6DC8409B5D28D6F495E99690553322F0A14DCB6A429D8E76DB7DCE`. The default-native muxer now passes:
+
+| Real default-native case | Parent exit | Observable result |
+| --- | --- | --- |
+| Two confirmed-empty modules | 0 | Two exact neutral ANSI-39 `No affected tests selected` entries; total, failed, succeeded and skipped all remain 0; every recorded child exit is 0. |
+| Real committed source change | 0 | Affected module selects two tests; the other correctly falls back to its two tests because the changed source is unmapped there. Four tests execute; this is not claimed as a mixed-empty selection. |
+| One fallback module plus one confirmed-empty module | 0 | Two tests pass and exactly one neutral module entry appears; no skipped tests are invented. Only the first module's real map metadata hash is deliberately made stale to force its documented conservative fallback. |
+| Earlier failed module plus later confirmed-empty module | 2 | One failed and one passed test, plus one neutral module entry; the later successful no-work completion does not erase the earlier failure. |
+| Explicit minimum after two empty selections | 9 | The entries remain neutral, but the zero-executed minimum violation and aggregate summary remain red. |
+| Missing required handshake | 1 | A child returning 0 without its required handshake is still a parent failure; no not-selected entry is emitted. |
+| Ordinary zero-test defect | 8 | Genuine zero-test failure remains red with no not-selected entry. |
+| Cancellation | 3 | Aborted, with no not-selected entries; child/parent cancellation exits remain nonzero. |
+| JSON discovery and help | 0 | Discovery parses as version 1.0 with two test nodes; neither informational mode is polluted with selection status or run-summary output. |
+
+The exact empty-selection command is `dotnet test --test-modules "*.Tests.dll" --root-directory <modules>
+--affected-tests --no-progress`, executed by the isolated SDK's real muxer, not by a handler mock. Each case
+retains `result.json`, `stdout.txt` and `sdk-trace.txt` beneath the SDK worktree's
+`artifacts\selection-validation\cases` directory, including parent/child returns and the actual command.
+The earlier wrong cancellation expectation and the source-change scenario that legitimately fell back are
+retained as harness/contract corrections, not relabelled as successful mixed-empty proof.
+All 11 canonical native cases pass. The generated map fault was restored byte-for-byte, and all owned build
+commands completed or were stopped. The source-redist build's unrelated missing Blazor tool assets were not
+worked around or presented as a completed full-source redist build; the actual managed/native CLI dependency
+closure was overlaid into the isolated published-SDK baseline instead. General agent/build guidance changes
+were excluded from the SDK delivery.
+
+The SDK owns the successful orchestrator-only completion call to `AssemblyRunNotSelected`; this method creates no
+test-host attempt, worker, result or aggregate-success override. Updating TestFx alone cannot change the SDK's
+embedded reporter. The coordinated SDK change must ship before the pinned SDK can display the new module entry.
+No rollout gate, global SDK version, release branch or servicing branch is changed by this implementation, and
+local validation is not a claim that existing CI logs have changed or that SDK rollout is complete.
+
+The task-owned comparison worktree was removed after archiving its source patch, base package, logs and TRX.
+The final validation package remains in an isolated evidence feed. Ordinary `Shipping` output was restored to
+one `Microsoft.Testing.Platform.2.6.0-dev.nupkg`, whose three MTP binary assets were verified byte-for-byte against
+the validated package; validation-version siblings were removed to avoid ambiguous acceptance-package discovery.
+
+### Main-branch integration (2026-10-15)
+
+Merged `origin/main` at `8718afe9b99b11e5b36be7dbc8d9e9ca959b3982` after Azure Pipelines reported
+`Skipped due to merge conflicts`, not a build or test failure. The only conflict was additive entries in
+`InternalAPI.Unshipped.txt`; both the reporting entries and main's `ShutdownProgressReporter` constructor entry
+were retained. The incoming .NET 11 runtime configuration was restored through the pinned repository build.
+The merged net8.0 unit project builds without warnings/errors, and the combined reporting, exit-policy and
+shutdown-reporter selection executes 334 cases with zero failures/skips (exit 0). The earlier packed-product
+and SDK composition results above remain bound to their recorded revisions; they are not presented as reruns
+or CI proof for this integration commit.
+
+### Session-failure review correction (2026-10-15)
+
+Review identified a separate zero-count failure: a framework can fail session creation or closure without
+publishing any test outcomes. Ignoring exit 8 must not neutralize that session's exit-10 failure. The terminal
+device now supplies a deferred reader of `ITestApplicationProcessExitCode.HasTestAdapterTestSessionFailure`;
+the reporter checks it at summary time, after session lifecycle callbacks, and displays a red `Failed!` verdict.
+The reader is deferred because the result service is registered after the output device. Existing zero-test
+opt-outs, cancellation, test counts and process exit policies are unchanged.
+
+The correction is based on `451b1bfb34575469b56c66aa71c2c28b4b7ac84c`; its source/test patch excluding this record
+has SHA-256 `B0193AC322654E59E21ECD8BDBEC09B1F5A3EEE72BF40CF10C8651829F5CF748`. The unchanged
+`ActualSummary_IgnoredZeroTests_FrameworkSessionFailureRemainsRed` regression executes real create/close
+callbacks through `TestHostTestFrameworkInvoker` and the actual default output-device factory. Its four cases
+cover both lifecycle phases and CLI/environment exit-8 opt-outs. Before the fix all four reached exit 10 but
+failed the intended red-summary assertion (outer exit 2); after the fix all four pass (outer exit 0). The retained
+test patch is SHA-256 `844CBC186F4E115AA3CBF1C23ECE81242D8377F1EA86525AD515F679DBCBAF01`.
+
+The net8.0 focused reporting/exit/shutdown selection passes all 338 cases with no skips, and the standalone
+reporter contract passes both cases. The corrected package
+`Microsoft.Testing.Platform.2.6.0-validation.20261015.3.nupkg`, SHA-256
+`73260538E631AED3AE26311B0097C2A8771DAC2F73409C9E4D2AAB8F1EF0D21B`, builds all five current shipping targets.
+The package-only consumer passes 32 process checks on net8.0/net472, including all eight real create/close
+failure variants: exit 10, red ANSI 31, and honest zero test counters. The final harness exits 0.
+An earlier harness leaked its last intentionally nonzero child exit, and a retry ran out of C: space while
+writing a binlog; neither is counted as behavioral red proof. Moving only task-owned logs/scratch to Q: and
+returning an explicit harness success after all assertions produced the clean final result without changing CI
+settings or clearing shared caches.
+
 ## Collection budget isolation
 
 [Run 20261013.16](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1633662&view=logs), from commit

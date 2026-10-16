@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -149,6 +150,8 @@ internal sealed partial class TerminalOutputDevice
             ShowTestResults = showTestResults,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             ZeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions),
+            AllowZeroTests = ExitCodeIgnorePolicy.Apply((int)ExitCode.ZeroTests, _commandLineOptions, _environment) == 0,
+            HasTestSessionFailure = TestSessionFailureProvider,
             AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,

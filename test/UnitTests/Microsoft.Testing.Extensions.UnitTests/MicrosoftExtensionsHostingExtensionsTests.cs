@@ -221,7 +221,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
                     {
                         serviceProvider.GetLoggerFactory().CreateLogger("hosting-test")
                             .Log(MtpLogLevel.Error, "message", null, static (state, _) => state);
-                        return new EmptyTestFramework();
+                        return SuppressOutput(serviceProvider, new EmptyTestFramework());
                     }),
                 TestContext.CancellationToken);
 
@@ -452,7 +452,7 @@ public sealed class MicrosoftExtensionsHostingExtensionsTests
             [],
             testApplication => testApplication.RegisterTestFramework(
                 _ => new TestFrameworkCapabilities(),
-                (_, _) => testFramework),
+                (_, serviceProvider) => SuppressOutput(serviceProvider, testFramework)),
             TestContext.CancellationToken);
 
         Assert.AreEqual(8, exitCode);

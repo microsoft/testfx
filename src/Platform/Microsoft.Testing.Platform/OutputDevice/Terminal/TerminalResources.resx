@@ -190,6 +190,10 @@
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
   </data>
+  <data name="NoAffectedTestsSelected" xml:space="preserve">
+    <value>No affected tests selected</value>
+    <comment>Neutral module status when affected-test selection succeeds without starting a test host. This is not the skipped test outcome and no test count is known.</comment>
+  </data>
   <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
     <value>Console is already in batching mode.</value>
     <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>

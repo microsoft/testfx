@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -188,7 +189,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
         string heading = new('#', headingLevel);
         if (includeExitCode && module.ExitCode != 0)
         {
-            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("`\n\n");
+            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
+                .Append(CiRunSummaryExitCode.GetName(module.ExitCode)).Append(" — ")
+                .Append(CiRunSummaryExitCode.GetReason(module.ExitCode, AzureDevOpsResources.ResourceManager)).Append(")\n\n");
         }
 
         if (module.TopFailingClasses.Length > 0)
@@ -425,7 +428,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append(" · ⏱ **").Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
         if (exitCode is int processExitCode && processExitCode != 0)
         {
-            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("**");
+            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (")
+                .Append(CiRunSummaryExitCode.GetName(processExitCode)).Append(" — ")
+                .Append(CiRunSummaryExitCode.GetReason(processExitCode, AzureDevOpsResources.ResourceManager)).Append(')');
         }
 
         builder.Append("\n\n");

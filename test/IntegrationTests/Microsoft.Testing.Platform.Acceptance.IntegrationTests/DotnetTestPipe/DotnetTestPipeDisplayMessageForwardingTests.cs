@@ -82,6 +82,8 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
                 .Distinct()];
         string onlyInstanceId = Assert.ContainsSingle(forwardedInstanceIds);
         Assert.AreEqual(handshakeInstanceId, onlyInstanceId);
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardOutput);
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardError);
     }
 
     [TestMethod]
@@ -104,6 +106,8 @@ public sealed class DotnetTestPipeDisplayMessageForwardingTests : AcceptanceTest
         Assert.IsEmpty(
             result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage),
             "No DisplayMessage should be forwarded when the negotiated protocol is below 1.3.0.");
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardOutput);
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardError);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
