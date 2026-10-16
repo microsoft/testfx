@@ -19,6 +19,7 @@
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReporterLoggingExtensions.cs" Link="Helpers\ReporterLoggingExtensions.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestNodeIdentity.cs" Link="Helpers\TestNodeIdentity.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SummaryReporterHelpers.cs" Link="Helpers\SummaryReporterHelpers.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryExitCode.cs" Link="Helpers\CiRunSummaryExitCode.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiCoverageSummary.cs" Link="Helpers\CiCoverageSummary.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiCoverageSummaryControllerHandler.cs" Link="Helpers\CiCoverageSummaryControllerHandler.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiCoverageSummaryControllerHandlerRegistration.cs" Link="Helpers\CiCoverageSummaryControllerHandlerRegistration.cs" />
