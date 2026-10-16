@@ -20,6 +20,27 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
+    internal void AssemblyRunNotSelected(string assembly, string? targetFramework, string? architecture)
+    {
+        if (_isHelp || _isDiscovery || WasCancelled)
+        {
+            return;
+        }
+
+        _terminalWithProgress.WriteToTerminal(terminal =>
+        {
+            terminal.SetColor(TerminalColor.Default);
+            if (_options.ShowAssembly)
+            {
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+                terminal.Append(' ');
+            }
+
+            terminal.AppendLine(TerminalResources.NoAffectedTestsSelected);
+            terminal.ResetColor();
+        });
+    }
+
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
         => AssemblyRunStarted(assembly, targetFramework, architecture, executionId, instanceId, attemptNumber: null);
 
