@@ -24,6 +24,6 @@ internal static class CiRunSummaryExitCode
     public static string GetReason(int exitCode, ResourceManager resources)
         => resources.GetString($"ExitCodeReason{GetName(exitCode)}", System.Globalization.CultureInfo.CurrentUICulture)
             ?? resources.GetString("ExitCodeReasonUnknown", System.Globalization.CultureInfo.CurrentUICulture)
-            ?? GetName(exitCode);
+            ?? "The test run reported a non-success exit code.";
 }
 #pragma warning restore RS0051
