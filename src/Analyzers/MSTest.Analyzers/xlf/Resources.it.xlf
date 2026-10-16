@@ -1092,7 +1092,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">La classe di test '{0}' deve essere valida</target>
+        <target state="translated">La class di test '{0}' deve essere valida</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -1147,12 +1147,12 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="translated">La classe derivata TestMethodAttribute '{0}' deve aggiungere i parametri CallerFilePath e CallerLineNumber al costruttore</target>
+        <target state="translated">La class derivata TestMethodAttribute '{0}' deve aggiungere i parametri CallerFilePath e CallerLineNumber al costruttore</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="translated">La classe derivata TestMethodAttribute deve propagare le informazioni di origine</target>
+        <target state="translated">La class derivata TestMethodAttribute deve propagare le informazioni di origine</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription">
@@ -1258,17 +1258,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">La classe di test deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitialize]' e/o '[AssemblyCleanup]'.</target>
+        <target state="translated">La class di test deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitialize]' e/o '[AssemblyCleanup]'.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">La classe di test '{0}' deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitialize]' e/o '[AssemblyCleanup]'</target>
+        <target state="translated">La class di test '{0}' deve avere almeno un metodo di test o essere 'static' con metodi contrassegnati da '[AssemblyInitialize]' e/o '[AssemblyCleanup]'</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">La classe di test deve avere un metodo di test</target>
+        <target state="translated">La class di test deve avere un metodo di test</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -1669,7 +1669,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="translated">La classe di test '{0}' non ha un costruttore valido. I costruttori validi sono di tipo 'public' e senza parametri o con un parametro di tipo 'TestContext'.</target>
+        <target state="translated">La class di test '{0}' non ha un costruttore valido. I costruttori validi sono di tipo 'public' e senza parametri o con un parametro di tipo 'TestContext'.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
