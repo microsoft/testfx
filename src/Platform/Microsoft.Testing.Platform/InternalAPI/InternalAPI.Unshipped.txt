@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.Services.ShutdownProgressReporter.ShutdownProgressReporter(Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.OutputDevice.IOutputDevice? outputDevice, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, System.TimeSpan quietWindow, System.TimeSpan pollInterval, Microsoft.Testing.Platform.Helpers.ITask! task) -> void
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler
 Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler.OnRunCompletedAsync(int exitCode, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>! artifacts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler![]!

@@ -983,6 +983,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <target state="translated">Параметр "--exit-on-process-exit" не поддерживается в браузерных средах.</target>
         <note>{Locked="--exit-on-process-exit"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
+        <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
+        <target state="new">The '--exit-on-process-exit' option is not supported in WASI environments.</target>
+        <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
         <target state="translated">Выход из тестового процесса при выходе зависимого процесса. Необходимо указать PID.</target>

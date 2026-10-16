@@ -82,4 +82,54 @@ public sealed class CompositeExtensionFactoryTests
         Assert.AreSame(first, second);
         Assert.AreEqual(1, callCount);
     }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Parameterless factory clone")]
+    [DataRow(true, DisplayName = "Service-provider factory clone")]
+    public void Clone_ProducesIndependentSingletonWhileRetainingTheFactory(bool withServices)
+    {
+        int constructions = 0;
+        ServiceProvider originalServices = new();
+        ServiceProvider cloneServices = new();
+        List<IServiceProvider> observedProviders = [];
+        CompositeExtensionFactory<TestExtension> factory = withServices
+            ? new(provider =>
+            {
+                observedProviders.Add(provider);
+                return new TestExtension($"instance-{++constructions}");
+            })
+            : new(() => new TestExtension($"instance-{++constructions}"));
+        object original = ((ICompositeExtensionFactory)factory).GetInstance(originalServices);
+        var clone = (ICompositeExtensionFactory)((ICloneable)factory).Clone();
+
+        object cloned = clone.GetInstance(cloneServices);
+        object cachedClone = clone.GetInstance(originalServices);
+
+        Assert.AreEqual("instance-1", ((TestExtension)original).Uid);
+        Assert.AreEqual("instance-2", ((TestExtension)cloned).Uid);
+        Assert.AreNotSame(original, cloned);
+        Assert.AreSame(cloned, cachedClone);
+        Assert.AreEqual(2, constructions);
+        Assert.AreSequenceEqual(withServices ? new IServiceProvider[] { originalServices, cloneServices } : [], observedProviders);
+    }
+
+    [TestMethod]
+    public void GetInstance_AfterFailedConstruction_CanConstructAndCacheTheNextSuccessfulInstance()
+    {
+        InvalidOperationException expectedFailure = new("first construction failed");
+        TestExtension expectedExtension = new("recovered");
+        int attempts = 0;
+        CompositeExtensionFactory<TestExtension> factory = new(() =>
+            ++attempts == 1 ? throw expectedFailure : expectedExtension);
+
+        InvalidOperationException failure = Assert.ThrowsExactly<InvalidOperationException>(
+            () => ((ICompositeExtensionFactory)factory).GetInstance());
+        object recovered = ((ICompositeExtensionFactory)factory).GetInstance();
+        object cached = ((ICompositeExtensionFactory)factory).GetInstance();
+
+        Assert.AreSame(expectedFailure, failure.InnerException);
+        Assert.AreSame(expectedExtension, recovered);
+        Assert.AreSame(recovered, cached);
+        Assert.AreEqual(2, attempts);
+    }
 }

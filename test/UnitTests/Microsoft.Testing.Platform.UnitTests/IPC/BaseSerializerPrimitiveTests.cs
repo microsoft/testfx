@@ -55,6 +55,45 @@ public sealed class BaseSerializerPrimitiveTests
             () => SerializerProbe.ReadByteValue(new MemoryStream()));
     }
 
+    [TestMethod]
+    public void ShippingSerializer_UsesUtf8ByteLengthAndPreservesUnicodeAndNullInIndependentPayloads()
+    {
+        Type shippingSerializer = GetShippingSerializer();
+        MethodInfo write = shippingSerializer.GetMethod("WriteString", BindingFlags.Static | BindingFlags.NonPublic)!;
+        MethodInfo read = shippingSerializer.GetMethod("ReadString", BindingFlags.Static | BindingFlags.NonPublic)!;
+        byte[] expectedBytes = [.. BitConverter.GetBytes(4), 0xCE, 0xA9, 0x00, 0x78];
+        using MemoryStream written = new();
+
+        write.Invoke(null, [written, "Ω\0x"]);
+
+        Assert.AreSequenceEqual(expectedBytes, written.ToArray());
+        using MemoryStream independentPayload = new(expectedBytes, writable: false);
+        Assert.AreEqual("Ω\0x", read.Invoke(null, [independentPayload]));
+        Assert.AreEqual(8, independentPayload.Position);
+    }
+
+    [TestMethod]
+    [DataRow(-1, DisplayName = "Negative string payload size")]
+    [DataRow(2, DisplayName = "String payload exceeds remaining byte")]
+    public void ShippingSerializer_InvalidStringSize_IsRejectedBeforeReadingPayload(int invalidSize)
+    {
+        MethodInfo read = GetShippingSerializer().GetMethod("ReadString", BindingFlags.Static | BindingFlags.NonPublic)!;
+        using MemoryStream stream = new([.. BitConverter.GetBytes(invalidSize), 0x41]);
+
+        TargetInvocationException reflectionFailure = Assert.ThrowsExactly<TargetInvocationException>(() => read.Invoke(null, [stream]));
+        InvalidDataException failure = Assert.IsInstanceOfType<InvalidDataException>(reflectionFailure.InnerException);
+
+        Assert.AreEqual($"Payload size {invalidSize} is invalid for the remaining stream.", failure.Message);
+        Assert.AreEqual(4, stream.Position);
+    }
+
+    private static Type GetShippingSerializer()
+    {
+        Type type = typeof(ITestApplication).Assembly.GetType("Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer", throwOnError: true)!;
+        Assert.AreEqual("Microsoft.Testing.Platform", type.Assembly.GetName().Name);
+        return type;
+    }
+
     private sealed class SerializerProbe : BaseSerializer
     {
         public static void WriteIntValue(Stream stream, int value) => WriteInt(stream, value);

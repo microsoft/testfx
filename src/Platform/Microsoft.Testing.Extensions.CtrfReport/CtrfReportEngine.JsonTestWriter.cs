@@ -18,6 +18,7 @@ internal sealed partial class CtrfReportEngine
         // remains the capped compatibility value. executionId spans coordinated retries.
         writer.WriteString("testId", GetTestId(r));
         writer.WriteString("executionId", executionId);
+        writer.WriteString("attemptId", Guid.NewGuid().ToString("D"));
 
         // CTRF spec: tests[i].name MUST be a non-empty string. Fall back to UID
         // (also non-empty) when the framework didn't supply a display name.
@@ -190,8 +191,6 @@ internal sealed partial class CtrfReportEngine
         writer.WritePropertyName("extra");
         writer.WriteStartObject();
         writer.WriteString("uid", r.Uid);
-        // CTRF 0.1.0 has no final-attempt identity field; keep it in the permitted extension point.
-        writer.WriteString("mtpAttemptId", Guid.NewGuid().ToString("D"));
         if (r.MethodName is not null)
         {
             writer.WriteString("method", r.MethodName);

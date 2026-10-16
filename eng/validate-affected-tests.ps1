@@ -87,6 +87,47 @@ function Assert-CollectionJobIsolation {
     }
 }
 
+function Invoke-SelfTestCases {
+    param(
+        $Cases,
+        [System.Collections.IDictionary]$BaselineConfiguration,
+        [scriptblock]$Validator
+    )
+
+    foreach ($case in $Cases) {
+        $caseConfiguration = @{}
+        $configurationChanged = $false
+        foreach ($argumentName in $BaselineConfiguration.Keys) {
+            $value = if ($case.ContainsKey($argumentName)) { $case[$argumentName] } else { $BaselineConfiguration[$argumentName] }
+            $caseConfiguration[$argumentName] = $value
+            if ($value -ne $BaselineConfiguration[$argumentName]) {
+                $configurationChanged = $true
+            }
+        }
+
+        if (-not $configurationChanged) {
+            throw "Self-test '$($case.Name)' did not change the configuration under test."
+        }
+
+        $rejected = $false
+        try {
+            & $Validator @caseConfiguration
+        } catch {
+            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
+                throw
+            }
+
+            $rejected = $true
+        }
+
+        if (-not $rejected) {
+            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
+        }
+
+        Write-Output "PASS $($case.Name)"
+    }
+}
+
 function Invoke-CollectionJobIsolationSelfTest {
     param(
         [string]$Pipeline,
@@ -177,28 +218,13 @@ function Invoke-CollectionJobIsolationSelfTest {
         }
     )
 
-    foreach ($case in $cases) {
-        $caseSharedCollectBranch = if ($case.ContainsKey("SharedCollectBranch")) { $case.SharedCollectBranch } else { $SharedCollectBranch }
-        if ($case.Pipeline -eq $Pipeline -and $case.CollectBranch -eq $CollectBranch -and $caseSharedCollectBranch -eq $SharedCollectBranch) {
-            throw "Self-test '$($case.Name)' did not change the configuration under test."
-        }
-
-        $rejected = $false
-        try {
-            Assert-CollectionJobIsolation $case.Pipeline $case.CollectBranch $caseSharedCollectBranch
-        } catch {
-            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
-                throw
-            }
-
-            $rejected = $true
-        }
-
-        if (-not $rejected) {
-            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
-        }
-
-        Write-Output "PASS $($case.Name)"
+    Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{
+        Pipeline = $Pipeline
+        CollectBranch = $CollectBranch
+        SharedCollectBranch = $SharedCollectBranch
+    } -Validator {
+        param($Pipeline, $CollectBranch, $SharedCollectBranch)
+        Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch
     }
 
     Write-Output "Collection isolation self-tests: $($cases.Count + 1) passed."
@@ -279,7 +305,8 @@ function Assert-NonWindowsAffectedTestsWiring {
         -not $NonWindowsTemplate.Contains('affectedTestsMode: ${{ parameters.affectedTestsMode }}') -or
         -not $NonWindowsTemplate.Contains("eq(parameters.enableAffectedTests, true), ne(parameters.affectedTestsMode, 'disabled')") -or
         -not $NonWindowsTemplate.Contains("dotnet test --solution NonWindowsTests.slnf") -or
-        -not $SharedTemplate.Contains('dotnet test --solution ${{ parameters.solution }}')) {
+        -not $SharedTemplate.Contains("'--solution'") -or
+        -not $SharedTemplate.Contains('${{ parameters.solution }}')) {
         throw "NonWindowsExecutionUsesSharedCommands: Unix must use its solution filter and the shared collection/selection contract."
     }
 
@@ -456,32 +483,15 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
         }
     }
 
-    foreach ($case in $cases) {
-        $casePipeline = if ($case.ContainsKey("Pipeline")) { $case.Pipeline } else { $Pipeline }
-        $caseNonWindowsTemplate = if ($case.ContainsKey("NonWindowsTemplate")) { $case.NonWindowsTemplate } else { $NonWindowsTemplate }
-        $caseSharedTemplate = if ($case.ContainsKey("SharedTemplate")) { $case.SharedTemplate } else { $SharedTemplate }
-        $caseLivePublishingTemplate = if ($case.ContainsKey("LivePublishingTemplate")) { $case.LivePublishingTemplate } else { $LivePublishingTemplate }
-        $caseFinalizePublishingTemplate = if ($case.ContainsKey("FinalizePublishingTemplate")) { $case.FinalizePublishingTemplate } else { $FinalizePublishingTemplate }
-        if ($casePipeline -eq $Pipeline -and $caseNonWindowsTemplate -eq $NonWindowsTemplate -and $caseSharedTemplate -eq $SharedTemplate -and $caseLivePublishingTemplate -eq $LivePublishingTemplate -and $caseFinalizePublishingTemplate -eq $FinalizePublishingTemplate) {
-            throw "Self-test '$($case.Name)' did not change the configuration under test."
-        }
-
-        $rejected = $false
-        try {
-            Assert-NonWindowsAffectedTestsWiring $casePipeline $caseNonWindowsTemplate $caseSharedTemplate $caseLivePublishingTemplate $caseFinalizePublishingTemplate
-        } catch {
-            if (-not $_.Exception.Message.StartsWith("$($case.ExpectedFailure):", [System.StringComparison]::Ordinal)) {
-                throw
-            }
-
-            $rejected = $true
-        }
-
-        if (-not $rejected) {
-            throw "Self-test '$($case.Name)' accepted an unsafe configuration."
-        }
-
-        Write-Output "PASS $($case.Name)"
+    Invoke-SelfTestCases -Cases $cases -BaselineConfiguration @{
+        Pipeline = $Pipeline
+        NonWindowsTemplate = $NonWindowsTemplate
+        SharedTemplate = $SharedTemplate
+        LivePublishingTemplate = $LivePublishingTemplate
+        FinalizePublishingTemplate = $FinalizePublishingTemplate
+    } -Validator {
+        param($Pipeline, $NonWindowsTemplate, $SharedTemplate, $LivePublishingTemplate, $FinalizePublishingTemplate)
+        Assert-NonWindowsAffectedTestsWiring $Pipeline $NonWindowsTemplate $SharedTemplate $LivePublishingTemplate $FinalizePublishingTemplate
     }
 
     foreach ($case in @(
@@ -772,8 +782,22 @@ if ($templateWithoutComments.Contains("DOTNET_CLI_TEST_AFFECTED_TESTS_MODE")) {
 $affectedTestsGateCount = [regex]::Matches(
     $templateWithoutComments,
     'DOTNET_CLI_ENABLE_AFFECTED_TESTS').Count
-if ($affectedTestsGateCount -ne 2) {
-    throw "DOTNET_CLI_ENABLE_AFFECTED_TESTS must appear exactly once in each enabled affected-test branch."
+if ($affectedTestsGateCount -ne 1) {
+    throw "DOTNET_CLI_ENABLE_AFFECTED_TESTS must appear exactly once on the shared affected-test step."
+}
+
+foreach ($environmentVariable in @(
+    "DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1",
+    'CTS_ACCESSTOKEN: $(System.AccessToken)',
+    'CTS_COLLECTIONURI: $(System.CollectionUri)',
+    'CTS_TEMPDIRECTORY: $(Agent.TempDirectory)',
+    'CTS_BUILDID: $(Build.BuildId)',
+    'BUILD_CONTAINERID: $(Build.ContainerId)',
+    'SYSTEM_ACCESSTOKEN: $(System.AccessToken)'
+)) {
+    if ([regex]::Matches($templateWithoutComments, [regex]::Escape($environmentVariable)).Count -ne 1) {
+        throw "Affected-test environment wiring '$environmentVariable' must be declared exactly once."
+    }
 }
 
 $wellKnownEnvironmentVariables = Get-Content -LiteralPath $wellKnownEnvironmentVariablesPath -Raw
@@ -797,17 +821,53 @@ if ($templateWithoutComments.Contains("AffectedTestsCoreOnly") -or
     throw "Affected-test execution must include every target framework."
 }
 
-$collectBranch = [regex]::Match(
+$collectMode = [regex]::Match(
     $templateWithoutComments,
-    "(?s)eq\(parameters\.affectedTestsMode, 'collect'\).*?(?=\r?\n- \$\{\{|\z)")
-$runBranch = [regex]::Match(
+    '(?s)if \(\$affectedTestsMode -eq ''collect''\) \{(?<body>.*?)\r?\n    \}')
+$runMode = [regex]::Match(
     $templateWithoutComments,
-    "(?s)eq\(parameters\.affectedTestsMode, 'run'\).*?(?=\r?\n- \$\{\{|\z)")
-if (-not $collectBranch.Success -or
-    -not $collectBranch.Value.Contains("DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1") -or
-    -not $runBranch.Success -or
-    -not $runBranch.Value.Contains("DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1")) {
-    throw "The affected-test gate must be scoped to the enabled collect and run branches."
+    '(?s)if \(\$affectedTestsMode -eq ''collect''\).*?else\s*\{(?<body>.*?)\r?\n    \}')
+if (-not $collectMode.Success -or
+    -not $collectMode.Groups["body"].Value.Contains("-p:TestingPlatformCommandLineArguments=") -or
+    -not $collectMode.Groups["body"].Value.Contains("-p:TestRunnerAdditionalArguments=") -or
+    -not $runMode.Success -or
+    -not $runMode.Groups["body"].Value.Contains("-p:TestRunnerAdditionalArguments=")) {
+    throw "Affected-test collection and execution must retain their mode-specific MSBuild arguments."
+}
+
+Assert-Containment `
+    -Text $templateWithoutComments `
+    -Substrings @(
+    "'--solution'",
+    '${{ parameters.solution }}',
+    "'-c'",
+    '$(_BuildConfig)',
+    "'--no-build'",
+    "'-p:UsingDotNetTest=true'",
+    "'-p:TestingPlatformCaptureOutput=false'",
+    '-bl:$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/$binlogName.binlog',
+    "& dotnet test @testArguments"
+) `
+    -Message "The shared affected-test step must preserve its common dotnet test arguments."
+
+$affectedTestsStepCount = [regex]::Matches($templateWithoutComments, '(?m)^- pwsh: \|$').Count
+if ($affectedTestsStepCount -ne 1 -or
+    [regex]::Matches($templateWithoutComments, '(?m)^  env:$').Count -ne 1 -or
+    -not $templateWithoutComments.Contains("name: CollectAffectedTests") -or
+    -not $templateWithoutComments.Contains("name: TestAffected") -or
+    -not $templateWithoutComments.Contains("eq(variables._CollectAffectedTests, 'true')") -or
+    -not $templateWithoutComments.Contains("eq(variables['Build.Reason'], 'PullRequest')")) {
+    throw "Collect and run must share one affected-test step while preserving their names and conditions."
+}
+
+$collectSwitch = [regex]::Match(
+    $templateWithoutComments,
+    '(?s)if \(\$affectedTestsMode -eq ''collect''\) \{\s*\$testArguments \+= ''--collect-test-map''')
+$runSwitch = [regex]::Match(
+    $templateWithoutComments,
+    '(?s)else \{\s*\$testArguments \+= ''--affected-tests''')
+if (-not $collectSwitch.Success -or -not $runSwitch.Success) {
+    throw "Affected-test execution must select the matching map collection or affected-test option."
 }
 $windowsCollectBranch = [regex]::Match(
     $windowsTemplateWithoutComments,
@@ -822,23 +882,13 @@ foreach ($requiredCollectArgument in @(
     "-p:TestingPlatformCommandLineArguments=",
     "-p:TestRunnerAdditionalArguments="
 )) {
-    if (-not $collectBranch.Value.Contains($requiredCollectArgument)) {
+    if (-not $collectMode.Groups["body"].Value.Contains($requiredCollectArgument)) {
         throw "Affected-test collection must suppress incompatible test-host arguments with '$requiredCollectArgument'."
     }
 }
 
-if (-not $runBranch.Value.Contains("-p:TestRunnerAdditionalArguments=")) {
+if (-not $runMode.Groups["body"].Value.Contains("-p:TestRunnerAdditionalArguments=")) {
     throw "Affected-test execution must suppress the repository's retry arguments."
-}
-
-$collectStepStart = $collectBranch.Value.IndexOf("- pwsh: |", [System.StringComparison]::Ordinal)
-if ($collectStepStart -lt 0) {
-    throw "The affected-test collection step is missing."
-}
-
-$collectStepEnd = $collectBranch.Value.IndexOf("name: CollectAffectedTests", $collectStepStart, [System.StringComparison]::Ordinal)
-if ($collectStepEnd -lt 0) {
-    throw "The affected-test collection step must be named CollectAffectedTests."
 }
 
 $fullTestStepStart = $windowsCollectBranch.Value.IndexOf("- script: |", [System.StringComparison]::Ordinal)
@@ -851,7 +901,7 @@ if ($fullTestStepEnd -lt 0) {
     throw "The ordinary Release full test step must be named Test."
 }
 
-$collectStep = $collectBranch.Value[$collectStepStart..($collectStepEnd - 1)] -join ""
+$collectStep = $templateWithoutComments
 $fullTestStep = $windowsCollectBranch.Value[$fullTestStepStart..($fullTestStepEnd - 1)] -join ""
 if ($collectStep.Contains("PublishCoverageReport") -or
     -not $collectStep.Contains("--collect-test-map") -or
@@ -861,15 +911,15 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 }
 
 if ($SelfTest) {
-    Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $collectBranch.Value
+    Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $templateWithoutComments
     Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate $affectedTestsPackageVersion
 } else {
-    Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $collectBranch.Value
+    Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $templateWithoutComments
     Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate
 }
 
-if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
-    -not $runBranch.Value.Contains('exit $exitCode')) {
+if (-not $templateWithoutComments.Contains('$exitCode -in 2, 8') -or
+    -not $templateWithoutComments.Contains('exit $exitCode')) {
     throw "The affected-test run must preserve exit codes 2 and 8 for failed or all-skipped selections."
 }
 

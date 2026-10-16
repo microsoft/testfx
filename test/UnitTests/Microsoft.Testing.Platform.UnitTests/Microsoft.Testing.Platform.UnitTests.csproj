@@ -6,6 +6,9 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);IS_MTP_UNIT_TESTS</DefineConstants>
+    <!-- Embedded Platform implementations are compiled here as linked production sources.
+         Collect them as explicitly labeled source-linked evidence, never as shipping-module-only coverage. -->
+    <CodeCoverageIncludeSourceLinkedProductionCode>true</CodeCoverageIncludeSourceLinkedProductionCode>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\Microsoft.Testing.Platform\BuildInfo.cs.template</BuildInfoTemplateFile>
     <!-- OSCondition cannot express browser, so it cannot mirror [UnsupportedOSPlatform("browser")]. -->
@@ -61,6 +64,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- This is the product under test, not only a transitive test-host dependency.
+         Keep it explicit so the owning project's coverage settings include the shipping assembly. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.AI\Microsoft.Testing.Platform.AI.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>

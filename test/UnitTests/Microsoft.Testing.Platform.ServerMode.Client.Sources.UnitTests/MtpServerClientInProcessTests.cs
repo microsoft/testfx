@@ -885,6 +885,7 @@ public sealed class MtpServerClientInProcessTests
             cancellationTaskId.TrySetResult(Task.CurrentId!.Value);
             releaseRegistration.Wait(TestContext.CancellationToken);
         });
+        Task? cancelling = null;
 
         try
         {
@@ -894,7 +895,8 @@ public sealed class MtpServerClientInProcessTests
                 TimeSpan.Zero,
                 new DelegateMtpClientLogger((_, message) => log.Enqueue(message)));
             int taskId = await WithTimeoutAsync(cancellationTaskId.Task);
-            await observation.AssertObservedAsync(taskId);
+            cancelling = CancellationTaskObservationScope.GetActiveTask(taskId);
+            await observation.AssertObservedAsync(cancelling);
 
             Assert.IsFalse(await WithTimeoutAsync(shutdown));
             Assert.IsEmpty(log, "Shutdown must not report abandonment of a still-running server.");
@@ -903,6 +905,10 @@ public sealed class MtpServerClientInProcessTests
         {
             releaseRegistration.Set();
             serverCompletion.TrySetResult(0);
+            if (cancelling is not null)
+            {
+                await WithTimeoutAsync(cancelling);
+            }
         }
     }
 
@@ -1572,9 +1578,8 @@ public sealed class MtpServerClientInProcessTests
             _asyncDebugging.SetValue(null, true);
         }
 
-        public async Task AssertObservedAsync(int taskId)
+        public async Task AssertObservedAsync(Task cancelling)
         {
-            Task cancelling = GetActiveTask(taskId);
             object continuation = await WaitForContinuationAsync(cancelling).ConfigureAwait(false);
 
             Assert.IsTrue(
@@ -1589,7 +1594,7 @@ public sealed class MtpServerClientInProcessTests
         public void Dispose()
             => _asyncDebugging.SetValue(null, _previousAsyncDebugging);
 
-        private static Task GetActiveTask(int taskId)
+        public static Task GetActiveTask(int taskId)
             => (Task)typeof(Task).GetMethod(
                 "GetActiveTaskFromId",
                 BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [taskId])!;
@@ -1648,21 +1653,15 @@ public sealed class MtpServerClientInProcessTests
                 return false;
             }
 
-            foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            for (Type? declaringType = type; declaringType is not null; declaringType = declaringType.BaseType)
             {
-                object? fieldValue;
-                try
+                foreach (FieldInfo field in declaringType.GetFields(
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
                 {
-                    fieldValue = field.GetValue(value);
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-
-                if (ObjectGraphContainsString(fieldValue, expected, visited, remainingDepth - 1))
-                {
-                    return true;
+                    if (ObjectGraphContainsString(field.GetValue(value), expected, visited, remainingDepth - 1))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -1816,7 +1815,11 @@ public sealed class MtpServerClientInProcessTests
     private sealed class QueueingSynchronizationContext : SynchronizationContext
     {
         private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = new();
+#if NET9_0_OR_GREATER
+        private readonly Lock _lock = new();
+#else
         private readonly object _lock = new();
+#endif
         private readonly TaskCompletionSource<bool> _continuationPosted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private int _postCount;
 

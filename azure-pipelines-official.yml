@@ -152,6 +152,9 @@ extends:
                 DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: Test.cmd
                   -configuration $(_BuildConfig)
@@ -305,6 +308,9 @@ extends:
               displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: |
                   chmod +x ./test.sh

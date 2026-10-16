@@ -127,6 +127,8 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
                 {
                     ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
                     ["MSTEST_TEST_TEMP_DIRECTORY_RETAIN"] = "1",
+                    // Keep IPC paths short on macOS when redirecting the test's temporary directory.
+                    ["TESTINGPLATFORM_PIPE_DIRECTORY"] = Path.GetTempPath(),
                     ["TEMP"] = resultsDirectory,
                     ["TMP"] = resultsDirectory,
                     ["TMPDIR"] = resultsDirectory,

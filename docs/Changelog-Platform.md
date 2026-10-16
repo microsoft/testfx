@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="2.6.0" />[2.6.0] - Unreleased
 
+### Changed
+
+* Align the CTRF reporter with specification 0.2.0 by emitting native final-attempt identities, retaining legacy retry identity support, and keeping compatible mixed-version merges correctly versioned and identified.
+* Graduate `Microsoft.Testing.Extensions.CtrfReport` to stable, align its package version with Microsoft.Testing.Platform, and remove the experimental registration API warning. The producer remains pinned to CTRF 0.2.0 and stays opt-in in MSTest.Sdk.
+
 ### Fixed
 
 * Preserve the invocation working directory for ordinary controller-launched test hosts so relative paths such as `--coverage-settings test.runsettings` keep working under `dotnet run`, while retaining the configured working directory for custom test host launchers.

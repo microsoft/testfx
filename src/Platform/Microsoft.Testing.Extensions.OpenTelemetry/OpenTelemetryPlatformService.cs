@@ -125,11 +125,11 @@ internal sealed class OpenTelemetryPlatformService :
 
     public ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct
-        => new CounterWrapper<T>(_meter.CreateCounter<T>(name, unit, description, tags));
+        => new CounterWrapper<T>(_meter.CreateCounter<T>(name, unit, description, tags ?? []));
 
     public IUpDownCounter<T> CreateUpDownCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct
-        => new UpDownCounterWrapper<T>(_meter.CreateUpDownCounter<T>(name, unit, description, tags));
+        => new UpDownCounterWrapper<T>(_meter.CreateUpDownCounter<T>(name, unit, description, tags ?? []));
 
     public IHistogram<T> CreateHistogram<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct

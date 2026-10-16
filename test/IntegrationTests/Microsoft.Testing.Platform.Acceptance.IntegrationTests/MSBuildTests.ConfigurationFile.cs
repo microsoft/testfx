@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 
-using Combinatorial.MSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 

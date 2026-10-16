@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net9.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>
 
     <ProjectReferenceTFM>netstandard2.0</ProjectReferenceTFM>
-    <ProjectReferenceTFM Condition="'$(TargetFramework)'=='net9.0'">net9.0</ProjectReferenceTFM>
+    <ProjectReferenceTFM Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">$(TargetFramework)</ProjectReferenceTFM>
 
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>

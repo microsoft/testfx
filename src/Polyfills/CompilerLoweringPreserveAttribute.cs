@@ -8,6 +8,4 @@ namespace System.Runtime.CompilerServices;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 [Embedded]
 internal sealed class CompilerLoweringPreserveAttribute : Attribute;
-#else
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute))]
 #endif
