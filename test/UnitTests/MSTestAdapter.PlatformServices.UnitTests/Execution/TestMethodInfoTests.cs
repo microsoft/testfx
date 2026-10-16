@@ -975,9 +975,11 @@ public class TestMethodInfoTests : TestContainer
         async Task RecordStageAsync(string stage)
         {
             SynchronizationContext.Current.Should().BeSameAs(syncContext);
+            TaskScheduler.Current.Should().BeSameAs(TaskScheduler.Default);
             stages.Add(stage + " before await");
             await Task.Yield();
             SynchronizationContext.Current.Should().BeSameAs(syncContext);
+            TaskScheduler.Current.Should().BeSameAs(TaskScheduler.Default);
             stages.Add(stage + " after await");
         }
 
@@ -1037,15 +1039,84 @@ public class TestMethodInfoTests : TestContainer
         invoked.Should().BeFalse();
     }
 
-    public async Task NonCooperativeTimeoutWithoutCleanupDoesNotWaitForBlockedSynchronizationContext()
+    public async Task NonCooperativeTimeoutPreservesDefaultSchedulerForTimeoutCleanup()
     {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskScheduler? cleanupScheduler = null;
+        SynchronizationContext? cleanupContext = null;
+        Task<SynchronizationContext?>? nestedWork = null;
+        DummyTestClass.DummyAsyncTestMethodBody = () => release.Task;
+        DummyTestClass.TestCleanupMethodBodyAsync = _ =>
+        {
+            cleanupScheduler = TaskScheduler.Current;
+            cleanupContext = SynchronizationContext.Current;
+            nestedWork = Task.Factory.StartNew<SynchronizationContext?>(() => SynchronizationContext.Current);
+            release.TrySetResult(true);
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+        var testMethodInfo = new TestMethodInfo(
+            typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(1_000),
+        };
+        Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        try
+        {
+            (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+        }
+        finally
+        {
+            release.TrySetResult(true);
+            await WaitForCompletionAsync(invocation);
+            await WaitForCompletionAsync(Task.WhenAll(syncContext.DispatchedTasks));
+        }
+
+        cleanupContext.Should().BeSameAs(syncContext);
+        cleanupScheduler.Should().BeSameAs(TaskScheduler.Default);
+        nestedWork.Should().NotBeNull();
+        (await nestedWork!).Should().BeNull("nested work must use the thread pool, not the dispatcher");
+    }
+
+    public Task NonCooperativeTimeoutWithoutCleanupDoesNotWaitForBlockedSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: false, requiresDisposal: false, blockInCleanup: false);
+
+    public Task NonCooperativeTimeoutWithCleanupDoesNotWaitForBlockedSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: true, requiresDisposal: false, blockInCleanup: false);
+
+    public Task NonCooperativeTimeoutWithDisposalDoesNotWaitForBlockedSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: false, requiresDisposal: true, blockInCleanup: false);
+
+    public Task NonCooperativeTimeoutDoesNotWaitForAlreadyRunningCleanupOnSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: true, requiresDisposal: true, blockInCleanup: true);
+
+    public Task NonCooperativeTimeoutDefersCleanupWhileUiConstructorIsRunning()
+        => VerifyNonCooperativeTimeoutDefersCleanupWhileUiSetupIsRunningAsync(blockConstructor: true);
+
+    public Task NonCooperativeTimeoutDefersCleanupWhileUiTestContextSetterIsRunning()
+        => VerifyNonCooperativeTimeoutDefersCleanupWhileUiSetupIsRunningAsync(blockConstructor: false);
+
+    private async Task VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(
+        bool hasCleanup,
+        bool requiresDisposal,
+        bool blockInCleanup)
+    {
+        CountingTestClassInstanceLease? lease = requiresDisposal ? new(new DummyTestClass()) : null;
+        using IDisposable? factoryScope = lease is null
+            ? null
+            : TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(lease));
         using var syncContext = new SingleThreadedSynchronizationContextForTesting();
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var workerWaitExpired = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SynchronizationContext? cleanupContext = null;
+        int cleanupCount = 0;
         // This guard is longer than the test timeout and only prevents a regression from hanging the suite.
         var blockedWorkerLimit = TimeSpan.FromSeconds(10);
-        DummyTestClass.TestMethodBody = _ =>
+        void BlockDispatcher()
         {
             started.TrySetResult(true);
             if (!release.Wait(blockedWorkerLimit))
@@ -1053,7 +1124,29 @@ public class TestMethodInfoTests : TestContainer
                 workerWaitExpired.TrySetResult(true);
                 release.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue();
             }
+        }
+
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            if (!blockInCleanup)
+            {
+                BlockDispatcher();
+            }
         };
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            cleanupContext = SynchronizationContext.Current;
+            Interlocked.Increment(ref cleanupCount);
+            if (blockInCleanup)
+            {
+                BlockDispatcher();
+            }
+        };
+        if (hasCleanup)
+        {
+            _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        }
+
         _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
         Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
         try
@@ -1062,15 +1155,85 @@ public class TestMethodInfoTests : TestContainer
             Task completed = await Task.WhenAny(invocation, workerWaitExpired.Task);
             completed.Should().BeSameAs(invocation, "timeout bookkeeping must not wait for the blocked dispatcher");
             (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+            Volatile.Read(ref cleanupCount).Should().Be(blockInCleanup ? 1 : 0);
+            lease?.DisposeCount.Should().Be(0);
+            if (blockInCleanup)
+            {
+                syncContext.DispatchedTasks.Should().HaveCount(1, "already-owned cleanup must not be dispatched again");
+            }
         }
         finally
         {
             release.Set();
-            var drained = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            syncContext.Post(_ => drained.TrySetResult(true), null);
-            await WaitForCompletionAsync(drained.Task);
             await WaitForCompletionAsync(invocation);
+            await WaitForCompletionAsync(Task.WhenAll(syncContext.DispatchedTasks));
         }
+
+        cleanupCount.Should().Be(hasCleanup ? 1 : 0);
+        if (hasCleanup)
+        {
+            cleanupContext.Should().BeSameAs(syncContext);
+        }
+
+        if (lease is not null)
+        {
+            lease.DisposeCount.Should().Be(1);
+            lease.DisposalContext.Should().BeSameAs(syncContext);
+        }
+    }
+
+    private async Task VerifyNonCooperativeTimeoutDefersCleanupWhileUiSetupIsRunningAsync(bool blockConstructor)
+    {
+        using var release = new ManualResetEventSlim();
+        var setupStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CountingTestClassInstanceLease? lease = null;
+        using IDisposable factoryScope = TestClassInstanceFactoryProvider.Push(
+            new CallbackTestClassInstanceFactory(() => lease = new CountingTestClassInstanceLease(new DummyTestClass())));
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        SynchronizationContext? cleanupContext = null;
+        int cleanupCount = 0;
+        void BlockSetup()
+        {
+            setupStarted.TrySetResult(true);
+            release.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue();
+        }
+
+        if (blockConstructor)
+        {
+            DummyTestClass.TestConstructorMethodBody = BlockSetup;
+        }
+        else
+        {
+            DummyTestClass.TestContextSetterBody = _ => BlockSetup();
+        }
+
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            cleanupContext = SynchronizationContext.Current;
+            cleanupCount++;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+        Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+        try
+        {
+            await WaitForCompletionAsync(setupStarted.Task);
+            (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+            cleanupCount.Should().Be(0);
+            lease?.DisposeCount.Should().Be(0);
+        }
+        finally
+        {
+            release.Set();
+            await WaitForCompletionAsync(invocation);
+            await WaitForCompletionAsync(Task.WhenAll(syncContext.DispatchedTasks));
+        }
+
+        cleanupCount.Should().Be(1);
+        cleanupContext.Should().BeSameAs(syncContext);
+        lease.Should().NotBeNull();
+        lease!.DisposeCount.Should().Be(1);
+        lease.DisposalContext.Should().BeSameAs(syncContext);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
@@ -2364,6 +2527,16 @@ public class TestMethodInfoTests : TestContainer
 
     #region Test data
 
+    private sealed class CallbackTestClassInstanceFactory(Func<ITestClassInstanceLease> createInstance) : ITestClassInstanceFactory
+    {
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return createInstance();
+        }
+    }
+
     private sealed class SequencedTestClassInstanceFactory(
         ITestClassInstanceLease firstLease,
         Exception secondException) : ITestClassInstanceFactory
@@ -2404,10 +2577,13 @@ public class TestMethodInfoTests : TestContainer
 
         public int DisposeCount { get; private set; }
 
+        public SynchronizationContext? DisposalContext { get; private set; }
+
         public Task DisposalCompleted => _disposalCompleted.Task;
 
         public Task DisposeAsync()
         {
+            DisposalContext = SynchronizationContext.Current;
             DisposeCount++;
             _disposalCompleted.TrySetResult(null);
             return disposeException is null
@@ -2419,7 +2595,10 @@ public class TestMethodInfoTests : TestContainer
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {
         private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _queue = [];
+        private readonly ConcurrentQueue<Task> _dispatchedTasks = new();
         private readonly Thread _thread;
+
+        public Task[] DispatchedTasks => _dispatchedTasks.ToArray();
 
         public SingleThreadedSynchronizationContextForTesting()
         {
@@ -2439,6 +2618,11 @@ public class TestMethodInfoTests : TestContainer
 
         public override void Post(SendOrPostCallback d, object? state)
         {
+            if (state is Task<Task> task)
+            {
+                _dispatchedTasks.Enqueue(task.Unwrap());
+            }
+
             try
             {
                 _queue.TryAdd((d, state));

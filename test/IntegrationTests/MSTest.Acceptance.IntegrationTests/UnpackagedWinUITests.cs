@@ -382,6 +382,7 @@ public class UITimeoutTestClass
     [Timeout(10000)]
     public void UITestMethodWithTimeout_CreatesGrid()
     {
+        Assert.AreSame(TaskScheduler.Default, TaskScheduler.Current);
         var grid = new Grid();
         Assert.AreEqual(0, grid.MinWidth);
         Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess);
@@ -402,6 +403,7 @@ public class UITimeoutTestClass
     [Timeout(1000)]
     public Task UITestMethodWithTimeout_ReportsTimeout()
     {
+        Assert.AreSame(TaskScheduler.Default, TaskScheduler.Current);
         Assert.IsTrue(UITestMethodAttribute.DispatcherQueue!.HasThreadAccess);
         return _timedOutWork = WaitForReleaseAsync();
     }
@@ -409,6 +411,7 @@ public class UITimeoutTestClass
     [TestCleanup]
     public async Task Cleanup()
     {
+        Assert.AreSame(TaskScheduler.Default, TaskScheduler.Current);
         Assert.IsTrue(UITestMethodAttribute.DispatcherQueue!.HasThreadAccess);
         _release.TrySetResult(true);
         if (_timedOutWork is not null)
@@ -421,6 +424,7 @@ public class UITimeoutTestClass
 
     private static async Task LoadUIAsync()
     {
+        Assert.IsFalse(await Task.Factory.StartNew(() => UITestMethodAttribute.DispatcherQueue!.HasThreadAccess));
         var grid = new Grid { Background = new SolidColorBrush(Microsoft.UI.Colors.Red) };
         var loaded = new TaskCompletionSource<bool>();
         RoutedEventHandler onLoaded = (_, _) => loaded.TrySetResult(true);

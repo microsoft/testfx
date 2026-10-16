@@ -169,6 +169,14 @@ The timeout must not move the test to another STA or thread-pool thread: WinUI c
 the application's actual dispatcher. The test and its ordinary asynchronous continuations run on
 that dispatcher, and timeout cleanup is dispatched there too.
 
+Preserving the dispatcher does not change the default scheduler used by nested
+`Task.Factory.StartNew` calls. Non-cooperative timeouts cannot interrupt synchronous code that blocks
+the dispatcher. If cleanup has already started, the timeout is reported without waiting for it.
+If the dispatcher cannot start cleanup within one second, cleanup is deferred to the original
+invocation once it can continue; it is never moved to a worker thread. Cleanup is also deferred
+while the constructor or `TestContext` setter is still running. Cleanup that starts on the dispatcher
+retains its own timeout settings.
+
 See `UITestMethodWithTimeoutLoadsUI` in the
 [unpackaged sample](../samples/public/WinUIMtpUnpackagedApp/UnitTests.cs) for a test that assigns a
 red `Grid` to the window and awaits `Loaded`. The sample uses cooperative cancellation to remain
