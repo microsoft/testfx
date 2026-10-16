@@ -123,7 +123,7 @@
           DependsOnTargets="GetMSTestV2CultureHierarchy"
           Inputs="@(MSTestV2Files)"
           Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)%(FileName)%(Extension)')">
-
+ 
     <ItemGroup>
       <!-- Add the localization file as content so it gets copied from nuget to bin folder. -->
       <Content Include="@(MSTestV2Files->'%(FullPath)')">
@@ -132,6 +132,15 @@
         <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
         <Visible>False</Visible>
       </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_RegisterMSTestV2ResourcesForClean"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites"
+          DependsOnTargets="GetMSTestV2CultureHierarchy"
+          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' ">
+    <ItemGroup>
+      <FileWrites Include="@(MSTestV2Files->'$(TargetDir)%(UICulture)%(FileName)%(Extension)')" />
     </ItemGroup>
   </Target>
 
