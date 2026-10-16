@@ -154,8 +154,11 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestConstructorMethodBody = () => { };
         DummyTestClass.TestContextSetterBody = value => { };
         DummyTestClass.TestInitializeMethodBody = value => { };
+        DummyTestClass.TestInitializeMethodBodyAsync = _ => Task.CompletedTask;
         DummyTestClass.TestMethodBody = instance => { };
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.CompletedTask;
         DummyTestClass.TestCleanupMethodBody = value => { };
+        DummyTestClass.TestCleanupMethodBodyAsync = _ => Task.CompletedTask;
         DummyTestClass.GlobalTestInitializeMethodBodyAsync = _ => Task.CompletedTask;
         DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => Task.CompletedTask;
     }
@@ -963,6 +966,111 @@ public class TestMethodInfoTests : TestContainer
         // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
         capturedContextInTestCleanup.Should().BeSameAs(syncContext);
+    }
+
+    public async Task NonCooperativeTimeoutPreservesSynchronizationContextAcrossAsyncLifecycle()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var stages = new List<string>();
+        async Task RecordStageAsync(string stage)
+        {
+            SynchronizationContext.Current.Should().BeSameAs(syncContext);
+            stages.Add(stage + " before await");
+            await Task.Yield();
+            SynchronizationContext.Current.Should().BeSameAs(syncContext);
+            stages.Add(stage + " after await");
+        }
+
+        DummyTestClass.TestInitializeMethodBodyAsync = _ => RecordStageAsync("initialize");
+        DummyTestClass.DummyAsyncTestMethodBody = () => RecordStageAsync("test");
+        DummyTestClass.TestCleanupMethodBodyAsync = _ => RecordStageAsync("cleanup");
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethodAsync))!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+        var testMethodInfo = new TestMethodInfo(
+            typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(30_000),
+        };
+
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        stages.Should().Equal(
+            "initialize before await", "initialize after await",
+            "test before await", "test after await",
+            "cleanup before await", "cleanup after await");
+    }
+
+    public async Task NonCooperativeTimeoutPreservesTestFailureAndSynchronizationContextForCleanup()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var failure = new InvalidOperationException("UI test failure");
+        SynchronizationContext? cleanupContext = null;
+        DummyTestClass.TestMethodBody = _ => throw failure;
+        DummyTestClass.TestCleanupMethodBodyAsync = async _ =>
+        {
+            await Task.Yield();
+            cleanupContext = SynchronizationContext.Current;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+
+        TestResult result = await RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        result.TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException.Should().BeSameAs(failure);
+        cleanupContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task NonCooperativeTimeoutOnSynchronizationContextWhenAlreadyCanceledDoesNotInvokeTest()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        bool invoked = false;
+        DummyTestClass.TestMethodBody = _ => invoked = true;
+        _testContextImplementation.CancellationTokenSource.Cancel();
+
+        TestResult result = await RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.TestFailureException!.Message.Should().Be(
+            string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, _testMethodInfo.TestMethodName));
+        invoked.Should().BeFalse();
+    }
+
+    public async Task NonCooperativeTimeoutWithoutCleanupDoesNotWaitForBlockedSynchronizationContext()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        using var release = new ManualResetEventSlim();
+        var started = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var workerWaitExpired = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        // This guard is longer than the test timeout and only prevents a regression from hanging the suite.
+        var blockedWorkerLimit = TimeSpan.FromSeconds(10);
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            started.TrySetResult(true);
+            if (!release.Wait(blockedWorkerLimit))
+            {
+                workerWaitExpired.TrySetResult(true);
+                release.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue();
+            }
+        };
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+        Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+        try
+        {
+            await WaitForCompletionAsync(started.Task);
+            Task completed = await Task.WhenAny(invocation, workerWaitExpired.Task);
+            completed.Should().BeSameAs(invocation, "timeout bookkeeping must not wait for the blocked dispatcher");
+            (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+        }
+        finally
+        {
+            release.Set();
+            var drained = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            syncContext.Post(_ => drained.TrySetResult(true), null);
+            await WaitForCompletionAsync(drained.Task);
+            await WaitForCompletionAsync(invocation);
+        }
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
