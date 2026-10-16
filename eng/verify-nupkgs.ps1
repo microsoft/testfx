@@ -25,6 +25,7 @@ function Confirm-NugetPackages {
         "MSTest.Extensions.Hosting"                   = 87
         "MSTest"                                      = 12
         "MSTest.Analyzers"                            = 56
+        "MSTest.Analyzers.FSharp"                     = 53
         "MSTest.SourceGeneration"                     = 8
         "MSTest.Windows.UIAutomation"                 = 66
     }
@@ -119,6 +120,10 @@ function Confirm-NugetPackages {
 
     $isMSTestProductBuild = $false
     foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+        # The opt-in F# pilot can be packed independently of the existing MSTest product matrix.
+        if ($expectedPackageKey -eq "MSTest.Analyzers.FSharp") {
+            continue
+        }
         if ($verifiedPackageKeys.Contains($expectedPackageKey)) {
             $isMSTestProductBuild = $true
             break

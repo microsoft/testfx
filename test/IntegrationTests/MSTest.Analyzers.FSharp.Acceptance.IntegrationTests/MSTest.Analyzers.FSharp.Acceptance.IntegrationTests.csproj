@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <AssemblyMetadata Include="MSTestVersion" Value="$(MSTestVersion)" />
+    <AssemblyMetadata Include="FSharpAnalyzersCoreVersion" Value="$(FSharpAnalyzersCoreVersion)" />
+    <PackageDownload Include="fsharp-analyzers" Version="[$(FSharpAnalyzersSdkVersion)]" />
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+    <Compile Include="$(RepoRoot)test\UnitTests\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests\Program.cs" Link="Program.cs" />
+    <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="AcceptanceFixture.cs" />
+  </ItemGroup>
+
+  <Target Name="_CopyFSharpAnalyzerCli" AfterTargets="Build" Condition="'$(TargetFramework)' != ''">
+    <ItemGroup>
+      <_FSharpAnalyzerCliFile Include="$(NuGetPackageRoot)fsharp-analyzers\$(FSharpAnalyzersSdkVersion)\tools\net10.0\any\**\*" />
+    </ItemGroup>
+    <Error Condition="'@(_FSharpAnalyzerCliFile)' == ''" Text="The pinned F# analyzer CLI was not restored." />
+    <Copy SourceFiles="@(_FSharpAnalyzerCliFile)" DestinationFiles="@(_FSharpAnalyzerCliFile->'$(TargetDir)FSharpAnalyzerCli\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="@(_FSharpAnalyzerCliFile->'$(TargetDir)FSharpAnalyzerCli\%(RecursiveDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+</Project>
