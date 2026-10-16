@@ -56,6 +56,8 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
   <ItemGroup>
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <!-- Keep Aspire's transitive dependency on the repository's serviced version. -->
+    <PackageReference Include="MessagePack" Version="$MessagePackVersion$" />
   </ItemGroup>
 </Project>
 
@@ -85,6 +87,7 @@ public class IntegrationTest1
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AspireProjectName, AspireProjectName,
                 AspireSourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MessagePackVersion$", MessagePackVersion));
     }
 }

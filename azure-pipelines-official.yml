@@ -125,7 +125,8 @@ extends:
           jobs:
           - job: Windows
             enablePublishing: true
-            timeoutInMinutes: 90
+            # Leave room for the expanded framework matrix and signing/artifact publication after tests.
+            timeoutInMinutes: 180
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2026preview.scout.amd64
