@@ -189,9 +189,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
         string heading = new('#', headingLevel);
         if (includeExitCode && module.ExitCode != 0)
         {
-            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
-                .Append(CiRunSummaryExitCode.GetName(module.ExitCode)).Append(" — ")
-                .Append(CiRunSummaryExitCode.GetReason(module.ExitCode, AzureDevOpsResources.ResourceManager)).Append(")\n\n");
+            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (");
+            AppendExitCodeExplanation(builder, module.ExitCode);
+            builder.Append(")\n\n");
         }
 
         if (module.TopFailingClasses.Length > 0)
@@ -428,13 +428,18 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append(" · ⏱ **").Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
         if (exitCode is int processExitCode && processExitCode != 0)
         {
-            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (")
-                .Append(CiRunSummaryExitCode.GetName(processExitCode)).Append(" — ")
-                .Append(CiRunSummaryExitCode.GetReason(processExitCode, AzureDevOpsResources.ResourceManager)).Append(')');
+            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (");
+            AppendExitCodeExplanation(builder, processExitCode);
+            builder.Append(')');
         }
 
         builder.Append("\n\n");
     }
+
+    // Shared by AppendModuleDiagnostics and AppendStatusStrip to avoid duplicating the "Name — Reason" format.
+    private static void AppendExitCodeExplanation(StringBuilder builder, int exitCode)
+        => builder.Append(CiRunSummaryExitCode.GetName(exitCode)).Append(" — ")
+            .Append(CiRunSummaryExitCode.GetReason(exitCode, AzureDevOpsResources.ResourceManager));
 
     private static string FormatHistoricalDuration(double milliseconds)
         => milliseconds <= TimeSpan.MaxValue.TotalMilliseconds
