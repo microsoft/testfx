@@ -431,6 +431,33 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    public async Task Clean_RemovesLocalizedMSTestAdapterResources()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            $"{AssetName}CleanLocalizedResources",
+            SingleTestSourceCode
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$ExtraProperties$", "<SatelliteResourceLanguages>fr</SatelliteResourceLanguages>"));
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c Release \"{testAsset.TargetAssetPath}\"",
+            environmentVariables: new() { ["DOTNET_CLI_UI_LANGUAGE"] = "fr" },
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string outputDirectory = Path.Combine(testAsset.TargetAssetPath, "bin", BuildConfiguration.Release.ToString(), TargetFrameworks.NetCurrent);
+        string localizedResource = Path.Combine(outputDirectory, "fr", "MSTest.TestAdapter.resources.dll");
+        Assert.IsTrue(File.Exists(localizedResource), $"Build did not copy the localized MSTest adapter resource to '{localizedResource}'.");
+
+        DotnetMuxerResult cleanResult = await DotnetCli.RunAsync(
+            $"clean \"{testAsset.TargetAssetPath}\" -c Release -v:minimal -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        cleanResult.AssertExitCodeIs(0);
+        Assert.IsFalse(File.Exists(localizedResource), $"Clean did not remove the localized MSTest adapter resource: '{localizedResource}'.");
+    }
+
+    [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
