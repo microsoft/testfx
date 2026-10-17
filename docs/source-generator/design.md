@@ -124,6 +124,11 @@ Reflection-free mode serves registered type and method attribute entries from ge
 arrays and invokes registered constructors through generated delegates. Rooting mode,
 skipped/unresolved members, and incompletely materialized attributes still fall back.
 
+Attribute materialization supports `typeof` arguments for accessible array types,
+including jagged and multidimensional arrays. An inaccessible element type still
+requires reflection fallback; accessible array types do not force other attributes
+on the same method (such as its remaining `DataRow` applications) to fall back.
+
 - `GetCustomAttributes(MemberInfo)` for missing `Type` and `MethodInfo` entries
 - `GetCustomAttributes(Assembly, Type)` when no generated assembly attributes are available
 - `GetDeclaredConstructors`
