@@ -135,21 +135,21 @@
 
 ## Last Run
 
-2026-10-16 UTC (run 38978556305)
+2026-10-17 UTC (run 39076994810)
 
 ## Last Run (previous)
 
-2026-10-12 UTC (run 38319495889)
+2026-10-16 UTC (run 38978556305)
 
-## Run 2026-10-16 (run 38978556305) — DotnetTestConnection.StartServerControlChannelAsync guard tests
+## Run 2026-10-17 (run 39076994810) — DotnetTestConnection.StartServerControlChannelAsync guard tests (redo)
 
-- Task reconciliation: PR #11913 "Add unit tests for dotnet test handshake values" (GetExecutionMode/GetAttemptNumber, same goal as the 2026-10-12 run but authored independently, fixes #11908) merged 2026-10-13. No open `[test-improver]`-prefixed PRs found needing maintenance. No open testing-labeled issues found this run.
-- Task 2/3: continued the `DotnetTestConnection` orchestration sweep per prior run's note. Found `StartServerControlChannelAsync`'s multi-condition guard clause had only the Http-transport branch directly tested; the NamedPipe-path guard terms (empty pipe name despite negotiated capability, already-started idempotency, capability-not-negotiated) were untested.
-- Added 3 tests to `DotnetTestConnectionTests.cs`: empty-pipe-name-despite-supported, already-started-no-replace, unsupported-despite-pipe-name. Gotcha: `_serverControlPipeClient`'s field type (`NamedPipeClient`) is `[Embedded]`-linked separately into prod vs test assemblies — constructing a sentinel via `new NamedPipeClient(...)` throws `ArgumentException` (type mismatch at runtime); must use `Activator.CreateInstance` against `typeof(DotnetTestConnection).Assembly.GetType(...)` instead (same pattern as the existing `ConnectionClient` reflection helper in the same file).
-- Verified red/green: simultaneously dropped the empty-pipe-name guard and the already-started guard — exactly 2/3273 failed at the intended assertions (ArgumentException from NamedPipeClientStream; AreSame failure proving idempotency); reverted (file diff confirmed empty), reran — 0/3273 net8.0, 0/3274 net9.0, 22 pre-existing skips.
+- **Orphaned-PR discrepancy recurred again**: the 2026-10-16 run's reported PR (branch `test-assist/dotnet-test-connection-control-channel-guards`) never landed on `main` — `DotnetTestConnectionTests.cs` on `main` still had zero `StartServerControlChannelAsync` guard tests at the start of this run (confirmed via local checkout + grep, not GitHub search, per the established reconciliation process). No open `[test-improver]`-prefixed PRs found needing maintenance via GitHub search either. No open testing-labeled issues found this run. Issue #11698 (October Monthly Activity) only listed that one (now-confirmed-missing) PR as a suggested action.
+- Task 2/3: redid the same goal — added 3 tests to `DotnetTestConnectionTests.cs` on a freshly named branch: `StartServerControlChannelAsync_EmptyPipeNameDespiteNegotiatedSupportDoesNotConnect`, `StartServerControlChannelAsync_AlreadyStartedDoesNotReplaceTheExistingClient`, `StartServerControlChannelAsync_CapabilityNotNegotiatedDoesNotConnectEvenWithAPipeName`. Added a `GetField<T>` helper alongside the existing `SetField` (extended to fall back to property reflection for `IsServerControlChannelSupported`, a private-setter auto-property, not a field).
+- Verified red/green: simultaneously dropped all 3 guard terms (empty-pipe-name, already-started, capability-not-negotiated) — exactly 3/3273 failed at the intended assertions; reverted (file diff confirmed empty), reran — 0/3273 net8.0, 0/3274 net9.0, 22 pre-existing skips.
 - Build succeeded (0 warnings) net8.0+net9.0. `dotnet format whitespace --verify-no-changes` clean.
-- Created PR "Add unit tests for DotnetTestConnection.StartServerControlChannelAsync guard conditions" on branch `test-assist/dotnet-test-connection-control-channel-guards`.
-- Remaining candidates for future runs: `DotnetTestConnection`'s remaining async orchestration (`ConnectAndListenForServerControlAsync` connect-timeout/exception branches, `ListenForServerControlAsync` message loop incl. unknown-control-kind forward-compat branch, `OnExitAsync` bounded-wait-timeout branch) — needs a fake/mock `NamedPipeClient`-shaped `IClient` to drive the listen loop without a real OS pipe; moderate-to-high effort. Otherwise the `DotnetTestConnection` class is now close to fully covered — consider pivoting to Task 6 (test infrastructure) or a fresh area next run.
+- Created PR "Add unit tests for DotnetTestConnection.StartServerControlChannelAsync guard conditions" on branch `test-assist/dotnet-test-connection-control-channel-guards-2`.
+- **Process note**: the orphaned-PR discrepancy, previously thought resolved after 2026-09-21, has now recurred at least once more (2026-10-16). Future runs MUST verify a prior run's claimed PR against local `main`/git history (grep for the expected test names) before trusting the Monthly Activity issue's "Suggested Actions" list at face value — do this reconciliation even when the issue only lists one item.
+- Remaining candidates for future runs: `DotnetTestConnection`'s remaining async orchestration (`ConnectAndListenForServerControlAsync` connect-timeout/exception branches, `ListenForServerControlAsync` message loop incl. unknown-control-kind forward-compat branch, `OnExitAsync` bounded-wait-timeout branch) — needs a fake/mock `NamedPipeClient`-shaped `IClient` to drive the listen loop without a real OS pipe; moderate-to-high effort. Otherwise `DotnetTestConnection` is now close to fully covered — consider pivoting to Task 6 (test infrastructure) or a fresh area next run.
 
 ## Run 2026-10-12 (run 38319495889) — DotnetTestConnection.GetExecutionMode / GetAttemptNumber tests
 
