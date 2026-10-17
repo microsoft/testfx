@@ -312,12 +312,22 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
+    [DataRow(false, "clean")]
+    [DataRow(false, "rebuild")]
+    [DataRow(true, "clean")]
+    [DataRow(true, "rebuild")]
+    [DataRow(true, "build-clean")]
+    [DataRow(true, "build-rebuild")]
+    [DataRow(true, "optout-clean")]
     [OSCondition(OperatingSystems.Windows)]
-    public async Task TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile(bool generateFirst)
+    public async Task TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile(bool generateFirst, string operation)
     {
-        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """);
         string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
         if (generateFirst)
@@ -326,13 +336,57 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             Assert.AreEqual(0, first.ExitCode, first.ToString());
         }
 
-        string launcher = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.launcher.config.json");
-        Directory.CreateDirectory(Path.GetDirectoryName(launcher)!);
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        string[] launchers =
+        [
+            Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
+            Path.Combine(directory, "PackagedConsumer.build.launcher.config.json"),
+        ];
+        Directory.CreateDirectory(directory);
         const string CallerConfiguration = """{"program":"custom-controller.exe","args":["--server","jsonrpc"]}""";
-        await File.WriteAllTextAsync(launcher, CallerConfiguration, TestContext.CancellationToken);
-        DotnetMuxerResult result = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        foreach (string launcher in launchers)
+        {
+            await File.WriteAllTextAsync(launcher, CallerConfiguration, TestContext.CancellationToken);
+        }
+
+        if (!generateFirst || operation.StartsWith("build-", StringComparison.Ordinal) || operation == "optout-clean")
+        {
+            string buildCommand = operation == "optout-clean"
+                ? $"{command} -p:GenerateTestingPlatformPackagedAppTestExplorerLauncher=false"
+                : command;
+            DotnetMuxerResult build = await DotnetCli.RunAsync(buildCommand, cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, build.ExitCode, build.ToString());
+            await AssertPreservedAsync();
+        }
+
+        string lifecycleCommand = operation.EndsWith("rebuild", StringComparison.Ordinal)
+            ? $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\""
+            : $"clean \"{asset.TargetAssetPath}\"";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(lifecycleCommand, cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, result.ToString());
-        Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(launcher, TestContext.CancellationToken));
+        await AssertPreservedAsync();
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        await AssertPreservedAsync();
+
+        async Task AssertPreservedAsync()
+        {
+            foreach (string launcher in launchers)
+            {
+                Assert.IsTrue(File.Exists(launcher), $"Caller launcher was deleted: {launcher}");
+                Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(launcher, TestContext.CancellationToken));
+            }
+
+            foreach (string manifest in Directory.GetFiles(asset.TargetAssetPath, "*.FileListAbsolute.txt", SearchOption.AllDirectories))
+            {
+                string[] entries = await File.ReadAllLinesAsync(manifest, TestContext.CancellationToken);
+                foreach (string launcher in launchers)
+                {
+                    Assert.IsFalse(entries.Contains(launcher, StringComparer.OrdinalIgnoreCase), $"Caller launcher entered clean tracking: {launcher}");
+                }
+            }
+        }
     }
 
     [TestMethod]
