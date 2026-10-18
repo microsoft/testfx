@@ -250,14 +250,21 @@ internal static class AttributeMaterializationHelper
             TypedConstantKind.Array => IsArgumentTypeReferenceable(constant.Type, consumingAssembly)
                 && (constant.IsNull || constant.Values.All(element => AreArgumentTypesReferenceable(element, consumingAssembly))),
 
-            // typeof(X): the target type must be referenceable. Non-named targets (arrays, type
-            // parameters) are conservatively rejected.
+            // typeof(X): array element types must also be referenceable from the generated code.
             TypedConstantKind.Type => constant.Value is null
-                || (constant.Value is INamedTypeSymbol typeofTarget && SymbolReferenceabilityHelper.IsTypeReferenceableFrom(typeofTarget, consumingAssembly)),
+                || (constant.Value is ITypeSymbol typeofTarget && IsTypeofTargetReferenceable(typeofTarget, consumingAssembly)),
 
             // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type must be
             // referenceable. Untyped values (Type is null) are plain literals.
             _ => IsArgumentTypeReferenceable(constant.Type, consumingAssembly),
+        };
+
+    private static bool IsTypeofTargetReferenceable(ITypeSymbol type, IAssemblySymbol consumingAssembly)
+        => type switch
+        {
+            IArrayTypeSymbol arrayType => IsTypeofTargetReferenceable(arrayType.ElementType, consumingAssembly),
+            INamedTypeSymbol namedType => SymbolReferenceabilityHelper.IsTypeReferenceableFrom(namedType, consumingAssembly),
+            _ => false,
         };
 
     private static bool IsArgumentTypeReferenceable(ITypeSymbol? type, IAssemblySymbol consumingAssembly)

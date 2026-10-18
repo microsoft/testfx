@@ -137,6 +137,22 @@ public class UnitTest1 : GenericBase<int>
     {
         Assert.IsNull(value);
     }
+
+    [TestMethod]
+    [DataRow(0)]
+    public void SingleArgumentDataRow(int value)
+        => Assert.AreEqual(0, value);
+
+    [TestMethod]
+    [DataRow(typeof(int), "Int32", "kind")]
+    [DataRow(typeof(int[]), "Int32[]", "kind")]
+    [DataRow(typeof(int[][]), "Int32[][]", "kind")]
+    [DataRow(typeof(int[,]), "Int32[,]", "kind")]
+    public void ArrayTypeRows(Type type, string name, string kind)
+    {
+        Assert.AreEqual(name, type.Name);
+        Assert.AreEqual("kind", kind);
+    }
 }
 
 public enum CustomValue
@@ -223,7 +239,7 @@ public sealed class AsyncVoidTests
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 10, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 15, skipped: 0);
         result.AssertExitCodeIs(0);
 
         TestHostResult nullRowResult = await testHost.ExecuteAsync(
