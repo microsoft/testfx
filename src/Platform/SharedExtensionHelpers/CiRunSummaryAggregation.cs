@@ -13,6 +13,12 @@ internal static partial class CiRunSummaryAggregation
     private const int MaxSlowestTests = 10;
     private const int MaxTopFailingClasses = 5;
 
+    internal static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => modules.Count(candidate =>
+            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
+            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
+            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
+
     public static CiRunSummaryModule CreateModule(
         IReadOnlyList<TestRecord> records,
         string assemblyName,

@@ -119,7 +119,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 continue;
             }
 
-            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
+            bool needsDiscriminator = CiRunSummaryAggregation.HasDuplicateModuleIdentity(aggregate.Modules, module);
 
             // A full module is a test project whose results are all here, which is exactly what the marker counts.
             // Emitting it lets a direct per-project writer sharing this file count these modules too, so a note it
@@ -193,10 +193,4 @@ internal sealed partial class GitHubActionsSummaryReporter
             module.FailedTests,
             module.SkippedTests,
             module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
-
-    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
-        => modules.Count(candidate =>
-            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
-            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
-            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }
