@@ -126,8 +126,10 @@ skipped/unresolved members, and incompletely materialized attributes still fall 
 
 Attribute materialization supports `typeof` arguments for accessible array types,
 including jagged and multidimensional arrays. An inaccessible element type still
-requires reflection fallback; accessible array types do not force other attributes
+requires reflection fallback, including when it is nested in a generic argument or
+a containing generic type. Accessible array types do not force other attributes
 on the same method (such as its remaining `DataRow` applications) to fall back.
+Unbound generic `typeof` arguments remain supported.
 
 - `GetCustomAttributes(MemberInfo)` for missing `Type` and `MethodInfo` entries
 - `GetCustomAttributes(Assembly, Type)` when no generated assembly attributes are available
