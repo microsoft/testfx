@@ -1433,6 +1433,38 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildMarkdown_FailureNameWithLineBreakAndBacktick_EscapesInlineCode()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("Boom", "T.Backtick`Name\r\nNext", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.AreEqual(
+            """
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — T (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 1ms |
+
+            ### ❌ Failures (1)
+
+            - `T.Backtick'Name Next` — 1ms
+
+            ### ⏱ Slowest tests
+
+            - `T.Backtick'Name Next` — 1ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
+    }
+
+    [TestMethod]
     public void BuildMarkdown_FailureMessageContainingCodeFence_DoesNotBreakOutOfTheBlock()
     {
         // A message that itself contains a ``` fence must not terminate the block we open around it.
