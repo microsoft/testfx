@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
+using System.Linq;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
@@ -41,10 +42,8 @@ public class CombinatorialDataAttributeTests : TestContainer
 
     public void GetDataWithOnlyCancellationTokenProducesOneEmptyRow()
     {
-        foreach (string methodName in new[] { nameof(TokenOnly), nameof(OptionalTokenOnly) })
+        foreach (object?[][] rows in new[] { nameof(TokenOnly), nameof(OptionalTokenOnly) }.Select(GetData))
         {
-            object?[][] rows = GetData(methodName);
-
             rows.Should().ContainSingle();
             rows[0].Should().BeEmpty();
         }

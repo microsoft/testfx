@@ -133,7 +133,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         int constructorArgumentCount = attribute.ConstructorArguments.Length;
         ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
-        if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams == true)
+        if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams is true)
         {
             constructorArguments = constructorArguments[0].Values;
         }
@@ -158,6 +158,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             && (methodParameters.Length == 0
                 || (methodParameters.Length < methodSymbol.Parameters.Length && methodParameters.All(parameter => parameter.IsOptional))))
         {
+            AnalyzeGenericMethod(context, dataRowSyntax, methodSymbol, methodParameters, constructorArguments);
             return;
         }
 

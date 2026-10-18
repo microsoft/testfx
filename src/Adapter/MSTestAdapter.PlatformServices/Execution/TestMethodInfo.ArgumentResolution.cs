@@ -95,7 +95,8 @@ internal partial class TestMethodInfo
             return arguments;
         }
 
-        if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(arguments, parameters))
+        if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(arguments, parameters)
+            && arguments is not [object[]])
         {
             arguments = [arguments];
         }
