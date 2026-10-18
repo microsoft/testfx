@@ -246,6 +246,58 @@ public sealed class DotnetTestConnectionTests
     }
 
     [TestMethod]
+    public async Task StartServerControlChannelAsync_SupportedButPipeNameEmptyDoesNotCreateListener()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        await NegotiateServerControlChannelAsync(fixture, TestContext.CancellationToken);
+        SetField(fixture.Connection, "_serverControlPipeName", string.Empty);
+
+        await fixture.Connection.StartServerControlChannelAsync(_ => Task.CompletedTask);
+
+        Assert.IsTrue(fixture.Connection.IsServerControlChannelSupported);
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlPipeClient"));
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlListenerTask"));
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlListenerCts"));
+    }
+
+    [TestMethod]
+    public async Task StartServerControlChannelAsync_AlreadyStartedDoesNotReplaceExistingListener()
+    {
+        using CancellationTokenSource listenerCts = new();
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        await NegotiateServerControlChannelAsync(fixture, TestContext.CancellationToken);
+        using var existingPipeClient = (IDisposable)Activator.CreateInstance(
+            typeof(DotnetTestConnection).GetField("_serverControlPipeClient", BindingFlags.Instance | BindingFlags.NonPublic)!.FieldType,
+            new object?[] { "server-control", fixture.Environment.Object, false })!;
+        Task listenerTask = Task.CompletedTask;
+        SetField(fixture.Connection, "_serverControlPipeClient", existingPipeClient);
+        SetField(fixture.Connection, "_serverControlListenerTask", listenerTask);
+        SetField(fixture.Connection, "_serverControlListenerCts", listenerCts);
+
+        await fixture.Connection.StartServerControlChannelAsync(_ => Task.CompletedTask);
+
+        Assert.AreSame(existingPipeClient, GetField(fixture.Connection, "_serverControlPipeClient"));
+        Assert.AreSame(listenerTask, GetField(fixture.Connection, "_serverControlListenerTask"));
+        Assert.AreSame(listenerCts, GetField(fixture.Connection, "_serverControlListenerCts"));
+        Assert.IsFalse(listenerCts.IsCancellationRequested);
+    }
+
+    [TestMethod]
+    public async Task StartServerControlChannelAsync_UnsupportedDoesNotCreateListenerDespitePipeName()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        SetField(fixture.Connection, "_serverControlPipeName", "server-control");
+
+        await fixture.Connection.StartServerControlChannelAsync(_ => Task.CompletedTask);
+
+        Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlPipeClient"));
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlListenerTask"));
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlListenerCts"));
+    }
+
+    [TestMethod]
     public async Task HelpInvokedAsync_SortsOrdinaryOptionsAndExcludesToolProviders()
     {
         var ordinary = new Mock<ICommandLineOptionsProvider>();
@@ -363,6 +415,24 @@ public sealed class DotnetTestConnectionTests
 
     private static void SetField(DotnetTestConnection connection, string name, object? value)
         => typeof(DotnetTestConnection).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(connection, value);
+
+    private static object? GetField(DotnetTestConnection connection, string name)
+        => typeof(DotnetTestConnection).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(connection);
+
+    private static async Task NegotiateServerControlChannelAsync(ConnectionFixture fixture, CancellationToken token)
+    {
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = "1.3.0",
+                [HandshakeMessagePropertyNames.ServerControlPipeName] = "server-control",
+            }),
+            token);
+
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHostController));
+        Assert.IsTrue(fixture.Connection.IsServerControlChannelSupported);
+    }
 
     // Embedded protocol types are deliberately hidden from the C# importer. The IPC tests
     // have their own source-linked contracts; those cannot implement this connection's field.
