@@ -382,6 +382,87 @@ during test execution. No scheduler, exclusion, lock, global lifetime or IPC
 registration change is introduced. There is no file overlap with the separate
 startup-registration slice.
 
+### Additional analyzer array-shape review
+
+The next Agent merge tick identified three related analyzer discrepancies against
+`199d5dba631eb7fc67c89afa25174b4b6aa5f70a`: flattened typed arrays were accepted,
+generic `T` bound to an array could crash analysis, and a singleton scalar bound
+to `object[]` was rejected despite supported runtime binding.
+
+Keep the pre-existing non-token diagnostic policy unchanged. When a token is
+omitted, only `object[]` receives flattened values, including empty and singleton
+rows; typed arrays require an actual supplied array. Generic `T` infers the whole
+array type, while `T[]` infers its element type. Whole-array/scalar conflicts must
+remain visible rather than merely suppressing the analyzer exception.
+
+Add exact diagnostic regressions, a singleton invocation check and three packed
+consumer cases with stable display names. Scheduling, token lifetime and
+runtime binding behavior remain unchanged. The comparison retains identical tests
+against the pre-fix analyzer; compilation of the test harness is not red evidence,
+but an executed harness reporting the analyzer's AD0001 crash is the reported
+product defect.
+
+The packed fixture now explicitly enables analyzer execution instead of
+inheriting the infrastructure's `RunAnalyzers=false` default. Its existing
+intentional invalid-data file keeps its local MSTEST0014 suppression; valid
+singleton and generic-array rows must compile with the actual shipping analyzer.
+The first enabled run exposed MSTEST0057 on the fixture's existing derived
+test-method attribute. Forward caller-file and caller-line constructor arguments
+to the base attribute rather than suppressing that diagnostic; the setup failure
+is not red-phase evidence.
+
+#### Analyzer array-shape execution evidence
+
+The tested source/test patch against
+`199d5dba631eb7fc67c89afa25174b4b6aa5f70a` has SHA-256
+`8936F35F6856E44598E56A964A098613C3937443C46D478201030223A28754FB`.
+The identical analyzer regression file in both variants has SHA-256
+`6BCCE429C73B9D429EAAEA57F6EF8BC8395D8296F5542197D972969F2EB48717`.
+
+| Contract / named test | Pre-fix or targeted counterfactual | Correct implementation |
+| --- | --- | --- |
+| `WhenOmittedCancellationTokenFollowsTypedArray_RequiresArrayArgument` | Executed: expected three diagnostics, actual one; flattened and empty typed-array rows wrongly pass | Executed: exact count/type diagnostics pass; supplied arrays and existing non-token policy remain accepted |
+| `WhenGenericDataBeforeCancellationTokenIsWholeArray_NoDiagnostic` | Executed: AD0001 with `InvalidCastException` instead of a valid analysis result | Executed: integer/string/object whole arrays and `T[]` element inference pass |
+| `WhenGenericArrayDataHasConflictingTypes_Diagnostic` | Executed: the pre-fix analyzer crashes; a separate compiling control removing only the `MakeArrayType` block yields zero expected conflict diagnostics instead of two | Executed: both argument orders report the whole-array/scalar conflict; restoring the block returns all 42 cases to green |
+| `WhenTrailingCancellationTokenFollowsSingleObjectArray_NoDiagnostic`, `InvokeAsyncPacksSingletonObjectArrayBeforeInjectingCancellationToken` | Executed: the pre-fix analyzer reports an unwanted MSTEST0014 for `[DataRow(7)]` | Executed: analysis accepts the row; required/optional and direct/stored invocations receive exactly `[7]` and the current context token |
+
+The pre-fix run executes all 42 analyzer cases: 38 pass and four fail for the
+reported defects, with no skips and exit 2. The inference-only control executes
+42 cases with one intended assertion failure (expected two diagnostics, actual
+zero), exit 2; its restored run executes/passes all 42, exit 0. These are executed
+analyzer-harness assertions, not a failed test-project compilation.
+
+Final focused validation passes 42 analyzer and 196 adapter/helper/signature
+cases, plus all 15 packed acceptance cases, with exit 0 and no skips. Positive
+children execute 40 reflection, 40 Rooting, 38 reflection-free and 40 VSTest cases,
+including exact array values and `typeof(T) == typeof(int[])`. Reflection-free
+generation still excludes the two unsupported generic methods. Existing retry,
+invalid-data and five-target params-preservation cases remain green. Independently
+planned identities agree with TRX, JUnit and CTRF.
+
+Use the earlier unit/acceptance commands with the DataRow analyzer class filter
+and the same 15-case acceptance selector. Build logs, exact commands, source
+patch and control records are retained under
+`artifacts\tmp\cancellation-toolchain\analyzer-arrays`; reports are under
+`artifacts\TestResults\Release\analyzer-arrays-*` and
+`review-batch-acceptance-analyzer-arrays-complete`. The packed fixture's build
+binlog records `RunAnalyzers=true` with the pinned SDK.
+
+The final shipping analyzer package SHA-256 is
+`A9FF74A539533F899827B2D5200C720E83ADD153220ADEE5385FBE9CE112C0B1`;
+its DLL payload, producer and unit-test copy share SHA-256
+`76E838B5BBC165458B76D658E538BCCA1AF7D27B2A7BB9A5461C20971567CC7A`.
+The unchanged framework/adapter products were also repacked after the current
+checkout rebuilt their assembly metadata; all three consumer layouts now match
+their packed payloads and built producers. Fresh fixture-owned caches and resolved
+assets prove package selection. No runtime binding, lifecycle, lock or scheduler
+behavior change is introduced.
+
+A late CodeQL thread requested the same nullable `is true` pattern in
+`TryHandleTupleDataSource`. Accept it without changing semantics: the identical
+196-case adapter selection and 15 packed cases pass before and after that
+one-line change. Its source is included in the final patch identity above.
+
 ## Open questions
 
 The packed control is a compiling behavior-removal experiment, not a

@@ -22,6 +22,9 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         "OptionalToken",
         "InlineRows (7,\"inline-a\")",
         "InlineRows (11,\"inline-b\")",
+        "singleton object-array token",
+        "typed-array token",
+        "generic whole-array token",
         "OptionalData (13)",
         "OptionalData (17,\"provided\")",
         "DynamicPlain (19,\"dynamic\")",
@@ -89,10 +92,12 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         discovery.AssertExitCodeIs(ExitCode.Success);
         // Each of the three folded methods has one discovery node but executes two concrete cases.
         string[] expectedNames = metadataMode == MetadataMode.AotSourceGeneration
-            ? [.. ExpectedPassingNames.Where(name => name != "GenericRow (59)")]
+            ? [.. ExpectedPassingNames.Where(name => name is not "GenericRow (59)" and not "generic whole-array token")]
             : ExpectedPassingNames;
         discovery.AssertOutputContains($"found {expectedNames.Length - 3} test(s)");
         discovery.AssertOutputContains("InlineRows (7,\"inline-a\")");
+        discovery.AssertOutputContains("singleton object-array token");
+        discovery.AssertOutputContains("typed-array token");
         discovery.AssertOutputContains("ObjectArrayAsOne ([37,\"array\"])");
         discovery.AssertOutputContains("TupleAsOne ((31, tuple))");
         discovery.AssertOutputContains("ObjectTupleAsOne ((31, tuple))");
@@ -105,6 +110,7 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         if (metadataMode != MetadataMode.AotSourceGeneration)
         {
             discovery.AssertOutputContains("GenericRow (59)");
+            discovery.AssertOutputContains("generic whole-array token");
         }
 
         using TempDirectory results = new();
@@ -238,6 +244,7 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>
+    <RunAnalyzers>true</RunAnalyzers>
     <WarningsAsErrors>$(WarningsAsErrors);MSTEST0014</WarningsAsErrors>
     <DefineConstants Condition="'$(MSTestSourceGenMode)' == 'ReflectionFree'">$(DefineConstants);REFLECTION_FREE</DefineConstants>
   </PropertyGroup>
@@ -257,6 +264,7 @@ dotnet_diagnostic.MSTEST0014.severity = error
 #file InjectedTokenTests.cs
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -300,6 +308,22 @@ public sealed class InjectedTokenTests
         Assert.AreEqual(value == 7 ? "inline-a" : "inline-b", label);
         Assert.IsTrue(value is 7 or 11);
         TokenAssertions.Injected(TestContext, token, [value, label]);
+    }
+
+    [TestMethod]
+    [DataRow(7, DisplayName = "singleton object-array token")]
+    public void SingletonObjectArray(object[] values, CancellationToken token)
+    {
+        Assert.AreSequenceEqual(new object[] { 7 }, values);
+        TokenAssertions.Injected(TestContext, token, [7]);
+    }
+
+    [TestMethod]
+    [DataRow(new int[] { 1, 2 }, DisplayName = "typed-array token")]
+    public void TypedArray(int[] values, CancellationToken token)
+    {
+        Assert.AreSequenceEqual(new int[] { 1, 2 }, values);
+        TokenAssertions.Injected(TestContext, token, [values]);
     }
 
     [TestMethod]
@@ -404,6 +428,16 @@ public sealed class InjectedTokenTests
         Assert.AreEqual(typeof(int), typeof(T));
         Assert.AreEqual((object)59, value);
         TokenAssertions.Injected(TestContext, token, [59]);
+    }
+
+    [TestMethod]
+    [DataRow(new int[] { 3, 5 }, DisplayName = "generic whole-array token")]
+    public void GenericWholeArray<T>(T value, CancellationToken token)
+    {
+        Assert.AreEqual(typeof(int[]), typeof(T));
+        int[] values = Assert.IsInstanceOfType<int[]>(value);
+        Assert.AreSequenceEqual(new int[] { 3, 5 }, values);
+        TokenAssertions.Injected(TestContext, token, [values]);
     }
 #endif
 
@@ -513,7 +547,9 @@ public sealed class InjectedTokenTests
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class ExplicitTokenTestMethodAttribute : TestMethodAttribute
+public sealed class ExplicitTokenTestMethodAttribute(
+    [CallerFilePath] string callerFilePath = "",
+    [CallerLineNumber] int callerLineNumber = -1) : TestMethodAttribute(callerFilePath, callerLineNumber)
 {
     public override async Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
     {

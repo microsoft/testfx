@@ -74,7 +74,7 @@ internal static class TestDataSourceHelpers
     public static bool TryHandleTupleDataSource(object? data, ParameterInfo[] testMethodParameters, out object?[] array)
     {
         bool isSingleDataArgument = GetDataParameterCount(testMethodParameters) == 1
-            && testMethodParameters[0].ParameterType?.IsAssignableFrom(data?.GetType()) == true;
+            && testMethodParameters[0].ParameterType?.IsAssignableFrom(data?.GetType()) is true;
         if (isSingleDataArgument && testMethodParameters.Length == 1)
         {
             array = [];

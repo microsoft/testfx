@@ -108,6 +108,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
+                [DataRow(7)]
                 [DataRow(7, "array")]
                 [DataRow(11, "array", true)]
                 public void ArrayData(object[] values, CancellationToken token) { }
@@ -115,6 +116,89 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenOmittedCancellationTokenFollowsTypedArray_RequiresArrayArgument()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DataRow(1, 2)|}]
+                [{|#1:DataRow()|}]
+                [{|#2:DataRow(7)|}]
+                [DataRow(new int[] { 1, 2 })]
+                [DataRow(new int[] { })]
+                [DataRow(new int[] { 1, 2 }, null)]
+                public void TypedArray(int[] values, CancellationToken token) { }
+
+                [TestMethod]
+                [DataRow(1, 2)]
+                [DataRow(new int[] { 1, 2 })]
+                public void LegacyArray(int[] values) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(0).WithArguments(2, 1),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(1).WithArguments(0, 1),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule).WithLocation(2)
+                .WithArguments("Parameter 'values' expects type 'int[]', but the provided value has type 'int'"));
+    }
+
+    [TestMethod]
+    public async Task WhenGenericDataBeforeCancellationTokenIsWholeArray_NoDiagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(new int[] { 3, 5 })]
+                [DataRow((object)new string[] { "a", "b" })]
+                [DataRow(new object[] { new object[] { 1, "a" } })]
+                [DataRow(new int[] { }, null)]
+                public void WholeArray<T>(T value, CancellationToken token) { }
+
+                [TestMethod]
+                [DataRow(7, new int[] { 3, 5 })]
+                public void ArrayElement<T>(T value, T[] values, CancellationToken token) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericArrayDataHasConflictingTypes_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DataRow(new int[] { 3, 5 }, 7)|}]
+                [{|#1:DataRow(7, new int[] { 3, 5 })|}]
+                public void DifferentTypes<T>(T first, T second, CancellationToken token) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentConflictingTypesRule).WithLocation(0).WithArguments("T", "int[]", "Int32"),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentConflictingTypesRule).WithLocation(1).WithArguments("T", "Int32", "int[]"));
     }
 
     [TestMethod]
@@ -165,10 +249,6 @@ public sealed class DataRowShouldBeValidAnalyzerTests
                 [TestMethod]
                 [{|#1:DataRow(7, 11)|}]
                 public void WrongExplicitToken(int value, CancellationToken token) { }
-
-                [TestMethod]
-                [{|#2:DataRow(7)|}]
-                public void WrongArray(object[] values, CancellationToken token) { }
             }
             """;
 
@@ -176,9 +256,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests
             code,
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule).WithLocation(0)
                 .WithArguments("Parameter 'value' expects type 'int', but the provided value has type 'string'; Parameter 'label' expects type 'string', but the provided value has type 'int'"),
-            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(1).WithArguments(2, 1),
-            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule).WithLocation(2)
-                .WithArguments("Parameter 'values' expects type 'object[]', but the provided value has type 'int'"));
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(1).WithArguments(2, 1));
     }
 
     [TestMethod]

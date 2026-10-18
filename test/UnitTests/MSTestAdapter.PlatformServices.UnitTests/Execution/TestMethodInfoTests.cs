@@ -412,6 +412,35 @@ public class TestMethodInfoTests : TestContainer
         _testContextImplementation.TestData.Should().Equal(17, "array");
     }
 
+    public async Task InvokeAsyncPacksSingletonObjectArrayBeforeInjectingCancellationToken()
+    {
+        foreach (string methodName in new[] { nameof(CancellationTokenInvocationFixture.SingleArrayAndToken), nameof(CancellationTokenInvocationFixture.OptionalSingleArrayAndToken) })
+        {
+            foreach (bool storedArguments in new[] { false, true })
+            {
+                CancellationToken? receivedToken = null;
+                CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                object?[] userData = [7];
+                if (storedArguments)
+                {
+                    method.SetArguments(userData);
+                }
+
+                _testContextImplementation.SetTestData(userData);
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync(storedArguments ? null : userData);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                instance.ReceivedData.Should().Equal(7);
+                receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+                userData.Should().Equal(7);
+                _testContextImplementation.TestData.Should().BeSameAs(userData);
+            }
+        }
+    }
+
     public async Task InvokeAsyncPreservesWrappedObjectArrayBeforeInjectingCancellationToken()
     {
         string[] methodNames =
