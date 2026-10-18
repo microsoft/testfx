@@ -463,6 +463,43 @@ A late CodeQL thread requested the same nullable `is true` pattern in
 196-case adapter selection and 15 packed cases pass before and after that
 one-line change. Its source is included in the final patch identity above.
 
+### System.Type array inference follow-up
+
+Against `bf7591b06cca02697ac63c9e1bdb629e8396e6f7`, the next review identified
+the remaining legal attribute-constant array element `System.Type`.
+It has no Roslyn `SpecialType`, so the existing CLR-type mapper throws while
+inferring `Type[]`. Recognize the actual `System` namespace/type shape, and
+normalize scalar `typeof(...)` constants to the same CLR `Type` representation
+so scalar/element inference agrees in both argument orders.
+
+Add one focused no-diagnostic regression covering nonempty/empty whole arrays,
+explicit-null tokens, array elements and mixed scalar/array inference. Add a
+packed whole-array case asserting the exact inferred `Type[]`, its contents and
+the injected context token. No runtime, public API or scheduling change is needed.
+
+**Test-value evidence:** `WhenGenericDataBeforeCancellationTokenIsTypeArray_NoDiagnostic`
+executes against the pre-fix analyzer and fails with AD0001 / `ArgumentException`
+for `SpecialType.None`. The same 43-case analyzer selection passes with the fix;
+there are no skips. Both variants retain the identical regression file, SHA-256
+`EC1184A7F6780CC4448CBA162809A987D4389346C0A0248168C847AC5CBE726D`.
+The source/test patch against the stated base has SHA-256
+`2178874B628E73AE901092D6FF20EEA6AEA6A6F401817251CA2D6A243237E145`.
+
+The aligned Release packages also pass the same 15-case packed acceptance
+selection with analyzers enabled, exit 0 and no skips. Positive children now
+execute 41 reflection, 41 Rooting, 38 reflection-free and 41 VSTest cases.
+The new `generic type-array token` case asserts `typeof(T) == typeof(Type[])`,
+the exact `typeof(int)` element, context-token identity and live cancellation.
+The existing reflection-free generic-method exclusion is unchanged.
+
+TRX, JUnit and CTRF counts agree with the independent plans. Commands, binlogs,
+retained comparison patch and package/cache/consumer records use the
+`type-array-*` tags in the existing evidence directory. The analyzer package
+SHA-256 is `D014ED03FD0F8036B7551DC448E9C3BA3B43088033EB71AA4D88626A54F38C77`;
+its producer, unit-test copy and shipping DLL share
+`9DB2CCC26B2242D5F4B86299AFA38C902AC01148D53288DEDBF44B28B95DF455`.
+The owned comparison checkout was removed after retaining the evidence.
+
 ## Open questions
 
 The packed control is a compiling behavior-removal experiment, not a

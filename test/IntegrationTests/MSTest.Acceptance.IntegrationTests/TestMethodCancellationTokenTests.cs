@@ -25,6 +25,7 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         "singleton object-array token",
         "typed-array token",
         "generic whole-array token",
+        "generic type-array token",
         "OptionalData (13)",
         "OptionalData (17,\"provided\")",
         "DynamicPlain (19,\"dynamic\")",
@@ -92,7 +93,7 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         discovery.AssertExitCodeIs(ExitCode.Success);
         // Each of the three folded methods has one discovery node but executes two concrete cases.
         string[] expectedNames = metadataMode == MetadataMode.AotSourceGeneration
-            ? [.. ExpectedPassingNames.Where(name => name is not "GenericRow (59)" and not "generic whole-array token")]
+            ? [.. ExpectedPassingNames.Where(name => name is not "GenericRow (59)" and not "generic whole-array token" and not "generic type-array token")]
             : ExpectedPassingNames;
         discovery.AssertOutputContains($"found {expectedNames.Length - 3} test(s)");
         discovery.AssertOutputContains("InlineRows (7,\"inline-a\")");
@@ -111,6 +112,7 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         {
             discovery.AssertOutputContains("GenericRow (59)");
             discovery.AssertOutputContains("generic whole-array token");
+            discovery.AssertOutputContains("generic type-array token");
         }
 
         using TempDirectory results = new();
@@ -437,6 +439,16 @@ public sealed class InjectedTokenTests
         Assert.AreEqual(typeof(int[]), typeof(T));
         int[] values = Assert.IsInstanceOfType<int[]>(value);
         Assert.AreSequenceEqual(new int[] { 3, 5 }, values);
+        TokenAssertions.Injected(TestContext, token, [values]);
+    }
+
+    [TestMethod]
+    [DataRow((object)new Type[] { typeof(int) }, DisplayName = "generic type-array token")]
+    public void GenericTypeArray<T>(T value, CancellationToken token)
+    {
+        Assert.AreEqual(typeof(Type[]), typeof(T));
+        Type[] values = Assert.IsInstanceOfType<Type[]>(value);
+        Assert.AreSequenceEqual(new Type[] { typeof(int) }, values);
         TokenAssertions.Injected(TestContext, token, [values]);
     }
 #endif

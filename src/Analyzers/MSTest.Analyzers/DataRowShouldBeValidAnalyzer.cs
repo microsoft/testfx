@@ -261,6 +261,17 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     private static Type GetSystemType(ITypeSymbol type)
     {
+        if (type is INamedTypeSymbol
+            {
+                Name: nameof(Type),
+                Arity: 0,
+                ContainingType: null,
+                ContainingNamespace: { Name: WellKnownTypeNames.System, ContainingNamespace.IsGlobalNamespace: true },
+            })
+        {
+            return typeof(Type);
+        }
+
         if (type.TypeKind == TypeKind.Enum)
         {
             if (((INamedTypeSymbol)type).EnumUnderlyingType is { } underlyingType)
@@ -345,9 +356,12 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            Type? argumentType = constructorArgument.Kind == TypedConstantKind.Array
-                ? GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType)
-                : constructorArgument.Value?.GetType();
+            Type? argumentType = constructorArgument.Kind switch
+            {
+                TypedConstantKind.Array => GetSystemType(((IArrayTypeSymbol)constructorArgument.Type).ElementType),
+                TypedConstantKind.Type => GetSystemType(constructorArgument.Type),
+                _ => constructorArgument.Value?.GetType(),
+            };
 
             if (argumentType is null)
             {

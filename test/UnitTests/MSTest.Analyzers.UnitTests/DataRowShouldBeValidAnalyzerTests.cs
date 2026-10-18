@@ -179,6 +179,40 @@ public sealed class DataRowShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenGenericDataBeforeCancellationTokenIsTypeArray_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow((object)new Type[] { typeof(int) })]
+                [DataRow((object)new Type[] { })]
+                [DataRow(new Type[] { typeof(string) }, null)]
+                public void WholeArray<T>(T value, CancellationToken token) { }
+
+                [TestMethod]
+                [DataRow((object)new Type[] { typeof(int) })]
+                public void ArrayElement<T>(T[] values, CancellationToken token) { }
+
+                [TestMethod]
+                [DataRow(typeof(int), new Type[] { typeof(string) })]
+                public void ScalarFirst<T>(T value, T[] values, CancellationToken token) { }
+
+                [TestMethod]
+                [DataRow(new Type[] { typeof(string) }, typeof(int))]
+                public void ArrayFirst<T>(T[] values, T value, CancellationToken token) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenGenericArrayDataHasConflictingTypes_Diagnostic()
     {
         string code = """
