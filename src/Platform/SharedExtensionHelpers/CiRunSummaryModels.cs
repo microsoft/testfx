@@ -68,6 +68,15 @@ internal sealed class CiRunSummaryModule
     public string[]? GitHubActionsStepSummarySections { get; set; }
 }
 
+internal static class CiRunSummaryModuleIdentity
+{
+    internal static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => modules.Count(candidate =>
+            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
+            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
+            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
+}
+
 internal sealed class CiRunSummaryTest
 {
     public string DisplayName { get; set; } = string.Empty;

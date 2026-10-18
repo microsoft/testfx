@@ -463,7 +463,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         }
 
         string discriminator = $"{module.AssemblyName} ({module.TargetFramework}, {module.Architecture}";
-        if (HasDuplicateModuleIdentity(modules, module))
+        if (CiRunSummaryModuleIdentity.HasDuplicateModuleIdentity(modules, module))
         {
             discriminator += $", attempt {module.AttemptNumber.ToString(CultureInfo.InvariantCulture)}, session {module.SessionUid}";
         }
@@ -525,7 +525,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append(EscapeCell(module.AssemblyName))
             .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(", ")
             .Append(EscapeCell(module.Architecture)).Append(')');
-        if (HasDuplicateModuleIdentity(modules, module))
+        if (CiRunSummaryModuleIdentity.HasDuplicateModuleIdentity(modules, module))
         {
             builder.Append(" — attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
                 .Append(", session ").Append(EscapeCell(module.SessionUid));
@@ -543,10 +543,4 @@ internal sealed partial class AzureDevOpsSummaryReporter
 
     private static string HtmlEncode(string value)
         => System.Net.WebUtility.HtmlEncode(value);
-
-    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
-        => modules.Count(candidate =>
-            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
-            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
-            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }
