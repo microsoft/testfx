@@ -316,6 +316,7 @@ public class TestMethodInfoTests : TestContainer
         [
             (nameof(CancellationTokenInvocationFixture.DataAndToken), 43, [43]),
             (nameof(CancellationTokenInvocationFixture.SingleArrayAndToken), new object?[] { 17, "array" }, [17, "array"]),
+            (nameof(CancellationTokenInvocationFixture.OptionalSingleArrayAndToken), new object?[] { 17, "array" }, [17, "array"]),
         ];
         foreach ((string methodName, object data, object?[] expectedData) in cases)
         {
@@ -409,6 +410,48 @@ public class TestMethodInfoTests : TestContainer
         userData.Should().Equal(17, "array");
         method.Arguments.Should().Equal(17, "array");
         _testContextImplementation.TestData.Should().Equal(17, "array");
+    }
+
+    public async Task InvokeAsyncPreservesWrappedObjectArrayBeforeInjectingCancellationToken()
+    {
+        string[] methodNames =
+        [
+            nameof(CancellationTokenInvocationFixture.SingleArrayAndToken),
+            nameof(CancellationTokenInvocationFixture.OptionalSingleArrayAndToken),
+        ];
+        foreach (string methodName in methodNames)
+        {
+            foreach (object?[] values in new object?[][] { [17, "array"], [], [new object[] { 19, "nested" }] })
+            {
+                foreach (bool storedArguments in new[] { false, true })
+                {
+                    CancellationToken? receivedToken = null;
+                    CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+                    TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                    object?[] userData = [values];
+                    if (storedArguments)
+                    {
+                        method.SetArguments(userData);
+                    }
+
+                    _testContextImplementation.SetTestData(userData);
+                    using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                    TestResult result = await method.InvokeAsync(storedArguments ? null : userData);
+
+                    result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                    instance.ReceivedData.Should().BeSameAs(values);
+                    instance.ReceivedData.Should().Equal(values);
+                    receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+                    userData.Should().ContainSingle().Which.Should().BeSameAs(values);
+                    _testContextImplementation.TestData.Should().BeSameAs(userData);
+                    if (storedArguments)
+                    {
+                        method.Arguments.Should().BeSameAs(userData);
+                    }
+                }
+            }
+        }
     }
 
     public async Task InvokeAsyncInfersGenericDataBeforeInjectingCancellationToken()
@@ -2917,6 +2960,13 @@ public class TestMethodInfoTests : TestContainer
 
         [TestMethod]
         public void SingleArrayAndToken(object?[] data, CancellationToken token)
+        {
+            ReceivedData = data;
+            Body(token);
+        }
+
+        [TestMethod]
+        public void OptionalSingleArrayAndToken(object?[] data, CancellationToken token = default)
         {
             ReceivedData = data;
             Body(token);

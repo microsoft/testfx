@@ -146,6 +146,46 @@ Baseline: `2cf09d01522dcca5bf6bee848c9ebb90d86f9255`.
   consumers/cache: ten pass, zero fail/skip, parent exit 0. The final production
   and test source manifest still matches the delivered working-tree files.
 
+### 2026-10-18: review feedback and binding compatibility
+
+Review comparison base: `dbd69abc4ad58e501f3d05e57ff86a649aaef592`.
+The review batch preserves the trailing-scalar-token contract and the upstream
+dispatcher/lifecycle changes merged before it.
+
+- An already supplied single `object[]` argument must not be wrapped a second
+  time before injection. Preserve its identity and elements for both required
+  and optional tokens, direct invocation and stored arguments, including empty
+  and nested arrays.
+- A valid full-arity tuple supplies its own token before either single-object
+  or single-array interpretation. Reuse the existing tuple expander for modern
+  `ITuple` and legacy `Tuple`/`ValueTuple` paths. Retain intentional tuple-valued
+  data when arity or assignability does not describe an explicit-token row.
+  This avoids a new data-source API or separate legacy normalization policy.
+- Empty rows with an optional generic data parameter still require generic
+  inference diagnostics. Run the existing generic analyzer before its
+  empty-row return; explicit data continues to infer the type.
+- Accept the nullable `is true` pattern and the combinatorial test's
+  `.Select(GetData)` projection. The existing implicit LINQ import makes an
+  additional explicit using unnecessary; these suggestions preserve behavior.
+- Retain identical test bytes in an isolated comparison checkout. An initial
+  incremental analyzer build skipped the copied test because copying preserved
+  an older source timestamp. Its 38-test result was discarded, not counted as
+  regression evidence. A forced rebuild executed all 39 tests and reproduced
+  the intended missing-diagnostic failure (expected two, actual zero).
+- The first isolated acceptance attempt stopped in shared fixture initialization
+  because the focused feed lacked unrelated package-version prerequisites; it
+  is not behavioral red evidence. Stage the unchanged support packages
+  byte-for-byte in both feeds, retain their hashes, and rebuild/repack each
+  variant's changed products. The analyzer's shipping entry point is
+  `MSTest.Analyzers.Package`, not the non-packable analyzer implementation
+  project; verify its actual DLL payload rather than trusting `pack` exit 0.
+
+The pre-fix production with all new tests executes 195 modern adapter, 193
+legacy adapter, 47 framework and 39 analyzer cases. Four adapter tests fail on
+each target for array identity/tuple expansion, one analyzer test fails for the
+missing diagnostics, and the remaining cases pass; none are skipped. The
+framework projection remains green against the unchanged production code.
+
 ## Alternatives and decision
 
 The existing approach is to retrieve `TestContext.CancellationToken` inside the
@@ -263,6 +303,84 @@ the complete production/test file-manifest SHA-256 is
 `25CA9ABD66BC83AFD6350675E1D75C36756D3211336AB510260516F944DFC89C`.
 Producer source and package contents did not change during this params-only
 follow-up; the new source identity includes its additional test coverage.
+
+### Review-batch execution evidence
+
+The final reviewed source/test patch against
+`dbd69abc4ad58e501f3d05e57ff86a649aaef592` has SHA-256
+`59491AFE1570336B0F80A73E6075EF86B8D3BA5A48E51467B55AFEF8A005EB86`.
+The comparison's identical retained tests and policy-precedence patch have
+SHA-256 `C4D2914A7035D64B549913CF5719FFC61615ED077D6EF79C09F1882834582998`.
+While validation was running, the PR received review-suggestion commit
+`66a6cca9e15c8bdad3a2ecaa24ebc9d594fbdcf5`. It was fast-forwarded locally;
+its overlapping functional changes were retained, and all final production/test
+bytes were checked against the saved, tested tree before publication.
+
+Release validation uses the pinned SDK and normal localization checks, without
+the historical `ErrorOnOutOfDateXlf` override. The modern unit selection passes
+195 adapter/helper/signature, 47 framework and 39 analyzer cases; the net462
+adapter selection passes 193 cases. TRX, JUnit and CTRF agree on all 474
+executed/passed cases, with zero skips. The independently planned 15-case packed
+selection passes after the red experiment, also with matching reports and no
+skips.
+
+| Contract / named test | Pre-fix production with identical tests | Correct implementation |
+| --- | --- | --- |
+| Array identity and elements: `InvokeAsyncPreservesWrappedObjectArrayBeforeInjectingCancellationToken` | Executed: received `[[17, "array"]]` rather than the supplied `[17, "array"]`; fails on net8.0 and net462 | Executed: required/optional token, direct/stored arguments, empty/nonempty/nested arrays pass |
+| Explicit-token tuple precedence: `TryHandleTupleDataSource_ExpandsExplicitTokenTuplesForObjectArgument`, `IsDataConsideredSingleArgumentValue_RejectsExplicitTokenTuplesForObjectArrayArgument`, `TryHandleITestDataRow_ExpandsExplicitTokenTuplesForObjectAndObjectArrayArguments` | Executed: three distinct expansion/shortcut assertions fail on both targets | Executed: raw/wrapped, reference/value tuples, explicit/default/null/missing tokens and intentional tuple-valued data pass |
+| Empty-row generic inference: `WhenEmptyDataRowWithOptionalGenericDataBeforeCancellationToken_Diagnostic` | Executed: expected two unresolved-`T` diagnostics, actual zero | Executed: exact diagnostics pass; explicit generic data still produces no diagnostic |
+| Packed composition: `Mtp_InjectsTokensWithoutChangingUserData`, `Vstest_InjectsTokensWithoutChangingUserData` | Executed: four outer failures, attributable to tuple discovery names and bad bound values; direct MTP execution reaches seven intended array/tuple failures in each metadata mode, and VSTest reaches the same seven failures | Executed: 37 reflection, 37 Rooting, 36 reflection-free and 37 VSTest positive child cases pass with exact TRX identities/outcomes |
+| Params preservation: `OptionalParamsAndInvalidArgumentsProduceExactResults` | Executed: all five target-framework cases pass | Executed: net462 and net8.0-net11.0 cases pass, retaining exact array lengths/elements and intentional invalid-row failures |
+
+The clean packed comparison executes 15 outer cases: 11 pass, four fail at
+the intended behavioral assertions, none skip, and the parent exits 2.
+Its MTP positive discovery commands exit 0 but report the wrong tuple names;
+direct positive execution exits 2 with seven failed cases, while VSTest exits 1.
+The correct implementation's parent exits 0. A first long-path comparison also
+hit net462's deployment `MAX_PATH` limit; that unrelated failure is excluded.
+Rerunning through an owned short-path junction removes it without changing the
+tests, package payloads or production code.
+
+Reproduction uses the existing unit selectors documented above, expanded to
+include `TestDataSourceHelpersTests` in both adapter runs:
+
+```powershell
+.\.dotnet\dotnet.exe artifacts\bin\MSTestAdapter.PlatformServices.UnitTests\Release\net8.0\MSTestAdapter.PlatformServices.UnitTests.dll --treenode-filter "/*/*/(TestMethodInfoTests)|(MethodInfoExtensionsTests)|(TestDataSourceHelpersTests)/*"
+.\artifacts\bin\MSTestAdapter.PlatformServices.UnitTests\Release\net462\MSTestAdapter.PlatformServices.UnitTests.exe --treenode-filter "/*/*/(TestMethodInfoTests)|(MethodInfoExtensionsTests)|(TestDataSourceHelpersTests)/*"
+.\.dotnet\dotnet.exe build src\Analyzers\MSTest.GlobalConfigsGenerator\MSTest.GlobalConfigsGenerator.csproj -c Release -bl:generator.binlog
+.\.dotnet\dotnet.exe pack src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj -c Release -bl:analyzer-pack.binlog
+.\.dotnet\dotnet.exe test --project test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c Release -f net11.0 --no-build --no-launch-profile --filter "ClassName=MSTest.Acceptance.IntegrationTests.TestMethodCancellationTokenTests|FullyQualifiedName~LegacyDataRowBehaviorTests.OptionalParamsAndInvalidArgumentsProduceExactResults" --minimum-expected-tests 15 -p:UsingDotNetTest=true -p:ArtifactsTestResultsDir=artifacts\TestResults\Release\review-batch-acceptance-green-final -p:SkipUapTargetFramework=true -p:ModernUwpMinimum= -p:WinUiMinimum= -bl:review-acceptance.binlog --show-test-results all
+```
+
+Each command exits 0 for the correct implementation. Before acceptance, repack
+the configuration-matched framework, adapter, source generator and SDK as in
+the earlier validation, then rebuild the acceptance project. Discovery uses
+the same filter with `--list-tests text` and finds the independently planned
+15 identities. Reports are retained in `artifacts\TestResults\Release\review-batch-*`;
+commands, binlogs, patch identities and physical payload records are in
+`artifacts\tmp\cancellation-toolchain\review-batch`.
+
+Both variants consume MSTest 4.6.0-dev and MTP 2.6.0-dev using fresh fixture-owned
+NuGet caches. SHA-256 checks match the three actual consumer output layouts to
+their respective NuGet payloads and their built producers. The shipping analyzer
+DLL is likewise matched to its producer. The final green adapter package hash is
+`829A9F97527AACEC9B4B0F30BA60CEF7C644E5798FA0A7FDCC14D3C507DEEE98`;
+the pre-fix adapter package hash is
+`F19A8FF2BB0F2256C89E53586C3A3942483856573FA3B2DB71FD5F1EB75D8023`.
+The corresponding analyzer package hashes are
+`289B5EDA89FFD437DAB7148B3A73EF584A92310031B6FA03520880A2FAE20B91`
+and `6095F2568349105BA71B29DFA9F33B51AB1ED5D4BB5844045B30DB37ABF25EA0`.
+Unchanged support packages needed by shared fixture initialization are copied
+byte-for-byte into the isolated feed and separately hashed, not rebuilt as part
+of an unrelated product validation claim.
+
+Parallel-safety reconciliation keeps the internal TestContainer suites serial,
+analyzer and acceptance assemblies method-parallel with CPU-count workers, and
+the generated consumer at two workers. New arrays, tokens and assertion state
+are per invocation/row; generated output variants are separate and read-only
+during test execution. No scheduler, exclusion, lock, global lifetime or IPC
+registration change is introduced. There is no file overlap with the separate
+startup-registration slice.
 
 ## Open questions
 

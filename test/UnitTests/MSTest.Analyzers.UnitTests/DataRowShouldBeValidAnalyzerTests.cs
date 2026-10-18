@@ -61,6 +61,11 @@ public sealed class DataRowShouldBeValidAnalyzerTests
                 public void Generic<T>(T value, CancellationToken token) { }
 
                 [TestMethod]
+                [DataRow(7)]
+                [DataRow(11, null)]
+                public void OptionalGeneric<T>(T value = default, CancellationToken token = default) { }
+
+                [TestMethod]
                 [DataRow(new int[] { 3, 5 })]
                 public void GenericArray<T>(T[] values, CancellationToken token) { }
             }
@@ -241,6 +246,29 @@ public sealed class DataRowShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(
             code,
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(0).WithArguments("T"));
+    }
+
+    [TestMethod]
+    public async Task WhenEmptyDataRowWithOptionalGenericDataBeforeCancellationToken_Diagnostic()
+    {
+        string code = """
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DataRow()|}]
+                [{|#1:DataRow(new object[] { })|}]
+                public void Generic<T>(T value = default, CancellationToken token = default) { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(0).WithArguments("T"),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.GenericTypeArgumentNotResolvedRule).WithLocation(1).WithArguments("T"));
     }
 
     [TestMethod]

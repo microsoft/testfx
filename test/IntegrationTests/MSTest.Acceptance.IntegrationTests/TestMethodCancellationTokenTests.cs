@@ -29,7 +29,10 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         "DynamicTyped (29)",
         "TupleExpanded (31,\"tuple\")",
         "TupleAsOne ((31, tuple))",
+        "ObjectTupleAsOne ((31, tuple))",
         "ObjectArrayAsOne ([37,\"array\"])",
+        "ObjectArrayTupleAsOne ([(31, tuple)])",
+        "OptionalObjectArrayAsOne ([[17,\"array\"]])",
         "metadata row a",
         "metadata row b",
         "FoldedRows (47)",
@@ -40,6 +43,14 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         "Combinations (67,True)",
         "Combinations (67,False)",
         "explicit user token",
+        "ExplicitObjectTuple (83,System.Threading.CancellationToken)",
+        "ExplicitObjectTuple (wrapped tuple)",
+        "ExplicitObjectTupleFolded (83,System.Threading.CancellationToken)",
+        "ExplicitObjectTupleFolded (wrapped tuple)",
+        "ExplicitObjectArrayTuple ([89,\"tuple-array\"],System.Threading.CancellationToken)",
+        "ExplicitObjectArrayTuple (wrapped tuple)",
+        "ExplicitObjectArrayTupleFolded ([89,\"tuple-array\"],System.Threading.CancellationToken)",
+        "ExplicitObjectArrayTupleFolded (wrapped tuple)",
         "CustomInvocation",
         "CombinatorialTokenOnly ()",
     ];
@@ -76,14 +87,21 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
             cancellationToken: TestContext.CancellationToken);
 
         discovery.AssertExitCodeIs(ExitCode.Success);
-        // The two folded rows are one discovery node but execute as two concrete cases.
+        // Each of the three folded methods has one discovery node but executes two concrete cases.
         string[] expectedNames = metadataMode == MetadataMode.AotSourceGeneration
             ? [.. ExpectedPassingNames.Where(name => name != "GenericRow (59)")]
             : ExpectedPassingNames;
-        discovery.AssertOutputContains($"found {expectedNames.Length - 1} test(s)");
+        discovery.AssertOutputContains($"found {expectedNames.Length - 3} test(s)");
         discovery.AssertOutputContains("InlineRows (7,\"inline-a\")");
         discovery.AssertOutputContains("ObjectArrayAsOne ([37,\"array\"])");
         discovery.AssertOutputContains("TupleAsOne ((31, tuple))");
+        discovery.AssertOutputContains("ObjectTupleAsOne ((31, tuple))");
+        discovery.AssertOutputContains("ObjectArrayTupleAsOne ([(31, tuple)])");
+        discovery.AssertOutputContains("OptionalObjectArrayAsOne ([[17,\"array\"]])");
+        discovery.AssertOutputContains("ExplicitObjectTuple (83,System.Threading.CancellationToken)");
+        discovery.AssertOutputContains("ExplicitObjectTuple (wrapped tuple)");
+        discovery.AssertOutputContains("ExplicitObjectArrayTuple ([89,\"tuple-array\"],System.Threading.CancellationToken)");
+        discovery.AssertOutputContains("ExplicitObjectArrayTuple (wrapped tuple)");
         if (metadataMode != MetadataMode.AotSourceGeneration)
         {
             discovery.AssertOutputContains("GenericRow (59)");
@@ -166,6 +184,9 @@ public sealed class TestMethodCancellationTokenTests : AcceptanceTestBase<TestMe
         Assert.AreEqual(0, discoveryExitCode, $"{commandLine.StandardOutput}{Environment.NewLine}{commandLine.ErrorOutput}");
         Assert.Contains("InlineRows (7,\"inline-a\")", commandLine.StandardOutput);
         Assert.Contains("ObjectArrayAsOne ([37,\"array\"])", commandLine.StandardOutput);
+        Assert.Contains("OptionalObjectArrayAsOne ([[17,\"array\"]])", commandLine.StandardOutput);
+        Assert.Contains("ExplicitObjectTuple", commandLine.StandardOutput);
+        Assert.Contains("ExplicitObjectArrayTuple", commandLine.StandardOutput);
 
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
             $"\"{dotnetPath}\" vstest \"{assemblyPath}\" /TestCaseFilter:\"FullyQualifiedName~InjectedTokenTests\" /Logger:\"trx;LogFileName=tokens.trx\" /ResultsDirectory:\"{results.Path}\"",
@@ -326,11 +347,35 @@ public sealed class InjectedTokenTests
     }
 
     [TestMethod]
+    [DynamicData(nameof(TupleRows))]
+    public void ObjectTupleAsOne(object value, CancellationToken token)
+    {
+        Assert.AreEqual((object)(31, "tuple"), value);
+        TokenAssertions.Injected(TestContext, token, [(31, "tuple")]);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(ObjectRows))]
     public void ObjectArrayAsOne(object[] values, CancellationToken token)
     {
         Assert.AreSequenceEqual(new object[] { 37, "array" }, values);
         TokenAssertions.Injected(TestContext, token, [37, "array"]);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TupleRows))]
+    public void ObjectArrayTupleAsOne(object[] values, CancellationToken token)
+    {
+        Assert.AreSequenceEqual(new object[] { (31, "tuple") }, values);
+        TokenAssertions.Injected(TestContext, token, [(31, "tuple")]);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(WrappedObjectRows))]
+    public void OptionalObjectArrayAsOne(object[] values, CancellationToken token = default)
+    {
+        Assert.AreSequenceEqual(new object[] { 17, "array" }, values);
+        TokenAssertions.Injected(TestContext, token, [values]);
     }
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
@@ -378,6 +423,42 @@ public sealed class InjectedTokenTests
         TokenAssertions.Explicit(TestContext, token, [71, new CancellationToken(canceled: true)]);
     }
 
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(ExplicitObjectTupleRows))]
+    [DynamicData(nameof(ExplicitObjectTupleMetadataRows))]
+    public void ExplicitObjectTuple(object value, CancellationToken token)
+    {
+        Assert.AreEqual((object)83, value);
+        TokenAssertions.Explicit(TestContext, token, [83, new CancellationToken(canceled: true)]);
+    }
+
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(ExplicitObjectTupleRows))]
+    [DynamicData(nameof(ExplicitObjectTupleMetadataRows))]
+    public void ExplicitObjectTupleFolded(object value, CancellationToken token)
+    {
+        Assert.AreEqual((object)83, value);
+        TokenAssertions.Explicit(TestContext, token, [83, new CancellationToken(canceled: true)]);
+    }
+
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DynamicData(nameof(ExplicitObjectArrayTupleRows))]
+    [DynamicData(nameof(ExplicitObjectArrayTupleMetadataRows))]
+    public void ExplicitObjectArrayTuple(object[] values, CancellationToken token)
+    {
+        Assert.AreSequenceEqual(new object[] { 89, "tuple-array" }, values);
+        TokenAssertions.Explicit(TestContext, token, [values, new CancellationToken(canceled: true)]);
+    }
+
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DynamicData(nameof(ExplicitObjectArrayTupleRows))]
+    [DynamicData(nameof(ExplicitObjectArrayTupleMetadataRows))]
+    public void ExplicitObjectArrayTupleFolded(object[] values, CancellationToken token)
+    {
+        Assert.AreSequenceEqual(new object[] { 89, "tuple-array" }, values);
+        TokenAssertions.Explicit(TestContext, token, [values, new CancellationToken(canceled: true)]);
+    }
+
     [ExplicitTokenTestMethod]
     public void CustomInvocation(CancellationToken token)
         => TokenAssertions.Explicit(TestContext, token, null);
@@ -395,6 +476,8 @@ public sealed class InjectedTokenTests
 
     public static IEnumerable<object[]> ObjectRows => [new object[] { 37, "array" }];
 
+    public static IEnumerable<object[]> WrappedObjectRows => [new object[] { new object[] { 17, "array" } }];
+
     public static IEnumerable<TestDataRow<(int, string)>> MetadataRows =>
     [
         new TestDataRow<(int, string)>((41, "row-a")) { DisplayName = "metadata row a" },
@@ -406,6 +489,26 @@ public sealed class InjectedTokenTests
     public static IEnumerable<TestDataRow<(int, CancellationToken)>> ExplicitTokenRows =>
     [
         new TestDataRow<(int, CancellationToken)>((71, new CancellationToken(canceled: true))) { DisplayName = "explicit user token" },
+    ];
+
+    public static IEnumerable<(int, CancellationToken)> ExplicitObjectTupleRows => [(83, new CancellationToken(canceled: true))];
+
+    public static IEnumerable<TestDataRow<(int, CancellationToken)>> ExplicitObjectTupleMetadataRows =>
+    [
+        new TestDataRow<(int, CancellationToken)>((83, new CancellationToken(canceled: true))) { ArgumentsDisplayName = "wrapped tuple" },
+    ];
+
+    public static IEnumerable<(object[], CancellationToken)> ExplicitObjectArrayTupleRows =>
+    [
+        (new object[] { 89, "tuple-array" }, new CancellationToken(canceled: true)),
+    ];
+
+    public static IEnumerable<TestDataRow<(object[], CancellationToken)>> ExplicitObjectArrayTupleMetadataRows =>
+    [
+        new TestDataRow<(object[], CancellationToken)>((new object[] { 89, "tuple-array" }, new CancellationToken(canceled: true)))
+        {
+            ArgumentsDisplayName = "wrapped tuple",
+        },
     ];
 }
 
