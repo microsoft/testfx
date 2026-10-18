@@ -22,6 +22,9 @@ public partial class UnitTestApp : Application
     /// </summary>
     public UnitTestApp() => InitializeComponent();
 
+    internal static Window GetWindow()
+        => ((UnitTestApp)Current)._window ?? throw new InvalidOperationException("The test window has not been initialized.");
+
     /// <summary>
     /// Invoked when the application is launched.
     /// </summary>
