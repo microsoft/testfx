@@ -19,7 +19,6 @@ public abstract class AcceptanceTestBase
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         MicrosoftNETCoreUniversalWindowsPlatformVersion = cpmPropFileDoc.Descendants("MicrosoftNETCoreUniversalWindowsPlatformVersion").Single().Value;
         MicrosoftExtensionsHostingVersion = GetPackageVersion(cpmPropFileDoc, "Microsoft.Extensions.Logging");
-        MessagePackVersion = GetPackageVersion(cpmPropFileDoc, "MessagePack");
         OpenTelemetryVersion = GetPackageVersion(cpmPropFileDoc, "OpenTelemetry");
 
         using var globalJson = JsonDocument.Parse(File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json")));
@@ -92,8 +91,6 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftNETCoreUniversalWindowsPlatformVersion { get; private set; }
 
     public static string MicrosoftExtensionsHostingVersion { get; private set; }
-
-    public static string MessagePackVersion { get; private set; }
 
     public static string OpenTelemetryVersion { get; private set; }
 
