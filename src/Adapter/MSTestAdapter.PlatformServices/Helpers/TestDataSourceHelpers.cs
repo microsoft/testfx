@@ -18,9 +18,15 @@ internal static class TestDataSourceHelpers
             && GetDataParameterCount(parameters) == 1
             && parameters[0].ParameterType == typeof(object[])
             && !IsDataWithExplicitCancellationToken(data, parameters)
-            && !(parameters.Length == 2 && data.Length == 1
-                && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
-                && IsDataWithExplicitCancellationToken(tupleArguments, parameters));
+            && !IsSingleTupleArgumentWithExplicitCancellationToken(data, parameters);
+
+    // A single-element data array whose element is itself a tuple matching [dataParameter, CancellationToken]
+    // is considered a full-arity row supplying its own token, not an object[] data value to wrap.
+    private static bool IsSingleTupleArgumentWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2
+            && data.Length == 1
+            && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
+            && IsDataWithExplicitCancellationToken(tupleArguments, parameters);
 
     public static bool TryHandleITestDataRow(
         object?[] d,

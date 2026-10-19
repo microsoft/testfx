@@ -33,10 +33,7 @@ internal static class TestDataSourceUtilities
         string displayNameFormat = GetDisplayNameFormat();
 
         StringBuilder argumentsBuilder = AcquireBuilder();
-        if (methodData.HasSingleObjectArrayParameter
-            && !(methodData.HasCancellationTokenParameter && data.Length == 2
-                && data[0] is null or object[]
-                && (data[1] is null or CancellationToken || data[1] == Type.Missing)))
+        if (methodData.HasSingleObjectArrayParameter && !HasExplicitCancellationTokenData(methodData, data))
         {
             AppendHumanizedArgument(argumentsBuilder, data);
         }
@@ -48,6 +45,15 @@ internal static class TestDataSourceUtilities
         string arguments = GetStringAndReleaseBuilder(argumentsBuilder);
         return ComputeDisplayName(methodDisplayName, arguments, currentCulture, displayNameFormat);
     }
+
+    // Distinguishes a data row that explicitly supplies its own trailing CancellationToken argument
+    // (e.g. [object[] data, CancellationToken token]) from a plain single object[] data row, so the
+    // former is rendered as two humanized arguments instead of being treated as one array argument.
+    private static bool HasExplicitCancellationTokenData(MethodData methodData, object?[] data)
+        => methodData.HasCancellationTokenParameter
+            && data.Length == 2
+            && data[0] is null or object[]
+            && (data[1] is null or CancellationToken || data[1] == Type.Missing);
 
     public static string ComputeDisplayName(MethodInfo methodInfo, string argumentsDisplayName)
         => ComputeDisplayName(GetMethodDisplayName(methodInfo), argumentsDisplayName, CultureInfo.CurrentCulture, GetDisplayNameFormat());
