@@ -71,7 +71,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(flaky.ToString(CultureInfo.InvariantCulture))
-                .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
+                .Append(" | ").Append(GitHubActionsFailureDetails.FormatDuration(totalDuration)).Append(" |\n\n");
         }
 
         if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
@@ -93,7 +93,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     exitCode.ToString(CultureInfo.InvariantCulture),
                     GitHubActionsExitCode.GetName(exitCode),
                     GitHubActionsExitCode.GetReason(exitCode));
-                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+                builder.Append("> [!WARNING]\n> ").Append(GitHubActionsFailureDetails.EscapeInlineCode(calloutText)).Append("\n\n");
             }
 
             if (failures.Count > 0)
@@ -133,7 +133,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     slowestEmitted = true;
                 }
 
-                builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
+                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(GitHubActionsFailureDetails.FormatDuration(record.Duration)).Append('\n');
             }
 
             if (slowestEmitted)
@@ -195,7 +195,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         string heading = new('#', headingLevel);
         bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
         builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
-            .Append(EscapeInlineCode(module.AssemblyName)).Append("\n\n");
+            .Append(GitHubActionsFailureDetails.EscapeInlineCode(module.AssemblyName)).Append("\n\n");
         if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
             builder.Append("| Total | Passed | Failed | Skipped | Flaky | Test duration |\n");
@@ -205,7 +205,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.FlakyTests.Length.ToString(CultureInfo.InvariantCulture))
-                .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
+                .Append(" | ").Append(GitHubActionsFailureDetails.FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
         }
 
         if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
@@ -219,7 +219,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
             {
                 builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
-                    .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
+                    .Append(GitHubActionsFailureDetails.EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
             }
 
             if (module.Failures.Length > 0)
@@ -253,8 +253,8 @@ internal sealed partial class GitHubActionsSummaryReporter
             builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)
             {
-                builder.Append("- `").Append(EscapeInlineCode(test.FullyQualifiedName)).Append("` — ")
-                    .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
+                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(test.FullyQualifiedName)).Append("` — ")
+                    .Append(GitHubActionsFailureDetails.FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
             }
 
             builder.Append('\n');
@@ -278,7 +278,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             .Append(count.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
         foreach (string testName in testNames.Take(MaxListedFlakyTests))
         {
-            builder.Append("- `").Append(EscapeInlineCode(testName)).Append("`\n");
+            builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(testName)).Append("`\n");
         }
 
         if (count > MaxListedFlakyTests)

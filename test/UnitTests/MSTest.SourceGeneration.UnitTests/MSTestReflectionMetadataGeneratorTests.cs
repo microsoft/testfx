@@ -2477,6 +2477,124 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_MaterializesDataRowArrayTypeArguments()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(typeof(int), "Int32", "kind")]
+                    [DataRow(typeof(int[]), "Int32[]", "kind")]
+                    [DataRow(typeof(int[][]), "Int32[][]", "kind")]
+                    [DataRow(typeof(int[,]), "Int32[,]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.List<int[]>[]), "List`1[]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.Dictionary<int[], string>.KeyCollection[]), "KeyCollection[]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.List<>), "List`1", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.Dictionary<,>.KeyCollection), "KeyCollection", "kind")]
+                    public void Test(Type type, string name, string kind) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("AreAttributesComplete = false");
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        rows.Should().HaveCount(8);
+        rows[0].Should().Equal(typeof(int), "Int32", "kind");
+        rows[1].Should().Equal(typeof(int[]), "Int32[]", "kind");
+        rows[2].Should().Equal(typeof(int[][]), "Int32[][]", "kind");
+        rows[3].Should().Equal(typeof(int[,]), "Int32[,]", "kind");
+        rows[4].Should().Equal(typeof(List<int[]>[]), "List`1[]", "kind");
+        rows[5].Should().Equal(typeof(Dictionary<int[], string>.KeyCollection[]), "KeyCollection[]", "kind");
+        rows[6].Should().Equal(typeof(List<>), "List`1", "kind");
+        rows[7].Should().Equal(typeof(Dictionary<,>.KeyCollection), "KeyCollection", "kind");
+    }
+
+    [TestMethod]
+    public void Generator_MaterializesArrayTypeNamedArgument()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public sealed class MarkerAttribute : Attribute
+                {
+                    public Type Type { get; set; }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [Marker(Type = typeof(int[][]))]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain("new global::Sample.MarkerAttribute() { Type = typeof(int[][]) }");
+        registry.Should().NotContain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
+    [DataRow("Hidden[][]")]
+    [DataRow("System.Collections.Generic.List<Hidden[]>[]")]
+    [DataRow("System.Collections.Generic.Dictionary<Hidden[], int>.KeyCollection[]")]
+    [DataRow("System.Collections.Generic.Dictionary<Hidden, int>.KeyCollection[]")]
+    public void Generator_OmitsArrayTypeArgument_WhenElementTypeIsInaccessible(string typeName)
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class Hidden { }
+
+                    [TestClass]
+                    public class Tests
+                    {
+                        [TestMethod]
+                        [DataRow(typeof($Type$))]
+                        public void Test(Type type) { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode.Replace("$Type$", typeName, StringComparison.Ordinal));
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("DataRowAttribute");
+        registry.Should().Contain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
     public void Generator_PreservesDataRowConstantTypes()
     {
         const string userCode = """

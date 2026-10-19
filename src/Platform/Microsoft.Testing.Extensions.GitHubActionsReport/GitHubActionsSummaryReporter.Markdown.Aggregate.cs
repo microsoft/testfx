@@ -22,7 +22,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             : aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
                 ? "⚠️"
                 : "✅";
-        string duration = aggregate.Duration is { } value ? FormatDuration(value) : "Unavailable";
+        string duration = aggregate.Duration is { } value ? GitHubActionsFailureDetails.FormatDuration(value) : "Unavailable";
 
         var builder = new StringBuilder();
         builder.Append("## ").Append(statusIcon).Append(" Overall Test Run Summary\n\n");
@@ -63,7 +63,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
                     GitHubActionsExitCode.GetName(authoritativeExitCode),
                     GitHubActionsExitCode.GetReason(authoritativeExitCode));
-                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+                builder.Append("> [!WARNING]\n> ").Append(GitHubActionsFailureDetails.EscapeInlineCode(calloutText)).Append("\n\n");
             }
 
             AppendFlakyTests(
@@ -119,20 +119,20 @@ internal sealed partial class GitHubActionsSummaryReporter
                 continue;
             }
 
-            bool needsDiscriminator = CiRunSummaryAggregation.HasDuplicateModuleIdentity(aggregate.Modules, module);
+            bool needsDiscriminator = CiRunSummaryModuleIdentity.HasDuplicateModuleIdentity(aggregate.Modules, module);
 
             // A full module is a test project whose results are all here, which is exactly what the marker counts.
             // Emitting it lets a direct per-project writer sharing this file count these modules too, so a note it
             // writes later states how many projects the whole summary reports rather than only its own.
             builder.Append(ProjectSectionMarker).Append('\n');
             builder.Append("<details>\n<summary>")
-                .Append(HtmlEncode(module.AssemblyName))
-                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
-                .Append(HtmlEncode(module.Architecture));
+                .Append(GitHubActionsFailureDetails.HtmlEncode(module.AssemblyName))
+                .Append(" (").Append(GitHubActionsFailureDetails.HtmlEncode(module.TargetFramework)).Append(", ")
+                .Append(GitHubActionsFailureDetails.HtmlEncode(module.Architecture));
             if (needsDiscriminator)
             {
                 builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
-                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
+                    .Append(", session ").Append(GitHubActionsFailureDetails.HtmlEncode(module.SessionUid));
             }
 
             builder.Append(")</summary>\n\n");
@@ -152,7 +152,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         if (unlistedModules > 0)
         {
             builder.Append("> [!WARNING]\n> ")
-                .Append(EscapeInlineCode(string.Format(
+                .Append(GitHubActionsFailureDetails.EscapeInlineCode(string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.ModulesNotListed,
                     unlistedModules.ToString(CultureInfo.InvariantCulture))))
@@ -172,8 +172,8 @@ internal sealed partial class GitHubActionsSummaryReporter
             CultureInfo.InvariantCulture,
             "{0} `{1}` ({2}): {3} total, {4} passed, {5} failed, {6} skipped — {7}\n\n",
             runFailed ? "❌" : "✅",
-            EscapeInlineCode(assemblyName),
-            EscapeInlineCode(targetFramework),
+            GitHubActionsFailureDetails.EscapeInlineCode(assemblyName),
+            GitHubActionsFailureDetails.EscapeInlineCode(targetFramework),
             total.ToString(CultureInfo.InvariantCulture),
             passed.ToString(CultureInfo.InvariantCulture),
             failed.ToString(CultureInfo.InvariantCulture),
