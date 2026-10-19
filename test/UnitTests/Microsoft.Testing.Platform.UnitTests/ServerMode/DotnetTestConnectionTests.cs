@@ -298,6 +298,81 @@ public sealed class DotnetTestConnectionTests
     }
 
     [TestMethod]
+    public async Task StartServerControlChannelAsync_EmptyPipeNameDespiteNegotiatedSupportDoesNotConnect()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        SetField(fixture.Connection, "_serverControlPipeName", string.Empty);
+        typeof(DotnetTestConnection).GetProperty(nameof(DotnetTestConnection.IsServerControlChannelSupported))!.SetValue(fixture.Connection, true);
+        bool cancelled = false;
+
+        await fixture.Connection.StartServerControlChannelAsync(_ =>
+        {
+            cancelled = true;
+            return Task.CompletedTask;
+        });
+
+        Assert.IsFalse(cancelled);
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlPipeClient"));
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlListenerTask"));
+    }
+
+    [TestMethod]
+    public async Task StartServerControlChannelAsync_AlreadyStartedDoesNotReplaceTheExistingClient()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        SetField(fixture.Connection, "_serverControlPipeName", "already-started-control");
+        typeof(DotnetTestConnection).GetProperty(nameof(DotnetTestConnection.IsServerControlChannelSupported))!.SetValue(fixture.Connection, true);
+        Type namedPipeClientType = typeof(DotnetTestConnection).Assembly.GetType("Microsoft.Testing.Platform.IPC.NamedPipeClient", throwOnError: true)!;
+        object existingClient = Activator.CreateInstance(namedPipeClientType, new object?[] { "already-started-control", fixture.Environment.Object, false })!;
+        Task existingListenerTask = Task.CompletedTask;
+        SetField(fixture.Connection, "_serverControlPipeClient", existingClient);
+        SetField(fixture.Connection, "_serverControlListenerTask", existingListenerTask);
+        bool cancelled = false;
+
+        try
+        {
+            await fixture.Connection.StartServerControlChannelAsync(_ =>
+            {
+                cancelled = true;
+                return Task.CompletedTask;
+            });
+
+            Assert.IsFalse(cancelled);
+            Assert.AreSame(existingClient, GetField(fixture.Connection, "_serverControlPipeClient"));
+            Assert.AreSame(existingListenerTask, GetField(fixture.Connection, "_serverControlListenerTask"));
+        }
+        finally
+        {
+            if (!ReferenceEquals(existingClient, GetField(fixture.Connection, "_serverControlPipeClient")))
+            {
+                ((IDisposable)existingClient).Dispose();
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task StartServerControlChannelAsync_CapabilityNotNegotiatedDoesNotConnectEvenWithAPipeName()
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        SetField(fixture.Connection, "_transportKind", DotnetTestTransportKind.NamedPipe);
+        SetField(fixture.Connection, "_serverControlPipeName", "unnegotiated-control");
+        bool cancelled = false;
+
+        await fixture.Connection.StartServerControlChannelAsync(_ =>
+        {
+            cancelled = true;
+            return Task.CompletedTask;
+        });
+
+        Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
+        Assert.IsFalse(cancelled);
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlPipeClient"));
+        Assert.IsNull(GetField(fixture.Connection, "_serverControlListenerTask"));
+    }
+
+    [TestMethod]
     public async Task HelpInvokedAsync_SortsOrdinaryOptionsAndExcludesToolProviders()
     {
         var ordinary = new Mock<ICommandLineOptionsProvider>();
