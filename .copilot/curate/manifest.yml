@@ -57,6 +57,7 @@ plugins:
         - skills/build-parallelism
         - skills/check-bin-obj-clash
         - skills/directory-build-organization
+        - skills/eliminate-redundant-restores
         - skills/including-generated-files
         - skills/item-management
         - skills/msbuild-antipatterns/references
