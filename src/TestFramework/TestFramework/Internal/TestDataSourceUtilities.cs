@@ -33,7 +33,10 @@ internal static class TestDataSourceUtilities
         string displayNameFormat = GetDisplayNameFormat();
 
         StringBuilder argumentsBuilder = AcquireBuilder();
-        if (methodData.HasSingleObjectArrayParameter)
+        if (methodData.HasSingleObjectArrayParameter
+            && !(methodData.HasCancellationTokenParameter && data.Length == 2
+                && data[0] is null or object[]
+                && (data[1] is null or CancellationToken || data[1] == Type.Missing)))
         {
             AppendHumanizedArgument(argumentsBuilder, data);
         }
@@ -183,9 +186,13 @@ internal static class TestDataSourceUtilities
         public MethodData(MethodInfo method)
         {
             ParameterInfo[] parameters = method.GetParameters();
-            HasSingleObjectArrayParameter = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[]);
+            HasCancellationTokenParameter = parameters.Length > 0 && parameters[parameters.Length - 1].ParameterType == typeof(CancellationToken);
+            int dataParameterCount = parameters.Length - (HasCancellationTokenParameter ? 1 : 0);
+            HasSingleObjectArrayParameter = dataParameterCount == 1 && parameters[0].ParameterType == typeof(object[]);
         }
 
         public bool HasSingleObjectArrayParameter { get; }
+
+        public bool HasCancellationTokenParameter { get; }
     }
 }

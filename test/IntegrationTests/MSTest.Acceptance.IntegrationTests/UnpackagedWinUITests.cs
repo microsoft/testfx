@@ -77,7 +77,9 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         using TestAsset testAsset = await GenerateAssetAsync(AssetName, SelfHostedSourceCode);
         string testHostDirectory = await BuildAssetAsync(AssetName, testAsset);
-        TestHostResult testHostResult = await ExecuteBoundedAsync(TestHost.LocateFrom(testHostDirectory, AssetName));
+        TestHostResult testHostResult = await ExecuteBoundedAsync(
+            TestHost.LocateFrom(testHostDirectory, AssetName),
+            "--filter FullyQualifiedName~TestClass1");
 
         // Passing all three proves in a single run that:
         //  - the app has no package identity yet still hosts the platform (unpackaged works at all),
@@ -89,6 +91,49 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         // Getting a result at all means the process exited rather than being killed by the timeout:
         // Application.Start pumps a message loop that never returns, so the UI thread has to stay a
         // background thread for the run to terminate (see https://github.com/microsoft/testfx/pull/9904).
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [MemberCondition(
+        typeof(AcceptanceTestBase),
+        nameof(AcceptanceTestBase.IsWindowsApplicationModelTestEnvironment),
+        IgnoreMessage = "Requires an interactive Windows application-model test environment.")]
+    public async Task SelfHostedUnpackagedWinUI_WithTimeout_PreservesUIThread()
+    {
+        const string AssetName = "WinUITimeoutTests";
+        using TestAsset testAsset = await GenerateAssetAsync(AssetName, SelfHostedSourceCode);
+        string testHostDirectory = await BuildAssetAsync(AssetName, testAsset);
+
+        TestHostResult result = await ExecuteBoundedAsync(
+            TestHost.LocateFrom(testHostDirectory, AssetName),
+            "--filter FullyQualifiedName~UITimeoutTestClass&Name!=UITestMethodWithTimeout_ReportsTimeout");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        result.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+    }
+
+    [TestMethod]
+    [TestCategory("WindowsApplicationModel")]
+    [MemberCondition(
+        typeof(AcceptanceTestBase),
+        nameof(AcceptanceTestBase.IsWindowsApplicationModelTestEnvironment),
+        IgnoreMessage = "Requires an interactive Windows application-model test environment.")]
+    public async Task SelfHostedUnpackagedWinUI_WithTimeout_ReportsTimeoutAndCompletesCleanup()
+    {
+        const string AssetName = "WinUITimeoutCleanupTests";
+        using TestAsset testAsset = await GenerateAssetAsync(AssetName, SelfHostedSourceCode);
+        string testHostDirectory = await BuildAssetAsync(AssetName, testAsset);
+
+        TestHostResult result = await ExecuteBoundedAsync(
+            TestHost.LocateFrom(testHostDirectory, AssetName),
+            "--filter Name=UITestMethodWithTimeout_ReportsTimeout");
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
+        result.AssertOutputContains("Test 'UITestMethodWithTimeout_ReportsTimeout' timed out after 1000ms");
+        result.AssertOutputContains("Timed out UI work completed.");
+        result.AssertOutputContains("UI test cleanup completed.");
     }
 
     [TestMethod]
@@ -119,13 +164,13 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     /// <c>WaitForExitAsync</c> with no indication of what the app was doing, so the timeout is turned
     /// into a message that names the likely cause instead.
     /// </summary>
-    private async Task<TestHostResult> ExecuteBoundedAsync(TestHost testHost)
+    private async Task<TestHostResult> ExecuteBoundedAsync(TestHost testHost, string arguments = "")
     {
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
         cancellation.CancelAfter(ExecutionTimeout);
         try
         {
-            return await testHost.ExecuteAsync(cancellationToken: cancellation.Token);
+            return await testHost.ExecuteAsync(arguments, cancellationToken: cancellation.Token);
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested && !TestContext.CancellationToken.IsCancellationRequested)
         {
@@ -159,7 +204,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         string project = Path.Combine(testAsset.TargetAssetPath, $"{assetName}.csproj");
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
-            $"build \"{project}\" -c Release",
+            $"build \"{project}\" -c Release -bl:{{}}",
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
             // MrtCore's PRI indexer warns that MSTest's localized satellite assemblies carry no en-US
@@ -262,7 +307,11 @@ namespace $AssetName$;
 
 public partial class UnitTestApp : Application
 {
+    private static Window? s_window;
+
     public UnitTestApp() => InitializeComponent();
+
+    public static Window GetWindow() => s_window ??= new Window();
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
@@ -278,13 +327,18 @@ public partial class UnitTestApp : Application
         finally
         {
             // The app is the test host, so it has to shut itself down once the run is over.
+            s_window?.Close();
             Exit();
         }
     }
 }
 
 #file UnitTest1.cs
+using System;
+using System.Threading.Tasks;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
@@ -314,6 +368,92 @@ public class TestClass1
         var grid = new Grid();
 
         Assert.AreEqual(0, grid.MinWidth);
+    }
+}
+
+[TestClass]
+[DoNotParallelize]
+public class UITimeoutTestClass
+{
+    private readonly TaskCompletionSource<bool> _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private Task? _timedOutWork;
+
+    [UITestMethod]
+    [Timeout(10000)]
+    public void UITestMethodWithTimeout_CreatesGrid()
+    {
+        Assert.AreSame(TaskScheduler.Default, TaskScheduler.Current);
+        var grid = new Grid();
+        Assert.AreEqual(0, grid.MinWidth);
+        Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess);
+    }
+
+    [UITestMethod]
+    [Timeout(10000)]
+    public async Task UITestMethodWithTimeout_LoadsUI() => await LoadUIAsync();
+
+    [UITestMethod]
+    public async Task UITestMethodWithoutTimeout_LoadsUI() => await LoadUIAsync();
+
+    [UITestMethod]
+    [Timeout(10000, CooperativeCancellation = true)]
+    public async Task UITestMethodWithCooperativeTimeout_LoadsUI() => await LoadUIAsync();
+
+    [UITestMethod]
+    [Timeout(1000)]
+    public Task UITestMethodWithTimeout_ReportsTimeout()
+    {
+        Assert.AreSame(TaskScheduler.Default, TaskScheduler.Current);
+        Assert.IsTrue(UITestMethodAttribute.DispatcherQueue!.HasThreadAccess);
+        return _timedOutWork = WaitForReleaseAsync();
+    }
+
+    [TestCleanup]
+    public async Task Cleanup()
+    {
+        Assert.AreSame(TaskScheduler.Default, TaskScheduler.Current);
+        Assert.IsTrue(UITestMethodAttribute.DispatcherQueue!.HasThreadAccess);
+        _release.TrySetResult(true);
+        if (_timedOutWork is not null)
+        {
+            await _timedOutWork.WaitAsync(TimeSpan.FromSeconds(30));
+        }
+
+        Console.WriteLine("UI test cleanup completed.");
+    }
+
+    private static async Task LoadUIAsync()
+    {
+        Assert.IsFalse(await Task.Factory.StartNew(() => UITestMethodAttribute.DispatcherQueue!.HasThreadAccess));
+        var grid = new Grid { Background = new SolidColorBrush(Microsoft.UI.Colors.Red) };
+        var loaded = new TaskCompletionSource<bool>();
+        RoutedEventHandler onLoaded = (_, _) => loaded.TrySetResult(true);
+        Window window = UnitTestApp.GetWindow();
+        UIElement? previousContent = window.Content;
+        grid.Loaded += onLoaded;
+        try
+        {
+            window.Activate();
+            window.Content = grid;
+            await loaded.Task;
+            Assert.IsTrue(grid.IsLoaded);
+            Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess);
+            Assert.AreSame(grid, window.Content);
+            await Task.Yield();
+            Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess);
+        }
+        finally
+        {
+            grid.Loaded -= onLoaded;
+            window.Content = previousContent;
+        }
+    }
+
+    private async Task WaitForReleaseAsync()
+    {
+        await _release.Task;
+        Assert.IsTrue(UITestMethodAttribute.DispatcherQueue!.HasThreadAccess);
+        Console.WriteLine("Timed out UI work completed.");
     }
 }
 """;
