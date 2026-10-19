@@ -165,6 +165,7 @@ internal partial class TestMethodInfo
                     // In case of WinUI's default synchronization context, this will ensure that the test method runs on the UI thread.
                     if (await RunTestInitializeMethodAsync(classInstance, result, timeoutTokenSource).ConfigureAwait(true))
                     {
+                        arguments = GetArgumentsWithCancellationToken(arguments);
                         if (_executionContext is null)
                         {
                             Task? invokeResult = MethodInfo.GetInvokeResultWithParametersAsync(classInstance, ParameterTypes, arguments);
