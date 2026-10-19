@@ -397,8 +397,9 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     public async Task TestExplorer_PreservesExplicitLauncherOptOuts(string properties)
     {
         using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{properties}");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
         DotnetMuxerResult result = await DotnetCli.RunAsync(
-            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract",
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
             cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, result.ExitCode, result.ToString());
         Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.launcher.config.json")));
