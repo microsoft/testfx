@@ -70,11 +70,39 @@ internal sealed class CiRunSummaryModule
 
 internal static class CiRunSummaryModuleIdentity
 {
+    // Markdown builders call HasDuplicateModuleIdentity once per rendered module row and once per historical/dependency
+    // test row (both proportional to the module count), so a naive per-call linear scan over 'modules' makes the whole
+    // render O(modules^2) for a run with many test projects. A ConditionalWeakTable memoizes the duplicate-identity set
+    // for a given 'modules' list, turning the repeated-scan cost into a single O(modules) pass the first time any
+    // module in that list is queried.
+#pragma warning disable IDE0028 // ConditionalWeakTable is not constructible via a collection expression on netstandard2.0; keep explicit construction for all TFMs.
+    private static readonly ConditionalWeakTable<IReadOnlyList<CiRunSummaryModule>, HashSet<(string AssemblyName, string TargetFramework, string Architecture)>> DuplicateIdentitiesByModuleList = new ConditionalWeakTable<IReadOnlyList<CiRunSummaryModule>, HashSet<(string AssemblyName, string TargetFramework, string Architecture)>>();
+#pragma warning restore IDE0028
+
     internal static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
-        => modules.Count(candidate =>
-            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
-            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
-            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
+        => GetDuplicateIdentities(modules).Contains((module.AssemblyName, module.TargetFramework, module.Architecture.ToUpperInvariant()));
+
+    private static HashSet<(string AssemblyName, string TargetFramework, string Architecture)> GetDuplicateIdentities(IReadOnlyList<CiRunSummaryModule> modules)
+        => DuplicateIdentitiesByModuleList.GetValue(modules, static list =>
+        {
+            Dictionary<(string AssemblyName, string TargetFramework, string Architecture), int> counts = [];
+            foreach (CiRunSummaryModule candidate in list)
+            {
+                (string AssemblyName, string TargetFramework, string Architecture) key = (candidate.AssemblyName, candidate.TargetFramework, candidate.Architecture.ToUpperInvariant());
+                counts[key] = counts.TryGetValue(key, out int count) ? count + 1 : 1;
+            }
+
+            HashSet<(string AssemblyName, string TargetFramework, string Architecture)> duplicates = [];
+            foreach (KeyValuePair<(string AssemblyName, string TargetFramework, string Architecture), int> entry in counts)
+            {
+                if (entry.Value > 1)
+                {
+                    duplicates.Add(entry.Key);
+                }
+            }
+
+            return duplicates;
+        });
 }
 
 internal sealed class CiRunSummaryTest
