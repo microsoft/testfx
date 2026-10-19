@@ -125,8 +125,9 @@ extends:
           jobs:
           - job: Windows
             enablePublishing: true
-            # Leave room for the expanded framework matrix and signing/artifact publication after tests.
-            timeoutInMinutes: 180
+            # Match main CI's budget for the signed build, full acceptance matrix, and publishing.
+            # The original 90-minute limit canceled active acceptance tests (for example, build 3108989).
+            timeoutInMinutes: 240
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2026preview.scout.amd64
