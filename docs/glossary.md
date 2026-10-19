@@ -72,6 +72,10 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [
 
 ## C
 
+### CancellationToken parameter (test method)
+
+MSTest test methods may declare one additional, trailing, by-value `CancellationToken` parameter. A parameterless test can take the token alone; a data-driven test can take its data parameters followed by the token as the last parameter. The adapter binds the current `TestContext.CancellationToken` immediately before the test body runs — after initialization and inside the existing timeout/cancellation scope — without requiring a new attribute, capability handshake, or opt-in. Only a trailing, non-nullable, by-value `CancellationToken` is recognized; nullable tokens, token sources, and by-reference tokens are not injected. An explicit trailing token already supplied by a custom data source is left untouched rather than overwritten. Ordinary `params` arrays (including `params CancellationToken[]`) remain data, since C# requires `params` to be last. Discovery, display names, `TestContext.TestData`, serialization, `CombinatorialDataAttribute`, and `DataRowShouldBeValidAnalyzer` all exclude the injected token from the declared data arity. See `docs/decisions/test-method-cancellation-token.md` for the full design record. Introduced in [PR #11991](https://github.com/microsoft/testfx/pull/11991).
+
 ### CIConditionAttribute
 
 An MSTest attribute (`[CIConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on whether the test is executing in a CI environment. Accepts a `ConditionMode` argument: `Include` (run only in CI) or `Exclude` (skip in CI). Detection is delegated to `CIEnvironmentDetector`, which checks well-known CI environment variables (e.g., `CI`, `TF_BUILD`). The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
