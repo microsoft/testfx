@@ -118,6 +118,15 @@ public class DataRowAttributeTests : TestContainer
         attribute.GetDisplayName(method, []).Should().Be("SingleArrayAndToken ([])");
     }
 
+    public void GetDisplayNameRecognizesExplicitCancellationTokenInObjectArrayRows()
+    {
+        MethodInfo method = typeof(DataRowAttributeTests).GetMethod(nameof(SingleArrayAndToken), BindingFlags.Static | BindingFlags.NonPublic)!;
+        DataRowAttribute attribute = new();
+
+        attribute.GetDisplayName(method, [new object?[] { 7, "array" }, null]).Should().Be("SingleArrayAndToken ([7,\"array\"],null)");
+        attribute.GetDisplayName(method, [new object?[] { 7, "array" }, "not a token"]).Should().Be("SingleArrayAndToken ([[7,\"array\"],\"not a token\"])");
+    }
+
     public void GetDisplayNameWithInjectedTokenKeepsOrdinaryDataFormatting()
     {
         MethodInfo method = typeof(DataRowAttributeTests).GetMethod(nameof(OrdinaryDataAndToken), BindingFlags.Static | BindingFlags.NonPublic)!;

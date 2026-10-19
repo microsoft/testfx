@@ -7,6 +7,18 @@ internal static class TestDataSourceUtilities
 {
     private const int MaxCachedBuilderCapacity = 360;
 
+    public static int GetDataParameterCount(ParameterInfo[] parameters)
+        => parameters.Length > 0 && parameters[parameters.Length - 1].ParameterType == typeof(CancellationToken)
+            ? parameters.Length - 1
+            : parameters.Length;
+
+    public static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2
+            && parameters[1].ParameterType == typeof(CancellationToken)
+            && data.Length == 2
+            && (data[0] is null || parameters[0].ParameterType.IsInstanceOfType(data[0]))
+            && (data[1] is null or CancellationToken || data[1] == Type.Missing);
+
 #pragma warning disable IDE0028 // ConditionalWeakTable is not collection-expression-constructible on .NET Framework (CS9174).
     private static readonly ConditionalWeakTable<MethodInfo, MethodData> MethodDataCache = new();
 #pragma warning restore IDE0028
@@ -34,9 +46,7 @@ internal static class TestDataSourceUtilities
 
         StringBuilder argumentsBuilder = AcquireBuilder();
         if (methodData.HasSingleObjectArrayParameter
-            && !(methodData.HasCancellationTokenParameter && data.Length == 2
-                && data[0] is null or object[]
-                && (data[1] is null or CancellationToken || data[1] == Type.Missing)))
+            && !IsDataWithExplicitCancellationToken(data, methodData.Parameters))
         {
             AppendHumanizedArgument(argumentsBuilder, data);
         }
@@ -185,14 +195,13 @@ internal static class TestDataSourceUtilities
     {
         public MethodData(MethodInfo method)
         {
-            ParameterInfo[] parameters = method.GetParameters();
-            HasCancellationTokenParameter = parameters.Length > 0 && parameters[parameters.Length - 1].ParameterType == typeof(CancellationToken);
-            int dataParameterCount = parameters.Length - (HasCancellationTokenParameter ? 1 : 0);
-            HasSingleObjectArrayParameter = dataParameterCount == 1 && parameters[0].ParameterType == typeof(object[]);
+            Parameters = method.GetParameters();
+            int dataParameterCount = GetDataParameterCount(Parameters);
+            HasSingleObjectArrayParameter = dataParameterCount == 1 && Parameters[0].ParameterType == typeof(object[]);
         }
 
-        public bool HasSingleObjectArrayParameter { get; }
+        public ParameterInfo[] Parameters { get; }
 
-        public bool HasCancellationTokenParameter { get; }
+        public bool HasSingleObjectArrayParameter { get; }
     }
 }
