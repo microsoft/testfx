@@ -135,21 +135,21 @@
 
 ## Last Run
 
-2026-10-18 UTC (run 39174297592)
+2026-10-19 UTC (run 39338194570)
 
 ## Last Run (previous)
 
-2026-10-17 UTC (run 39076994810)
+2026-10-18 UTC (run 39174297592)
 
-## Run 2026-10-18 (run 39174297592) — CiRunSummaryModuleIdentity.HasDuplicateModuleIdentity tests
+## Run 2026-10-19 (run 39338194570) — CiRunSummaryExitCode tests
 
-- **Stale-PR discrepancy (inverse direction)**: found PR #12005 ("Share duplicate module identity detection", fixes #12000) and PR #12006 ("Test server control channel guard conditions", fixes #11998) both propose changes already present on `main` — #12005's extraction landed via a different merged PR (#12007), and #12006's `DotnetTestConnectionTests.cs` guard tests already exist (equivalent coverage, including the `GetField` helper). Confirmed via local `grep`/git history, not GitHub search alone — same reconciliation discipline as the orphaned-PR issue, but this time the *agent's own proposed PRs* were superseded by other merged work rather than failing to land. Flagged both for maintainer closure in the Monthly Activity issue rather than attempting to rebase/maintain them (Task 4).
-- Task 2/3: while investigating #12005/#12006 noticed the newly-extracted `CiRunSummaryModuleIdentity.HasDuplicateModuleIdentity` (`SharedExtensionHelpers/CiRunSummaryModels.cs`, source-linked into both AzureDevOpsReport and GitHubActionsReport, 4 call sites) had zero direct tests — only indirect exercise via each reporter's end-to-end markdown tests.
-- Added `CiRunSummaryModuleIdentityTests.cs` (10 tests) in `Microsoft.Testing.Extensions.UnitTests`: single-module baseline, matching-identity duplicate (both directions), each of the 3 identity fields independently differing, the Ordinal(AssemblyName/TargetFramework)-vs-OrdinalIgnoreCase(Architecture) comparison-mode asymmetry (2 tests), 3-module partial-match, empty-list, plus 2 tests against the separately-compiled GitHubActionsReport copy via the existing `ghactions` extern alias pattern.
-- Verified red/green: swapped the two comparison modes (AssemblyName→OrdinalIgnoreCase, Architecture→Ordinal) — exactly 2/2838 failed at the intended assertions; reverted (clean diff), reran — 0/2838 net8.0 and net9.0, 66 skipped (pre-existing).
-- Build succeeded (0 warnings) net8.0+net9.0+net10.0+net11.0. `dotnet format whitespace --verify-no-changes` clean.
-- Created PR "Add unit tests for CiRunSummaryModuleIdentity.HasDuplicateModuleIdentity" on branch `test-assist/ci-run-summary-module-identity-tests`.
-- Remaining candidates for future runs: other recently-extracted `SharedExtensionHelpers` members that consolidate duplicated reporter logic (precedent: `CiRunSummaryExitCode` from #11970) are worth a quick direct-test audit — check whether they have the same zero-direct-test pattern as `HasDuplicateModuleIdentity` did. Otherwise, `DotnetTestConnection`'s remaining async orchestration (needs fake `IClient`/`NamedPipeClient`) or Task 6 (test infrastructure).
+- Reconciliation: confirmed #12005/#12006 both merged 2026-10-19 (not just flagged — maintainer actually merged them directly rather than closing as redundant; their content landed as additional/duplicate-but-harmless commits). The *agent's own* `CiRunSummaryModuleIdentityTests.cs` work was separately re-landed by maintainer/Copilot-coding-agent as PR #12022 (confirmed merged, 10 tests, file present on `main` matches exactly). No open `[test-improver]`-prefixed PRs found. No open `testing`-labeled issues besides the Monthly Activity issue itself.
+- Task 2/3: per prior run's suggestion, audited other `SharedExtensionHelpers` members for the same zero-direct-test pattern as `HasDuplicateModuleIdentity`. Found `CiRunSummaryExitCode` (IsTestResultOutcome/IndicatesFailure/GetName/GetReason, source-linked into both AzureDevOpsReport and GitHubActionsReport) had zero direct tests — only indirect exercise via each reporter's end-to-end markdown tests (e.g. `AzureDevOpsSummaryReporterTests.BuildAggregateMarkdown_ExplainsModuleAndRunExitCodes`).
+- Added `CiRunSummaryExitCodeTests.cs` (7 tests, both reporter copies via the `ghactions` extern-alias pattern): IsTestResultOutcome/IndicatesFailure semantics, GetName known/out-of-range, GetReason known-code/out-of-range-fallback/final-hardcoded-literal-fallback (via a minimal `ResourceManager` subclass overriding `GetString` to return null, avoiding any dependency on an unrelated BCL resource set).
+- Verified red/green: simultaneously swapped `IndicatesFailure`'s comparison to `GenericFailure` and dropped the final hardcoded fallback literal to `string.Empty` — exactly 3 of the new tests failed at the intended assertions (plus 7 pre-existing consumer tests rippled, confirming real-path wiring); reverted (clean diff), reran — 0/2862 failed net8.0 and net9.0, 66 skipped (pre-existing).
+- Build succeeded (0 warnings) net8.0+net9.0. `dotnet format whitespace --verify-no-changes` clean (only the expected harmless F# warning).
+- Created PR "Add unit tests for CiRunSummaryExitCode" on branch `test-assist/ci-run-summary-exit-code-tests`.
+- Remaining candidates for future runs: `SharedExtensionHelpers` sweep for `CiRunSummaryModuleIdentity`/`CiRunSummaryExitCode` now complete — both have direct tests. `DotnetTestConnection`'s remaining async orchestration (needs fake `IClient`/`NamedPipeClient`) still open; otherwise consider Task 6 (test infrastructure) or a fresh area.
 
 ## Run 2026-10-17 (run 39076994810) — DotnetTestConnection.StartServerControlChannelAsync guard tests (redo)
 
