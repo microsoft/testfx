@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.UnitTests.OutputDevice;
@@ -39,6 +40,34 @@ public sealed class TestRunSummaryHelperTests
         => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 0, failedTests: 0, skippedTests: 0, wasCancelled: false, minimumExpectedTests: 0, ZeroTestsPolicy.AllowSkipped));
 
     [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(0, true)]
+    [DataRow(5, true)]
+    public void IsRunFailed_WhenZeroTestsAreAllowed_ReturnsFalse(int skippedTests, bool strict)
+        => Assert.IsFalse(TestRunSummaryHelper.IsRunFailed(
+            totalTests: skippedTests,
+            failedTests: 0,
+            skippedTests,
+            wasCancelled: false,
+            minimumExpectedTests: 0,
+            strict ? ZeroTestsPolicy.Strict : ZeroTestsPolicy.AllowSkipped,
+            allowZeroTests: true));
+
+    [TestMethod]
+    [DataRow(1, 1, false, 0)]
+    [DataRow(0, 0, true, 0)]
+    [DataRow(0, 0, false, 1)]
+    public void IsRunFailed_WhenZeroTestsAreAllowed_PreservesOtherFailures(int totalTests, int failedTests, bool wasCancelled, int minimumExpectedTests)
+        => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests, failedTests, skippedTests: 0, wasCancelled, minimumExpectedTests, allowZeroTests: true));
+
+    [TestMethod]
+    [DataRow(5, 5, 1, true)]
+    [DataRow(5, 2, 4, true)]
+    [DataRow(5, 2, 3, false)]
+    public void IsRunFailed_SkippedTestsDoNotSatisfyMinimum(int totalTests, int skippedTests, int minimumExpectedTests, bool expectedFailure)
+        => Assert.AreEqual(expectedFailure, TestRunSummaryHelper.IsRunFailed(totalTests, failedTests: 0, skippedTests, wasCancelled: false, minimumExpectedTests, allowZeroTests: true));
+
+    [TestMethod]
     public void IsRunFailed_WhenCancelled_ReturnsTrue()
         => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 10, failedTests: 0, skippedTests: 0, wasCancelled: true, minimumExpectedTests: 0));
 
@@ -58,6 +87,23 @@ public sealed class TestRunSummaryHelperTests
         Assert.Contains("3", result, StringComparison.Ordinal);
         Assert.Contains("10", result, StringComparison.Ordinal);
     }
+
+    [TestMethod]
+    [DataRow(5, 5, 1)]
+    [DataRow(5, 2, 4)]
+    public void GetVerdictText_SkippedTestsDoNotSatisfyMinimum(int totalTests, int skippedTests, int minimumExpectedTests)
+        => Assert.AreEqual(
+            string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, totalTests - skippedTests, minimumExpectedTests),
+            TestRunSummaryHelper.GetVerdictText(totalTests, failedTests: 0, skippedTests, wasCancelled: false, minimumExpectedTests));
+
+    [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(3, false)]
+    [DataRow(0, true)]
+    public void GetVerdictText_WhenSessionFails_PreservesFailureAndCancellation(int totalTests, bool wasCancelled)
+        => Assert.AreEqual(
+            wasCancelled ? PlatformResources.Aborted : $"{PlatformResources.Failed}!",
+            TestRunSummaryHelper.GetVerdictText(totalTests, failedTests: 0, skippedTests: 0, wasCancelled, minimumExpectedTests: 1, hasTestSessionFailure: true));
 
     [TestMethod]
     public void GetVerdictText_WhenAllTestsSkipped_WithStrictPolicy_ReturnsZeroTestsRan()

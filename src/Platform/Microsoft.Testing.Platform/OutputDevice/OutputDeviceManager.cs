@@ -110,6 +110,10 @@ internal sealed class PlatformOutputDeviceManager
             serviceProvider.GetClock(),
             serviceProvider.GetRequiredService<IStopPoliciesService>(),
             serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetRequiredService<ITestCoverageResult>());
+            serviceProvider.GetRequiredService<ITestCoverageResult>())
+        {
+            // The result is registered after the output device and may fail after initialization.
+            TestSessionFailureProvider = () => serviceProvider.GetService<ITestApplicationProcessExitCode>()?.HasTestAdapterTestSessionFailure == true,
+        };
     }
 }
