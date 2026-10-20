@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <_TestingPlatformPackagedAppPackageRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</_TestingPlatformPackagedAppPackageRoot>
+    <GenerateTestingPlatformPackagedAppTestExplorerLauncher Condition="'$(GenerateTestingPlatformPackagedAppTestExplorerLauncher)' == ''">true</GenerateTestingPlatformPackagedAppTestExplorerLauncher>
   </PropertyGroup>
 
   <!-- Adapter targets may set IsTestingPlatformApplication after this file is imported. -->
@@ -79,7 +80,8 @@
        It consumes RunCommand/RunArguments, not TestingPlatformEnvironmentVariable. -->
   <Target Name="_ConfigureTestingPlatformPackagedAppRunArguments"
           AfterTargets="ComputeRunArguments"
-          DependsOnTargets="_PrepareTestingPlatformPackagedAppRunController">
+          DependsOnTargets="_PrepareTestingPlatformPackagedAppController"
+          Condition="'$(DesignTimeBuild)' != 'true'">
     <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(StartAction)' != 'Program'">
       <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' == 'true'">$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)</_TestingPlatformPackagedAppDefaultRunCommand>
       <_TestingPlatformPackagedAppDefaultRunCommand Condition="'$(UseAppHost)' != 'true'">dotnet</_TestingPlatformPackagedAppDefaultRunCommand>
@@ -100,11 +102,11 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_PrepareTestingPlatformPackagedAppRunController"
+  <Target Name="_PrepareTestingPlatformPackagedAppController"
           AfterTargets="CopyFilesToOutputDirectory"
           DependsOnTargets="_ConfigureTestingPlatformPackagedAppEnvironment"
-          Condition="'$(OS)' == 'Windows_NT' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(StartAction)' != 'Program'">
-    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)' AND (('$(UseAppHost)' == 'true' AND '$(RunCommand)' == '$(TargetDir)$(AssemblyName)$(_NativeExecutableExtension)') OR ('$(UseAppHost)' != 'true' AND '$(RunCommand)' == 'dotnet'))">
+          Condition="'$(OS)' == 'Windows_NT' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup Condition="'$(_TestingPlatformPackagedAppControllerPath)' != '' AND '$(TestingPlatformExecutablePath)' == '$(_TestingPlatformPackagedAppControllerPath)'">
       <_TestingPlatformPackagedAppRunControllerDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'PackagedAppController'))</_TestingPlatformPackagedAppRunControllerDirectory>
       <_TestingPlatformPackagedAppBootstrapFile>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.bootstrap</_TestingPlatformPackagedAppBootstrapFile>
     </PropertyGroup>
@@ -126,6 +128,109 @@
                       WriteOnlyWhenDifferent="true"
                       Encoding="UTF-8"
                       Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != ''" />
+  </Target>
+
+  <Target Name="_GetTestingPlatformPackagedAppLauncherPaths"
+          Condition="'$(OS)' == 'Windows_NT' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_TestingPlatformPackagedAppLauncherTemplate>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'PackagedAppController', 'mstest-appmodel-controller.launcher.config.json'))</_TestingPlatformPackagedAppLauncherTemplate>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TestingPlatformPackagedAppLauncher Include="$([MSBuild]::Escape($([System.IO.Path]::ChangeExtension('$(TargetPath)', '.launcher.config.json'))))" />
+      <_TestingPlatformPackagedAppLauncher Include="$([MSBuild]::Escape($([System.IO.Path]::ChangeExtension('$(AppxPackageRecipe)', '.launcher.config.json'))))"
+                                         Condition="'$(AppxPackageRecipe)' != ''" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Test Explorer treats the appx recipe as the MTP source, but cannot execute it.
+       Its launcher config must explicitly retain server mode when replacing the program. -->
+  <Target Name="_GenerateTestingPlatformPackagedAppTestExplorerLauncher"
+          AfterTargets="_PrepareTestingPlatformPackagedAppController"
+          DependsOnTargets="_GetTestingPlatformPackagedAppLauncherPaths"
+          Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != '' AND '$(GenerateTestingPlatformPackagedAppTestExplorerLauncher)' == 'true'">
+    <PropertyGroup>
+      <_TestingPlatformPackagedAppLauncherProgram>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe</_TestingPlatformPackagedAppLauncherProgram>
+      <_TestingPlatformPackagedAppLauncherJson>{ "program": "$(_TestingPlatformPackagedAppLauncherProgram.Replace('\', '\\'))", "args": [ "--server" ] }</_TestingPlatformPackagedAppLauncherJson>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TestingPlatformPackagedAppExistingLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="Exists('%(Identity)')" />
+      <_TestingPlatformPackagedAppOwnedLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="!Exists('%(Identity)')" />
+    </ItemGroup>
+    <!-- Only replace our own previous output; never overwrite a caller's launcher config. -->
+    <GetFileHash Files="$(_TestingPlatformPackagedAppLauncherTemplate)" Condition="Exists('$(_TestingPlatformPackagedAppLauncherTemplate)')">
+      <Output TaskParameter="Hash" PropertyName="_TestingPlatformPackagedAppPreviousLauncherHash" />
+    </GetFileHash>
+    <GetFileHash Files="@(_TestingPlatformPackagedAppExistingLauncher)" Condition="'@(_TestingPlatformPackagedAppExistingLauncher)' != ''">
+      <Output TaskParameter="Items" ItemName="_TestingPlatformPackagedAppHashedLauncher" />
+    </GetFileHash>
+    <ItemGroup>
+      <_TestingPlatformPackagedAppOwnedLauncher Include="@(_TestingPlatformPackagedAppHashedLauncher)"
+                                              Condition="'%(_TestingPlatformPackagedAppHashedLauncher.FileHash)' == '$(_TestingPlatformPackagedAppPreviousLauncherHash)'" />
+      <_TestingPlatformPackagedAppCallerLauncher Remove="@(_TestingPlatformPackagedAppLauncher)" />
+      <_TestingPlatformPackagedAppCallerLauncher Include="@(_TestingPlatformPackagedAppExistingLauncher)" Exclude="@(_TestingPlatformPackagedAppOwnedLauncher)" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(_TestingPlatformPackagedAppLauncherTemplate)"
+                      Lines="$([MSBuild]::Escape('$(_TestingPlatformPackagedAppLauncherJson)'))"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true"
+                      Encoding="UTF-8"
+                      Condition="'@(_TestingPlatformPackagedAppOwnedLauncher)' != ''" />
+    <Copy SourceFiles="@(_TestingPlatformPackagedAppOwnedLauncher->'$(_TestingPlatformPackagedAppLauncherTemplate)')"
+          DestinationFiles="@(_TestingPlatformPackagedAppOwnedLauncher)"
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
+    </Copy>
+    <ItemGroup>
+      <FileWrites Include="$(_TestingPlatformPackagedAppLauncherTemplate)" Condition="Exists('$(_TestingPlatformPackagedAppLauncherTemplate)')" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Cleanup may follow a user edit without generation running. Remove relinquished
+       outputs from the persisted manifest before either clean path reads them. -->
+  <Target Name="_ProtectTestingPlatformPackagedAppCallerLaunchers"
+          BeforeTargets="CoreClean;_CleanGetCurrentAndPriorFileWrites"
+          DependsOnTargets="_GetTestingPlatformPackagedAppLauncherPaths"
+          Condition="'$(OS)' == 'Windows_NT' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <_TestingPlatformPackagedAppCleanLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="Exists('%(Identity)')" />
+    </ItemGroup>
+    <GetFileHash Files="$(_TestingPlatformPackagedAppLauncherTemplate)" Condition="Exists('$(_TestingPlatformPackagedAppLauncherTemplate)')">
+      <Output TaskParameter="Hash" PropertyName="_TestingPlatformPackagedAppCleanTemplateHash" />
+    </GetFileHash>
+    <GetFileHash Files="@(_TestingPlatformPackagedAppCleanLauncher)" Condition="'@(_TestingPlatformPackagedAppCleanLauncher)' != ''">
+      <Output TaskParameter="Items" ItemName="_TestingPlatformPackagedAppCleanHashedLauncher" />
+    </GetFileHash>
+    <ItemGroup>
+      <_TestingPlatformPackagedAppCallerLauncher Remove="@(_TestingPlatformPackagedAppLauncher)" />
+      <_TestingPlatformPackagedAppCallerLauncher Include="@(_TestingPlatformPackagedAppCleanHashedLauncher)"
+                                               Condition="'%(_TestingPlatformPackagedAppCleanHashedLauncher.FileHash)' != '$(_TestingPlatformPackagedAppCleanTemplateHash)'" />
+      <_CleanPriorFileWrites Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+    </ItemGroup>
+    <ReadLinesFromFile File="$(IntermediateOutputPath)$(CleanFile)"
+                       Condition="'@(_TestingPlatformPackagedAppCallerLauncher)' != '' AND Exists('$(IntermediateOutputPath)$(CleanFile)')">
+      <Output TaskParameter="Lines" ItemName="_TestingPlatformPackagedAppCleanManifest" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_TestingPlatformPackagedAppCleanManifest Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(CleanFile)"
+                      Lines="@(_TestingPlatformPackagedAppCleanManifest)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true"
+                      Condition="'@(_TestingPlatformPackagedAppCallerLauncher)' != '' AND Exists('$(IntermediateOutputPath)$(CleanFile)')" />
+  </Target>
+
+  <!-- Filtering both lists avoids IncrementalClean deleting a caller edit as an orphan
+       and prevents the no-build recording path from reclaiming it for a later clean. -->
+  <Target Name="_ExcludeTestingPlatformPackagedAppCallerLaunchersFromClean"
+          AfterTargets="_CleanGetCurrentAndPriorFileWrites"
+          Condition="'@(_TestingPlatformPackagedAppCallerLauncher)' != ''">
+    <ItemGroup>
+      <FileWrites Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+      <FileWritesShareable Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+      <_CleanCurrentFileWrites Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+      <_CleanPriorFileWrites Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+    </ItemGroup>
   </Target>
 
   <!-- A no-build launch query has no IncrementalClean to persist FileWrites. Record the
