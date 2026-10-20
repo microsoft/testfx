@@ -2,15 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class TestDataSourceHelpers
 {
     internal static int GetDataParameterCount(ParameterInfo[] parameters)
-        => parameters.Length > 0 && parameters[^1].ParameterType == typeof(CancellationToken)
-            ? parameters.Length - 1
-            : parameters.Length;
+        => TestDataSourceUtilities.GetDataParameterCount(parameters);
 
     public static bool IsDataConsideredSingleArgumentValue(object?[]? data, ParameterInfo[] parameters)
         => data is not null
@@ -102,11 +101,7 @@ internal static class TestDataSourceHelpers
             && IsDataWithExplicitCancellationToken(tupleArguments, parameters);
 
     private static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
-        => parameters.Length == 2
-            && parameters[1].ParameterType == typeof(CancellationToken)
-            && data.Length == 2
-            && (data[0] is null || parameters[0].ParameterType.IsInstanceOfType(data[0]))
-            && (data[1] is null or CancellationToken || data[1] == Type.Missing);
+        => TestDataSourceUtilities.IsDataWithExplicitCancellationToken(data, parameters);
 
     private static bool TryExpandTupleDataSource(object? data, out object?[] array)
     {

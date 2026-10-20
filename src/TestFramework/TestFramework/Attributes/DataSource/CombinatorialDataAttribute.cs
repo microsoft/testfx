@@ -27,22 +27,17 @@ public sealed class CombinatorialDataAttribute : Attribute, ITestDataSource
         }
 
         ParameterInfo[] parameters = methodInfo.GetParameters();
-        int parameterCount = parameters.Length;
-        if (parameterCount > 0
-            && parameters[parameterCount - 1].ParameterType == typeof(CancellationToken)
-            && !parameters[parameterCount - 1].GetCustomAttributesData()
+        int parameterCount = TestDataSourceUtilities.GetDataParameterCount(parameters);
+        if (parameterCount < parameters.Length
+            && parameters[parameters.Length - 1].GetCustomAttributesData()
                 .Any(attribute => typeof(ICombinatorialValuesProvider).IsAssignableFrom(attribute.AttributeType)))
         {
-            parameterCount--;
-            if (parameterCount == 0)
-            {
-                return [[]];
-            }
+            parameterCount++;
         }
 
         if (parameterCount == 0)
         {
-            return [];
+            return parameters.Length == 0 ? [] : [[]];
         }
 
         object?[][] values = new object?[parameterCount][];
