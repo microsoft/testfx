@@ -390,6 +390,46 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_RebuildPreservesSourceCopiedCallerLaunchers(bool generateFirst)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """,
+            extraReferences: """
+                <None Include="CallerExecutable.json" TargetPath="PackagedConsumer.launcher.config.json" CopyToOutputDirectory="Always" />
+                <None Include="CallerRecipe.json" TargetPath="PackagedConsumer.build.launcher.config.json" CopyToOutputDirectory="Always" />
+                """);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        if (generateFirst)
+        {
+            DotnetMuxerResult first = await DotnetCli.RunAsync(
+                $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+                cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, first.ExitCode, first.ToString());
+        }
+
+        const string CallerConfiguration = """{"program":"custom-controller.exe","args":["--server","jsonrpc"]}""";
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "CallerExecutable.json"), CallerConfiguration, TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "CallerRecipe.json"), CallerConfiguration, TestContext.CancellationToken);
+
+        DotnetMuxerResult rebuild = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, rebuild.ExitCode, rebuild.ToString());
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        foreach (string launcher in new[] { "PackagedConsumer.launcher.config.json", "PackagedConsumer.build.launcher.config.json" })
+        {
+            Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(Path.Combine(directory, launcher), TestContext.CancellationToken), launcher);
+        }
+    }
+
+    [TestMethod]
     [DataRow("<GenerateTestingPlatformPackagedAppTestExplorerLauncher>false</GenerateTestingPlatformPackagedAppTestExplorerLauncher>")]
     [DataRow("<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>")]
     [DataRow("<DesignTimeBuild>true</DesignTimeBuild>")]
