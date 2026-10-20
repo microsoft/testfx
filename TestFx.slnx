@@ -79,6 +79,7 @@
   </Folder>
   <Folder Name="/src/4 - Analyzers/">
     <Project Path="src/Analyzers/MSTest.Analyzers.CodeFixes/MSTest.Analyzers.CodeFixes.csproj" />
+    <Project Path="src/Analyzers/MSTest.Analyzers.FSharp/MSTest.Analyzers.FSharp.fsproj" />
     <Project Path="src/Analyzers/MSTest.Analyzers.Package/MSTest.Analyzers.Package.csproj">
       <BuildDependency Project="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
     </Project>
@@ -99,6 +100,7 @@
   <Folder Name="/test/IntegrationTests/">
     <Project Path="test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
+    <Project Path="test/IntegrationTests/MSTest.Analyzers.FSharp.Acceptance.IntegrationTests/MSTest.Analyzers.FSharp.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/PlatformServices.Desktop.IntegrationTests/PlatformServices.Desktop.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/test/IntegrationTests/TestAssets/">
