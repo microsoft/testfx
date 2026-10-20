@@ -95,4 +95,20 @@ internal partial class TestMethodInfo
 
         return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
     }
+
+    private static Exception GetRealException(Exception ex)
+    {
+        if (ex is TargetInvocationException)
+        {
+            DebugEx.Assert(ex.InnerException != null, "Inner exception of TargetInvocationException is null. This should occur because we should have caught this case above.");
+
+            // Our reflected call will typically always get back a TargetInvocationException
+            // containing the real exception thrown by the test method as its inner exception
+            return ex.InnerException;
+        }
+        else
+        {
+            return ex;
+        }
+    }
 }
