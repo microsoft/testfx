@@ -601,13 +601,17 @@ write to its reporter (and thus the pipeline log).
 
 ### 9.8 `DisplayMessage` (ID 12, ≥ 1.3.0)
 
-`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A generic host diagnostic forwarded so
-warning/error messages produced **outside** test results (hang/crash dump diagnostics, retry summaries,
-generic extension/framework warnings and errors) are not swallowed. `Level` is `DisplayMessageLevels`:
+`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A host message forwarded so durable session
+messages, marked GitHub Actions workflow commands, and warning/error messages produced **outside** test
+results (hang/crash dump diagnostics, retry summaries, generic extension/framework warnings and errors)
+are not swallowed. `Level` is `DisplayMessageLevels`:
 `0` Information, `1` Warning, `2` Error. The SDK maps them to `WriteMessage` / `WriteWarningMessage` /
-`WriteErrorMessage`. Regular (informational) host output is still discarded by the forwarding device;
-only warning/error levels are relayed. Unlike the Azure DevOps path, this is **not** gated on an ADO
-agent.
+`WriteErrorMessage`. GitHub Actions commands use Information regardless of the command's own severity:
+`::error`, `::warning`, `::notice`, `::group::`, and `::endgroup::` must reach the runner unchanged, without
+warning/error decoration. The GitHub Actions extension gates their production on `GITHUB_ACTIONS=true`
+and `--report-gh`; regular (informational) host output remains discarded. Unlike the Azure DevOps path,
+the display-message transport is **not** gated on an ADO agent. An SDK that negotiates a version below
+1.3.0 receives none of these messages; job-summary file writing is independent of this transport.
 
 ---
 
