@@ -46,7 +46,7 @@ internal static class TestDataSourceUtilities
 
         StringBuilder argumentsBuilder = AcquireBuilder();
         if (methodData.HasSingleObjectArrayParameter
-            && !IsDataWithExplicitCancellationToken(data, methodData.Parameters))
+            && !HasExplicitCancellationTokenData(data, methodData.Parameters))
         {
             AppendHumanizedArgument(argumentsBuilder, data);
         }
@@ -58,6 +58,10 @@ internal static class TestDataSourceUtilities
         string arguments = GetStringAndReleaseBuilder(argumentsBuilder);
         return ComputeDisplayName(methodDisplayName, arguments, currentCulture, displayNameFormat);
     }
+
+    // Keep full-arity rows with an explicit token formatted as separate arguments.
+    private static bool HasExplicitCancellationTokenData(object?[] data, ParameterInfo[] parameters)
+        => IsDataWithExplicitCancellationToken(data, parameters);
 
     public static string ComputeDisplayName(MethodInfo methodInfo, string argumentsDisplayName)
         => ComputeDisplayName(GetMethodDisplayName(methodInfo), argumentsDisplayName, CultureInfo.CurrentCulture, GetDisplayNameFormat());
