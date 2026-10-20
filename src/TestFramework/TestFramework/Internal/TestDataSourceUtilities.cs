@@ -33,10 +33,7 @@ internal static class TestDataSourceUtilities
         string displayNameFormat = GetDisplayNameFormat();
 
         StringBuilder argumentsBuilder = AcquireBuilder();
-        if (methodData.HasSingleObjectArrayParameter
-            && !(methodData.HasCancellationTokenParameter && data.Length == 2
-                && data[0] is null or object[]
-                && (data[1] is null or CancellationToken || data[1] == Type.Missing)))
+        if (methodData.HasSingleObjectArrayParameter && !HasExplicitCancellationTokenData(methodData, data))
         {
             AppendHumanizedArgument(argumentsBuilder, data);
         }
@@ -51,6 +48,13 @@ internal static class TestDataSourceUtilities
 
     public static string ComputeDisplayName(MethodInfo methodInfo, string argumentsDisplayName)
         => ComputeDisplayName(GetMethodDisplayName(methodInfo), argumentsDisplayName, CultureInfo.CurrentCulture, GetDisplayNameFormat());
+
+    // A full-arity row supplies both the object[] data and trailing token, so it is not one array argument.
+    private static bool HasExplicitCancellationTokenData(MethodData methodData, object?[] data)
+        => methodData.HasCancellationTokenParameter
+            && data.Length == 2
+            && data[0] is null or object[]
+            && (data[1] is null or CancellationToken || data[1] == Type.Missing);
 
     private static string GetMethodDisplayName(MethodInfo methodInfo)
         => methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
