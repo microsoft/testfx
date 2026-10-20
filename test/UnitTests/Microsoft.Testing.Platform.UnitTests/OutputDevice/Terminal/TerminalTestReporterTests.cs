@@ -2621,6 +2621,32 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain(secondAssembly, output);
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void ExpectedZeroTests_HandshakeAndProcessFailures_StayRed(bool handshakeFailure)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowAssembly = true,
+            ShowProgress = () => false,
+            AllowZeroTests = true,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        if (!handshakeFailure)
+        {
+            reporter.AssemblyRunStarted("failed.dll", "net8.0", "x64", "failed", "failed");
+        }
+
+        reporter.AssemblyRunCompleted("failed", 1, outputData: null, errorData: null);
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 1);
+
+        string verdict = handshakeFailure ? "Failed!" : "Zero tests ran";
+        Assert.Contains($"\u001B[31mTest run summary: {verdict}", console.Output);
+    }
+
     // Ported from the dotnet/sdk TerminalTestReporterTests (regression for dotnet/sdk#51608) to validate the
     // orchestrator handshake-failure surface of the shared reporter: if a child test host process exits before a
     // session was ever started (so the execution id is never registered), the orchestrator overload of
