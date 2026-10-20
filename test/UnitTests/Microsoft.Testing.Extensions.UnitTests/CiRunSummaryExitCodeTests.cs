@@ -84,6 +84,7 @@ public sealed class CiRunSummaryExitCodeTests
     [TestMethod]
     public void GetReason_WhenResourceManagerHasNoMatchingKeys_ReturnsTheHardcodedFallbackLiteralInBothReporters()
     {
+        // Keep this independent expected value aligned with the final fallback in CiRunSummaryExitCode.
         const string expected = "The test run reported a non-success exit code.";
         ResourceManager resources = new MissingResourceManager();
 
