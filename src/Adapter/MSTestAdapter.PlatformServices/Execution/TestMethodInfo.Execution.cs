@@ -381,8 +381,36 @@ internal partial class TestMethodInfo
         TestResult? result = null;
         Exception? failure = null;
         var invocationState = new TestInvocationState();
+        CancellationTokenSource cancellationTokenSource = TestContext.Context.CancellationTokenSource;
+        TaskScheduler? synchronizationContextScheduler = SynchronizationContext.Current is null
+            ? null
+            : TaskScheduler.FromCurrentSynchronizationContext();
+        bool executionCompleted;
 
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TimeoutInfo.Timeout, TestContext.Context.CancellationTokenSource.Token))
+        if (synchronizationContextScheduler is null)
+        {
+            executionCompleted = PlatformServiceProvider.Instance.ThreadOperations.Execute(
+                ExecuteAsyncAction, TimeoutInfo.Timeout, cancellationTokenSource.Token);
+        }
+        else
+        {
+            // Queue the invocation on its original dispatcher without blocking the message pump.
+            // A new STA thread cannot access controls owned by this UI thread.
+            Task executionTask = Task.Factory.StartNew(
+                ExecuteOnSynchronizationContextAsync,
+                cancellationTokenSource.Token,
+                TaskCreationOptions.DenyChildAttach | TaskCreationOptions.HideScheduler,
+                synchronizationContextScheduler).Unwrap();
+            using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token);
+            var timeoutTask = Task.Delay(TimeoutInfo.Timeout, timeoutCancellation.Token);
+            Task completedTask = await Task.WhenAny(executionTask, timeoutTask).ConfigureAwait(false);
+            executionCompleted = completedTask == executionTask && !executionTask.IsCanceled;
+#pragma warning disable VSTHRD103 // CancelAsync is not available on all supported target frameworks.
+            timeoutCancellation.Cancel();
+#pragma warning restore VSTHRD103 // CancelAsync is not available on all supported target frameworks.
+        }
+
+        if (executionCompleted)
         {
             if (failure != null)
             {
@@ -395,7 +423,7 @@ internal partial class TestMethodInfo
 
         // Timed out or canceled
         string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout);
-        if (TestContext.Context.CancellationTokenSource.IsCancellationRequested)
+        if (cancellationTokenSource.IsCancellationRequested)
         {
             errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName);
         }
@@ -403,7 +431,7 @@ internal partial class TestMethodInfo
         {
             // Cancel the token source as test has timed out
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - likely fine in this context. CancelAsync is .NET Core only. We prefer having the same behavior between .NET Core and .NET Framework.
-            TestContext.Context.CancellationTokenSource.Cancel();
+            cancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
         }
 
@@ -412,24 +440,74 @@ internal partial class TestMethodInfo
         // Execution context propagation here may still not be accurate.
         // if test init was successfully executed by ExecuteAsyncAction, but then the test itself timed out or cancelled,
         // then at this point we will run the cleanup on an execution context that doesn't have any state set by the test initialize.
+        if (synchronizationContextScheduler is null)
+        {
+            await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
+        }
+        else if (!invocationState.IsCleanupStarted
+            && invocationState.TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot))
+        {
+            if (!HasCleanupsToInvoke(snapshot.ClassInstanceLease))
+            {
+                // Cancellation bookkeeping does not need a dispatcher blocked by synchronous user code.
+                await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
+            }
+            else
+            {
+                const int CleanupDispatchTimeoutMilliseconds = 1_000;
+                int cleanupDispatchClaimed = 0;
+                Task cleanupTask = Task.Factory.StartNew(
+                    async () =>
+                    {
+                        // Either the dispatcher starts cleanup, or the monitor leaves it to the original invocation.
+                        if (Interlocked.CompareExchange(ref cleanupDispatchClaimed, 1, 0) == 0)
+                        {
+                            await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskCreationOptions.DenyChildAttach | TaskCreationOptions.HideScheduler,
+                    synchronizationContextScheduler).Unwrap();
+                using var dispatchTimeoutCancellation = new CancellationTokenSource();
+                await Task.WhenAny(
+                    cleanupTask,
+                    Task.Delay(CleanupDispatchTimeoutMilliseconds, dispatchTimeoutCancellation.Token)).ConfigureAwait(false);
+#pragma warning disable VSTHRD103 // CancelAsync is not available on all supported target frameworks.
+                dispatchTimeoutCancellation.Cancel();
+#pragma warning restore VSTHRD103 // CancelAsync is not available on all supported target frameworks.
+                if (Interlocked.CompareExchange(ref cleanupDispatchClaimed, 1, 0) != 0)
+                {
+                    await cleanupTask.ConfigureAwait(false);
+                }
+                else if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsVerboseEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Verbose(
+                        "MSTest.TestMethodInfo: Cleanup for timed out test '{0}' is deferred because its synchronization context did not become available within {1}ms.",
+                        TestMethodName,
+                        CleanupDispatchTimeoutMilliseconds);
+                }
+            }
+        }
 
-        // We don't know when the cancellation happened so it's possible that the cleanup wasn't executed, so we need to run it here.
-        // The method already checks if the cleanup was already executed.
-        await RunTestCleanupMethodAsync(timeoutResult, null, invocationState).ConfigureAwait(false);
         return timeoutResult;
 
         // Local functions
+        async Task ExecuteOnSynchronizationContextAsync()
+        {
+            try
+            {
+                result = await ExecuteInternalAsync(arguments, null, invocationState).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+        }
+
         void ExecuteAsyncAction()
         {
             try
             {
-                // Ideally this would avoid blocking.
-                // This used to always happen, but now is moved to the code path where there is a Timeout on the test method.
-                // The GetAwaiter().GetResult() call here can be a source of deadlocks, especially for UWP/WinUI.
-                // When the test method has `await`s with ConfigureAwait(true) (which is the default), the continuation is
-                // dispatched back to the SynchronizationContext which offloads the work to the UI thread.
-                // However, the GetAwaiter().GetResult() here will block the current thread which is also the UI thread.
-                // So, the continuations will not be able, thus this task never completes.
                 result = ExecuteInternalAsync(arguments, null, invocationState).GetAwaiter().GetResult();
             }
             catch (Exception ex)
@@ -449,6 +527,8 @@ internal partial class TestMethodInfo
         private ITestClassInstanceLease? _classInstanceLease;
         private int _testContextSetupState;
         private int _cleanupStarted;
+
+        public bool IsCleanupStarted => Volatile.Read(ref _cleanupStarted) != 0;
 
         public void PublishActivation(object classInstance, ITestClassInstanceLease? classInstanceLease)
         {

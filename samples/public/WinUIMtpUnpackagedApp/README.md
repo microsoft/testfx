@@ -4,7 +4,12 @@ This sample is an unpackaged WinUI 3 application whose process hosts Microsoft.T
 It has no MSIX identity or `Package.appxmanifest`; `dotnet run` and `dotnet test` start the generated
 executable directly. It carries the Windows App SDK with the app so it does not depend on a
 machine-wide Windows App Runtime installation. The tests verify the absence of package identity,
-Windows App SDK initialization, and WinUI dispatcher access.
+Windows App SDK initialization, WinUI dispatcher access, and asynchronous UI loading with `[Timeout]`.
+`UITestMethodWithTimeoutLoadsUI` creates a red `Grid`, awaits its `Loaded` event, and verifies that
+the continuation still has UI-thread access before restoring the window's original content.
+It uses cooperative cancellation and observes `TestContext.CancellationToken`, so it also works with
+the sample's existing SDK version pin. Ordinary, non-cooperative UI timeouts require an adapter
+containing the dispatcher-preserving timeout fix.
 
 ## Prerequisites
 

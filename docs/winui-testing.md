@@ -162,6 +162,30 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 With either setup, `dotnet run` (or `dotnet test`) starts the executable directly and the run finishes in a single process.
 
+### Asynchronous UI tests and timeouts
+
+`[UITestMethod]` supports asynchronous `Task` methods, including methods marked with `[Timeout]`.
+The timeout must not move the test to another STA or thread-pool thread: WinUI controls belong to
+the application's actual dispatcher. The test and its ordinary asynchronous continuations run on
+that dispatcher, and timeout cleanup is dispatched there too.
+
+Preserving the dispatcher does not change the default scheduler used by nested
+`Task.Factory.StartNew` calls. Non-cooperative timeouts cannot interrupt synchronous code that blocks
+the dispatcher. If cleanup has already started, the timeout is reported without waiting for it.
+If the dispatcher cannot start cleanup within one second, cleanup is deferred to the original
+invocation once it can continue; it is never moved to a worker thread. Cleanup is also deferred
+while the constructor or `TestContext` setter is still running. Cleanup that starts on the dispatcher
+retains its own timeout settings.
+
+See `UITestMethodWithTimeoutLoadsUI` in the
+[unpackaged sample](../samples/public/WinUIMtpUnpackagedApp/UnitTests.cs) for a test that assigns a
+red `Grid` to the window and awaits `Loaded`. The sample uses cooperative cancellation to remain
+compatible with its existing SDK pin; the default timeout regression is covered by the real WinUI
+acceptance tests. Always detach event handlers and restore window content when the test finishes.
+For cooperative cancellation, use
+`[Timeout(10000, CooperativeCancellation = true)]` and observe `TestContext.CancellationToken`;
+unlike the default non-cooperative timeout, that mode waits for the test itself to finish.
+
 ### Building unpackaged WinUI projects
 
 Build with `dotnet build` as usual. Note that older Windows App SDK releases required the MrtCore PRI generation
