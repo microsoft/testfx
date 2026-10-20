@@ -25,6 +25,8 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 public sealed class MtpServerProcessTests
 {
     internal const string StandardOutputFloodEnvironmentVariable = "TESTFX_FLOOD_SERVER_STDOUT";
+    internal const string StartupStandardErrorEnvironmentVariable = "TESTFX_SERVER_STARTUP_STDERR";
+    internal const string StartupStandardError = "expected-startup-error";
 
     // Any value works: BuildLaunch only formats the port into the argument string, it never binds it.
     private const int Port = 12345;
@@ -162,7 +164,7 @@ public sealed class MtpServerProcessTests
     }
 
     [TestMethod]
-    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExitAndStandardError()
+    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExit()
     {
         using var temp = TempDirectory.Create();
         string source = Path.Combine(temp.Path, "Missing.dll");
@@ -179,11 +181,32 @@ public sealed class MtpServerProcessTests
 
         Assert.Contains("exited with code", exception.Message);
         Assert.Contains("before connecting back", exception.Message);
-        Assert.Contains("Standard error:", exception.Message);
         Assert.IsLessThan(
             maximumExpectedDuration,
             stopwatch.Elapsed,
             "A process that exits during startup must be reported immediately instead of waiting for the connection timeout.");
+    }
+
+    [TestMethod]
+    public async Task StartAsyncWhenProcessExitsReportsStandardError()
+    {
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromMinutes(1),
+            EnvironmentVariables =
+            {
+                [StartupStandardErrorEnvironmentVariable] = "1",
+                [StandardOutputFloodEnvironmentVariable] = null,
+            },
+        };
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
+
+        Assert.Contains("exited with code 17 before connecting back", exception.Message);
+        Assert.Contains("Standard error:", exception.Message);
+        Assert.EndsWith(StartupStandardError, exception.Message);
     }
 
     [TestMethod]
