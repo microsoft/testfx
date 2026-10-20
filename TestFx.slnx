@@ -99,16 +99,6 @@
   <Folder Name="/test/IntegrationTests/">
     <Project Path="test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
-    <Project Path="test/IntegrationTests/PlatformServices.Desktop.IntegrationTests/PlatformServices.Desktop.IntegrationTests.csproj" />
-  </Folder>
-  <Folder Name="/test/IntegrationTests/TestAssets/">
-    <File Path="test/IntegrationTests/TestAssets/Directory.Build.targets" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx86Debug/DesktopTestProjectx86Debug.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/FixturesTestProject/FixturesTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/SampleFrameworkExtensions/SampleFrameworkExtensions.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/SampleProjectForAssemblyResolution/SampleProjectForAssemblyResolution.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DefaultStrategy/TestIdProject.DefaultStrategy.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestProject/TestProjectForDiscovery.csproj" />
   </Folder>
   <Folder Name="/test/Performance/">
     <Project Path="test/Performance/MSTest.Performance.Benchmarks/MSTest.Performance.Benchmarks.csproj" />
