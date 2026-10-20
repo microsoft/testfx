@@ -25,6 +25,12 @@ This package extends Microsoft.Testing.Platform with:
 >
 > Cross-module aggregation is negotiated with `dotnet test`. If the SDK does not provide the authoritative run-summary context, the extension keeps its standalone behavior; a manually invoked post-processor labels totals as observed and leaves overall duration and exit verdict unavailable rather than reconstructing them.
 
+### Running through `dotnet test`
+
+Log groups, failure and skip annotations, and slow-test notices are forwarded unchanged through the SDK's informational display-message channel. This requires an SDK that negotiates Microsoft.Testing.Platform protocol 1.3.0 or later. The Markdown job summary is written independently and does not require that channel.
+
+Older SDKs, including .NET SDK 10.0.402 (protocol 1.0.0), cannot receive these workflow commands. Use a newer SDK that supports protocol 1.3.0 or run the built test executable directly to get groups, annotations, and notices. The extension does not send unsupported messages to an older SDK.
+
 ### How the annotation source location is resolved
 
 An annotation is pinned to `file:line` using, in order:
