@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-16T09:36:39.3863289Z
-manifestHash: sha256:2bc8ac83a1bf89c62658151d10dc811a52bef10cccc97e7be174e7a7c67a7573
+generatedAt: 2026-10-19T18:49:07.1553576Z
+manifestHash: sha256:4bb31905c11fbf6fce9075a9650c8b272df696a030a4bb4ad6ff90aa20377622
 plugins:
     - id: dotnet
       source:
@@ -13,7 +13,7 @@ plugins:
         owner: dotnet
         repo: skills
       requestedRef: main
-      resolvedRef: 19bb55d785cd88ce47a1b43f9a21d0192c412dac
+      resolvedRef: 10d85e25fb42d5f65c568d5e979a005ee69eecb3
       layout: dotnet-skills
       install:
         mode: summary
@@ -115,7 +115,7 @@ plugins:
         owner: dotnet
         repo: skills
       requestedRef: main
-      resolvedRef: 9de888b8ce55da34e76a113bd7b2d463d6b3e1e6
+      resolvedRef: 9386ed7c1148a7bef970aa0502371c982effa01c
       layout: dotnet-skills
       install:
         mode: summary
@@ -149,6 +149,11 @@ plugins:
           upstreamPath: plugins/dotnet-msbuild/skills/directory-build-organization/references/targetframework-props-pitfall.md
           upstreamHash: sha256:a5f0b84a3138e5fdf1fdf103268493006756a1c86312952926f3a10c3e5dd738
           localHash: sha256:a5f0b84a3138e5fdf1fdf103268493006756a1c86312952926f3a10c3e5dd738
+          mode: "0666"
+        - path: .agents/skills/eliminate-redundant-restores/SKILL.md
+          upstreamPath: plugins/dotnet-msbuild/skills/eliminate-redundant-restores/SKILL.md
+          upstreamHash: sha256:178c6b44ae9d5a4b5aedefa73b1366be7d389e07a3c855e2bdceeb54cc435e74
+          localHash: sha256:178c6b44ae9d5a4b5aedefa73b1366be7d389e07a3c855e2bdceeb54cc435e74
           mode: "0666"
         - path: .agents/skills/including-generated-files/SKILL.md
           upstreamPath: plugins/dotnet-msbuild/skills/including-generated-files/SKILL.md
@@ -197,8 +202,8 @@ plugins:
           mode: "0666"
         - path: .github/agents/build-perf.agent.md
           upstreamPath: plugins/dotnet-msbuild/agents/build-perf.agent.md
-          upstreamHash: sha256:ad7f5870b1f999889ed564523af609b3b7cda14bab5f6ddda80767c747871d92
-          localHash: sha256:ad7f5870b1f999889ed564523af609b3b7cda14bab5f6ddda80767c747871d92
+          upstreamHash: sha256:622f219a43d65e3023337206b63ae13df2242e4deb2cfe16958dbd51fbf40ede
+          localHash: sha256:622f219a43d65e3023337206b63ae13df2242e4deb2cfe16958dbd51fbf40ede
           mode: "0666"
         - path: .github/agents/msbuild-code-review.agent.md
           upstreamPath: plugins/dotnet-msbuild/agents/msbuild-code-review.agent.md
@@ -207,8 +212,8 @@ plugins:
           mode: "0666"
         - path: .github/agents/msbuild.agent.md
           upstreamPath: plugins/dotnet-msbuild/agents/msbuild.agent.md
-          upstreamHash: sha256:7ffa223129d65e3fc5159dfdb79cb90f0c1b383fa404286d092c067f076f0565
-          localHash: sha256:7ffa223129d65e3fc5159dfdb79cb90f0c1b383fa404286d092c067f076f0565
+          upstreamHash: sha256:680cff3b89d6586575d44d3a222c53da27b81ed0016a30073c9f6edc8586d6aa
+          localHash: sha256:680cff3b89d6586575d44d3a222c53da27b81ed0016a30073c9f6edc8586d6aa
           mode: "0666"
     - id: dotnet-test
       source:
