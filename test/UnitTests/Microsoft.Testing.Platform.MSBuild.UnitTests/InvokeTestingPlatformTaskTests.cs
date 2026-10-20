@@ -113,9 +113,46 @@ public sealed class InvokeTestingPlatformTaskTests
         Assert.IsTrue(task.Execute());
         string path = Assert.ContainsSingle(fileSystem.CreatedFiles.Keys);
         Assert.AreEqual(Path.Combine("original-results", "apphost_net9.0_x64.log"), path);
+        Assert.AreEqual("original-results", Assert.ContainsSingle(fileSystem.CreatedDirectories));
         string output = Encoding.Unicode.GetString(fileSystem.CreatedFiles[path].ToArray()).TrimStart('\uFEFF');
         Assert.AreEqual($"simulated output{Environment.NewLine}{Environment.NewLine}=== COMMAND LINE ==={Environment.NewLine}simulated command{Environment.NewLine}{Environment.NewLine}", output);
         Assert.IsFalse(fileSystem.CreatedFiles[path].CanWrite, "Execute must dispose the output stream.");
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Execute_ModuleInfoCreatesResultsDirectoryBeforeOpeningLog(bool resultsDirectoryExists)
+    {
+        using AppHostTaskFixture fixture = new();
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask(new FileSystem());
+        string resultsDirectory = Path.Combine(fixture.DotnetRoot, "nested", "results");
+        if (resultsDirectoryExists)
+        {
+            Directory.CreateDirectory(resultsDirectory);
+        }
+
+        task.TestArchitecture = new TaskItem("x64");
+        task.SimulatedExitCode = 0;
+        task.OnSimulatedLaunch = current =>
+        {
+            current.DeliverRequest(new ModuleInfoRequest("framework", "x64", resultsDirectory));
+            current.DeliverRequest(new RunSummaryInfoRequest(1, 0, 1, 0, "1s", AllowSkipped: true));
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.IsTrue(Directory.Exists(resultsDirectory));
+        string logPath = Path.Combine(resultsDirectory, "apphost_net9.0_x64.log");
+        Assert.AreEqual(
+            """
+            simulated output
+
+            === COMMAND LINE ===
+            simulated command
+
+
+            """.ReplaceLineEndings(),
+            File.ReadAllText(logPath, Encoding.Unicode).ReplaceLineEndings());
     }
 
     [TestMethod]
@@ -197,14 +234,7 @@ public sealed class InvokeTestingPlatformTaskTests
         Assert.AreEqual(task.TargetPath.ItemSpec, errors[0].File);
         Assert.AreEqual(exitCode, task.ExitCode);
         Assert.IsFalse(fileSystem.CreatedFiles[path].CanWrite);
-        if (hasModule)
-        {
-            Assert.IsEmpty(fileSystem.CreatedDirectories);
-        }
-        else
-        {
-            Assert.AreEqual(directory, Assert.ContainsSingle(fileSystem.CreatedDirectories));
-        }
+        Assert.AreEqual(directory, Assert.ContainsSingle(fileSystem.CreatedDirectories));
     }
 
     private static TestableInvokeTestingPlatformTask CreateSimulatedTask(AppHostTaskFixture fixture, StubFileSystem fileSystem)
@@ -699,8 +729,8 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public string DotnetRoot { get; } = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
 
-        public TestableInvokeTestingPlatformTask CreateTask()
-            => new()
+        public TestableInvokeTestingPlatformTask CreateTask(IFileSystem? fileSystem = null)
+            => new(fileSystem ?? new StubFileSystem())
             {
                 TargetPath = new TaskItem(Path.Combine(DotnetRoot, $"apphost{_appHostExtension}")),
                 TargetDir = new TaskItem($"{DotnetRoot}{Path.DirectorySeparatorChar}"),
