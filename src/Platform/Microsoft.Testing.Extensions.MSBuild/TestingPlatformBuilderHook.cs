@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Platform.Builder;
 
@@ -35,10 +37,9 @@ public static class TestingPlatformBuilderHook
             return;
         }
 
-        // The full-trust controller owns the MSBuild-node connection and relays the child host's
-        // messages through the controller protocol. A sandboxed test host cannot and must not open
-        // the outer build pipe directly.
-        if (_.Contains(TestHostControllerPidOption, StringComparer.Ordinal))
+        // Only sandboxed children must avoid the outer build pipe. Ordinary controller children
+        // still own the MSBuild lifecycle callbacks and must send module information and results.
+        if (_.Contains(TestHostControllerPidOption, StringComparer.Ordinal) && IsAppContainer())
         {
             testApplicationBuilder.CommandLine.AddProvider(() => new MSBuildCommandLineProvider());
             return;
@@ -46,4 +47,29 @@ public static class TestingPlatformBuilderHook
 
         testApplicationBuilder.AddMSBuild();
     }
+
+    private static bool IsAppContainer()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || Environment.OSVersion.Version < new Version(6, 2))
+        {
+            return false;
+        }
+
+        const int TokenIsAppContainer = 29;
+        // GetCurrentProcessToken's borrowed pseudo-handle has TOKEN_QUERY access and needs no cleanup.
+        IntPtr currentProcessToken = new(-4);
+        return GetTokenInformation(currentProcessToken, TokenIsAppContainer, out int isAppContainer, sizeof(int), out _)
+            ? isAppContainer != 0
+            : throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    [DllImport("advapi32.dll", ExactSpelling = true, CallingConvention = CallingConvention.Winapi, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetTokenInformation(
+        IntPtr tokenHandle,
+        int tokenInformationClass,
+        out int tokenInformation,
+        int tokenInformationLength,
+        out int returnLength);
 }
