@@ -14,14 +14,28 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
-if (args is ["--server", "--client-port", string port, "--no-banner"]
-    && Environment.GetEnvironmentVariable(MtpServerProcessTests.StandardOutputFloodEnvironmentVariable) == "1")
+if (args is ["--server", "--client-port", string port, "--no-banner"])
 {
-    // Fill the redirected pipe before connecting, without shell overhead or a descendant that can outlive shutdown.
-    Console.WriteLine(new string('x', 1024 * 1024));
-    using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
-    await Task.Delay(Timeout.InfiniteTimeSpan);
-    return 0;
+    if (Environment.GetEnvironmentVariable(MtpServerProcessTests.StandardOutputFloodEnvironmentVariable) == "1")
+    {
+        // Fill the redirected pipe before connecting, without shell overhead or a descendant that can outlive shutdown.
+        Console.WriteLine(new string('x', 1024 * 1024));
+        using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
+        await Task.Delay(Timeout.InfiniteTimeSpan);
+        return 0;
+    }
+
+    if (Environment.GetEnvironmentVariable(MtpServerProcessTests.StartupStandardErrorEnvironmentVariable) == "1")
+    {
+        // Exceed the pipe capacity with complete lines so the parent must consume stderr before this child
+        // can exit. A single muxer diagnostic can instead lose the race against the bounded stderr-drain wait.
+        for (int i = 0; i < 8192; i++)
+        {
+            Console.Error.WriteLine(MtpServerProcessTests.StartupStandardError);
+        }
+
+        return 17;
+    }
 }
 
 // Opt-out telemetry.
