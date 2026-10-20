@@ -25,10 +25,12 @@ internal sealed class PlatformOutputDeviceManager
         // See #7161 and dotnet/sdk#51615 for the broader context.
         //
         // DotnetTestPassthroughOutputDevice discards regular informational output exactly like a no-op device, but
-        // forwards three classes of host message to the SDK over the protocol so they are not swallowed in
+        // forwards selected host messages to the SDK over the protocol so they are not swallowed in
         // multi-assembly runs:
         //   - Durable session messages (SessionMessageOutputDeviceData) as informational DisplayMessage
         //     (protocol 1.3.0+).
+        //   - GitHub Actions workflow commands (GitHubActionsCommandOutputDeviceData) as informational
+        //     DisplayMessage (protocol 1.3.0+), preserving the command text for the runner.
         //   - Warning/error host messages (WarningMessageOutputDeviceData / ErrorMessageOutputDeviceData) as
         //     DisplayMessage (protocol 1.3.0+). This covers hang/crash dump diagnostics, retry summaries, and
         //     generic extension/framework warnings and errors — regardless of environment.

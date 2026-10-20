@@ -17,9 +17,7 @@ internal static class TestDataSourceHelpers
             && GetDataParameterCount(parameters) == 1
             && parameters[0].ParameterType == typeof(object[])
             && !IsDataWithExplicitCancellationToken(data, parameters)
-            && !(parameters.Length == 2 && data.Length == 1
-                && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
-                && IsDataWithExplicitCancellationToken(tupleArguments, parameters));
+            && !IsSingleTupleArgumentWithExplicitCancellationToken(data, parameters);
 
     public static bool TryHandleITestDataRow(
         object?[] d,
@@ -95,8 +93,21 @@ internal static class TestDataSourceHelpers
         return true;
     }
 
+    // A tuple supplying the data argument and its token is a full row, not an object[] value to wrap.
+    private static bool IsSingleTupleArgumentWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2 && data.Length == 1
+            && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
+            && IsDataWithExplicitCancellationToken(tupleArguments, parameters);
+
     private static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
         => TestDataSourceUtilities.IsDataWithExplicitCancellationToken(data, parameters);
+
+    // A tuple that supplies the trailing token is a full-arity row, not one object[] value.
+    private static bool IsSingleTupleArgumentWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2
+            && data.Length == 1
+            && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
+            && IsDataWithExplicitCancellationToken(tupleArguments, parameters);
 
     private static bool TryExpandTupleDataSource(object? data, out object?[] array)
     {

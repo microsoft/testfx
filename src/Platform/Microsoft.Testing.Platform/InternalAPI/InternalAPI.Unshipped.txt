@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.init -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.get -> System.Func<bool>!

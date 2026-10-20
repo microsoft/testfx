@@ -61,6 +61,13 @@ function Assert-CollectionJobIsolation {
         throw "CollectionHonorsRolloutGates: the collection matrix entry must require main, enabled tests, and enabled affected tests."
     }
 
+    $mainBudget = '${{ if eq(variables[''Build.SourceBranch''], ''refs/heads/main'') }}:'
+    $collectionBudget = '$[ iif(eq(variables._CollectAffectedTests, ''true''), 360, 240) ]'
+    if ($windowsJob -notmatch ([regex]::Escape($mainBudget) + '\r?\n          timeoutInMinutes: ' + [regex]::Escape($collectionBudget)) -or
+        $windowsJob -notmatch '\$\{\{ else \}\}:\r?\n          timeoutInMinutes: 120\r?\n') {
+        throw "CollectionHasIndependentTimeBudget: Windows collection needs six hours without extending ordinary main or PR validation."
+    }
+
     if (-not $windowsJob.Contains('enableAffectedTests: ${{ parameters.EnableAffectedTests }}') -or
         -not $Pipeline.Contains('validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }}')) {
         throw "AffectedTestsRollbackControlsAllJobs: the root affected-test parameter must control collection and selection."
@@ -163,6 +170,26 @@ function Invoke-CollectionJobIsolationSelfTest {
             Pipeline = $Pipeline.Replace("eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False)", "eq(parameters.SkipTests, False)")
             CollectBranch = $CollectBranch
             ExpectedFailure = "CollectionHonorsRolloutGates"
+        },
+        @{
+            Name = "SharedCollectionTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace('$[ iif(eq(variables._CollectAffectedTests, ''true''), 360, 240) ]', '240')
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "ReversedCollectionTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace('$[ iif(eq(variables._CollectAffectedTests, ''true''), 360, 240) ]', '$[ iif(eq(variables._CollectAffectedTests, ''false''), 360, 240) ]')
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "ExtendedMainValidationTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace('$[ iif(eq(variables._CollectAffectedTests, ''true''), 360, 240) ]', '$[ iif(eq(variables._CollectAffectedTests, ''true''), 360, 360) ]')
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "ExtendedPullRequestTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 120", "          timeoutInMinutes: 360")
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
         },
         @{
             Name = "SkipTestsBypassIsRejected"
