@@ -232,10 +232,10 @@ stages:
         # XML-documentation-only PRs use it only for compiler and package validation. Debug remains
         # skippable for samples-only and XML-doc-only PRs.
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.infrastructureOnly'], 'true'), or(eq(variables._BuildConfig, 'Release'), and(ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))))
-        # Keep the existing main collection budget. PR builds now cover four modern TFMs, so leave
-        # headroom for full Release validation and artifact collection after tests complete.
+        # Collection runs instrumented batches across every TFM and both acceptance suites. Give only that
+        # entry six hours; ordinary main validation keeps four hours and PR validation keeps two hours.
         ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-          timeoutInMinutes: 240
+          timeoutInMinutes: $[ iif(eq(variables._CollectAffectedTests, 'true'), 360, 240) ]
         ${{ else }}:
           timeoutInMinutes: 120
         pool:

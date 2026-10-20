@@ -13,6 +13,10 @@ internal static class TestDataSourceUtilities
             : parameters.Length;
 
     public static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => HasExplicitCancellationTokenData(data, parameters);
+
+    // Only a two-argument row with a valid trailing token supplies explicit token data.
+    private static bool HasExplicitCancellationTokenData(object?[] data, ParameterInfo[] parameters)
         => parameters.Length == 2
             && parameters[1].ParameterType == typeof(CancellationToken)
             && data.Length == 2
@@ -46,7 +50,7 @@ internal static class TestDataSourceUtilities
 
         StringBuilder argumentsBuilder = AcquireBuilder();
         if (methodData.HasSingleObjectArrayParameter
-            && !IsDataWithExplicitCancellationToken(data, methodData.Parameters))
+            && !HasExplicitCancellationTokenData(data, methodData.Parameters))
         {
             AppendHumanizedArgument(argumentsBuilder, data);
         }
