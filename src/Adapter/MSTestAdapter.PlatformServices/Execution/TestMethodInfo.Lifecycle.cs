@@ -417,4 +417,9 @@ internal partial class TestMethodInfo
             _executionContext = ExecutionContext.Capture() ?? _executionContext;
         }
     }
+
+    private readonly record struct TestInvocationCleanupSnapshot(
+        object? ClassInstance,
+        ITestClassInstanceLease? ClassInstanceLease,
+        bool IsTestContextSet);
 }
