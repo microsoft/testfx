@@ -92,6 +92,9 @@ public sealed class DesktopAssemblyResolutionTests : AcceptanceTestBase<NopAsset
         run.AssertExitCodeIs(0);
 
         string reportPath = Path.Combine(evidenceDirectory, ChildReportFileName);
+        Assert.IsTrue(
+            File.Exists(reportPath),
+            $"The child test run did not produce its TRX report at '{reportPath}'.{Environment.NewLine}{run}");
         TestContext.AddResultFile(reportPath);
         var report = XDocument.Load(reportPath);
         XNamespace trx = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
@@ -169,6 +172,7 @@ public sealed class ResolutionTests
     public void LoadsDependencyFromConfiguredSearchDirectory()
     {
         bool expectChildDomain = bool.Parse((string)TestContext.Properties["ExpectChildDomain"]!);
+        // VSTest's parent is also non-default, so IsDefaultAppDomain cannot distinguish these paths.
         bool isChildDomain = AppDomain.CurrentDomain.FriendlyName.StartsWith("TestSourceHost: Enumerating source (", StringComparison.Ordinal);
         Assert.AreEqual(expectChildDomain, isChildDomain, AppDomain.CurrentDomain.FriendlyName);
         Assert.IsFalse(File.Exists(Path.Combine(Path.GetDirectoryName(typeof(ResolutionTests).Assembly.Location)!, "ResolutionDependency.dll")));
@@ -180,13 +184,6 @@ public sealed class ResolutionTests
         object? value = dependency.GetType("ResolutionDependency.Probe", throwOnError: true)!
             .GetMethod("ReadValue")!.Invoke(null, null);
         Assert.AreEqual("resolved from the configured search directory", value);
-
-        TestContext.WriteLine("DOMAIN=" + AppDomain.CurrentDomain.FriendlyName);
-        TestContext.WriteLine("DEPENDENCY=" + dependency.Location);
-        TestContext.WriteLine("FRAMEWORK=" + typeof(Assert).Assembly.Location);
-        TestContext.WriteLine("ADAPTER=" + Assembly.Load("MSTest.TestAdapter").Location);
-        TestContext.WriteLine("PLATFORM_SERVICES=" + Assembly.Load("MSTestAdapter.PlatformServices").Location);
-        TestContext.WriteLine("MTP=" + Assembly.Load("Microsoft.Testing.Platform").Location);
     }
 }
 """;
