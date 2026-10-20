@@ -142,33 +142,38 @@
     </ItemGroup>
   </Target>
 
-  <!-- Test Explorer treats the appx recipe as the MTP source, but cannot execute it.
-       Its launcher config must explicitly retain server mode when replacing the program. -->
-  <Target Name="_GenerateTestingPlatformPackagedAppTestExplorerLauncher"
-          AfterTargets="_PrepareTestingPlatformPackagedAppController"
+  <!-- Only replace our own previous output; never overwrite a caller's launcher config. -->
+  <Target Name="_DetermineTestingPlatformPackagedAppCallerLaunchers"
           DependsOnTargets="_GetTestingPlatformPackagedAppLauncherPaths"
-          Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != '' AND '$(GenerateTestingPlatformPackagedAppTestExplorerLauncher)' == 'true'">
-    <PropertyGroup>
-      <_TestingPlatformPackagedAppLauncherProgram>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe</_TestingPlatformPackagedAppLauncherProgram>
-      <_TestingPlatformPackagedAppLauncherJson>{ "program": "$(_TestingPlatformPackagedAppLauncherProgram.Replace('\', '\\'))", "args": [ "--server" ] }</_TestingPlatformPackagedAppLauncherJson>
-    </PropertyGroup>
+          Condition="'$(DesignTimeBuild)' != 'true'">
     <ItemGroup>
       <_TestingPlatformPackagedAppExistingLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="Exists('%(Identity)')" />
       <_TestingPlatformPackagedAppOwnedLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="!Exists('%(Identity)')" />
     </ItemGroup>
-    <!-- Only replace our own previous output; never overwrite a caller's launcher config. -->
     <GetFileHash Files="$(_TestingPlatformPackagedAppLauncherTemplate)" Condition="Exists('$(_TestingPlatformPackagedAppLauncherTemplate)')">
-      <Output TaskParameter="Hash" PropertyName="_TestingPlatformPackagedAppPreviousLauncherHash" />
+      <Output TaskParameter="Hash" PropertyName="_TestingPlatformPackagedAppLauncherTemplateHash" />
     </GetFileHash>
     <GetFileHash Files="@(_TestingPlatformPackagedAppExistingLauncher)" Condition="'@(_TestingPlatformPackagedAppExistingLauncher)' != ''">
       <Output TaskParameter="Items" ItemName="_TestingPlatformPackagedAppHashedLauncher" />
     </GetFileHash>
     <ItemGroup>
       <_TestingPlatformPackagedAppOwnedLauncher Include="@(_TestingPlatformPackagedAppHashedLauncher)"
-                                              Condition="'%(_TestingPlatformPackagedAppHashedLauncher.FileHash)' == '$(_TestingPlatformPackagedAppPreviousLauncherHash)'" />
+                                              Condition="'%(_TestingPlatformPackagedAppHashedLauncher.FileHash)' == '$(_TestingPlatformPackagedAppLauncherTemplateHash)'" />
       <_TestingPlatformPackagedAppCallerLauncher Remove="@(_TestingPlatformPackagedAppLauncher)" />
       <_TestingPlatformPackagedAppCallerLauncher Include="@(_TestingPlatformPackagedAppExistingLauncher)" Exclude="@(_TestingPlatformPackagedAppOwnedLauncher)" />
     </ItemGroup>
+  </Target>
+
+  <!-- Test Explorer treats the appx recipe as the MTP source, but cannot execute it.
+       Its launcher config must explicitly retain server mode when replacing the program. -->
+  <Target Name="_GenerateTestingPlatformPackagedAppTestExplorerLauncher"
+          AfterTargets="_PrepareTestingPlatformPackagedAppController"
+          DependsOnTargets="_DetermineTestingPlatformPackagedAppCallerLaunchers"
+          Condition="'$(_TestingPlatformPackagedAppRunControllerDirectory)' != '' AND '$(GenerateTestingPlatformPackagedAppTestExplorerLauncher)' == 'true'">
+    <PropertyGroup>
+      <_TestingPlatformPackagedAppLauncherProgram>$(_TestingPlatformPackagedAppRunControllerDirectory)mstest-appmodel-controller.exe</_TestingPlatformPackagedAppLauncherProgram>
+      <_TestingPlatformPackagedAppLauncherJson>{ "program": "$(_TestingPlatformPackagedAppLauncherProgram.Replace('\', '\\'))", "args": [ "--server" ] }</_TestingPlatformPackagedAppLauncherJson>
+    </PropertyGroup>
     <WriteLinesToFile File="$(_TestingPlatformPackagedAppLauncherTemplate)"
                       Lines="$([MSBuild]::Escape('$(_TestingPlatformPackagedAppLauncherJson)'))"
                       Overwrite="true"
@@ -189,21 +194,9 @@
        outputs from the persisted manifest before either clean path reads them. -->
   <Target Name="_ProtectTestingPlatformPackagedAppCallerLaunchers"
           BeforeTargets="CoreClean;_CleanGetCurrentAndPriorFileWrites"
-          DependsOnTargets="_GetTestingPlatformPackagedAppLauncherPaths"
+          DependsOnTargets="_DetermineTestingPlatformPackagedAppCallerLaunchers"
           Condition="'$(OS)' == 'Windows_NT' AND '$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(DesignTimeBuild)' != 'true'">
     <ItemGroup>
-      <_TestingPlatformPackagedAppCleanLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="Exists('%(Identity)')" />
-    </ItemGroup>
-    <GetFileHash Files="$(_TestingPlatformPackagedAppLauncherTemplate)" Condition="Exists('$(_TestingPlatformPackagedAppLauncherTemplate)')">
-      <Output TaskParameter="Hash" PropertyName="_TestingPlatformPackagedAppCleanTemplateHash" />
-    </GetFileHash>
-    <GetFileHash Files="@(_TestingPlatformPackagedAppCleanLauncher)" Condition="'@(_TestingPlatformPackagedAppCleanLauncher)' != ''">
-      <Output TaskParameter="Items" ItemName="_TestingPlatformPackagedAppCleanHashedLauncher" />
-    </GetFileHash>
-    <ItemGroup>
-      <_TestingPlatformPackagedAppCallerLauncher Remove="@(_TestingPlatformPackagedAppLauncher)" />
-      <_TestingPlatformPackagedAppCallerLauncher Include="@(_TestingPlatformPackagedAppCleanHashedLauncher)"
-                                               Condition="'%(_TestingPlatformPackagedAppCleanHashedLauncher.FileHash)' != '$(_TestingPlatformPackagedAppCleanTemplateHash)'" />
       <_CleanPriorFileWrites Remove="@(_TestingPlatformPackagedAppCallerLauncher)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
     </ItemGroup>
     <ReadLinesFromFile File="$(IntermediateOutputPath)$(CleanFile)"
