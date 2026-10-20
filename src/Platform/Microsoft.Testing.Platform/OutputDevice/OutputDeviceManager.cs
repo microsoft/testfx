@@ -20,8 +20,9 @@ internal sealed class PlatformOutputDeviceManager
     internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice, bool isPipeProtocol)
     {
         // Under the dotnet test pipe protocol, the SDK's TerminalTestReporter owns all
-        // user-facing output, so the host must not produce console output of its own. See #7161
-        // and dotnet/sdk#51615 for the broader context.
+        // user-facing output, so regular host output must not be written directly to the console.
+        // Startup diagnostics fall back to captured console output until the connection exists.
+        // See #7161 and dotnet/sdk#51615 for the broader context.
         //
         // DotnetTestPassthroughOutputDevice discards regular informational output exactly like a no-op device, but
         // forwards three classes of host message to the SDK over the protocol so they are not swallowed in
