@@ -36,14 +36,23 @@ internal static class SymbolReferenceabilityHelper
             {
                 return false;
             }
+
+            if (!current.TypeArguments.All(argument => IsTypeArgumentReferenceable(argument, consumingAssembly)))
+            {
+                return false;
+            }
         }
 
-        // Also require every generic type argument to be referenceable (e.g. a closed generic
-        // attribute type argument that is itself inaccessible).
-        return type.TypeArguments
-            .OfType<INamedTypeSymbol>()
-            .All(namedArgument => IsTypeReferenceableFrom(namedArgument, consumingAssembly));
+        return true;
     }
+
+    private static bool IsTypeArgumentReferenceable(ITypeSymbol type, IAssemblySymbol consumingAssembly)
+        => type switch
+        {
+            IArrayTypeSymbol arrayType => IsTypeArgumentReferenceable(arrayType.ElementType, consumingAssembly),
+            INamedTypeSymbol namedType => IsTypeReferenceableFrom(namedType, consumingAssembly),
+            _ => true,
+        };
 
     internal static bool IsMemberAccessibleFrom(Accessibility accessibility, INamedTypeSymbol containingType, IAssemblySymbol consumingAssembly)
         => IsMemberAccessibleFrom(accessibility, containingType.ContainingAssembly, consumingAssembly);
