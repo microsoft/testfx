@@ -156,7 +156,8 @@
       <_TestingPlatformPackagedAppExistingLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="Exists('%(Identity)')" />
       <_TestingPlatformPackagedAppOwnedLauncher Include="@(_TestingPlatformPackagedAppLauncher)" Condition="!Exists('%(Identity)')" />
     </ItemGroup>
-    <!-- Only replace our own previous output; never overwrite a caller's launcher config. -->
+    <!-- Recheck after copying files: Rebuild may have classified different content before clean.
+         A shared target would run only once and reuse that stale classification here. -->
     <GetFileHash Files="$(_TestingPlatformPackagedAppLauncherTemplate)" Condition="Exists('$(_TestingPlatformPackagedAppLauncherTemplate)')">
       <Output TaskParameter="Hash" PropertyName="_TestingPlatformPackagedAppPreviousLauncherHash" />
     </GetFileHash>
