@@ -24,7 +24,13 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
     }
 
     [TestMethod]
-    public async Task DisplayAsync_WithNonMarkerData_IsSwallowedWithoutResolvingTheConnection()
+    [DataRow("##[group]not a marker", DisplayName = "Unmarked_AzureGroup")]
+    [DataRow("::group::not a marker", DisplayName = "Unmarked_GitHubGroup")]
+    [DataRow("::endgroup::", DisplayName = "Unmarked_GitHubEndGroup")]
+    [DataRow("::error title=Failure::not a marker", DisplayName = "Unmarked_GitHubError")]
+    [DataRow("::warning title=Skipped::not a marker", DisplayName = "Unmarked_GitHubWarning")]
+    [DataRow("::notice title=Slow test::not a marker", DisplayName = "Unmarked_GitHubNotice")]
+    public async Task DisplayAsync_WithNonMarkerData_IsSwallowedWithoutResolvingTheConnection(string text)
     {
         // A strict mock fails the test if the device touches the service provider at all: non-marker
         // output must be discarded as early as NopPlatformOutputDevice would, preserving the deliberate
@@ -32,7 +38,8 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         var serviceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
         var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
 
-        await device.DisplayAsync(Producer, new FormattedTextOutputDeviceData("##[group]not a marker"), CancellationToken.None);
+        await device.DisplayAsync(Producer, new FormattedTextOutputDeviceData(text), CancellationToken.None);
+        await device.DisplayAsync(Producer, new TextOutputDeviceData(text), CancellationToken.None);
 
         serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
     }
@@ -49,6 +56,21 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         await device.DisplayAsync(Producer, new AzureDevOpsCommandOutputDeviceData("##[group]Tests: A (net9.0)"), CancellationToken.None);
 
         serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithGitHubActionsMarkerButNoConnection_IsSwallowedWithoutThrowing()
+    {
+        // A missing pipe connection must not turn a workflow command into a console fallback.
+        // Strictness also prevents resolving an IConsole or any service other than the protocol.
+        var serviceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new GitHubActionsCommandOutputDeviceData("::group::Tests: A (net9.0)"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+        serviceProvider.VerifyNoOtherCalls();
     }
 
     [TestMethod]

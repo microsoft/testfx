@@ -49,7 +49,7 @@ internal sealed class GitHubActionsSlowTestReporter : SlowTestReporterBase
     protected override Task EmitSlowTestAsync(string testName, string displayLabel, TimeSpan elapsed, CancellationToken cancellationToken)
     {
         string line = BuildNoticeLine(displayLabel, elapsed);
-        return OutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken);
+        return OutputDevice.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData(line), cancellationToken);
     }
 
     internal static /* for testing */ string BuildNoticeLine(string testLabel, TimeSpan elapsed)

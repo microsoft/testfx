@@ -3,6 +3,8 @@
 
 using System.Text.Json;
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -15,7 +17,13 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsReportTests.TestAssetFixture>
 {
-    private const string AssetName = "GitHubActionsReportBehavior";
+    internal const string AssetName = "GitHubActionsReportBehavior";
+
+    internal const string LocatedFailureCommand = "::error file=src/MyTests.cs,line=7,col=1,title=Test failed%3A FailingTest::Expected 1 but got 2";
+    internal const string LocatedSkippedCommand = "::warning file=src/MyTests.cs,line=9,col=1,title=Test skipped%3A SkippedTest::Not today";
+    internal const string ZeroTestsCommand = "::error title=Test run failed (exit code 8%3A ZeroTests)::No tests were found to run. This often means a test filter matched nothing.";
+
+    private const string DisplayMessageProtocolVersions = "1.0.0;1.1.0;1.2.0;1.3.0";
 
     public TestContext TestContext { get; set; } = null!;
 
@@ -267,6 +275,231 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         Assert.AreEqual("run-2", runIds[1]);
     }
 
+    [TestMethod]
+    [DataRow("pass", (int)ExitCode.Success, DisplayName = "GitHubWire_Pass")]
+    [DataRow("location", (int)ExitCode.AtLeastOneTestFailed, DisplayName = "GitHubWire_FailureAndSkipped")]
+    [DataRow("zero", (int)ExitCode.ZeroTests, DisplayName = "GitHubWire_ZeroTests")]
+    public async Task DotnetTestPipe_GitHubCommands_AreForwardedWithCorrelation(string mode, int expectedExit)
+    {
+        string workspace = Path.Combine(TestContext.TestRunDirectory!, $"gh-wire-{Guid.NewGuid():N}");
+        Dictionary<string, string?> environment = CreateForwardingEnvironment(workspace, mode);
+        var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            host,
+            extraArguments: "--report-gh --report-gh-slow-test-notices off",
+            environmentVariables: environment,
+            supportedProtocolVersions: DisplayMessageProtocolVersions,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.TestHostResult.AssertExitCodeIs((ExitCode)expectedExit);
+        Assert.AreEqual("1.3.0", result.NegotiatedProtocolVersion);
+        (string? ExecutionId, string? InstanceId, byte? Level, string? Text)[] forwarded =
+        [
+            .. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
+                .Select(message => DotnetTestPipeProtocol.DecodeDisplayMessageBody(message.Body)),
+        ];
+        Assert.AreSequenceEqual(GetExpectedCommandPayloads(mode), forwarded.Select(message => message.Text));
+
+        Assert.IsNotNull(result.ReceivedHandshake);
+        Assert.AreEqual(environment["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"], result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.ExecutionId]);
+        string instanceId = result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.InstanceId];
+        Assert.IsFalse(string.IsNullOrWhiteSpace(instanceId));
+        foreach ((string? executionId, string? forwardedInstanceId, byte? level, string? _) in forwarded)
+        {
+            Assert.AreEqual(environment["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"], executionId);
+            Assert.AreEqual(instanceId, forwardedInstanceId);
+            Assert.AreEqual(DotnetTestPipeProtocol.DisplayMessageLevels.Information, level);
+        }
+
+        // The SDK owns presentation. Neither success nor intentionally failing child runs may leak
+        // raw commands to stdout/stderr as an alternative to forwarding the protocol frames.
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardOutput);
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardError);
+        AssertModuleSummary(File.ReadAllText(environment["GITHUB_STEP_SUMMARY"]!), AssetName, mode);
+    }
+
+    [TestMethod]
+    [DataRow("1.0.0", "1.0.0", DisplayName = "GitHubWire_Legacy100")]
+    [DataRow("1.0.0;1.1.0", "1.1.0", DisplayName = "GitHubWire_Legacy110")]
+    [DataRow("1.0.0;1.1.0;1.2.0", "1.2.0", DisplayName = "GitHubWire_Legacy120")]
+    public async Task DotnetTestPipe_LegacyProtocol_DropsGitHubCommands(string versions, string expectedVersion)
+    {
+        string workspace = Path.Combine(TestContext.TestRunDirectory!, $"gh-legacy-{Guid.NewGuid():N}");
+        Dictionary<string, string?> environment = CreateForwardingEnvironment(workspace, "location");
+        var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            host,
+            extraArguments: "--report-gh",
+            environmentVariables: environment,
+            supportedProtocolVersions: versions,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.TestHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.AreEqual(expectedVersion, result.NegotiatedProtocolVersion);
+        Assert.IsEmpty(result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage));
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardOutput);
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardError);
+        AssertModuleSummary(File.ReadAllText(environment["GITHUB_STEP_SUMMARY"]!), AssetName, "location");
+    }
+
+    [TestMethod]
+    [DataRow(false, "--report-gh", false, false, false, DisplayName = "GitHubWire_OutsideActions")]
+    [DataRow(true, "", false, false, false, DisplayName = "GitHubWire_MasterSwitchAbsent")]
+    [DataRow(true, "--report-gh --report-gh-groups off", false, true, true, DisplayName = "GitHubWire_GroupsOff")]
+    [DataRow(true, "--report-gh --report-gh-annotations off", true, false, true, DisplayName = "GitHubWire_AnnotationsOff")]
+    [DataRow(true, "--report-gh --report-gh-groups off --report-gh-annotations off --report-gh-slow-test-notices off", false, false, true, DisplayName = "GitHubWire_AllCommandsOff")]
+    [DataRow(true, "--report-gh --report-gh-step-summary off", true, true, false, DisplayName = "GitHubWire_SummaryOff")]
+    public async Task DotnetTestPipe_GitHubFeatureGates_ArePreserved(
+        bool githubActions, string arguments, bool groups, bool annotations, bool summary)
+    {
+        string workspace = Path.Combine(TestContext.TestRunDirectory!, $"gh-gates-{Guid.NewGuid():N}");
+        Dictionary<string, string?> environment = CreateForwardingEnvironment(workspace, "location", githubActions);
+        var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            host,
+            extraArguments: arguments,
+            environmentVariables: environment,
+            supportedProtocolVersions: DisplayMessageProtocolVersions,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.TestHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.AreEqual("1.3.0", result.NegotiatedProtocolVersion);
+        Assert.AreSequenceEqual(
+            GetExpectedCommandPayloads("location", groups: groups, annotations: annotations),
+            result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.DisplayMessage)
+                .Select(message => DotnetTestPipeProtocol.DecodeDisplayMessageBody(message.Body).Text));
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardOutput);
+        Assert.AreEqual(string.Empty, result.TestHostResult.StandardError);
+        string summaryPath = environment["GITHUB_STEP_SUMMARY"]!;
+        if (summary)
+        {
+            AssertModuleSummary(File.ReadAllText(summaryPath), AssetName, "location");
+        }
+        else
+        {
+            Assert.IsFalse(File.Exists(summaryPath), "Disabled reporting must not create a job summary.");
+        }
+    }
+
+    [TestMethod]
+    public async Task ListTestsJson_WithGitHubReporting_DoesNotRenderWorkflowCommands()
+    {
+        string workspace = Path.Combine(TestContext.TestRunDirectory!, $"gh-json-{Guid.NewGuid():N}");
+        Dictionary<string, string?> environment = CreateForwardingEnvironment(workspace, "discovery");
+        var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult result = await host.ExecuteAsync(
+            "--report-gh --list-tests json",
+            environmentVariables: environment,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreEqual(string.Empty, result.StandardError);
+        using var document = JsonDocument.Parse(result.StandardOutput);
+        Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
+        JsonElement test = Assert.ContainsSingle(document.RootElement.GetProperty("tests").EnumerateArray());
+        Assert.AreEqual("test-1", test.GetProperty("uid").GetString());
+        Assert.AreEqual("PassingTest", test.GetProperty("displayName").GetString());
+    }
+
+    internal static Dictionary<string, string?> CreateForwardingEnvironment(string workspace, string mode, bool githubActions = true)
+    {
+        string sourceFile = Path.Combine(workspace, "src", "MyTests.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(sourceFile)!);
+        File.WriteAllText(
+            sourceFile,
+            """
+            // Source locations supplied by the generated test framework.
+            //
+            // These declarations are deliberately outside any actual test framework.
+            // TestFileLocationProperty identifies the corresponding lines below.
+            //
+            // Failing test:
+            // FailingTest
+            // Skipped test:
+            // SkippedTest
+            """,
+            Encoding.UTF8);
+        return new()
+        {
+            ["GITHUB_ACTIONS"] = githubActions ? "true" : "false",
+            ["TF_BUILD"] = "false",
+            ["GITHUB_WORKSPACE"] = workspace,
+            ["GITHUB_STEP_SUMMARY"] = Path.Combine(workspace, "summary.md"),
+            ["GH_TEST_MODE"] = mode,
+            ["GH_TEST_FILE"] = sourceFile,
+            ["TESTINGPLATFORM_DOTNETTEST_EXECUTIONID"] = Guid.NewGuid().ToString("N"),
+        };
+    }
+
+    internal static string[] GetExpectedCommandPayloads(
+        string mode, string assemblyName = AssetName, bool groups = true, bool annotations = true)
+    {
+        List<string> expected = [];
+        if (groups)
+        {
+            expected.Add($"::group::Tests: {assemblyName} ({TargetFrameworks.NetCurrent})");
+        }
+
+        if (annotations && mode == "location")
+        {
+            // Annotation producers intentionally prepend a newline; forwarding must preserve it.
+            expected.Add("\n" + LocatedFailureCommand);
+            expected.Add("\n" + LocatedSkippedCommand);
+        }
+        else if (annotations && mode == "zero")
+        {
+            expected.Add("\n" + ZeroTestsCommand);
+        }
+
+        if (groups)
+        {
+            expected.Add("::endgroup::");
+        }
+
+        return [.. expected];
+    }
+
+    internal static void AssertModuleSummary(string summary, string assemblyName, string mode)
+    {
+        string[] lines = summary.ReplaceLineEndings("\n").Split('\n');
+        // The passing module's name is a prefix of the failing module's name. Require the
+        // heading's identity boundary so the latter cannot stand in for a missing passing module.
+        string aggregateHeading = "<summary>" + assemblyName + " (";
+        int heading = Array.FindIndex(
+            lines,
+            line => (line.StartsWith('#') && line.Contains(assemblyName + " (", StringComparison.Ordinal))
+                || line.StartsWith(aggregateHeading, StringComparison.Ordinal));
+        Assert.IsGreaterThanOrEqualTo(0, heading, $"Missing summary for {assemblyName}:{Environment.NewLine}{summary}");
+        int level = lines[heading].TakeWhile(character => character == '#').Count();
+        // SDKs advertising artifact post-processing render collapsible module sections; an SDK
+        // without that capability leaves the independently appended per-project Markdown sections.
+        // In either shape, inspect this module's own table, never the overall/neighboring totals.
+        IEnumerable<string> moduleLines = lines[heading].StartsWith(aggregateHeading, StringComparison.Ordinal)
+            ? lines.Skip(heading + 1).TakeWhile(line => !line.StartsWith("<summary>", StringComparison.Ordinal) || line.StartsWith("<summary><code>", StringComparison.Ordinal))
+            : lines.Skip(heading + 1).TakeWhile(line => !line.StartsWith('#') || line.TakeWhile(character => character == '#').Count() > level);
+        string moduleSummary = string.Join("\n", moduleLines);
+        string totals = mode switch
+        {
+            "location" => "| 2 | 0 | 1 | 1 | 0 | 0ms |",
+            "zero" => "| 0 | 0 | 0 | 0 | 0 | 0ms |",
+            _ => "| 1 | 1 | 0 | 0 | 0 | 0ms |",
+        };
+        Assert.Contains(totals, moduleSummary.Split('\n'));
+        if (mode == "zero")
+        {
+            Assert.Contains("ZeroTests", moduleSummary);
+        }
+        else if (mode == "location")
+        {
+            Assert.Contains("FailingTest", moduleSummary);
+            Assert.Contains("Expected 1 but got 2", moduleSummary);
+        }
+    }
+
     private async Task<(TestHostResult Result, string Summary)> RunAsync(
         string tfm,
         string testMode,
@@ -279,6 +512,7 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         var environmentVariables = new Dictionary<string, string?>
         {
             ["GITHUB_ACTIONS"] = "true",
+            ["TF_BUILD"] = "false",
             ["GITHUB_STEP_SUMMARY"] = stepSummaryPath,
             ["GH_TEST_MODE"] = testMode,
         };
@@ -308,6 +542,7 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
@@ -366,7 +601,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         //                 job summary's slow-tests section has real durations to rank
         //   "location" -> publish a failing and a skipped test, both carrying a TestFileLocationProperty and no
         //                 exception, so the annotations can only be pinned through the declared-location fallback
-        string mode = Environment.GetEnvironmentVariable("GH_TEST_MODE") ?? "pass";
+        //   "discovery" -> publish one discovered test, leaving --list-tests json responsible for its rendering
+        //   "slow"     -> keep one test in progress across several slow-reporter scans
+        string mode = Environment.GetEnvironmentVariable("GH_TEST_MODE_" + typeof(Program).Assembly.GetName().Name)
+            ?? Environment.GetEnvironmentVariable("GH_TEST_MODE")
+            ?? "pass";
 
         if (mode == "fail")
         {
@@ -452,7 +691,31 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     }));
             }
         }
-        else if (mode is "pass" or "coverage")
+        else if (mode == "slow")
+        {
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-1",
+                    DisplayName = "SlowTest",
+                    Properties = new PropertyBag(InProgressTestNodeStateProperty.CachedInstance),
+                }));
+
+            // This is the simulated test workload, not a synchronization delay. Five scan intervals
+            // leave room for loaded CI agents; threshold/backoff boundaries are tested with a fake clock.
+            await Task.Delay(TimeSpan.FromSeconds(5), context.CancellationToken);
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-1",
+                    DisplayName = "SlowTest",
+                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+                }));
+        }
+        else if (mode is "pass" or "coverage" or "discovery")
         {
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
                 context.Request.Session.SessionUid,
@@ -460,7 +723,9 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 {
                     Uid = "test-1",
                     DisplayName = "PassingTest",
-                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+                    Properties = new PropertyBag(mode == "discovery"
+                        ? DiscoveredTestNodeStateProperty.CachedInstance
+                        : PassedTestNodeStateProperty.CachedInstance),
                 }));
 
             if (mode == "coverage")
@@ -478,9 +743,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
+        internal static string GetSourceCode(params string[] targetFrameworks)
+            => Sources
+                .PatchTargetFrameworks(targetFrameworks)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion);
+
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
-            Sources
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion));
+            GetSourceCode(TargetFrameworks.All));
     }
 }
