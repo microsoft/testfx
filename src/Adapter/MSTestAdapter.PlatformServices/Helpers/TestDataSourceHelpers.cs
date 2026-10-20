@@ -93,6 +93,12 @@ internal static class TestDataSourceHelpers
         return true;
     }
 
+    // A tuple supplying the data argument and its token is a full row, not an object[] value to wrap.
+    private static bool IsSingleTupleArgumentWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2 && data.Length == 1
+            && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
+            && IsDataWithExplicitCancellationToken(tupleArguments, parameters);
+
     private static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
         => TestDataSourceUtilities.IsDataWithExplicitCancellationToken(data, parameters);
 
