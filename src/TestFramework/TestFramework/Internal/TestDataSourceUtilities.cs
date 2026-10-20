@@ -13,6 +13,10 @@ internal static class TestDataSourceUtilities
             : parameters.Length;
 
     public static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => HasExplicitCancellationTokenData(data, parameters);
+
+    // Only a two-argument row with a valid trailing token supplies explicit token data.
+    private static bool HasExplicitCancellationTokenData(object?[] data, ParameterInfo[] parameters)
         => parameters.Length == 2
             && parameters[1].ParameterType == typeof(CancellationToken)
             && data.Length == 2
@@ -58,10 +62,6 @@ internal static class TestDataSourceUtilities
         string arguments = GetStringAndReleaseBuilder(argumentsBuilder);
         return ComputeDisplayName(methodDisplayName, arguments, currentCulture, displayNameFormat);
     }
-
-    // Keep full-arity rows with an explicit token formatted as separate arguments.
-    private static bool HasExplicitCancellationTokenData(object?[] data, ParameterInfo[] parameters)
-        => IsDataWithExplicitCancellationToken(data, parameters);
 
     public static string ComputeDisplayName(MethodInfo methodInfo, string argumentsDisplayName)
         => ComputeDisplayName(GetMethodDisplayName(methodInfo), argumentsDisplayName, CultureInfo.CurrentCulture, GetDisplayNameFormat());
