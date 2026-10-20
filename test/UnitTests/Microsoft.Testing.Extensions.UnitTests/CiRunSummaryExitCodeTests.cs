@@ -92,6 +92,22 @@ public sealed class CiRunSummaryExitCodeTests
         Assert.AreEqual(expected, GitHubCiRunSummaryExitCode.GetReason(8, resources));
     }
 
+    [TestMethod]
+    public void GetReason_WhenSpecificResourceIsMissing_UsesUnknownResourceInBothReporters()
+    {
+        const string expected = "Localized unknown reason";
+        ResourceManager resources = new UnknownOnlyResourceManager();
+
+        Assert.AreEqual(expected, CiRunSummaryExitCode.GetReason(8, resources));
+        Assert.AreEqual(expected, GitHubCiRunSummaryExitCode.GetReason(8, resources));
+    }
+
+    private sealed class UnknownOnlyResourceManager : ResourceManager
+    {
+        public override string? GetString(string name, CultureInfo? culture)
+            => name is "ExitCodeReasonUnknown" ? "Localized unknown reason" : null;
+    }
+
     private sealed class MissingResourceManager : ResourceManager
     {
         public override string? GetString(string name, CultureInfo? culture)
