@@ -40,7 +40,8 @@ builds that contain only the no-handshake fix.
   Windows matrix entry runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
   collection owns its instrumentation and launches discovery children with `--list-tests`. A collection failure
   still fails its job; it is not normalized to success or allowed to consume the Release entry's time budget.
-  Main-branch Windows entries each have a four-hour budget. PR jobs retain their 90-minute budget.
+  Main-branch Windows validation entries retain a four-hour budget; the dedicated collection entry has six
+  hours. PR jobs retain their two-hour budget.
 - The Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
@@ -56,7 +57,15 @@ builds that contain only the no-handshake fix.
   test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
   nested-process isolation, command names, and fallbacks. Its `-SelfTest` mode, run by `DetectChanges`, also rejects
-  shared collection/validation jobs, bypassed rollout gates, ignored collection failures, and artifact collisions.
+  shared collection/validation jobs, regressed collection budgets, bypassed rollout gates, ignored collection
+  failures, and artifact collisions.
+
+The collection budget follows [run 1639792](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1639792):
+its sequential collector spent about 70 minutes on unit-test maps and another 88 minutes on MTP acceptance maps
+before starting MSTest acceptance. The four-hour job limit canceled that still-running collection, including its
+artifact publication. The extra budget applies only to collection; it does not drop frameworks or acceptance
+suites, change collector concurrency, suppress failures, or extend ordinary validation. Completing a full
+collection within the new limit still requires a main-branch CI run.
 
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.
