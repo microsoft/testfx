@@ -81,6 +81,8 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
             _ => false,
         };
 
+    // Detects assertions comparing a literal with a const field from another assembly, in either argument order,
+    // such as Assert.AreEqual(12, Protocol.HeaderVersion), which can pin the dependency's contract.
     private static bool IsReferencedConstantContractAssertion(IInvocationOperation operation, IAssemblySymbol currentAssembly)
     {
         IOperation? expectedArgument = operation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == AssertConditionAnalyzerHelper.ExpectedParameterName)?.Value;
