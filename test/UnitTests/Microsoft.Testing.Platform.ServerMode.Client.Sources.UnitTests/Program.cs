@@ -16,6 +16,17 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 if (args is ["--server", "--client-port", string port, "--no-banner"])
 {
+    if (Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is { } releaseFile)
+    {
+        using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
+        while (!File.Exists(releaseFile))
+        {
+            await Task.Delay(10);
+        }
+
+        return 23;
+    }
+
     if (Environment.GetEnvironmentVariable(MtpServerProcessTests.StandardOutputFloodEnvironmentVariable) == "1")
     {
         // Fill the redirected pipe before connecting, without shell overhead or a descendant that can outlive shutdown.
