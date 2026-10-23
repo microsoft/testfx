@@ -288,39 +288,30 @@ public sealed class HangDumpTests
     public async Task QueryOnceAndDumpTree_StartsEveryDumpBeforeAwaitingCompletion()
     {
         IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
+        TaskCompletionSource<bool> allDumpsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> releaseDumps = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        List<Func<Task>> scheduledDumps = [];
-        Mock<ITask> task = new();
-        task.Setup(x => x.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
-            .Returns((Func<Task> dump, CancellationToken _) =>
-            {
-                scheduledDumps.Add(dump);
-                return releaseDumps.Task;
-            });
-        task.Setup(x => x.WhenAll(It.IsAny<Task[]>()))
-            .Returns((Task[] dumps) => Task.WhenAll(dumps));
         int startedDumpCount = 0;
 
         Task dumpTreeTask = HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
             bottomUpTree,
-            task.Object,
+            new SystemTask(),
             _ => Task.FromResult<(string, int)[]>([]),
             (_, _, _) =>
             {
-                startedDumpCount++;
-                return Task.CompletedTask;
+                if (Interlocked.Increment(ref startedDumpCount) == bottomUpTree.Length)
+                {
+                    allDumpsStarted.TrySetResult(true);
+                }
+
+                return releaseDumps.Task;
             },
             CancellationToken.None);
 
         try
         {
-            // Submission order must not depend on six blocked thread-pool workers being scheduled.
-            Assert.HasCount(bottomUpTree.Length, scheduledDumps, "A dump was awaited before the remaining process dumps were scheduled.");
+            Task completed = await Task.WhenAny(allDumpsStarted.Task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Assert.AreSame(allDumpsStarted.Task, completed, "A dump was awaited before the remaining process dumps were started.");
             Assert.IsFalse(dumpTreeTask.IsCompleted);
-            foreach (Func<Task> dump in scheduledDumps)
-            {
-                await dump();
-            }
         }
         finally
         {
