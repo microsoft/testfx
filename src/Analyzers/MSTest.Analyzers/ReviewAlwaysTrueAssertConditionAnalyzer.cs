@@ -57,19 +57,20 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
     {
         var operation = (IInvocationOperation)context.Operation;
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
-            IsAlwaysTrue(operation))
+            IsAlwaysTrue(operation, context.Compilation.Assembly))
         {
             context.ReportDiagnostic(operation.CreateDiagnostic(Rule));
         }
     }
 
-    private static bool IsAlwaysTrue(IInvocationOperation operation)
+    private static bool IsAlwaysTrue(IInvocationOperation operation, IAssemblySymbol currentAssembly)
         => operation.TargetMethod.Name switch
         {
             "IsTrue" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
             "IsFalse" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
             "AreEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
                 && !IsEnumUnderlyingValueContractAssertion(operation)
+                && !IsReferencedConstantContractAssertion(operation, currentAssembly)
                 && (AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal
                     || AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActualWithBuiltInEquality(operation, AssertConditionAnalyzerHelper.ExpectedParameterName)),
             "AreNotEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
@@ -78,6 +79,41 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
             "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
             _ => false,
+        };
+
+    // Detects assertions comparing a literal with a const field from another assembly, in either argument order,
+    // such as Assert.AreEqual(12, Protocol.HeaderVersion), which can pin the dependency's contract.
+    private static bool IsReferencedConstantContractAssertion(IInvocationOperation operation, IAssemblySymbol currentAssembly)
+    {
+        IOperation? expectedArgument = operation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == AssertConditionAnalyzerHelper.ExpectedParameterName)?.Value;
+        IOperation? actualArgument = operation.Arguments.FirstOrDefault(argument => argument.Parameter?.Name == AssertConditionAnalyzerHelper.ActualParameterName)?.Value;
+
+        return expectedArgument is not null
+            && actualArgument is not null
+            && ((IsContractLiteral(expectedArgument) && IsReferencedConstant(actualArgument, currentAssembly))
+                || (IsReferencedConstant(expectedArgument, currentAssembly) && IsContractLiteral(actualArgument)));
+    }
+
+    private static bool IsContractLiteral(IOperation operation)
+        => WalkDownImplicitBuiltInConversionsAndParentheses(operation) switch
+        {
+            ILiteralOperation => true,
+            IUnaryOperation { OperatorKind: UnaryOperatorKind.Plus or UnaryOperatorKind.Minus, OperatorMethod: null, Operand: { } operand } => IsContractLiteral(operand),
+            _ => false,
+        };
+
+    private static bool IsReferencedConstant(IOperation operation, IAssemblySymbol currentAssembly)
+        // A literal anchors a dependency's contract independently of its current value. Constants compiled
+        // into the test assembly (including linked source) intentionally remain diagnostic.
+        => WalkDownImplicitBuiltInConversionsAndParentheses(operation) is IFieldReferenceOperation { Field: { IsConst: true, Type.TypeKind: not TypeKind.Enum } field }
+            && !SymbolEqualityComparer.Default.Equals(field.ContainingAssembly, currentAssembly);
+
+    private static IOperation WalkDownImplicitBuiltInConversionsAndParentheses(IOperation operation)
+        => operation switch
+        {
+            IConversionOperation { IsImplicit: true, Conversion.IsUserDefined: false } conversion => WalkDownImplicitBuiltInConversionsAndParentheses(conversion.Operand),
+            IParenthesizedOperation parenthesizedOperation => WalkDownImplicitBuiltInConversionsAndParentheses(parenthesizedOperation.Operand),
+            _ => operation,
         };
 
     private static bool IsEnumUnderlyingValueContractAssertion(IInvocationOperation operation)
