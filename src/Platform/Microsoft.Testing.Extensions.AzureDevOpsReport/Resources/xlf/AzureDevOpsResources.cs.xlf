@@ -244,82 +244,82 @@
       </trans-unit>
       <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
         <source>At least one test failed.</source>
-        <target state="new">At least one test failed.</target>
+        <target state="translated">Nejméně jeden test se nepovedl.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
         <source>One or more code coverage thresholds were not met.</source>
-        <target state="new">One or more code coverage thresholds were not met.</target>
+        <target state="translated">Nebylo dosaženo minimálně jedné prahové hodnoty pokrytí kódu.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
         <source>A dependent process exited unexpectedly.</source>
-        <target state="new">A dependent process exited unexpectedly.</target>
+        <target state="translated">Závislý proces se neočekávaně ukončil.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonGenericFailure">
         <source>The test run failed.</source>
-        <target state="new">The test run failed.</target>
+        <target state="translated">Spuštění testů se nepovedlo.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
         <source>An incompatible protocol version was negotiated.</source>
-        <target state="new">An incompatible protocol version was negotiated.</target>
+        <target state="translated">Vyjednala se nekompatibilní verze protokolu.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonInvalidCommandLine">
         <source>The command line arguments are invalid.</source>
-        <target state="new">The command line arguments are invalid.</target>
+        <target state="translated">Argumenty příkazového řádku nejsou platné.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
         <source>The test platform setup is invalid.</source>
-        <target state="new">The test platform setup is invalid.</target>
+        <target state="translated">Nastavení testovací platformy není platné.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
         <source>Fewer tests ran than required by --minimum-expected-tests.</source>
-        <target state="new">Fewer tests ran than required by --minimum-expected-tests.</target>
+        <target state="translated">Spustilo se méně testů, než vyžaduje parametr --minimum-expected-tests.</target>
         <note>{Locked="--minimum-expected-tests"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeReasonSuccess">
         <source>The test run succeeded.</source>
-        <target state="new">The test run succeeded.</target>
+        <target state="translated">Spuštění testů proběhlo úspěšně.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
         <source>The test adapter reported a test session failure.</source>
-        <target state="new">The test adapter reported a test session failure.</target>
+        <target state="translated">Testovací adaptér oznámil selhání testovací relace.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
         <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
-        <target state="new">Test execution was stopped early because a CI-imposed deadline was approaching.</target>
+        <target state="translated">Provádění testů bylo předčasně zastaveno, protože se blížil časový limit stanovený systémem CI.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
         <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
-        <target state="new">Test execution stopped after reaching the limit set by --maximum-failed-tests.</target>
+        <target state="translated">Spouštění testů se zastavilo po dosažení limitu nastaveného parametrem --maximum-failed-tests.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
         <source>The test host process exited non-gracefully.</source>
-        <target state="new">The test host process exited non-gracefully.</target>
+        <target state="translated">Proces hostitele testů se ukončil nestandardně.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonTestSessionAborted">
         <source>The test session was aborted.</source>
-        <target state="new">The test session was aborted.</target>
+        <target state="translated">Testovací relace byla přerušená.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonUnknown">
         <source>The test run reported a non-success exit code.</source>
-        <target state="new">The test run reported a non-success exit code.</target>
+        <target state="translated">Spuštění testů vrátilo neúspěšný ukončovací kód.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonZeroTests">
         <source>No tests were found to run. This often means a test filter matched nothing.</source>
-        <target state="new">No tests were found to run. This often means a test filter matched nothing.</target>
+        <target state="translated">Nenašly se žádné testy ke spuštění. Často to znamená, že filtru testů nic nevyhovovalo.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
