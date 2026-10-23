@@ -985,7 +985,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
         <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
-        <target state="new">The '--exit-on-process-exit' option is not supported in WASI environments.</target>
+        <target state="translated">WASI 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
         <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
