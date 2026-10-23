@@ -827,6 +827,7 @@ public sealed class MtpServerProcessTests
     {
         using var temp = TempDirectory.Create();
         string releaseFile = Path.Combine(temp.Path, "release.txt");
+        // Program.cs runs this assembly as a child fixture that returns 23 when releaseFile is created.
         string source = typeof(MtpServerProcessTests).Assembly.Location;
         // Match the existing self-host fixture's allowance for profiled startup, not a product timeout.
         var readinessLimit = TimeSpan.FromMinutes(1);
