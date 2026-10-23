@@ -16,6 +16,8 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 if (args is ["--server", "--client-port", string port, "--no-banner"])
 {
+    // Child fixture for MtpServerProcessTests.ShutdownPreservesNaturalExitCodeAfterDisposingProcess:
+    // connect without running tests, then exit naturally with code 23 when the parent releases us.
     if (Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is { } releaseFile)
     {
         using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
