@@ -74,22 +74,22 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidBootstrap">
         <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
-        <target state="new">The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</target>
+        <target state="translated">Die Startargumente des Paket-App-Controllers sind ungültig. Stellen Sie die übereinstimmenden Pakete „Microsoft.Testing.Extensions.PackagedApp.MSBuild“ und „Microsoft.Testing.Extensions.PackagedApp“ wieder her.</target>
         <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidTransport">
         <source>The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</source>
-        <target state="new">The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</target>
+        <target state="translated">Der Paket-App-Controller erfordert genau einen nativen SDK-Named-Pipe-Transport. Doppelte, unvollständige oder andere --server- und --dotnet-test-*-Argumente werden nicht unterstützt.</target>
         <note>{Locked="--server"}{Locked="--dotnet-test-*"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
         <source>Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</source>
-        <target state="new">Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</target>
+        <target state="translated">Ein nativer dotnet test kann keinen AppContainer-Testhost mit der Named Pipe des SDK verbinden. Verwenden Sie für diese Anwendung das MSBuild-Ziel „InvokeTestingPlatform“. Es wurde kein Testhost aktiviert.</target>
         <note>{Locked="dotnet test"}{Locked="AppContainer"}{Locked="InvokeTestingPlatform"}{Locked="MSBuild"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
         <source>Packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</source>
-        <target state="new">Packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</target>
+        <target state="translated">Die Hilfe und Ermittlung für verpackte Apps erfordern einen aktivierten Launcher für verpackte Apps. Aktivieren Sie die Erweiterung für verpackte Apss, und entfernen Sie TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. Es wurde kein Testhost aktiviert.</target>
         <note>{Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
