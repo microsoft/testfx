@@ -3,8 +3,8 @@
 version: 1
 managedBy: gh-copilot-curate
 toolVersion: 0.6.0 (commit 87f35bd, built 2026-06-04T11:24:56Z)
-generatedAt: 2026-10-19T18:49:07.1553576Z
-manifestHash: sha256:4bb31905c11fbf6fce9075a9650c8b272df696a030a4bb4ad6ff90aa20377622
+generatedAt: 2026-10-26T10:53:10.452448Z
+manifestHash: sha256:80eb0d9a520e9c3131cb8f9023c6bf1a78dc7383e9f0885d5370d9fa3df26e52
 plugins:
     - id: dotnet
       source:
@@ -13,7 +13,7 @@ plugins:
         owner: dotnet
         repo: skills
       requestedRef: main
-      resolvedRef: 10d85e25fb42d5f65c568d5e979a005ee69eecb3
+      resolvedRef: a6bf43ab61967c30919334986515163ab24d7635
       layout: dotnet-skills
       install:
         mode: summary
@@ -115,7 +115,7 @@ plugins:
         owner: dotnet
         repo: skills
       requestedRef: main
-      resolvedRef: 9386ed7c1148a7bef970aa0502371c982effa01c
+      resolvedRef: a6bf43ab61967c30919334986515163ab24d7635
       layout: dotnet-skills
       install:
         mode: summary
@@ -200,10 +200,15 @@ plugins:
           upstreamHash: sha256:e39b9ad0bfe65746c8110f971847a1dd8988feccc10b8ad19674ab544926bcc0
           localHash: sha256:e39b9ad0bfe65746c8110f971847a1dd8988feccc10b8ad19674ab544926bcc0
           mode: "0666"
+        - path: .agents/skills/troubleshoot-binlog-mcp/SKILL.md
+          upstreamPath: plugins/dotnet-msbuild/skills/troubleshoot-binlog-mcp/SKILL.md
+          upstreamHash: sha256:3fdcbbdcdbe1d07d2dc79c4481866a4ea238848966349151bf5d42f7cf029fba
+          localHash: sha256:3fdcbbdcdbe1d07d2dc79c4481866a4ea238848966349151bf5d42f7cf029fba
+          mode: "0666"
         - path: .github/agents/build-perf.agent.md
           upstreamPath: plugins/dotnet-msbuild/agents/build-perf.agent.md
-          upstreamHash: sha256:622f219a43d65e3023337206b63ae13df2242e4deb2cfe16958dbd51fbf40ede
-          localHash: sha256:622f219a43d65e3023337206b63ae13df2242e4deb2cfe16958dbd51fbf40ede
+          upstreamHash: sha256:aac1d222f6525230e18fc94ec5d4fa1db449e01f1c454e81d45a29cfe0baf609
+          localHash: sha256:aac1d222f6525230e18fc94ec5d4fa1db449e01f1c454e81d45a29cfe0baf609
           mode: "0666"
         - path: .github/agents/msbuild-code-review.agent.md
           upstreamPath: plugins/dotnet-msbuild/agents/msbuild-code-review.agent.md
@@ -212,8 +217,8 @@ plugins:
           mode: "0666"
         - path: .github/agents/msbuild.agent.md
           upstreamPath: plugins/dotnet-msbuild/agents/msbuild.agent.md
-          upstreamHash: sha256:680cff3b89d6586575d44d3a222c53da27b81ed0016a30073c9f6edc8586d6aa
-          localHash: sha256:680cff3b89d6586575d44d3a222c53da27b81ed0016a30073c9f6edc8586d6aa
+          upstreamHash: sha256:293f2733cdb64bba7c281b4cfa78c19b35e4fa0605f7804e8b6b110204e75709
+          localHash: sha256:293f2733cdb64bba7c281b4cfa78c19b35e4fa0605f7804e8b6b110204e75709
           mode: "0666"
     - id: dotnet-test
       source:
