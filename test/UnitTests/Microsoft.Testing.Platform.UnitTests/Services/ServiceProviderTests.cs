@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 using Moq;
@@ -34,7 +35,34 @@ public sealed class ServiceProviderTests
     {
         IServiceProvider provider = new SingleServiceProvider(null);
 
-        Assert.ThrowsExactly<InvalidOperationException>(() => provider.GetRequiredPlatformService<object>());
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => provider.GetRequiredPlatformService<object>());
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(object)),
+            exception.Message);
+    }
+
+    [TestMethod]
+    public void GetRequiredServiceInternal_MissingServicePreservesDiagnostic()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => _serviceProvider.GetRequiredServiceInternal<object>());
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(object)),
+            exception.Message);
+    }
+
+    [TestMethod]
+    public void GetRequiredServiceInternal_ReturnsFirstMatchingService()
+    {
+        TestSessionLifetimeHandler first = new();
+        TestSessionLifetimeHandler second = new();
+        _serviceProvider.AddService(first);
+        _serviceProvider.AddService(second);
+
+        Assert.AreSame(first, _serviceProvider.GetRequiredServiceInternal<ITestSessionLifetimeHandler>());
+        Assert.IsNull(_serviceProvider.GetPlatformService<ITestSessionLifetimeHandler>());
     }
 
     [TestMethod]

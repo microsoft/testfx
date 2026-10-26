@@ -162,12 +162,14 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             requireProcessRestart = true;
         }
 
-        return new TestHostControllerConfiguration(
-            [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostEnvironmentVariableProvider)x.Extension)],
-            [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostProcessLifetimeHandler)x.Extension)],
-            [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => (IDataConsumer)x.Extension)],
-            testHostLauncher,
-            requireProcessRestart);
+        return !requireProcessRestart
+            ? new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false)
+            : new TestHostControllerConfiguration(
+                [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostEnvironmentVariableProvider)x.Extension)],
+                [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostProcessLifetimeHandler)x.Extension)],
+                [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => (IDataConsumer)x.Extension)],
+                testHostLauncher,
+                requireProcessRestart);
     }
 
     internal async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)

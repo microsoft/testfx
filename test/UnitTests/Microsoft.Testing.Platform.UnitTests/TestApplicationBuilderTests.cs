@@ -111,6 +111,74 @@ public sealed class TestApplicationBuilderTests
     }
 
     [TestMethod]
+    public async Task TestHostController_WithoutExtensions_DoesNotRequireProcessRestart()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+
+        TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
+
+        Assert.IsFalse(configuration.RequireProcessRestart);
+        Assert.IsEmpty(configuration.EnvironmentVariableProviders);
+        Assert.IsEmpty(configuration.LifetimeHandlers);
+        Assert.IsEmpty(configuration.DataConsumer);
+        Assert.IsNull(configuration.TestHostLauncher);
+    }
+
+    [TestMethod]
+    public async Task TestHostController_DisabledExtensions_StillBuildsFactoriesAndChecksEnablement()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+        int factoryInvocations = 0;
+        int serviceCount = _serviceProvider.Services.Count;
+
+        Mock<ITestHostEnvironmentVariableProvider> environmentVariableProvider = new();
+        environmentVariableProvider.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        testHostControllerManager.AddEnvironmentVariableProvider(_ =>
+        {
+            factoryInvocations++;
+            return environmentVariableProvider.Object;
+        });
+
+        Mock<ITestHostProcessLifetimeHandler> lifetimeHandler = new();
+        lifetimeHandler.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        testHostControllerManager.AddProcessLifetimeHandler(_ =>
+        {
+            factoryInvocations++;
+            return lifetimeHandler.Object;
+        });
+
+        Mock<IDataConsumer> dataConsumer = new();
+        dataConsumer.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        testHostControllerManager.AddDataConsumer(new CompositeExtensionFactory<IDataConsumer>(() =>
+        {
+            factoryInvocations++;
+            return dataConsumer.Object;
+        }));
+
+        Mock<ITestHostLauncher> launcher = new();
+        launcher.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        testHostControllerManager.AddTestHostLauncher(_ =>
+        {
+            factoryInvocations++;
+            return launcher.Object;
+        });
+
+        TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual(4, factoryInvocations);
+        environmentVariableProvider.Verify(x => x.IsEnabledAsync(), Times.Once);
+        lifetimeHandler.Verify(x => x.IsEnabledAsync(), Times.Once);
+        dataConsumer.Verify(x => x.IsEnabledAsync(), Times.AtLeastOnce);
+        launcher.Verify(x => x.IsEnabledAsync(), Times.Once);
+        Assert.IsFalse(configuration.RequireProcessRestart);
+        Assert.IsEmpty(configuration.EnvironmentVariableProviders);
+        Assert.IsEmpty(configuration.LifetimeHandlers);
+        Assert.IsEmpty(configuration.DataConsumer);
+        Assert.IsNull(configuration.TestHostLauncher);
+        Assert.HasCount(serviceCount, _serviceProvider.Services);
+    }
+
+    [TestMethod]
     public async Task TestHostControllerEnvironmentVariableProvider_DuplicatedId_ShouldFail()
     {
         TestHostControllersManager testHostControllerManager = new();
