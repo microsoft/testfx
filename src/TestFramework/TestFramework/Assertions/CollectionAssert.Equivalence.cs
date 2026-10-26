@@ -131,11 +131,12 @@ public sealed partial class CollectionAssert
         }
 
         // If the references are the same or both collections are null, they are equivalent.
-        if (object.ReferenceEquals(expected, actual) || expected is null)
+        if (expected == actual)
         {
             return;
         }
 
+        DebugEx.Assert(expected is not null, "expected is not null here");
         DebugEx.Assert(actual is not null, "actual is not null here");
 
         int expectedCollectionCount = CollectionCountHelper.GetCount(expected);
