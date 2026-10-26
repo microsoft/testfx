@@ -60,7 +60,7 @@ internal static class PackagedAppActivationArguments
                 byte[] ciphertext = new byte[serialized.Length];
                 byte[] tag = new byte[TagSize];
 
-                using (var aes = new AesGcm(key, TagSize)) //codeql [SM04193] Code uses single-use key in compliance with Microsoft.Security.Cryptography.10002, CB review via email “Review of AES-GCM usage in testfx”, 10/23/2026
+                using (var aes = new AesGcm(key, TagSize)) // codeql [SM04193] Code uses single-use key in compliance with Microsoft.Security.Cryptography.10002, CB review via email “Review of AES-GCM usage in testfx”, 10/23/2026
                 {
                     aes.Encrypt(nonce, serialized, ciphertext, tag, GetAssociatedData(token));
                 }
@@ -249,7 +249,7 @@ internal static class PackagedAppActivationArguments
             byte[] serialized = new byte[ciphertext.Length];
             try
             {
-                using (var aes = new AesGcm(key, TagSize)) //codeql [SM04193] Code uses single-use key in compliance with Microsoft.Security.Cryptography.10002, CB review via email “Review of AES-GCM usage in testfx”, 10/23/2026
+                using (var aes = new AesGcm(key, TagSize)) // codeql [SM04193] Code uses single-use key in compliance with Microsoft.Security.Cryptography.10002, CB review via email “Review of AES-GCM usage in testfx”, 10/23/2026
                 {
                     aes.Decrypt(nonce, ciphertext, tag, serialized, GetAssociatedData(token));
                 }
