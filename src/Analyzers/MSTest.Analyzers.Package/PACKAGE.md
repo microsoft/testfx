@@ -22,6 +22,23 @@ diagnostic. Boolean assertions such as `Assert.IsTrue(Protocol.HeaderSize == 16)
 are unchanged, as is the existing exemption for pinning enum members cast to their
 exact underlying type.
 
+## Exact-type assertions against abstract classes
+
+MSTEST0025 reports `Assert.IsExactInstanceOfType<AbstractBase>(value)` and
+`Assert.IsExactInstanceOfType(value, typeof(AbstractBase))` when the expected type
+is abstract. An object's runtime type cannot be an abstract class, so these
+assertions always fail.
+
+Use `Assert.IsInstanceOfType<AbstractBase>(value)` when derived types are allowed,
+or specify the intended concrete type when an exact match is required. Use
+`Assert.Fail` when the failure is intentional. The C# code fix replaces standalone
+assertions with `Assert.Fail`, preserving qualification and literal or interpolated
+messages. It is not offered when the generic assertion's return value is used,
+including discard assignments, or when an explicit `ref` message handler cannot
+be forwarded to `Assert.Fail`.
+Ordinary `IsInstanceOfType` assertions, unknown runtime `Type` values, and type
+parameters constrained to an abstract base class are unchanged.
+
 ## Queryable count and existence assertions
 
 MSTEST0090 suggests keeping count and existence checks on the query provider
