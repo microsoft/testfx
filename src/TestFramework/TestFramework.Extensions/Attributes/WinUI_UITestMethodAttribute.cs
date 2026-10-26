@@ -110,23 +110,23 @@ public class UITestMethodAttribute : TestMethodAttribute
 
     private static DispatcherQueue? GetApplicationDispatcherQueue(Assembly assembly)
     {
-#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
+#pragma warning disable CSIsNull002 // Preserve the WinRT equality operator semantics.
         if (s_applicationDispatcherQueue != null)
         {
             return s_applicationDispatcherQueue;
         }
-#pragma warning restore RCS1248 // Normalize null check
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         // Application.Start can only be called once per process, so the whole check-and-start has to be
         // serialized: otherwise two [UITestMethod]s running in parallel can both see "not started yet".
         lock (InitializationLock)
         {
-#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
+#pragma warning disable CSIsNull002 // Preserve the WinRT equality operator semantics.
             if (s_applicationDispatcherQueue != null)
             {
                 return s_applicationDispatcherQueue;
             }
-#pragma warning restore RCS1248 // Normalize null check
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
             // A previous attempt already failed to bring the application up, and Application.Start cannot
             // be retried in the same process. Report that cause instead of letting the caller fall through
@@ -175,12 +175,12 @@ public class UITestMethodAttribute : TestMethodAttribute
 
     private static DispatcherQueue? GetDispatcherQueue(Assembly assembly)
     {
-#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
+#pragma warning disable CSIsNull002 // Preserve the WinRT equality operator semantics.
         if (DispatcherQueue != null)
         {
             return DispatcherQueue;
         }
-#pragma warning restore RCS1248 // Normalize null check
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         if (GetApplicationDispatcherQueue(assembly) is { } appDispatcherQueue)
         {

@@ -164,11 +164,11 @@ dotnet_style_null_propagation = true:warning
 # IDE0041: Use 'is null' instead of ReferenceEquals
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
 
-# RCS1248: Use 'is null' / 'is not null' instead of equality operators
-# Enable only the null-check rule from Roslynator.
-dotnet_analyzer_diagnostic.category-Roslynator.severity = none
-dotnet_diagnostic.RCS1248.severity = error
-roslynator_null_check_style = pattern_matching
+# CSIsNull001: Use 'is null' for null checks
+dotnet_diagnostic.CSIsNull001.severity = error
+
+# CSIsNull002: Use 'is not null' for non-null checks
+dotnet_diagnostic.CSIsNull002.severity = error
 
 # Avoid this. unless absolutely necessary (IDE0003 and IDE0009)
 dotnet_style_qualification_for_event = false:warning

@@ -63,10 +63,10 @@
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.26255.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
   </PropertyGroup>
   <ItemGroup Label="Analyzers">
+    <PackageVersion Include="CSharpIsNullAnalyzer" Version="0.2.19" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />
-    <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">

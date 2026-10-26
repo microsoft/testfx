@@ -115,9 +115,9 @@ internal sealed class WellKnownTypeProvider
 
                 if (type is null)
                 {
-#pragma warning disable RCS1248 // Preserve ImmutableArray's overloaded comparison with null.
+#pragma warning disable CSIsNull002 // Preserve ImmutableArray's overloaded comparison with null.
                     RoslynDebug.Assert(namespaceNames != null);
-#pragma warning restore RCS1248 // Normalize null check
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
                     foreach (IAssemblySymbol? referencedAssembly in _referencedAssemblies.Value)
                     {

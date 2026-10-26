@@ -61,18 +61,19 @@ The repository includes [.editorconfig](http://editorconfig.org) files to help e
 Contributors should ensure they follow these guidelines when making submissions.
 
 Use `is null` and `is not null` for null checks. The repository enforces this with
-Roslynator's `RCS1248` as a build error; `IDE0041` separately covers
-`ReferenceEquals`. After bootstrapping and restoring with the repository build
-scripts, use the repo-local SDK to apply the code fix:
+`CSharpIsNullAnalyzer` rules `CSIsNull001` and `CSIsNull002` as build errors;
+`IDE0041` separately covers `ReferenceEquals`. After bootstrapping and restoring
+with the repository build scripts, use the repo-local SDK to apply the code fix:
 
 ```powershell
-.\.dotnet\dotnet.exe format analyzers TestFx.slnx --diagnostics RCS1248 --severity error --no-restore
+.\.dotnet\dotnet.exe format analyzers TestFx.slnx --diagnostics CSIsNull001 CSIsNull002 --severity error --no-restore
 ```
 
-Keep equality comparisons in expression trees, which do not support pattern
-matching. Also preserve comparisons that intentionally rely on an overloaded
-equality operator, using a narrowly scoped `#pragma warning disable RCS1248` with
-an explanation rather than changing their behavior.
+Preserve comparisons that intentionally rely on an overloaded equality operator
+or exercise specific expression-tree shapes. Use a narrowly scoped
+`#pragma warning disable CSIsNull001` or `CSIsNull002` with an explanation rather
+than changing their behavior. In particular, `is not null` is not supported in
+expression trees, and changing a test input to `is object` changes its tree shape.
 
 ## TODO Comment Policy
 

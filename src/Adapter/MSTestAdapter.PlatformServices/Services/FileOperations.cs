@@ -75,9 +75,9 @@ internal sealed class FileOperations : IFileOperations
             string fileNameWithoutPath = Path.GetFileName(assemblyFileName);
             Task<Windows.Storage.StorageFile> searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
             searchTask.Wait();
-#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
+#pragma warning disable CSIsNull002 // Preserve the WinRT equality operator semantics.
             fileExists = searchTask.Result != null;
-#pragma warning restore RCS1248 // Normalize null check
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
         }
         catch (Exception)
         {
