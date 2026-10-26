@@ -65,6 +65,7 @@ plugins:
         - skills/property-patterns
         - skills/resolve-project-references
         - skills/target-authoring
+        - skills/troubleshoot-binlog-mcp
       install:
         mode: summary
     - id: dotnet
