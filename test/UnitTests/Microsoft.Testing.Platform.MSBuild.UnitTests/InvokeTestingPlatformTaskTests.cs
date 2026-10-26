@@ -1,17 +1,81 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias PlatformMSBuild;
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Testing.Platform.Helpers;
 
 using Moq;
 
+using ModuleInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.ModuleInfoRequest;
+using RunSummaryInfoRequest = PlatformMSBuild::Microsoft.Testing.Extensions.MSBuild.Serializers.RunSummaryInfoRequest;
+
 namespace Microsoft.Testing.Platform.MSBuild.UnitTests;
 
 [TestClass]
 public sealed class InvokeTestingPlatformTaskTests
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Execute_ModuleInfoCreatesResultsDirectoryBeforeOpeningLog(bool resultsDirectoryExists)
+    {
+        using AppHostTaskFixture fixture = new();
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask(new FileSystem());
+        string resultsDirectory = Path.Combine(fixture.DotnetRoot, "nested", "results");
+        if (resultsDirectoryExists)
+        {
+            Directory.CreateDirectory(resultsDirectory);
+        }
+
+        task.TestArchitecture = new TaskItem("x64");
+        task.SimulatedExitCode = 0;
+        task.OnSimulatedLaunch = current =>
+        {
+            current.DeliverRequest(new ModuleInfoRequest("framework", "x64", resultsDirectory));
+            current.DeliverRequest(new RunSummaryInfoRequest(1, 0, 1, 0, "1s", AllowSkipped: true));
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.IsTrue(Directory.Exists(resultsDirectory));
+        string logPath = Path.Combine(resultsDirectory, "apphost_net9.0_x64.log");
+        Assert.AreEqual(
+            """
+            simulated output
+
+            === COMMAND LINE ===
+            simulated command
+
+
+            """.ReplaceLineEndings(),
+            File.ReadAllText(logPath, Encoding.Unicode).ReplaceLineEndings());
+    }
+
+    [TestMethod]
+    public void Execute_FirstModuleOwnsOutputFileAndCompleteHandshakeAllowsSuccess()
+    {
+        using AppHostTaskFixture fixture = new();
+        using TestableInvokeTestingPlatformTask task = fixture.CreateTask(new FileSystem());
+        string originalResultsDirectory = Path.Combine(fixture.DotnetRoot, "original-results");
+        string retryResultsDirectory = Path.Combine(fixture.DotnetRoot, "retry-results");
+        task.TestArchitecture = new TaskItem("x64");
+        task.SimulatedExitCode = 0;
+        task.OnSimulatedLaunch = current =>
+        {
+            current.DeliverRequest(new ModuleInfoRequest("first-framework", "first-architecture", originalResultsDirectory));
+            current.DeliverRequest(new ModuleInfoRequest("retry-framework", "retry-architecture", retryResultsDirectory));
+            current.DeliverRequest(new RunSummaryInfoRequest(1, 0, 1, 0, "1s", AllowSkipped: true));
+        };
+
+        Assert.IsTrue(task.Execute());
+        Assert.AreEqual(
+            Path.Combine(originalResultsDirectory, "apphost_net9.0_x64.log"),
+            Assert.ContainsSingle(Directory.GetFiles(originalResultsDirectory)));
+        Assert.IsFalse(Directory.Exists(retryResultsDirectory));
+    }
+
     [TestMethod]
     [DataRow("##[group]Tests: MyAssembly (net9.0)", true)]
     [DataRow("##[endgroup]", true)]
@@ -287,7 +351,13 @@ public sealed class InvokeTestingPlatformTaskTests
         // on the output-logging behavior.
         [SetsRequiredMembers]
         public TestableInvokeTestingPlatformTask()
-            : base(new StubFileSystem())
+            : this(new StubFileSystem())
+        {
+        }
+
+        [SetsRequiredMembers]
+        public TestableInvokeTestingPlatformTask(IFileSystem fileSystem)
+            : base(fileSystem)
         {
             BuildEngine = Mock.Of<IBuildEngine>();
             TargetPath = new TaskItem("MyAssembly.dll");
@@ -301,6 +371,28 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public void InvokeLogEventsFromTextOutput(string singleLine)
             => LogEventsFromTextOutput(singleLine, MessageImportance.High);
+
+        public int? SimulatedExitCode { get; set; }
+
+        public Action<TestableInvokeTestingPlatformTask>? OnSimulatedLaunch { get; set; }
+
+        protected override int ExecuteTool(string pathToTool, string responseFileCommands, string commandLineCommands)
+        {
+            if (SimulatedExitCode is not int exitCode)
+            {
+                return base.ExecuteTool(pathToTool, responseFileCommands, commandLineCommands);
+            }
+
+            LogToolCommand("simulated command");
+            LogEventsFromTextOutput("simulated output", MessageImportance.High);
+            OnSimulatedLaunch?.Invoke(this);
+            return exitCode;
+        }
+
+        public void DeliverRequest(object request)
+            => ((System.Threading.Tasks.Task)typeof(InvokeTestingPlatformTask)
+                .GetMethod("HandleRequestAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(this, [request])!).GetAwaiter().GetResult();
 
         public void InvokeAddAppHostDotnetRootEnvironmentVariable()
             => AddAppHostDotnetRootEnvironmentVariable();
@@ -338,8 +430,8 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public string DotnetRoot { get; } = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
 
-        public TestableInvokeTestingPlatformTask CreateTask()
-            => new()
+        public TestableInvokeTestingPlatformTask CreateTask(IFileSystem? fileSystem = null)
+            => new(fileSystem ?? new StubFileSystem())
             {
                 TargetPath = new TaskItem(Path.Combine(DotnetRoot, $"apphost{_appHostExtension}")),
                 TargetDir = new TaskItem($"{DotnetRoot}{Path.DirectorySeparatorChar}"),
