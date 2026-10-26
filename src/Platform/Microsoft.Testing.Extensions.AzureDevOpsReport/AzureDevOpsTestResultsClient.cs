@@ -18,7 +18,7 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
     private static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 
-    // Attachments can be up to 16 MB and base64 encoding bloats them ~4/3x. Allow generously longer timeouts.
+    // Attachments can be up to 75 MiB and base64 encoding bloats them ~4/3x. Allow generously longer timeouts.
     private static readonly TimeSpan AttachmentRequestTimeout = TimeSpan.FromMinutes(5);
     private static readonly HttpMethod PatchMethod = new("PATCH");
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
