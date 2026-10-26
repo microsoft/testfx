@@ -162,24 +162,14 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             requireProcessRestart = true;
         }
 
-<<<<<<< HEAD
-=======
-        if (!requireProcessRestart)
-        {
-            return new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false);
-        }
-
-        // Observers of an existing controller must not introduce an extra process themselves.
-        List<(IExtension Extension, int RegistrationOrder)> runCompletionHandlers = [];
-        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_runCompletionHandlerFactories, serviceProvider, runCompletionHandlers, _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
-
->>>>>>> Reduce redundant platform startup work and service allocations
-        return new TestHostControllerConfiguration(
-            [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostEnvironmentVariableProvider)x.Extension)],
-            [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostProcessLifetimeHandler)x.Extension)],
-            [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => (IDataConsumer)x.Extension)],
-            testHostLauncher,
-            requireProcessRestart);
+        return !requireProcessRestart
+            ? new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false)
+            : new TestHostControllerConfiguration(
+                [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostEnvironmentVariableProvider)x.Extension)],
+                [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostProcessLifetimeHandler)x.Extension)],
+                [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => (IDataConsumer)x.Extension)],
+                testHostLauncher,
+                requireProcessRestart);
     }
 
     internal async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)
