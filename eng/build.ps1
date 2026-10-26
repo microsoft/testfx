@@ -83,3 +83,4 @@ $null = $PSBoundParameters.Remove("vs")
 $null = $PSBoundParameters.Remove("installWindowsSdk")
 
 & $PSScriptRoot\common\Build.ps1 @PSBoundParameters
+exit $LASTEXITCODE

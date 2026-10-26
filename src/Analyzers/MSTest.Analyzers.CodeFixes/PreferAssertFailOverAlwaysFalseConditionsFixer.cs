@@ -45,7 +45,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
             || invocationExpr.ArgumentList.Arguments.Any(argument => argument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword)
             || invocationExpr.ArgumentList.Arguments.Any(argument => argument.DescendantNodes().Any(node =>
                 node is SingleVariableDesignationSyntax or AssignmentExpressionSyntax
-                || node is ArgumentSyntax nestedArgument && nestedArgument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword)))
+                || (node is ArgumentSyntax nestedArgument && nestedArgument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword))))
         {
             return;
         }
