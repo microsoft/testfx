@@ -375,20 +375,19 @@ public sealed class MtpServerProcessTests
     [OSCondition(
         ConditionMode.Exclude,
         OperatingSystems.Windows,
-        IgnoreMessage = "Unix execute permission classes do not apply on Windows.")]
+        IgnoreMessage = "Unix script interpreter permissions do not apply on Windows.")]
     [UnsupportedOSPlatform("windows")]
-    public async Task StartAsyncOnUnixWhenOnlyNonApplicableExecuteBitIsSetRetriesThroughDotnet()
+    public async Task StartAsyncOnUnixRetriesThroughDotnetWhenApphostInterpreterIsNotExecutable()
     {
         using var temp = TempDirectory.Create();
         string dll = temp.CreateFile("App.dll");
-        string apphost = temp.CreateFile("App");
+        string interpreter = temp.CreateFile("interpreter");
+        string apphost = temp.CreateFile("App", "#" + $"!{interpreter}\n");
 
-        // The owner class applies to this process, so GroupExecute does not grant execution even when the
-        // process is also a member of the file's group. The coarse mode-bit preflight accepts this candidate,
-        // and Process.Start must recover from the resulting EACCES by retrying through dotnet.
-        File.SetUnixFileMode(
-            apphost,
-            UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupExecute);
+        // A non-executable interpreter produces EACCES on both Linux and macOS, even for a privileged process.
+        // A group-only execute bit on the apphost does not reliably deny execution on those systems.
+        File.SetUnixFileMode(interpreter, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        MakeExecutable(apphost);
 
         var log = new StringBuilder();
         var options = new MtpServerClientOptions
