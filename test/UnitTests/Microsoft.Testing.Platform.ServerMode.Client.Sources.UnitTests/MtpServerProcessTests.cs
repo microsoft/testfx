@@ -149,14 +149,14 @@ public sealed class MtpServerProcessTests
             ConnectionTimeout = TimeSpan.FromMinutes(1),
             EnvironmentVariables = { [StandardOutputFloodEnvironmentVariable] = "1" },
         };
-        MtpServerProcess? process = null;
-
         await AssertDoesNotCaptureSynchronizationContextAsync(
-            async () => process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken).ConfigureAwait(false),
+            async () =>
+            {
+                using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken).ConfigureAwait(false);
+                Assert.IsGreaterThan(0, process.ProcessId);
+                await process.ShutdownAsync().ConfigureAwait(false);
+            },
             static () => { });
-
-        Assert.IsNotNull(process);
-        await process.ShutdownAsync();
     }
 
     [TestMethod]
@@ -1125,13 +1125,14 @@ public sealed class MtpServerProcessTests
         }
 
         releaseOperation();
-        Task completed = await Task.WhenAny(
-            operation,
-            Task.Delay(TimeSpan.FromSeconds(20), TestContext.CancellationToken)).ConfigureAwait(false);
+        // This is a deadlock watchdog, not a startup benchmark: the profiled child has one minute to connect
+        // and still needs time for teardown. PostCount detects context capture independently of scheduling speed.
+        var completionLimit = TimeSpan.FromMinutes(2);
+        Task completed = await Task.WhenAny(operation, Task.Delay(completionLimit, TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.AreSame(operation, completed, "The operation did not complete within the expected timeout.");
+        Assert.AreSame(operation, completed, "The operation did not complete before the deadlock watchdog expired.");
         await operation.ConfigureAwait(false);
-        Assert.AreEqual(0, context.PostCount);
+        Assert.AreEqual(0, context.PostCount, "The operation captured and posted back to the caller's synchronization context.");
     }
 
     private sealed class RecordingSynchronizationContext : SynchronizationContext
