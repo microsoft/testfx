@@ -64,7 +64,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
         }
 
         IArgumentOperation? conditionArgument = invocationOperation.Arguments.FirstOrDefault(x => x.Parameter?.Name == "condition");
-        if (conditionArgument != null
+        if (conditionArgument is not null
             && conditionArgument.Value.WalkDownConversion() is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not })
         {
             // Determine the proper assert method name (swap IsTrue <-> IsFalse)

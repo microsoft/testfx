@@ -141,7 +141,7 @@ internal sealed partial class TerminalTestReporter
         // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
         // failed-test count. In-process leaves ShowAssembly off and never has handshake failures, so error is 0.
         int error = (_options.ShowAssembly ? failedAssembliesWithoutFailedTests : 0) + HandshakeFailureCount;
-        TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
+        TimeSpan runDuration = _testExecutionStartTime is not null && _testExecutionEndTime is not null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;

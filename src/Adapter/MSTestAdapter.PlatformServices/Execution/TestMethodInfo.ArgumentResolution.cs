@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 #pragma warning disable CA1852 // Seal internal types - This class is inherited in tests.
 internal partial class TestMethodInfo
 {
-    internal void SetArguments(object?[]? arguments) => Arguments = arguments == null ? null : ResolveArguments(arguments);
+    internal void SetArguments(object?[]? arguments) => Arguments = arguments is null ? null : ResolveArguments(arguments);
 
     internal object?[] ResolveArguments(object?[] arguments)
     {

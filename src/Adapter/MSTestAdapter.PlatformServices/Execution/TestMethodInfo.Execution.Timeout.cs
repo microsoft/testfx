@@ -75,7 +75,7 @@ internal partial class TestMethodInfo
 
         if (executionCompleted)
         {
-            if (failure != null)
+            if (failure is not null)
             {
                 throw failure;
             }

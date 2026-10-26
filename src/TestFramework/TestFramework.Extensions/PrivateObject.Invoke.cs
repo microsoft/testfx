@@ -113,7 +113,7 @@ public partial class PrivateObject
     public object? Invoke(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture, Type[]? typeArguments)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        if (parameterTypes == null)
+        if (parameterTypes is null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
         }
@@ -125,7 +125,7 @@ public partial class PrivateObject
 
         // If the method was not found and type arguments were provided for generic parameters,
         // attempt to look up a generic method.
-        if (member == null && typeArguments != null)
+        if (member is null && typeArguments is not null)
         {
             // This method may contain generic parameters...if so, the previous call to
             // GetMethod() will fail because it doesn't fully support generic parameters.
@@ -135,7 +135,7 @@ public partial class PrivateObject
             member = GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags);
         }
 
-        if (member == null)
+        if (member is null)
         {
             throw new ArgumentException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
@@ -155,8 +155,8 @@ public partial class PrivateObject
         }
         catch (TargetInvocationException e)
         {
-            DebugEx.Assert(e.InnerException != null, "Inner exception should not be null.");
-            if (e.InnerException != null)
+            DebugEx.Assert(e.InnerException is not null, "Inner exception should not be null.");
+            if (e.InnerException is not null)
             {
                 throw e.InnerException;
             }
@@ -176,7 +176,7 @@ public partial class PrivateObject
     private object? InvokeHelper(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        DebugEx.Assert(_target != null, "Internal Error: Null reference is returned for internal object");
+        DebugEx.Assert(_target is not null, "Internal Error: Null reference is returned for internal object");
 
         // Invoke the actual Method
         try
@@ -185,8 +185,8 @@ public partial class PrivateObject
         }
         catch (TargetInvocationException e)
         {
-            DebugEx.Assert(e.InnerException != null, "Inner exception should not be null.");
-            if (e.InnerException != null)
+            DebugEx.Assert(e.InnerException is not null, "Inner exception should not be null.");
+            if (e.InnerException is not null)
             {
                 throw e.InnerException;
             }

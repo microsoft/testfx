@@ -110,19 +110,23 @@ public class UITestMethodAttribute : TestMethodAttribute
 
     private static DispatcherQueue? GetApplicationDispatcherQueue(Assembly assembly)
     {
+#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
         if (s_applicationDispatcherQueue != null)
         {
             return s_applicationDispatcherQueue;
         }
+#pragma warning restore RCS1248 // Normalize null check
 
         // Application.Start can only be called once per process, so the whole check-and-start has to be
         // serialized: otherwise two [UITestMethod]s running in parallel can both see "not started yet".
         lock (InitializationLock)
         {
+#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
             if (s_applicationDispatcherQueue != null)
             {
                 return s_applicationDispatcherQueue;
             }
+#pragma warning restore RCS1248 // Normalize null check
 
             // A previous attempt already failed to bring the application up, and Application.Start cannot
             // be retried in the same process. Report that cause instead of letting the caller fall through
@@ -145,7 +149,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             }
 
             Type? applicationType = GetApplicationType(assembly);
-            if (applicationType == null)
+            if (applicationType is null)
             {
                 return null;
             }
@@ -156,7 +160,7 @@ public class UITestMethodAttribute : TestMethodAttribute
                 // We need to execute all module initializers before doing any WinRT calls.
                 // This will cause the [ModuleInitializer]s to execute, if they haven't yet.
                 Type? id = applicationType.Assembly.GetType("Microsoft.WindowsAppSDK.Runtime.Identity");
-                if (id != null)
+                if (id is not null)
                 {
                     _ = Activator.CreateInstance(id);
                 }
@@ -171,10 +175,12 @@ public class UITestMethodAttribute : TestMethodAttribute
 
     private static DispatcherQueue? GetDispatcherQueue(Assembly assembly)
     {
+#pragma warning disable RCS1248 // Preserve the WinRT equality operator semantics.
         if (DispatcherQueue != null)
         {
             return DispatcherQueue;
         }
+#pragma warning restore RCS1248 // Normalize null check
 
         if (GetApplicationDispatcherQueue(assembly) is { } appDispatcherQueue)
         {

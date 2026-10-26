@@ -32,7 +32,7 @@ internal class AssemblyUtility
     {
         get
         {
-            if (field == null)
+            if (field is null)
             {
                 field = [with(StringComparer.OrdinalIgnoreCase)];
                 foreach (CultureInfo? info in CultureInfo.GetCultures(CultureTypes.AllCultures))
@@ -257,7 +257,7 @@ internal class AssemblyUtility
         }
         finally
         {
-            if (appDomain != null)
+            if (appDomain is not null)
             {
                 if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
                 {

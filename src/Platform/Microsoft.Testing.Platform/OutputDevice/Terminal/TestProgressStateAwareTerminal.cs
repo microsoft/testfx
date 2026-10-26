@@ -154,7 +154,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             {
                 for (int i = 0; i < _progressItems.Length; i++)
                 {
-                    if (_progressItems[i] == null)
+                    if (_progressItems[i] is null)
                     {
                         _progressItems[i] = testWorker;
                         return i;
@@ -409,14 +409,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private bool GetShowProgress()
     {
-        if (_showProgressCached != null)
+        if (_showProgressCached is not null)
         {
             return _showProgressCached.Value;
         }
 
         // Get the value from the func until we get the first non-null value.
         bool? showProgress = _showProgress();
-        if (showProgress != null)
+        if (showProgress is not null)
         {
             _showProgressCached = showProgress;
         }

@@ -60,6 +60,20 @@ The MSTest project follows the same rules as the runtime repository [developer g
 The repository includes [.editorconfig](http://editorconfig.org) files to help enforce this convention.
 Contributors should ensure they follow these guidelines when making submissions.
 
+Use `is null` and `is not null` for null checks. The repository enforces this with
+Roslynator's `RCS1248` as a build error; `IDE0041` separately covers
+`ReferenceEquals`. After bootstrapping and restoring with the repository build
+scripts, use the repo-local SDK to apply the code fix:
+
+```powershell
+.\.dotnet\dotnet.exe format analyzers TestFx.slnx --diagnostics RCS1248 --severity error --no-restore
+```
+
+Keep equality comparisons in expression trees, which do not support pattern
+matching. Also preserve comparisons that intentionally rely on an overloaded
+equality operator, using a narrowly scoped `#pragma warning disable RCS1248` with
+an explanation rather than changing their behavior.
+
 ## TODO Comment Policy
 
 To keep technical debt visible and tracked, the project enforces the following policy for `TODO` comments in code:

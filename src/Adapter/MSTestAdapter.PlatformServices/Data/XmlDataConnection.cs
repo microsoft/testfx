@@ -26,7 +26,7 @@ internal sealed class XmlDataConnection : TestDataConnection
     public override List<string>? GetDataTablesAndViews()
     {
         DataSet? dataSet = LoadDataSet(true);
-        if (dataSet == null)
+        if (dataSet is null)
         {
             return null;
         }
@@ -48,7 +48,7 @@ internal sealed class XmlDataConnection : TestDataConnection
         DataSet? dataSet = LoadDataSet(true);
 
         DataTable? table = dataSet?.Tables[tableName];
-        if (table == null)
+        if (table is null)
         {
             return null;
         }

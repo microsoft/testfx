@@ -165,7 +165,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// <inheritdoc />
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
-        if (DynamicDataDisplayName == null)
+        if (DynamicDataDisplayName is null)
         {
             return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
         }

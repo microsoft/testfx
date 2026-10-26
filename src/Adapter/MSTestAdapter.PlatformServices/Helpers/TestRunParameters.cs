@@ -40,7 +40,7 @@ internal static class TestRunParameters
                         }
                     }
 
-                    if (paramName != null && paramValue != null)
+                    if (paramName is not null && paramValue is not null)
                     {
                         testParameters[paramName] = paramValue;
                     }

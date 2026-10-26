@@ -25,12 +25,12 @@ internal partial class TestMethodInfo
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private bool SetTestContext(object classInstance, TestResult result)
     {
-        DebugEx.Assert(classInstance != null, "classInstance != null");
-        DebugEx.Assert(result != null, "result != null");
+        DebugEx.Assert(classInstance is not null, "classInstance != null");
+        DebugEx.Assert(result is not null, "result != null");
 
         try
         {
-            if (Parent.TestContextProperty != null && Parent.TestContextProperty.CanWrite)
+            if (Parent.TestContextProperty is not null && Parent.TestContextProperty.CanWrite)
             {
                 // Reflection-free fast path: use the source-generated setter when available;
                 // otherwise fall back to PropertyInfo.SetValue (reflection mode).

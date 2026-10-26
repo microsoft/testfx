@@ -234,7 +234,7 @@ internal sealed partial class ServerTestHost
         }
 
         DateTimeOffset requestStop = _clock.UtcNow;
-        RoslynDebug.Assert(requestExecuteStop != null);
+        RoslynDebug.Assert(requestExecuteStop is not null);
         RoslynDebug.Assert(testNodeUpdateProcessor is not null);
 
         bool isRunRequest = method switch

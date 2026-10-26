@@ -125,13 +125,13 @@ public sealed partial class CollectionAssert
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
-        if (expected == null != (actual == null))
+        if ((expected is null) != (actual is null))
         {
             Assert.ReportAssertFailed("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message));
         }
 
         // If the references are the same or both collections are null, they are equivalent.
-        if (object.ReferenceEquals(expected, actual) || expected == null)
+        if (object.ReferenceEquals(expected, actual) || expected is null)
         {
             return;
         }
@@ -293,7 +293,7 @@ public sealed partial class CollectionAssert
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
-        if (notExpected == null != (actual == null))
+        if ((notExpected is null) != (actual is null))
         {
             return;
         }

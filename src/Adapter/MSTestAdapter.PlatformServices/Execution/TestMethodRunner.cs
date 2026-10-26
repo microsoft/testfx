@@ -77,9 +77,9 @@ internal sealed partial class TestMethodRunner
         ITestContext testContext,
         ITestExecutionActivityLease? executionActivityLease)
     {
-        DebugEx.Assert(testMethodInfo != null, "testMethodInfo should not be null");
-        DebugEx.Assert(testMethod != null, "testMethod should not be null");
-        DebugEx.Assert(testContext != null, "testContext should not be null");
+        DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null");
+        DebugEx.Assert(testMethod is not null, "testMethod should not be null");
+        DebugEx.Assert(testContext is not null, "testContext should not be null");
 
         _testMethodInfo = testMethodInfo;
         _test = testMethod;
@@ -243,10 +243,10 @@ internal sealed partial class TestMethodRunner
     /// <returns>The test results.</returns>
     internal async Task<TestResult[]> RunTestMethodAsync()
     {
-        DebugEx.Assert(_test != null, "Test should not be null.");
-        DebugEx.Assert(_testMethodInfo.MethodInfo != null, "Test method should not be null.");
+        DebugEx.Assert(_test is not null, "Test should not be null.");
+        DebugEx.Assert(_testMethodInfo.MethodInfo is not null, "Test method should not be null.");
 
-        if (_testMethodInfo.Executor == null)
+        if (_testMethodInfo.Executor is null)
         {
             throw ApplicationStateGuard.Unreachable();
         }

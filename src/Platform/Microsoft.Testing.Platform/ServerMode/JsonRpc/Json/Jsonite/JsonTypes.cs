@@ -114,7 +114,7 @@ namespace Jsonite
         /// <returns>A string representation of this object</returns>
         public override string ToString()
         {
-            var innerMessage = InnerException != null ? " Check inner exception for more details" : string.Empty;
+            var innerMessage = InnerException is not null ? " Check inner exception for more details" : string.Empty;
             return $"({Line + 1},{Column + 1}) : error : {Message}{innerMessage}";
         }
     }

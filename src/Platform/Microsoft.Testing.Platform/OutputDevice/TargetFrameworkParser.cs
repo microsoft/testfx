@@ -11,7 +11,7 @@ internal static class TargetFrameworkParser
     [return: NotNullIfNotNull(nameof(frameworkDescription))]
     public static string? GetShortTargetFramework(string? frameworkDescription)
     {
-        if (frameworkDescription == null)
+        if (frameworkDescription is null)
         {
             return null;
         }

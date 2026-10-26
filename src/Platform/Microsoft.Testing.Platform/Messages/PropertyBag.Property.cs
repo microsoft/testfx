@@ -18,7 +18,7 @@ public sealed partial class PropertyBag
                 int count = 1;
                 Property current = this;
 
-                while (current?.Next != null)
+                while (current?.Next is not null)
                 {
                     current = current.Next;
                     count++;
@@ -41,7 +41,7 @@ public sealed partial class PropertyBag
 
             Property current = this;
 
-            while (current?.Next != null)
+            while (current?.Next is not null)
             {
                 current = current.Next;
 
@@ -63,7 +63,7 @@ public sealed partial class PropertyBag
 
             Property current = this;
 
-            while (current?.Next != null)
+            while (current?.Next is not null)
             {
                 current = current.Next;
 
@@ -85,7 +85,7 @@ public sealed partial class PropertyBag
 
             Property current = this;
 
-            while (current?.Next != null)
+            while (current?.Next is not null)
             {
                 current = current.Next;
 

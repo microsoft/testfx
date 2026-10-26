@@ -12,11 +12,11 @@ internal static class ITypeSymbolExtensions
         [NotNullWhen(returnValue: true)] this ITypeSymbol? fromSymbol,
         [NotNullWhen(returnValue: true)] ITypeSymbol? toSymbol,
         Compilation compilation)
-        => fromSymbol != null && toSymbol != null && compilation.ClassifyCommonConversion(fromSymbol, toSymbol).IsImplicit;
+        => fromSymbol is not null && toSymbol is not null && compilation.ClassifyCommonConversion(fromSymbol, toSymbol).IsImplicit;
 
     public static bool Inherits([NotNullWhen(returnValue: true)] this ITypeSymbol? type, [NotNullWhen(returnValue: true)] ITypeSymbol? possibleBase)
     {
-        if (type == null || possibleBase == null)
+        if (type is null || possibleBase is null)
         {
             return false;
         }
@@ -41,7 +41,7 @@ internal static class ITypeSymbolExtensions
 
     public static bool DerivesFrom([NotNullWhen(returnValue: true)] this ITypeSymbol? symbol, [NotNullWhen(returnValue: true)] ITypeSymbol? candidateBaseType, bool baseTypesOnly = false, bool checkTypeParameterConstraints = true)
     {
-        if (candidateBaseType == null || symbol == null)
+        if (candidateBaseType is null || symbol is null)
         {
             return false;
         }
@@ -76,7 +76,7 @@ internal static class ITypeSymbolExtensions
             }
         }
 
-        while (symbol != null)
+        while (symbol is not null)
         {
             if (SymbolEqualityComparer.Default.Equals(symbol, candidateBaseType))
             {
@@ -90,7 +90,7 @@ internal static class ITypeSymbolExtensions
     }
 
     public static bool IsNullableValueType([NotNullWhen(returnValue: true)] this ITypeSymbol? typeSymbol)
-        => typeSymbol != null && typeSymbol.IsValueType && typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
+        => typeSymbol is not null && typeSymbol.IsValueType && typeSymbol.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T;
 
     public static bool IsNullableOfBoolean([NotNullWhen(returnValue: true)] this ITypeSymbol? typeSymbol)
         => typeSymbol.IsNullableValueType() && ((INamedTypeSymbol)typeSymbol).TypeArguments[0].SpecialType == SpecialType.System_Boolean;

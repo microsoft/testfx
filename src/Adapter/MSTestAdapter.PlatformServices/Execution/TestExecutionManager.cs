@@ -102,10 +102,10 @@ internal partial class TestExecutionManager
     /// <param name="runCancellationToken">Test run cancellation token.</param>
     internal async Task RunTestsAsync(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, TestRunCancellationToken runCancellationToken)
     {
-        DebugEx.Assert(tests != null, "tests");
-        DebugEx.Assert(deploymentContext != null, "deploymentContext");
-        DebugEx.Assert(messageLogger != null, "messageLogger");
-        DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
+        DebugEx.Assert(tests is not null, "tests");
+        DebugEx.Assert(deploymentContext is not null, "deploymentContext");
+        DebugEx.Assert(messageLogger is not null, "messageLogger");
+        DebugEx.Assert(runCancellationToken is not null, "runCancellationToken");
 
         _testRunCancellationToken = runCancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
