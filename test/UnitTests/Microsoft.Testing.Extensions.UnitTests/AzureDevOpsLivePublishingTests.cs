@@ -1012,11 +1012,12 @@ public sealed class AzureDevOpsLivePublishingTests
     [DataRow(false)]
     public async Task Attachments_OversizedFileWarnsAndCountsFailureWithoutPreventingNextUpload(bool runAttachment)
     {
+        const long attachmentSizeLimit = 75L * 1024 * 1024;
         using TestDirectory directory = CreateTestDirectory();
         string bigPath = Path.Combine(directory.Path, "big.coverage");
         using (FileStream file = File.OpenWrite(bigPath))
         {
-            file.SetLength(AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes + 1);
+            file.SetLength(attachmentSizeLimit + 1);
         }
 
         string smallPath = Path.Combine(directory.Path, "small.coverage");
@@ -1052,7 +1053,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.AreEqual(1, httpRequests);
-        string detail = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentTooLarge, "big.coverage", AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes + 1, AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes);
+        string detail = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentTooLarge, "big.coverage", attachmentSizeLimit + 1, attachmentSizeLimit);
         Assert.Contains(warning => warning.Contains(detail), output.Warnings);
         Assert.Contains(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 1), output.Warnings);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, Assert.ContainsSingle(client.UpdateTestRunStateCalls).State);
@@ -1096,9 +1097,15 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
-    [DataRow(0L)]
-    [DataRow(16L * 1024 * 1024)]
-    public async Task AzureDevOpsTestResultsClient_AttachmentAtOrBelowSizeLimitIsUploaded(long size)
+    [DataRow(0L, true)]
+    [DataRow(0L, false)]
+    [DataRow(34_360_600L, true)]
+    [DataRow(34_360_600L, false)]
+    [DataRow((75L * 1024 * 1024) - 1, true)]
+    [DataRow((75L * 1024 * 1024) - 1, false)]
+    [DataRow(75L * 1024 * 1024, true)]
+    [DataRow(75L * 1024 * 1024, false)]
+    public async Task AzureDevOpsTestResultsClient_AttachmentAtOrBelowSizeLimitIsUploaded(long size, bool runAttachment)
     {
         using TestDirectory directory = CreateTestDirectory();
         string path = Path.Combine(directory.Path, "accepted.coverage");
@@ -1110,15 +1117,32 @@ public sealed class AzureDevOpsLivePublishingTests
         long? uploadedSize = null;
         using HttpClient httpClient = new(new QueueHttpMessageHandler(async (request, cancellationToken) =>
         {
-            using var payload = JsonDocument.Parse(await ReadRequestBodyAsync(request, cancellationToken));
-            uploadedSize = Convert.FromBase64String(payload.RootElement.GetProperty("stream").GetString()!).LongLength;
+#if NET
+            byte[] body = await request.Content!.ReadAsByteArrayAsync(cancellationToken);
+#else
+            cancellationToken.ThrowIfCancellationRequested();
+            byte[] body = await request.Content!.ReadAsByteArrayAsync();
+#endif
+            using var payload = JsonDocument.Parse(body);
+            uploadedSize = payload.RootElement.GetProperty("stream").GetBytesFromBase64().LongLength;
             Assert.AreEqual("accepted.coverage", payload.RootElement.GetProperty("fileName").GetString());
+            Assert.AreEqual(
+                runAttachment ? "/org/project/_apis/test/runs/42/attachments" : "/org/project/_apis/test/runs/42/results/7/attachments",
+                request.RequestUri!.AbsolutePath);
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") };
         }));
         AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
         AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", directory.Path);
 
-        await client.UploadTestRunAttachmentAsync(configuration, 42, AzureDevOpsTestResultAttachment.FromFile(path, AzureDevOpsAttachmentTypes.CodeCoverage), CancellationToken.None);
+        var attachment = AzureDevOpsTestResultAttachment.FromFile(path, AzureDevOpsAttachmentTypes.CodeCoverage);
+        if (runAttachment)
+        {
+            await client.UploadTestRunAttachmentAsync(configuration, 42, attachment, CancellationToken.None);
+        }
+        else
+        {
+            await client.UploadTestResultAttachmentAsync(configuration, 42, 7, null, attachment, CancellationToken.None);
+        }
 
         Assert.AreEqual(size, uploadedSize);
     }

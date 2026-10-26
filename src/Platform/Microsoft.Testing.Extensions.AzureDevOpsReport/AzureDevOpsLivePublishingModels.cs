@@ -35,7 +35,8 @@ internal static class AzureDevOpsLivePublishingConstants
     public const int MaxSubResultsPerResult = 1000;
 
     /// <summary>Maximum size (in bytes) of a single attachment uploaded to Azure DevOps. Files larger than this are skipped.</summary>
-    public const long MaxAttachmentSizeBytes = 16L * 1024 * 1024;
+    /// <remarks>75 MiB of raw content becomes 100 MiB of base64, matching the Azure Pipelines agent's attachment guards.</remarks>
+    public const long MaxAttachmentSizeBytes = 75L * 1024 * 1024;
 
     /// <summary>Maximum size (in bytes) of an inline (string-based) attachment such as stdout/stderr. Content beyond this is truncated.</summary>
     public const int MaxInlineAttachmentBytes = 256 * 1024;
