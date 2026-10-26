@@ -226,14 +226,14 @@ internal sealed class FileLoggerProvider(
         }
     }
 
+#if NETCOREAPP
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
+#endif
     public void Dispose()
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            FileLogger.Dispose();
-            return;
-        }
-
+        // This blocking path is only for multithreaded runtimes. Single-threaded WASM callers must use
+        // DisposeHelper.DisposeAsync, which prefers IAsyncDisposable and awaits the logger's drain.
         _relocationSemaphore.Wait();
         try
         {
