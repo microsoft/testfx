@@ -1,7 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
+    MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
     MSTest.Analyzers.ReviewAlwaysTrueAssertConditionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
@@ -10,6 +17,182 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 {
+    private const string ProtocolSource = """
+        public enum ContractOption { None = 0 }
+
+        public static class Protocol
+        {
+            public const int HeaderSize = 16;
+            public const int OtherSize = 16;
+            public const int Negative = -16;
+            public const string Version = "v1";
+            public const char Marker = 'a';
+            public const bool Enabled = true;
+            public const double Ratio = 1.5;
+            public const float SingleRatio = 1.5F;
+            public const decimal Price = 1.5M;
+            public const string Empty = null;
+        }
+        """;
+
+    [TestMethod]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual(Protocol.HeaderSize, 16)", true)]
+    [DataRow("Assert.AreEqual(actual: Protocol.HeaderSize, expected: 16)", true)]
+    [DataRow("Assert.AreEqual((16), (Protocol.HeaderSize))", true)]
+    [DataRow("Assert.AreEqual(+16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual(-16, Protocol.Negative)", true)]
+    [DataRow("Assert.AreEqual(\"v1\", Protocol.Version)", true)]
+    [DataRow("Assert.AreEqual('a', Protocol.Marker)", true)]
+    [DataRow("Assert.AreEqual(true, Protocol.Enabled)", true)]
+    [DataRow("Assert.AreEqual(1.5, Protocol.Ratio)", true)]
+    [DataRow("Assert.AreEqual(1.5F, Protocol.SingleRatio)", true)]
+    [DataRow("Assert.AreEqual(1.5M, Protocol.Price)", true)]
+    [DataRow("Assert.AreEqual<string>(null, Protocol.Empty)", true)]
+    [DataRow("Assert.AreEqual<object>(16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual<byte>(16, Protocol.HeaderSize)", true)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize, \"contract\")", true)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize, (System.Collections.Generic.IEqualityComparer<int>)null)", true)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize, System.Collections.Generic.EqualityComparer<int>.Default)", true)]
+    [DataRow("Assert.AreEqual(16, 16)", false)]
+    [DataRow("Assert.AreEqual(16, local)", false)]
+    [DataRow("Assert.AreEqual(16, alias)", false)]
+    [DataRow("Assert.AreEqual(16, 8 + 8)", false)]
+    [DataRow("Assert.AreEqual(16, Protocol.HeaderSize + 0)", false)]
+    [DataRow("Assert.AreEqual(16, +Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual(-(8 + 8), Protocol.Negative)", false)]
+    [DataRow("Assert.AreEqual(Protocol.HeaderSize, Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual(Protocol.HeaderSize, Protocol.OtherSize)", false)]
+    [DataRow("Assert.AreEqual(16, (int)Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual((int)16, Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual<Converted>(16, Protocol.HeaderSize)", false)]
+    [DataRow("Assert.AreEqual<ContractOption>(0, ContractOption.None)", false)]
+    [DataRow("Assert.AreEqual(nameof(Protocol), nameof(Protocol))", false)]
+    [DataRow("Assert.AreEqual(nameof(Protocol), LocalName)", false)]
+    [DataRow("Assert.IsTrue(Protocol.HeaderSize == 16)", false)]
+    [DataRow("Assert.IsFalse(Protocol.HeaderSize != 16)", false)]
+    [DataRow("Assert.AreNotEqual(17, Protocol.HeaderSize)", false)]
+    public async Task WhenAssertAreEqualPinsConstant_OnlyReferencedAssemblyIsExempt(string assertion, bool isContractPin)
+    {
+        foreach (string declaration in new[] { "source", "project", "metadata" })
+        {
+            bool reportsDiagnostic = declaration == "source" || !isContractPin;
+            var test = new VerifyCS.Test
+            {
+                TestCode = $$"""
+                    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                    public class ContractTests
+                    {
+                        private const string LocalName = "Protocol";
+
+                        public void PinsConstant()
+                        {
+                            const int local = 16;
+                            const int alias = Protocol.HeaderSize;
+                            {{(reportsDiagnostic ? $"[|{assertion}|]" : assertion)}};
+                        }
+                    }
+
+                    public sealed class Converted
+                    {
+                        public static implicit operator Converted(int value) => new Converted();
+                    }
+                    """,
+            };
+
+            switch (declaration)
+            {
+                case "source":
+                    test.TestState.Sources.Add(("Protocol.cs", ProtocolSource));
+                    break;
+                case "project":
+                    var libraryProject = new ProjectState("ProtocolLibrary", LanguageNames.CSharp, "/ProtocolLibrary/", "cs");
+                    libraryProject.Sources.Add(("Protocol.cs", ProtocolSource));
+                    test.TestState.AdditionalProjects.Add("ProtocolLibrary", libraryProject);
+                    test.TestState.AdditionalProjectReferences.Add("ProtocolLibrary");
+                    break;
+                case "metadata":
+                    test.TestState.AdditionalReferences.Add(await CreateProtocolReferenceAsync());
+                    break;
+            }
+
+            await test.RunAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsReferencedConstantInVisualBasic_NoDiagnostic()
+    {
+        var test = new VerifyVB.Test
+        {
+            TestCode = """
+                Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+                Public Class ContractTests
+                    Private Const LocalSize As Integer = 16
+
+                    Public Sub PinsConstant()
+                        Assert.AreEqual(16, Protocol.HeaderSize)
+                        Assert.AreEqual(Protocol.HeaderSize, 16)
+                        Assert.AreEqual(actual:=Protocol.HeaderSize, expected:=16)
+                        Assert.AreEqual((16), (Protocol.HeaderSize))
+                        Assert.AreEqual(-16, Protocol.Negative)
+                        Assert.AreEqual("v1", Protocol.Version)
+                        [|Assert.AreEqual(16, LocalSize)|]
+                        [|Assert.AreEqual(16, 16)|]
+                        [|Assert.AreEqual(16, Protocol.HeaderSize + 0)|]
+                        [|Assert.AreEqual(Protocol.HeaderSize, Protocol.HeaderSize)|]
+                        [|Assert.AreEqual(16, CInt(Protocol.HeaderSize))|]
+                    End Sub
+                End Class
+                """,
+        };
+        test.TestState.AdditionalReferences.Add(await CreateProtocolReferenceAsync());
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualPinsConstantInCurrentVisualBasicAssembly_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Class Protocol
+                Public Const HeaderSize As Integer = 16
+                Public Const Version As String = "v1"
+            End Class
+
+            Public Class ContractTests
+                Public Sub PinsConstant()
+                    [|Assert.AreEqual(16, Protocol.HeaderSize)|]
+                    [|Assert.AreEqual(Protocol.HeaderSize, 16)|]
+                    [|Assert.AreEqual(actual:=Protocol.HeaderSize, expected:=16)|]
+                    [|Assert.AreEqual((16), (Protocol.HeaderSize))|]
+                    [|Assert.AreEqual("v1", Protocol.Version)|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    private static async Task<MetadataReference> CreateProtocolReferenceAsync()
+    {
+        var compilation = CSharpCompilation.Create(
+            "ProtocolLibrary",
+            [CSharpSyntaxTree.ParseText(ProtocolSource)],
+            await new VerifyCS.Test().ReferenceAssemblies.ResolveAsync(LanguageNames.CSharp, CancellationToken.None),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        using var stream = new MemoryStream();
+        Microsoft.CodeAnalysis.Emit.EmitResult result = compilation.Emit(stream);
+        Assert.IsTrue(result.Success, string.Join(Environment.NewLine, result.Diagnostics));
+
+        return MetadataReference.CreateFromImage(stream.ToArray());
+    }
+
     [TestMethod]
     public async Task WhenIsNotNullAssertion_ValueParameterIsNotNullable_NoDiagnostic()
     {
