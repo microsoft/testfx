@@ -98,7 +98,7 @@ internal sealed class ObjectPool<T>
         private string GetTrace()
         {
 #if TRACE_LEAKS
-            return Trace == null ? "" : Trace.ToString();
+            return Trace is null ? "" : Trace.ToString();
 #else
             return "Leak tracing information is disabled. Define TRACE_LEAKS on ObjectPool`1.cs to get more info \n";
 #endif
@@ -156,7 +156,7 @@ internal sealed class ObjectPool<T>
         // We will interlock only when we have a candidate. in a worst case we may miss some
         // recently returned objects. Not a big deal.
         T? inst = _firstItem;
-        if (inst == null || inst != Interlocked.CompareExchange(ref _firstItem, null, inst))
+        if (inst is null || inst != Interlocked.CompareExchange(ref _firstItem, null, inst))
         {
             inst = AllocateSlow();
         }
@@ -183,7 +183,7 @@ internal sealed class ObjectPool<T>
             // We will interlock only when we have a candidate. in a worst case we may miss some
             // recently returned objects. Not a big deal.
             T? inst = items[i].Value;
-            if (inst != null &&
+            if (inst is not null &&
                 inst == Interlocked.CompareExchange(ref items[i].Value, null, inst))
             {
                 return inst;
@@ -213,7 +213,7 @@ internal sealed class ObjectPool<T>
         Validate(obj);
         ForgetTrackedObject(obj);
 
-        if (_firstItem == null)
+        if (_firstItem is null)
         {
             // Intentionally not using interlocked here.
             // In a worst case scenario two objects may be stored into same slot.
@@ -231,7 +231,7 @@ internal sealed class ObjectPool<T>
         Element[] items = _items;
         for (int i = 0; i < items.Length; i++)
         {
-            if (items[i].Value == null)
+            if (items[i].Value is null)
             {
                 // Intentionally not using interlocked here.
                 // In a worst case scenario two objects may be stored into same slot.
@@ -266,7 +266,7 @@ internal sealed class ObjectPool<T>
             Debug.WriteLine($"TRACEOBJECTPOOLLEAKS_BEGIN\nObject of type {typeof(T)} was freed, but was not from pool. \n Callstack: \n {trace} TRACEOBJECTPOOLLEAKS_END");
         }
 
-        if (replacement != null)
+        if (replacement is not null)
         {
             tracker = new LeakTracker();
             leakTrackers.Add(replacement, tracker);
@@ -292,7 +292,7 @@ internal sealed class ObjectPool<T>
         for (int i = 0; i < items.Length; i++)
         {
             T? value = items[i].Value;
-            if (value == null)
+            if (value is null)
             {
                 return;
             }

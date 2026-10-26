@@ -19,7 +19,7 @@ public class DebuggerUtility
     {
         try
         {
-            if (pid == null)
+            if (pid is null)
             {
                 Trace("FAIL: Pid is null.", enabled: enableLog);
                 return false;
@@ -30,7 +30,7 @@ public class DebuggerUtility
             Trace($"Using pid: {pid} to get parent VS.", enabled: enableLog);
             using Process? vs = GetVsFromPid(Process.GetProcessById(vsPid ?? process.Id));
 
-            if (vs != null)
+            if (vs is not null)
             {
                 Trace($"Parent VS is {vs.ProcessName} ({vs.Id}).", enabled: enableLog);
                 AttachTo(process, vs);
@@ -40,7 +40,7 @@ public class DebuggerUtility
             Trace("Parent VS not found, finding the first VS that started.", enabled: enableLog);
             using Process? firstVsProcess = GetFirstVsProcess();
 
-            if (firstVsProcess != null)
+            if (firstVsProcess is not null)
             {
                 Trace($"Found VS {firstVsProcess.Id}", enabled: enableLog);
                 AttachTo(process, firstVsProcess);
@@ -120,21 +120,21 @@ public class DebuggerUtility
             int r = CreateBindCtx(0, out bindCtx);
 #pragma warning restore IL2050
             Marshal.ThrowExceptionForHR(r);
-            if (bindCtx == null)
+            if (bindCtx is null)
             {
                 Trace("BindCtx is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             bindCtx.GetRunningObjectTable(out runningObjectTable);
-            if (runningObjectTable == null)
+            if (runningObjectTable is null)
             {
                 Trace("RunningObjectTable is null. Cannot attach VS.", enabled: enableLog);
                 return false;
             }
 
             runningObjectTable.EnumRunning(out enumMoniker);
-            if (enumMoniker == null)
+            if (enumMoniker is null)
             {
                 Trace("EnumMoniker is null. Cannot attach VS.", enabled: enableLog);
                 return false;
@@ -143,7 +143,7 @@ public class DebuggerUtility
             string dteSuffix = ":" + vs.Id;
 
             var moniker = new IMoniker[1];
-            while (enumMoniker.Next(1, moniker, IntPtr.Zero) == 0 && moniker[0] != null)
+            while (enumMoniker.Next(1, moniker, IntPtr.Zero) == 0 && moniker[0] is not null)
             {
                 moniker[0].GetDisplayName(bindCtx, null, out string dn);
 
@@ -192,7 +192,7 @@ public class DebuggerUtility
         }
         finally
         {
-            if (enumMoniker != null)
+            if (enumMoniker is not null)
             {
                 try
                 {
@@ -203,7 +203,7 @@ public class DebuggerUtility
                 }
             }
 
-            if (runningObjectTable != null)
+            if (runningObjectTable is not null)
             {
                 try
                 {
@@ -214,7 +214,7 @@ public class DebuggerUtility
                 }
             }
 
-            if (bindCtx != null)
+            if (bindCtx is not null)
             {
                 try
                 {
@@ -241,7 +241,7 @@ public class DebuggerUtility
 
     private static bool IsVsOrNull([NotNullWhen(false)] Process? process, bool enableLog = false)
     {
-        if (process == null)
+        if (process is null)
         {
             Trace("Parent process is null..", enabled: enableLog);
             return true;

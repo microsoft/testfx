@@ -51,7 +51,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         try
         {
             DataTable table = ReadTable(tableName, null);
-            if (table != null)
+            if (table is not null)
             {
                 List<string> columnNames = [];
                 foreach (DataColumn column in table.Columns)
@@ -117,7 +117,7 @@ internal sealed class CsvDataConnection : TestDataConnection
             ? string.Format(CultureInfo.InvariantCulture, " top {0}", maxRows.ToString(NumberFormatInfo.InvariantInfo))
             : string.Empty;
         string columnsClause;
-        if (columns != null)
+        if (columns is not null)
         {
             StringBuilder builder = new();
             foreach (string columnName in columns)

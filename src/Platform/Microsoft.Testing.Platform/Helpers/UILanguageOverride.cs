@@ -19,7 +19,7 @@ internal static class UILanguageOverride
     internal static void SetCultureSpecifiedByUser(IEnvironment environment)
     {
         CultureInfo? language = GetOverriddenUILanguage(environment);
-        if (language == null)
+        if (language is null)
         {
             return;
         }
@@ -62,7 +62,7 @@ internal static class UILanguageOverride
         // VSLANG=<lcid> is set by VS and we respect that as well so that we will respect the VS
         // language preference if we're invoked by VS.
         string? vsLang = environment.GetEnvironmentVariable(VSLANG);
-        if (vsLang != null && int.TryParse(vsLang, out int vsLcid))
+        if (vsLang is not null && int.TryParse(vsLang, out int vsLcid))
         {
             try
             {
@@ -91,7 +91,7 @@ internal static class UILanguageOverride
     private static void SetIfNotAlreadySet(string environmentVariableName, string value, IEnvironment environment)
     {
         string? currentValue = environment.GetEnvironmentVariable(environmentVariableName);
-        if (currentValue == null)
+        if (currentValue is null)
         {
             environment.SetEnvironmentVariable(environmentVariableName, value);
         }

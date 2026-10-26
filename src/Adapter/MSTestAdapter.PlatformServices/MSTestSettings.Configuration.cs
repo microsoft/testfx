@@ -98,7 +98,7 @@ internal sealed partial class MSTestSettings
     private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings, IAdapterMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
-        if (runConfigElement == null)
+        if (runConfigElement is null)
         {
             return;
         }

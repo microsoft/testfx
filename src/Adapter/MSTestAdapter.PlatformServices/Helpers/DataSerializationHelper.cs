@@ -47,7 +47,7 @@ internal static class DataSerializationHelper
     [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
     public static string?[]? Serialize(object?[]? data)
     {
-        if (data == null)
+        if (data is null)
         {
             return null;
         }
@@ -73,7 +73,7 @@ internal static class DataSerializationHelper
         {
             int typeIndex = i * 2;
             int dataIndex = typeIndex + 1;
-            if (data[i] == null)
+            if (data[i] is null)
             {
                 serializedData[typeIndex] = null;
                 serializedData[dataIndex] = null;
@@ -118,7 +118,7 @@ internal static class DataSerializationHelper
     [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = DataContractSerializationJustification)]
     public static object?[]? Deserialize(string?[]? serializedData)
     {
-        if (serializedData == null || serializedData.Length % 2 != 0)
+        if (serializedData is null || serializedData.Length % 2 != 0)
         {
             return null;
         }
@@ -146,7 +146,7 @@ internal static class DataSerializationHelper
             string? assemblyQualifiedName = serializedData[typeIndex];
             string? serializedValue = serializedData[typeIndex + 1];
 
-            if (serializedValue == null || assemblyQualifiedName == null)
+            if (serializedValue is null || assemblyQualifiedName is null)
             {
                 data[i] = null;
                 continue;

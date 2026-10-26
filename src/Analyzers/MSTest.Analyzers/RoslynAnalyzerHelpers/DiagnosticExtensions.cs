@@ -185,7 +185,7 @@ internal static class DiagnosticExtensions
 
             object? syntaxTreeOptionsProvider = s_compilationOptionsSyntaxTreeOptionsProviderProperty?.GetValue(compilation.Options);
             MethodInfo? syntaxTreeOptionsProviderTryGetDiagnosticValueMethod = syntaxTreeOptionsProvider?.GetType().GetRuntimeMethods().FirstOrDefault(m => m.Name == "TryGetDiagnosticValue");
-            if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod == null && s_syntaxTreeDiagnosticOptionsProperty == null)
+            if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod is null && s_syntaxTreeDiagnosticOptionsProperty is null)
             {
                 return rule.DefaultSeverity;
             }
@@ -196,9 +196,9 @@ internal static class DiagnosticExtensions
                 ReportDiagnostic? configuredValue = null;
 
                 // Prefer 'CompilationOptions.SyntaxTreeOptionsProvider', if available.
-                if (s_compilationOptionsSyntaxTreeOptionsProviderProperty != null)
+                if (s_compilationOptionsSyntaxTreeOptionsProviderProperty is not null)
                 {
-                    if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod != null)
+                    if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod is not null)
                     {
                         // public abstract bool TryGetDiagnosticValue(SyntaxTree tree, string diagnosticId, out ReportDiagnostic severity);
                         // public abstract bool TryGetDiagnosticValue(SyntaxTree tree, string diagnosticId, CancellationToken cancellationToken, out ReportDiagnostic severity);
@@ -214,7 +214,7 @@ internal static class DiagnosticExtensions
                 }
                 else
                 {
-                    RoslynDebug.Assert(s_syntaxTreeDiagnosticOptionsProperty != null);
+                    RoslynDebug.Assert(s_syntaxTreeDiagnosticOptionsProperty is not null);
                     var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree);
                     if (options.TryGetValue(rule.Id, out ReportDiagnostic value))
                     {
@@ -222,7 +222,7 @@ internal static class DiagnosticExtensions
                     }
                 }
 
-                if (configuredValue == null)
+                if (configuredValue is null)
                 {
                     continue;
                 }
@@ -233,7 +233,7 @@ internal static class DiagnosticExtensions
                     return null;
                 }
 
-                if (overriddenSeverity == null)
+                if (overriddenSeverity is null)
                 {
                     overriddenSeverity = configuredValue;
                 }

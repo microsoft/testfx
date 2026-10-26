@@ -67,7 +67,7 @@ internal partial class TestDataConnectionSql
                     continue;
                 }
 
-                DebugEx.Assert(dataTable != null, "Failed to get data table that contains metadata about tables!");
+                DebugEx.Assert(dataTable is not null, "Failed to get data table that contains metadata about tables!");
 
                 foreach (DataRow row in dataTable.Rows)
                 {
@@ -76,7 +76,7 @@ internal partial class TestDataConnectionSql
                     bool isDefaultSchema = false;
 
                     // Check the table type for validity
-                    if (metadata.TableTypeColumn != null)
+                    if (metadata.TableTypeColumn is not null)
                     {
                         if (row[metadata.TableTypeColumn] != DBNull.Value)
                         {
@@ -108,7 +108,7 @@ internal partial class TestDataConnectionSql
                     }
 
                     string? tableName = row[metadata.NameColumn] as string;
-                    WriteDiagnostics("Table {0}{1} found", tableSchema != null ? tableSchema + "." : string.Empty, tableName);
+                    WriteDiagnostics("Table {0}{1} found", tableSchema is not null ? tableSchema + "." : string.Empty, tableName);
 
                     // If schema is defined and is not equal to default, prepend table schema in front of the table.
                     string qualifiedTableName = isDefaultSchema
@@ -243,7 +243,7 @@ internal partial class TestDataConnectionSql
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected string? GetDefaultSchemaMSSql()
     {
-        DebugEx.Assert(Connection != null, "Connection should not be null.");
+        DebugEx.Assert(Connection is not null, "Connection should not be null.");
 
         try
         {
@@ -251,8 +251,8 @@ internal partial class TestDataConnectionSql
             var odbcConnection = Connection as OdbcConnection;
             DebugEx.Assert(
                 Connection is SqlConnection ||
-                (oleDbConnection != null && IsMSSql(oleDbConnection.Provider)) ||
-                (odbcConnection != null && IsMSSql(odbcConnection.Driver)),
+                (oleDbConnection is not null && IsMSSql(oleDbConnection.Provider)) ||
+                (odbcConnection is not null && IsMSSql(odbcConnection.Driver)),
                 "GetDefaultSchemaMSSql should be called only for MS SQL (either native or Ole Db or Odbc).");
 
             DebugEx.Assert(IsOpen(), "The connection must already be open!");

@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 
 using AwesomeAssertions;
 
+using Moq;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
@@ -367,6 +369,31 @@ public class CollectionAssertTests : TestContainer
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message");
         comparer.ToString(); // no warning
+    }
+
+    public void CollectionAssertAreEquivalent_BothNullEnumerables_DoesNotThrow()
+    {
+        Action action = () => CollectionAssert.AreEquivalent<int>(null, null, EqualityComparer<int>.Default);
+
+        action.Should().NotThrow();
+    }
+
+    public void CollectionAssertAreEquivalent_SameEnumerable_DoesNotEnumerate()
+    {
+        var collection = new Mock<IEnumerable<int>>(MockBehavior.Strict);
+        Action action = () => CollectionAssert.AreEquivalent(collection.Object, collection.Object, EqualityComparer<int>.Default);
+
+        action.Should().NotThrow();
+    }
+
+    public void CollectionAssertAreEquivalent_OneNullEnumerable_Throws()
+    {
+        IEnumerable<int> collection = [1];
+        Action expectedNull = () => CollectionAssert.AreEquivalent(null, collection, EqualityComparer<int>.Default);
+        Action actualNull = () => CollectionAssert.AreEquivalent(collection, null, EqualityComparer<int>.Default);
+
+        expectedNull.Should().Throw<AssertFailedException>();
+        actualNull.Should().Throw<AssertFailedException>();
     }
 
     public void CollectionAssertAreEquivalent_SameItemsWithDifferentOrder_DoesNotThrow()

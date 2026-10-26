@@ -140,11 +140,11 @@ internal static class ManagedNameHelper
             }
 
             ParameterInfo[] paramList = method.GetParameters();
-            if (paramList.Length == 0 && parameterTypes == null)
+            if (paramList.Length == 0 && parameterTypes is null)
             {
                 return true;
             }
-            else if (parameterTypes == null || paramList.Length != parameterTypes.Length)
+            else if (parameterTypes is null || paramList.Length != parameterTypes.Length)
             {
                 return false;
             }
@@ -192,7 +192,7 @@ internal static class ManagedNameHelper
         }
         else if (type.IsGenericParameter)
         {
-            if (type.DeclaringMethod != null)
+            if (type.DeclaringMethod is not null)
             {
                 b.Append('!');
             }
@@ -202,7 +202,7 @@ internal static class ManagedNameHelper
         }
         else
         {
-            if (type.Namespace != null)
+            if (type.Namespace is not null)
             {
                 AppendNamespace(b, type.Namespace);
                 b.Append('.');

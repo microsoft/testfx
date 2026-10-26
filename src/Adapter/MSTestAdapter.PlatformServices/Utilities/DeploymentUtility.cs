@@ -239,7 +239,7 @@ internal sealed class DeploymentUtility : DeploymentUtilityBase
         DebugEx.Assert(!StringEx.IsNullOrEmpty(testSourceHandler), "testSourceHandler should not be null or empty.");
 
         // config file can be null.
-        DebugEx.Assert(deploymentItems != null, "deploymentItems should not be null.");
+        DebugEx.Assert(deploymentItems is not null, "deploymentItems should not be null.");
         DebugEx.Assert(Path.IsPathRooted(testSourceHandler), "path should be rooted.");
 
         var sw = Stopwatch.StartNew();

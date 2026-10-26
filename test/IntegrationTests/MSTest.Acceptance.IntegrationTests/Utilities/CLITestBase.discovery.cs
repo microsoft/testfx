@@ -126,7 +126,7 @@ public abstract partial class CLITestBase
         {
             RunSettings = new InternalRunSettings(runSettings);
 
-            if (testCaseFilter != null)
+            if (testCaseFilter is not null)
             {
                 _filter = TestCaseFilterFactory.ParseTestFilter(testCaseFilter);
             }
@@ -145,7 +145,7 @@ public abstract partial class CLITestBase
         {
             RunSettings = new InternalRunSettings(runSettings);
 
-            if (testCaseFilter != null)
+            if (testCaseFilter is not null)
             {
                 _filter = TestCaseFilterFactory.ParseTestFilter(testCaseFilter);
             }

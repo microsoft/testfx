@@ -206,7 +206,7 @@ internal sealed class TestSourceHandler : ITestSourceHandler
         }
 #elif WIN_UI
         string? appxSource;
-        if ((appxSource = FindAppxSource(sources)) != null)
+        if ((appxSource = FindAppxSource(sources)) is not null)
         {
             string appxSourceDirectory = Path.GetDirectoryName(appxSource)!;
 

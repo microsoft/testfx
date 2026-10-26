@@ -64,7 +64,7 @@ internal sealed class AssemblyEnumeratorWrapper
         }
         catch (ReflectionTypeLoadException ex)
         {
-            if (ex.LoaderExceptions != null)
+            if (ex.LoaderExceptions is not null)
             {
                 if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
                 {

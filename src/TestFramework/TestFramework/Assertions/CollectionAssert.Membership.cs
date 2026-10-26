@@ -184,7 +184,7 @@ public sealed partial class CollectionAssert
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection");
         foreach (object? current in collection)
         {
-            if (current == null)
+            if (current is null)
             {
                 ReportAllItemsAreNotNullFailed(collection, Assert.BuildUserMessage(message));
             }
@@ -246,7 +246,7 @@ public sealed partial class CollectionAssert
         HashSet<object> table = [];
         foreach (object? current in collection)
         {
-            if (current == null)
+            if (current is null)
             {
                 if (!foundNull)
                 {

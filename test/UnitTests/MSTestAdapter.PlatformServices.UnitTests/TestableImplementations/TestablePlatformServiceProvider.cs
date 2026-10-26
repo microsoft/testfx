@@ -59,7 +59,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     [field: MaybeNull]
     public IReflectionOperations ReflectionOperations
     {
-        get => MockReflectionOperations != null
+        get => MockReflectionOperations is not null
             ? (_reflectionOperationsWrapper ?? MockReflectionOperations.Object)
             : field ??= new ReflectionOperations();
         private set;

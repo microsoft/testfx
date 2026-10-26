@@ -2333,7 +2333,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
         DummyTestClass.TestCleanupMethodBody = c =>
         {
-            if (DummyTestClass.GetTestContext() != null)
+            if (DummyTestClass.GetTestContext() is not null)
             {
                 testOutcome = DummyTestClass.GetTestContext().CurrentTestOutcome;
             }

@@ -64,7 +64,7 @@ public partial class PrivateObject
     public object? GetProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        if (parameterTypes == null)
+        if (parameterTypes is null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
@@ -95,7 +95,7 @@ public partial class PrivateObject
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
 
-        if (parameterTypes == null)
+        if (parameterTypes is null)
         {
             object?[] pass = new object[(args?.Length ?? 0) + 1];
             pass[0] = value;

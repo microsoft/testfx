@@ -75,7 +75,9 @@ public partial class AssertTests : TestContainer
     {
         string? s = null;
 
+#pragma warning disable CSIsNull002 // Preserve the inequality expression tree under test.
         Action act = () => Assert.That(() => s != null, "String should not be null");
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage(
@@ -824,7 +826,9 @@ public partial class AssertTests : TestContainer
         Action<string> action = Console.WriteLine;
         bool shouldExecute = false;
 
+#pragma warning disable CSIsNull002 // Preserve the inequality expression tree under test.
         Action act = () => Assert.That(() => shouldExecute && action != null);
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
@@ -1035,7 +1039,9 @@ public partial class AssertTests : TestContainer
         string? nullVariable = null;
         string nonNullVariable = "value";
 
+#pragma warning disable CSIsNull002 // Preserve the inequality expression tree under test.
         Action act = () => Assert.That(() => nullVariable != null && nonNullVariable == null);
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
@@ -1132,7 +1138,9 @@ public partial class AssertTests : TestContainer
         // s != null is false; the right operand s.Length > 0 must NOT execute on the assertion
         // path (it would NRE) and the diagnostic walk must not surface "<Failed to evaluate>"
         // for the benign short-circuit.
+#pragma warning disable CSIsNull002 // Preserve the inequality expression tree under test.
         Action act = () => Assert.That(() => s != null && s.Length > 0);
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         act.Should().Throw<AssertFailedException>()
             .WithMessage("""
@@ -1507,7 +1515,9 @@ public partial class AssertTests : TestContainer
     {
         var holder = new HolderWithFuncField { Callback = null };
 
+#pragma warning disable CSIsNull002 // Preserve the inequality expression tree under test.
         Action act = () => Assert.That(() => holder.Callback != null);
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
         AssertFailedException ex = act.Should().Throw<AssertFailedException>().Which;
         ex.Message.Should().Contain("Callback");

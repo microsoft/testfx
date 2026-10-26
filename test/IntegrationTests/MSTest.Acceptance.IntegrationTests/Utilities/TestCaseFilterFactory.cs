@@ -241,7 +241,7 @@ internal static class TestCaseFilterFactory
         {
             return i;
         }
-        else if (value != null)
+        else if (value is not null)
         {
             return value.ToString() is { } text ? [text] : null;
         }
@@ -251,7 +251,7 @@ internal static class TestCaseFilterFactory
 
     private static bool EqualsComparer(string[] values, string value)
     {
-        if (values == null)
+        if (values is null)
         {
             return false;
         }
@@ -269,7 +269,7 @@ internal static class TestCaseFilterFactory
 
     private static bool ContainsComparer(string[] values, string value)
     {
-        if (values == null)
+        if (values is null)
         {
             return false;
         }
