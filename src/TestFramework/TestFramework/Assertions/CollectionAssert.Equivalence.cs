@@ -131,12 +131,12 @@ public sealed partial class CollectionAssert
         }
 
         // If the references are the same or both collections are null, they are equivalent.
-        if (expected == actual)
+        // A scope records a mismatch instead of throwing, so a null expected sequence must also return.
+        if (expected == actual || expected is null)
         {
             return;
         }
 
-        DebugEx.Assert(expected is not null, "expected is not null here");
         DebugEx.Assert(actual is not null, "actual is not null here");
 
         int expectedCollectionCount = CollectionCountHelper.GetCount(expected);
