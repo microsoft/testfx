@@ -43,7 +43,9 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         if (root.FindNode(diagnosticSpan) is not InvocationExpressionSyntax invocationExpr
             || invocationExpr.ArgumentList.Arguments.Any(argument => argument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword)
-            || invocationExpr.ArgumentList.Arguments.Any(argument => argument.DescendantNodes().Any(node => node is SingleVariableDesignationSyntax)))
+            || invocationExpr.ArgumentList.Arguments.Any(argument => argument.DescendantNodes().Any(node =>
+                node is SingleVariableDesignationSyntax or AssignmentExpressionSyntax
+                || node is ArgumentSyntax nestedArgument && nestedArgument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword)))
         {
             return;
         }
