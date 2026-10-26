@@ -96,7 +96,7 @@ public sealed class TestHostControllerCancellationTests
             System.IO.Pipes.PipeOptions.Asynchronous);
         await client.ConnectAsync(TestContext.CancellationToken);
 
-        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
+        await DisposeServerAsync(server);
 
         byte[] responseBuffer = new byte[1];
         try
@@ -128,7 +128,7 @@ public sealed class TestHostControllerCancellationTests
             new SystemTask());
         server.Start();
 
-        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
+        await DisposeServerAsync(server);
 
         using var lateClient = new System.IO.Pipes.NamedPipeClientStream(
             ".",
@@ -162,7 +162,7 @@ public sealed class TestHostControllerCancellationTests
         await client.FlushAsync(TestContext.CancellationToken);
         await server.WaitForRequestAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
 
-        await Task.Run(server.Dispose, TestContext.CancellationToken).TimeoutAfterAsync(DisposalTestTimeout);
+        await DisposeServerAsync(server);
 
         byte[] responseBuffer = new byte[64];
         int bytesRead;
@@ -202,6 +202,12 @@ public sealed class TestHostControllerCancellationTests
             Assert.IsFalse(listener.WasCancellationRequestedByController);
         }
     }
+
+    private static Task DisposeServerAsync(TestHostControllerCancellationServer server)
+        // Synchronous disposal waits for asynchronous pipe continuations. A pooled worker can starve those
+        // continuations on .NET Framework when the rest of the method-parallel suite occupies the pool.
+        => Task.Factory.StartNew(server.Dispose, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+            .TimeoutAfterAsync(DisposalTestTimeout);
 
     private static Mock<ILoggerFactory> CreateLoggerFactory()
     {
