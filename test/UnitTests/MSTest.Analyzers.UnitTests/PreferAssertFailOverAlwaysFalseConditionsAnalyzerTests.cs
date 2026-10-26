@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer,
     MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsFixer>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.PreferAssertFailOverAlwaysFalseConditionsAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -2156,5 +2159,320 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("Assert.IsExactInstanceOfType<AbstractBase>(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(AbstractBase))")]
+    [DataRow("Assert.IsExactInstanceOfType(expectedType: typeof(AbstractBase), value: value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, (typeof(AbstractBase)))")]
+    [DataRow("Assert.IsExactInstanceOfType(value, (System.Type)(object)typeof(AbstractBase))")]
+    [DataRow("Assert.IsExactInstanceOfType<AbstractGeneric<int>>(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(AbstractGeneric<int>))")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(AbstractGeneric<>))")]
+    [DataRow("Assert.IsExactInstanceOfType<System.IO.Stream>(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(System.IO.Stream))")]
+    public async Task WhenAssertIsExactInstanceOfTypeExpectsAbstractType_DiagnosticAndCodeFix(string assertion)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    [|{{assertion}}|];
+                }
+
+                private abstract class AbstractBase { }
+                private abstract class AbstractGeneric<T> { }
+            }
+            """;
+        string fixedCode = code.Replace($"[|{assertion}|]", "Assert.Fail()");
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("Assert.IsExactInstanceOfType<AbstractBase>(value, \"message\")", "Assert.Fail(\"message\")")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(AbstractBase), \"message\")", "Assert.Fail(\"message\")")]
+    [DataRow("Assert.IsExactInstanceOfType<AbstractBase>(message: \"message\", value: value)", "Assert.Fail(message: \"message\")")]
+    [DataRow("Assert.IsExactInstanceOfType(message: \"message\", expectedType: typeof(AbstractBase), value: value)", "Assert.Fail(message: \"message\")")]
+    [DataRow("Assert.IsExactInstanceOfType<AbstractBase>(value, $\"message {value}\")", "Assert.Fail($\"message {value}\")")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(AbstractBase), $\"message {value}\")", "Assert.Fail($\"message {value}\")")]
+    public async Task WhenAssertIsExactInstanceOfTypeExpectsAbstractTypeWithMessage_CodeFixPreservesMessage(string assertion, string fixedAssertion)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    [|{{assertion}}|];
+                }
+
+                private abstract class AbstractBase { }
+            }
+            """;
+        string fixedCode = code.Replace($"[|{assertion}|]", fixedAssertion);
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow("public void Test(object value) { _ = [|Assert.IsExactInstanceOfType<AbstractBase>(value)|]; }", DisplayName = "Discarded result")]
+    [DataRow("public void Test(object value) { var result = [|Assert.IsExactInstanceOfType<AbstractBase>(value)|]; }", DisplayName = "Assigned result")]
+    [DataRow("public AbstractBase Test(object value) => [|Assert.IsExactInstanceOfType<AbstractBase>(value)|];", DisplayName = "Expression-bodied return")]
+    [DataRow("public AbstractBase Test(object value) { return [|Assert.IsExactInstanceOfType<AbstractBase>(value)|]; }", DisplayName = "Returned result")]
+    [DataRow("public void Test(object value) { Consume([|Assert.IsExactInstanceOfType<AbstractBase>(value)|]); }", DisplayName = "Argument result")]
+    public async Task WhenAssertIsExactInstanceOfTypeExpectsAbstractTypeAndResultIsUsed_DiagnosticWithoutCodeFix(string member)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                {{member}}
+
+                private static void Consume(object value) { }
+                public abstract class AbstractBase { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    [DataRow("Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType<AbstractBase>(value)", "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail()", "")]
+    [DataRow("global::Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsExactInstanceOfType(value, typeof(AbstractBase))", "global::Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail()", "")]
+    [DataRow("MSTestAssert.IsExactInstanceOfType<AbstractBase>(value)", "MSTestAssert.Fail()", "using MSTestAssert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;")]
+    [DataRow("MSTestAssert.IsExactInstanceOfType(value, typeof(AbstractBase))", "MSTestAssert.Fail()", "using MSTestAssert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;")]
+    [DataRow("IsExactInstanceOfType<AbstractBase>(value)", "global::Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail()", "using static Microsoft.VisualStudio.TestTools.UnitTesting.Assert;")]
+    [DataRow("IsExactInstanceOfType(value, typeof(AbstractBase))", "global::Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail()", "using static Microsoft.VisualStudio.TestTools.UnitTesting.Assert;")]
+    public async Task WhenAssertIsExactInstanceOfTypeUsesQualifiedOrImportedAssert_CodeFixTargetsMSTest(string assertion, string fixedAssertion, string imports)
+    {
+        string code = $$"""
+            {{imports}}
+
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    [|{{assertion}}|];
+                }
+
+                private static void Fail() { }
+                private abstract class AbstractBase { }
+            }
+            """;
+        string fixedCode = code.Replace($"[|{assertion}|]", fixedAssertion);
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    [DataRow(
+        "var message = new Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler(0, 0, value, typeof(AbstractBase), out _);",
+        "Assert.IsExactInstanceOfType(value, typeof(AbstractBase), ref message)",
+        DisplayName = "Non-generic ref handler")]
+    [DataRow(
+        "var message = new Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<AbstractBase>(0, 0, value, out _);",
+        "Assert.IsExactInstanceOfType<AbstractBase>(value, ref message)",
+        DisplayName = "Generic ref handler")]
+    public async Task WhenAssertIsExactInstanceOfTypeUsesExplicitRefMessage_DiagnosticWithoutCodeFix(string declaration, string assertion)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    {{declaration}}
+                    [|{{assertion}}|];
+                }
+
+                private abstract class AbstractBase { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsExactInstanceOfTypeMixesFixableAndUnfixableCalls_CodeFixLeavesUnfixableDiagnostics()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    [|Assert.IsExactInstanceOfType(value, typeof(AbstractBase))|];
+                    _ = [|Assert.IsExactInstanceOfType<AbstractBase>(value)|];
+                    var message = new Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<AbstractBase>(0, 0, value, out _);
+                    [|Assert.IsExactInstanceOfType<AbstractBase>(value, ref message)|];
+                }
+
+                private abstract class AbstractBase { }
+            }
+            """;
+        string fixedCode = code.Replace("[|Assert.IsExactInstanceOfType(value, typeof(AbstractBase))|]", "Assert.Fail()");
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+        };
+        test.FixedState.ExpectedDiagnostics.Add(VerifyCS.DiagnosticIgnoringAdditionalLocations().WithSpan(8, 13, 8, 62).WithArguments("IsExactInstanceOfType"));
+        test.FixedState.ExpectedDiagnostics.Add(VerifyCS.DiagnosticIgnoringAdditionalLocations().WithSpan(10, 9, 10, 71).WithArguments("IsExactInstanceOfType"));
+
+        await test.RunAsync(CancellationToken.None);
+    }
+
+    [TestMethod]
+    [DataRow("Assert.IsExactInstanceOfType<Derived>(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(Derived))")]
+    [DataRow("Assert.IsExactInstanceOfType<AbstractBase[]>(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(AbstractBase[]))")]
+    [DataRow("Assert.IsExactInstanceOfType<T>(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, typeof(T))")]
+    [DataRow("Assert.IsExactInstanceOfType(value, expectedType)")]
+    [DataRow("Assert.IsInstanceOfType<AbstractBase>(value)")]
+    [DataRow("Assert.IsInstanceOfType(value, typeof(AbstractBase))")]
+    [DataRow("Assert.IsNotExactInstanceOfType<AbstractBase>(value)")]
+    [DataRow("Assert.IsNotExactInstanceOfType(value, typeof(AbstractBase))")]
+    public async Task WhenAssertIsExactInstanceOfTypeIsNotKnownToFail_NoDiagnostic(string assertion)
+    {
+        string code = $$"""
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                private void TestMethod<T>(AbstractBase value, Type expectedType)
+                    where T : AbstractBase
+                {
+                    {{assertion}};
+                }
+
+                private abstract class AbstractBase { }
+                private sealed class Derived : AbstractBase { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsExactInstanceOfTypeIsNotMSTestAssert_NoDiagnostic()
+    {
+        string code = """
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    Assert.IsExactInstanceOfType<AbstractBase>(value);
+                    Assert.IsExactInstanceOfType(value, typeof(AbstractBase));
+                }
+
+                private abstract class AbstractBase { }
+            }
+
+            public static class Assert
+            {
+                public static T IsExactInstanceOfType<T>(object value) => (T)value;
+                public static void IsExactInstanceOfType(object value, System.Type expectedType) { }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsExactInstanceOfTypeExpectedTypeUsesUserDefinedConversion_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                public void TestMethod(object value)
+                {
+                    Assert.IsExactInstanceOfType(value, (Type)(TypeWrapper)typeof(AbstractBase));
+                }
+
+                private abstract class AbstractBase { }
+                private sealed class Derived : AbstractBase { }
+
+                private readonly struct TypeWrapper
+                {
+                    public static implicit operator TypeWrapper(Type type) => default;
+                    public static implicit operator Type(TypeWrapper value) => typeof(Derived);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    [DataRow("Assert.IsExactInstanceOfType(Of AbstractBase)(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, GetType(AbstractBase))")]
+    [DataRow("Assert.IsExactInstanceOfType(expectedType:=GetType(AbstractBase), value:=value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, (GetType(AbstractBase)))")]
+    [DataRow("Assert.IsExactInstanceOfType(value, DirectCast(DirectCast(GetType(AbstractBase), Object), System.Type))")]
+    public async Task WhenAssertIsExactInstanceOfTypeExpectsAbstractTypeInVisualBasic_Diagnostic(string assertion)
+    {
+        string code = $$"""
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Class MyTestClass
+                Public Sub TestMethod(value As Object)
+                    [|{{assertion}}|]
+                End Sub
+
+                Private MustInherit Class AbstractBase
+                End Class
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    [DataRow("Assert.IsExactInstanceOfType(Of Derived)(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, GetType(Derived))")]
+    [DataRow("Assert.IsExactInstanceOfType(Of T)(value)")]
+    [DataRow("Assert.IsExactInstanceOfType(value, GetType(T))")]
+    [DataRow("Assert.IsExactInstanceOfType(value, expectedType)")]
+    [DataRow("Assert.IsInstanceOfType(Of AbstractBase)(value)")]
+    [DataRow("Assert.IsInstanceOfType(value, GetType(AbstractBase))")]
+    [DataRow("Assert.IsNotExactInstanceOfType(Of AbstractBase)(value)")]
+    [DataRow("Assert.IsNotExactInstanceOfType(value, GetType(AbstractBase))")]
+    public async Task WhenAssertIsExactInstanceOfTypeIsNotKnownToFailInVisualBasic_NoDiagnostic(string assertion)
+    {
+        string code = $$"""
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Public Class MyTestClass
+                Private Sub TestMethod(Of T As AbstractBase)(value As AbstractBase, expectedType As Type)
+                    {{assertion}}
+                End Sub
+
+                Private MustInherit Class AbstractBase
+                End Class
+
+                Private NotInheritable Class Derived
+                    Inherits AbstractBase
+                End Class
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }
