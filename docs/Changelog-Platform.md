@@ -20,7 +20,7 @@ See full log [of v4.5.1...v4.5.2](https://github.com/microsoft/testfx/compare/v4
 * Reduce startup work when parsing build metadata, validating extension options and resolving services, by @thomhurst in [#12085](https://github.com/microsoft/testfx/pull/12085) and [#12086](https://github.com/microsoft/testfx/pull/12086)
 * Increase the Azure DevOps live-publishing attachment limit from 16 MiB to 75 MiB per file, while continuing to report oversized or unreadable attachments without failing otherwise successful tests, by @Evangelink in [#12101](https://github.com/microsoft/testfx/pull/12101)
 * Update the MessagePack dependency to 3.1.11, by @Evangelink in [#12026](https://github.com/microsoft/testfx/pull/12026)
-* Update Russian platform and GitHub Actions report translations, and German platform and packaged-app translations, by @Evangelink and @nohwnd-bot in [#12025](https://github.com/microsoft/testfx/pull/12025) and [#12090](https://github.com/microsoft/testfx/pull/12090)
+* Update localized platform, Azure DevOps report, GitHub Actions report and packaged-app messages, by @Evangelink and @nohwnd-bot in [#11898](https://github.com/microsoft/testfx/pull/11898), [#11899](https://github.com/microsoft/testfx/pull/11899), [#11900](https://github.com/microsoft/testfx/pull/11900), [#11973](https://github.com/microsoft/testfx/pull/11973), [#12025](https://github.com/microsoft/testfx/pull/12025) and [#12090](https://github.com/microsoft/testfx/pull/12090)
 * Mark blocking file-logger disposal as unsupported on browser and WASI runtimes, where shutdown must await asynchronous disposal, by @Evangelink in [#12098](https://github.com/microsoft/testfx/pull/12098)
 
 ### Fixed

@@ -13,7 +13,7 @@ For the Microsoft.Testing.Platform fixes included with this release, see [2.5.2]
 ### Changed
 
 * Add documentation links to the MSTest source generator's `AOTSG0001` through `AOTSG0005` diagnostics, by @Evangelink in [#11972](https://github.com/microsoft/testfx/pull/11972)
-* Update localized MSTest analyzer messages, by @Evangelink and @nohwnd-bot in [#11898](https://github.com/microsoft/testfx/pull/11898), [#11899](https://github.com/microsoft/testfx/pull/11899), [#11900](https://github.com/microsoft/testfx/pull/11900), [#11973](https://github.com/microsoft/testfx/pull/11973), [#12024](https://github.com/microsoft/testfx/pull/12024) and [#12090](https://github.com/microsoft/testfx/pull/12090)
+* Update localized MSTest adapter and analyzer messages, by @Evangelink and @nohwnd-bot in [#11898](https://github.com/microsoft/testfx/pull/11898), [#11899](https://github.com/microsoft/testfx/pull/11899), [#11900](https://github.com/microsoft/testfx/pull/11900), [#11973](https://github.com/microsoft/testfx/pull/11973), [#12024](https://github.com/microsoft/testfx/pull/12024) and [#12090](https://github.com/microsoft/testfx/pull/12090)
 
 ### Fixed
 
