@@ -105,10 +105,10 @@ runs-on-slim: ubuntu-latest
 # the workspace holds `main`, so an agent asked to fix a PR file would patch the
 # wrong revision: `push-to-pull-request-branch` pushes the *file contents* of
 # the agent's tree onto the PR branch, so a fix authored against `main` would
-# silently revert anything else that changed in that file. `pr-checkout-ref` is
-# the PR's head branch for same-repo PRs (attached, so gh-aw can derive the push
-# target from `git rev-parse --abbrev-ref HEAD`) and `refs/pull/<n>/head` for
-# forks, which gh-aw refuses to push to anyway.
+# silently revert anything else that changed in that file. Check out the exact
+# validated head SHA: the branch can move or be deleted while activation runs.
+# The pre-agent step reattaches same-repo branches locally for incremental patch
+# generation; fork checkouts stay detached and cannot be pushed by gh-aw.
 #
 # Checking out the PR head does NOT execute PR code: this workflow never builds,
 # and the agent's bash allowlist contains no interpreters, package managers or
@@ -132,7 +132,7 @@ runs-on-slim: ubuntu-latest
 # rewrite the analyst's own instructions — `roles: all` lets every fork reach
 # this workflow.
 checkout:
-  - ref: ${{ needs.fetch-binlog.outputs.pr-checkout-ref }}
+  - ref: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
   # The pull request's own base branch (resolved from the GitHub API by the
   # shared fetch job), not the repository default branch: a `rel/*` pull
   # request must be analyzed with the playbook and agent config that branch
@@ -162,6 +162,27 @@ checkout:
       .pi
 
 pre-agent-steps:
+  - name: Attach the verified analysis revision
+    shell: bash
+    env:
+      EXPECTED_HEAD_SHA: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
+      ANALYSIS_CHECKOUT_REF: ${{ needs.fetch-binlog.outputs.pr-checkout-ref }}
+    run: |
+      set -euo pipefail
+      if [[ "$(git rev-parse HEAD)" != "${EXPECTED_HEAD_SHA}" ]]; then
+        echo "::error::The checkout does not match the revision validated with the build artifacts."
+        exit 1
+      fi
+      case "${ANALYSIS_CHECKOUT_REF}" in
+        refs/pull/*/head) ;;
+        *)
+          git check-ref-format --branch "${ANALYSIS_CHECKOUT_REF}"
+          # Preserve the pre-agent baseline without refetching a moving branch.
+          git update-ref "refs/remotes/origin/${ANALYSIS_CHECKOUT_REF}" "${EXPECTED_HEAD_SHA}"
+          git switch --create "${ANALYSIS_CHECKOUT_REF}" "${EXPECTED_HEAD_SHA}"
+          ;;
+      esac
+
   - name: Restore agent config from the base branch
     shell: bash
     env:
