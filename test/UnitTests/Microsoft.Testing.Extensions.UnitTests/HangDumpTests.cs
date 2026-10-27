@@ -359,26 +359,40 @@ public sealed class HangDumpTests
     public async Task QueryInProgressTestsWithTimeout_WhenTimeoutElapses_CancelsTheRequestToken()
     {
         CancellationToken requestCancellationToken = default;
+        CancellationTokenRegistration cancellationRegistration = default;
+        TaskCompletionSource<bool> requestCanceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<(string, int)[]> requestCompletion = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Exception? loggedFailure = null;
 
-        (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
-            async queryCancellationToken =>
-            {
-                requestCancellationToken = queryCancellationToken;
-                await Task.Delay(Timeout.Infinite, queryCancellationToken);
-                return [("Token was not canceled", 0)];
-            },
-            TimeSpan.FromMilliseconds(200),
-            ex =>
-            {
-                loggedFailure = ex;
-                return Task.CompletedTask;
-            },
-            CancellationToken.None);
+        try
+        {
+            (string, int)[] result = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                queryCancellationToken =>
+                {
+                    requestCancellationToken = queryCancellationToken;
+                    cancellationRegistration = queryCancellationToken.Register(() => requestCanceled.TrySetResult(true));
+                    return requestCompletion.Task;
+                },
+                TimeSpan.FromMilliseconds(200),
+                ex =>
+                {
+                    loggedFailure = ex;
+                    return Task.CompletedTask;
+                },
+                CancellationToken.None);
 
-        Assert.IsTrue(requestCancellationToken.IsCancellationRequested);
-        Assert.IsEmpty(result);
-        Assert.IsNotNull(loggedFailure);
+            // Best-effort cancellation can still be queued on the thread pool when the bounded query returns.
+            await requestCanceled.Task.TimeoutAfterAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+            Assert.IsTrue(requestCancellationToken.IsCancellationRequested);
+            Assert.IsEmpty(result);
+            Assert.IsNotNull(loggedFailure);
+        }
+        finally
+        {
+            requestCompletion.TrySetResult([]);
+            cancellationRegistration.Dispose();
+        }
     }
 
     [TestMethod]
