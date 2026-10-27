@@ -1154,3 +1154,38 @@ local implementation handoff.
 - The coordinated SDK initially references MTP `2.6.0-preview.26519.1` and MSTest
   `4.6.0-preview.26519.1`. Local validation must align those dependencies with the actual
   TestFX and collector packages produced for this contract and record their provenance.
+
+### Pre-PR review rounds (2026-10-27)
+
+All three passes reviewed the complete feature against
+`b6e7268c80ed13ec33c3a1f736140bc8169b194c`, at implementation/evidence head
+`9c0ca15cb3858a322da28261e18147b571710fe1`, not just the latest documentation commit.
+The initial and final live PR lookup found no existing pull request. Creation remains
+held until the cross-repository coordinator releases the dependency-ordered PR sequence.
+
+| Round | Findings and disposition | Validation |
+| --- | --- | --- |
+| 1: independent full-branch review | A fresh reviewer checked all 25 changed files and direct consumers: negotiation, framing and numeric presence, API compatibility, scoped identity, lifetime, accepted artifact provenance, tests and linked targets. No actionable defect met the concrete-trigger/consequence threshold; no speculative or style-only change was made. | Static source/assertion review plus independent verification of the canonical package hash and all five TFM payloads. The reviewer did not claim fresh test execution. |
+| 2: complete producer/consumer and lifecycle review | Rechecked the entire feature and traced regular session finalization, controller post-exit publication/draining, tool-mode dispatch, transport shutdown, retry consumers, old constructors and both SDK send guards. Checked the new fixture/helper synchronization, side effects and independent wire oracles. No actionable defect; no behavioral or contract change required. | Fresh Release/net8.0 unit execution: 308 executed/passed, zero failed/skipped, exit 0. Fresh Release/net11.0 packed C# 12 execution: 14 executed/passed, zero failed/skipped, exit 0. The independent execution gate reconciled all 14 planned cases and provenance assertions. |
+| 3: complete compatibility, package and readiness review | Rechecked the full diff, nullable/unknown-field bounds, public/internal API baselines, retained constructor call shapes, standalone protocol-source globs, shared consumers, package provenance, evidence claims and CI selectors. No actionable defect; no artificial fix or new policy was introduced. | A fresh isolated Release build of the core passed for net8.0, net9.0, net10.0, net11.0 and netstandard2.0, exit 0 with zero warnings/errors. Verified the full code/test patch hash remains unchanged, all 21 changed C# files retain their BOMs, and the canonical package was not overwritten. |
+
+Round-two reports are retained as `review-round2-units.trx` and
+`review-round2-acceptance.trx` with their execution logs. They replay the exact host/class
+selectors in the validation section above against the unchanged source/package, using
+fresh result directories. The round-three build used `eng\build.ps1 -restore -build -c Release`
+for `src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj`, the dotnet
+MSBuild engine, disabled node reuse, an isolated `artifacts\coverage-review-final` output
+directory, `SkipRuntimesInstall=true`, and `coverage-review-round3-build.binlog`.
+It did not repack or modify the already-consumed `.1` package identity.
+
+The protocol-source manifest uses globs that include the new models and serializer without
+introducing platform-only types into shared wire source. CI inspection confirmed that the
+owning test projects are in the full and non-Windows solutions and flow through the normal
+Release test selection under the existing `SkipTests` and affected-test/fallback policy.
+That is static selection evidence, not a claim that CI has executed an unpublished branch.
+
+No producer, wire or API change was needed in these review rounds. The existing genuine
+`2.6.0-preview.coverage-summary.20261027.1` package and its recorded hash remain the accepted
+MTP dependency for the coordinator's post-review composition. Local validation suffixes and
+feeds were not added to released dependency manifests. The prior executed behavior-removal
+evidence remains applicable because the code/test patch is unchanged.
