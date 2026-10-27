@@ -28,10 +28,10 @@ internal partial class TestMethodInfo
         string methodName,
         bool classInstanceCreated)
     {
-        DebugEx.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex is not null, "exception should not be null.");
 
         string errorMessage;
-        if (ex is TargetInvocationException && ex.InnerException == null)
+        if (ex is TargetInvocationException && ex.InnerException is null)
         {
             errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
             return new TestFailedException(UnitTestOutcome.Error, errorMessage);
@@ -94,5 +94,21 @@ internal partial class TestMethodInfo
         }
 
         return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
+    }
+
+    private static Exception GetRealException(Exception ex)
+    {
+        if (ex is TargetInvocationException)
+        {
+            DebugEx.Assert(ex.InnerException is not null, "Inner exception of TargetInvocationException is null. This should occur because we should have caught this case above.");
+
+            // Our reflected call will typically always get back a TargetInvocationException
+            // containing the real exception thrown by the test method as its inner exception
+            return ex.InnerException;
+        }
+        else
+        {
+            return ex;
+        }
     }
 }

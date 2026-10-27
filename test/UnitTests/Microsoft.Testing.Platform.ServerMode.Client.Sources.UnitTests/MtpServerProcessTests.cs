@@ -33,6 +33,7 @@ public sealed class MtpServerProcessTests
 {
     internal const string StandardOutputFloodEnvironmentVariable = "TESTFX_FLOOD_SERVER_STDOUT";
     internal const string StartupStandardErrorEnvironmentVariable = "TESTFX_SERVER_STARTUP_STDERR";
+    internal const string NaturalExitReleaseFileEnvironmentVariable = "TESTFX_SERVER_NATURAL_EXIT_RELEASE_FILE";
     internal const string StartupStandardError = "expected-startup-error";
 
     // Any value works: BuildLaunch only formats the port into the argument string, it never binds it.
@@ -148,14 +149,14 @@ public sealed class MtpServerProcessTests
             ConnectionTimeout = TimeSpan.FromMinutes(1),
             EnvironmentVariables = { [StandardOutputFloodEnvironmentVariable] = "1" },
         };
-        MtpServerProcess? process = null;
-
         await AssertDoesNotCaptureSynchronizationContextAsync(
-            async () => process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken).ConfigureAwait(false),
+            async () =>
+            {
+                using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken).ConfigureAwait(false);
+                Assert.IsGreaterThan(0, process.ProcessId);
+                await process.ShutdownAsync().ConfigureAwait(false);
+            },
             static () => { });
-
-        Assert.IsNotNull(process);
-        await process.ShutdownAsync();
     }
 
     [TestMethod]
@@ -384,20 +385,19 @@ public sealed class MtpServerProcessTests
     [OSCondition(
         ConditionMode.Exclude,
         OperatingSystems.Windows,
-        IgnoreMessage = "Unix execute permission classes do not apply on Windows.")]
+        IgnoreMessage = "Unix script interpreter permissions do not apply on Windows.")]
     [UnsupportedOSPlatform("windows")]
-    public async Task StartAsyncOnUnixWhenOnlyNonApplicableExecuteBitIsSetRetriesThroughDotnet()
+    public async Task StartAsyncOnUnixRetriesThroughDotnetWhenApphostInterpreterIsNotExecutable()
     {
         using var temp = TempDirectory.Create();
         string dll = temp.CreateFile("App.dll");
-        string apphost = temp.CreateFile("App");
+        string interpreter = temp.CreateFile("interpreter");
+        string apphost = temp.CreateFile("App", "#" + $"!{interpreter}\n");
 
-        // The owner class applies to this process, so GroupExecute does not grant execution even when the
-        // process is also a member of the file's group. The coarse mode-bit preflight accepts this candidate,
-        // and Process.Start must recover from the resulting EACCES by retrying through dotnet.
-        File.SetUnixFileMode(
-            apphost,
-            UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupExecute);
+        // A non-executable interpreter produces EACCES on both Linux and macOS, even for a privileged process.
+        // A group-only execute bit on the apphost does not reliably deny execution on those systems.
+        File.SetUnixFileMode(interpreter, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        MakeExecutable(apphost);
 
         var log = new StringBuilder();
         var options = new MtpServerClientOptions
@@ -823,36 +823,29 @@ public sealed class MtpServerProcessTests
 #endif
 
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file as the server process.")]
     public async Task ShutdownPreservesNaturalExitCodeAfterDisposingProcess()
     {
         using var temp = TempDirectory.Create();
         string releaseFile = Path.Combine(temp.Path, "release.txt");
-        string escapedReleaseFile = releaseFile.Replace("'", "''");
-        string source = temp.CreateFile(
-            "ConnectsThenExits.cmd",
-            "@echo off\r\n"
-            + "set port=\r\n"
-            + ":parse\r\n"
-            + "if \"%~1\"==\"\" exit /b 2\r\n"
-            + "if \"%~1\"==\"--client-port\" (\r\n"
-            + "  set port=%~2\r\n"
-            + "  goto found\r\n"
-            + ")\r\n"
-            + "shift\r\n"
-            + "goto parse\r\n"
-            + ":found\r\n"
-            + $"powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); while (-not (Test-Path -LiteralPath '{escapedReleaseFile}')) {{ Start-Sleep -Milliseconds 10 }}; $client.Dispose(); exit 23\"\r\n"
-            + "exit /b %errorlevel%\r\n");
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
+        // Program.cs runs this assembly as a child fixture that returns 23 when releaseFile is created.
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        // Match the existing self-host fixture's allowance for profiled startup, not a product timeout.
+        var readinessLimit = TimeSpan.FromMinutes(1);
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = readinessLimit,
+            EnvironmentVariables = { [NaturalExitReleaseFileEnvironmentVariable] = releaseFile },
+        };
 
         using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken);
+        Process launchedProcess = GetPrivateInstanceField<Process>(process, "_process");
         Assert.IsGreaterThan(0, process.ProcessId);
         Assert.IsNull(process.ExitCode);
         File.WriteAllText(releaseFile, string.Empty);
-        Assert.IsTrue(
-            SpinWait.SpinUntil(() => process.ExitCode == 23, TimeSpan.FromSeconds(10)),
-            "The server process did not exit naturally with the expected code.");
+        using var completionTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        completionTimeout.CancelAfter(readinessLimit);
+        await launchedProcess.WaitForExitAsync(completionTimeout.Token);
+        Assert.AreEqual(23, process.ExitCode);
         Assert.AreEqual(0, process.ProcessId);
 
         await process.ShutdownAsync();
@@ -1132,13 +1125,14 @@ public sealed class MtpServerProcessTests
         }
 
         releaseOperation();
-        Task completed = await Task.WhenAny(
-            operation,
-            Task.Delay(TimeSpan.FromSeconds(20), TestContext.CancellationToken)).ConfigureAwait(false);
+        // This is a deadlock watchdog, not a startup benchmark: the profiled child has one minute to connect
+        // and still needs time for teardown. PostCount detects context capture independently of scheduling speed.
+        var completionLimit = TimeSpan.FromMinutes(2);
+        Task completed = await Task.WhenAny(operation, Task.Delay(completionLimit, TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.AreSame(operation, completed, "The operation did not complete within the expected timeout.");
+        Assert.AreSame(operation, completed, "The operation did not complete before the deadlock watchdog expired.");
         await operation.ConfigureAwait(false);
-        Assert.AreEqual(0, context.PostCount);
+        Assert.AreEqual(0, context.PostCount, "The operation captured and posted back to the caller's synchronization context.");
     }
 
     private sealed class RecordingSynchronizationContext : SynchronizationContext

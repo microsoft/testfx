@@ -109,6 +109,40 @@ public class DataRowAttributeTests : TestContainer
         displayName.Should().Be("DataRowTestWithDisplayName");
     }
 
+    public void GetDisplayNamePreservesSingleObjectArrayBeforeTrailingCancellationToken()
+    {
+        MethodInfo method = typeof(DataRowAttributeTests).GetMethod(nameof(SingleArrayAndToken), BindingFlags.Static | BindingFlags.NonPublic)!;
+        DataRowAttribute attribute = new();
+
+        attribute.GetDisplayName(method, [7, "array"]).Should().Be("SingleArrayAndToken ([7,\"array\"])");
+        attribute.GetDisplayName(method, []).Should().Be("SingleArrayAndToken ([])");
+    }
+
+    public void GetDisplayNameRecognizesExplicitCancellationTokenInObjectArrayRows()
+    {
+        MethodInfo method = typeof(DataRowAttributeTests).GetMethod(nameof(SingleArrayAndToken), BindingFlags.Static | BindingFlags.NonPublic)!;
+        DataRowAttribute attribute = new();
+
+        attribute.GetDisplayName(method, [new object?[] { 7, "array" }, null]).Should().Be("SingleArrayAndToken ([7,\"array\"],null)");
+        attribute.GetDisplayName(method, [new object?[] { 7, "array" }, "not a token"]).Should().Be("SingleArrayAndToken ([[7,\"array\"],\"not a token\"])");
+    }
+
+    public void GetDisplayNameWithInjectedTokenKeepsOrdinaryDataFormatting()
+    {
+        MethodInfo method = typeof(DataRowAttributeTests).GetMethod(nameof(OrdinaryDataAndToken), BindingFlags.Static | BindingFlags.NonPublic)!;
+        DataRowAttribute attribute = new();
+
+        attribute.GetDisplayName(method, [7, "array"]).Should().Be("OrdinaryDataAndToken (7,\"array\")");
+    }
+
+    private static void SingleArrayAndToken(object?[] data, CancellationToken token)
+    {
+    }
+
+    private static void OrdinaryDataAndToken(int number, string text, CancellationToken token)
+    {
+    }
+
     public void GetDisplayNameWithArgumentsDisplayNameKeepsMethodName()
     {
         var attribute = new DataRowAttribute(string.Empty) { ArgumentsDisplayName = "empty input" };

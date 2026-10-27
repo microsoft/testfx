@@ -22,7 +22,7 @@ internal partial class AssemblyResolver
     void AddSubdirectories(string path, List<string> searchDirectories)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "'path' cannot be null or empty.");
-        DebugEx.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
+        DebugEx.Assert(searchDirectories is not null, "'searchDirectories' cannot be null.");
 
         // If the directory exists, get its subdirectories
         if (DoesDirectoryExist(path))
@@ -114,7 +114,7 @@ internal partial class AssemblyResolver
                 {
                     // Are we recursively looking up the same resource?  Note - our backout code will set
                     // the ResourceHelper's currentlyLoading stack to null if an exception occurs.
-                    if (s_currentlyLoading != null && s_currentlyLoading.Count > 0 && s_currentlyLoading.LastIndexOf(assemblyPath) != -1)
+                    if (s_currentlyLoading is not null && s_currentlyLoading.Count > 0 && s_currentlyLoading.LastIndexOf(assemblyPath) != -1)
                     {
                         SafeLog(
                             name,
@@ -141,7 +141,7 @@ internal partial class AssemblyResolver
                     s_currentlyLoading.RemoveAt(s_currentlyLoading.Count - 1); // Pop
                 }
 
-                if (assembly != null)
+                if (assembly is not null)
                 {
                     return assembly;
                 }
@@ -160,14 +160,14 @@ internal partial class AssemblyResolver
     /// <returns> The <see cref="bool"/>. </returns>
     private static bool RequestedAssemblyNameMatchesFound(AssemblyName requestedName, AssemblyName foundName)
     {
-        DebugEx.Assert(requestedName != null, "requested assembly name should not be null.");
-        DebugEx.Assert(foundName != null, "found assembly name should not be null.");
+        DebugEx.Assert(requestedName is not null, "requested assembly name should not be null.");
+        DebugEx.Assert(foundName is not null, "found assembly name should not be null.");
 
         byte[]? requestedPublicKey = requestedName.GetPublicKeyToken();
-        if (requestedPublicKey != null)
+        if (requestedPublicKey is not null)
         {
             byte[]? foundPublicKey = foundName.GetPublicKeyToken();
-            if (foundPublicKey == null)
+            if (foundPublicKey is null)
             {
                 return false;
             }
@@ -181,7 +181,7 @@ internal partial class AssemblyResolver
             }
         }
 
-        return requestedName.Version == null || requestedName.Version.Equals(foundName.Version);
+        return requestedName.Version is null || requestedName.Version.Equals(foundName.Version);
     }
 
     /// <summary>

@@ -127,7 +127,7 @@ internal struct ValueTuple<T1, T2> : IEquatable<ValueTuple<T1, T2>>, IStructural
 
     readonly int IStructuralComparable.CompareTo(object other, IComparer comparer)
     {
-        if (other == null)
+        if (other is null)
         {
             return 1;
         }

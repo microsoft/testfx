@@ -47,7 +47,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
 
         // Find the TestCleanup method declaration identified by the diagnostic.
         MethodDeclarationSyntax? testCleanupMethod = syntaxToken.Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (testCleanupMethod == null ||
+        if (testCleanupMethod is null ||
             !IsTestCleanupMethodValid(testCleanupMethod) ||
             testCleanupMethod.Parent is not TypeDeclarationSyntax containingType)
         {
@@ -164,7 +164,7 @@ public sealed class PreferDisposeOverTestCleanupFixer : CodeFixProvider
             newParent = newParent.ReplaceNode(testCleanupMethod, disposeMethod);
 
             // Ensure the class implements IDisposable
-            if (iDisposableSymbol != null && !ImplementsIDisposable(containingType, iDisposableSymbol, semanticModel))
+            if (iDisposableSymbol is not null && !ImplementsIDisposable(containingType, iDisposableSymbol, semanticModel))
             {
                 newParent = (TypeDeclarationSyntax)generator.AddInterfaceType(newParent, generator.TypeExpression(iDisposableSymbol, addImport: true).WithAdditionalAnnotations(Simplifier.AddImportsAnnotation));
             }

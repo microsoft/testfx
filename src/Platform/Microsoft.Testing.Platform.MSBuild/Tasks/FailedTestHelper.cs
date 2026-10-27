@@ -68,7 +68,7 @@ internal static class FailedTestHelper
         {
             lowPriorityMessage = errorMessage.ToString();
 
-            string nameAndPlace = place == null
+            string nameAndPlace = place is null
                 ? $"{failedTestInfoRequest.DisplayName} ({failedTestInfoRequest.Duration})"
                     : $"{failedTestInfoRequest.DisplayName} ({failedTestInfoRequest.Duration}): {place}";
 
@@ -77,7 +77,7 @@ internal static class FailedTestHelper
     }
 
     private static string JoinSingleLineAndShorten(string first, string? second)
-        => second == null
+        => second is null
             ? SingleLineAndShorten(first)
             : SingleLineAndShorten(first) + " " + SingleLineAndShorten(second);
 

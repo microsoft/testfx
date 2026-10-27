@@ -152,7 +152,7 @@ internal partial class TestMethodInfo
         }
 
         // If testCleanup was successful, then don't do anything
-        if (testCleanupException == null)
+        if (testCleanupException is null)
         {
             return;
         }
@@ -169,7 +169,7 @@ internal partial class TestMethodInfo
                 : UnitTestOutcome.Failed;
         result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
 
-        realException = testCleanupMethod != null
+        realException = testCleanupMethod is not null
             ? new TestFailedException(
                 outcomeFromRealException,
                 string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrows, TestClassName, testCleanupMethod.Name, realException.GetFormattedExceptionMessage()),
@@ -201,7 +201,7 @@ internal partial class TestMethodInfo
     private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object? classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
         DebugEx.Assert(classInstance is not null || Parent.IsFSharpModule, "classInstance is null for a non-module test");
-        DebugEx.Assert(result != null, "result != null");
+        DebugEx.Assert(result is not null, "result != null");
 
         MethodInfo? testInitializeMethod = null;
         Exception? testInitializeException = null;
@@ -223,7 +223,7 @@ internal partial class TestMethodInfo
                 }
             }
 
-            if (testInitializeException == null)
+            if (testInitializeException is null)
             {
                 testInitializeMethod = Parent.TestInitializeMethod;
                 testInitializeException = testInitializeMethod is not null
@@ -237,7 +237,7 @@ internal partial class TestMethodInfo
         }
 
         // If testInitialization was successful, then don't do anything
-        if (testInitializeException == null)
+        if (testInitializeException is null)
         {
             return true;
         }
@@ -417,4 +417,9 @@ internal partial class TestMethodInfo
             _executionContext = ExecutionContext.Capture() ?? _executionContext;
         }
     }
+
+    private readonly record struct TestInvocationCleanupSnapshot(
+        object? ClassInstance,
+        ITestClassInstanceLease? ClassInstanceLease,
+        bool IsTestContextSet);
 }

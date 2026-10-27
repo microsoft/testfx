@@ -89,9 +89,9 @@ public sealed class UseExecuteAsyncOverrideFixer : CodeFixProvider
     private static SimpleNameSyntax? GetRightmostName(TypeSyntax? node)
         => node switch
         {
-            QualifiedNameSyntax qualified when qualified.Right != null => qualified.Right,
+            QualifiedNameSyntax qualified when qualified.Right is not null => qualified.Right,
             SimpleNameSyntax simple => simple,
-            AliasQualifiedNameSyntax aliasQualifiedName when aliasQualifiedName.Name != null => aliasQualifiedName.Name,
+            AliasQualifiedNameSyntax aliasQualifiedName when aliasQualifiedName.Name is not null => aliasQualifiedName.Name,
             _ => null,
         };
 

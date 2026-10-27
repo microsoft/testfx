@@ -985,7 +985,7 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
         <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
-        <target state="new">The '--exit-on-process-exit' option is not supported in WASI environments.</target>
+        <target state="translated">Opcja „--exit-on-process-exit” nie jest obsługiwana w środowiskach WASI.</target>
         <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">

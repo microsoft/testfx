@@ -161,7 +161,7 @@ internal abstract class DeploymentUtilityBase
 
             // Get the files corresponding to this deployment item
             List<string>? deploymentItemFiles = GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSourceHandler, resultsDirectory, warnings, out bool itemIsDirectory);
-            if (deploymentItemFiles == null)
+            if (deploymentItemFiles is null)
             {
                 continue;
             }
@@ -285,7 +285,7 @@ internal abstract class DeploymentUtilityBase
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected List<string>? GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSourceHandler, string resultsDirectory, IList<string> warnings, out bool isDirectory)
     {
-        DebugEx.Assert(deploymentItem != null, "deploymentItem should not be null.");
+        DebugEx.Assert(deploymentItem is not null, "deploymentItem should not be null.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(testSourceHandler), "testSourceHandler should not be null or empty.");
 
         try
@@ -337,9 +337,9 @@ internal abstract class DeploymentUtilityBase
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected static bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
     {
-        DebugEx.Assert(deploymentItem != null, "deploymentItem should not be null.");
+        DebugEx.Assert(deploymentItem is not null, "deploymentItem should not be null.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(deploymentDirectory), "deploymentDirectory should not be null or empty.");
-        DebugEx.Assert(warnings != null, "warnings should not be null.");
+        DebugEx.Assert(warnings is not null, "warnings should not be null.");
 
         // Check that item.output dir does not go outside deployment Out dir, otherwise you can erase any file!
         string outputDir = deploymentDirectory;
@@ -399,7 +399,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="warnings">Warnings.</param>
     private static void LogWarnings(IAdapterMessageLogger messageLogger, IEnumerable<string> warnings)
     {
-        DebugEx.Assert(messageLogger != null, "Logger should not be null");
+        DebugEx.Assert(messageLogger is not null, "Logger should not be null");
 
         // log the warnings
         foreach (string warning in warnings)

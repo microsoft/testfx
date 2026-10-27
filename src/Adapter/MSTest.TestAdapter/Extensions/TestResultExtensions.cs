@@ -31,7 +31,7 @@ internal static class TestResultExtensions
     /// <param name="currentSettings">Current MSTest settings.</param>
     internal static VSTestTestResult ToTestResult(this TestResult frameworkTestResult, VSTestTestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, string computerName, MSTestSettings currentSettings)
     {
-        DebugEx.Assert(testCase != null, "testCase");
+        DebugEx.Assert(testCase is not null, "testCase");
         if (frameworkTestResult.AssociatedUnitTestElement is UnitTestElement unitTestElement)
         {
             testCase = unitTestElement.ToTestCase();

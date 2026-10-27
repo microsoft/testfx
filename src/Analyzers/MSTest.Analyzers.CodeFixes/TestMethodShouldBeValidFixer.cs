@@ -77,14 +77,14 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
         if (abstractModifier != default)
         {
             newMethodDeclaration = newMethodDeclaration.WithModifiers(newMethodDeclaration.Modifiers.Remove(abstractModifier));
-            if (newMethodDeclaration.Body == null)
+            if (newMethodDeclaration.Body is null)
             {
                 newMethodDeclaration = newMethodDeclaration.WithBody(SyntaxFactory.Block()).WithSemicolonToken(default);
             }
         }
 
         // Remove type parameters to make the method non-generic.
-        if (newMethodDeclaration.TypeParameterList != null)
+        if (newMethodDeclaration.TypeParameterList is not null)
         {
             newMethodDeclaration = newMethodDeclaration.WithTypeParameterList(null);
         }
@@ -109,15 +109,15 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
         INamedTypeSymbol? taskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
         INamedTypeSymbol? valueTaskSymbol = wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
 
-        if (newMethodDeclaration.ReturnType != null &&
+        if (newMethodDeclaration.ReturnType is not null &&
             !newMethodDeclaration.ReturnType.IsVoid() &&
-            (taskSymbol == null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
-            (valueTaskSymbol == null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
+            (taskSymbol is null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, taskSymbol).IsImplicit) &&
+            (valueTaskSymbol is null || !semanticModel.ClassifyConversion(methodDeclaration.ReturnType, valueTaskSymbol).IsImplicit))
         {
             // Change return type to void and remove return statements
             newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)));
 
-            if (newMethodDeclaration.Body != null)
+            if (newMethodDeclaration.Body is not null)
             {
                 SyntaxList<StatementSyntax> statements = newMethodDeclaration.Body.Statements;
                 IEnumerable<StatementSyntax> newStatements = statements.Where(s => s is not ReturnStatementSyntax);
@@ -127,7 +127,7 @@ public sealed class TestMethodShouldBeValidFixer : CodeFixProvider
 
         // Ensure async methods do not return void.
         bool asyncModifier = newMethodDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.AsyncKeyword));
-        if (asyncModifier && newMethodDeclaration.ReturnType != null && newMethodDeclaration.ReturnType.IsVoid())
+        if (asyncModifier && newMethodDeclaration.ReturnType is not null && newMethodDeclaration.ReturnType.IsVoid())
         {
             // Change the return type to Task. We have a space after Task to ensure we have a trailing trivia (space) after Task.
             newMethodDeclaration = newMethodDeclaration.WithReturnType(SyntaxFactory.IdentifierName("Task"));

@@ -40,30 +40,49 @@ function Assert-CollectionJobIsolation {
     param(
         [string]$Pipeline,
         [string]$CollectBranch,
-        [string]$SharedCollectBranch
+        [string]$SharedCollectBranch,
+        [string]$WindowsBuildTemplate
     )
 
     $windowsJob = [regex]::Match(
         $Pipeline,
-        '(?ms)^      - job: Windows\r?\n(?<job>.*?)(?=^      - job: )').Groups["job"].Value
+        '(?ms)^      - job: Windows\r?\n(?<job>.*?)(?=^      - (?:job:|\$\{\{))').Groups["job"].Value
+    $collectionJob = [regex]::Match(
+        $Pipeline,
+        '(?ms)^        - job: WindowsAffectedTests\r?\n(?<job>.*?)(?=^      - job:|\z)').Groups["job"].Value
     $matrix = [regex]::Match(
         $windowsJob,
         '(?ms)^        strategy:\r?\n          matrix:\r?\n(?<matrix>.*?)(?=^        steps:)').Groups["matrix"].Value
     if ($matrix -notmatch 'Release:\s+_BuildConfig:\s*Release\s+_CollectAffectedTests:\s*false\s+_TestArtifactsName:\s*Release' -or
         $matrix -notmatch 'Debug:\s+_BuildConfig:\s*Debug\s+_CollectAffectedTests:\s*false\s+_TestArtifactsName:\s*Debug' -or
-        $matrix -notmatch 'AffectedTests:\s+_BuildConfig:\s*Release\s+_CollectAffectedTests:\s*true\s+_TestArtifactsName:\s*AffectedTests' -or
-        [regex]::Matches($matrix, '_CollectAffectedTests:\s*true').Count -ne 1) {
-        throw "CollectionUsesIndependentJob: Release validation and affected-test collection must use separate Windows matrix entries."
+        $matrix -match '_CollectAffectedTests:\s*true' -or
+        $collectionJob -notmatch '- name: _BuildConfig\s+value: Release' -or
+        $collectionJob -notmatch '- name: _CollectAffectedTests\s+value: true' -or
+        $collectionJob -notmatch '- name: _TestArtifactsName\s+value: AffectedTests') {
+        throw "CollectionUsesIndependentJob: Release and Debug validation must remain in their Windows matrix, with collection in its own job."
     }
 
     $collectionGate = '${{ if and(eq(variables[''Build.SourceBranch''], ''refs/heads/main''), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)) }}:'
-    if (-not $matrix.Contains($collectionGate)) {
-        throw "CollectionHonorsRolloutGates: the collection matrix entry must require main, enabled tests, and enabled affected tests."
+    if ($Pipeline -notmatch ('(?m)^      - ' + [regex]::Escape($collectionGate) + '\r?\n        - job: WindowsAffectedTests\r?$')) {
+        throw "CollectionHonorsRolloutGates: the collection job must require main, enabled tests, and enabled affected tests."
     }
 
-    if (-not $windowsJob.Contains('enableAffectedTests: ${{ parameters.EnableAffectedTests }}') -or
+    $mainBudget = '${{ if eq(variables[''Build.SourceBranch''], ''refs/heads/main'') }}:'
+    if ($windowsJob -notmatch ([regex]::Escape($mainBudget) + '\r?\n          timeoutInMinutes: 240\r?\n') -or
+        $collectionJob -notmatch '(?m)^          timeoutInMinutes: 360\r?$' -or
+        $windowsJob -notmatch '\$\{\{ else \}\}:\r?\n          timeoutInMinutes: 120\r?\n') {
+        throw "CollectionHasIndependentTimeBudget: Windows collection needs a literal six-hour timeout without matrix-variable dependencies or extended main/PR validation."
+    }
+
+    $sharedBuildCall = 'template: /eng/pipelines/steps/build-test-windows.yml\r?\n\s+parameters:\r?\n\s+SkipTests: ' +
+        [regex]::Escape('${{ parameters.SkipTests }}') + '\r?\n\s+EnableAffectedTests: ' +
+        [regex]::Escape('${{ parameters.EnableAffectedTests }}')
+    if ([regex]::Matches($windowsJob, $sharedBuildCall).Count -ne 1 -or
+        [regex]::Matches($collectionJob, $sharedBuildCall).Count -ne 1 -or
+        -not $WindowsBuildTemplate.Contains('${{ if eq(parameters.SkipTests, False) }}') -or
+        -not $WindowsBuildTemplate.Contains('enableAffectedTests: ${{ parameters.EnableAffectedTests }}') -or
         -not $Pipeline.Contains('validate-affected-tests.ps1 -SelfTest -EnableAffectedTests ${{ parameters.EnableAffectedTests }}')) {
-        throw "AffectedTestsRollbackControlsAllJobs: the root affected-test parameter must control collection and selection."
+        throw "AffectedTestsRollbackControlsAllJobs: both Windows jobs must share build/test steps and pass through the root test and affected-test gates."
     }
 
     if (-not $SharedCollectBranch.Contains("condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), eq(variables._CollectAffectedTests, 'true'))") -or
@@ -81,8 +100,8 @@ function Assert-CollectionJobIsolation {
         'ArtifactName: Integration_Tests_Windows_Binlogs_$(_TestArtifactsName)',
         'ArtifactName: TestResults_Windows_$(_TestArtifactsName)'
     )) {
-        if ($windowsJob -notmatch ('(?m)^\s*' + [regex]::Escape($artifact) + '\r?$')) {
-            throw "WindowsArtifactsAreIsolated: each matrix entry must have distinct test-result, binlog, and dump artifact names."
+        if ($WindowsBuildTemplate -notmatch ('(?m)^\s*' + [regex]::Escape($artifact) + '\r?$')) {
+            throw "WindowsArtifactsAreIsolated: each Windows configuration must have distinct test-result, binlog, and dump artifact names."
         }
     }
 }
@@ -132,16 +151,17 @@ function Invoke-CollectionJobIsolationSelfTest {
     param(
         [string]$Pipeline,
         [string]$CollectBranch,
-        [string]$SharedCollectBranch
+        [string]$SharedCollectBranch,
+        [string]$WindowsBuildTemplate
     )
 
-    Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch
+    Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch $WindowsBuildTemplate
     Write-Output "PASS CollectionUsesIndependentJob"
 
     $cases = @(
         @{
             Name = "MissingCollectionJobIsRejected"
-            Pipeline = $Pipeline.Replace("              AffectedTests:", "              RemovedCollection:")
+            Pipeline = $Pipeline.Replace("        - job: WindowsAffectedTests", "        - job: RemovedCollection")
             CollectBranch = $CollectBranch
             ExpectedFailure = "CollectionUsesIndependentJob"
         },
@@ -165,6 +185,26 @@ function Invoke-CollectionJobIsolationSelfTest {
             ExpectedFailure = "CollectionHonorsRolloutGates"
         },
         @{
+            Name = "SharedCollectionTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 360", "          timeoutInMinutes: 240")
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "MatrixDependentCollectionTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 360", '          timeoutInMinutes: $[ iif(eq(variables._CollectAffectedTests, ''true''), 360, 240) ]')
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "ExtendedMainValidationTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 240", "          timeoutInMinutes: 360")
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
+            Name = "ExtendedPullRequestTimeoutIsRejected"
+            Pipeline = $Pipeline.Replace("          timeoutInMinutes: 120", "          timeoutInMinutes: 360")
+            ExpectedFailure = "CollectionHasIndependentTimeBudget"
+        },
+        @{
             Name = "SkipTestsBypassIsRejected"
             Pipeline = $Pipeline.Replace("eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true)", "eq(parameters.EnableAffectedTests, true)")
             CollectBranch = $CollectBranch
@@ -178,7 +218,19 @@ function Invoke-CollectionJobIsolationSelfTest {
         },
         @{
             Name = "DisconnectedRollbackIsRejected"
-            Pipeline = $Pipeline.Replace('enableAffectedTests: ${{ parameters.EnableAffectedTests }}', "enableAffectedTests: true")
+            WindowsBuildTemplate = $WindowsBuildTemplate.Replace('enableAffectedTests: ${{ parameters.EnableAffectedTests }}', "enableAffectedTests: true")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
+        },
+        @{
+            Name = "DisconnectedJobRollbackIsRejected"
+            Pipeline = $Pipeline.Replace('EnableAffectedTests: ${{ parameters.EnableAffectedTests }}', "EnableAffectedTests: true")
+            CollectBranch = $CollectBranch
+            ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
+        },
+        @{
+            Name = "DisconnectedSkipTestsIsRejected"
+            Pipeline = $Pipeline.Replace('SkipTests: ${{ parameters.SkipTests }}', "SkipTests: false")
             CollectBranch = $CollectBranch
             ExpectedFailure = "AffectedTestsRollbackControlsAllJobs"
         },
@@ -197,20 +249,20 @@ function Invoke-CollectionJobIsolationSelfTest {
         },
         @{
             Name = "ArtifactCollisionIsRejected"
-            Pipeline = $Pipeline.Replace('ArtifactName: Integration_Tests_Windows_Binlogs_$(_TestArtifactsName)', 'ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)')
+            WindowsBuildTemplate = $WindowsBuildTemplate.Replace('ArtifactName: Integration_Tests_Windows_Binlogs_$(_TestArtifactsName)', 'ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)')
             CollectBranch = $CollectBranch
             ExpectedFailure = "WindowsArtifactsAreIsolated"
         },
         @{
             Name = "TestResultArtifactCollisionIsRejected"
-            Pipeline = $Pipeline.Replace('ArtifactName: TestResults_Windows_$(_TestArtifactsName)_Attempt$(System.JobAttempt)', 'ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)')
+            WindowsBuildTemplate = $WindowsBuildTemplate.Replace('ArtifactName: TestResults_Windows_$(_TestArtifactsName)_Attempt$(System.JobAttempt)', 'ArtifactName: TestResults_Windows_$(_BuildConfig)_Attempt$(System.JobAttempt)')
             CollectBranch = $CollectBranch
             ExpectedFailure = "WindowsArtifactsAreIsolated"
         },
         @{
             Name = "DumpArtifactCollisionIsRejected"
-            Pipeline = [regex]::Replace(
-                $Pipeline,
+            WindowsBuildTemplate = [regex]::Replace(
+                $WindowsBuildTemplate,
                 '(?m)^(?<indent> +)ArtifactName: TestResults_Windows_\$\(_TestArtifactsName\)(?<ending>\r?)$',
                 '${indent}ArtifactName: TestResults_Windows_$(_BuildConfig)${ending}')
             CollectBranch = $CollectBranch
@@ -222,9 +274,10 @@ function Invoke-CollectionJobIsolationSelfTest {
         Pipeline = $Pipeline
         CollectBranch = $CollectBranch
         SharedCollectBranch = $SharedCollectBranch
+        WindowsBuildTemplate = $WindowsBuildTemplate
     } -Validator {
-        param($Pipeline, $CollectBranch, $SharedCollectBranch)
-        Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch
+        param($Pipeline, $CollectBranch, $SharedCollectBranch, $WindowsBuildTemplate)
+        Assert-CollectionJobIsolation $Pipeline $CollectBranch $SharedCollectBranch $WindowsBuildTemplate
     }
 
     Write-Output "Collection isolation self-tests: $($cases.Count + 1) passed."
@@ -525,6 +578,7 @@ $repoRoot = Split-Path $PSScriptRoot -Parent
 $globalJsonPath = Join-Path $repoRoot "global.json"
 $versionsPropsPath = Join-Path $repoRoot "eng/Versions.props"
 $pipelinePath = Join-Path $repoRoot "azure-pipelines.yml"
+$windowsBuildTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/build-test-windows.yml"
 $testTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-windows-configuration-tests.yml"
 $sharedTestTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-affected-tests.yml"
 $nonWindowsTestTemplatePath = Join-Path $repoRoot "eng/pipelines/steps/test-non-windows.yml"
@@ -570,8 +624,9 @@ if ($globalJsonText -match '(?i)"[^"]*(token|secret|password|connectionString|sa
 }
 
 $pipeline = Get-Content -LiteralPath $pipelinePath -Raw
+$windowsBuildTemplate = Get-Content -LiteralPath $windowsBuildTemplatePath -Raw
 $affectedTestsCall = [regex]::Match(
-    $pipeline,
+    $windowsBuildTemplate,
     '(?s)enableAffectedTests:\s*(?<enabled>true|false|\$\{\{\s*parameters\.EnableAffectedTests\s*\}\})\s+\$\{\{ if eq\(variables\[''Build\.SourceBranch''\], ''refs/heads/main''\) \}\}:\s+affectedTestsMode:\s*collect\s+\$\{\{ else \}\}:\s+affectedTestsMode:\s*run')
 if (-not $affectedTestsCall.Success) {
     throw "The pipeline must route the Windows test call site to collection on main and selection on PRs."
@@ -911,10 +966,10 @@ if ($collectStep.Contains("PublishCoverageReport") -or
 }
 
 if ($SelfTest) {
-    Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $templateWithoutComments
+    Invoke-CollectionJobIsolationSelfTest $pipeline $windowsCollectBranch.Value $templateWithoutComments $windowsBuildTemplate
     Invoke-NonWindowsAffectedTestsSelfTest $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate $affectedTestsPackageVersion
 } else {
-    Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $templateWithoutComments
+    Assert-CollectionJobIsolation $pipeline $windowsCollectBranch.Value $templateWithoutComments $windowsBuildTemplate
     Assert-NonWindowsAffectedTestsWiring $pipeline $nonWindowsTestTemplate $sharedTestTemplate $livePublishingTemplate $finalizePublishingTemplate
 }
 

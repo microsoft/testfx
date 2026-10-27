@@ -2,16 +2,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal static class TestDataSourceHelpers
 {
+    internal static int GetDataParameterCount(ParameterInfo[] parameters)
+        => TestDataSourceUtilities.GetDataParameterCount(parameters);
+
     public static bool IsDataConsideredSingleArgumentValue(object?[]? data, ParameterInfo[] parameters)
         => data is not null
             && (data.Length != 1 || data[0] is not null)
-            && parameters.Length == 1
-            && parameters[0].ParameterType == typeof(object[]);
+            && GetDataParameterCount(parameters) == 1
+            && parameters[0].ParameterType == typeof(object[])
+            && !IsDataWithExplicitCancellationToken(data, parameters)
+            && !IsSingleTupleArgumentWithExplicitCancellationToken(data, parameters);
 
     public static bool TryHandleITestDataRow(
         object?[] d,
@@ -64,13 +70,40 @@ internal static class TestDataSourceHelpers
 
     public static bool TryHandleTupleDataSource(object? data, ParameterInfo[] testMethodParameters, out object?[] array)
     {
-        if (testMethodParameters.Length == 1 &&
-            testMethodParameters[0].ParameterType?.IsAssignableFrom(data?.GetType()) == true)
+        bool isSingleDataArgument = GetDataParameterCount(testMethodParameters) == 1
+            && testMethodParameters[0].ParameterType?.IsAssignableFrom(data?.GetType()) is true;
+        if (isSingleDataArgument && testMethodParameters.Length == 1)
         {
             array = [];
             return false;
         }
 
+        if (!TryExpandTupleDataSource(data, out array))
+        {
+            return false;
+        }
+
+        // A valid full-arity row supplies its own token, even when the tuple itself fits the data parameter.
+        if (isSingleDataArgument && !IsDataWithExplicitCancellationToken(array, testMethodParameters))
+        {
+            array = [];
+            return false;
+        }
+
+        return true;
+    }
+
+    // A tuple supplying the data argument and its token is a full row, not an object[] value to wrap.
+    private static bool IsSingleTupleArgumentWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => parameters.Length == 2 && data.Length == 1
+            && TryHandleTupleDataSource(data[0], parameters, out object?[] tupleArguments)
+            && IsDataWithExplicitCancellationToken(tupleArguments, parameters);
+
+    private static bool IsDataWithExplicitCancellationToken(object?[] data, ParameterInfo[] parameters)
+        => TestDataSourceUtilities.IsDataWithExplicitCancellationToken(data, parameters);
+
+    private static bool TryExpandTupleDataSource(object? data, out object?[] array)
+    {
 #if NET471_OR_GREATER || NETCOREAPP
         if (data is ITuple tuple)
         {

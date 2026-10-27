@@ -57,9 +57,7 @@ public static class ServiceProviderExtensions
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
         object? service = provider.GetService(typeof(TService));
-        ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
-
-        return (TService)service;
+        return (TService)(service ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService))));
     }
 
     /// <summary>
@@ -189,9 +187,7 @@ public static class ServiceProviderExtensions
         _ = provider ?? throw new ArgumentNullException(nameof(provider));
 
         object? service = ((ServiceProvider)provider).GetServiceInternal(typeof(TService));
-        ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
-
-        return (TService)service;
+        return (TService)(service ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService))));
     }
 
     internal static TService? GetServiceInternal<TService>(this IServiceProvider provider)

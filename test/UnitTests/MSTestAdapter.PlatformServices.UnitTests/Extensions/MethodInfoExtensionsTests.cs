@@ -338,6 +338,46 @@ public class MethodInfoExtensionsTests : TestContainer
         methodInfo.HasCorrectTestMethodSignature(false).Should().BeFalse();
     }
 
+    public void HasCorrectTestMethodSignatureAcceptsOnlyByValueCancellationTokenWithoutData()
+    {
+        string[] accepted =
+        [
+            nameof(CancellationTokenSignatureFixture.TokenOnly),
+            nameof(CancellationTokenSignatureFixture.TaskTokenOnly),
+            nameof(CancellationTokenSignatureFixture.ValueTaskTokenOnly),
+            nameof(CancellationTokenSignatureFixture.OptionalToken),
+        ];
+        foreach (string methodName in accepted)
+        {
+            typeof(CancellationTokenSignatureFixture).GetMethod(methodName)!
+                .HasCorrectTestMethodSignature(ignoreParameterLength: false).Should().BeTrue("{0}", methodName);
+        }
+
+        string[] rejected =
+        [
+            nameof(CancellationTokenSignatureFixture.NullableToken),
+            nameof(CancellationTokenSignatureFixture.TokenSource),
+            nameof(CancellationTokenSignatureFixture.ByRefToken),
+            nameof(CancellationTokenSignatureFixture.DataAndToken),
+            nameof(CancellationTokenSignatureFixture.NonTrailingToken),
+        ];
+        foreach (string methodName in rejected)
+        {
+            typeof(CancellationTokenSignatureFixture).GetMethod(methodName)!
+                .HasCorrectTestMethodSignature(ignoreParameterLength: false).Should().BeFalse("{0}", methodName);
+        }
+    }
+
+    public void LifecycleSignaturesDoNotAcceptCancellationTokenParameters()
+    {
+        MethodInfo instanceMethod = typeof(CancellationTokenSignatureFixture).GetMethod(nameof(CancellationTokenSignatureFixture.TokenOnly))!;
+        MethodInfo staticMethod = typeof(CancellationTokenSignatureFixture).GetMethod(nameof(CancellationTokenSignatureFixture.StaticToken))!;
+
+        instanceMethod.HasCorrectTestInitializeOrCleanupSignature().Should().BeFalse();
+        staticMethod.HasCorrectClassOrAssemblyInitializeSignature().Should().BeFalse();
+        staticMethod.HasCorrectClassOrAssemblyCleanupSignature().Should().BeFalse();
+    }
+
     public void HasCorrectTestMethodSignatureShouldReturnTrueForMethodsWithParametersWhenParameterCountIsIgnored()
     {
         MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodWithInt")!;
@@ -590,6 +630,45 @@ public class MethodInfoExtensionsTests : TestContainer
     #endregion
 
     #region Dummy Class
+
+    private sealed class CancellationTokenSignatureFixture
+    {
+        public static void StaticToken(CancellationToken token)
+        {
+        }
+
+        public void TokenOnly(CancellationToken token)
+        {
+        }
+
+        public Task TaskTokenOnly(CancellationToken token) => Task.CompletedTask;
+
+        public ValueTask ValueTaskTokenOnly(CancellationToken token) => default;
+
+        public void OptionalToken(CancellationToken token = default)
+        {
+        }
+
+        public void NullableToken(CancellationToken? token)
+        {
+        }
+
+        public void TokenSource(CancellationTokenSource source)
+        {
+        }
+
+        public void ByRefToken(ref CancellationToken token)
+        {
+        }
+
+        public void DataAndToken(int value, CancellationToken token)
+        {
+        }
+
+        public void NonTrailingToken(CancellationToken token, int value)
+        {
+        }
+    }
 
     public class DummyTestClass2
     {

@@ -19,7 +19,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right Assembly/Class initialize signature.</returns>
     internal static bool HasCorrectClassOrAssemblyInitializeSignature(this MethodInfo method)
     {
-        DebugEx.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method is not null, "method should not be null.");
 
         ParameterInfo[] parameters = method.GetParameters();
 
@@ -37,7 +37,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right Assembly/Class cleanup signature.</returns>
     internal static bool HasCorrectClassOrAssemblyCleanupSignature(this MethodInfo method)
     {
-        DebugEx.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method is not null, "method should not be null.");
 
         return
             method is { IsStatic: true, IsPublic: true } &&
@@ -58,7 +58,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right test init/cleanup signature.</returns>
     internal static bool HasCorrectTestInitializeOrCleanupSignature(this MethodInfo method)
     {
-        DebugEx.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method is not null, "method should not be null.");
 
         return
             method.IsPublic &&
@@ -77,13 +77,13 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right test method signature.</returns>
     internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength, bool discoverInternals = false)
     {
-        DebugEx.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method is not null, "method should not be null.");
 
         return
             !method.IsAbstract &&
             (method.IsStatic == method.DeclaringType!.IsFSharpModule()) &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
-            (method.GetParameters().Length == 0 || ignoreParameterLength) &&
+            (ignoreParameterLength || TestDataSourceHelpers.GetDataParameterCount(method.GetParameters()) == 0) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
     }
 
@@ -95,7 +95,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method, ReflectHelper? reflectHelper = null)
         => ReflectHelper.MatchReturnType(method, typeof(Task))
-        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) == null)
+        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName(reflectHelper) is null)
         // Keep this the last check, as it avoids loading System.Threading.Tasks.Extensions unnecessarily.
         || method.IsValueTask();
 

@@ -87,7 +87,7 @@ internal class UnitTestDiscoverer
         }
 
         // No tests found => nothing to do
-        if (testElements == null || discoveredTestCount == 0)
+        if (testElements is null || discoveredTestCount == 0)
         {
             return;
         }

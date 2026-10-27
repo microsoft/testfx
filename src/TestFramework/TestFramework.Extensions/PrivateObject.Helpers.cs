@@ -36,7 +36,7 @@ public partial class PrivateObject
 
     private void BuildGenericMethodCacheForType(Type t)
     {
-        DebugEx.Assert(t != null, "type should not be null.");
+        DebugEx.Assert(t is not null, "type should not be null.");
         GenericMethodCache = [];
 
         MethodInfo[] members = t.GetMethods(BindToEveryThing);
@@ -55,7 +55,7 @@ public partial class PrivateObject
                 GenericMethodCache.Add(member.Name, listByName);
             }
 
-            DebugEx.Assert(listByName != null, "list should not be null.");
+            DebugEx.Assert(listByName is not null, "list should not be null.");
             listByName.AddLast(member);
         }
     }
@@ -71,8 +71,8 @@ public partial class PrivateObject
     private MethodInfo? GetGenericMethodFromCache(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(methodName), "Invalid method name.");
-        DebugEx.Assert(parameterTypes != null, "Invalid parameter type array.");
-        DebugEx.Assert(typeArguments != null, "Invalid type arguments array.");
+        DebugEx.Assert(parameterTypes is not null, "Invalid parameter type array.");
+        DebugEx.Assert(typeArguments is not null, "Invalid type arguments array.");
 
         // Build a preliminary list of method candidates that contain roughly the same signature.
         LinkedList<MethodInfo> methodCandidates = GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags);
@@ -82,7 +82,7 @@ public partial class PrivateObject
         methodCandidates.CopyTo(finalCandidates, 0);
 
         // parameterTypes is only asserted non-null in debug builds (see above), so the null check is kept as a defensive guard for release builds.
-        if (parameterTypes == null || parameterTypes.Length != 0)
+        if (parameterTypes is null || parameterTypes.Length != 0)
         {
             // Now that we have a preliminary list of candidates, select the most appropriate one.
             return RuntimeTypeHelper.SelectMethod(finalCandidates, parameterTypes!) as MethodInfo;
@@ -105,8 +105,8 @@ public partial class PrivateObject
     private LinkedList<MethodInfo> GetMethodCandidates(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(methodName), "methodName should not be null.");
-        DebugEx.Assert(parameterTypes != null, "parameterTypes should not be null.");
-        DebugEx.Assert(typeArguments != null, "typeArguments should not be null.");
+        DebugEx.Assert(parameterTypes is not null, "parameterTypes should not be null.");
+        DebugEx.Assert(typeArguments is not null, "typeArguments should not be null.");
 
         LinkedList<MethodInfo> methodCandidates = new();
 
@@ -115,7 +115,7 @@ public partial class PrivateObject
             return methodCandidates;
         }
 
-        DebugEx.Assert(methods != null, "methods should not be null.");
+        DebugEx.Assert(methods is not null, "methods should not be null.");
 
         foreach (MethodInfo candidate in methods)
         {

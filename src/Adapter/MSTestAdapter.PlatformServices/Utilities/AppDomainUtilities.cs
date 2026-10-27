@@ -137,7 +137,7 @@ internal static class AppDomainUtilities
         }
         finally
         {
-            if (appDomain != null)
+            if (appDomain is not null)
             {
                 AppDomain.Unload(appDomain);
             }
@@ -196,11 +196,11 @@ internal static class AppDomainUtilities
     internal static object CreateInstance(AppDomain appDomain, Type type, object?[]? arguments)
     {
         string? typeAssemblyLocation = type.Assembly.Location;
-        string? fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
+        string? fullFilePath = typeAssemblyLocation is null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
 
         EnsureRelevantStaticStateIsRestored(appDomain);
 
-        if (fullFilePath == null || File.Exists(fullFilePath))
+        if (fullFilePath is null || File.Exists(fullFilePath))
         {
             // If the assembly exists in the app base directory, load it from there itself.
             // Even if it does not exist, Create the type in the default Load Context and let the CLR resolve the assembly path.

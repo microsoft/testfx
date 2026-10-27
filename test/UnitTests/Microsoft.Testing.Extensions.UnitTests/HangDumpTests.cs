@@ -289,7 +289,7 @@ public sealed class HangDumpTests
     {
         IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
         TaskCompletionSource<bool> allDumpsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        using ManualResetEventSlim releaseDumps = new();
+        TaskCompletionSource<bool> releaseDumps = new(TaskCreationOptions.RunContinuationsAsynchronously);
         int startedDumpCount = 0;
 
         Task dumpTreeTask = HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
@@ -303,8 +303,7 @@ public sealed class HangDumpTests
                     allDumpsStarted.TrySetResult(true);
                 }
 
-                releaseDumps.Wait(TestContext.CancellationToken);
-                return Task.CompletedTask;
+                return releaseDumps.Task;
             },
             CancellationToken.None);
 
@@ -316,10 +315,9 @@ public sealed class HangDumpTests
         }
         finally
         {
-            releaseDumps.Set();
+            releaseDumps.SetResult(true);
+            await dumpTreeTask;
         }
-
-        await dumpTreeTask;
 
         Assert.AreEqual(bottomUpTree.Length, startedDumpCount);
     }

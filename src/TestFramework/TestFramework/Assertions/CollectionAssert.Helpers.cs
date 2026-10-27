@@ -94,14 +94,14 @@ public sealed partial class CollectionAssert
     /// </returns>
     private static Dictionary<T, int> GetElementCounts<T>(IEnumerable<T?> collection, IEqualityComparer<T> comparer, out int nullCount)
     {
-        DebugEx.Assert(collection != null, "Collection is Null.");
+        DebugEx.Assert(collection is not null, "Collection is Null.");
 
         var elementCounts = new Dictionary<T, int>(comparer);
         nullCount = 0;
 
         foreach (T? element in collection)
         {
-            if (element == null)
+            if (element is null)
             {
                 nullCount++;
                 continue;
@@ -207,7 +207,7 @@ public sealed partial class CollectionAssert
 
     private static bool CompareIEnumerable(IEnumerable? expected, IEnumerable? actual, IComparer comparer, ref string reason)
     {
-        if ((expected == null) || (actual == null))
+        if ((expected is null) || (actual is null))
         {
             return false;
         }

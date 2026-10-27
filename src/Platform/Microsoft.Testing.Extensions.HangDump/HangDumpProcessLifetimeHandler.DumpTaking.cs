@@ -174,7 +174,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler
             foreach (ProcessTreeNode node in processTree)
             {
                 IProcess? p = node.Process;
-                if (p == null)
+                if (p is null)
                 {
                     continue;
                 }

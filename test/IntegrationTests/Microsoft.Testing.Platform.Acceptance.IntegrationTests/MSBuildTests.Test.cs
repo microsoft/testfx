@@ -10,6 +10,61 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSBuildTests";
 
+    [TestMethod]
+    [DataRow("Test", "", true, DisplayName = "TestTarget_NoController_Passing")]
+    [DataRow("Test", "", false, DisplayName = "TestTarget_NoController_Failing")]
+    [DataRow("Test", "--report-trx", true, DisplayName = "TestTarget_Trx_Passing")]
+    [DataRow("Test", "--report-trx", false, DisplayName = "TestTarget_Trx_Failing")]
+    [DataRow("Test", "--hangdump", true, DisplayName = "TestTarget_HangDump_Passing")]
+    [DataRow("Test", "--hangdump", false, DisplayName = "TestTarget_HangDump_Failing")]
+    [DataRow("Test", "--crashdump", true, DisplayName = "TestTarget_CrashDump_Passing")]
+    [DataRow("Test", "--crashdump", false, DisplayName = "TestTarget_CrashDump_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "", true, DisplayName = "InvokeTestingPlatform_NoController_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "", false, DisplayName = "InvokeTestingPlatform_NoController_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "--report-trx", true, DisplayName = "InvokeTestingPlatform_Trx_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "--report-trx", false, DisplayName = "InvokeTestingPlatform_Trx_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "--hangdump", true, DisplayName = "InvokeTestingPlatform_HangDump_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "--hangdump", false, DisplayName = "InvokeTestingPlatform_HangDump_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "--crashdump", true, DisplayName = "InvokeTestingPlatform_CrashDump_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "--crashdump", false, DisplayName = "InvokeTestingPlatform_CrashDump_Failing")]
+    public async Task InvokeTestingPlatform_Target_With_AutoRegistered_Extensions_Should_Report_Test_Results(string target, string extensionOption, bool testSucceeded)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "MSBuildControllerTests",
+            ControllerSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant()));
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build -t:{target} -p:TestingPlatformShowTestsFailure=true -p:TestingPlatformCommandLineArguments=\"{extensionOption} --results-directory %22{resultsDirectory}%22\" \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.DoesNotContain("MSBuild extension failed to receive test application information", result.StandardOutput);
+        Assert.DoesNotContain("MSBuild extension failed to receive test run summary information", result.StandardOutput);
+        Assert.AreEqual(testSucceeded ? 0 : 1, result.ExitCode, result.ToString());
+        result.AssertOutputContains(testSucceeded
+            ? "Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1"
+            : "Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1");
+        if (!testSucceeded)
+        {
+            result.AssertOutputContains("error test failed: ControllerTest");
+        }
+
+        if (extensionOption == "--report-trx")
+        {
+            string trxPath = Assert.ContainsSingle(Directory.GetFiles(resultsDirectory, "*.trx"));
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            XElement testResult = Assert.ContainsSingle(XDocument.Load(trxPath).Descendants(ns + "UnitTestResult"));
+            Assert.AreEqual("ControllerTest", (string?)testResult.Attribute("testName"));
+            Assert.AreEqual(testSucceeded ? "Passed" : "Failed", (string?)testResult.Attribute("outcome"));
+        }
+    }
+
     public static string? FormatBuildMatrixEntry(MethodInfo method, object?[]? data)
         => $"{data![0]},{(Equals(TargetFrameworks.All.ToMSBuildTargetFrameworks(), data[1]) ? "multitfm" : data[1])},{data[2]},{((bool)data[3]! ? "Succeeded" : "Failed")}";
 
@@ -443,6 +498,36 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
         disabledResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
     }
+
+    private const string ControllerSourceCode = """
+#file MSBuildControllerTests.csproj
+<Project Sdk="MSTest.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <TestingExtensionsProfile>None</TestingExtensionsProfile>
+        <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
+        <EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>
+        <EnableMicrosoftTestingExtensionsCrashDump>true</EnableMicrosoftTestingExtensionsCrashDump>
+    </PropertyGroup>
+</Project>
+
+#file global.json
+{
+  "msbuild-sdks": {
+    "MSTest.Sdk": "$MSTestVersion$"
+  }
+}
+
+#file Test1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class ControllerTests
+{
+    [TestMethod]
+    public void ControllerTest() => Assert.IsTrue($AssertValue$);
+}
+""";
 
     private const string SourceCode = """
 #file MSBuild Tests.csproj

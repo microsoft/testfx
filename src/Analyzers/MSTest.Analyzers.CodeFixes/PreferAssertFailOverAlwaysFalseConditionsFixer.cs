@@ -41,7 +41,11 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        if (root.FindNode(diagnosticSpan) is not InvocationExpressionSyntax invocationExpr)
+        if (root.FindNode(diagnosticSpan) is not InvocationExpressionSyntax invocationExpr
+            || invocationExpr.ArgumentList.Arguments.Any(argument => argument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword)
+            || invocationExpr.ArgumentList.Arguments.Any(argument => argument.DescendantNodes().Any(node =>
+                node is SingleVariableDesignationSyntax or AssignmentExpressionSyntax
+                || (node is ArgumentSyntax nestedArgument && nestedArgument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword or SyntaxKind.InKeyword))))
         {
             return;
         }
@@ -64,8 +68,11 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsFixer : CodeFixProv
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         SyntaxGenerator generator = editor.Generator;
 
-        var newInvocationExpr = (InvocationExpressionSyntax)generator.InvocationExpression(
-            generator.MemberAccessExpression(generator.IdentifierName("Assert"), "Fail"));
+        ExpressionSyntax failExpression = invocationExpr.Expression is MemberAccessExpressionSyntax memberAccess
+            ? memberAccess.WithName(SyntaxFactory.IdentifierName("Fail").WithTriviaFrom(memberAccess.Name))
+            : SyntaxFactory.ParseExpression($"global::{WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert}.Fail")
+                .WithTriviaFrom(invocationExpr.Expression);
+        var newInvocationExpr = (InvocationExpressionSyntax)generator.InvocationExpression(failExpression);
 
         if (additionalLocations.Count >= 1)
         {

@@ -47,13 +47,14 @@ public sealed class GitHubActionsAnnotationReporterTests
         await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);
 
         Assert.AreEqual("\n::error file=source.cs,line=42,col=1,title=Test failed%3A Tests.Sample::boom%0Anext%25line", Assert.ContainsSingle(fixture.Output));
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(fixture.OutputData));
         Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.Tokens));
         Assert.Contains(invocation => invocation.Method.Name == nameof(ILogger.LogAsync) && (LogLevel)invocation.Arguments[0] == LogLevel.Trace, fixture.Logger.Invocations);
     }
 
     [TestMethod]
-    [DataRow("explicit", "\n::warning file=source.cs,line=42,col=1,title=Test skipped%3A Tests.Sample::not available%0Ahere")]
-    [DataRow("missing", "\n::warning file=source.cs,line=42,col=1,title=Test skipped%3A Tests.Sample::The test was skipped without providing a reason.")]
+    [DataRow("explicit", "\n::warning file=source.cs,line=42,col=1,title=Test skipped%3A Tests.Sample::not available%0Ahere", DisplayName = "SkippedAnnotation_ExplicitReason")]
+    [DataRow("missing", "\n::warning file=source.cs,line=42,col=1,title=Test skipped%3A Tests.Sample::The test was skipped without providing a reason.", DisplayName = "SkippedAnnotation_DefaultReason")]
     public async Task ConsumeAsync_SkippedStatesEmitDeclaredLocationAndReason(string partition, string expected)
     {
         AnnotationExecutionFixture fixture = new(trace: true);
@@ -62,6 +63,7 @@ public sealed class GitHubActionsAnnotationReporterTests
         await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), new TestNodeUpdateMessage(new SessionUid("session"), node), TestContext.CancellationToken);
 
         Assert.AreEqual(expected, Assert.ContainsSingle(fixture.Output));
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(fixture.OutputData));
         Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.Tokens));
     }
 
@@ -101,6 +103,7 @@ public sealed class GitHubActionsAnnotationReporterTests
         Assert.AreEqual(
             "\n::error file=source.cs,line=42,col=1,title=Test failed%3A Tests.Sample::boom Historical context: failed 3 and flaked 0 of 10 prior runs within the 14-day history window.",
             Assert.ContainsSingle(fixture.Output));
+        Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(fixture.OutputData));
     }
 
     [TestMethod]
@@ -122,6 +125,7 @@ public sealed class GitHubActionsAnnotationReporterTests
         if (expectedAnnotation)
         {
             Assert.AreEqual("\n" + GitHubActionsAnnotationReporter.GetExitCodeAnnotation(exitCode), Assert.ContainsSingle(fixture.Output));
+            Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(Assert.ContainsSingle(fixture.OutputData));
             Assert.AreEqual(TestContext.CancellationToken, Assert.ContainsSingle(fixture.Tokens));
         }
         else
@@ -214,7 +218,8 @@ public sealed class GitHubActionsAnnotationReporterTests
             OutputDevice.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
                 .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, token) =>
                 {
-                    Output.Add(((FormattedTextOutputDeviceData)data).Text);
+                    OutputData.Add(data);
+                    Output.Add(((TextOutputDeviceData)data).Text);
                     Tokens.Add(token);
                 }).Returns(Task.CompletedTask);
             Reporter = new(
@@ -231,6 +236,8 @@ public sealed class GitHubActionsAnnotationReporterTests
         public Mock<ILogger> Logger { get; } = new();
 
         public List<string> Output { get; } = [];
+
+        public List<IOutputDeviceData> OutputData { get; } = [];
 
         public List<CancellationToken> Tokens { get; } = [];
 

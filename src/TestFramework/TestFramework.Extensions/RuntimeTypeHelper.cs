@@ -53,7 +53,7 @@ internal sealed class RuntimeTypeHelper
             depth++;
             currentType = currentType.BaseType;
         }
-        while (currentType != null);
+        while (currentType is not null);
 
         return depth;
     }
@@ -80,7 +80,7 @@ internal sealed class RuntimeTypeHelper
             // which is not allowed, unless one of them is vararg...
             if (currentHierarchyDepth == deepestHierarchy)
             {
-                if (methWithDeepestHierarchy != null)
+                if (methWithDeepestHierarchy is not null)
                 {
                     DebugEx.Assert(
                         ((match[i].CallingConvention & CallingConventions.VarArgs)
@@ -301,12 +301,12 @@ internal sealed class RuntimeTypeHelper
         object?[]? args)
     {
         // A method using params is always less specific than one not using params
-        if (paramArrayType1 != null && paramArrayType2 == null)
+        if (paramArrayType1 is not null && paramArrayType2 is null)
         {
             return 2;
         }
 
-        if (paramArrayType2 != null && paramArrayType1 == null)
+        if (paramArrayType2 is not null && paramArrayType1 is null)
         {
             return 1;
         }
@@ -316,7 +316,7 @@ internal sealed class RuntimeTypeHelper
 
         for (int i = 0; i < types.Length; i++)
         {
-            if (args != null && args[i] == Type.Missing)
+            if (args is not null && args[i] == Type.Missing)
             {
                 continue;
             }
@@ -332,9 +332,9 @@ internal sealed class RuntimeTypeHelper
             //      or the user did not re-order the parameters in which case
             //          the paramOrder array could contain indexes larger than p.Length - 1
             //          so any index >= p.Length - 1 is being put in the param array
-            c1 = paramArrayType1 != null && paramOrder1[i] >= p1.Length - 1 ? paramArrayType1 : p1[paramOrder1[i]].ParameterType;
+            c1 = paramArrayType1 is not null && paramOrder1[i] >= p1.Length - 1 ? paramArrayType1 : p1[paramOrder1[i]].ParameterType;
 
-            c2 = paramArrayType2 != null && paramOrder2[i] >= p2.Length - 1 ? paramArrayType2 : p2[paramOrder2[i]].ParameterType;
+            c2 = paramArrayType2 is not null && paramOrder2[i] >= p2.Length - 1 ? paramArrayType2 : p2[paramOrder2[i]].ParameterType;
 
             if (c1 == c2)
             {
@@ -366,7 +366,7 @@ internal sealed class RuntimeTypeHelper
         {
             // it's possible that the 2 methods have same sig and  default param in which case we match the one
             // with the same number of args but only if they were exactly the same (that is p1Less and p2Lees are both false)
-            if (!p1Less && p1.Length != p2.Length && args != null)
+            if (!p1Less && p1.Length != p2.Length && args is not null)
             {
                 if (p1.Length == args.Length)
                 {

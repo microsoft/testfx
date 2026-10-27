@@ -36,11 +36,12 @@ builds that contain only the no-handshake fix.
 
 - `global.json` defines the repository-specific `test.affectedTests` change policy and selects Azure DevOps artifact
   storage for the public `microsoft.testfx` pipeline.
-- The trusted main-branch Windows Release entry runs full tests and publishes coverage. A separate `AffectedTests`
-  Windows matrix entry runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
+- The trusted main-branch Windows Release entry runs full tests and publishes coverage. A separate
+  `WindowsAffectedTests` job runs `--collect-test-map` without the normal report, retry, or coverage arguments, because
   collection owns its instrumentation and launches discovery children with `--list-tests`. A collection failure
   still fails its job; it is not normalized to success or allowed to consume the Release entry's time budget.
-  Main-branch Windows entries each have a four-hour budget. PR jobs retain their 90-minute budget.
+  Main-branch Windows validation entries retain a four-hour budget; the dedicated collection entry has six
+  hours. PR jobs retain their two-hour budget.
 - The Windows Release PR test runs `--affected-tests`.
 - Affected-test collection and selection cover all repository test TFMs, including .NET Framework through the
   package's `netstandard2.0` assets. The build restores the collector's required x64 native files beneath
@@ -56,7 +57,54 @@ builds that contain only the no-handshake fix.
   test applications launched by acceptance tests, while still allowing an individual test to opt in explicitly.
 - `eng/validate-affected-tests.ps1` verifies the SDK gate, package reference, storage configuration, pipeline wiring,
   nested-process isolation, command names, and fallbacks. Its `-SelfTest` mode, run by `DetectChanges`, also rejects
-  shared collection/validation jobs, bypassed rollout gates, ignored collection failures, and artifact collisions.
+  shared collection/validation jobs, regressed collection budgets, bypassed rollout gates, ignored collection
+  failures, and artifact collisions.
+
+### Windows timeout resolution (2026-10-26)
+
+[Run 20261025.5](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1648684), at
+`3c6614c5ae19ee4ddca55cbf9b3375bbaad3496b`, canceled collection at 08:06 UTC, four hours after its job started.
+The collector was still producing maps, not hung: its last completed analyzer shard was uploaded at 08:04 UTC.
+[Run 1648260](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1648260) hit the same four-hour limit.
+The previous `iif` timeout expression depended on the `_CollectAffectedTests` matrix variable, but the service
+resolved it to the ordinary 240-minute budget. The old configuration assertions only recognized the intended
+expression; they did not establish its effective runtime value.
+
+Collection now has its own compile-time-gated job with a literal 360-minute timeout. Release and Debug remain
+in the existing Windows matrix with literal 240-minute main and 120-minute PR budgets. Both jobs reuse
+`eng/pipelines/steps/build-test-windows.yml`, preserving prerequisites, build/pack commands, test selection,
+failure propagation, and distinct diagnostic artifacts. The main, `SkipTests`, and `EnableAffectedTests` gates
+are unchanged. This avoids another dependency on matrix expansion timing without extending ordinary validation,
+dropping tests/frameworks, changing collector concurrency, or ignoring collection failures.
+
+Validation must retain the real pipeline's former runtime-dependent timeout as a rejected configuration, not
+only mutate numeric limits. A live main-branch run is still required to demonstrate completion of the full
+collection within six hours; local configuration assertions are not that evidence. This repair changes only
+the unofficial pipeline and its validation, not SDK/collector versions or release-branch product behavior.
+
+The local repair is based on `92cbd59de751ca7ce5a44974073c30badeee93f5`. Its tracked executable patch
+(excluding this document) has SHA-256 `9A1E867AC253E08D5058634C4C63227FBB705F35A3907033BB9B34C382A4D0F8`;
+the new shared steps file has SHA-256 `62FD3794519E044E75E8EDE96CEBB3D12C9AB02D76B623BE83347CF85237E92A`.
+The following commands both exit 0 with 19 Windows isolation cases and 36 non-Windows rollout cases:
+
+```powershell
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests false -EnableNonWindowsAffectedTests true
+```
+
+**Test-value evidence:** `MatrixDependentCollectionTimeoutIsRejected` restores the former runtime-dependent
+expression and requires the `CollectionHasIndependentTimeBudget` assertion. Applying that same counterfactual
+to an otherwise valid pipeline fixture exits 1 at the intended assertion; the correct configuration exits 0.
+That fixture has SHA-256 `7578D89CD67EA20348F603FA75846B213398DDB3B2940F768D6F31CC18720A2C`.
+The extracted Windows steps also compare exactly with the base job after indentation normalization.
+This establishes configuration sensitivity and preservation, not a live Azure DevOps run.
+
+The collection budget follows [run 1639792](https://dev.azure.com/dnceng-public/public/_build/results?buildId=1639792):
+its sequential collector spent about 70 minutes on unit-test maps and another 88 minutes on MTP acceptance maps
+before starting MSTest acceptance. The four-hour job limit canceled that still-running collection, including its
+artifact publication. The extra budget applies only to collection; it does not drop frameworks or acceptance
+suites, change collector concurrency, suppress failures, or extend ordinary validation. Completing a full
+collection within the new limit still requires a main-branch CI run.
 
 `DOTNET_CLI_TEST_AFFECTED_TESTS_MODE` is an SDK-to-extension authorization marker. Repository scripts and pipeline
 definitions must not set it.
@@ -259,16 +307,15 @@ settings or clearing shared caches.
 then had less than 10 minutes before the shared four-hour Windows job timed out. Collection produced 45 shards,
 but the required full test and coverage validation did not complete.
 
-Collection therefore needs an independent job budget, not merely a separate step. A main-only `AffectedTests`
-entry in the existing Windows matrix reuses the same Release build, packing, Windows prerequisites, and pinned
+Collection therefore needs an independent job budget, not merely a separate step. The initial isolation used a
+main-only `AffectedTests` entry in the existing Windows matrix. The timeout correction above moves collection
+into a dedicated job, still reusing the same Release build, packing, Windows prerequisites, and pinned
 toolchain on its own agent. The ordinary Release entry runs full tests and publishes coverage without waiting for
 collection. Each entry owns its workspace and diagnostic artifacts; only the collection entry publishes test maps.
-Collection failures remain blocking and visible, but cannot cancel another matrix entry by consuming its timeout.
-Azure DevOps' [matrix contract](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/jobs-job-strategy)
-creates a separate copy of the job for each entry.
+Collection failures remain blocking and visible, but cannot cancel validation by consuming its timeout.
 
-The root `EnableAffectedTests` parameter controls both the collection matrix entry and PR selection. The collection
-entry is also compile-time gated by `SkipTests=false` and the main branch. Disabling affected tests retains the
+The root `EnableAffectedTests` parameter controls both the collection job and PR selection. The collection
+job is also compile-time gated by `SkipTests=false` and the main branch. Disabling affected tests retains the
 ordinary Release and Debug entries without creating a redundant collection build. PR selection, conservative
 fallbacks, SDK/package versions, and the collection command's exit semantics are unchanged.
 The selected parameter value is also passed to the rollout validator, so its compatibility gates use the actual
