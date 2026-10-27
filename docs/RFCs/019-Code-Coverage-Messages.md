@@ -884,3 +884,328 @@ Report:
    being closed-by-default) vs. an open readonly-struct metric type — confirm.
 4. **Value range convention.** This RFC standardizes on **0–100**; some tools use 0–1. Lock it
    and document on every percentage property.
+
+## dotnet test summary transport: research and decisions
+
+### Problem and contract
+
+[dotnet/sdk#56796](https://github.com/dotnet/sdk/issues/56796) requires the SDK to render
+coverage summaries without understanding collector-specific report formats. The TestFX
+portion transports measurements and couples merged measurements to the artifact that
+produced them. SDK rendering, collector merging, and composed-product validation are
+separately owned. Threshold evaluation and process exit-code policy remain unchanged.
+
+The application forwards only `TestCoverageMessage` measurements at `Overall` and `Module`
+scope. Each entry is an update, not a delta. Consumers use last-write-wins identity including
+the execution, process instance, session, producer, scope level/name, metric, and custom
+metric name. The existing handshake identifies the producing test module. Measurements
+from different applications, sessions, or collectors must not be added or averaged into a
+run-level total.
+
+For post-processing, the existing four-argument `ProcessedArtifact` constructor remains.
+An additive five-argument overload accepts
+`IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult>? coverageSummary`,
+exposed as a read-only `CoverageSummary` property. The list is snapshotted. Each metric
+describes the complete output artifact, computed by its producer from the actual merged
+data. `null` means unavailable; an explicit `0/0` measurement means no coverable data, not
+100 percent coverage. The platform does not parse coverage reports or merge measurements.
+
+| Wire addition | Contract |
+| --- | --- |
+| Handshake property 20, `CoverageSummaryVersion` | Both peers send the exact string `"1"`. Missing or unknown versions disable coverage transport; a compatible base-protocol handshake is also required. |
+| Serializer 15, `CoverageSummaryMessages` | Fields 1 `ExecutionId`, 2 `InstanceId`, 3 `Summaries`, using the existing counted-list framing. |
+| `CoverageSummaryMessage` entry | Fields 1 `SessionUid` (string), 2 `ProducerId` (string), 3 `ScopeLevel` (int32), 4 `ScopeName` (string), 5 `Metric` (int32), 6 `CustomMetricName` (string), 7 `CoveredCount` (int64), 8 `CoverableCount` (int64). All fields are nullable on the wire, so absent numbers cannot become invented zeros. Enum values match RFC 019. |
+| `FileArtifactMessage` field 9, `CoverageSummary` | Optional list of the same entries, after existing field 8 `InputArtifactPaths`. Entries describe the complete output at `Overall` scope, with no session or scope name. |
+
+Base protocol versions are unchanged. Coverage support does not enable the 1.4 server-control
+feature or reuse serializer IDs 13/14. Old SDKs receive the existing artifact payload without
+coverage metadata and never receive serializer 15. Old producers leave the new capability
+and field absent. Unknown optional fields retain the existing skip behavior.
+
+The dispatcher sends metadata only with a validated output artifact, after every processor
+has finished, and omits all coverage metadata for a failed or truncated job. Original
+artifacts and existing processor failure exits remain intact. Cancellation must prevent a
+pending metadata send. The SDK must stage metadata with its candidate artifact and commit it
+only after successful job completion and its existing artifact/provenance checks. A
+multi-application authoritative `Total` additionally requires complete coverage input
+provenance; missing, incompatible, opted-out, partial, unmerged, or cancelled inputs never
+authorize a fabricated total. A genuinely complete coverage result can accompany a failing
+test run without changing that run's exit code.
+
+Regular test hosts and controller-process lifetime handlers use the push-only data consumer.
+The controller drains messages after coverage finalization. Tool mode does not construct
+the session message bus, so merged metadata is sent directly by the artifact dispatcher.
+The SDK owns process launch, completion/cancellation, candidate acceptance, and rendering;
+the platform owns its connection and existing disposal behavior.
+
+### Research and experiments
+
+- 2026-10-27: Inspected the issue, this RFC, `DotnetTestDataConsumer`,
+  `DotnetTestConnection`, the IPC serializers, and artifact dispatcher at TestFX base
+  `b6e7268c80ed13ec33c3a1f736140bc8169b194c`. Existing streamed data excludes coverage;
+  `ProcessedArtifact` has no measurement metadata; the dispatcher publishes validated
+  artifact messages with the exact represented input paths.
+- 2026-10-27: Verified regular-host registration in `TestHostBuilder.Framework`, controller
+  registration/draining in `TestHostControllersTestHost`, and the separate `ToolsHost`
+  dispatcher path. No new tool-mode data bus is needed.
+- 2026-10-27: The SDK coordinator accepted capability 20, serializer 15, entry fields 1-8,
+  artifact field 9, and the additive public API before consumer implementation. The
+  collector owner confirmed it can attach counts from the exact merged output using
+  `CoverageMetricResult`; its merged producer ID need not equal a standalone producer ID.
+- 2026-10-27: The pinned SDK bootstrap succeeded, but Arcade's runtime-install `.cmd` could
+  not resolve `powershell` on this execution host. Installing the selected pinned .NET
+  runtime directly through `eng\common\dotnet-install.ps1` and passing
+  `/p:SkipRuntimesInstall=true` to the bounded build avoided that local wrapper failure
+  without changing build infrastructure or substituting an SDK/runtime version.
+- 2026-10-27: Before production edits, built and executed the existing focused IPC,
+  connection, consumer, and dispatcher selection on .NET 8.0.32 with SDK
+  `12.0.100-alpha.1.26509.101`, Release/net8.0. The selection executed 214 cases:
+  214 passed, zero failed/skipped; build and test exits were zero. Assembly method-level
+  parallelization remained enabled (32 workers on this host).
+- 2026-10-27: The first producer compilation found an alphabetic-using-order diagnostic,
+  corrected without changing the contract. The next core build passed with zero warnings
+  and errors. Reflection confirmed both `ProcessedArtifact` constructors and the expected
+  `IReadOnlyList<CoverageMetricResult>` property. This is compilation/API-shape evidence,
+  not composed-product validation.
+- 2026-10-27: Evaluated local package versions with the pinned SDK and compared them with
+  `NuGet.Versioning`. A bare `coverage-summary.20261027.1` suffix sorts below existing
+  numerical `preview` dependencies and was rejected before packing. The explicit local
+  suffix `preview.coverage-summary.20261027.1` sorts above those previews without
+  impersonating a published build. Collector consumers of the new constructor must depend
+  on the feature-bearing platform version; handshake gating cannot supply an API missing
+  from an older assembly.
+- 2026-10-27: A first isolated pack compiled all five TFMs and created a package, but its
+  post-build verifier could not launch `powershell` through the tool host's inherited
+  `PATH`. Setting `PATH` inside the same native `cmd` process before launching PowerShell
+  resolved the launcher issue. The repeated isolated build/pack and the unmodified
+  repository package verifier then exited zero, with zero warnings/errors. Product
+  binaries/intermediates were isolated from the concurrent unit-test build; the verified
+  package was written to the normal Release shipping feed.
+
+### Alternatives and decision
+
+- **No change:** preserves compatibility but leaves CI log consumers without a summary.
+- **Forward rendered console text:** cannot identify complete merged provenance, distinguish
+  collectors reliably, or give the SDK ownership of stable numeric formatting.
+- **Parse collector reports in the SDK:** duplicates collector knowledge and fails the
+  format-independent contract.
+- **Add or average application counts:** double-counts assemblies loaded by multiple test
+  applications and cannot reproduce the actual merged result.
+- **Separate merged-summary message:** can outlive a rejected or failed artifact job.
+- **Chosen:** one negotiated measurement message plus optional artifact-coupled metadata,
+  reusing the existing validated count model. A separate capability avoids enabling
+  unrelated protocol features; the extra wire record keeps SDK-shared source independent
+  of public platform types. Detailed scopes, threshold transport, and new exit-code policy
+  are deliberately excluded.
+
+### Validation and demonstration
+
+Producer-level tests and packed-package checks do not establish real SDK/collector
+integration. The SDK coordinator owns the composed command and its stable invariant-culture
+output demonstration; this transport has no independent user-facing media.
+
+The local candidate is
+`artifacts\packages\Release\Shipping\Microsoft.Testing.Platform.2.6.0-preview.coverage-summary.20261027.1.nupkg`,
+SHA-256 `34FDAB56A1228C5DACA3BEC45B0CC7B48E44D41D8E1F4DCB6668AF1D2311F6AD`.
+It contains the complete declared `net8.0`, `net9.0`, `net10.0`, `net11.0`, and
+`netstandard2.0` payloads. Each packed DLL's hash matches its source-built counterpart, and
+each TFM's XML documentation includes the new coverage metadata API. This is a genuine
+source pack, not a modified published package.
+
+The effective pack invocation, from the worktree root, was:
+
+```powershell
+$root = (Get-Location).Path
+& .\eng\build.ps1 -restore -build -pack -c Release `
+    -projects src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj `
+    -msbuildEngine dotnet -nodeReuse:$false `
+    -properties @(
+        "/p:ArtifactsDir=$root\artifacts\coverage-package-bootstrap\",
+        "/p:PackageOutputPath=$root\artifacts\packages\Release\Shipping",
+        '/p:VersionSuffix=preview.coverage-summary.20261027.1',
+        '/p:SkipRuntimesInstall=true',
+        '/bl:<task-owned-evidence-directory>\coverage-producer-pack.binlog'
+    )
+```
+
+Result: build, pack, and repository package verification exited **0**. The binlog destination
+above denotes the retained session evidence directory, not an additional build property.
+This local environment used the native-process `PATH` setup described above and the
+repository-pinned SDK/runtime bootstrap; no global or source build settings were changed.
+
+The initial implementation/test patch against base
+`b6e7268c80ed13ec33c3a1f736140bc8169b194c`, excluding this decision record, has SHA-256
+`8B63DF5B2825CD1F6791AB456D17D2117ECDEC2E84782BCBEFCC31DFDEC6DC4C`.
+The implementation and tests are committed as
+`479eb249a33830d9c0d2c26b7ceb3349d65771c1`; later decision-record-only updates do not
+change those tested source files.
+The package's exact producer-source patch has SHA-256
+`3C7D00CB9F0321C26A0CDDDC8EC81041A0AEECFE41746F4EE2C01851977B6888`.
+The package was built from that uncommitted source state, not from a later commit stamped
+into its metadata.
+
+| Requirement | Evidence |
+| --- | --- |
+| Exact capability, compatible base, reset and opt-out | `IsCompatibleProtocolAsync_CoverageSummaryRequiresExactVersionAndCompatibleBase`, `IsCompatibleProtocolAsync_CoverageSummaryRenegotiationClearsPreviousSupport`, `IsCompatibleProtocolAsync_LocalCoverageOptOutCannotBeEnabledByPeer`. |
+| Identity, 64-bit counts, update semantics and bounded scopes | `ConsumeAsync_CoverageSummaryPreservesIdentityAndInt64Counts`, `ConsumeAsync_CoverageUpdatesRemainReplacementsWithDistinctIdentities`, `ConsumeAsync_NarrowCoverageScopesAreIgnored`. |
+| Stable wire fields, missing counts, malformed input and legacy readers | `CoverageSummaryMessages_IndependentWireFixturePinsAllFields`, `CoverageSummaryMessages_AbsentCountsAreNotDefaultedToZero`, `CoverageSummaryPayload_InvalidCollectionLengthIsBounded`, `FileArtifactMessages_LegacyReaderSkipsCoverageAndPreservesFollowingArtifacts`. |
+| Metadata snapshot, successful acceptance, failure and cancellation | `ProcessedArtifact_CoverageSummaryIsReadOnlySnapshot`, `ValidateProcessedArtifact_NormalizesPathWithoutDroppingCoverage`, `DispatcherRun_AnyProcessorFailureStripsEveryOutputCoverage`, `DispatcherRun_CancellationAfterOutputCreationPreventsPublication`. |
+| Real packed regular/controller finalization and failing-test exit preservation | `SessionFinalization_NegotiatedCoverageReachesPackedConsumer`, `ControllerFinalization_CoverageIsDrainedToPackedConsumer`, `SessionFinalization_UnsupportedPeerReceivesNoCoverage`. |
+| Real packed metadata/provenance and partial-run suppression | `Dispatcher_CompleteFixtureMergeCouplesCoverageToExactProvenance`, `Dispatcher_UnsupportedOrTruncatedJobOmitsCoverageMetadata`. The producer and SDK peer are explicitly synthetic fixtures, not a real coverage collector or SDK. |
+
+The focused unit build and discovery/execution exited **0** on Release/net8.0:
+**308 executed, 308 passed, zero failed/skipped**, comprising the 214 existing cases and
+94 new cases. The package-consuming acceptance build and execution exited **0** on
+Release/net11.0: **14 planned/discovered/executed, 14 passed, zero failed/skipped**.
+Both assemblies retained method-level parallelization, observed with 32 workers. New
+resources use per-test streams, mocks, GUID paths and child processes; no global-state
+mutation or scheduling exclusion was added.
+
+The acceptance assets use only the real packed MTP dependency and C# 12. They compile and
+execute both the original four-argument constructor and the new five-argument constructor.
+Before cleanup, every case verifies its `project.assets.json` package identity and effective
+cache path, hashes the cached `.nupkg` against the local shipping package, compares the
+output DLL to the package's net11.0 payload, and asserts the child reported that actual loaded
+assembly path. All 14 reports recorded net11.0 DLL SHA-256
+`118F19919CC4C9AE41869AFE4D34A00EDE8FFB8B8EF1A927CE2F361241D7D594`.
+The execution gate also reconciled all 14 source-declared names with fresh TRX results.
+
+The successful execution commands, after the configuration-matched build/pack, were:
+
+```powershell
+$unitFilter = 'ClassName=Microsoft.Testing.Platform.UnitTests.DotnetTestConnectionTests|ClassName=Microsoft.Testing.Platform.UnitTests.DotnetTestDataConsumerTests|ClassName=Microsoft.Testing.Platform.UnitTests.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTests|ClassName=Microsoft.Testing.Platform.UnitTests.ProtocolTests|ClassName=Microsoft.Testing.Platform.UnitTests.ProtocolEdgeCaseTests'
+& .\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.UnitTests\Release\net8.0\Microsoft.Testing.Platform.UnitTests.dll --filter $unitFilter --report-trx --report-trx-filename coverage-units.trx --results-directory $unitEvidence --show-test-results failed
+
+$acceptanceFilter = 'ClassName=Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe.DotnetTestPipeCoverageSummaryTests'
+& .\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net11.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter $acceptanceFilter --report-trx --report-trx-filename coverage-acceptance.trx --results-directory $acceptanceEvidence --show-test-results failed
+```
+
+`$unitEvidence` and `$acceptanceEvidence` identify the retained task-owned result directories.
+The acceptance host was built through `eng\build.ps1 -restore -build -c Release` with its
+specific project, `SupportedNetFrameworks=net11.0`, `SkipUapTargetFramework=true`,
+`EnableCodeCoverage=false`, `SkipRuntimesInstall=true`, and a unique binlog. The pinned
+11.0.0-rc.2.26504.105 runtime was bootstrapped locally before execution.
+
+#### Test-value evidence
+
+The behavior-removal experiment retained all APIs, tests and assertions. It removed only
+the measurement send from `DotnetTestDataConsumer` and the metadata argument when
+`ValidateProcessedArtifact` reconstructs a normalized artifact. A task-owned comparison
+checkout used the same five-class selector and Release/net8.0 toolchain. The comparison
+feature patch has SHA-256
+`C26BDC3366C1972109F39B662AFBF7664783F40A792DD762DB4A1201073EBCF2`;
+the mutation/harness patch has SHA-256
+`879B5DAFE7215865D3EDBBD251DA195259E02081DD8EC3E3D17976038AB16413`.
+All five changed unit-test source files were byte-identical between variants.
+
+| Contract / test case | Counterfactual | Without behavior | Correct implementation | Evidence / gap |
+| --- | --- | --- | --- | --- |
+| Streamed identity/counts: `OverallCoverageIdentity`, `ModuleCoverageIdentity`, `ConsumeAsync_CoverageUpdatesRemainReplacementsWithDistinctIdentities` | Omit the negotiated measurement send, keeping registration and API shape. | **Executed: detected.** All three cases fail on absent message/cardinality assertions. | All three pass. | Same source, selector and assertions; no setup/compiler failure counted as red. |
+| Validated artifact metadata: `ValidateProcessedArtifact_NormalizesPathWithoutDroppingCoverage`, `CompleteNegotiatedCoverage`, `EmptyListDoesNotInventZeroCounts`, `DispatcherRun_CompleteCoverageDoesNotOverrideFailingRunSummary` | Normalize through the legacy constructor, dropping only metadata. | **Executed: detected.** All four cases fail on missing expected metadata. | All four pass. | Both variants compiled with zero warnings/errors; original inputs and existing verdict policy remain protected. |
+
+The red run exited **2** with **308 executed, 301 passed, 7 failed, zero skipped**.
+After restoring only the two owned production edits and forcing a comparison rebuild,
+the green run exited **0** with **308 executed, 308 passed, zero failed/skipped**.
+Stable method identities and data-row multiplicities match; one pre-existing timing-property
+case includes the current timestamp in its display label and was reconciled by method
+identity rather than requiring identical timestamps. Every one of the seven intended failing
+case labels uniquely passes in the green report.
+
+The counterfactual DLL SHA-256 was
+`EF67ACFC10BCF0800D61EF5CC0CD6B6489E0533AD364CAB385016C80CF0EA9DC`;
+the freshly rebuilt restored DLL was
+`EAA493D9BC4FEBE9079A163F7863EEC0C8DC46F503085B2C2E52F9AE5CD94F44`.
+An initial restored-source attempt reused the mutant output because copying preserved older
+timestamps; that attempt is not green evidence. The forced rebuild and changed binary hash
+establish that the final green run used the restored implementation.
+
+Initial external-source injection attempts hit analyzer/import setup failures and were
+abandoned, not counted as behavioral failures. The standard comparison checkout needed only
+an explicit higher `global_level` for its identical `.globalconfig` value because it is nested
+under the original checkout; this harness-only setting remained identical in red and green.
+Raw binlogs, TRX reports, source hashes and patches are retained in session artifacts. No
+counterfactual production change is delivered.
+
+The coordinating SDK session subsequently completed **11 real composed-product cases**
+using the built SDK redist, this MTP `2.6.0-preview.coverage-summary.20261027.1` package, and
+the genuine local collector `18.13.0-preview.coverage-summary.20261027.1` package. Inspection
+of its retained `aligned-feature-verified-20261027-141856/evidence.json` found all checks
+passing, with SHA-256
+`96013CEB641AE57509CA95D2C813B0B8EF2F768872FAD36D9126A9444E4542E9`.
+These are coordinator-owned executions, not results produced by the synthetic fixture tests.
+
+The real single-app result is `50.0%` (6/12). The two applications each cover half of the same
+library; the actual merged artifact contains 12/12 and prints `Total - Line: 100.0%` exactly
+once in solution, managed-module, and Native AOT module paths. Both original artifacts
+remain. Post-processing suppression and no-coverage paths invent no total; test failures
+retain exit 2, zero-test selection retains exit 8, and cancellation retains exit 3. The
+coordinator also reports 245 managed and 30 ILC-compiled SDK coverage cases passing.
+
+The earlier stock collector pack's missing ARM64 native inputs no longer block this local
+composed proof. No published package was patched and no global Visual Studio installation
+was attempted. Official package release/flow was not requested and remains outside this
+local implementation handoff.
+
+### Open questions and delivery ownership
+
+- Local source validation targets the current TestFX `main` baseline. Official package flow,
+  release-branch validation, rollout, and any servicing/backport decision remain with the SDK
+  coordinator; unpublished local packages are not shipping-readiness evidence.
+- The coordinated SDK initially references MTP `2.6.0-preview.26519.1` and MSTest
+  `4.6.0-preview.26519.1`. Local validation must align those dependencies with the actual
+  TestFX and collector packages produced for this contract and record their provenance.
+
+### Pre-PR review rounds (2026-10-27)
+
+All three passes reviewed the complete feature against
+`b6e7268c80ed13ec33c3a1f736140bc8169b194c`, at implementation/evidence head
+`9c0ca15cb3858a322da28261e18147b571710fe1`, not just the latest documentation commit.
+The initial and final live PR lookup found no existing pull request. Creation remains
+held until the cross-repository coordinator releases the dependency-ordered PR sequence.
+
+| Round | Findings and disposition | Validation |
+| --- | --- | --- |
+| 1: independent full-branch review | A fresh reviewer checked all 25 changed files and direct consumers: negotiation, framing and numeric presence, API compatibility, scoped identity, lifetime, accepted artifact provenance, tests and linked targets. No actionable defect met the concrete-trigger/consequence threshold; no speculative or style-only change was made. | Static source/assertion review plus independent verification of the canonical package hash and all five TFM payloads. The reviewer did not claim fresh test execution. |
+| 2: complete producer/consumer and lifecycle review | Rechecked the entire feature and traced regular session finalization, controller post-exit publication/draining, tool-mode dispatch, transport shutdown, retry consumers, old constructors and both SDK send guards. Checked the new fixture/helper synchronization, side effects and independent wire oracles. No actionable defect; no behavioral or contract change required. | Fresh Release/net8.0 unit execution: 308 executed/passed, zero failed/skipped, exit 0. Fresh Release/net11.0 packed C# 12 execution: 14 executed/passed, zero failed/skipped, exit 0. The independent execution gate reconciled all 14 planned cases and provenance assertions. |
+| 3: complete compatibility, package and readiness review | Rechecked the full diff, nullable/unknown-field bounds, public/internal API baselines, retained constructor call shapes, standalone protocol-source globs, shared consumers, package provenance, evidence claims and CI selectors. No actionable defect; no artificial fix or new policy was introduced. | A fresh isolated Release build of the core passed for net8.0, net9.0, net10.0, net11.0 and netstandard2.0, exit 0 with zero warnings/errors. Verified the full code/test patch hash remains unchanged, all 21 changed C# files retain their BOMs, and the canonical package was not overwritten. |
+
+Round-two reports are retained as `review-round2-units.trx` and
+`review-round2-acceptance.trx` with their execution logs. They replay the exact host/class
+selectors in the validation section above against the unchanged source/package, using
+fresh result directories. The round-three build used `eng\build.ps1 -restore -build -c Release`
+for `src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj`, the dotnet
+MSBuild engine, disabled node reuse, an isolated `artifacts\coverage-review-final` output
+directory, `SkipRuntimesInstall=true`, and `coverage-review-round3-build.binlog`.
+It did not repack or modify the already-consumed `.1` package identity.
+
+The protocol-source manifest uses globs that include the new models and serializer without
+introducing platform-only types into shared wire source. CI inspection confirmed that the
+owning test projects are in the full and non-Windows solutions and flow through the normal
+Release test selection under the existing `SkipTests` and affected-test/fallback policy.
+That is static selection evidence, not a claim that CI has executed an unpublished branch.
+
+No producer, wire or API change was needed in these review rounds. The existing genuine
+`2.6.0-preview.coverage-summary.20261027.1` package and its recorded hash remain the accepted
+MTP dependency for the coordinator's post-review composition. Local validation suffixes and
+feeds were not added to released dependency manifests. The prior executed behavior-removal
+evidence remains applicable because the code/test patch is unchanged.
+
+### Review-comment follow-up (2026-10-27)
+
+The nullability feedback was partially accepted: the consumer's connection is a required
+constructor argument, stored readonly, and its production factory passes `this`. The field
+now declares that non-null invariant and no longer has redundant debug-only null assertions.
+No runtime guard, silent return, wire change or public API change was introduced.
+
+The test-helper projection feedback was accepted: `WriteStringList` iterates
+`values.Select(WriteString)` while preserving order and the exact count/length/data framing.
+Implicit usings already provide LINQ, so no additional import was needed.
+
+These are behavior-preserving changes. The same focused `DotnetTestDataConsumerTests` and
+`ProtocolEdgeCaseTests` selection executed **104/104 passing cases before and after**,
+with zero failures/skips and matching stable method/data-row multiplicities. The pinned
+Release/net8.0 unit-project build exited zero with zero warnings/errors. The updated
+code/test patch against the same base has SHA-256
+`4F279020DE0944C2759BCDD5DAB38075FD75B0916583383673B286091BA8DA56`.
+The original feature-ablation evidence above remains labeled at its original source state;
+this follow-up uses green/green equivalence, not a fabricated failing regression.

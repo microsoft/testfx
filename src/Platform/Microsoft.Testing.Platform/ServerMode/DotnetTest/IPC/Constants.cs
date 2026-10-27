@@ -109,6 +109,11 @@ internal static class HandshakeMessagePropertyNames
     // Sent only by the SDK in its handshake response. A true value means the SDK honors
     // RequiredPostProcessorKinds and supplies an authoritative runSummary in the post-processing manifest.
     internal const byte RequiredPostProcessingSupported = 19;
+
+    // Both peers send "1" to opt into CoverageSummaryMessages and FileArtifactMessage.CoverageSummary.
+    // Missing or unknown versions mean unsupported, not zero coverage. This capability is independent
+    // of the base protocol version and does not enable the server-control channel.
+    internal const byte CoverageSummaryVersion = 20;
 }
 
 [Embedded]
@@ -163,6 +168,8 @@ internal static class HandshakeMessageExecutionModes
 [Embedded]
 internal static class ProtocolConstants
 {
+    internal const string CoverageSummaryVersion = "1";
+
     // The change between 1.0.0 and 1.1.0 is that TerminalOutputDevice is no longer plugged in.
     // That's not really a protocol change, but we use the version to signal to the SDK that it
     // can safely keep the test host's standard output/error visible (TerminalTestReporter and

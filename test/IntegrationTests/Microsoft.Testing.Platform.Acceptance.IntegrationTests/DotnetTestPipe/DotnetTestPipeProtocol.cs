@@ -44,6 +44,7 @@ internal static class DotnetTestPipeProtocol
         public const int DisplayMessage = 12;
         public const int WaitForServerControlRequest = 13;
         public const int ServerControlMessage = 14;
+        public const int CoverageSummaryMessages = 15;
     }
 
     public static class HandshakeProperties
@@ -68,6 +69,7 @@ internal static class DotnetTestPipeProtocol
         public const byte SupportedTruncatedRunPostProcessorExtensionsLegacy = 17;
         public const byte RequiredPostProcessorKinds = 18;
         public const byte RequiredPostProcessingSupported = 19;
+        public const byte CoverageSummaryVersion = 20;
     }
 
     public static class ServerControlKinds
@@ -376,13 +378,96 @@ internal static class DotnetTestPipeProtocol
         return (executionId, instanceId, level, text);
     }
 
-    public static IReadOnlyList<FileArtifact> DecodeFileArtifacts(byte[] body, bool readInputArtifactPaths = true)
+    public static CoverageSummaryBatch DecodeCoverageSummaryMessagesBody(byte[] body)
+    {
+        string? executionId = null, instanceId = null;
+        IReadOnlyList<CoverageSummary> summaries = [];
+        using MemoryStream stream = new(body, writable: false);
+        ushort fields = ReadUShort(stream);
+        for (int i = 0; i < fields; i++)
+        {
+            ushort id = ReadUShort(stream);
+            int size = ReadInt(stream);
+            long end = stream.Position + size;
+            switch (id)
+            {
+                case 1:
+                    executionId = ReadFixedSizeString(stream, size);
+                    break;
+                case 2:
+                    instanceId = ReadFixedSizeString(stream, size);
+                    break;
+                case 3:
+                    summaries = ReadCoverageSummaries(stream);
+                    break;
+            }
+
+            stream.Position = end;
+        }
+
+        return new(executionId, instanceId, summaries);
+    }
+
+    private static IReadOnlyList<CoverageSummary> ReadCoverageSummaries(Stream stream)
+    {
+        int count = ReadInt(stream);
+        List<CoverageSummary> summaries = [];
+        for (int i = 0; i < count; i++)
+        {
+            string? sessionUid = null, producerId = null, scopeName = null, customMetricName = null;
+            int? scopeLevel = null, metric = null;
+            long? coveredCount = null, coverableCount = null;
+            ushort fields = ReadUShort(stream);
+            for (int j = 0; j < fields; j++)
+            {
+                ushort id = ReadUShort(stream);
+                int size = ReadInt(stream);
+                long end = stream.Position + size;
+                switch (id)
+                {
+                    case 1:
+                        sessionUid = ReadFixedSizeString(stream, size);
+                        break;
+                    case 2:
+                        producerId = ReadFixedSizeString(stream, size);
+                        break;
+                    case 3:
+                        scopeLevel = ReadInt(stream);
+                        break;
+                    case 4:
+                        scopeName = ReadFixedSizeString(stream, size);
+                        break;
+                    case 5:
+                        metric = ReadInt(stream);
+                        break;
+                    case 6:
+                        customMetricName = ReadFixedSizeString(stream, size);
+                        break;
+                    case 7:
+                        coveredCount = ReadLong(stream);
+                        break;
+                    case 8:
+                        coverableCount = ReadLong(stream);
+                        break;
+                }
+
+                stream.Position = end;
+            }
+
+            summaries.Add(new(sessionUid, producerId, scopeLevel, scopeName, metric, customMetricName, coveredCount, coverableCount));
+        }
+
+        return summaries;
+    }
+
+    public static IReadOnlyList<FileArtifact> DecodeFileArtifacts(byte[] body, bool readInputArtifactPaths = true, bool readCoverageSummary = true)
     {
         const ushort fileArtifactMessageListFieldId = 3;
         const ushort fullPathFieldId = 1;
         const ushort displayNameFieldId = 2;
         const ushort kindFieldId = 7;
         const ushort inputArtifactPathsFieldId = 8;
+        const ushort coverageSummaryFieldId = 9;
 
         List<FileArtifact> artifacts = [];
         using MemoryStream stream = new(body, writable: false);
@@ -404,6 +489,7 @@ internal static class DotnetTestPipeProtocol
                 string? displayName = null;
                 string? kind = null;
                 string[]? inputArtifactPaths = null;
+                IReadOnlyList<CoverageSummary>? coverageSummary = null;
                 ushort messageFieldCount = ReadUShort(stream);
                 for (int messageFieldIndex = 0; messageFieldIndex < messageFieldCount; messageFieldIndex++)
                 {
@@ -429,13 +515,16 @@ internal static class DotnetTestPipeProtocol
                             }
 
                             break;
+                        case coverageSummaryFieldId when readCoverageSummary:
+                            coverageSummary = ReadCoverageSummaries(stream);
+                            break;
                         default:
                             stream.Seek(messageFieldSize, SeekOrigin.Current);
                             break;
                     }
                 }
 
-                artifacts.Add(new FileArtifact(fullPath, displayName, kind, inputArtifactPaths));
+                artifacts.Add(new FileArtifact(fullPath, displayName, kind, inputArtifactPaths, coverageSummary));
             }
         }
 
@@ -637,6 +726,13 @@ internal static class DotnetTestPipeProtocol
         return BitConverter.ToInt32(bytes);
     }
 
+    private static long ReadLong(Stream stream)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(long)];
+        stream.ReadExactly(bytes);
+        return BitConverter.ToInt64(bytes);
+    }
+
     private static void WriteUShort(Stream stream, ushort value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
@@ -693,7 +789,24 @@ internal static class DotnetTestPipeProtocol
 /// <summary>A raw decoded pipe frame (serializer id + body bytes, no further decoding).</summary>
 internal sealed record RawMessage(int SerializerId, byte[] Body);
 
-internal sealed record FileArtifact(string? FullPath, string? DisplayName, string? Kind, string[]? InputArtifactPaths);
+internal sealed record FileArtifact(
+    string? FullPath,
+    string? DisplayName,
+    string? Kind,
+    string[]? InputArtifactPaths,
+    IReadOnlyList<CoverageSummary>? CoverageSummary = null);
+
+internal sealed record CoverageSummaryBatch(string? ExecutionId, string? InstanceId, IReadOnlyList<CoverageSummary> Summaries);
+
+internal sealed record CoverageSummary(
+    string? SessionUid,
+    string? ProducerId,
+    int? ScopeLevel,
+    string? ScopeName,
+    int? Metric,
+    string? CustomMetricName,
+    long? CoveredCount,
+    long? CoverableCount);
 
 /// <summary>
 /// A fully decoded discovered test message: the complete discovery object the SDK needs to build the

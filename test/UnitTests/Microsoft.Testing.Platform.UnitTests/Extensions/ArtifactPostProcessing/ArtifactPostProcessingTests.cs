@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
@@ -21,6 +22,341 @@ namespace Microsoft.Testing.Platform.UnitTests.Extensions.ArtifactPostProcessing
 public sealed class ArtifactPostProcessingTests
 {
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public void ProcessedArtifact_LegacyAndExplicitNullConstructorsLeaveCoverageUnavailable()
+    {
+        var legacy = new ProcessedArtifact("output.fixture", "fixture.kind", "display", "description");
+        var unavailable = new ProcessedArtifact("output.fixture", "fixture.kind", "display", "description", null);
+
+        foreach (ProcessedArtifact artifact in new[] { legacy, unavailable })
+        {
+            Assert.AreEqual("output.fixture", artifact.Path);
+            Assert.AreEqual("fixture.kind", artifact.Kind);
+            Assert.AreEqual("display", artifact.DisplayName);
+            Assert.AreEqual("description", artifact.Description);
+            Assert.IsNull(artifact.CoverageSummary);
+        }
+    }
+
+    [TestMethod]
+    public void ProcessedArtifact_CoverageSummaryIsReadOnlySnapshot()
+    {
+        List<CoverageMetricResult> source = CreateCoverageMetrics();
+        var artifact = new ProcessedArtifact("output.fixture", "fixture.kind", "display", null, source);
+
+        source[0] = new CoverageMetricResult(CoverageMetric.Line, 1, 2, "replacement");
+        source.Clear();
+
+        AssertMetricSnapshot(artifact.CoverageSummary);
+        IList<CoverageMetricResult> list = Assert.IsInstanceOfType<IList<CoverageMetricResult>>(artifact.CoverageSummary);
+        Assert.IsTrue(list.IsReadOnly);
+        Assert.ThrowsExactly<NotSupportedException>(() => list[0] = new CoverageMetricResult(CoverageMetric.Line, 1, 2, "replacement"));
+        Assert.ThrowsExactly<NotSupportedException>(() => list.Add(new CoverageMetricResult(CoverageMetric.Line, 1, 2, "replacement")));
+        AssertMetricSnapshot(artifact.CoverageSummary);
+    }
+
+    [TestMethod]
+    public void ValidateProcessedArtifact_NormalizesPathWithoutDroppingCoverage()
+    {
+        using DispatcherFixture fixture = new();
+        fixture.WriteCoverageManifest();
+        Directory.CreateDirectory(Path.Combine(fixture.OutputDirectory, "nested"));
+        string normalized = Path.Combine(fixture.OutputDirectory, "merged.fixture");
+        string originalPath = Path.Combine(fixture.OutputDirectory, "nested", "..", "merged.fixture");
+        File.WriteAllText(normalized, "complete output");
+        var output = new ProcessedArtifact(originalPath, "fixture.kind", "display", "description", CreateCoverageMetrics());
+
+        ProcessedArtifact actual = ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+            output, fixture.OutputDirectory, [new InputArtifact(fixture.FirstInputPath, "coverage.fixture", null, null, null, null)]);
+
+        Assert.AreEqual(normalized, actual.Path);
+        Assert.AreEqual("fixture.kind", actual.Kind);
+        Assert.AreEqual("display", actual.DisplayName);
+        Assert.AreEqual("description", actual.Description);
+        AssertMetricSnapshot(actual.CoverageSummary);
+        Assert.AreEqual(originalPath, output.Path);
+        AssertMetricSnapshot(output.CoverageSummary);
+        Assert.AreEqual("complete output", File.ReadAllText(normalized));
+        fixture.AssertInputsUnchanged();
+    }
+
+    [TestMethod]
+    [DataRow(true, null, DisplayName = "CompleteNegotiatedCoverage")]
+    [DataRow(false, null, DisplayName = "UnnegotiatedArtifactHasNoCoverage")]
+    [DataRow(true, "timeout", DisplayName = "TimeoutArtifactHasNoCoverage")]
+    [DataRow(true, "maximumFailedTests", DisplayName = "PartialArtifactHasNoCoverage")]
+    public async Task DispatcherRun_CoverageRequiresNegotiatedNonTruncatedOutput(bool negotiated, string? truncation)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsCoverageSummarySupported).Returns(negotiated);
+        fixture.WriteCoverageManifest(truncation);
+        Mock<IArtifactPostProcessor> processor = CreateCoverageProcessor(fixture, TestContext.CancellationToken);
+
+        int exit = await fixture.Create([processor.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exit);
+        object message = Assert.ContainsSingle(fixture.Published);
+        Assert.AreEqual("execution", ReadModel<string>(message, "ExecutionId"));
+        Assert.AreEqual("instance", ReadModel<string>(message, "InstanceId"));
+        object artifact = Assert.ContainsSingle(ReadModel<Array>(message, "FileArtifacts")!.Cast<object>());
+        Assert.AreEqual(Path.Combine(fixture.OutputDirectory, "merged.fixture"), ReadModel<string>(artifact, "FullPath"));
+        Assert.AreEqual("coverage.fixture.processed", ReadModel<string>(artifact, "Kind"));
+        Assert.AreSequenceEqual([fixture.FirstInputPath, fixture.SecondInputPath], ReadModel<string[]>(artifact, "InputArtifactPaths"));
+        if (negotiated && truncation is null)
+        {
+            AssertWireCoverage(artifact);
+        }
+        else
+        {
+            Assert.IsNull(ReadModel<Array>(artifact, "CoverageSummary"));
+        }
+
+        Assert.AreEqual("complete output", File.ReadAllText(Path.Combine(fixture.OutputDirectory, "merged.fixture")));
+        fixture.AssertInputsUnchanged();
+        Assert.IsEmpty(fixture.Output);
+    }
+
+    [TestMethod]
+    [DataRow("none", DisplayName = "ProcessorReturnsNoOutput")]
+    [DataRow("legacy", DisplayName = "LegacyOutputHasUnavailableCoverage")]
+    [DataRow("null", DisplayName = "ExplicitUnavailableCoverage")]
+    [DataRow("empty", DisplayName = "EmptyListDoesNotInventZeroCounts")]
+    public async Task DispatcherRun_UnavailableCoverageOrNoOutputDoesNotInventSummary(string mode)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsCoverageSummarySupported).Returns(true);
+        fixture.WriteCoverageManifest();
+        Mock<IArtifactPostProcessor> processor = CreateProcessor("unavailable", ["coverage.fixture"], []);
+        string outputPath = Path.Combine(fixture.OutputDirectory, "merged.fixture");
+        processor.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .Returns(() =>
+            {
+                if (mode == "none")
+                {
+                    return Task.FromResult<ProcessedArtifact?>(null);
+                }
+
+                File.WriteAllText(outputPath, "complete output");
+                return Task.FromResult<ProcessedArtifact?>(mode == "legacy"
+                    ? new ProcessedArtifact(outputPath, "fixture.kind", "display", null)
+                    : new ProcessedArtifact(outputPath, "fixture.kind", "display", null, mode == "empty" ? [] : null));
+            });
+
+        int exit = await fixture.Create([processor.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exit);
+        if (mode == "none")
+        {
+            Assert.IsEmpty(fixture.Published);
+            Assert.IsFalse(File.Exists(outputPath));
+        }
+        else
+        {
+            object artifact = Assert.ContainsSingle(ReadModel<Array>(Assert.ContainsSingle(fixture.Published), "FileArtifacts")!.Cast<object>());
+            Assert.AreEqual(outputPath, ReadModel<string>(artifact, "FullPath"));
+            Assert.AreSequenceEqual([fixture.FirstInputPath, fixture.SecondInputPath], ReadModel<string[]>(artifact, "InputArtifactPaths"));
+            if (mode == "empty")
+            {
+                Assert.IsEmpty(ReadModel<Array>(artifact, "CoverageSummary")!);
+            }
+            else
+            {
+                Assert.IsNull(ReadModel<Array>(artifact, "CoverageSummary"));
+            }
+        }
+
+        fixture.AssertInputsUnchanged();
+        Assert.IsEmpty(fixture.Output);
+    }
+
+    [TestMethod]
+    [DataRow("missing", DisplayName = "MissingOutputCannotPublishCoverage")]
+    [DataRow("outside", DisplayName = "OutsideOutputCannotPublishCoverage")]
+    [DataRow("input", DisplayName = "ReusedInputCannotPublishCoverage")]
+    public async Task DispatcherRun_RejectedOutputDoesNotPublishCoverage(string invalidOutput)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsCoverageSummarySupported).Returns(true);
+        fixture.WriteCoverageManifest();
+        Directory.CreateDirectory(fixture.OutputDirectory);
+        string outputPath = invalidOutput switch
+        {
+            "missing" => Path.Combine(fixture.OutputDirectory, "missing.fixture"),
+            "outside" => Path.Combine(fixture.Root, "outside.fixture"),
+            _ => Path.Combine(fixture.OutputDirectory, "original-input.fixture"),
+        };
+        if (invalidOutput != "missing")
+        {
+            File.WriteAllText(outputPath, "original content");
+        }
+
+        if (invalidOutput == "input")
+        {
+            fixture.WriteManifest($$"""[{ "path": "{{outputPath.Replace("\\", "\\\\")}}", "kind": "coverage.fixture" }]""");
+        }
+
+        Mock<IArtifactPostProcessor> processor = CreateProcessor("rejected", ["coverage.fixture"], []);
+        processor.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .ReturnsAsync(new ProcessedArtifact(outputPath, "fixture.kind", "rejected", null, CreateCoverageMetrics()));
+
+        int exit = await fixture.Create([processor.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, exit);
+        Assert.IsEmpty(fixture.Published);
+        Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(Assert.ContainsSingle(fixture.Output));
+        if (invalidOutput != "missing")
+        {
+            Assert.AreEqual("original content", File.ReadAllText(outputPath));
+        }
+
+        fixture.AssertInputsUnchanged();
+    }
+
+    [TestMethod]
+    [DataRow(false, "exception", DisplayName = "ExceptionAfterValidOutput")]
+    [DataRow(false, "missing", DisplayName = "RejectedOutputAfterValidOutput")]
+    [DataRow(false, "uncanceled", DisplayName = "UncancelledExceptionAfterValidOutput")]
+    [DataRow(true, "exception", DisplayName = "ExceptionBeforeValidOutputs")]
+    [DataRow(true, "missing", DisplayName = "RejectedOutputBeforeValidOutputs")]
+    [DataRow(true, "uncanceled", DisplayName = "UncancelledExceptionBeforeValidOutputs")]
+    public async Task DispatcherRun_AnyProcessorFailureStripsEveryOutputCoverage(bool failureFirst, string failure)
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsCoverageSummarySupported).Returns(true);
+        fixture.WriteCoverageManifest();
+        fixture.WriteManifest($$"""
+            [
+              { "path": "{{fixture.FirstInputPath.Replace("\\", "\\\\")}}", "kind": "first.kind" },
+              { "path": "{{fixture.SecondInputPath.Replace("\\", "\\\\")}}", "kind": "second.kind" },
+              { "path": "bad.fixture", "kind": "bad.kind" }
+            ]
+            """);
+        Mock<IArtifactPostProcessor> first = CreateCoverageProcessor(fixture, TestContext.CancellationToken, "first.kind", "first.fixture");
+        Mock<IArtifactPostProcessor> second = CreateCoverageProcessor(fixture, TestContext.CancellationToken, "second.kind", "second.fixture");
+        Mock<IArtifactPostProcessor> bad = CreateProcessor("bad.processor", ["bad.kind"], []);
+        bad.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), TestContext.CancellationToken))
+            .Returns(() => failure switch
+            {
+                "exception" => Task.FromException<ProcessedArtifact?>(new IOException("processing sentinel")),
+                "uncanceled" => Task.FromException<ProcessedArtifact?>(new OperationCanceledException("processing sentinel")),
+                _ => Task.FromResult<ProcessedArtifact?>(new ProcessedArtifact(
+                    Path.Combine(fixture.OutputDirectory, "missing.fixture"), "bad.kind", "bad", null, CreateCoverageMetrics())),
+            });
+
+        int exit = await fixture.Create(failureFirst ? [bad.Object, first.Object, second.Object] : [first.Object, bad.Object, second.Object])
+            .RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, exit);
+        object[] artifacts = [.. ReadModel<Array>(Assert.ContainsSingle(fixture.Published), "FileArtifacts")!.Cast<object>()];
+        Assert.HasCount(2, artifacts);
+        Assert.AreSequenceEqual(
+            [Path.Combine(fixture.OutputDirectory, "first.fixture"), Path.Combine(fixture.OutputDirectory, "second.fixture")],
+            artifacts.Select(artifact => ReadModel<string>(artifact, "FullPath")));
+        Assert.AreSequenceEqual([fixture.FirstInputPath], ReadModel<string[]>(artifacts[0], "InputArtifactPaths"));
+        Assert.AreSequenceEqual([fixture.SecondInputPath], ReadModel<string[]>(artifacts[1], "InputArtifactPaths"));
+        foreach (object artifact in artifacts)
+        {
+            Assert.IsNull(ReadModel<Array>(artifact, "CoverageSummary"));
+            Assert.AreEqual("complete output", File.ReadAllText(ReadModel<string>(artifact, "FullPath")!));
+        }
+
+        Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(Assert.ContainsSingle(fixture.Output));
+        fixture.AssertInputsUnchanged();
+    }
+
+    [TestMethod]
+    public async Task DispatcherRun_CancellationAfterOutputCreationPreventsPublication()
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsCoverageSummarySupported).Returns(true);
+        fixture.WriteCoverageManifest();
+        using CancellationTokenSource cancellation = new();
+        string path = Path.Combine(fixture.OutputDirectory, "merged.fixture");
+        Mock<IArtifactPostProcessor> processor = CreateProcessor("cancel-after-output", ["coverage.fixture"], []);
+        processor.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), cancellation.Token))
+            .Returns(() =>
+            {
+                File.WriteAllText(path, "complete output");
+                cancellation.Cancel();
+                return Task.FromResult<ProcessedArtifact?>(new ProcessedArtifact(path, "fixture.kind", "display", null, CreateCoverageMetrics()));
+            });
+
+        OperationCanceledException error = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => fixture.Create([processor.Object]).RunAsync(cancellation.Token));
+
+        Assert.AreEqual(cancellation.Token, error.CancellationToken);
+        Assert.AreEqual("complete output", File.ReadAllText(path));
+        Assert.IsEmpty(fixture.Published);
+        Assert.IsEmpty(fixture.Output);
+        fixture.AssertInputsUnchanged();
+    }
+
+    [TestMethod]
+    public async Task DispatcherRun_CompleteCoverageDoesNotOverrideFailingRunSummary()
+    {
+        using DispatcherFixture fixture = new();
+        fixture.Protocol.SetupGet(value => value.IsCoverageSummarySupported).Returns(true);
+        fixture.WriteCoverageManifest(runSummary: """
+            { "totalTests": 1, "passedTests": 0, "failedTests": 1, "skippedTests": 0,
+              "durationTicks": 1, "exitCode": 2, "testModuleCount": 2 }
+            """);
+        Mock<IArtifactPostProcessor> processor = CreateCoverageProcessor(fixture, TestContext.CancellationToken);
+
+        int exit = await fixture.Create([processor.Object]).RunAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exit, "Successful artifact processing must not reinterpret the test-run verdict.");
+        var context = (ArtifactPostProcessingContext)Assert.ContainsSingle(
+            processor.Invocations.Where(invocation => invocation.Method.Name == nameof(IArtifactPostProcessor.ProcessAsync))).Arguments[2];
+        Assert.AreEqual(2, context.RunSummary?.ExitCode);
+        AssertWireCoverage(Assert.ContainsSingle(ReadModel<Array>(Assert.ContainsSingle(fixture.Published), "FileArtifacts")!.Cast<object>()));
+        fixture.AssertInputsUnchanged();
+    }
+
+    private static List<CoverageMetricResult> CreateCoverageMetrics() =>
+    [
+        new(CoverageMetric.Line, 3_000_000_000L, long.MaxValue, "merged.producer"),
+        new(CoverageMetric.Branch, 2, 7, "merged.producer"),
+        new(CoverageMetric.Custom, 0, 0, "custom.producer", "paths"),
+        new(CoverageMetric.Custom, 1, 3, "custom.producer", "mcdc"),
+    ];
+
+    private static void AssertMetricSnapshot(IReadOnlyList<CoverageMetricResult>? metrics)
+    {
+        Assert.IsNotNull(metrics);
+        Assert.AreSequenceEqual([CoverageMetric.Line, CoverageMetric.Branch, CoverageMetric.Custom, CoverageMetric.Custom], metrics.Select(metric => metric.Metric));
+        Assert.AreSequenceEqual(["merged.producer", "merged.producer", "custom.producer", "custom.producer"], metrics.Select(metric => metric.ProducerId));
+        Assert.AreSequenceEqual([null, null, "paths", "mcdc"], metrics.Select(metric => metric.CustomMetricName));
+        Assert.AreSequenceEqual<long>([3_000_000_000L, 2, 0, 1], metrics.Select(metric => metric.CoveredCount));
+        Assert.AreSequenceEqual<long>([long.MaxValue, 7, 0, 3], metrics.Select(metric => metric.CoverableCount));
+    }
+
+    private static void AssertWireCoverage(object artifact)
+    {
+        Assert.IsNull(ReadModel<string>(artifact, "SessionUid"));
+        object[] entries = [.. ReadModel<Array>(artifact, "CoverageSummary")!.Cast<object>()];
+        Assert.AreSequenceEqual(["merged.producer", "merged.producer", "custom.producer", "custom.producer"], entries.Select(entry => ReadModel<string>(entry, "ProducerId")));
+        Assert.AreSequenceEqual<int?>([0, 2, 255, 255], entries.Select(entry => ReadModel<int?>(entry, "Metric")));
+        Assert.AreSequenceEqual([null, null, "paths", "mcdc"], entries.Select(entry => ReadModel<string>(entry, "CustomMetricName")));
+        Assert.AreSequenceEqual<long?>([3_000_000_000L, 2, 0, 1], entries.Select(entry => ReadModel<long?>(entry, "CoveredCount")));
+        Assert.AreSequenceEqual<long?>([long.MaxValue, 7, 0, 3], entries.Select(entry => ReadModel<long?>(entry, "CoverableCount")));
+        Assert.IsTrue(entries.All(entry => ReadModel<int?>(entry, "ScopeLevel") == 0));
+        Assert.IsTrue(entries.All(entry => ReadModel<string>(entry, "ScopeName") is null && ReadModel<string>(entry, "SessionUid") is null));
+    }
+
+    private static Mock<IArtifactPostProcessor> CreateCoverageProcessor(
+        DispatcherFixture fixture, CancellationToken token, string kind = "coverage.fixture", string fileName = "merged.fixture")
+    {
+        Mock<IArtifactPostProcessor> processor = CreateProcessor(kind + ".processor", [kind], [], supportsTruncated: true);
+        processor.Setup(value => value.ProcessAsync(It.IsAny<IReadOnlyList<InputArtifact>>(), fixture.OutputDirectory, It.IsAny<ArtifactPostProcessingContext>(), token))
+            .Returns(() =>
+            {
+                string path = Path.Combine(fixture.OutputDirectory, fileName);
+                File.WriteAllText(path, "complete output");
+                return Task.FromResult<ProcessedArtifact?>(new ProcessedArtifact(path, kind + ".processed", "display", "description", CreateCoverageMetrics()));
+            });
+        return processor;
+    }
 
     [TestMethod]
     [DataRow(false)]
@@ -261,6 +597,10 @@ public sealed class ArtifactPostProcessingTests
 
         public string OutputDirectory => Path.Combine(Root, "out");
 
+        public string FirstInputPath => Path.Combine(Root, "first.fixture");
+
+        public string SecondInputPath => Path.Combine(Root, "second.fixture");
+
         public Mock<IPushOnlyProtocol> Protocol { get; } = new();
 
         public Mock<IEnvironment> Environment { get; } = new();
@@ -283,13 +623,35 @@ public sealed class ArtifactPostProcessingTests
         public ArtifactPostProcessingDispatcherTool Create(IReadOnlyList<IArtifactPostProcessor> processors, IPushOnlyProtocol? protocol)
             => new(new TestCommandLineOptions(new() { ["manifest"] = [ManifestPath] }), processors, protocol, Environment.Object, Device.Object);
 
-        public void WriteManifest(string inputs, string? truncation = null)
+        public void WriteCoverageManifest(string? truncation = null, string? runSummary = null)
+        {
+            File.WriteAllText(FirstInputPath, "first input");
+            File.WriteAllText(SecondInputPath, "second input");
+            WriteManifest(
+                $$"""
+                [
+                  { "path": "{{FirstInputPath.Replace("\\", "\\\\")}}", "kind": "coverage.fixture" },
+                  { "path": "{{SecondInputPath.Replace("\\", "\\\\")}}", "kind": "coverage.fixture" }
+                ]
+                """,
+                truncation,
+                runSummary);
+        }
+
+        public void AssertInputsUnchanged()
+        {
+            Assert.AreEqual("first input", File.ReadAllText(FirstInputPath));
+            Assert.AreEqual("second input", File.ReadAllText(SecondInputPath));
+        }
+
+        public void WriteManifest(string inputs, string? truncation = null, string? runSummary = null)
             => File.WriteAllText(ManifestPath, $$"""
                 {
                   "schemaVersion": 1,
                   "outputDirectory": "{{OutputDirectory.Replace("\\", "\\\\")}}",
                   "inputs": {{inputs}}
                   {{(truncation is null ? string.Empty : ", \"truncationReason\": \"" + truncation + "\"")}}
+                  {{(runSummary is null ? string.Empty : ", \"runSummary\": " + runSummary)}}
                 }
                 """);
 

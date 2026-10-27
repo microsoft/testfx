@@ -20,6 +20,123 @@ public sealed class DotnetTestDataConsumerTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    [DataRow(CoverageScopeLevel.Overall, null, DisplayName = "OverallCoverageIdentity")]
+    [DataRow(CoverageScopeLevel.Module, "module with space.dll", DisplayName = "ModuleCoverageIdentity")]
+    public async Task ConsumeAsync_CoverageSummaryPreservesIdentityAndInt64Counts(CoverageScopeLevel level, string? scopeName)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        Assert.IsTrue(await DotnetTestConnectionTests.NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken));
+        List<CoverageSummaryMessages> sent = [];
+        fixture.Client.RespondVoid<CoverageSummaryMessages>(TestContext.CancellationToken, sent.Add);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        var message = new TestCoverageMessage(
+            new SessionUid("coverage-session"), new CoverageScope(level, scopeName), CoverageMetric.Custom,
+            3_000_000_000L, long.MaxValue, "collector-id", "MC/DC");
+
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), message, TestContext.CancellationToken);
+
+        CoverageSummaryMessages batch = Assert.ContainsSingle(sent);
+        Assert.AreEqual("execution", batch.ExecutionId);
+        Assert.AreEqual(DotnetTestConnection.InstanceId, batch.InstanceId);
+        Assert.AreEqual(
+            new CoverageSummaryMessage("coverage-session", "collector-id", (int)level, scopeName, 255, "MC/DC", 3_000_000_000L, long.MaxValue),
+            Assert.ContainsSingle(batch.Summaries));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_CoverageUpdatesRemainReplacementsWithDistinctIdentities()
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        Assert.IsTrue(await DotnetTestConnectionTests.NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken));
+        List<CoverageSummaryMessages> sent = [];
+        fixture.Client.RespondVoid<CoverageSummaryMessages>(TestContext.CancellationToken, sent.Add);
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        TestCoverageMessage[] updates =
+        [
+            new(new SessionUid("s1"), CoverageScope.Overall, CoverageMetric.Line, 10, 20, "p1"),
+            new(new SessionUid("s1"), CoverageScope.Overall, CoverageMetric.Line, 7, 12, "p1"),
+            new(new SessionUid("s2"), CoverageScope.Overall, CoverageMetric.Line, 3, 9, "p1"),
+            new(new SessionUid("s1"), CoverageScope.Overall, CoverageMetric.Line, 4, 11, "p2"),
+            new(new SessionUid("s1"), CoverageScope.Overall, CoverageMetric.Branch, 2, 8, "p1"),
+            new(new SessionUid("s1"), CoverageScope.Overall, CoverageMetric.Custom, 1, 6, "p1", "mcdc"),
+            new(new SessionUid("s1"), CoverageScope.Overall, CoverageMetric.Custom, 0, 0, "p1", "paths"),
+        ];
+
+        foreach (TestCoverageMessage update in updates)
+        {
+            await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+        }
+
+        Assert.HasCount(7, sent);
+        Assert.AreSequenceEqual(
+            [
+                new CoverageSummaryMessage("s1", "p1", 0, null, 0, null, 10, 20),
+                new CoverageSummaryMessage("s1", "p1", 0, null, 0, null, 7, 12),
+                new CoverageSummaryMessage("s2", "p1", 0, null, 0, null, 3, 9),
+                new CoverageSummaryMessage("s1", "p2", 0, null, 0, null, 4, 11),
+                new CoverageSummaryMessage("s1", "p1", 0, null, 2, null, 2, 8),
+                new CoverageSummaryMessage("s1", "p1", 0, null, 255, "mcdc", 1, 6),
+                new CoverageSummaryMessage("s1", "p1", 0, null, 255, "paths", 0, 0),
+            ],
+            sent.Select(batch => Assert.ContainsSingle(batch.Summaries)));
+        Assert.IsTrue(sent.All(batch => batch.ExecutionId == "execution" && batch.InstanceId == DotnetTestConnection.InstanceId));
+    }
+
+    [TestMethod]
+    [DataRow(CoverageScopeLevel.Assembly, DisplayName = "AssemblyCoverageNotForwarded")]
+    [DataRow(CoverageScopeLevel.Namespace, DisplayName = "NamespaceCoverageNotForwarded")]
+    [DataRow(CoverageScopeLevel.Type, DisplayName = "TypeCoverageNotForwarded")]
+    [DataRow(CoverageScopeLevel.File, DisplayName = "FileCoverageNotForwarded")]
+    public async Task ConsumeAsync_NarrowCoverageScopesAreIgnored(CoverageScopeLevel level)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        Assert.IsTrue(await DotnetTestConnectionTests.NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken));
+        fixture.Client.Mock.Invocations.Clear();
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+
+        await consumer.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new TestCoverageMessage(new SessionUid("session"), new CoverageScope(level, "identity"), CoverageMetric.Line, 1, 2, "producer"),
+            TestContext.CancellationToken);
+
+        Assert.IsEmpty(fixture.Client.Mock.Invocations);
+    }
+
+    [TestMethod]
+    [DataRow("1.0.0", null, DisplayName = "ConsumerOldPeer")]
+    [DataRow("1.3.0", "false", DisplayName = "ConsumerOptOut")]
+    [DataRow("1.3.0", "2", DisplayName = "ConsumerUnknownCoverage")]
+    [DataRow("2.0.0", "1", DisplayName = "ConsumerIncompatibleBase")]
+    public async Task ConsumeAsync_UnnegotiatedCoverageDoesNotSuppressArtifactsOrTestResults(string baseVersion, string? coverageVersion)
+    {
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(TestContext.CancellationToken);
+        Assert.AreEqual(
+            baseVersion != "2.0.0",
+            await DotnetTestConnectionTests.NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken, baseVersion, coverageVersion));
+        List<object> sent = [];
+        fixture.Client.RespondVoid<CoverageSummaryMessages>(TestContext.CancellationToken, value => sent.Add(value));
+        fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, value => sent.Add(value));
+        fixture.Client.RespondVoid<TestResultMessages>(TestContext.CancellationToken, value => sent.Add(value));
+        var consumer = new DotnetTestDataConsumer(fixture.Connection, fixture.Environment.Object);
+        var file = new FileInfo(Path.Combine(Path.GetTempPath(), $"coverage-consumer-{Guid.NewGuid():N}.fixture"));
+
+        await consumer.ConsumeAsync(
+            Mock.Of<IDataProducer>(), new TestCoverageMessage(new SessionUid("session"), CoverageScope.Overall, CoverageMetric.Line, 1, 2, "producer"),
+            TestContext.CancellationToken);
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), new FileArtifact(file, "original"), TestContext.CancellationToken);
+        await consumer.ConsumeAsync(Mock.Of<IDataProducer>(), CreateUpdate(PassedTestNodeStateProperty.CachedInstance), TestContext.CancellationToken);
+
+        Assert.HasCount(2, sent);
+        FileArtifactMessage artifact = Assert.ContainsSingle(Assert.IsInstanceOfType<FileArtifactMessages>(sent[0]).FileArtifacts);
+        Assert.AreEqual(file.FullName, artifact.FullPath);
+        Assert.AreEqual("original", artifact.DisplayName);
+        Assert.IsNull(artifact.CoverageSummary);
+        SuccessfulTestResultMessage result = Assert.ContainsSingle(Assert.IsInstanceOfType<TestResultMessages>(sent[1]).SuccessfulTestMessages);
+        Assert.AreEqual("uid", result.Uid);
+        Assert.AreEqual(TestStates.Passed, result.State);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task ConsumeAsync_DiscoveryNegotiationControlsFullMetadataAndOrderedTraits(bool ide)
@@ -243,7 +360,7 @@ public sealed class DotnetTestDataConsumerTests
             [new TestSessionEvent(SessionEventTypes.TestSessionStart, "actual-session", "execution"), new TestSessionEvent(SessionEventTypes.TestSessionEnd, "actual-session", "execution")],
             sent);
         Assert.IsTrue(await consumer.IsEnabledAsync());
-        Assert.AreSequenceEqual([typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact), typeof(FileArtifact)], consumer.DataTypesConsumed);
+        Assert.AreSequenceEqual([typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact), typeof(FileArtifact), typeof(TestCoverageMessage)], consumer.DataTypesConsumed);
     }
 
     [TestMethod]

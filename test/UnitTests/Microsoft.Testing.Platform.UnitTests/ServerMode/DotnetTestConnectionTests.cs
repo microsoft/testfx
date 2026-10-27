@@ -151,6 +151,142 @@ public sealed class DotnetTestConnectionTests
     }
 
     [TestMethod]
+    [DataRow("1.0.0", "1", true, true, DisplayName = "CoverageOnBase10")]
+    [DataRow("1.3.0", "1", true, true, DisplayName = "CoverageOnBase13")]
+    [DataRow("1.4.0", "1", true, true, DisplayName = "CoverageWithoutControlPipe")]
+    [DataRow("1.3.0", null, true, false, DisplayName = "OldPeerOmitsCoverage")]
+    [DataRow("1.3.0", "false", true, false, DisplayName = "PeerOptsOut")]
+    [DataRow("1.3.0", "2", true, false, DisplayName = "UnknownCoverageVersion")]
+    [DataRow("1.3.0", "true", true, false, DisplayName = "BooleanIsNotCoverageVersion")]
+    [DataRow("2.0.0", "1", false, false, DisplayName = "IncompatibleBase")]
+    [DataRow("malformed", "1", false, false, DisplayName = "MalformedBase")]
+    [DataRow(null, "1", false, false, DisplayName = "MissingBase")]
+    public async Task IsCompatibleProtocolAsync_CoverageSummaryRequiresExactVersionAndCompatibleBase(
+        string? baseVersion, string? coverageVersion, bool compatible, bool coverageEnabled)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        Dictionary<byte, string> reply = [];
+        if (baseVersion is not null)
+        {
+            reply[HandshakeMessagePropertyNames.SupportedProtocolVersions] = baseVersion;
+        }
+
+        if (coverageVersion is not null)
+        {
+            reply[20] = coverageVersion;
+        }
+
+        HandshakeMessage? sent = null;
+        fixture.Client.Respond(new HandshakeMessage(reply), TestContext.CancellationToken, value => sent = value);
+
+        Assert.AreEqual(compatible, await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+
+        Assert.IsNotNull(sent);
+        Assert.IsNotNull(sent.Properties);
+        Assert.AreEqual("1", sent.Properties[20]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", sent.Properties[4]);
+        Assert.AreEqual(coverageEnabled, fixture.Connection.IsCoverageSummarySupported);
+        Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
+    }
+
+    [TestMethod]
+    [DataRow("1.3.0", null, DisplayName = "RenegotiateOldPeer")]
+    [DataRow("1.3.0", "false", DisplayName = "RenegotiateOptOut")]
+    [DataRow("1.3.0", "2", DisplayName = "RenegotiateUnknownCoverage")]
+    [DataRow("2.0.0", "1", DisplayName = "RenegotiateIncompatibleBase")]
+    [DataRow(null, "1", DisplayName = "RenegotiateMissingBase")]
+    public async Task IsCompatibleProtocolAsync_CoverageSummaryRenegotiationClearsPreviousSupport(string? baseVersion, string? coverageVersion)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        Assert.IsTrue(await NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken));
+        Assert.IsTrue(fixture.Connection.IsCoverageSummarySupported);
+
+        Assert.AreEqual(
+            baseVersion == "1.3.0",
+            await NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken, baseVersion, coverageVersion));
+
+        Assert.IsFalse(fixture.Connection.IsCoverageSummarySupported);
+        Assert.IsFalse(fixture.Connection.IsServerControlChannelSupported);
+    }
+
+    [TestMethod]
+    [DataRow("false", DisplayName = "LocalCoverageOptOut")]
+    [DataRow("2", DisplayName = "LocalUnknownCoverageVersion")]
+    public async Task IsCompatibleProtocolAsync_LocalCoverageOptOutCannotBeEnabledByPeer(string advertisedVersion)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        HandshakeMessage? sent = null;
+        fixture.Client.Respond(
+            new HandshakeMessage(new() { [4] = "1.3.0", [20] = "1" }),
+            TestContext.CancellationToken,
+            value => sent = value);
+
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(
+            HandshakeMessageHostTypes.TestHost,
+            new Dictionary<byte, string> { [20] = advertisedVersion }));
+
+        Assert.IsNotNull(sent);
+        Assert.IsNotNull(sent.Properties);
+        Assert.AreEqual(advertisedVersion, sent.Properties[20]);
+        Assert.IsFalse(fixture.Connection.IsCoverageSummarySupported);
+    }
+
+    [TestMethod]
+    [DataRow(null, false, DisplayName = "RawCoverageOldPeer")]
+    [DataRow("false", false, DisplayName = "RawCoverageOptOut")]
+    [DataRow("2", false, DisplayName = "RawCoverageUnknownVersion")]
+    [DataRow("1", true, DisplayName = "RawCoverageNegotiated")]
+    public async Task SendMessageAsync_CoverageSummaryIsSentOnlyWhenNegotiated(string? coverageVersion, bool enabled)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        Assert.IsTrue(await NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken, coverageVersion: coverageVersion));
+        List<CoverageSummaryMessages> sent = [];
+        fixture.Client.RespondVoid<CoverageSummaryMessages>(TestContext.CancellationToken, sent.Add);
+        fixture.Client.Mock.Invocations.Clear();
+        var message = new CoverageSummaryMessages("execution", "instance", [new("session", "producer", 0, null, 0, null, 0, 0)]);
+
+        await fixture.Connection.SendMessageAsync(message);
+
+        if (enabled)
+        {
+            Assert.AreSame(message, Assert.ContainsSingle(sent));
+            Assert.AreEqual(TestContext.CancellationToken, (CancellationToken)Assert.ContainsSingle(fixture.Client.Mock.Invocations).Arguments[1]);
+        }
+        else
+        {
+            Assert.IsEmpty(sent);
+            Assert.IsEmpty(fixture.Client.Mock.Invocations);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "ArtifactCoverageOldPeer")]
+    [DataRow(true, DisplayName = "ArtifactCoverageNegotiated")]
+    public async Task SendMessageAsync_ArtifactCoverageIsGatedWithoutMutatingOriginal(bool enabled)
+    {
+        using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken);
+        Assert.IsTrue(await NegotiateCoverageSummaryAsync(fixture, TestContext.CancellationToken, coverageVersion: enabled ? "1" : null));
+        List<FileArtifactMessages> sent = [];
+        fixture.Client.RespondVoid<FileArtifactMessages>(TestContext.CancellationToken, sent.Add);
+        CoverageSummaryMessage[] summary = [new(null, "merged-producer", 0, null, 255, "custom", 3_000_000_000L, long.MaxValue)];
+        var artifact = new FileArtifactMessage(
+            "merged.fixture", "merged", "description", "test", "display", "session", "fixture.kind",
+            ["first.fixture", "second.fixture"], summary);
+        var message = new FileArtifactMessages("execution", "instance", [artifact]);
+
+        await fixture.Connection.SendMessageAsync(message);
+
+        FileArtifactMessages actual = Assert.ContainsSingle(sent);
+        Assert.AreEqual("execution", actual.ExecutionId);
+        Assert.AreEqual("instance", actual.InstanceId);
+        FileArtifactMessage actualArtifact = Assert.ContainsSingle(actual.FileArtifacts);
+        Assert.AreEqual(artifact with { CoverageSummary = enabled ? summary : null }, actualArtifact);
+        Assert.AreSequenceEqual(["first.fixture", "second.fixture"], actualArtifact.InputArtifactPaths);
+        Assert.AreSame(summary, artifact.CoverageSummary);
+        Assert.AreSame(artifact, Assert.ContainsSingle(message.FileArtifacts));
+    }
+
+    [TestMethod]
     [DataRow("run", "run")]
     [DataRow("help", "help")]
     [DataRow("discover", "discover")]
@@ -486,6 +622,24 @@ public sealed class DotnetTestConnectionTests
             : new DotnetTestConnection(handler, environment.Object, module.Object, cancellation.Object, logger);
         SetField(connection, "_transportClient", client.Object);
         return new ConnectionFixture(connection, client, environment);
+    }
+
+    internal static Task<bool> NegotiateCoverageSummaryAsync(
+        ConnectionFixture fixture, CancellationToken token, string? baseVersion = "1.3.0", string? coverageVersion = "1")
+    {
+        Dictionary<byte, string> properties = [];
+        if (baseVersion is not null)
+        {
+            properties[HandshakeMessagePropertyNames.SupportedProtocolVersions] = baseVersion;
+        }
+
+        if (coverageVersion is not null)
+        {
+            properties[20] = coverageVersion;
+        }
+
+        fixture.Client.Respond(new HandshakeMessage(properties), token);
+        return fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost);
     }
 
     private static void SetField(DotnetTestConnection connection, string name, object? value)

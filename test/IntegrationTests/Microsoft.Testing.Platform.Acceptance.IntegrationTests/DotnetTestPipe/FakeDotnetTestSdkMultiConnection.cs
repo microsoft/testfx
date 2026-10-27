@@ -29,6 +29,7 @@ internal static class FakeDotnetTestSdkMultiConnection
         string extraArguments,
         Dictionary<string, string?>? environmentVariables = null,
         string supportedProtocolVersions = FakeDotnetTestSdk.DefaultSupportedProtocolVersions,
+        string? coverageSummaryVersion = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(testHost);
@@ -37,11 +38,13 @@ internal static class FakeDotnetTestSdkMultiConnection
         string osPipeName = DotnetTestPipeProtocol.GetPipeName(pipeId);
 
         var receivedHandshakes = new ConcurrentBag<Dictionary<byte, string>>();
+        var receivedMessages = new ConcurrentBag<RawMessage>();
         var connectionTasks = new ConcurrentBag<Task>();
 
         using var acceptLoopCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        Task acceptLoop = AcceptConnectionsAsync(osPipeName, supportedProtocolVersions, receivedHandshakes, connectionTasks, acceptLoopCts.Token);
+        Task acceptLoop = AcceptConnectionsAsync(
+            osPipeName, supportedProtocolVersions, coverageSummaryVersion, receivedHandshakes, receivedMessages, connectionTasks, acceptLoopCts.Token);
 
         string pipeArgs = $"--server dotnettestcli --dotnet-test-pipe {osPipeName}";
         string finalArgs = $"{pipeArgs} {extraArguments}";
@@ -56,13 +59,15 @@ internal static class FakeDotnetTestSdkMultiConnection
             await SwallowCancellationAsync(connectionTask).ConfigureAwait(false);
         }
 
-        return new FakeDotnetTestSdkMultiConnectionResult(hostResult, [.. receivedHandshakes]);
+        return new FakeDotnetTestSdkMultiConnectionResult(hostResult, [.. receivedHandshakes], [.. receivedMessages]);
     }
 
     private static async Task AcceptConnectionsAsync(
         string osPipeName,
         string supportedProtocolVersions,
+        string? coverageSummaryVersion,
         ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        ConcurrentBag<RawMessage> receivedMessages,
         ConcurrentBag<Task> connectionTasks,
         CancellationToken cancellationToken)
     {
@@ -77,7 +82,8 @@ internal static class FakeDotnetTestSdkMultiConnection
                 // Each connection's NamedPipeServerStream is created, awaited, used and disposed
                 // entirely within ServeConnectionAsync (via await using), so a single method owns
                 // its whole lifetime and it never leaks on the cancellation path.
-                connectionTasks.Add(ServeConnectionAsync(osPipeName, options, supportedProtocolVersions, receivedHandshakes, connectionEstablished, cancellationToken));
+                connectionTasks.Add(ServeConnectionAsync(
+                    osPipeName, options, supportedProtocolVersions, coverageSummaryVersion, receivedHandshakes, receivedMessages, connectionEstablished, cancellationToken));
 
                 // Throttle the accept loop to one outstanding listener at a time (mirrors the real
                 // SDK's serial accept loop): only create the next server instance after the current
@@ -95,7 +101,9 @@ internal static class FakeDotnetTestSdkMultiConnection
         string osPipeName,
         PipeOptions options,
         string supportedProtocolVersions,
+        string? coverageSummaryVersion,
         ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        ConcurrentBag<RawMessage> receivedMessages,
         TaskCompletionSource connectionEstablished,
         CancellationToken cancellationToken)
     {
@@ -126,13 +134,15 @@ internal static class FakeDotnetTestSdkMultiConnection
         // Let the accept loop create the next listener now that this one has connected.
         connectionEstablished.TrySetResult();
 
-        await HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken).ConfigureAwait(false);
+        await HandleConnectionAsync(stream, supportedProtocolVersions, coverageSummaryVersion, receivedHandshakes, receivedMessages, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task HandleConnectionAsync(
         NamedPipeServerStream stream,
         string supportedProtocolVersions,
+        string? coverageSummaryVersion,
         ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        ConcurrentBag<RawMessage> receivedMessages,
         CancellationToken cancellationToken)
     {
         try
@@ -145,6 +155,7 @@ internal static class FakeDotnetTestSdkMultiConnection
                     break;
                 }
 
+                receivedMessages.Add(frame);
                 if (frame.SerializerId == DotnetTestPipeProtocol.SerializerIds.HandshakeMessage)
                 {
                     Dictionary<byte, string> handshake = DotnetTestPipeProtocol.DecodeHandshakeBody(frame.Body);
@@ -152,7 +163,7 @@ internal static class FakeDotnetTestSdkMultiConnection
 
                     string selected = FakeDotnetTestSdk.SelectHighestMutuallySupportedVersion(handshake, supportedProtocolVersions);
 
-                    byte[] replyBody = DotnetTestPipeProtocol.EncodeHandshakeBody(BuildSdkHandshakeReply(selected));
+                    byte[] replyBody = DotnetTestPipeProtocol.EncodeHandshakeBody(BuildSdkHandshakeReply(selected, coverageSummaryVersion));
                     await DotnetTestPipeProtocol.WriteFrameAsync(stream, DotnetTestPipeProtocol.SerializerIds.HandshakeMessage, replyBody, cancellationToken).ConfigureAwait(false);
                 }
                 else
@@ -171,8 +182,9 @@ internal static class FakeDotnetTestSdkMultiConnection
         }
     }
 
-    private static Dictionary<byte, string> BuildSdkHandshakeReply(string selectedVersion)
-        => new(capacity: 5)
+    private static Dictionary<byte, string> BuildSdkHandshakeReply(string selectedVersion, string? coverageSummaryVersion)
+    {
+        Dictionary<byte, string> properties = new(capacity: 6)
         {
             { DotnetTestPipeProtocol.HandshakeProperties.PID, Environment.ProcessId.ToString(CultureInfo.InvariantCulture) },
             { DotnetTestPipeProtocol.HandshakeProperties.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
@@ -180,6 +192,14 @@ internal static class FakeDotnetTestSdkMultiConnection
             { DotnetTestPipeProtocol.HandshakeProperties.OS, RuntimeInformation.OSDescription },
             { DotnetTestPipeProtocol.HandshakeProperties.SupportedProtocolVersions, selectedVersion },
         };
+
+        if (coverageSummaryVersion is not null)
+        {
+            properties.Add(DotnetTestPipeProtocol.HandshakeProperties.CoverageSummaryVersion, coverageSummaryVersion);
+        }
+
+        return properties;
+    }
 
     private static async Task SwallowCancellationAsync(Task task)
     {
@@ -197,15 +217,19 @@ internal static class FakeDotnetTestSdkMultiConnection
 /// <summary>Captures the handshakes observed across all pipe connections plus the process result.</summary>
 internal sealed class FakeDotnetTestSdkMultiConnectionResult
 {
-    public FakeDotnetTestSdkMultiConnectionResult(TestHostResult testHostResult, IReadOnlyList<Dictionary<byte, string>> receivedHandshakes)
+    public FakeDotnetTestSdkMultiConnectionResult(
+        TestHostResult testHostResult, IReadOnlyList<Dictionary<byte, string>> receivedHandshakes, IReadOnlyList<RawMessage> receivedMessages)
     {
         TestHostResult = testHostResult;
         ReceivedHandshakes = receivedHandshakes;
+        ReceivedMessages = receivedMessages;
     }
 
     public TestHostResult TestHostResult { get; }
 
     public IReadOnlyList<Dictionary<byte, string>> ReceivedHandshakes { get; }
+
+    public IReadOnlyList<RawMessage> ReceivedMessages { get; }
 
     public IEnumerable<Dictionary<byte, string>> HandshakesWithHostType(string hostType)
         => ReceivedHandshakes.Where(h => h.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.HostType, out string? value) && value == hostType);
