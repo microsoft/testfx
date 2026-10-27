@@ -12,7 +12,7 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
-    private readonly DotnetTestConnection? _dotnetTestConnection;
+    private readonly DotnetTestConnection _dotnetTestConnection;
     private readonly string? _executionId;
 
     public DotnetTestDataConsumer(DotnetTestConnection dotnetTestConnection, IEnvironment environment)
@@ -39,8 +39,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         switch (value)
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
@@ -438,8 +436,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
             testSessionContext.SessionUid.Value,
@@ -450,8 +446,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
             testSessionContext.SessionUid.Value,

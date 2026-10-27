@@ -667,9 +667,8 @@ public sealed class ProtocolEdgeCaseTests
     {
         using var stream = new MemoryStream();
         WriteInt(stream, values.Length);
-        foreach (string value in values)
+        foreach (byte[] bytes in values.Select(WriteString))
         {
-            byte[] bytes = WriteString(value);
             WriteInt(stream, bytes.Length);
             stream.Write(bytes, 0, bytes.Length);
         }

@@ -1033,7 +1033,7 @@ above denotes the retained session evidence directory, not an additional build p
 This local environment used the native-process `PATH` setup described above and the
 repository-pinned SDK/runtime bootstrap; no global or source build settings were changed.
 
-The final implementation/test patch against base
+The initial implementation/test patch against base
 `b6e7268c80ed13ec33c3a1f736140bc8169b194c`, excluding this decision record, has SHA-256
 `8B63DF5B2825CD1F6791AB456D17D2117ECDEC2E84782BCBEFCC31DFDEC6DC4C`.
 The implementation and tests are committed as
@@ -1189,3 +1189,23 @@ No producer, wire or API change was needed in these review rounds. The existing 
 MTP dependency for the coordinator's post-review composition. Local validation suffixes and
 feeds were not added to released dependency manifests. The prior executed behavior-removal
 evidence remains applicable because the code/test patch is unchanged.
+
+### Review-comment follow-up (2026-10-27)
+
+The nullability feedback was partially accepted: the consumer's connection is a required
+constructor argument, stored readonly, and its production factory passes `this`. The field
+now declares that non-null invariant and no longer has redundant debug-only null assertions.
+No runtime guard, silent return, wire change or public API change was introduced.
+
+The test-helper projection feedback was accepted: `WriteStringList` iterates
+`values.Select(WriteString)` while preserving order and the exact count/length/data framing.
+Implicit usings already provide LINQ, so no additional import was needed.
+
+These are behavior-preserving changes. The same focused `DotnetTestDataConsumerTests` and
+`ProtocolEdgeCaseTests` selection executed **104/104 passing cases before and after**,
+with zero failures/skips and matching stable method/data-row multiplicities. The pinned
+Release/net8.0 unit-project build exited zero with zero warnings/errors. The updated
+code/test patch against the same base has SHA-256
+`4F279020DE0944C2759BCDD5DAB38075FD75B0916583383673B286091BA8DA56`.
+The original feature-ablation evidence above remains labeled at its original source state;
+this follow-up uses green/green equivalence, not a fabricated failing regression.
