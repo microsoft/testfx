@@ -119,7 +119,6 @@
           DependsOnTargets="GetMSTestV2CultureHierarchy"
           Inputs="@(MSTestV2Files)"
           Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)\%(FileName)%(Extension)')">
- 
     <ItemGroup>
       <!-- Add the localization file as content so it gets copied from nuget to bin folder. -->
       <Content Include="@(MSTestV2Files->'%(FullPath)')">
