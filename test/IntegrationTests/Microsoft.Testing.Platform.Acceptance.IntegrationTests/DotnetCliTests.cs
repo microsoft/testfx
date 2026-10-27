@@ -67,7 +67,7 @@ public sealed class DotnetCliTests
     [DataRow("MSB3021", "Unable to copy the file because access is denied.", DisplayName = "Copy file error")]
     [DataRow("MSB4018", "The \"Copy\" task failed unexpectedly. System.IO.IOException: The file is in use.", DisplayName = "Copy IO exception")]
     [DataRow("MSB4018", "The \"Delete\" task failed unexpectedly. System.ArgumentNullException: Value cannot be null. (Parameter 'message')", DisplayName = "Other task null message")]
-    [DataRow("MSB4018", "The \"Copy\" task failed unexpectedly. System.ArgumentNullException: Value cannot be null. (Parameter 'source') at Microsoft.Build.Tasks.Copy.CopyFileWithLogging", DisplayName = "Copy other null parameter")]
+    [DataRow("MSB4018", "The \"Copy\" task failed unexpectedly. System.ArgumentNullException: Value cannot be null. (Parameter 'source') at Microsoft.Build.Tasks.Copy.CopyFileWithLogging(FileState sourceFileState, FileState destinationFileState)", DisplayName = "Copy other null parameter")]
     public async Task RunAsync_UnrelatedBuildFailure_DoesNotRetry(string errorCode, string errorMessage)
     {
         using TempDirectory directory = new();
