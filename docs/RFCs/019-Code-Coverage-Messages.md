@@ -1036,6 +1036,9 @@ repository-pinned SDK/runtime bootstrap; no global or source build settings were
 The final implementation/test patch against base
 `b6e7268c80ed13ec33c3a1f736140bc8169b194c`, excluding this decision record, has SHA-256
 `8B63DF5B2825CD1F6791AB456D17D2117ECDEC2E84782BCBEFCC31DFDEC6DC4C`.
+The implementation and tests are committed as
+`479eb249a33830d9c0d2c26b7ceb3349d65771c1`; later decision-record-only updates do not
+change those tested source files.
 The package's exact producer-source patch has SHA-256
 `3C7D00CB9F0321C26A0CDDDC8EC81041A0AEECFE41746F4EE2C01851977B6888`.
 The package was built from that uncommitted source state, not from a later commit stamped
@@ -1123,12 +1126,25 @@ under the original checkout; this harness-only setting remained identical in red
 Raw binlogs, TRX reports, source hashes and patches are retained in session artifacts. No
 counterfactual production change is delivered.
 
-The coordinating SDK session separately reports a real built-redist single-application run
-using this genuine MTP package and a published collector, plus managed and Native AOT SDK
-coverage tests. Those are coordinator-owned composed-product results, not results produced
-by the fixture tests here. Complete multi-application summary validation still requires the
-collector metadata package; its stock full pack is blocked on missing ARM64 native inputs.
-No published package was patched and no global Visual Studio installation was attempted.
+The coordinating SDK session subsequently completed **11 real composed-product cases**
+using the built SDK redist, this MTP `2.6.0-preview.coverage-summary.20261027.1` package, and
+the genuine local collector `18.13.0-preview.coverage-summary.20261027.1` package. Inspection
+of its retained `aligned-feature-verified-20261027-141856/evidence.json` found all checks
+passing, with SHA-256
+`96013CEB641AE57509CA95D2C813B0B8EF2F768872FAD36D9126A9444E4542E9`.
+These are coordinator-owned executions, not results produced by the synthetic fixture tests.
+
+The real single-app result is `50.0%` (6/12). The two applications each cover half of the same
+library; the actual merged artifact contains 12/12 and prints `Total - Line: 100.0%` exactly
+once in solution, managed-module, and Native AOT module paths. Both original artifacts
+remain. Post-processing suppression and no-coverage paths invent no total; test failures
+retain exit 2, zero-test selection retains exit 8, and cancellation retains exit 3. The
+coordinator also reports 245 managed and 30 ILC-compiled SDK coverage cases passing.
+
+The earlier stock collector pack's missing ARM64 native inputs no longer block this local
+composed proof. No published package was patched and no global Visual Studio installation
+was attempted. Official package release/flow was not requested and remains outside this
+local implementation handoff.
 
 ### Open questions and delivery ownership
 
