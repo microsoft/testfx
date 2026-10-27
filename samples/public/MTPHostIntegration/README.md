@@ -25,7 +25,7 @@ builder.Services.AddMSTestTestClassInjection();
 
 The ASP.NET Core and Aspire tests receive application-host services through their constructors. The integration creates one dependency-injection scope per test invocation and leaves the host/root provider caller-owned.
 
-`MSTest.Extensions.Hosting` stays prerelease while `Microsoft.Testing.Extensions.Hosting` is alpha. Its sample version is pinned separately through `MSTestExtensionsHostingVersion` in `samples/public/Directory.Build.props`; when testing a new MSTest release, select the actual hosting package version rather than reusing `MSTestVersion`.
+`MSTest.Extensions.Hosting` stays prerelease while `Microsoft.Testing.Extensions.Hosting` is alpha. Their sample versions are pinned separately through `MSTestExtensionsHostingVersion` and `MicrosoftTestingExtensionsHostingVersion` in `samples/public/Directory.Build.props`; when testing a new release, select the actual hosting package versions rather than reusing `MSTestVersion` or `MTPVersion`.
 
 ## Run
 
