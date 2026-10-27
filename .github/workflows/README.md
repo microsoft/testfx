@@ -201,6 +201,24 @@ This update retains gh-aw v0.89.21 because [v0.89.22](https://github.com/github/
 
 The v0.89.21 Node.js setup helper `GenerateNodeJsSetupStep()` reads only the embedded action-pin catalog, bypassing both `aw.json` redirects and the repository cache. For a catalog-only correction, build the exact pinned gh-aw source after resolving the required action version in its cache and running upstream's [`sync-action-pins` target](https://github.com/github/gh-aw/blob/v0.89.21/Makefile). Keep the compiler code unchanged, preserve the pinned setup action, and record the source commit, verified action SHA, and reproduction commands in the PR. On Windows, clone that source with `core.autocrlf=false` so embedded prompt assets retain their committed LF endings. Regenerate the lock rather than editing it, and verify that no unrelated executable configuration changed.
 
+The October 27 repair aligns the embedded catalog and repository cache with
+`actions/setup-node@v7.1.0` and `github/codeql-action/upload-sarif@v4.39.0`.
+Both actions were already used by executable workflow steps, but 33 generated
+manifests and the SARIF cache entry still described older versions. The existing
+auditor reported 36 problems. Regeneration must update the manifests as well as
+the executable steps; changing only `uses:` lines leaves the repository broken.
+The compiler remains v0.89.21 at source commit
+`c35393777e5604a63721d09512263b1383301d4f`, with catalog data synchronized from
+the repository's verified pins before building. Do not use a newer local
+extension to repair these locks: even `--no-emit` can update the action cache
+to that extension's version.
+
+For that source build, set both release linker variables:
+`-ldflags "-s -w -X main.version=v0.89.21 -X main.isRelease=true"`.
+Setting only `main.version` makes `version` print the expected value but leaves
+compilation in development mode, emitting local action paths and a different
+job graph. Reject that output rather than approving its extra actions.
+
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
 ```bash
@@ -215,6 +233,34 @@ python .github/scripts/check_action_pins.py --list
 ```
 
 [`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, when one action resolves to more than one SHA across the repository, when a `docker://` container action is not pinned to an image digest, or when a `uses` reachable in the parsed YAML is hidden from the line scan (a block scalar, flow mapping or alias). Comparisons are case-insensitive on owner/repository names, since GitHub resolves them that way and `Actions/Checkout` would otherwise escape the lock-file check.
+
+### Build-analysis checkout identity
+
+[Run 40359801044](https://github.com/microsoft/testfx/actions/runs/40359801044)
+resolved an open PR, but it merged and its branch was deleted during activation.
+The later agent checkout failed before analysis. The automatic build analyst now
+checks out the head SHA already validated against the Azure Pipelines artifacts,
+asserts that exact identity, and attaches only a local same-repository branch.
+Its `origin/<branch>` baseline is also pinned locally to that SHA so incremental
+patch collection neither refetches a deleted branch nor includes newer commits.
+Fork checkouts remain detached; the safe-output target, closed/deleted-branch
+checks, allowed files, loop guard, and credentials are unchanged.
+
+`python .github/scripts/test_build_failure_analysis_checkout.py` exercises the
+authored checkout configuration and pre-agent script using isolated local Git
+repositories, including deleted/moving branches, fork isolation, patch baseline,
+and rejected input. The pin-check workflow runs these regressions as well.
+This does not prove hosted artifact access or safe-output publication.
+
+Failures before any jobs exist are not necessarily malformed YAML. For example,
+[run 40366844700](https://github.com/microsoft/testfx/actions/runs/40366844700)
+expired awaiting approval. Read the run annotation before changing triggers,
+permissions, or approval policy. Likewise, daily-credit HTTP 502 failures leave
+usage unknown; they do not justify removing the credit guardrail.
+
+Full strict compilation also checks the link checker's command-file writes.
+Keep every `GITHUB_OUTPUT` redirection quoted, including its empty-link path;
+an output-file path containing spaces must not split into multiple shell words.
 
 ## Secrets & authentication
 
