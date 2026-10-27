@@ -168,7 +168,9 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             Assert.AreSequenceEqual(new[] { "A", "B", "C" }, service.TestNames.OrderBy(name => name, StringComparer.Ordinal));
             Assert.AreEqual(2, service.CreatedRunCount);
             Assert.AreEqual(2, service.CompletedRunCount);
-            Assert.AreEqual(1, service.AttachmentCount);
+            (string fileName, long size) = Assert.ContainsSingle(service.Attachments);
+            Assert.AreEqual("A.coverage", fileName);
+            Assert.AreEqual(34_360_600L, size);
             Assert.AreEqual(0, service.RejectedResultCount);
             Assert.IsFalse(File.Exists(Path.Combine(directory.Path, "azdo-runid.123.owner")));
             Assert.IsFalse(File.Exists(Path.Combine(directory.Path, "azdo-runid.123.json")));
@@ -207,9 +209,9 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         private readonly ConcurrentBag<Task> _requests = [];
         private readonly ConcurrentDictionary<int, string> _states = new();
         private readonly ConcurrentBag<string> _testNames = [];
+        private readonly ConcurrentBag<(string FileName, long Size)> _attachments = [];
         private readonly Task _acceptLoop;
         private int _nextRunId;
-        private int _attachmentCount;
         private int _rejectedResultCount;
 
         public AzureDevOpsService()
@@ -233,7 +235,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
 
         public int CreatedRunCount => _states.Count;
 
-        public int AttachmentCount => _attachmentCount;
+        public IEnumerable<(string FileName, long Size)> Attachments => _attachments;
 
         public int RejectedResultCount => _rejectedResultCount;
 
@@ -299,7 +301,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 string[] request = headers[0].Split(' ');
                 string lengthHeader = headers.Single(header => header.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase));
                 int length = int.Parse(lengthHeader["Content-Length:".Length..], CultureInfo.InvariantCulture);
-                if (length is < 0 or > 1024 * 1024)
+                if (length is < 0 or > 64 * 1024 * 1024)
                 {
                     throw new InvalidOperationException("Unexpected HTTP body length.");
                 }
@@ -357,7 +359,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
 
             if (segments.Length == 6 && segments[5] == "attachments" && method == "POST")
             {
-                Interlocked.Increment(ref _attachmentCount);
+                _attachments.Add((body.GetProperty("fileName").GetString()!, body.GetProperty("stream").GetBytesFromBase64().LongLength));
                 return (200, "{}");
             }
 
@@ -452,7 +454,7 @@ sealed class Framework(string module, string rendezvous, bool nativeRendezvous) 
             string path = Path.Combine(rendezvous, $"{module}.coverage");
             using (FileStream file = File.OpenWrite(path))
             {
-                file.SetLength(module == "B" ? 16L * 1024 * 1024 + 1 : 8);
+                file.SetLength(module == "B" ? (75L * 1024 * 1024) + 1 : 34_360_600L);
             }
             await context.MessageBus.PublishAsync(this, new SessionFileArtifact(session, new FileInfo(path), "coverage"));
         }
