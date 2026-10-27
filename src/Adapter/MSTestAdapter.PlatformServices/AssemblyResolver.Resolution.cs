@@ -80,14 +80,14 @@ internal partial class AssemblyResolver
             }
 
             assembly = SearchAssembly(_searchDirectories, assemblyNameToLoad, isReflectionOnly);
-            if (assembly != null)
+            if (assembly is not null)
             {
                 return assembly;
             }
 
             // required assembly is not present in searchDirectories??
             // see, if we can find it in user specified search directories.
-            while (assembly == null && _directoryList?.Count > 0)
+            while (assembly is null && _directoryList?.Count > 0)
             {
                 // instead of loading whole search directory in one time, we are adding directory on the basis of need
                 RecursiveDirectoryPath currentNode = _directoryList.Dequeue();
@@ -127,7 +127,7 @@ internal partial class AssemblyResolver
                 }
             }
 
-            if (assembly != null)
+            if (assembly is not null)
             {
                 return assembly;
             }

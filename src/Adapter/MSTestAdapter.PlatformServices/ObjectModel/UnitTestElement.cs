@@ -27,7 +27,7 @@ internal sealed class UnitTestElement
             throw new ArgumentNullException(nameof(testMethod));
         }
 
-        DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
+        DebugEx.Assert(testMethod.FullClassName is not null, "Full className cannot be empty");
         TestMethod = testMethod;
     }
 

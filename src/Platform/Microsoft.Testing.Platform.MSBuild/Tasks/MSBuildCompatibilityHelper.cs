@@ -30,10 +30,10 @@ internal static class MSBuildCompatibilityHelper
 
     private static Version GetMsBuildVersion()
     {
-        if (s_msBuildVersion == null)
+        if (s_msBuildVersion is null)
         {
             var fileVersionAttribute = (AssemblyFileVersionAttribute?)typeof(ILogger).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false).FirstOrDefault();
-            s_msBuildVersion = fileVersionAttribute?.Version != null ? new Version(fileVersionAttribute.Version) : new Version();
+            s_msBuildVersion = fileVersionAttribute?.Version is not null ? new Version(fileVersionAttribute.Version) : new Version();
         }
 
         return s_msBuildVersion;

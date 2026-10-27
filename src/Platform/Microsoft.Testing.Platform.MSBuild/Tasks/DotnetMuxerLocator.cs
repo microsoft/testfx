@@ -81,7 +81,7 @@ internal sealed partial class DotnetMuxerLocator
         string? envVar = Environment.GetEnvironmentVariable(envKey);
 
         // Try on non virtualized x86 var(should happen only on non-x86 architecture)
-        if ((envVar == null || !Directory.Exists(envVar)) &&
+        if ((envVar is null || !Directory.Exists(envVar)) &&
             targetArchitecture == PlatformArchitecture.X86 && isWinOs)
         {
             envKey = "DOTNET_ROOT(x86)";
@@ -89,13 +89,13 @@ internal sealed partial class DotnetMuxerLocator
         }
 
         // Try on default DOTNET_ROOT
-        if (envVar == null || !Directory.Exists(envVar))
+        if (envVar is null || !Directory.Exists(envVar))
         {
             envKey = "DOTNET_ROOT";
             envVar = Environment.GetEnvironmentVariable(envKey);
         }
 
-        if (envVar != null)
+        if (envVar is not null)
         {
             // If directory specified by env vars does not exists, it's like env var doesn't exists as well.
             if (!Directory.Exists(envVar))
@@ -144,7 +144,7 @@ internal sealed partial class DotnetMuxerLocator
         // Try to search for global registration
         muxerPath = isWinOs ? GetMuxerFromGlobalRegistrationWin(targetArchitecture) : GetMuxerFromGlobalRegistrationOnUnix(targetArchitecture);
 
-        if (muxerPath != null)
+        if (muxerPath is not null)
         {
             if (!File.Exists(muxerPath))
             {
@@ -250,7 +250,7 @@ internal sealed partial class DotnetMuxerLocator
         using var hklm = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32);
 
         using RegistryKey? dotnetInstalledVersion = hklm.OpenSubKey(@"SOFTWARE\dotnet\Setup\InstalledVersions");
-        if (dotnetInstalledVersion == null)
+        if (dotnetInstalledVersion is null)
         {
             _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing RegistryHive.LocalMachine for RegistryView.Registry32");
             return null;
@@ -258,7 +258,7 @@ internal sealed partial class DotnetMuxerLocator
 
         using RegistryKey? nativeArch = dotnetInstalledVersion.OpenSubKey(targetArchitecture.ToString().ToLowerInvariant());
         string? installLocation = nativeArch?.GetValue("InstallLocation")?.ToString();
-        if (installLocation == null)
+        if (installLocation is null)
         {
             _resolutionLog(@"DotnetHostHelper.GetMuxerFromGlobalRegistrationWin: Missing registry InstallLocation");
             return null;

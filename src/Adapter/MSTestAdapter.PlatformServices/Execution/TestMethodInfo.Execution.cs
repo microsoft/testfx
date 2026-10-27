@@ -22,7 +22,7 @@ internal partial class TestMethodInfo
     /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
     private TimeoutInfo GetTestTimeout()
     {
-        DebugEx.Assert(MethodInfo != null, "TestMethod should be non-null");
+        DebugEx.Assert(MethodInfo is not null, "TestMethod should be non-null");
         TimeoutAttribute? timeoutAttribute = ReflectHelper.Instance.GetFirstAttributeOrDefault<TimeoutAttribute>(MethodInfo);
         if (timeoutAttribute is null)
         {
@@ -78,7 +78,7 @@ internal partial class TestMethodInfo
         CancellationTokenSource? timeoutTokenSource,
         TestInvocationState? invocationState = null)
     {
-        DebugEx.Assert(MethodInfo != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
+        DebugEx.Assert(MethodInfo is not null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
         var result = new TestResult();
         invocationState ??= new();
@@ -281,6 +281,6 @@ internal partial class TestMethodInfo
             timeoutTokenSource,
             invocationState).ConfigureAwait(false);
 
-        return testRunnerException != null ? throw testRunnerException : result;
+        return testRunnerException is not null ? throw testRunnerException : result;
     }
 }

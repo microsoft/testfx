@@ -56,9 +56,9 @@ internal sealed class TestDataSource : ITestDataSource
         {
             using TestDataConnection connection = factory.Create(providerNameInvariant, connectionString!, dataFolders);
             DataTable? table = connection.ReadTable(tableName!, null);
-            DebugEx.Assert(table != null, "Table should not be null");
+            DebugEx.Assert(table is not null, "Table should not be null");
             DataRow[] rows = table!.Select();
-            DebugEx.Assert(rows != null, "rows should not be null.");
+            DebugEx.Assert(rows is not null, "rows should not be null.");
 
             // check for row length is 0
             if (rows.Length == 0)

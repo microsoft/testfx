@@ -69,5 +69,5 @@ internal sealed class SimpleAnsiTerminal : SimpleTerminal
     }
 
     private string? SetColorPerLine(string value)
-        => _newlineAndColor == null ? value : value.Replace("\n", _newlineAndColor);
+        => _newlineAndColor is null ? value : value.Replace("\n", _newlineAndColor);
 }

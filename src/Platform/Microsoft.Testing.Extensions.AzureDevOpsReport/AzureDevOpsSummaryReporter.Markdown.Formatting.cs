@@ -34,13 +34,17 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append(" · ⏱ **").Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
         if (exitCode is int processExitCode && processExitCode != 0)
         {
-            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (")
-                .Append(CiRunSummaryExitCode.GetName(processExitCode)).Append(" — ")
-                .Append(CiRunSummaryExitCode.GetReason(processExitCode, AzureDevOpsResources.ResourceManager)).Append(')');
+            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (");
+            AppendExitCodeExplanation(builder, processExitCode);
+            builder.Append(')');
         }
 
         builder.Append("\n\n");
     }
+
+    private static void AppendExitCodeExplanation(StringBuilder builder, int exitCode)
+        => builder.Append(CiRunSummaryExitCode.GetName(exitCode)).Append(" — ")
+            .Append(CiRunSummaryExitCode.GetReason(exitCode, AzureDevOpsResources.ResourceManager));
 
     private static string GetQualifiedTestLabel(
         IReadOnlyList<CiRunSummaryModule> modules,

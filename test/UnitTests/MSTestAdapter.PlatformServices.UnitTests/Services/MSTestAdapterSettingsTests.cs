@@ -387,5 +387,5 @@ internal class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
-    protected override string ExpandEnvironmentVariables(string path) => ExpandEnvironmentVariablesSetter == null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
+    protected override string ExpandEnvironmentVariables(string path) => ExpandEnvironmentVariablesSetter is null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
 }

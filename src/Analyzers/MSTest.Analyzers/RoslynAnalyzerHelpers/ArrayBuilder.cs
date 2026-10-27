@@ -214,7 +214,7 @@ internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
     private void Free()
     {
         ObjectPool<ArrayBuilder<T>>? pool = _pool;
-        if (pool != null)
+        if (pool is not null)
         {
             // According to the statistics of a C# compiler self-build, the most commonly used builder size is 0.  (808003 uses).
             // The distant second is the Count == 1 (455619), then 2 (106362) ...

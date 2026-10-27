@@ -12,7 +12,7 @@ internal static class DictionaryHelper
         string overwriteFriendlyName = "overwrite")
         where TKey : IEquatable<TKey>
     {
-        if ((source == null || source?.Count == 0) && (overwrite == null || overwrite?.Count == 0))
+        if ((source is null || source?.Count == 0) && (overwrite is null || overwrite?.Count == 0))
         {
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
@@ -22,7 +22,7 @@ internal static class DictionaryHelper
             return new Dictionary<TKey, TValue>();
         }
 
-        if (overwrite == null || overwrite.Count == 0)
+        if (overwrite is null || overwrite.Count == 0)
         {
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
@@ -32,7 +32,7 @@ internal static class DictionaryHelper
             return source!.ToDictionary(p => p.Key, p => p.Value);
         }
 
-        if (source == null || source.Count == 0)
+        if (source is null || source.Count == 0)
         {
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {

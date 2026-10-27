@@ -55,7 +55,7 @@ internal class XmlUtilities
     {
         XmlElement? ret = parent[name];
 
-        if (ret != null)
+        if (ret is not null)
         {
             return ret;
         }
@@ -75,7 +75,7 @@ internal class XmlUtilities
 
         // Use the assemblyBinding section if it exists; otherwise, create one.
         XmlElement? assemblyBindingSection = runtimeSection["assemblyBinding"];
-        if (assemblyBindingSection != null)
+        if (assemblyBindingSection is not null)
         {
             return assemblyBindingSection;
         }
@@ -108,7 +108,7 @@ internal class XmlUtilities
         // Convert the public key token into a string.
         StringBuilder? publicKeyTokenString = null;
         byte[] publicKeyToken = assemblyName.GetPublicKeyToken();
-        if (publicKeyToken != null)
+        if (publicKeyToken is not null)
         {
             publicKeyTokenString = new StringBuilder(publicKeyToken.GetLength(0) * 2);
             for (int i = 0; i < publicKeyToken.GetLength(0); i++)
@@ -134,7 +134,7 @@ internal class XmlUtilities
         // Add the assemblyIdentity element.
         XmlElement assemblyIdentityElement = doc.CreateElement("assemblyIdentity", XmlNamespace);
         assemblyIdentityElement.SetAttribute("name", assemblyName.Name);
-        if (publicKeyTokenString != null)
+        if (publicKeyTokenString is not null)
         {
             assemblyIdentityElement.SetAttribute("publicKeyToken", publicKeyTokenString.ToString());
         }

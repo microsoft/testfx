@@ -46,7 +46,7 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
 
         // Find the constructor declaration identified by the diagnostic.
         ConstructorDeclarationSyntax? constructorDeclaration = syntaxToken.Parent?.AncestorsAndSelf().OfType<ConstructorDeclarationSyntax>().FirstOrDefault();
-        if (constructorDeclaration == null)
+        if (constructorDeclaration is null)
         {
             return;
         }
@@ -79,12 +79,12 @@ public sealed class PreferTestInitializeOverConstructorFixer : CodeFixProvider
             // Move the body of the constructor
             BlockSyntax? constructorBody = constructorDeclaration.Body;
 
-            if (existingTestInitialize != null)
+            if (existingTestInitialize is not null)
             {
                 // If TestInitialize exists, append the constructor body to it
                 StatementSyntax[]? constructorStatements = constructorBody?.Statements.ToArray();
                 MethodDeclarationSyntax newTestInitialize;
-                if (existingTestInitialize.Body != null)
+                if (existingTestInitialize.Body is not null)
                 {
                     BlockSyntax newTestInitializeBody = existingTestInitialize.Body.AddStatements(constructorStatements ?? []);
                     newTestInitialize = existingTestInitialize.WithBody(newTestInitializeBody);

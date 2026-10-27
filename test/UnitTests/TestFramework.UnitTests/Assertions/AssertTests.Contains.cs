@@ -1799,7 +1799,7 @@ public partial class AssertTests : TestContainer
         var collection = new List<string?> { "apple", null, "banana" };
 
         // Act
-        string? result = Assert.ContainsSingle(x => x == null, collection);
+        string? result = Assert.ContainsSingle(x => x is null, collection);
 
         // Assert
         result.Should().BeNull();
@@ -1814,7 +1814,7 @@ public partial class AssertTests : TestContainer
         var collection = new ArrayList { "apple", null, "banana" };
 
         // Act
-        object? result = Assert.ContainsSingle(x => x == null, collection);
+        object? result = Assert.ContainsSingle(x => x is null, collection);
 
         // Assert
         result.Should().BeNull();

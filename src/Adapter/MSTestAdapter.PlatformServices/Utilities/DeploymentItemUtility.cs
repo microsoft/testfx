@@ -80,7 +80,7 @@ internal sealed class DeploymentItemUtility
             return false;
         }
 
-        if (relativeOutputDirectory == null)
+        if (relativeOutputDirectory is null)
         {
             warning = Resource.DeploymentItemOutputDirectoryCannotBeNull;
             return false;
@@ -116,7 +116,7 @@ internal sealed class DeploymentItemUtility
         foreach (UnitTestElement test in tests)
         {
             KeyValuePair<string, string>[]? items = test.DeploymentItems;
-            if (items == null || items.Length == 0)
+            if (items is null || items.Length == 0)
             {
                 continue;
             }
@@ -135,8 +135,8 @@ internal sealed class DeploymentItemUtility
 
     internal static void AddDeploymentItem(IList<DeploymentItem> deploymentItemList, DeploymentItem deploymentItem)
     {
-        DebugEx.Assert(deploymentItemList != null, "DeploymentItem list cannot be null");
-        DebugEx.Assert(deploymentItem != null, "DeploymentItem  cannot be null");
+        DebugEx.Assert(deploymentItemList is not null, "DeploymentItem list cannot be null");
+        DebugEx.Assert(deploymentItem is not null, "DeploymentItem  cannot be null");
 
         if (!deploymentItemList.Contains(deploymentItem))
         {
@@ -197,17 +197,17 @@ internal sealed class DeploymentItemUtility
     [return: NotNullIfNotNull(nameof(deploymentItemList2))]
     private static IEnumerable<DeploymentItem>? Concat(IEnumerable<DeploymentItem>? deploymentItemList1, IEnumerable<DeploymentItem>? deploymentItemList2)
     {
-        if (deploymentItemList1 == null && deploymentItemList2 == null)
+        if (deploymentItemList1 is null && deploymentItemList2 is null)
         {
             return null;
         }
 
-        if (deploymentItemList1 == null)
+        if (deploymentItemList1 is null)
         {
             return deploymentItemList2;
         }
 
-        if (deploymentItemList2 == null)
+        if (deploymentItemList2 is null)
         {
             return deploymentItemList1;
         }
@@ -233,7 +233,7 @@ internal sealed class DeploymentItemUtility
 
         foreach (DeploymentItem deploymentItem in deploymentItemList)
         {
-            if (deploymentItem != null)
+            if (deploymentItem is not null)
             {
                 result.Add(new KeyValuePair<string, string>(deploymentItem.SourcePath, deploymentItem.RelativeOutputDirectory));
             }

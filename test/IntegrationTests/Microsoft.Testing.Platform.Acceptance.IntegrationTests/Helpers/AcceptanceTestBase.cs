@@ -354,9 +354,9 @@ public abstract class AcceptanceTestBase
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) is not null)
             {
-                if (path != null)
+                if (path is not null)
                 {
                     throw new InvalidOperationException(
                         $"vswhere.exe returned more than one path while locating {requiredCapability}:{Environment.NewLine}{commandLine.StandardOutput}");

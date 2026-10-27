@@ -39,7 +39,7 @@ internal static class AnalyzerSeverityDecider
             {
                 throw new InvalidOperationException("Rules with DisableInAllMode custom tag are expected to be disabled by default and have severity Info.");
             }
-            else if (severity != null)
+            else if (severity is not null)
             {
                 throw new InvalidOperationException("Rules with DisableInAllMode custom tag are expected to be disabled.");
             }

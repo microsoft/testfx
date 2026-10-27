@@ -137,7 +137,7 @@ internal class AssemblyEnumerator
         }
         catch (ReflectionTypeLoadException ex)
         {
-            if (ex.LoaderExceptions != null)
+            if (ex.LoaderExceptions is not null)
             {
                 if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
                 {
@@ -195,7 +195,7 @@ internal class AssemblyEnumerator
                 ? testTypeEnumerator.Enumerate(warningMessages, useGeneratedDescriptors: true)
                 : testTypeEnumerator.Enumerate(warningMessages);
 
-            if (unitTestCases != null)
+            if (unitTestCases is not null)
             {
                 foreach (UnitTestElement test in unitTestCases)
                 {

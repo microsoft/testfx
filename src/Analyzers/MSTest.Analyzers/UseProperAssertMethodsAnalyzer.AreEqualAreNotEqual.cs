@@ -31,8 +31,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 out _);
 
             if (linqStatus2 is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount &&
-                linqCollectionExpr2 != null &&
-                predicateExpr2 != null &&
+                linqCollectionExpr2 is not null &&
+                predicateExpr2 is not null &&
                 expectedArgument.ConstantValue.HasValue &&
                 expectedArgument.ConstantValue.Value is int expectedCountValue &&
                 expectedCountValue == 1)

@@ -51,7 +51,7 @@ internal class TestDataConnectionFactory
         // here we look for special cases
         if (SpecializedProviders.TryGetValue(invariantProviderName, out TestDataConnectionFactory? factory))
         {
-            DebugEx.Assert(factory != null, "factory");
+            DebugEx.Assert(factory is not null, "factory");
             return factory.Create(invariantProviderName, connectionString, dataFolders);
         }
         else

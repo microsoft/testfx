@@ -19,7 +19,7 @@ internal static class IMethodSymbolExtensions
     public static bool IsImplementationOfAnyInterfaceMember<TSymbol>(this ISymbol symbol)
         where TSymbol : ISymbol
     {
-        if (symbol.ContainingType == null)
+        if (symbol.ContainingType is null)
         {
             return false;
         }
@@ -39,7 +39,7 @@ internal static class IMethodSymbolExtensions
     }
 
     public static bool IsImplementationOfInterfaceMember(this ISymbol symbol, [NotNullWhen(returnValue: true)] ISymbol? interfaceMember)
-        => interfaceMember != null
+        => interfaceMember is not null
         && SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(interfaceMember));
 
     /// <summary>
@@ -48,7 +48,7 @@ internal static class IMethodSymbolExtensions
     /// </summary>
     public static bool IsImplementationOfInterfaceMethod(this IMethodSymbol method, ITypeSymbol? typeArgument, [NotNullWhen(returnValue: true)] INamedTypeSymbol? interfaceType, string interfaceMethodName)
     {
-        INamedTypeSymbol? constructedInterface = typeArgument != null ? interfaceType?.Construct(typeArgument) : interfaceType;
+        INamedTypeSymbol? constructedInterface = typeArgument is not null ? interfaceType?.Construct(typeArgument) : interfaceType;
 
         return constructedInterface?.GetMembers(interfaceMethodName).FirstOrDefault() is IMethodSymbol interfaceMethod &&
             SymbolEqualityComparer.Default.Equals(method, method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod));
@@ -59,7 +59,7 @@ internal static class IMethodSymbolExtensions
     /// </summary>
     public static bool IsDisposeImplementation([NotNullWhen(returnValue: true)] this IMethodSymbol? method, [NotNullWhen(returnValue: true)] INamedTypeSymbol? iDisposable)
     {
-        if (method == null)
+        if (method is null)
         {
             return false;
         }
@@ -83,7 +83,7 @@ internal static class IMethodSymbolExtensions
     {
         while (true)
         {
-            if (method == null)
+            if (method is null)
             {
                 return false;
             }
