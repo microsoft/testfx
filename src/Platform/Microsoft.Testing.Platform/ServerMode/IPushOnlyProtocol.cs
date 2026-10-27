@@ -16,6 +16,8 @@ internal interface IPushOnlyProtocol : IDisposable
     // IsCompatibleProtocolAsync call.
     bool IsServerControlChannelSupported { get; }
 
+    bool IsCoverageSummarySupported { get; }
+
     Task AfterCommonServiceSetupAsync();
 
     Task HelpInvokedAsync();

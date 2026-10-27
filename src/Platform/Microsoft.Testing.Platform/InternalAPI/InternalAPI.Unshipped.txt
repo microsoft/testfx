@@ -40,3 +40,58 @@ Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.get -> bool
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.init -> void
 Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.get -> bool?
 Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.init -> void
+Microsoft.Testing.Platform.DotnetTestConnection.IsCoverageSummarySupported.get -> bool
+Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.IsCoverageSummarySupported.get -> bool
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind, out string![]? InputArtifactPaths) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? Kind, string![]? InputArtifactPaths = null) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.CoverageSummary.get -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.CoverageSummary.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind, out string![]? InputArtifactPaths, out Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? CoverageSummary) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? Kind, string![]? InputArtifactPaths = null, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? CoverageSummary = null) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage!
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoverableCount.get -> long?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoverableCount.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoverageSummaryMessage(string? SessionUid, string? ProducerId, int? ScopeLevel, string? ScopeName, int? Metric, string? CustomMetricName, long? CoveredCount, long? CoverableCount) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoveredCount.get -> long?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoveredCount.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CustomMetricName.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CustomMetricName.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Deconstruct(out string? SessionUid, out string? ProducerId, out int? ScopeLevel, out string? ScopeName, out int? Metric, out string? CustomMetricName, out long? CoveredCount, out long? CoverableCount) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Equals(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Metric.get -> int?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Metric.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ProducerId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ProducerId.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeLevel.get -> int?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeLevel.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeName.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeName.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.SessionUid.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.SessionUid.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages!
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.CoverageSummaryMessages(string? ExecutionId, string? InstanceId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]! Summaries) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Deconstruct(out string? ExecutionId, out string? InstanceId, out Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]! Summaries) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Equals(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.ExecutionId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.ExecutionId.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.InstanceId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.InstanceId.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Summaries.get -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Summaries.init -> void
+Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer
+Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.CoverageSummaryMessagesSerializer() -> void
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.Id.get -> int
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.operator !=(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator !=(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.ReadSummariesPayload(System.IO.Stream! stream) -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
+static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.WriteSummariesPayload(System.IO.Stream! stream, ushort fieldId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? summaries) -> void

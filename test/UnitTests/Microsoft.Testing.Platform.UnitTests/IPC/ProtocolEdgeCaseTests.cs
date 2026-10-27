@@ -17,6 +17,235 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class ProtocolEdgeCaseTests
 {
     [TestMethod]
+    public void CoverageSummaryMessages_IndependentWireFixturePinsAllFields()
+    {
+        // Literal IDs deliberately do not share the production constants: a matching
+        // writer/reader mistake must not make this cross-repository contract test pass.
+        byte[] entry = WriteFields(
+            (1, WriteString("session")),
+            (2, WriteString("producer")),
+            (3, WriteInt(1)),
+            (4, WriteString("module.dll")),
+            (5, WriteInt(255)),
+            (6, WriteString("custom")),
+            (7, BitConverter.GetBytes(3_000_000_000L)),
+            (8, BitConverter.GetBytes(long.MaxValue)));
+        byte[] payload = WriteFields(
+            (1, WriteString("execution")), (2, WriteString("instance")), (3, WriteList(entry)));
+        var expected = new CoverageSummaryMessage("session", "producer", 1, "module.dll", 255, "custom", 3_000_000_000L, long.MaxValue);
+        object serializer = new CoverageSummaryMessagesSerializer();
+
+        CoverageSummaryMessages actual = DeserializePayload<CoverageSummaryMessages>(serializer, payload);
+        using var serialized = new MemoryStream();
+        Serialize(serializer, new CoverageSummaryMessages("execution", "instance", [expected]), serialized);
+
+        Assert.AreEqual("execution", actual.ExecutionId);
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.AreEqual(expected, Assert.ContainsSingle(actual.Summaries));
+        Assert.AreSequenceEqual(payload, serialized.ToArray());
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "AbsentCoverageList")]
+    [DataRow(true, DisplayName = "ExplicitEmptyCoverageList")]
+    public void CoverageSummaryMessages_EmptyPayloadDoesNotInventMeasurements(bool explicitList)
+    {
+        byte[] payload = explicitList ? WriteFields((3, WriteList())) : WriteFields();
+
+        CoverageSummaryMessages actual = DeserializePayload<CoverageSummaryMessages>(new CoverageSummaryMessagesSerializer(), payload);
+
+        Assert.IsNull(actual.ExecutionId);
+        Assert.IsNull(actual.InstanceId);
+        Assert.IsEmpty(actual.Summaries);
+    }
+
+    [TestMethod]
+    public void CoverageSummaryMessages_AbsentCountsAreNotDefaultedToZero()
+    {
+        byte[] payload = WriteFields((3, WriteList(
+            WriteFields((2, WriteString("missing"))),
+            WriteFields((7, BitConverter.GetBytes(0L))),
+            WriteFields((8, BitConverter.GetBytes(0L))),
+            WriteFields((7, BitConverter.GetBytes(0L)), (8, BitConverter.GetBytes(0L))))));
+
+        CoverageSummaryMessages actual = DeserializePayload<CoverageSummaryMessages>(new CoverageSummaryMessagesSerializer(), payload);
+
+        Assert.AreSequenceEqual(
+            [
+                new CoverageSummaryMessage(null, "missing", null, null, null, null, null, null),
+                new CoverageSummaryMessage(null, null, null, null, null, null, 0, null),
+                new CoverageSummaryMessage(null, null, null, null, null, null, null, 0),
+                new CoverageSummaryMessage(null, null, null, null, null, null, 0, 0),
+            ],
+            actual.Summaries);
+    }
+
+    [TestMethod]
+    public void CoverageSummaryMessages_UnknownFieldsBeforeAndAfterKnownFieldsAreSkipped()
+    {
+        byte[] entry = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (1, WriteString("session")),
+            (2, WriteString("producer")),
+            (7, BitConverter.GetBytes(42L)),
+            (8, BitConverter.GetBytes(99L)),
+            (ushort.MaxValue - 1, [0xCC]));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xDD]),
+            (1, WriteString("execution")),
+            (3, WriteList(entry, WriteFields((2, WriteString("following-producer"))))),
+            (2, WriteString("instance")),
+            (ushort.MaxValue - 1, [0xEE, 0xFF]));
+
+        CoverageSummaryMessages actual = DeserializePayload<CoverageSummaryMessages>(new CoverageSummaryMessagesSerializer(), payload);
+
+        Assert.AreEqual("execution", actual.ExecutionId);
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.AreSequenceEqual(
+            [
+                new CoverageSummaryMessage("session", "producer", null, null, null, null, 42, 99),
+                new CoverageSummaryMessage(null, "following-producer", null, null, null, null, null, null),
+            ],
+            actual.Summaries);
+    }
+
+    [TestMethod]
+    public void CoverageSummaryMessages_PaddedNumericFieldsPreserveFollowingValues()
+    {
+        byte[] entry = WriteFields(
+            (3, [.. WriteInt(1), 0xAA, 0xBB]),
+            (5, [.. WriteInt(255), 0xCC]),
+            (7, [.. BitConverter.GetBytes(42L), 0xDD, 0xEE]),
+            (8, [.. BitConverter.GetBytes(99L), 0xFF]),
+            (4, WriteString("after padding")),
+            (6, WriteString("custom")));
+
+        CoverageSummaryMessages actual = DeserializePayload<CoverageSummaryMessages>(
+            new CoverageSummaryMessagesSerializer(), WriteFields((3, WriteList(entry))));
+
+        Assert.AreEqual(
+            new CoverageSummaryMessage(null, null, 1, "after padding", 255, "custom", 42, 99),
+            Assert.ContainsSingle(actual.Summaries));
+    }
+
+    [TestMethod]
+    [DataRow(false, -1, DisplayName = "RawNegativeLength")]
+    [DataRow(false, 1, DisplayName = "RawLengthExceedsPayload")]
+    [DataRow(false, 1_000_001, DisplayName = "RawLengthExceedsLimit")]
+    [DataRow(false, int.MaxValue, DisplayName = "RawMaximumLength")]
+    [DataRow(true, -1, DisplayName = "ArtifactNegativeLength")]
+    [DataRow(true, 1, DisplayName = "ArtifactLengthExceedsPayload")]
+    [DataRow(true, 1_000_001, DisplayName = "ArtifactLengthExceedsLimit")]
+    [DataRow(true, int.MaxValue, DisplayName = "ArtifactMaximumLength")]
+    public void CoverageSummaryPayload_InvalidCollectionLengthIsBounded(bool artifact, int count)
+    {
+        // Isolate the collection cap from the remaining-byte guard: these zero-field
+        // entries otherwise fit, so removing the cap would incorrectly accept them.
+        byte[] summaries = count == 1_000_001
+            ? [.. WriteInt(count), .. new byte[count * sizeof(ushort)]]
+            : WriteInt(count);
+
+        AssertDeserializeThrows<InvalidDataException>(
+            artifact ? new FileArtifactMessagesSerializer() : new CoverageSummaryMessagesSerializer(),
+            WriteCoveragePayload(summaries, artifact));
+    }
+
+    [TestMethod]
+    [DataRow(false, 3, 0, DisplayName = "RawScopeFieldTooSmall")]
+    [DataRow(false, 5, 3, DisplayName = "RawMetricFieldTooSmall")]
+    [DataRow(false, 7, 4, DisplayName = "RawCoveredFieldTooSmall")]
+    [DataRow(false, 8, 7, DisplayName = "RawCoverableFieldTooSmall")]
+    [DataRow(true, 3, 0, DisplayName = "ArtifactScopeFieldTooSmall")]
+    [DataRow(true, 5, 3, DisplayName = "ArtifactMetricFieldTooSmall")]
+    [DataRow(true, 7, 4, DisplayName = "ArtifactCoveredFieldTooSmall")]
+    [DataRow(true, 8, 7, DisplayName = "ArtifactCoverableFieldTooSmall")]
+    public void CoverageSummaryPayload_UndersizedNumericFieldIsRejected(bool artifact, int fieldId, int declaredSize)
+    {
+        byte[] primitive = fieldId is 7 or 8 ? BitConverter.GetBytes(42L) : WriteInt(1);
+        byte[] entry = WriteFieldsWithDeclaredSizes(((ushort)fieldId, declaredSize, primitive));
+
+        AssertDeserializeThrows<InvalidDataException>(
+            artifact ? new FileArtifactMessagesSerializer() : new CoverageSummaryMessagesSerializer(),
+            WriteCoveragePayload(WriteList(entry), artifact));
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "RawNegativeFieldSize")]
+    [DataRow(true, DisplayName = "ArtifactNegativeFieldSize")]
+    public void CoverageSummaryPayload_NegativeFieldSizeIsRejected(bool artifact)
+    {
+        byte[] entry = WriteFieldsWithDeclaredSizes((7, -1, []));
+
+        AssertDeserializeThrows<InvalidDataException>(
+            artifact ? new FileArtifactMessagesSerializer() : new CoverageSummaryMessagesSerializer(),
+            WriteCoveragePayload(WriteList(entry), artifact));
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "RawTruncatedEntryIsBounded")]
+    [DataRow(true, DisplayName = "ArtifactTruncatedEntryIsBounded")]
+    public void CoverageSummaryPayload_TruncatedEntryCannotReadPastCollection(bool artifact)
+    {
+        // Enough bytes exist in the neighboring field, but not inside the counted list.
+        byte[] entry = WriteFieldsWithDeclaredSizes((7, sizeof(long), WriteInt(42)));
+
+        AssertDeserializeThrows<EndOfStreamException>(
+            artifact ? new FileArtifactMessagesSerializer() : new CoverageSummaryMessagesSerializer(),
+            WriteCoveragePayload(WriteList(entry), artifact));
+    }
+
+    [TestMethod]
+    [DataRow(false, 0, DisplayName = "RawMissingCollectionHeader")]
+    [DataRow(false, 1, DisplayName = "RawOneByteCollectionHeader")]
+    [DataRow(false, 2, DisplayName = "RawTwoByteCollectionHeader")]
+    [DataRow(false, 3, DisplayName = "RawThreeByteCollectionHeader")]
+    [DataRow(true, 0, DisplayName = "ArtifactMissingCollectionHeader")]
+    [DataRow(true, 1, DisplayName = "ArtifactOneByteCollectionHeader")]
+    [DataRow(true, 2, DisplayName = "ArtifactTwoByteCollectionHeader")]
+    [DataRow(true, 3, DisplayName = "ArtifactThreeByteCollectionHeader")]
+    public void CoverageSummaryPayload_TruncatedCollectionHeaderIsRejected(bool artifact, int byteCount)
+        => AssertDeserializeThrows<EndOfStreamException>(
+            artifact ? new FileArtifactMessagesSerializer() : new CoverageSummaryMessagesSerializer(),
+            WriteCoveragePayload(new byte[byteCount], artifact));
+
+    [TestMethod]
+    public void FileArtifactMessages_LegacyReaderSkipsCoverageAndPreservesFollowingArtifacts()
+    {
+        var summary = new CoverageSummaryMessage(null, "producer", 0, null, 0, null, 2, 4);
+        var message = new FileArtifactMessages("execution", "instance",
+        [
+            new("merged.fixture", "merged", null, null, null, null, "fixture.kind", ["first.fixture", "second.fixture"], [summary]),
+            new("following.fixture", "following", null, null, null, null, "legacy.kind", ["third.fixture"]),
+        ]);
+        byte[] expected = WriteFields(
+            (1, WriteString("execution")),
+            (2, WriteString("instance")),
+            (3, WriteList(
+                WriteFields(
+                    (1, WriteString("merged.fixture")), (2, WriteString("merged")), (7, WriteString("fixture.kind")),
+                    (8, WriteStringList("first.fixture", "second.fixture")),
+                    (9, WriteList(WriteFields(
+                        (2, WriteString("producer")), (3, WriteInt(0)), (5, WriteInt(0)),
+                        (7, BitConverter.GetBytes(2L)), (8, BitConverter.GetBytes(4L)))))),
+                WriteFields(
+                    (1, WriteString("following.fixture")), (2, WriteString("following")), (7, WriteString("legacy.kind")),
+                    (8, WriteStringList("third.fixture"))))));
+        using var stream = new MemoryStream();
+
+        Serialize(new FileArtifactMessagesSerializer(), message, stream);
+
+        Assert.AreSequenceEqual(expected, stream.ToArray());
+        (string? Path, string? Kind, string[]? Inputs)[] legacy = ReadLegacyArtifacts(stream.ToArray());
+        Assert.HasCount(2, legacy);
+        Assert.AreEqual("merged.fixture", legacy[0].Path);
+        Assert.AreEqual("fixture.kind", legacy[0].Kind);
+        Assert.AreSequenceEqual(["first.fixture", "second.fixture"], legacy[0].Inputs);
+        Assert.AreEqual("following.fixture", legacy[1].Path);
+        Assert.AreEqual("legacy.kind", legacy[1].Kind);
+        Assert.AreSequenceEqual(["third.fixture"], legacy[1].Inputs);
+    }
+
+    [TestMethod]
     public void TestResultMessages_WhenBothListsEmpty_RoundTrips()
     {
         var message = new TestResultMessages("exec", "inst", [], []);
@@ -427,6 +656,80 @@ public sealed class ProtocolEdgeCaseTests
         TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
             () => Deserialize(serializer, stream));
         Assert.IsInstanceOfType<TException>(wrapper.InnerException);
+    }
+
+    private static byte[] WriteCoveragePayload(byte[] summaries, bool artifact)
+        => artifact
+            ? WriteFields((3, WriteList(WriteFields((9, summaries), (1, WriteString("neighbor.fixture"))))))
+            : WriteFields((3, summaries), (2, WriteString("neighbor-instance")));
+
+    private static byte[] WriteStringList(params string[] values)
+    {
+        using var stream = new MemoryStream();
+        WriteInt(stream, values.Length);
+        foreach (string value in values)
+        {
+            byte[] bytes = WriteString(value);
+            WriteInt(stream, bytes.Length);
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        return stream.ToArray();
+    }
+
+    private static (string? Path, string? Kind, string[]? Inputs)[] ReadLegacyArtifacts(byte[] payload)
+    {
+        // This intentionally knows only the pre-coverage field IDs, not production serializers.
+        using var reader = new BinaryReader(new MemoryStream(payload), Encoding.UTF8);
+        List<(string? Path, string? Kind, string[]? Inputs)> artifacts = [];
+        int fields = reader.ReadUInt16();
+        for (int i = 0; i < fields; i++)
+        {
+            ushort id = reader.ReadUInt16();
+            int size = reader.ReadInt32();
+            if (id != 3)
+            {
+                reader.BaseStream.Seek(size, SeekOrigin.Current);
+                continue;
+            }
+
+            int count = reader.ReadInt32();
+            for (int j = 0; j < count; j++)
+            {
+                string? path = null, kind = null;
+                string[]? inputs = null;
+                int artifactFields = reader.ReadUInt16();
+                for (int k = 0; k < artifactFields; k++)
+                {
+                    ushort fieldId = reader.ReadUInt16();
+                    int fieldSize = reader.ReadInt32();
+                    switch (fieldId)
+                    {
+                        case 1:
+                            path = Encoding.UTF8.GetString(reader.ReadBytes(fieldSize));
+                            break;
+                        case 7:
+                            kind = Encoding.UTF8.GetString(reader.ReadBytes(fieldSize));
+                            break;
+                        case 8:
+                            inputs = new string[reader.ReadInt32()];
+                            for (int index = 0; index < inputs.Length; index++)
+                            {
+                                inputs[index] = Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
+                            }
+
+                            break;
+                        default:
+                            reader.BaseStream.Seek(fieldSize, SeekOrigin.Current);
+                            break;
+                    }
+                }
+
+                artifacts.Add((path, kind, inputs));
+            }
+        }
+
+        return [.. artifacts];
     }
 
     private static byte[] WriteFields(params (ushort Id, byte[] Payload)[] fields)
