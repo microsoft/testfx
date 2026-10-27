@@ -85,15 +85,18 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
     }
 
     [TestMethod]
-    public async Task WhenDeadlineStopsIdleHotReload_ReportersFinalize()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task WhenDeadlineStopsIdleHotReload_ReportersFinalize(bool deadlineAlreadyExpired)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             environmentVariables: new()
             {
+                ["TESTINGPLATFORM_DEADLINE"] = deadlineAlreadyExpired ? DateTimeOffset.UtcNow.AddMinutes(-5).ToString("o") : null,
                 ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
                 ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
-                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = "1",
+                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = deadlineAlreadyExpired ? null : "1",
                 ["REJECT_STOP_AFTER_EXECUTION"] = "1",
             },
             cancellationToken: TestContext.CancellationToken);
@@ -321,26 +324,29 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionResultCapability
 
     public TaskCompletionSource TCS { get; } = new();
 
-    private bool _executionCompleted;
+    private readonly TaskCompletionSource _executionCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public void NotifyExecutionCompleted()
-        => _executionCompleted = true;
+        => _executionCompleted.TrySetResult();
 
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
         => TryStopTestExecutionAsync(cancellationToken);
 
-    public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
+    public async Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
     {
         if (Environment.GetEnvironmentVariable("REJECT_STOP") == "1")
         {
-            return Task.FromResult(false);
+            return false;
         }
 
-        return Task.FromResult(
-            Environment.GetEnvironmentVariable("REJECT_STOP_AFTER_EXECUTION") != "1"
-            || !_executionCompleted
-                ? TCS.TrySetResult()
-                : false);
+        if (Environment.GetEnvironmentVariable("REJECT_STOP_AFTER_EXECUTION") == "1")
+        {
+            // Startup can outlast the deadline. Reach the completed execution before testing the idle-stop fallback.
+            await _executionCompleted.Task.WaitAsync(cancellationToken);
+            return false;
+        }
+
+        return TCS.TrySetResult();
     }
 }
 

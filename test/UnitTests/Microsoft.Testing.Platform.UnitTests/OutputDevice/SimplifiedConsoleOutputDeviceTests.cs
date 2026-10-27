@@ -649,13 +649,22 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             CancellationToken.None);
         clock.Advance(TimeSpan.FromSeconds(60));
 
-        await device.OnTestSessionStartingAsync(context);
-        Task completedTask = await Task.WhenAny(device.MessageReported, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
-        await device.OnTestSessionFinishingAsync(context);
+        try
+        {
+            await device.OnTestSessionStartingAsync(context);
 
-        Assert.AreSame(device.MessageReported, completedTask);
-        Assert.Contains("[slow]", await device.MessageReported);
-        Assert.Contains("AsyncHang", await device.MessageReported);
+            // Bound a missing notification without requiring a busy CI worker to service the poll within five seconds.
+            var reportingTimeout = TimeSpan.FromSeconds(30);
+            await device.MessageReported.TimeoutAfterAsync(reportingTimeout, TestContext.CancellationToken);
+
+            string message = await device.MessageReported;
+            Assert.Contains("[slow]", message);
+            Assert.Contains("AsyncHang", message);
+        }
+        finally
+        {
+            await device.OnTestSessionFinishingAsync(context);
+        }
     }
 
     private static TestNodeUpdateMessage CreateTestNodeUpdate(IProperty property)
