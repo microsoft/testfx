@@ -283,7 +283,13 @@ public static class DotnetCli
         => await new ResiliencePipelineBuilder<DotnetMuxerResult>()
             .AddRetry(new RetryStrategyOptions<DotnetMuxerResult>
             {
-                ShouldHandle = new PredicateBuilder<DotnetMuxerResult>().Handle<InvalidOperationException>(IsRetriableBuildFailure),
+                ShouldHandle = new PredicateBuilder<DotnetMuxerResult>()
+                    .Handle<InvalidOperationException>(ex => IsRetriableBuildFailure(ex)
+                        || (IsCommand(args, "build") && IsCopyTaskInitializationFailure(ex.Message)))
+                    .HandleResult(result => IsCommand(args, "build")
+                        && result.ExitCode != 0
+                        && (IsCopyTaskInitializationFailure(result.StandardOutput)
+                            || IsCopyTaskInitializationFailure(result.StandardError))),
                 MaxRetryAttempts = 3,
                 Delay = TimeSpan.FromSeconds(2),
                 BackoffType = DelayBackoffType.Constant,
@@ -301,6 +307,13 @@ public static class DotnetCli
     private static bool IsRetriableBuildFailure(InvalidOperationException ex)
         => ex.Message.Contains("MSB4236")
             || ex.Message.Contains("exited prematurely. Shutting down.");
+
+    // Copy's unsynchronized static message cache can be partially initialized under -mt. Retry the
+    // build in a fresh process, including when its caller requests a nonzero result instead of an exception.
+    private static bool IsCopyTaskInitializationFailure(string output)
+        => output.Contains("error MSB4018: The \"Copy\" task failed unexpectedly.", StringComparison.Ordinal)
+            && output.Contains("System.ArgumentNullException: Value cannot be null. (Parameter 'message')", StringComparison.Ordinal)
+            && output.Contains("Microsoft.Build.Tasks.Copy.CopyFileWithLogging(", StringComparison.Ordinal);
 
     private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
     {
