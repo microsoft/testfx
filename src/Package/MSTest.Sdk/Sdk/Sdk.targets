@@ -24,8 +24,6 @@
   <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
     <Error Condition=" '$(UseWinUI)' == 'true' AND '$(_MSTestUwpApplicationModel)' == 'true' "
            Text="A test project cannot use both WinUI and UWP application models." />
-    <Error Condition=" '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' == 'None' AND '$(UseVSTest)' == 'true' "
-           Text="VSTest does not support unpackaged WinUI test applications. Remove UseVSTest or set &lt;UseVSTest&gt;false&lt;/UseVSTest&gt; to use Microsoft.Testing.Platform." />
   </Target>
 
   <Target Name="_MSTestSDKValidateSourceGeneration"
