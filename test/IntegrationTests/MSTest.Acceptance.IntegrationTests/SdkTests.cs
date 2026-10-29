@@ -1422,7 +1422,7 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
-    public async Task MSTestSdk_UnpackagedWinUI_RejectsVSTest()
+    public async Task MSTestSdk_UnpackagedWinUI_AllowsVSTest()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
             "UnpackagedWinUIVSTestSdk",
@@ -1432,10 +1432,33 @@ namespace MSTestWebTest
             <UseVSTest>true</UseVSTest>
             """,
             failIfReturnValueIsNotZero: false,
-            target: "Build");
+            target: "PrepareForBuild;PrintWindowsTestContract");
+
+        result.AssertExitCodeIs(0);
+        result.AssertOutputContains("WindowsTestContract:UseVSTest=true;GenerateEntryPoint=false;GenerateHelper=false;PackagedApp=;OutputType=Exe;IsTestProject=true;");
+        result.AssertOutputContains(";Controller=;ControllerTfm=;ControllerExtensions=;EndContract");
+        result.AssertOutputContains("Microsoft.NET.Test.Sdk");
+        result.AssertOutputContains("MSTest.TestAdapter");
+        result.AssertOutputDoesNotContain("Microsoft.Testing.Extensions.PackagedApp");
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MSTestSdk_WinUIWithUwpTools_RejectsConflictingApplicationModels(bool useVSTest)
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "ConflictingWindowsApplicationModelsSdk",
+            $$"""
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <UseUwpTools>true</UseUwpTools>
+            <UseVSTest>{{useVSTest}}</UseVSTest>
+            """,
+            failIfReturnValueIsNotZero: false);
 
         Assert.AreNotEqual(0, result.ExitCode);
-        result.AssertOutputContains("VSTest does not support unpackaged WinUI test applications.");
+        result.AssertOutputContains("A test project cannot use both WinUI and UWP application models.");
     }
 
     [TestMethod]

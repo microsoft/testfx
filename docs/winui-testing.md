@@ -10,7 +10,7 @@
 | Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | [`WinUIMtpUnpackagedApp`](../samples/public/WinUIMtpUnpackagedApp) | MTP direct executable launch |
 | WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | [`WinUIMtpAppContainerApp`](../samples/public/WinUIMtpAppContainerApp) | MTP sidecar controller with exact package-SID pipe authorization |
 
-`MSTest.Sdk` uses Microsoft.Testing.Platform for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved.
+`MSTest.Sdk` uses Microsoft.Testing.Platform by default for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved in this default configuration.
 
 ### Packaging and sandboxing are separate choices
 
@@ -103,7 +103,7 @@ For the normal full-trust WinUI 3 model, test apps come in two packaging flavors
 Both flavors are supported when you use `MSTest.Sdk`, whose default runner is [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP). Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so VSTest's appx runtime provider is never involved. `MSTest.Sdk` adds the packaged-app launcher automatically for a packaged WinUI project; an unpackaged app stays on the direct executable launch path.
 
 > [!NOTE]
-> Unpackaged WinUI is not supported under VSTest. VSTest routes every `UseWinUI` project through its `UwpTestHostRuntimeProvider`, which unconditionally reads an `AppxManifest.xml` from the build output and fails with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784).
+> Microsoft.Testing.Platform is recommended for unpackaged WinUI. `MSTest.Sdk` also allows `<UseVSTest>true</UseVSTest>` so projects can apply their own VSTest workarounds, but does not configure those workarounds automatically. Visual Studio's `UwpTestHostRuntimeProvider` expects an `AppxManifest.xml` in the build output and can fail with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784) and the [community workaround discussion](https://github.com/microsoft/testfx/issues/1127#issuecomment-1196088592).
 
 ## Unpackaged WinUI
 
