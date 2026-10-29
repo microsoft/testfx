@@ -29,7 +29,7 @@ public static class AssertEx
                 CultureInfo.InvariantCulture,
                 "Expected object of type {0} but found object of type {1}",
                 typeof(T),
-                obj ?? obj?.GetType()));
+                obj?.GetType()));
 
     /// <summary>
     /// A chain/grouping of assert statements.
