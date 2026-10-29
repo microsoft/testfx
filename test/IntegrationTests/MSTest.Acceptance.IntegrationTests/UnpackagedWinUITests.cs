@@ -77,6 +77,18 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         using TestAsset testAsset = await GenerateAssetAsync(AssetName, SelfHostedSourceCode);
         string testHostDirectory = await BuildAssetAsync(AssetName, testAsset);
+
+        string[] cultures = ["cs", "de", "es", "fr", "it", "ja", "ko", "pl", "pt-BR", "ru", "tr", "zh-Hans", "zh-Hant"];
+        string[] resourceAssemblies = ["MSTest.TestAdapter.resources.dll", "MSTestAdapter.PlatformServices.resources.dll"];
+        foreach (string culture in cultures)
+        {
+            foreach (string assembly in resourceAssemblies)
+            {
+                string satellitePath = Path.Combine(testHostDirectory, culture, assembly);
+                Assert.IsTrue(File.Exists(satellitePath), $"Expected the localized adapter assembly '{satellitePath}'.");
+            }
+        }
+
         TestHostResult testHostResult = await ExecuteBoundedAsync(
             TestHost.LocateFrom(testHostDirectory, AssetName),
             "--filter FullyQualifiedName~TestClass1");
@@ -207,12 +219,6 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             $"build \"{project}\" -c Release -bl:{{}}",
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
-            // MrtCore's PRI indexer warns that MSTest's localized satellite assemblies carry no en-US
-            // default. It logs the PRI257/PRI263 codes inside the message text rather than as MSBuild
-            // warning codes, so neither NoWarn nor MSBuildWarningsAsMessages can target them (both were
-            // tried). The warning is benign for a test app and outside this repository's control, so drop
-            // -warnaserror for this build.
-            warnAsError: false,
             cancellationToken: cancellationToken);
         Assert.AreEqual(0, buildResult.ExitCode, $"Building the unpackaged WinUI asset failed.{Environment.NewLine}{buildResult}");
 
