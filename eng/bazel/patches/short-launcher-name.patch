@@ -1,0 +1,6 @@
+diff --git a/dotnet/private/rules/common/binary.bzl b/dotnet/private/rules/common/binary.bzl
+--- a/dotnet/private/rules/common/binary.bzl
++++ b/dotnet/private/rules/common/binary.bzl
+@@ -48,1 +48,1 @@
+-    launcher = ctx.actions.declare_file("{}.{}".format(executable.basename, "bat" if ctx.target_platform_has_constraint(windows_constraint) else "sh"), sibling = executable)
++    launcher = ctx.actions.declare_file("launch.{}".format("bat" if ctx.target_platform_has_constraint(windows_constraint) else "sh"), sibling = executable)

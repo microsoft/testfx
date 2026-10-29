@@ -1,0 +1,48 @@
+module(name = "testfx")
+
+bazel_dep(name = "rules_dotnet", version = "0.22.2")
+single_version_override(
+    module_name = "rules_dotnet",
+    patch_strip = 1,
+    patches = [
+        "//eng/bazel/patches:quote-csharp-sources.patch",
+        "//eng/bazel/patches:generated-resource-names.patch",
+        "//eng/bazel/patches:short-launcher-name.patch",
+        "//eng/bazel/patches:reference-only-analyzers.patch",
+        "//eng/bazel/patches:satellite-assemblies.patch",
+        "//eng/bazel/patches:unique-analyzers.patch",
+        "//eng/bazel/patches:framework-reference-priority.patch",
+        "//eng/bazel/patches:pdb-runfiles.patch",
+        "//eng/bazel/patches:windows-launcher.patch",
+    ],
+    version = "0.22.2",
+)
+
+dotnet = use_extension("@rules_dotnet//dotnet:extensions.bzl", "dotnet")
+dotnet.toolchain(dotnet_version = "10.0.400")
+use_repo(dotnet, "dotnet_toolchains")
+
+register_toolchains("@dotnet_toolchains//:all")
+
+# Bootstrap the resolver without requiring dotnet tool restore or a machine SDK.
+nuget_archive = use_repo_rule("@rules_dotnet//dotnet:defs.bzl", "nuget_archive")
+
+nuget_archive(
+    name = "paket_cli",
+    id = "paket",
+    sha512 = "sha512-i6fCViUL3/f8FaHPMknsee2UL67PGMmYKKalq6qNd2k6CG4DbzFtG6bSGlAWkFRx4/92U/NRNgxEYFPSasVWsQ==",
+    sources = ["https://api.nuget.org/v3/index.json"],
+    version = "11.0.1",
+)
+
+nuget = use_extension("//eng/bazel/nuget:paket.main_extension.bzl", "main_extension")
+use_repo(nuget, "paket.main")
+
+source_nuget = use_extension("//eng/bazel/nuget:paket.source_extension.bzl", "source_extension")
+use_repo(source_nuget, "paket.source")
+
+generator_nuget = use_extension("//eng/bazel/nuget:paket.generator_extension.bzl", "generator_extension")
+use_repo(generator_nuget, "paket.generator")
+
+analyzers_nuget = use_extension("//eng/bazel/nuget:paket.analyzers_extension.bzl", "analyzers_extension")
+use_repo(analyzers_nuget, "paket.analyzers")

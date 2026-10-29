@@ -1,0 +1,8 @@
+diff --git a/dotnet/private/common.bzl b/dotnet/private/common.bzl
+--- a/dotnet/private/common.bzl
++++ b/dotnet/private/common.bzl
+@@ -805,1 +805,4 @@
+     base_resource_arg = base_resource_fmt.format(file.path)
++    # TestFx's generated resource files carry their full logical name.
++    if not file.is_source:
++        return base_resource_arg + "," + file.basename

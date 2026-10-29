@@ -1,0 +1,10 @@
+diff --git a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+--- a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
++++ b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+@@ -470,3 +470,6 @@
+     else:
++        # Diagnostics run in the implementation compile. Keep generators enabled,
++        # but avoid Roslyn's analyzer crash in the extra reference-only compile.
++        args.add("/skipanalyzers+")
+         args.add("/refonly")
+         args.add(out_ref.path, format = "/out:%s")

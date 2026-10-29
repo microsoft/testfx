@@ -1,0 +1,13 @@
+diff --git a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+--- a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
++++ b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
+@@ -482,4 +482,7 @@
+     if run_analyzers:
+-        args.add_all(analyzer_assemblies, format_each = "/analyzer:%s")
+-        args.add_all(analyzer_assemblies_csharp, format_each = "/analyzer:%s")
++        # Framework generators precede explicit package generators. Run only the
++        # package version when both supply the same generator assembly.
++        unique_analyzers = {file.basename: file for file in analyzer_assemblies.to_list() + analyzer_assemblies_csharp.to_list()}
++        args.add_all(unique_analyzers.values(), format_each = "/analyzer:%s")
++
+         args.add_all(additionalfiles, format_each = "/additionalfile:%s")

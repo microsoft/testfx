@@ -1,0 +1,29 @@
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "dotnet_tool")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "GlobalUsings.cs",
+    "TestMain.cs",
+    "analyzers.globalconfig",
+])
+
+csharp_binary(
+    name = "build_tools",
+    srcs = [
+        "BuildTools.cs",
+        "GlobalUsings.cs",
+    ],
+    generate_documentation_file = False,
+    nullable = "enable",
+    target_frameworks = ["net10.0"],
+    treat_warnings_as_errors = True,
+)
+
+dotnet_tool(
+    name = "paket",
+    entrypoint = {"net10.0": "paket.dll"},
+    runner = {"net10.0": "dotnet"},
+    target_frameworks = ["net10.0"],
+    deps = "@paket_cli//:tools",
+)
