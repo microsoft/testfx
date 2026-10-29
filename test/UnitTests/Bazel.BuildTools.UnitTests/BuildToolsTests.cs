@@ -187,7 +187,7 @@ public sealed class BuildToolsTests(TestContext context)
         return path;
     }
 
-    private async Task<(int ExitCode, string Output)> RunAsync(params string[] arguments)
+    private async Task<(int exitCode, string output)> RunAsync(params string[] arguments)
     {
         string location = Environment.GetEnvironmentVariable("TESTFX_BAZEL_BUILD_TOOLS")
             ?? throw new InvalidOperationException("The Bazel build-tool location was not supplied.");
