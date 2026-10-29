@@ -129,21 +129,30 @@ public sealed class TelemetryCollectorTests : TestContainer
 #if NET8_0_OR_GREATER
     public void TrackAssertionCall_DoesNotAllocateAfterCounterExists()
     {
+        const int WarmupCallCount = 1_000;
+        const int CallsPerMeasurement = 10_000;
+        const int MeasurementCount = 3;
         TelemetryCollector.DrainAssertionCallCounts();
-        for (int i = 0; i < 1_000; i++)
+        for (int i = 0; i < WarmupCallCount; i++)
         {
             TelemetryCollector.TrackAssertionCall("TelemetryCollectorTests.Allocations", isEnabled: true);
         }
 
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        for (int i = 0; i < 10_000; i++)
+        // One-time runtime or profiler initialization must not count as a steady-state allocation.
+        long[] allocatedBytes = new long[MeasurementCount];
+        for (int measurement = 0; measurement < MeasurementCount; measurement++)
         {
-            TelemetryCollector.TrackAssertionCall("TelemetryCollectorTests.Allocations", isEnabled: true);
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            for (int i = 0; i < CallsPerMeasurement; i++)
+            {
+                TelemetryCollector.TrackAssertionCall("TelemetryCollectorTests.Allocations", isEnabled: true);
+            }
+
+            allocatedBytes[measurement] = GC.GetAllocatedBytesForCurrentThread() - before;
         }
 
-        long allocatedBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-        allocatedBytes.Should().Be(0);
-        TelemetryCollector.DrainAssertionCallCounts()["TelemetryCollectorTests.Allocations"].Should().Be(11_000);
+        allocatedBytes.Should().Contain(0L);
+        TelemetryCollector.DrainAssertionCallCounts()["TelemetryCollectorTests.Allocations"].Should().Be(WarmupCallCount + (MeasurementCount * CallsPerMeasurement));
     }
 #endif
 }
