@@ -91,6 +91,7 @@ public sealed class DotnetTestConnectionTests
     public async Task AuxiliaryDiagnosticsPreserveLevelAndStateButCannotSurfaceProviderFailure(bool synchronousFailure)
     {
         var logger = new Mock<ILogger>();
+        TaskCompletionSource<bool> providerInvoked = new(TaskCreationOptions.RunContinuationsAsynchronously);
         object? recorded = null;
         LogLevel recordedLevel = LogLevel.None;
         logger.Setup(value => value.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), null, It.IsAny<Func<string, Exception?, string>>()))
@@ -98,6 +99,7 @@ public sealed class DotnetTestConnectionTests
             {
                 recordedLevel = level;
                 recorded = formatter(state, exception);
+                providerInvoked.TrySetResult(true);
                 return synchronousFailure
                     ? throw new IOException("provider threw")
                     : Task.FromException(new IOException("provider task failed"));
@@ -105,6 +107,8 @@ public sealed class DotnetTestConnectionTests
         using ConnectionFixture fixture = CreateConnection(TestContext.CancellationToken, logger: logger.Object);
 
         await InvokeAuxiliaryAsync(fixture.Connection, "TryLogAsync", LogLevel.Debug, "control detail");
+        // The bounded logging wait can finish before the background provider runs.
+        await providerInvoked.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         Assert.AreEqual(LogLevel.Debug, recordedLevel);
         Assert.AreEqual("control detail", recorded);
         logger.Verify(value => value.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
