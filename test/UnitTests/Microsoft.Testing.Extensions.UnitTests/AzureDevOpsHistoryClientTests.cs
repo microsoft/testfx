@@ -133,15 +133,17 @@ public sealed class AzureDevOpsHistoryClientTests
     }
 
     [TestMethod]
-    [DataRow("Namespace.MyType.MyMethod (1)", "MyMethod (1)", "Namespace.MyType.MyMethod", DisplayName = "Data-row method history")]
-    [DataRow("Namespace.MyType.MyMethod (1)", "Namespace.MyType.MyMethod(1)", "Namespace.MyType.MyMethod", DisplayName = "Qualified data-row method history")]
-    [DataRow("Namespace.MyType.MyMethod (Custom scenario)", "Custom scenario", "Namespace.MyType.MyMethod", DisplayName = "Custom display-name method history")]
-    [DataRow("Namespace.MyType.MyMethod (MyMethodology)", "MyMethodology", "Namespace.MyType.MyMethod", DisplayName = "Custom name sharing method prefix")]
-    [DataRow("Namespace.MyType.MyMethod", "MyMethod", "Namespace.MyType.MyMethod", DisplayName = "Ordinary method history")]
-    [DataRow("Display name (1)", "Display name (1)", "Display name (1)", DisplayName = "Display-only identity is preserved")]
-    [DataRow("Namespace.MyType.MyMethod (1)", null, "Namespace.MyType.MyMethod (1)", DisplayName = "Missing title preserves identity")]
-    [DataRow("Namespace.MyType.MyMethod (1)", "OtherMethod (1)", "Namespace.MyType.MyMethod (1)", DisplayName = "Unrelated title preserves identity")]
-    public async Task GetResultsAsync_PreservesMethodHistoryForPublishedDisplayLabels(string automatedTestName, string? testCaseTitle, string expectedName)
+    [DataRow("Namespace.MyType.MyMethod (1)", "MyMethod (1)", DisplayName = "Data-row method history")]
+    [DataRow("Namespace.MyType.MyMethod (1)", "Namespace.MyType.MyMethod(1)", DisplayName = "Qualified data-row method history")]
+    [DataRow("Namespace.MyType.MyMethod (Custom scenario)", "Custom scenario", DisplayName = "Custom display-name method history")]
+    [DataRow("Namespace.MyType.MyMethod (MyMethodology)", "MyMethodology", DisplayName = "Custom name sharing method prefix")]
+    [DataRow("Namespace.MyType.MyMethod", "MyMethod", DisplayName = "Ordinary method history")]
+    [DataRow("Display name (1)", "Display name (1)", DisplayName = "Display-only identity is preserved")]
+    [DataRow("Namespace.MyType.MyMethod (1)", null, DisplayName = "Missing title preserves identity")]
+    [DataRow("Namespace.MyType.MyMethod (1)", "OtherMethod (1)", DisplayName = "Unrelated title preserves identity")]
+    [DataRow("Namespace.MyType.Verify (empty)", "Verify (empty)", DisplayName = "Parentheses in ordinary method identity")]
+    [DataRow("Namespace.MyType.Verify (empty) (1)", "Verify (empty) (1)", DisplayName = "Parentheses in data-driven method identity")]
+    public async Task GetResultsAsync_PreservesPublishedIdentityAndTitle(string automatedTestName, string? testCaseTitle)
     {
         string body = JsonSerializer.Serialize(new
         {
@@ -154,7 +156,8 @@ public sealed class AzureDevOpsHistoryClientTests
         AzureDevOpsTestResultsPage page = await client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None);
 
         AzureDevOpsTestResult result = Assert.ContainsSingle(page.Results);
-        Assert.AreEqual(expectedName, result.AutomatedTestName);
+        Assert.AreEqual(automatedTestName, result.AutomatedTestName);
+        Assert.AreEqual(testCaseTitle, result.TestCaseTitle);
         Assert.AreEqual("Passed", result.Outcome);
         Assert.AreEqual(12.5, result.DurationMilliseconds);
     }

@@ -30,6 +30,8 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
     private static readonly TimeSpan HistoryLoadBudget = TimeSpan.FromSeconds(30);
     private static readonly IReadOnlyDictionary<string, FlakyStats> EmptyStatsByTest = new Dictionary<string, FlakyStats>(StringComparer.OrdinalIgnoreCase);
     private static readonly IReadOnlyDictionary<string, DurationHistoryStats> EmptyDurationStatsByTest = new Dictionary<string, DurationHistoryStats>(StringComparer.OrdinalIgnoreCase);
+    private static readonly IReadOnlyDictionary<string, List<double>> EmptyDurationSamplesByTest = new Dictionary<string, List<double>>(StringComparer.OrdinalIgnoreCase);
+    private static readonly IReadOnlyDictionary<string, string?> EmptyTitlesByTest = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -41,6 +43,8 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
     private bool _collectDurations;
     private IReadOnlyDictionary<string, FlakyStats> _statsByTest = EmptyStatsByTest;
     private IReadOnlyDictionary<string, DurationHistoryStats> _durationStatsByTest = EmptyDurationStatsByTest;
+    private IReadOnlyDictionary<string, List<double>> _durationSamplesByTest = EmptyDurationSamplesByTest;
+    private IReadOnlyDictionary<string, string?> _titlesByTest = EmptyTitlesByTest;
 
     public AzureDevOpsHistoryService(
         ICommandLineOptions commandLineOptions,
@@ -154,7 +158,19 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
-        return Volatile.Read(ref _statsByTest).TryGetValue(testName, out stats);
+        IReadOnlyDictionary<string, FlakyStats> statsByTest = Volatile.Read(ref _statsByTest);
+        stats = default;
+        bool found = false;
+        foreach (string name in GetMatchingTestNames(testName))
+        {
+            if (statsByTest.TryGetValue(name, out FlakyStats matchingStats))
+            {
+                stats = new FlakyStats(stats.PassCount + matchingStats.PassCount, stats.FailCount + matchingStats.FailCount);
+                found = true;
+            }
+        }
+
+        return found;
     }
 
     public bool IsLikelyFlaky(string testName, double threshold)
@@ -171,7 +187,34 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
-        return Volatile.Read(ref _durationStatsByTest).TryGetValue(testName, out stats);
+        IReadOnlyDictionary<string, DurationHistoryStats> statsByTest = Volatile.Read(ref _durationStatsByTest);
+        string[] names = [.. GetMatchingTestNames(testName).Where(statsByTest.ContainsKey)];
+        if (names.Length == 1)
+        {
+            return statsByTest.TryGetValue(names[0], out stats);
+        }
+
+        IReadOnlyDictionary<string, List<double>> samplesByTest = Volatile.Read(ref _durationSamplesByTest);
+        double[] samples = [.. names.SelectMany(name => samplesByTest[name]).Take(MaxDurationSamplesPerTest)];
+        return DurationHistoryStats.TryCreate(samples, out stats);
+    }
+
+    private IEnumerable<string> GetMatchingTestNames(string canonicalName)
+    {
+        yield return canonicalName;
+
+        // The caller supplies the actual method identity. Never infer it by splitting a display
+        // label: parentheses are legal parts of method names, including F# backtick identifiers.
+        string prefix = $"{canonicalName} (";
+        foreach (KeyValuePair<string, string?> entry in Volatile.Read(ref _titlesByTest))
+        {
+            if (entry.Value is { Length: > 0 } title
+                && entry.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(TestNodeIdentity.GetDisplayLabel(canonicalName, title), entry.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return entry.Key;
+            }
+        }
     }
 
     private async Task LoadHistoryAsync(AzureDevOpsHistoryQuery query, int historyWindowInDays, CancellationToken cancellationToken)
@@ -184,6 +227,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         var counts = new Dictionary<string, (int PassCount, int FailCount)>(StringComparer.OrdinalIgnoreCase);
+        var titles = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 #pragma warning disable IDE0028 // Collection initialization can be simplified - the comparer cannot be passed via a collection expression.
         Dictionary<string, List<double>>? durations = _collectDurations
             ? new Dictionary<string, List<double>>(StringComparer.OrdinalIgnoreCase)
@@ -191,16 +235,17 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 #pragma warning restore IDE0028
         foreach (AzureDevOpsTestRun run in runs)
         {
-            await AggregateRunResultsAsync(query, run, counts, durations, cancellationToken).ConfigureAwait(false);
+            await AggregateRunResultsAsync(query, run, counts, titles, durations, cancellationToken).ConfigureAwait(false);
         }
 
-        PublishHistoryStats(historyWindowInDays, counts, durations);
+        PublishHistoryStats(historyWindowInDays, counts, titles, durations);
     }
 
     private async Task AggregateRunResultsAsync(
         AzureDevOpsHistoryQuery query,
         AzureDevOpsTestRun run,
         Dictionary<string, (int PassCount, int FailCount)> counts,
+        Dictionary<string, string?> titles,
         Dictionary<string, List<double>>? durations,
         CancellationToken cancellationToken)
     {
@@ -214,6 +259,16 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             AzureDevOpsTestResultsPage page = await _historyClient.GetResultsAsync(query, run.Url, skip, ResultsPageSize, continuationToken, cancellationToken).ConfigureAwait(false);
             foreach (AzureDevOpsTestResult result in page.Results)
             {
+                if (!titles.TryGetValue(result.AutomatedTestName, out string? title))
+                {
+                    titles[result.AutomatedTestName] = result.TestCaseTitle;
+                }
+                else if (!string.Equals(title, result.TestCaseTitle, StringComparison.Ordinal))
+                {
+                    // Ambiguous titles cannot safely provide an alias for a canonical method.
+                    titles[result.AutomatedTestName] = null;
+                }
+
                 if (!counts.TryGetValue(result.AutomatedTestName, out (int PassCount, int FailCount) currentCount))
                 {
                     currentCount = default;
@@ -271,7 +326,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun)).ConfigureAwait(false);
     }
 
-    private void PublishHistoryStats(int historyWindowInDays, Dictionary<string, (int PassCount, int FailCount)> counts, Dictionary<string, List<double>>? durations)
+    private void PublishHistoryStats(int historyWindowInDays, Dictionary<string, (int PassCount, int FailCount)> counts, Dictionary<string, string?> titles, Dictionary<string, List<double>>? durations)
     {
         Volatile.Write(ref _historyWindowInDays, historyWindowInDays);
         IReadOnlyDictionary<string, FlakyStats> publishedStats = counts.ToDictionary(
@@ -281,10 +336,12 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
         // NOTE: Volatile.Write on a reference atomically publishes the fully materialized dictionary to concurrent readers.
         Volatile.Write(ref _statsByTest, publishedStats);
+        Volatile.Write(ref _titlesByTest, titles);
 
         if (durations is null)
         {
             Volatile.Write(ref _durationStatsByTest, EmptyDurationStatsByTest);
+            Volatile.Write(ref _durationSamplesByTest, EmptyDurationSamplesByTest);
             return;
         }
 
@@ -298,6 +355,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         Volatile.Write(ref _durationStatsByTest, publishedDurationStats);
+        Volatile.Write(ref _durationSamplesByTest, durations);
     }
 
     private void ResetHistoryState()
@@ -307,6 +365,8 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         // NOTE: Volatile.Write on a reference atomically publishes the empty snapshot when history loading is skipped or fails.
         Volatile.Write(ref _statsByTest, EmptyStatsByTest);
         Volatile.Write(ref _durationStatsByTest, EmptyDurationStatsByTest);
+        Volatile.Write(ref _durationSamplesByTest, EmptyDurationSamplesByTest);
+        Volatile.Write(ref _titlesByTest, EmptyTitlesByTest);
     }
 
     private bool TryGetHistoryConfiguration(out int historyWindowInDays, out bool collectDurations)

@@ -261,42 +261,11 @@ internal sealed class AzureDevOpsHistoryClient : IAzureDevOpsHistoryClient
             : new AzureDevOpsTestResultsPage(
                 [.. payload.Value
                     .Where(static result => !RoslynString.IsNullOrWhiteSpace(result.AutomatedTestName) && !RoslynString.IsNullOrWhiteSpace(result.Outcome))
-                    .Select(static result => new AzureDevOpsTestResult(GetHistoryTestName(result), result.Outcome!, result.DurationInMs))],
+                    .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!, result.DurationInMs)
+                    {
+                        TestCaseTitle = result.TestCaseTitle,
+                    })],
                 continuationToken);
-    }
-
-    private static string GetHistoryTestName(AzureDevOpsResultResponse result)
-    {
-        string testName = result.AutomatedTestName!;
-        if (result.TestCaseTitle is not { Length: > 0 } displayName
-            || string.Equals(testName, displayName, StringComparison.Ordinal))
-        {
-            return testName;
-        }
-
-        // History is aggregated by method, while published references distinguish row display names.
-        // Only remove a suffix when the original title reproduces our complete published label.
-        string suffix = $" ({displayName})";
-        if (!testName.EndsWith(suffix, StringComparison.Ordinal))
-        {
-            int argumentIndex = displayName.IndexOf('(');
-            if (argumentIndex < 0)
-            {
-                return testName;
-            }
-
-            suffix = $" {displayName.Substring(argumentIndex)}";
-            if (!testName.EndsWith(suffix, StringComparison.Ordinal))
-            {
-                return testName;
-            }
-        }
-
-        string identity = testName.Substring(0, testName.Length - suffix.Length);
-        return identity.Length > 0
-            && string.Equals(TestNodeIdentity.GetDisplayLabel(identity, displayName), testName, StringComparison.Ordinal)
-                ? identity
-                : testName;
     }
 
     private static async Task<T?> DeserializeResponseAsync<T>(HttpResponseMessage response, JsonTypeInfo<T> jsonTypeInfo)
@@ -415,6 +384,8 @@ internal sealed class AzureDevOpsTestResult
     }
 
     public string AutomatedTestName { get; }
+
+    public string? TestCaseTitle { get; set; }
 
     public string Outcome { get; }
 
