@@ -193,3 +193,103 @@ The complete 28-invocation Windows sample matrix, including installed UWP/WinUI
 applications, was not run locally. CI retains that matrix and now runs the
 focused output checks first. The command-selection branches and established
 handshake retry remain unchanged in meaning; no broader retry is introduced.
+
+## Review follow-up: host coverage and transcript handling
+
+The three review comments were evaluated against
+`e25bf807a363b8dd2dbbf9702d1efc6b3a20cf94` and accepted:
+
+- Explicitly run the same check script in two `PowerShell@2` steps, with
+  `pwsh: false` and `pwsh: true`, inside the existing `SkipTests` guard.
+- Bound transcript filenames using at most 40 sanitized project-filename
+  characters and 16 hexadecimal SHA-256 characters from the full
+  separator-normalized relative project path, followed by mode and attempt.
+  Hashing before sanitization preserves distinct directory/punctuation
+  identities; the console still contains the full project path. Binlog naming
+  is unchanged.
+- Inspect both stdout and stderr for the existing handshake-failure marker,
+  including opted-in local runs. Keep the nonzero-exit gate, single retry,
+  five-second delay, and original failure exits. Ordinary stderr is not a
+  reason to retry.
+
+The longest transcript path in the current 28-invocation inventory, measured
+under the reviewed hosted-agent root, decreases from **218 to 165 characters**.
+The original path was below `MAX_PATH`; this is bounded robustness for longer
+roots and future sample names, not an observed hosted-agent path failure.
+An arbitrarily long caller-supplied log directory can still exceed platform
+limits. With the configured modes and attempts, the maximum transcript
+filename is 96 characters, including the stream suffix.
+
+### Executed review validation
+
+The parent reviewed both workers' combined changes and reran the complete
+focused suite: **32 passed, 0 failed, 0 skipped, exit 0** under each of
+PowerShell 7.6.9 and Windows PowerShell 5.1.26100.9711.
+
+```powershell
+& (Join-Path $PSHOME 'pwsh.exe') -NoLogo -NoProfile -File .\eng\test-samples-output.ps1
+& "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\eng\test-samples-output.ps1
+```
+
+YAML parsing and structural assertions verify both explicit hosts, the unchanged
+script and `SkipTests` gate, and no unrelated parsed pipeline changes.
+
+| Requirement | Evidence |
+| --- | --- |
+| Bound names without losing identity | `TranscriptNames_PreserveDirectoryAndPunctuationIdentity`, `TranscriptNames_NormalizePathSeparators`, `TranscriptNames_DistinguishModesAndAttempts` |
+| Boundary and deep-path handling | `TranscriptNames_RespectReadableNameBoundaries` (39/40/41 characters), `TranscriptNames_BoundDeepLongPaths` |
+| Retry either stream once | `CapturedStdoutHandshake_RetriesOnce`, `CapturedStderrHandshake_RetriesOnce`, `CapturedBothStreamsHandshake_RetriesOnce`, `LiveStderrHandshake_RetriesOnce` |
+| Preserve limits and actual failure exits | `CapturedRepeatedHandshake_StopsAfterSecondAttempt`, `CapturedRetryFailure_PreservesSecondExit`, `LiveCommandLaunchFailure_DoesNotReusePreviousExit` |
+| Do not broaden retries | Success-marker, no-opt-in, ordinary-stderr, near-marker and empty-stream cases |
+
+These tests launch real native child processes with invocation-owned state and
+transcripts. Only `Start-Sleep` is replaced by a recorder; its single
+five-second request and the corresponding warning are asserted. Windows
+PowerShell's stderr preference adjustment is scoped and restored, and missing
+executables still raise the original launch failure.
+
+The same built `MTPOTel` and help-only `TestingPlatformExplorer` samples were
+rerun through the complete script in CI mode: **2/2 invocations passed, exit 0**,
+with four transcript files. Windows PowerShell 5.1 also ran the real `MTPOTel`
+sample successfully. An actual shortened name from that run is:
+
+```text
+MTPOTel.csproj.be1009cff9aa6bed.Run.attempt1.stdout.log
+```
+
+### Paired regression evidence
+
+Both counterfactuals retain the same 32 final test cases and helper signatures,
+so missing APIs or compilation failures cannot manufacture the red result.
+Each variant was executed under both hosts:
+
+| Production behavior | Passed | Failed | Skipped | Exit |
+| --- | ---: | ---: | ---: | ---: |
+| Correct implementation | 32 | 0 | 0 | 0 |
+| Restore former full-path-flattening names | 16 | 16 | 0 | 1 |
+| Restore stdout-only handshake recognition | 26 | 6 | 0 | 1 |
+
+The naming comparison fails actual name/length assertions, including expected
+`Sample.csproj.66b9b4ff875c2e4e.Run.attempt1` versus
+`group.a.Sample.csproj.Run.attempt1`. The stdout-only comparison fails the
+intended retry assertions: expected two attempts but observed one, or expected
+success/second exit 23 but observed the first exit 17. Launch/setup failures
+were excluded from these receipts.
+
+The counterfactual commands use the same test script with `-ToolsPath` selecting
+an isolated helper copy; `-OutputDirectory` and `-KeepArtifacts` retain unique
+per-run evidence. Source SHA-256 bindings:
+
+- Correct helper:
+  `BA0E0AECBD450BE1D7D7FDCE9ED477A23670A56D03585CFA1065598FCE4CD7EA`.
+- Identical final test file:
+  `A014B3328131B0AD0F2ECCD249FDDB518833287A9230EAFFC406CBE043F2254E`.
+- Old-name helper:
+  `35418A89D501952A752E76AE34C5BBA67C9E721DB30B53C39168BC6EA6C70ECD`.
+- Stdout-only helper:
+  `A7B89357A0E387C45734C878A9C1466BEDC1617CD291435C65FB492D52BBF678`.
+
+The earlier complete 28-sample CI run validates the original implementation,
+not this review follow-up. Hosted execution of both new check steps and the
+full sample matrix remains a subsequent CI check; local focused success is not
+claimed as new hosted CI or release-branch validation.

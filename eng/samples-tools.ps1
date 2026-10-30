@@ -27,6 +27,28 @@ function Get-SampleBinlogArgument {
     return "$ArgumentPrefix$binlogPath"
 }
 
+function Get-SampleOutputLogName {
+    param(
+        [string]$Project,
+        [string]$Mode,
+        [int]$Attempt
+    )
+
+    $normalizedProject = $Project.Replace('\', '/')
+    $projectName = [System.IO.Path]::GetFileName($normalizedProject) -replace '[^a-zA-Z0-9._-]', '_'
+    $projectName = $projectName.Substring(0, [Math]::Min(40, $projectName.Length))
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = [BitConverter]::ToString($sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalizedProject)))
+        $shortHash = $hash.Replace("-", "").Substring(0, 16).ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+    }
+
+    return "$projectName.$shortHash.$Mode.attempt$Attempt"
+}
+
 function Invoke-SampleProcess {
     [CmdletBinding()]
     param(
@@ -104,5 +126,63 @@ function Invoke-SampleProcess {
         ExitCode = $exitCode
         StandardOutputPath = $stdoutPath
         StandardErrorPath = $stderrPath
+    }
+}
+
+function Invoke-SampleProcessWithRetry {
+    [CmdletBinding()]
+    param(
+        [string]$FilePath,
+        [string[]]$Arguments = @(),
+        [string]$Project,
+        [string]$Mode,
+        [string]$OutputDirectory,
+        [bool]$RetryHandshakeFailure
+    )
+
+    $displayMode = if ($Mode -in @("Smoke", "ExecutableSmoke")) { "$Mode; help only" } else { $Mode }
+    $maxAttempts = if ($RetryHandshakeFailure) { 2 } else { 1 }
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $hasHandshakeFailure = $false
+        if ($OutputDirectory) {
+            $logName = Get-SampleOutputLogName -Project $Project -Mode $Mode -Attempt $attempt
+            $description = "$Project ($displayMode; attempt $attempt/$maxAttempts)"
+            $result = Invoke-SampleProcess -FilePath $FilePath -Arguments $Arguments `
+                -LogFilePrefix (Join-Path $OutputDirectory $logName) -Description $description
+            $exitCode = $result.ExitCode
+            $hasHandshakeFailure = $RetryHandshakeFailure -and
+                ((Select-String -LiteralPath $result.StandardOutputPath -SimpleMatch "Handshake failures:" -Quiet) -or
+                (Select-String -LiteralPath $result.StandardErrorPath -SimpleMatch "Handshake failures:" -Quiet))
+        }
+        elseif (!$RetryHandshakeFailure) {
+            & $FilePath $Arguments
+            $exitCode = $LASTEXITCODE
+        }
+        else {
+            $commandOutput = @()
+            $previousErrorActionPreference = $ErrorActionPreference
+            try {
+                # Windows PowerShell turns redirected native stderr into errors before we can inspect the exit code.
+                $ErrorActionPreference = "Continue"
+                & $FilePath $Arguments 2>&1 | Tee-Object -Variable commandOutput
+                $exitCode = $LASTEXITCODE
+            }
+            finally {
+                $ErrorActionPreference = $previousErrorActionPreference
+            }
+
+            $hasHandshakeFailure = @($commandOutput | Where-Object { $_ -match "Handshake failures:" }).Count -ne 0
+        }
+
+        if ($exitCode -eq 0) {
+            break
+        }
+
+        if (!$hasHandshakeFailure -or $attempt -eq $maxAttempts) {
+            throw "Sample validation failed for '$Project' with exit code $exitCode."
+        }
+
+        Write-Warning "Test host handshake failed for '$Project' on attempt $attempt; retrying once."
+        Start-Sleep -Seconds 5
     }
 }

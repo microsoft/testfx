@@ -10,7 +10,8 @@
     external dependency. Library and application-under-test projects are explicitly classified as
     dependencies so newly added projects cannot silently escape CI validation.
     In Azure Pipelines, native stdout and stderr are saved below BinaryLogDirectory (or
-    artifacts/log/<Configuration>) and replayed for failed attempts. Local runs keep live output.
+    artifacts/log/<Configuration>) using bounded, project-specific names and replayed for failed
+    attempts. Local runs keep live output. Opted-in handshake retries inspect both streams.
 
 .PARAMETER Configuration
     The build configuration to use (default: Release).
@@ -213,40 +214,8 @@ function Invoke-SampleCommand {
             }
         }
 
-        $maxAttempts = if ($RetryHandshakeFailure) { 2 } else { 1 }
-        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-            $hasHandshakeFailure = $false
-            if ($captureSampleOutput) {
-                $logName = "$($Project.Replace('/', '.').Replace('\', '.')).$Mode.attempt$attempt"
-                $description = "$Project ($displayMode; attempt $attempt/$maxAttempts)"
-                $result = Invoke-SampleProcess -FilePath $commandPath -Arguments $arguments `
-                    -LogFilePrefix (Join-Path $sampleOutputDirectory $logName) -Description $description
-                $exitCode = $result.ExitCode
-                $hasHandshakeFailure = $RetryHandshakeFailure -and
-                    (Select-String -LiteralPath $result.StandardOutputPath -SimpleMatch "Handshake failures:" -Quiet)
-            }
-            elseif (!$RetryHandshakeFailure) {
-                & $commandPath $arguments
-                $exitCode = $LASTEXITCODE
-            }
-            else {
-                $commandOutput = @()
-                & $commandPath $arguments | Tee-Object -Variable commandOutput
-                $exitCode = $LASTEXITCODE
-                $hasHandshakeFailure = @($commandOutput | Where-Object { $_ -match "Handshake failures:" }).Count -ne 0
-            }
-
-            if ($exitCode -eq 0) {
-                break
-            }
-
-            if (!$hasHandshakeFailure -or $attempt -eq $maxAttempts) {
-                throw "Sample validation failed for '$Project' with exit code $exitCode."
-            }
-
-            Write-Warning "Test host handshake failed for '$Project' on attempt $attempt; retrying once."
-            Start-Sleep -Seconds 5
-        }
+        Invoke-SampleProcessWithRetry -FilePath $commandPath -Arguments $arguments -Project $Project -Mode $Mode `
+            -OutputDirectory $sampleOutputDirectory -RetryHandshakeFailure $RetryHandshakeFailure
 
         if (!$captureSampleOutput) {
             Write-Host "SUCCESS: Validated $Project"
