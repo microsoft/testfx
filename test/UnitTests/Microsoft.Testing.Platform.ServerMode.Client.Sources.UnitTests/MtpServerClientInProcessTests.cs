@@ -980,11 +980,12 @@ public sealed class MtpServerClientInProcessTests
     }
 
     [TestMethod]
+    [DoNotParallelize] // Measures teardown latency; parallel tests can starve the net462 thread pool.
     public async Task Dispose_FromANotificationHandler_DoesNotSelfWaitOnTheReadLoop()
     {
-        // Teardown runs on the thread pool, so the read-loop AsyncLocal marker the connection uses to detect
-        // re-entrant disposal has to survive that hop. If it did not, disposing from a handler would stall
-        // for the connection's read-loop shutdown timeout while the read loop sits in this very handler.
+        // Teardown runs on the thread pool, so the read-loop context must be captured before scheduling it.
+        // Otherwise, disposing from a handler would stall for the connection's read-loop shutdown timeout
+        // while the read loop sits in this very handler.
         using var server = new InProcessServerFixture();
 
         MtpServerClient client = await LaunchAsync(server);
