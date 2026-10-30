@@ -143,9 +143,9 @@ public sealed class AzureDevOpsHistoryServiceTests
             .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (2)", "Passed", 200) { TestCaseTitle = "MyMethod (2)" }),
         ];
         client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AzureDevOpsTestResultsPage(results[..700], continuationToken: "next"));
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(results.Take(700).ToArray(), continuationToken: "next"));
         client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, "next", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AzureDevOpsTestResultsPage(results[700..], continuationToken: null));
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(results.Skip(700).ToArray(), continuationToken: null));
         AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
 
         await service.OnTestSessionStartingAsync(new TestSessionContextStub());
