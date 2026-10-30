@@ -293,3 +293,39 @@ The earlier complete 28-sample CI run validates the original implementation,
 not this review follow-up. Hosted execution of both new check steps and the
 full sample matrix remains a subsequent CI check; local focused success is not
 claimed as new hosted CI or release-branch validation.
+
+## Classifier follow-up
+
+A separate top-level review identified that a future change touching only
+`eng/test-samples-output.ps1` would not set `hasSamplesChanges`. That would skip
+the `WindowsSamples` job which owns both host checks. Add the new script to the
+existing exact-path sample classification; do not broaden the classifier to
+all engineering scripts or change the trusted-target-branch loading policy.
+
+The path case, `Sample output checks only` classification case, and an actual
+single-file Git-diff fixture now require:
+
+```text
+hasProductChanges=false;hasSamplesChanges=true;infrastructureOnly=false
+```
+
+The original classifier at `5a07b5ee492e83c2dede2e75362ff0e4725ea269` passed its
+existing self-tests. With the new tests retained but only the new production
+path entry removed, the buildable comparison fails at the intended assertion:
+
+```text
+Path self-test 'eng/test-samples-output.ps1' produced infrastructure=False, samples=False.
+```
+
+`pwsh -NoLogo -NoProfile -File .\eng\classify-build-change.ps1 -SelfTest` passes
+with the fix (exit 0); the isolated missing-entry comparison exits 1. The
+classifier's CI consumer uses pwsh. An additional Windows PowerShell 5.1 check
+passes for both original and corrected scripts when the temporary Git fixture
+uses process-local `core.autocrlf=false`; this avoids an existing LF-conversion
+warning being interpreted as a native error by that host. No repository/global
+Git configuration or CI error policy was changed.
+
+The corrected classifier SHA-256 is
+`BE61CDE46E695BC43EA23308E837C84F5AD4DBD6D936CE4B99E03C6E221E2E93`.
+This follow-up does not alter sample execution, retries, or the unrelated
+ServerMode timing assertion from an earlier pipeline run.
