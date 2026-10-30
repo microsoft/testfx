@@ -36,8 +36,8 @@ internal sealed class TerminalTestReporterOptions
     public Func<bool> HasTestSessionFailure { get; init; } = static () => false;
 
     /// <summary>
-    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
-    /// When ANSI is not allowed we never have progress.
+    /// Gets a value indicating whether we should write progress periodically to screen. Cursor-capable terminals
+    /// update in place; non-cursor terminals emit bounded progress lines after visible-output silence.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean
     /// and then cache that value.
     /// </summary>
@@ -77,10 +77,10 @@ internal sealed class TerminalTestReporterOptions
     public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
 
     /// <summary>
-    /// Gets the silence threshold for the non-cursor heartbeat renderer (E1). When no test completes for this
-    /// duration, a single heartbeat line is emitted. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
+    /// Gets the visible-output silence threshold for the non-cursor heartbeat renderer (E1). Hidden test
+    /// completions do not reset this interval. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
     /// </summary>
-    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>
     /// Gets the per-test threshold for the non-cursor heartbeat renderer (E2). When a single test exceeds this

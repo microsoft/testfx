@@ -52,7 +52,8 @@ internal interface IProgressRenderer
         TerminalProgressMessageState[]? messages = null);
 
     /// <summary>
-    /// Notifies the renderer that a test completed. Used by the heartbeat renderer to reset its silence timer.
+    /// Notifies the renderer that a test completed. Used by the heartbeat renderer to report completion age,
+    /// independently of whether that result produced visible output.
     /// MUST be thread-safe.
     /// </summary>
     void OnTestCompleted();

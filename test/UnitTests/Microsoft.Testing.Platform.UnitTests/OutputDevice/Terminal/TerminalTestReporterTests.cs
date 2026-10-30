@@ -323,17 +323,17 @@ public sealed class TerminalTestReporterTests
               Error output
                 Oh no!
 
-              Out of process file artifacts produced:
-                - {folder}artifact1.txt
-              In process file artifacts produced:
-                - {folder}artifact2.txt
-
             Test run summary: Failed! - {assembly} (net8.0|x64)
               total: 5
               failed: 3
               succeeded: 1
               skipped: 1
               duration: 3652058d 23h 59m 59s 999ms
+
+              Out of process file artifacts produced:
+                - {folder}artifact1.txt
+              In process file artifacts produced:
+                - {folder}artifact2.txt
 
             """;
 
@@ -476,17 +476,17 @@ public sealed class TerminalTestReporterTests
             ␛[90m  Error output
             ␛[90m    Oh no!
             ␛[m
-              Out of process file artifacts produced:
-                - {folder}artifact1.txt
-              In process file artifacts produced:
-                - {folder}artifact2.txt
-
             ␛[31mTest run summary: Failed!␛[90m - ␛[m{folder}assembly.dll (net8.0|x64)
             ␛[m  total: 5
             ␛[31m  failed: 3
             ␛[m  succeeded: 1
             ␛[33m  skipped: 1
             ␛[m  duration: 3652058d 23h 59m 59s 999ms
+
+              Out of process file artifacts produced:
+                - {folder}artifact1.txt
+              In process file artifacts produced:
+                - {folder}artifact2.txt
 
             """;
 
@@ -2742,6 +2742,197 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain(firstAssembly, output);
         Assert.DoesNotContain(secondAssembly, output);
     }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void NonCursorSummary_FailuresPrecedeArtifactsAndSuccessfulRecapsAreNotRepeated(bool simpleAnsi)
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = simpleAnsi ? AnsiMode.SimpleAnsi : AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 3, isDiscovery: false, isHelp: false, isRetry: false);
+        foreach (string module in new[] { "passing", "failing", "crashed" })
+        {
+            reporter.AssemblyRunStarted($"{module}.dll", "net9.0", "x64", module, module);
+            ReportOrchestratorTest(reporter, $"{module}.dll", module, module, module, module == "failing" ? TestOutcome.Fail : TestOutcome.Passed);
+            reporter.ArtifactAdded(false, $"{module}.dll", "net9.0", "x64", module, testName: null, $"{module}.trx");
+        }
+
+        reporter.AssemblyRunCompleted("passing", 0, outputData: null, errorData: null);
+        reporter.AssemblyRunCompleted("failing", 2, outputData: null, errorData: null);
+        reporter.AssemblyRunCompleted("crashed", 42, "crash stdout", "crash stderr");
+        reporter.HandshakeFailure("missing.dll", "net9.0", 1, "handshake stdout", "handshake stderr");
+        int summaryStart = console.Output.Length;
+
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: null);
+
+        string output = NormalizeTerminalOutput(console.Output);
+        TestContext.WriteLine(output);
+        const string expected = """
+
+            Test run summary: Failed!
+              error: 2
+
+              total: 3
+              failed: 1
+              succeeded: 2
+              skipped: 0
+              duration: 0ms
+
+              failing.dll (net9.0|x64) failed with 1 error(s) [+0/x1/?0] (0ms)
+              crashed.dll (net9.0|x64) failed [+1/x0/?0] (0ms)
+
+
+            Handshake failures:
+              missing.dll (net9.0)
+            Exit code: 1
+              Standard output: handshake stdout
+              Error output: handshake stderr
+
+            Errored assemblies:
+              crashed.dll (net9.0|x64)
+            Exit code: 42
+              Standard output: crash stdout
+              Error output: crash stderr
+
+              In process file artifacts produced:
+                - passing.trx
+                - failing.trx
+                - crashed.trx
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output.Substring(summaryStart)));
+        Assert.AreEqual(1, output.Split(["passing.dll (net9.0|x64) passed"], StringSplitOptions.None).Length - 1);
+    }
+
+    [TestMethod]
+    public void NonCursorSummary_AllPassingModules_KeepOnlyAggregateAfterCompletion()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+            ShowTestResults = TestResultVisibility.None,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        })
+        {
+            CreateStopwatch = () => new StubStopwatch(),
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        foreach (string module in new[] { "first", "second" })
+        {
+            reporter.AssemblyRunStarted($"{module}.dll", "net9.0", "x64", module, module);
+            ReportOrchestratorTest(reporter, $"{module}.dll", module, module, module, TestOutcome.Passed);
+            reporter.AssemblyRunCompleted(module, 0, outputData: null, errorData: null);
+        }
+
+        int summaryStart = console.Output.Length;
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, 0);
+
+        const string expected = """
+
+            Test run summary: Passed!
+              total: 2
+              failed: 0
+              succeeded: 2
+              skipped: 0
+              duration: 0ms
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output.Substring(summaryStart)));
+    }
+
+    [TestMethod]
+    public void NonCursorSummary_SuppressedVerdict_KeepsFailureRecapsAndArtifacts()
+    {
+        var console = new StringBuilderConsole();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowRunSummary = false,
+        });
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: true);
+        reporter.HandshakeFailure("missing.dll", "net9.0", 1, string.Empty, "host error");
+        reporter.ArtifactAdded(true, "missing.dll", "net9.0", "x64", "missing", testName: null, "retry.log");
+        int summaryStart = console.Output.Length;
+        reporter.TestExecutionCompleted(DateTimeOffset.MinValue, exitCode: null);
+
+        const string expected = """
+
+
+            Handshake failures:
+              missing.dll (net9.0)
+            Exit code: 1
+              Error output: host error
+
+              Out of process file artifacts produced:
+                - retry.log
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output.Substring(summaryStart)));
+    }
+
+    [TestMethod]
+    public void NonCursorProgress_CompletedWorkerSlot_IsIncludedInRunTotals()
+    {
+        long elapsedTicks = 0;
+        var stopwatch = new Mock<IStopwatch>();
+        stopwatch.SetupGet(value => value.Elapsed).Returns(() => TimeSpan.FromTicks(Interlocked.Read(ref elapsedTicks)));
+        var console = new StringBuilderConsole();
+        using var rendered = new ManualResetEventSlim();
+        using var reporter = new TerminalTestReporter(console, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowTestResults = TestResultVisibility.None,
+            ShowActiveTests = true,
+            SlowTestThreshold = TimeSpan.Zero,
+        })
+        {
+            CreateStopwatch = () => stopwatch.Object,
+        };
+        reporter.OnProgressStopUpdate += (_, _) =>
+        {
+            if (Interlocked.Read(ref elapsedTicks) >= TimeSpan.FromSeconds(60).Ticks)
+            {
+                rendered.Set();
+            }
+        };
+        reporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        reporter.AssemblyRunStarted("finished.dll", "net9.0", "x64", "finished", "finished");
+        ReportOrchestratorTest(reporter, "finished.dll", "finished", "finished", "first", TestOutcome.Passed);
+        ReportOrchestratorTest(reporter, "finished.dll", "finished", "finished", "second", TestOutcome.Passed);
+        reporter.AssemblyRunCompleted("finished");
+        reporter.AssemblyRunStarted("active.dll", "net9.0", "x64", "active", "active");
+        ReportOrchestratorTest(reporter, "active.dll", "active", "active", "third", TestOutcome.Passed);
+        reporter.TestInProgress("active", "running", "InFlight");
+        Interlocked.Exchange(ref elapsedTicks, TimeSpan.FromSeconds(60).Ticks);
+
+        Assert.IsTrue(rendered.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "The progress refresher did not render.");
+        reporter.Dispose();
+
+        const string expected = """
+            running... 3 completed, 0 failed, active modules: 1 | last completion: 1m 00s ago | active: InFlight
+
+            """;
+        Assert.AreEqual(NormalizeTerminalOutput(expected), NormalizeTerminalOutput(console.Output));
+    }
+
+    private static string NormalizeTerminalOutput(string output)
+        => Regex.Replace(output, @"\x1B\[[0-9;]*m", string.Empty).Replace("\r\n", "\n");
 
     [TestMethod]
     [DataRow(false)]
