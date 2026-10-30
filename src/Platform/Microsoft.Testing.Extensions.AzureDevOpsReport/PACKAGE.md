@@ -23,6 +23,10 @@ This package extends Microsoft.Testing.Platform with:
 
 The Markdown summary is independent from the self-contained HTML report produced by `--report-html`. Both options can be enabled together: Azure DevOps renders the Markdown in the Extensions tab, while the HTML remains a report file that can be published as a build artifact or displayed by a separately installed Azure DevOps web extension.
 
+The aggregate contains one top-ten slowest-test list across modules, including failed tests and their outcomes, module names, and target frameworks. **Elapsed** is the SDK-reported run duration; each module's **test time** is the sum of reported test durations and may exceed elapsed time when tests run concurrently. Missing duration history is explicitly unavailable, not a baseline for comparison.
+
+Skipped tests are grouped by their reported reason and execution platform, with module/target-framework context and at most ten groups shown. Issue references in reasons are retained; skipped test names are not dumped into the summary. Omitted groups are accounted for by a skipped-test count. Older summary fragments remain supported and label unavailable outcomes, skip reasons, and platform metadata explicitly.
+
 ## Usage
 
 Enable Azure DevOps reporting with the `--report-azdo` command line option.
