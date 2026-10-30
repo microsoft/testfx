@@ -71,6 +71,15 @@ retains rollout and servicing responsibility.
   consumer project fixed the incompatible-reference build without changing
   package content or target frameworks. Neither setup failure is regression
   evidence.
+- 2026-10-30: The full multi-TFM build/pack succeeded with zero warnings/errors.
+  All 32 shipping packages identify implementation commit
+  `f4d8d35bf45ce0ece75a66e1b197c96684767e48`. With the task-local
+  `VersionSuffix=preview.26530.102`, the SDK's independently generated JUnit
+  default remains `1.0.0-dev`; a producer-side private-property override did not
+  change that evaluated value. The SDK validation consumer must use the supported
+  `MicrosoftTestingExtensionsJUnitReportVersion=1.0.0-preview.26530.102` override
+  to consume the same-source JUnit package. No package/source fix outside this
+  reporter change was made.
 
 ## Alternatives and decision
 
@@ -108,21 +117,115 @@ focused Debug/net8.0 executions.
   package is `2.6.0-preview.26530.101`. These are task-local comparison versions,
   not published package versions.
 
-The same behavioral tests will be retained against baseline production behavior
-in the isolated comparison. Packed-host before/after captures and assertion-level
-red/green results will be added after execution; they are not yet claimed here.
+### Revision-bound regression sensitivity
+
+The correct implementation is
+`f4d8d35bf45ce0ece75a66e1b197c96684767e48`. The isolated comparison retains
+both final test files against baseline production, adding only an ignored optional
+fourth renderer-constructor parameter so the new aggregation test can compile.
+This is a buildable targeted counterfactual, not an unmodified baseline run.
+Its retained-test/support patch SHA-256 is
+`164ED76C41CAD0FD7B5BEB1A8B3DBAFBFC180836C3A872B39A4BD162CD642352`.
+
+The identical filter in each state was:
+
+```text
+FullyQualifiedName~VisibleSilence_|FullyQualifiedName~NonCursorSummary_|FullyQualifiedName~NonCursorProgress_
+```
+
+Both runners used
+`dotnet <built-test-dll> --filter <filter> --report-trx --results-directory <isolated-results> --no-ansi --progress off`.
+The comparison build used the repository-pinned dotnet with
+`build <comparison-test-project> -c Debug -p:TargetFramework=net8.0 -p:TargetFrameworks=net8.0 -bl:<isolated-binlog> -v:minimal`.
+
+| Contract / test case | Without behavior | Correct implementation |
+| --- | --- | --- |
+| `VisibleSilence_HiddenCompletions_EmitAtDefaultBoundary` | Assertion: expected one progress line, actual zero. | Passed; 59/60-second boundary and repeat interval. |
+| `VisibleSilence_VisibleWriteDelaysHeartbeatButNotCompletionAge`, `VisibleSilence_ProgressMessage_PostponesHeartbeat` | Premature heartbeat/count assertions failed. | Both passed. |
+| `VisibleSilence_NoCompletionsAndRestart_DoNotInventProgress` | Exact-output assertion failed. | Passed. |
+| `VisibleSilence_CompletedModules_RemainInCumulativeCounts`, `NonCursorProgress_CompletedWorkerSlot_IsIncludedInRunTotals` | Lost completed-module totals; reporter wiring printed one instead of three completed tests. | Both passed. |
+| `NonCursorSummary_FailuresPrecedeArtifactsAndSuccessfulRecapsAreNotRepeated` (two modes) | Both exact-output assertions failed. | NoAnsi and SimpleAnsi passed. |
+| `NonCursorSummary_AllPassingModules_KeepOnlyAggregateAfterCompletion`, `NonCursorSummary_SuppressedVerdict_KeepsFailureRecapsAndArtifacts` | Both exact-output assertions failed. | Both passed. |
+
+Red: 10 selected/executed, 10 assertion failures, zero skipped, process exit 2.
+Green: the same 10 selected/executed passed, zero skipped, process exit 0.
+The source-declared expected names, individual TRX results, test-file hashes, and
+green execution gate were checked. Build failures, skips, and zero-test runs were
+not counted as sensitivity evidence. The nested comparison emitted duplicate
+ancestor `.globalconfig` warnings, but compiled and executed; the real candidate
+build had zero warnings.
+
+### Real packed-host demonstration
+
+An external net8.0 MSTest host ran eight sequential data rows, each awaiting 750ms,
+against each packed core. Both hosts used MSTest framework/adapter
+`4.6.0-preview.26529.1` and TrxReport `2.6.0-preview.26529.1`; only the compared core
+package changed. This isolates the reporter behavior. The separately frozen
+same-source package set below is for native SDK composition.
+
+The exact arguments were
+`--filter FullyQualifiedName~HiddenPass --no-ansi --progress on --show-test-results failed --no-banner --report-trx --results-directory <isolated-results>`,
+with `MTP_PROGRESS_SILENCE_SECONDS=1` and `MTP_PROGRESS_SLOW_TEST_SECONDS=0`.
+The one-second override accelerates the demonstration, not the production default.
+
+Before: eight executed/passed, exit 0, duration `6s 379ms`, **zero progress lines**.
+After: the same eight executed/passed, exit 0, duration `6s 332ms`, and these
+captured progress lines:
+
+```text
+running... 1 completed, 0 failed, active modules: 1 | last completion: 0s ago | active: HiddenPass (2)
+running... 2 completed, 0 failed, active modules: 1 | last completion: 0s ago | active: HiddenPass (3)
+running... 3 completed, 0 failed, active modules: 1 | last completion: 0s ago | active: HiddenPass (4)
+running... 5 completed, 0 failed, active modules: 1 | last completion: 0s ago | active: HiddenPass (6)
+running... 6 completed, 0 failed, active modules: 1 | last completion: 0s ago | active: HiddenPass (7)
+running... 7 completed, 0 failed, active modules: 1 | last completion: 0s ago | active: HiddenPass (8)
+```
+
+Additional real consumer runs retained eight passing rows and no heartbeat for
+`--progress off` and for the zero heartbeat threshold. An intentionally failing
+test retained its full diagnostic and exit 2; an empty selection retained exit 8.
+Those expected child failures are not counted as green test cases.
+
+The comparison packages' embedded repository commits, `project.assets.json`,
+effective caches, and the DLLs in the launched host directories were verified:
+
+| Artifact | Before SHA-256 | After SHA-256 |
+| --- | --- | --- |
+| Net8-only comparison nupkg | `E923C274656C1AF40AE9236F7712D537C88C99FC4C5DEDA07277746BD11483FB` | `FD65003E40C1C20E055388C35205CB0081603759A3EFA25E41F9FFCAECE368F8` |
+| Consumed core DLL | `59590E8F40E00587F38916EBE98A3E5B8B9B5F15CC1E9973F7FBD5A759A490D1` | `D0A562846536D9FE8E9456E3785FAF566165F6896720993605F81B07CBC519D5` |
+
+The authorized PR preserves complete before/after progress transcripts, the
+consumer fixture/build commands, and final-summary transcripts captured from
+the same reporter harness in both states. Text is preferable to a screenshot
+for this CLI output; the harness captures are explicitly not a native SDK run.
+
+### Aligned package handoff
+
+The full source build/pack command was
+`.\eng\build.ps1 -restore -build -pack -projects 'src\**\*.csproj' -c Debug -bl /p:VersionSuffix=preview.26530.102 /p:SkipRuntimesInstall=true`;
+it completed with exit 0, zero warnings/errors, and successful package
+content/metadata verification. The pinned runtime needed by focused tests was
+already installed. The immutable 32-package feed was handed to the SDK owner
+with a SHA-256 manifest, not published to a package registry.
+
+MSTest packages use `4.6.0-preview.26530.102`, MTP and its version-aligned
+extensions use `2.6.0-preview.26530.102`, and JUnit uses
+`1.0.0-preview.26530.102` with the explicit consumer property above. Every
+package's repository commit is the implementation revision. The full MTP nupkg
+hash is `AD327786AD823B6E7424DE97FC308368F14032A6DFF8226F3FF06D07B11B3DBE`;
+its net8 core payload exactly matches the captured after-consumer DLL.
 
 The owning unit-test assembly uses MSTest method-level parallelism with one
 worker per processor. New renderer tests use per-test clocks and consoles, not
 shared environment/console mutation; reporter refresher threads must be joined
 before assertions or cleanup. Packed consumers use task-owned directories/caches.
 
-Executed evidence and the exact implementation revision will be added after the
-comparison runs. Native SDK composed-product evidence is owned by the coordinated
-SDK PR and remains separate from TestFx-local proof.
+Native SDK composed-product evidence is owned by the coordinated SDK PR and
+remains separate from the executed TestFx-local proof.
 
 ## Open questions
 
-- Exact package/source pair and native SDK validation results are pending.
+- The source/package pair has been delivered. Native SDK validation results are
+  pending; this PR does not claim that the outer SDK console changed.
 - Supported release-branch servicing is a coordinator decision after composed
   validation; no claim of cross-repository completion is made here.
