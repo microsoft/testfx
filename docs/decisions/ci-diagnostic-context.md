@@ -319,3 +319,73 @@ The same capable SDK reran normal failure and ignored-failure aggregation:
 2 and 0 respectively, the Azure global timing bound is ten, and both providers'
 standalone artifacts and existing on-failure detail remain correct. Earlier
 frozen package snapshots remain unchanged.
+
+## Final SDK companion replay
+
+The published companion is [dotnet/sdk#56852](https://github.com/dotnet/sdk/pull/56852).
+On 2026-10-30, the two requested normal-failure and ignored-failure cases were
+replayed through its frozen SDK source
+`a629f41ab69bdb8f9c2c6ce63d1edf7b5f1aabfe`, base
+`c6405adbf0aadab2a0419579f5bffcd72a72764a`, version `12.0.100-dev`.
+The managed CLI SHA-256 is
+`4720B630F9AD8DC37F51B3DF790B6C7B5DB7634DC1CC8C41386AAFB2D967C9A3`;
+the native CLI SHA-256 is
+`AA0DBE209A4C46711EFB14694F2B462F3A005F2FAE7AC8D2D445178A822CEEC9`.
+Both hashes were checked before and after execution. These controlled replays
+use `DOTNET_CLI_ENABLEAOT=false`, matching the earlier managed-CLI comparison;
+they are not an additional native-AOT matrix.
+
+TestFx code head was `82ec9d46d2e671c02138bc9eedc60d8b1aeeef1d`.
+Shipping source and configuration were unchanged from the packed merge
+`72a3bc87add2b08c153e8eb56ad2a3631170e33c`: the later changes affect only this
+record, the nonshipping timing consumer, and its tests. The same three
+source-stamped `2.6.0-dev` packages, isolated cache, and byte-identical Alpha/Beta
+outputs were reused, not replaced by a same-version restore. Their package,
+cache, and executed DLL hashes were rechecked.
+
+The new owned `artifacts\ci-policy-composed\final-sdk` fixture has its own
+`global.json`, selecting only the frozen `required-summary-sdk-a629f41ab6`
+root, with roll-forward disabled and the MTP runner. `dotnet --info` confirmed
+that exact SDK base path and commit, rather than an ancestor redirect to
+`6fc4e43c66`. The earlier fixtures, package snapshots, and before/after captures
+were left untouched. CLI home remained isolated, global-tool PATH insertion
+was disabled, and only the task-owned empty temporary directories were removed.
+
+From that fixture, the existing commands were repeated with a fresh results
+directory and `GITHUB_STEP_SUMMARY` for each case:
+
+```powershell
+& $sdk test --test-modules '**\bin\Release\net8.0\*a.dll' --root-directory . --report-azdo --report-azdo-summary --report-gh --report-gh-step-summary on-failure --results-directory $results --show-test-results failed --no-progress
+# Normal failure: parent and actual worker manifest exit 2.
+& $sdk test --test-modules '**\bin\Release\net8.0\*a.dll' --root-directory . --report-azdo --report-azdo-summary --report-gh --report-gh-step-summary on-failure --results-directory $results --show-test-results failed --no-progress --ignore-exit-code 2
+# Ignored failure: parent and actual worker manifest exit 0.
+```
+
+Both use `TF_BUILD=true`, `GITHUB_ACTIONS=true`, and `DIAGNOSTICS_MODE=mixed`.
+Only `Alpha.dll` and `Beta.dll` match, each emitting `Passing01` through
+`Passing12`, `Longest`, and `Skipped1` through `Skipped3`. The reported totals
+are **32 / 25 passed / 1 failed / 6 skipped**, with 26 non-skipped results and
+a two-module denominator. `Beta`'s `Fixture.Cases.Longest` remains the failed
+identity. Each real retained manifest contains four provider fragments.
+
+| Case | Parent / manifest exit | Azure global reports / timing rows | GitHub on-failure summary |
+| --- | --- | --- | --- |
+| Normal failure | 2 / 2 | 1 / 10 | Present, failed policy and failed details |
+| Ignored failure | 0 / 0 | 1 / 10 | Present, accepted policy and failed details |
+
+Azure keeps the strict failed-test indicator in both cases. Both providers
+render the separate authoritative policy and exit; GitHub's existing global
+badge follows that exit. The failed timing, skip groups, unavailable-history
+notice, and raw failure details remain visible. The step-summary content equals
+the standalone GitHub artifact after removing only its publication start/end
+comments. No suppression semantics changed.
+
+The observation hook retained actual worker manifests
+`sdk-worker-manifest-301368.json` and `sdk-worker-manifest-156640.json` in the
+respective `final-sdk-failure-results` and `final-sdk-ignored-results` folders.
+Task-owned `final-sdk-consumer-provenance.json`,
+`final-sdk-failure-run.json`, `final-sdk-ignored-run.json`, and their
+`*-verified.json` receipts retain exact arguments, environment, paths, hashes,
+counts, exits, and artifact assertions. The SDK owner received these receipts.
+This confirms the final companion head without replacing the earlier controlled
+before/after or claiming non-Windows, servicing, or CI execution.
