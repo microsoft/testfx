@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 [Embedded]
-internal abstract class BaseSerializer
+internal abstract partial class BaseSerializer
 {
     private const int MaximumCollectionLength = 1_000_000;
 
@@ -24,170 +24,6 @@ internal abstract class BaseSerializer
     // unsupported type). Kept self-contained (no ApplicationStateGuard) so this file shares as source.
     private static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
         => new(string.Format(CultureInfo.InvariantCulture, "This program location is thought to be unreachable. File='{0}' Line={1}", path, line));
-
-    protected static string ReadString(Stream stream)
-    {
-        int length = ReadInt(stream);
-        return ReadStringValue(stream, length);
-    }
-
-    protected static string ReadStringValue(Stream stream, int size)
-    {
-        ValidatePayloadSize(stream, size);
-
-#if NETCOREAPP
-        byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(size);
-        try
-        {
-            ReadExactly(stream, rentedBytes, 0, size);
-            return Encoding.UTF8.GetString(rentedBytes, 0, size);
-        }
-
-        // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the decoded string.
-        finally
-        {
-            System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
-        }
-#else
-        byte[] bytes = new byte[size];
-        ReadExactly(stream, bytes, 0, size);
-        return Encoding.UTF8.GetString(bytes, 0, size);
-#endif
-    }
-
-    protected static void WriteString(Stream stream, string str)
-    {
-#if NETCOREAPP
-        int byteCount = Encoding.UTF8.GetByteCount(str);
-        byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
-        try
-        {
-            Encoding.UTF8.GetBytes(str, rentedBytes);
-            WriteInt(stream, byteCount);
-            stream.Write(rentedBytes, 0, byteCount);
-        }
-
-        // Stryker disable once all: returning a temporary pooled buffer changes allocation reuse, not the encoded string.
-        finally
-        {
-            System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
-        }
-#else
-        byte[] bytes = Encoding.UTF8.GetBytes(str);
-        WriteInt(stream, bytes.Length);
-        stream.Write(bytes, 0, bytes.Length);
-#endif
-    }
-
-    protected static void WriteSize<T>(Stream stream)
-        where T : struct
-        => WriteInt(stream, GetSize<T>());
-
-#if NETCOREAPP
-    protected static void WriteInt(Stream stream, int value) => WritePrimitive(stream, value);
-
-    protected static int ReadInt(Stream stream) => ReadPrimitive<int>(stream);
-
-    protected static void WriteLong(Stream stream, long value) => WritePrimitive(stream, value);
-
-    protected static long ReadLong(Stream stream) => ReadPrimitive<long>(stream);
-
-    protected static void WriteUShort(Stream stream, ushort value) => WritePrimitive(stream, value);
-
-    protected static ushort ReadUShort(Stream stream) => ReadPrimitive<ushort>(stream);
-
-    private static void WritePrimitive<T>(Stream stream, T value)
-        where T : unmanaged
-    {
-        int size = GetSize<T>();
-        Span<byte> bytes = stackalloc byte[size];
-        System.Runtime.InteropServices.MemoryMarshal.Write(bytes, in value);
-        stream.Write(bytes);
-    }
-
-    private static T ReadPrimitive<T>(Stream stream)
-        where T : unmanaged
-    {
-        Span<byte> bytes = stackalloc byte[GetSize<T>()];
-        stream.ReadExactly(bytes);
-        return System.Runtime.InteropServices.MemoryMarshal.Read<T>(bytes);
-    }
-#else
-    protected static void WriteInt(Stream stream, int value)
-    {
-        byte[] bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-
-    protected static int ReadInt(Stream stream)
-    {
-        byte[] bytes = new byte[sizeof(int)];
-        ReadExactly(stream, bytes, 0, bytes.Length);
-        return BitConverter.ToInt32(bytes, 0);
-    }
-
-    protected static void WriteLong(Stream stream, long value)
-    {
-        byte[] bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-
-    protected static long ReadLong(Stream stream)
-    {
-        byte[] bytes = new byte[sizeof(long)];
-        ReadExactly(stream, bytes, 0, bytes.Length);
-        return BitConverter.ToInt64(bytes, 0);
-    }
-
-    protected static void WriteUShort(Stream stream, ushort value)
-    {
-        byte[] bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-
-    protected static ushort ReadUShort(Stream stream)
-    {
-        byte[] bytes = new byte[sizeof(ushort)];
-        ReadExactly(stream, bytes, 0, bytes.Length);
-        return BitConverter.ToUInt16(bytes, 0);
-    }
-#endif
-
-    protected static void WriteBool(Stream stream, bool value)
-        => stream.WriteByte(value ? (byte)1 : (byte)0);
-
-    protected static bool ReadBool(Stream stream)
-        => ReadByte(stream) != 0;
-
-    // Reads exactly 'count' bytes into 'buffer' starting at 'offset', looping until the request is
-    // satisfied or the end of the stream is reached. This centralizes the previously duplicated
-    // per-primitive read logic and fixes the historical short-read bug on the non-NETCOREAPP path,
-    // where a single Stream.Read could return fewer bytes than requested and silently corrupt data.
-    private static void ReadExactly(Stream stream, byte[] buffer, int offset, int count)
-    {
-#if NETCOREAPP
-        stream.ReadExactly(buffer, offset, count);
-#else
-        int totalRead = 0;
-        while (totalRead < count)
-        {
-            int read = stream.Read(buffer, offset + totalRead, count - totalRead);
-            if (read == 0)
-            {
-                throw new EndOfStreamException();
-            }
-
-            totalRead += read;
-        }
-#endif
-    }
-
-    protected static byte ReadByte(Stream stream)
-        => stream.ReadByte() is int value and not -1
-            ? (byte)value
-            : throw new EndOfStreamException();
-
-    protected static void WriteByte(Stream stream, byte value) => stream.WriteByte(value);
 
     protected static void WriteField(Stream stream, ushort id, string? value)
     {
@@ -379,81 +215,6 @@ internal abstract class BaseSerializer
             : length;
     }
 
-    private static void ValidatePayloadSize(Stream stream, int size)
-    {
-        if (size < 0 || size > stream.Length - stream.Position)
-        {
-            throw new InvalidDataException($"Payload size {size} is invalid for the remaining stream.");
-        }
-    }
-
-    private sealed class BoundedReadStream(Stream stream, long length) : Stream
-    {
-        private readonly long _start = stream.Position;
-
-        public override bool CanRead => true;
-
-        public override bool CanSeek => true;
-
-        public override bool CanWrite => false;
-
-        public override long Length { get; } = length;
-
-        public override long Position
-        {
-            get => stream.Position - _start;
-            set
-            {
-                if (value < 0 || value > Length)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                }
-
-                stream.Position = _start + value;
-            }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            int bytesToRead = (int)Math.Min(count, Length - Position);
-            return bytesToRead == 0 ? 0 : stream.Read(buffer, offset, bytesToRead);
-        }
-
-#if NETCOREAPP
-        public override int Read(Span<byte> buffer)
-        {
-            int bytesToRead = (int)Math.Min(buffer.Length, Length - Position);
-            return bytesToRead == 0 ? 0 : stream.Read(buffer[..bytesToRead]);
-        }
-#endif
-
-        public override int ReadByte()
-            => Position == Length ? -1 : stream.ReadByte();
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            long position = origin switch
-            {
-                SeekOrigin.Begin => offset,
-                SeekOrigin.Current => Position + offset,
-                SeekOrigin.End => Length + offset,
-                _ => throw new ArgumentOutOfRangeException(nameof(origin)),
-            };
-            Position = position;
-            return Position;
-        }
-
-        public override void Flush()
-        {
-        }
-
-        public override void SetLength(long value)
-            => throw new NotSupportedException();
-
-        public override void Write(byte[] buffer, int offset, int count)
-            => throw new NotSupportedException();
-    }
-
     /// <summary>
     /// Writes a length-prefixed list payload using the deferred-size-backfill protocol: the field id, a reserved
     /// 4-byte size slot, the element count, then each element via <paramref name="writeItem"/>. The reserved slot is
@@ -530,17 +291,6 @@ internal abstract class BaseSerializer
         WriteField(stream, ExecutionScopedExecutionIdFieldId, executionId);
         WriteField(stream, ExecutionScopedInstanceIdFieldId, instanceId);
     }
-
-    private static int GetSize<T>() => typeof(T) switch
-    {
-        Type type when type == typeof(int) => sizeof(int),
-        Type type when type == typeof(long) => sizeof(long),
-        Type type when type == typeof(short) => sizeof(short),
-        Type type when type == typeof(ushort) => sizeof(ushort),
-        Type type when type == typeof(bool) => sizeof(bool),
-        Type type when type == typeof(byte) => sizeof(byte),
-        _ => throw Unreachable(),
-    };
 
     public static bool IsNullOrEmpty<T>(T[]? list) => list is null || list.Length == 0;
 }
