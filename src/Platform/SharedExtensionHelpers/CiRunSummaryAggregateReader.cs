@@ -100,6 +100,8 @@ internal static partial class CiRunSummaryAggregation
             || RoslynString.IsNullOrWhiteSpace(module.ModulePath)
             || RoslynString.IsNullOrWhiteSpace(module.TargetFramework)
             || RoslynString.IsNullOrWhiteSpace(module.Architecture)
+            || (module.OperatingSystem is not null
+                && (RoslynString.IsNullOrWhiteSpace(module.OperatingSystem) || module.OperatingSystem.Length > 64))
             || RoslynString.IsNullOrWhiteSpace(module.SessionUid)
             || module.AttemptNumber <= 0
             || module.TotalTests < 0
@@ -114,6 +116,7 @@ internal static partial class CiRunSummaryAggregation
             || module.Failures is null
             || module.FlakyTests is null
             || module.SlowestTests is null
+            || !AreValidSkipReasons(module.SkipReasons, module.SkippedTests)
             || module.HistoryTests is null
             || module.HistoryTests.Length > MaxHistoryTests
             || module.Dependencies is null
@@ -222,8 +225,48 @@ internal static partial class CiRunSummaryAggregation
         => !RoslynString.IsNullOrWhiteSpace(test.DisplayName)
             && !RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
             && test.DurationTicks >= 0
+            && test.Outcome is null or "passed" or "failed" or "skipped"
             && test.LineNumber is null or >= 0;
 
+<<<<<<< HEAD
+=======
+    private static bool AreValidSkipReasons(CiRunSummarySkipReason[]? reasons, long skippedTests)
+    {
+        if (reasons is null)
+        {
+            return true;
+        }
+
+        if (reasons.Length > MaxSkipReasons)
+        {
+            return false;
+        }
+
+        long remaining = skippedTests;
+        foreach (CiRunSummarySkipReason reason in reasons)
+        {
+            if (reason is null
+                || RoslynString.IsNullOrWhiteSpace(reason.Reason)
+                || reason.Reason.Length > MaxSkipReasonLength
+                || reason.Count <= 0
+                || reason.Count > remaining)
+            {
+                return false;
+            }
+
+            remaining -= reason.Count;
+        }
+
+        return true;
+    }
+
+    private static bool IsValidExactPercentage(string? value, double percentage)
+        => value is null
+            || (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal exact)
+                && exact is >= 0 and <= 100
+                && (double)exact == percentage);
+
+>>>>>>> Clarify CI timing, skip reasons, and acceptance process context
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {
         int result = StringComparer.Ordinal.Compare(left.AssemblyName, right.AssemblyName);

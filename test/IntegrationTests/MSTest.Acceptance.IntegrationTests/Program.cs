@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Services;
 
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -37,10 +39,15 @@ builder.AddOpenTelemetryProvider(
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
-    = new(_ => new SlowestTestsConsumer());
+    = new(serviceProvider => new SlowestTestsConsumer(serviceProvider.GetRequiredService<ICommandLineOptions>()));
 builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
 builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 int returnValue = await app.RunAsync();
+<<<<<<< HEAD
 Console.Error.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");
+=======
+AcceptanceDiagnostics.WriteProcessSummary(args, returnValue, CommandLine.TotalProcessesAttempt);
+
+>>>>>>> Clarify CI timing, skip reasons, and acceptance process context
 return returnValue;
