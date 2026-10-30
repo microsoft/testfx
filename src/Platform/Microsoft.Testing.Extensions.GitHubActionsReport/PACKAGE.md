@@ -20,6 +20,8 @@ This package extends Microsoft.Testing.Platform with:
 - **Slow-test notices**: emits a `::notice` workflow command for any test still running past a threshold (default 60 seconds)
 - **Test history**: reads and updates a bounded JSON snapshot so failures can include prior pass/fail context. GitHub Actions artifact download/upload remains a workflow responsibility, keeping GitHub credentials out of the test process
 
+Job-summary test names retain their fully qualified method names and include framework-provided data-row arguments or custom display names, distinguishing individual cases in the failures, flaky tests, and slowest tests sections.
+
 > [!NOTE]
 > The exit-code callout and run-level annotation only cover outcomes the extension can observe once the in-process test session has finished. Those are: `ZeroTests` (8), `MinimumExpectedTestsPolicyViolation` (9), `TestAdapterTestSessionFailure` (10), `TestExecutionStoppedForMaxFailedTests` (13), and `TestExecutionStoppedAtDeadline` (15). `AtLeastOneTestFailed` (2) is already conveyed by the per-test failures, so it gets no separate callout. A hard abort/cancellation (`TestSessionAborted`, 3) short-circuits end-of-session reporting, and codes raised before or after the session — e.g. `InvalidCommandLine` (5) or `TestHostProcessExitedNonGracefully` (7) — occur outside the extension's reach, so none of those are surfaced here.
 >

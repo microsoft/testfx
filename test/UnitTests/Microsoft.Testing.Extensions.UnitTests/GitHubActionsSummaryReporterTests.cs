@@ -55,6 +55,46 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public async Task SessionFinishing_DataDrivenTest_PreservesHistoryIdentity()
+    {
+        using SummaryExecutionFixture fixture = new();
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        DateTimeOffset start = DateTimeOffset.UtcNow;
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new TestNodeUpdateMessage(
+                fixture.Session.Object.SessionUid,
+                new TestNode
+                {
+                    Uid = "row-1",
+                    DisplayName = "RunDataTest (1)",
+                    Properties = new PropertyBag(
+                        PassedTestNodeStateProperty.CachedInstance,
+                        new TestMethodIdentifierProperty("Tests", string.Empty, "Tests", "RunDataTest", 0, ["System.Int32"], "System.Void"),
+                        new TimingProperty(new TimingInfo(start, start.AddSeconds(1), TimeSpan.FromSeconds(1)))),
+                }),
+            TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        GitHubCiRunSummaryHistoryTest history = Assert.ContainsSingle(module.HistoryTests);
+        Assert.AreEqual("row-1", history.TestId);
+        Assert.AreEqual("Tests.RunDataTest", history.FullyQualifiedName);
+        Assert.AreEqual("RunDataTest (1)", history.DisplayName);
+        GitHubCiRunSummaryTest slowest = Assert.ContainsSingle(module.SlowestTests);
+        Assert.AreEqual("Tests.RunDataTest", slowest.FullyQualifiedName);
+        Assert.AreEqual("RunDataTest (1)", slowest.DisplayName);
+        Assert.Contains(
+            """
+            ### ⏱ Slowest tests
+
+            - `Tests.RunDataTest (1)` — 1.00s
+            """.ReplaceLineEndings("\n"),
+            File.ReadAllText(fixture.SummaryPath).ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
     [DataRow("passed", "passed", "passed")]
     [DataRow("skipped", "passed", "passed")]
     [DataRow("passed", "skipped", "passed")]
@@ -850,6 +890,62 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    [DataRow("RunDataTest (1)", "RunDataTest (2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Data rows with a space")]
+    [DataRow("RunDataTest(1)", "RunDataTest(2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Data rows without a space")]
+    [DataRow("Tests.RunDataTest (1)", "Tests.RunDataTest (2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Fully qualified data rows")]
+    [DataRow("Tests.RunDataTest(1)", "Tests.RunDataTest(2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Fully qualified data rows without a space")]
+    [DataRow("First scenario", "RunDataTestology", "Tests.RunDataTest (First scenario)", "Tests.RunDataTest (RunDataTestology)", DisplayName = "Custom display names")]
+    public void BuildMarkdown_TestDisplayNames_DistinguishesRowsInEverySection(
+        string failedDisplayName,
+        string flakyDisplayName,
+        string failedLabel,
+        string flakyLabel)
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new(failedDisplayName, "Tests.RunDataTest", GitHubActionsTerminalKind.Failed, TimeSpan.FromSeconds(2),
+                new GitHubActionsTestFailureDetails("row failed", null, null, null, 0)),
+            new(flakyDisplayName, "Tests.RunDataTest", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(1), isFlaky: true),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "Tests", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.AreEqual(
+            $$"""
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — Tests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 1 | 3.00s |
+
+            ### ❌ Failures (1)
+
+            <details>
+            <summary><code>{{failedLabel}}</code> — 2.00s</summary>
+
+            ```text
+            row failed
+            ```
+
+            </details>
+
+
+            ### ⚠️ Flaky tests (1)
+
+            - `{{flakyLabel}}`
+
+            ### ⏱ Slowest tests
+
+            - `{{failedLabel}}` — 2.00s
+            - `{{flakyLabel}}` — 1.00s
+
+
+            """.ReplaceLineEndings("\n"),
+            markdown.ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
     public void BuildMarkdown_AllPassing_UsesSuccessIconAndTotals()
     {
         GitHubActionsTestRecord[] records =
@@ -1391,19 +1487,21 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildMarkdown_HtmlEncodesFailureNameInSummaryElement()
+    [DataRow("T.Map<string,int>", "T.Map<string,int>", "T.Map&lt;string,int&gt;", "T.Map<string,int>", DisplayName = "Generic identity")]
+    [DataRow("T.Map", "Map (<string,int>)", "T.Map (&lt;string,int&gt;)", "T.Map (<string,int>)", DisplayName = "Data-row display name")]
+    public void BuildMarkdown_HtmlEncodesFailureNameInSummaryElement(string identity, string displayName, string htmlLabel, string inlineLabel)
     {
         // A generic test name would otherwise be parsed as an HTML tag and swallow the rest of the <summary> line.
         var failure = new GitHubActionsTestFailureDetails("boom", null, null, null, 0);
         GitHubActionsTestRecord[] records =
         [
-            new("Map", "T.Map<string,int>", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1), failure),
+            new(displayName, identity, GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1), failure),
         ];
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
 
         Assert.AreEqual(
-            """
+            $$"""
             <!-- microsoft-testing-platform:github:project-section -->
             ## ❌ Test Run Summary — T (net9.0)
 
@@ -1414,7 +1512,7 @@ public sealed class GitHubActionsSummaryReporterTests
             ### ❌ Failures (1)
 
             <details>
-            <summary><code>T.Map&lt;string,int&gt;</code> — 1ms</summary>
+            <summary><code>{{htmlLabel}}</code> — 1ms</summary>
 
             ```text
             boom
@@ -1425,7 +1523,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
             ### ⏱ Slowest tests
 
-            - `T.Map<string,int>` — 1ms
+            - `{{inlineLabel}}` — 1ms
 
 
             """.Replace("\r\n", "\n"),
@@ -1433,17 +1531,19 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildMarkdown_FailureNameWithLineBreakAndBacktick_EscapesInlineCode()
+    [DataRow("T.Backtick`Name\r\nNext", "T.Backtick`Name\r\nNext", "T.Backtick'Name Next", DisplayName = "Identity control characters")]
+    [DataRow("T.Boom", "Boom (`Name\r\nNext)", "T.Boom ('Name Next)", DisplayName = "Display-name control characters")]
+    public void BuildMarkdown_FailureNameWithLineBreakAndBacktick_EscapesInlineCode(string identity, string displayName, string label)
     {
         GitHubActionsTestRecord[] records =
         [
-            new("Boom", "T.Backtick`Name\r\nNext", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+            new(displayName, identity, GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
         ];
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
 
         Assert.AreEqual(
-            """
+            $$"""
             <!-- microsoft-testing-platform:github:project-section -->
             ## ❌ Test Run Summary — T (net9.0)
 
@@ -1453,11 +1553,11 @@ public sealed class GitHubActionsSummaryReporterTests
 
             ### ❌ Failures (1)
 
-            - `T.Backtick'Name Next` — 1ms
+            - `{{label}}` — 1ms
 
             ### ⏱ Slowest tests
 
-            - `T.Backtick'Name Next` — 1ms
+            - `{{label}}` — 1ms
 
 
             """.Replace("\r\n", "\n"),
@@ -2078,6 +2178,72 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.AreEqual("short", GitHubActionsFailureDetails.Clip("short", maxLength: 10));
         Assert.IsNull(GitHubActionsFailureDetails.Clip("   ", maxLength: 10));
         Assert.IsNull(GitHubActionsFailureDetails.Clip(null, maxLength: 10));
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_DataDrivenTests_DistinguishesRowsInEverySection()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("RunDataTest (1)", "Tests.RunDataTest", GitHubActionsTerminalKind.Failed, TimeSpan.FromSeconds(2)),
+            new("RunDataTest (2)", "Tests.RunDataTest", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(1), isFlaky: true),
+        ];
+        GitHubCiRunSummaryModule module = GitHubCiRunSummaryAggregation.CreateModule(
+            records, "Tests", "Tests.dll", "net9.0", "x64", "execution", "session", 1, AtLeastOneTestFailedExitCode);
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(3),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
+
+        Assert.AreEqual(
+            """
+            ## ❌ Overall Test Run Summary
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 1 | 3.00s |
+
+            ### ⚠️ Flaky tests (1)
+
+            - `Tests.RunDataTest (2)`
+
+            <!-- microsoft-testing-platform:github:project-section -->
+            <details>
+            <summary>Tests (net9.0, x64)</summary>
+
+            ### ❌ Tests
+
+            | Total | Passed | Failed | Skipped | Flaky | Test duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 1 | 3.00s |
+
+            #### ❌ Failures (1)
+
+            - `Tests.RunDataTest (1)` — 2.00s
+
+            #### ⚠️ Flaky tests (1)
+
+            - `Tests.RunDataTest (2)`
+
+            #### ⏱ Slowest tests
+
+            - `Tests.RunDataTest (1)` — 2.00s
+            - `Tests.RunDataTest (2)` — 1.00s
+
+            </details>
+
+
+            """.ReplaceLineEndings("\n"),
+            markdown.ReplaceLineEndings("\n"));
     }
 
     [TestMethod]
