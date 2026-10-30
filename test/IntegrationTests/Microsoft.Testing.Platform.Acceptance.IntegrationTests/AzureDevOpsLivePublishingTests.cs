@@ -20,9 +20,19 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
 
     public TestContext TestContext { get; set; } = null!;
 
+    public static IEnumerable<object[]> DataDrivenMetadataModes()
+    {
+        foreach (MetadataMode mode in MetadataModesToRun)
+        {
+            if (mode is MetadataMode.Reflection or MetadataMode.SourceGeneration)
+            {
+                yield return [mode];
+            }
+        }
+    }
+
     [TestMethod]
-    [DataRow(MetadataMode.Reflection)]
-    [DataRow(MetadataMode.SourceGeneration)]
+    [DynamicData(nameof(DataDrivenMetadataModes))]
     public async Task DataDrivenRows_PublishDistinctAutomatedTestNames(MetadataMode metadataMode)
     {
         using TempDirectory directory = new();
