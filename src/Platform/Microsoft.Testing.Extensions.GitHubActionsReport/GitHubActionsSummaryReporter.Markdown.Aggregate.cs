@@ -68,7 +68,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             AppendFlakyTests(
                 builder,
-                aggregate.FlakyTests.Select(static test => test.FullyQualifiedName),
+                aggregate.FlakyTests.Select(static test => TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)),
                 aggregate.FlakyTests.Count);
         }
 
