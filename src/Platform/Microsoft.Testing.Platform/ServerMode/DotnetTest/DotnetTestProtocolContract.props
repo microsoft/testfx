@@ -25,7 +25,7 @@
         - Wire contract: IPC/ObjectFieldIds.cs, IPC/Constants.cs.
         - Interfaces + serializer registry: IPC/INamedPipeSerializer.cs, IPC/IRequest.cs, IPC/IResponse.cs,
           IPC/NamedPipeBase.cs (registry only).
-        - Serializer infrastructure: IPC/Serializers/BaseSerializer.cs, NamedPipeSerializer.cs, RegisterSerializers.cs
+        - Serializer infrastructure: IPC/Serializers/BaseSerializer*.cs, NamedPipeSerializer.cs, RegisterSerializers.cs
           and the base request/response serializers (VoidResponse/TestHostCompletedRequest/TestHostProcessPIDRequest).
         - Message models + serializers for serializer ids 0-12 (Models/*.cs + Serializers/*.cs under this folder,
           plus the base models under IPC/Models/*.cs).

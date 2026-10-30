@@ -5,3 +5,4 @@ Microsoft.Testing.Extensions.TestRecord.SkipReason.get -> string?
 Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, bool isFlaky, Microsoft.Testing.Extensions.TestFailureDetails? failure, string? skipReason) -> void
 *REMOVED*const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes = 16777216 -> long
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes = 78643200 -> long
+static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(string! identity, string! displayName) -> string!
