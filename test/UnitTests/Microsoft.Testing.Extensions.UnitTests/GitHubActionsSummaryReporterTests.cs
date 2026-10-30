@@ -2212,6 +2212,8 @@ public sealed class GitHubActionsSummaryReporterTests
             |---:|---:|---:|---:|---:|---:|
             | 2 | 1 | 1 | 0 | 1 | 3.00s |
 
+            **Runner policy:** ❌ failed · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
+
             ### ⚠️ Flaky tests (1)
 
             - `Tests.RunDataTest (2)`

@@ -12,6 +12,8 @@ internal static partial class CiRunSummaryAggregation
     private const int MaxFailures = 20;
     private const int MaxSlowestTests = 10;
     private const int MaxTopFailingClasses = 5;
+    private const int MaxSkipReasons = 10;
+    private const int MaxSkipReasonLength = 512;
 
     public static CiRunSummaryModule CreateModule(
         IReadOnlyList<TestRecord> records,
@@ -60,6 +62,11 @@ internal static partial class CiRunSummaryAggregation
             ModulePath = modulePath,
             TargetFramework = targetFramework,
             Architecture = architecture,
+            OperatingSystem = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? "Windows"
+                : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                    ? "Linux"
+                    : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macOS" : "Unknown",
             ExecutionId = executionId ?? string.Empty,
             SessionUid = sessionUid,
             RequestedOutputPath = requestedOutputPath ?? string.Empty,
@@ -96,6 +103,16 @@ internal static partial class CiRunSummaryAggregation
                     .Take(MaxSlowestTests)
                     .Select(record => ToSummaryTest(record, includeFailureDetails: false)),
             ],
+            SkipReasons =
+            [
+                .. records
+                    .Where(static record => record.Kind == TerminalKind.Skipped)
+                    .GroupBy(static record => NormalizeSkipReason(record.SkipReason), StringComparer.Ordinal)
+                    .OrderByDescending(static group => group.LongCount())
+                    .ThenBy(static group => group.Key, StringComparer.Ordinal)
+                    .Take(MaxSkipReasons)
+                    .Select(static group => new CiRunSummarySkipReason { Reason = group.Key, Count = group.LongCount() }),
+            ],
             TopFailingClasses =
             [
                 .. failingByClass
@@ -115,6 +132,13 @@ internal static partial class CiRunSummaryAggregation
             DisplayName = record.DisplayName,
             FullyQualifiedName = record.FullyQualifiedName,
             DurationTicks = record.Duration.Ticks,
+            Outcome = record.Kind switch
+            {
+                TerminalKind.Passed => "passed",
+                TerminalKind.Failed => "failed",
+                TerminalKind.Skipped => "skipped",
+                _ => null,
+            },
         };
 
         // Diagnostics are only meaningful on the failures list; carrying them on the slowest-tests entries would
@@ -129,6 +153,19 @@ internal static partial class CiRunSummaryAggregation
         }
 
         return test;
+    }
+
+    private static string NormalizeSkipReason(string? reason)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(reason))
+        {
+            return "Reason not provided";
+        }
+
+        string normalized = reason.Replace('\r', ' ').Replace('\n', ' ').Trim();
+        return normalized.Length > MaxSkipReasonLength
+            ? normalized.Substring(0, MaxSkipReasonLength - 3) + "..."
+            : normalized;
     }
 
     private static string GetClassName(string fullyQualifiedName)

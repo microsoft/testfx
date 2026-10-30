@@ -27,6 +27,8 @@ Job-summary test names retain their fully qualified method names and include fra
 >
 > Cross-module aggregation is negotiated with `dotnet test`. If the SDK does not provide the authoritative run-summary context, the extension keeps its standalone behavior; a manually invoked post-processor labels totals as observed and leaves overall duration and exit verdict unavailable rather than reconstructing them.
 
+When authoritative context is available, the aggregate labels the final invocation outcome and exit separately as **Runner policy**, including exit `0`. Exit-code policies do not rewrite failed test results or remove their details. The existing `on-failure` behavior retains visibility for actual failed tests and partial runs even when runner policy accepts the invocation; it is not an exit-code-only suppression switch.
+
 ### Running through `dotnet test`
 
 Log groups, failure and skip annotations, and slow-test notices are forwarded unchanged through the SDK's informational display-message channel. This requires an SDK that negotiates Microsoft.Testing.Platform protocol 1.3.0 or later. The Markdown job summary is written independently and does not require that channel.
