@@ -44,9 +44,10 @@ parent/child exit semantics, and multi-module aggregation must not change.
 Reporter timers are owned by the existing progress terminal, stopped/joined on
 completion/disposal, and reset for subsequent runs.
 
-Implementation targets `main`. No release-branch backport or downstream feature
-enablement is authorized by this change alone; the coordinating CI-output owner
-retains rollout and servicing responsibility.
+Implementation targets `main` only. This batch excludes backports, downstream
+SDK-pin updates, and feature-gate rollout. A future downstream pin or backport is
+separate work requiring its own release-branch validation; existing SDK releases
+are not fixed by this PR.
 
 ## Research and experiments
 
@@ -60,6 +61,9 @@ retains rollout and servicing responsibility.
   diagnostics; reuse them rather than introducing a second reporting pipeline.
 - 2026-10-30: The working tree and refreshed `origin/main` both resolve to the
   baseline above; no open terminal-reporter PR overlaps this work.
+- 2026-10-30: The coordinator finalized main-only delivery for this batch.
+  Backports, downstream SDK-pin updates, and feature-gate rollout are out of
+  scope rather than pending decisions for this PR.
 - 2026-10-30: Initial build launches could not find Windows PowerShell because
   the inherited PATH exceeded `cmd.exe`'s limit. A short process-local PATH
   containing the pinned dotnet, Windows PowerShell, System32, Git, and the active
@@ -227,5 +231,6 @@ remains separate from the executed TestFx-local proof.
 
 - The source/package pair has been delivered. Native SDK validation results are
   pending; this PR does not claim that the outer SDK console changed.
-- Supported release-branch servicing is a coordinator decision after composed
-  validation; no claim of cross-repository completion is made here.
+- Backports, downstream SDK-pin updates, and feature-gate rollout are outside
+  this main-only batch. Future work in those areas needs separate release-branch
+  validation; no existing SDK release or cross-repository completion is claimed.
