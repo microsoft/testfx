@@ -133,11 +133,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     slowestEmitted = true;
                 }
 
-<<<<<<< HEAD
-                builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
-=======
-                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(record.FullyQualifiedName, record.DisplayName))).Append("` — ").Append(GitHubActionsFailureDetails.FormatDuration(record.Duration)).Append('\n');
->>>>>>> Show data-row arguments in GitHub Actions summaries
+                builder.Append("- `").Append(EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(record.FullyQualifiedName, record.DisplayName))).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
             }
 
             if (slowestEmitted)
@@ -257,13 +253,8 @@ internal sealed partial class GitHubActionsSummaryReporter
             builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)
             {
-<<<<<<< HEAD
-                builder.Append("- `").Append(EscapeInlineCode(test.FullyQualifiedName)).Append("` — ")
+                builder.Append("- `").Append(EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName))).Append("` — ")
                     .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
-=======
-                builder.Append("- `").Append(GitHubActionsFailureDetails.EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName))).Append("` — ")
-                    .Append(GitHubActionsFailureDetails.FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
->>>>>>> Show data-row arguments in GitHub Actions summaries
             }
 
             builder.Append('\n');

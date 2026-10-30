@@ -36,8 +36,6 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class GitHubActionsSummaryReporterTests
 {
-<<<<<<< HEAD
-=======
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -382,7 +380,6 @@ public sealed class GitHubActionsSummaryReporterTests
         public void Dispose() => Directory.Delete(DirectoryPath, recursive: true);
     }
 
->>>>>>> Show data-row arguments in GitHub Actions summaries
     // ExitCode.Success (0): a normal passing run — no exit-code callout expected.
     private const int SuccessExitCode = 0;
 
@@ -1534,8 +1531,6 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-<<<<<<< HEAD
-=======
     [DataRow("T.Backtick`Name\r\nNext", "T.Backtick`Name\r\nNext", "T.Backtick'Name Next", DisplayName = "Identity control characters")]
     [DataRow("T.Boom", "Boom (`Name\r\nNext)", "T.Boom ('Name Next)", DisplayName = "Display-name control characters")]
     public void BuildMarkdown_FailureNameWithLineBreakAndBacktick_EscapesInlineCode(string identity, string displayName, string label)
@@ -1570,7 +1565,6 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
->>>>>>> Show data-row arguments in GitHub Actions summaries
     public void BuildMarkdown_FailureMessageContainingCodeFence_DoesNotBreakOutOfTheBlock()
     {
         // A message that itself contains a ``` fence must not terminate the block we open around it.
@@ -3667,6 +3661,10 @@ public sealed class GitHubActionsSummaryReporterTests
 
     private sealed class CapturingHistoryService(bool isEnabled = false) : IGitHubActionsHistoryService
     {
+        public GitHubActionsHistoryStats? Stats { get; set; }
+
+        public Exception? WriteError { get; set; }
+
         public List<IReadOnlyList<GitHubCiRunSummaryModule>> Writes { get; } = [];
 
         public bool IsEnabled { get; } = isEnabled;
@@ -3681,14 +3679,14 @@ public sealed class GitHubActionsSummaryReporterTests
             string displayName,
             out GitHubActionsHistoryStats stats)
         {
-            stats = default;
-            return false;
+            stats = Stats.GetValueOrDefault();
+            return Stats.HasValue;
         }
 
         public Task WriteAsync(IReadOnlyList<GitHubCiRunSummaryModule> modules, CancellationToken cancellationToken)
         {
             Writes.Add(modules);
-            return Task.CompletedTask;
+            return WriteError is null ? Task.CompletedTask : Task.FromException(WriteError);
         }
     }
 
