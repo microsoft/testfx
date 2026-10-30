@@ -1018,7 +1018,9 @@ public sealed class AzureDevOpsSummaryReporterTests
             """
             ## ❌ Overall test results
 
-            **13 tests** · ✅ **11 passed** · ❌ **1 failed** · ⏭ **1 skipped** · ⏱ Elapsed: **20.00s** · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
+            **13 tests** · ✅ **11 passed** · ❌ **1 failed** · ⏭ **1 skipped** · ⏱ Elapsed: **20.00s**
+
+            **Runner policy:** ❌ failed · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
 
             > Duration history unavailable for the observed tests; current timings are not a historical baseline.
 

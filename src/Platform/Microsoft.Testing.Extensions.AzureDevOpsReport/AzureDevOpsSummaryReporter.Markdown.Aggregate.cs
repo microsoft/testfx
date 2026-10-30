@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -25,8 +26,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             aggregate.SkippedTests,
             aggregate.FlakyTests.Count,
             aggregate.Duration,
-            aggregate.ExitCode,
+            aggregate.HasAuthoritativeRunSummary ? null : aggregate.ExitCode,
             isRunElapsed: true);
+        CiRunSummaryExitCode.AppendRunnerPolicy(builder, aggregate, AzureDevOpsResources.ResourceManager);
         if (aggregate.IsPartial)
         {
             builder.Append("> **Partial summary:** the test run was truncated.\n\n");

@@ -25,6 +25,8 @@ The Markdown summary is independent from the self-contained HTML report produced
 
 The aggregate contains one top-ten slowest-test list across modules, including failed tests and their outcomes, module names, and target frameworks. **Elapsed** is the SDK-reported run duration; each module's **test time** is the sum of reported test durations and may exceed elapsed time when tests run concurrently. Missing duration history is explicitly unavailable, not a baseline for comparison.
 
+When the SDK supplies an authoritative final invocation exit, the aggregate shows it separately as **Runner policy**, including exit `0`. A policy such as `--ignore-exit-code 2` can accept an invocation that still contains failed tests: the test-result indicator, failed counts and failure details remain unchanged. Partial runs keep their warning; older fragments without authoritative context do not invent a policy verdict.
+
 Skipped tests are grouped by their reported reason and execution platform, with module/target-framework context and at most ten groups shown. Issue references in reasons are retained; skipped test names are not dumped into the summary. Omitted groups are accounted for by a skipped-test count. Older summary fragments remain supported and label unavailable outcomes, skip reasons, and platform metadata explicitly.
 
 ## Usage
