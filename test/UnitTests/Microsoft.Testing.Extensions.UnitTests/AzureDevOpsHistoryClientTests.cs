@@ -4,6 +4,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Platform.Helpers;
@@ -127,6 +128,33 @@ public sealed class AzureDevOpsHistoryClientTests
         Assert.AreEqual("https://example/run/results?outcomes=Failed,Passed&$top=20&$skip=7&api-version=7.1", handler.Requests[0].RequestUri!.OriginalString);
         Assert.AreEqual("Basic", handler.Requests[0].Headers.Authorization!.Scheme);
         Assert.AreEqual("OnRva2Vu", handler.Requests[0].Headers.Authorization!.Parameter);
+    }
+
+    [TestMethod]
+    [DataRow("Namespace.MyType.MyMethod (1)", "MyMethod (1)", "Namespace.MyType.MyMethod", DisplayName = "Data-row method history")]
+    [DataRow("Namespace.MyType.MyMethod (1)", "Namespace.MyType.MyMethod(1)", "Namespace.MyType.MyMethod", DisplayName = "Qualified data-row method history")]
+    [DataRow("Namespace.MyType.MyMethod (Custom scenario)", "Custom scenario", "Namespace.MyType.MyMethod", DisplayName = "Custom display-name method history")]
+    [DataRow("Namespace.MyType.MyMethod (MyMethodology)", "MyMethodology", "Namespace.MyType.MyMethod", DisplayName = "Custom name sharing method prefix")]
+    [DataRow("Namespace.MyType.MyMethod", "MyMethod", "Namespace.MyType.MyMethod", DisplayName = "Ordinary method history")]
+    [DataRow("Display name (1)", "Display name (1)", "Display name (1)", DisplayName = "Display-only identity is preserved")]
+    [DataRow("Namespace.MyType.MyMethod (1)", null, "Namespace.MyType.MyMethod (1)", DisplayName = "Missing title preserves identity")]
+    [DataRow("Namespace.MyType.MyMethod (1)", "OtherMethod (1)", "Namespace.MyType.MyMethod (1)", DisplayName = "Unrelated title preserves identity")]
+    public async Task GetResultsAsync_PreservesMethodHistoryForPublishedDisplayLabels(string automatedTestName, string? testCaseTitle, string expectedName)
+    {
+        string body = JsonSerializer.Serialize(new
+        {
+            value = new[] { new { automatedTestName, testCaseTitle, outcome = "Passed", durationInMs = 12.5 } },
+        });
+        ScriptedHandler handler = new(() => Response(HttpStatusCode.OK, body));
+        using HttpClient http = new(handler);
+        AzureDevOpsHistoryClient client = new(new TestTask(), new TestClock(), http);
+
+        AzureDevOpsTestResultsPage page = await client.GetResultsAsync(CreateQuery(), "https://example/run", 0, 10, null, CancellationToken.None);
+
+        AzureDevOpsTestResult result = Assert.ContainsSingle(page.Results);
+        Assert.AreEqual(expectedName, result.AutomatedTestName);
+        Assert.AreEqual("Passed", result.Outcome);
+        Assert.AreEqual(12.5, result.DurationMilliseconds);
     }
 
     [TestMethod]
