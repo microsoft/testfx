@@ -36,6 +36,353 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class GitHubActionsSummaryReporterTests
 {
+<<<<<<< HEAD
+=======
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task SessionFinishing_FailureDetailsIncludeRealHistoricalContext()
+    {
+        using SummaryExecutionFixture fixture = new(exitCode: 2);
+        fixture.History.Stats = new GitHubActionsHistoryStats(passCount: 7, failCount: 3, flakyCount: 1);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(new FailedTestNodeStateProperty("boom"), 1, false, "Tests.WithHistory"), TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains("Tests.WithHistory", markdown);
+        Assert.Contains("boom Historical context: failed 3 and flaked 1 of 10 prior runs within the 30-day history window.", markdown);
+        Assert.AreEqual("failed", Assert.ContainsSingle(Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes)).HistoryTests).Outcome);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_DataDrivenTest_PreservesHistoryIdentity()
+    {
+        using SummaryExecutionFixture fixture = new();
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        DateTimeOffset start = DateTimeOffset.UtcNow;
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new TestNodeUpdateMessage(
+                fixture.Session.Object.SessionUid,
+                new TestNode
+                {
+                    Uid = "row-1",
+                    DisplayName = "RunDataTest (1)",
+                    Properties = new PropertyBag(
+                        PassedTestNodeStateProperty.CachedInstance,
+                        new TestMethodIdentifierProperty("Tests", string.Empty, "Tests", "RunDataTest", 0, ["System.Int32"], "System.Void"),
+                        new TimingProperty(new TimingInfo(start, start.AddSeconds(1), TimeSpan.FromSeconds(1)))),
+                }),
+            TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        GitHubCiRunSummaryHistoryTest history = Assert.ContainsSingle(module.HistoryTests);
+        Assert.AreEqual("row-1", history.TestId);
+        Assert.AreEqual("Tests.RunDataTest", history.FullyQualifiedName);
+        Assert.AreEqual("RunDataTest (1)", history.DisplayName);
+        GitHubCiRunSummaryTest slowest = Assert.ContainsSingle(module.SlowestTests);
+        Assert.AreEqual("Tests.RunDataTest", slowest.FullyQualifiedName);
+        Assert.AreEqual("RunDataTest (1)", slowest.DisplayName);
+        Assert.Contains(
+            """
+            ### ⏱ Slowest tests
+
+            - `Tests.RunDataTest (1)` — 1.00s
+            """.ReplaceLineEndings("\n"),
+            File.ReadAllText(fixture.SummaryPath).ReplaceLineEndings("\n"));
+    }
+
+    [TestMethod]
+    [DataRow("passed", "passed", "passed")]
+    [DataRow("skipped", "passed", "passed")]
+    [DataRow("passed", "skipped", "passed")]
+    [DataRow("skipped", "skipped", "skipped")]
+    [DataRow("failed", "passed", "failed")]
+    [DataRow("passed", "failed", "failed")]
+    public async Task SessionFinishing_FoldedHistoryMergesFinalRowsWithoutInventingExtraTestIdentities(string first, string second, string expected)
+    {
+        using SummaryExecutionFixture fixture = new(historyOnly: true);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        foreach (TestNodeStateProperty state in new[] { first, second }.Select<string, TestNodeStateProperty>(static outcome => outcome switch
+            {
+                "failed" => new FailedTestNodeStateProperty("failure"),
+                "skipped" => SkippedTestNodeStateProperty.CachedInstance,
+                _ => PassedTestNodeStateProperty.CachedInstance,
+            }))
+        {
+            await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(state, 1, false, "Tests.Folded"), TestContext.CancellationToken);
+        }
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        Assert.AreEqual(2, module.TotalTests);
+        GitHubCiRunSummaryHistoryTest history = Assert.ContainsSingle(module.HistoryTests);
+        Assert.AreEqual("flaky", history.TestId);
+        Assert.AreEqual("Tests.Folded", history.FullyQualifiedName);
+        Assert.AreEqual(expected, history.Outcome);
+        Assert.IsFalse(history.IsFlaky);
+        Assert.IsFalse(File.Exists(fixture.SummaryPath));
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_HistoryFailureIsLoggedWithoutAttemptingSummaryWrite()
+    {
+        using SummaryExecutionFixture fixture = new();
+        fixture.History.WriteError = new IOException("history write unavailable");
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        Assert.ContainsSingle(fixture.History.Writes);
+        Assert.IsEmpty(fixture.Warnings);
+        Assert.IsFalse(File.Exists(fixture.SummaryPath));
+        Assert.Contains(
+            invocation => invocation.Method.Name == nameof(ILogger.Log)
+                && invocation.Arguments[1].ToString()!.Contains("Unexpected exception in OnTestSessionFinishingAsync", StringComparison.Ordinal)
+                && invocation.Arguments[1].ToString()!.Contains("history write unavailable", StringComparison.Ordinal),
+            fixture.Logger.Invocations);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_DroppedSectionAndNoticeFailureProduceDistinctWarningsWithoutCorruptingExistingContent()
+    {
+        using SummaryExecutionFixture fixture = new();
+        string original = new('x', GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1);
+        File.WriteAllText(fixture.SummaryPath, original, new UTF8Encoding(false));
+        var fileSystem = new Mock<IFileSystem>();
+        var real = new SystemFileSystem();
+        int lockAttempts = 0;
+        fileSystem.Setup(value => value.ExistFile(It.IsAny<string>())).Returns((string path) => File.Exists(path));
+        fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Returns((string path, FileMode mode, FileAccess access, FileShare share) =>
+                path.EndsWith(".microsoft-testing-platform.lock", StringComparison.Ordinal) && ++lockAttempts == 2
+                    ? throw new NotSupportedException("notice unavailable")
+                    : real.NewFileStream(path, mode, access, share));
+        GitHubActionsSummaryReporter reporter = fixture.CreateReporter(fileSystem.Object);
+        await reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+
+        await reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        Assert.AreEqual(original, File.ReadAllText(fixture.SummaryPath));
+        Assert.HasCount(2, fixture.Warnings);
+        Assert.Contains("limit", fixture.Warnings[0], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("notice unavailable", fixture.Warnings[1]);
+        Assert.Contains(fixture.SummaryPath, fixture.Warnings[1]);
+        Assert.ContainsSingle(fixture.History.Writes);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SessionFinishing_HistoryPersistsWithoutSummaryWhenDisabledOrPathMissing(bool historyOnly)
+    {
+        using SummaryExecutionFixture fixture = new(historyOnly: historyOnly, summaryPathMissing: !historyOnly);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false, "Tests.Passed"),
+            TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        Assert.AreEqual(1, module.TotalTests);
+        Assert.AreEqual(1, module.PassedTests);
+        Assert.AreEqual("Tests.Passed", Assert.ContainsSingle(module.HistoryTests).FullyQualifiedName);
+        Assert.AreEqual(!historyOnly, module.GitHubActionsStepSummaryEnabled);
+        Assert.IsFalse(File.Exists(fixture.SummaryPath));
+        Assert.IsEmpty(fixture.Warnings);
+        Assert.IsEmpty(Directory.GetFiles(fixture.DirectoryPath));
+    }
+
+    [TestMethod]
+    [DataRow(0, false, false)]
+    [DataRow(8, false, true)]
+    [DataRow(2, true, true)]
+    public async Task SessionFinishing_OnFailurePolicyKeepsHistoryAndWritesOnlyForActualFailure(int exitCode, bool failingTest, bool expectedSummary)
+    {
+        using SummaryExecutionFixture fixture = new(onFailureOnly: true, exitCode: exitCode);
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateRetryUpdate(failingTest ? new FailedTestNodeStateProperty("actual failure") : PassedTestNodeStateProperty.CachedInstance, 1, false, "Tests.Observed"),
+            TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        GitHubCiRunSummaryModule module = Assert.ContainsSingle(Assert.ContainsSingle(fixture.History.Writes));
+        Assert.AreEqual(1, module.TotalTests);
+        Assert.AreEqual(failingTest ? 1 : 0, module.FailedTests);
+        Assert.AreEqual(failingTest ? 0 : 1, module.PassedTests);
+        Assert.IsTrue(module.WriteOnFailureOnly);
+        Assert.AreEqual(expectedSummary, File.Exists(fixture.SummaryPath));
+        if (expectedSummary)
+        {
+            string markdown = File.ReadAllText(fixture.SummaryPath);
+            Assert.Contains("Coverage.Reporter.Tests", markdown);
+            if (failingTest)
+            {
+                Assert.Contains("Tests.Observed", markdown);
+                Assert.Contains("actual failure", markdown);
+            }
+            else
+            {
+                Assert.Contains("ZeroTests", markdown);
+            }
+        }
+
+        Assert.IsEmpty(fixture.Warnings);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SessionFinishing_SharedBudgetPreservesPreviousContentAndChoosesFullOrCondensedProject(bool condensed)
+    {
+        using SummaryExecutionFixture fixture = new(exitCode: 2);
+        int existingBytes = condensed ? GitHubActionsFailureDetails.CondenseLength : 0;
+        string prefix = new('x', existingBytes);
+        File.WriteAllText(fixture.SummaryPath, prefix, new UTF8Encoding(false));
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateRetryUpdate(new FailedTestNodeStateProperty("diagnostic payload"), 1, false, "Tests.Broken"),
+            TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        string markdown = File.ReadAllText(fixture.SummaryPath);
+        Assert.Contains(prefix, markdown);
+        Assert.Contains("Coverage.Reporter.Tests", markdown);
+        Assert.AreEqual(!condensed, markdown.Contains("Tests.Broken", StringComparison.Ordinal));
+        Assert.AreEqual(!condensed, markdown.Contains("diagnostic payload", StringComparison.Ordinal));
+        Assert.IsLessThanOrEqualTo(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, new FileInfo(fixture.SummaryPath).Length);
+        Assert.IsEmpty(fixture.Warnings);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_OverfullSummaryLeavesExistingBytesAndWarnsWithoutDroppingHistory()
+    {
+        using SummaryExecutionFixture fixture = new();
+        string original = new('x', GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1);
+        File.WriteAllText(fixture.SummaryPath, original, new UTF8Encoding(false));
+        await fixture.Reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await fixture.Reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false), TestContext.CancellationToken);
+
+        await fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        Assert.AreEqual(original, File.ReadAllText(fixture.SummaryPath));
+        Assert.ContainsSingle(fixture.History.Writes);
+        Assert.Contains("limit", Assert.ContainsSingle(fixture.Warnings), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(path => path.EndsWith(".tmp", StringComparison.Ordinal), Directory.GetFiles(fixture.DirectoryPath));
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_UnwritableSummaryProducesOneWarningAndPreservesHistory()
+    {
+        using SummaryExecutionFixture fixture = new();
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(value => value.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            .Throws(new NotSupportedException("controlled write unavailable"));
+        GitHubActionsSummaryReporter reporter = fixture.CreateReporter(fileSystem.Object);
+        await reporter.OnTestSessionStartingAsync(fixture.Session.Object);
+        await reporter.ConsumeAsync(Mock.Of<IDataProducer>(), CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, 1, false), TestContext.CancellationToken);
+
+        await reporter.OnTestSessionFinishingAsync(fixture.Session.Object);
+
+        Assert.ContainsSingle(fixture.History.Writes);
+        string warning = Assert.ContainsSingle(fixture.Warnings);
+        Assert.Contains(fixture.SummaryPath, warning);
+        Assert.Contains("controlled write unavailable", warning);
+        Assert.IsFalse(File.Exists(fixture.SummaryPath));
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_CanceledSessionDoesNotPersistOrWrite()
+    {
+        using SummaryExecutionFixture fixture = new();
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        fixture.Session.SetupGet(value => value.CancellationToken).Returns(cancellation.Token);
+
+        OperationCanceledException error = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => fixture.Reporter.OnTestSessionFinishingAsync(fixture.Session.Object));
+
+        Assert.AreEqual(cancellation.Token, error.CancellationToken);
+        Assert.IsEmpty(fixture.History.Writes);
+        Assert.IsEmpty(fixture.Warnings);
+        Assert.IsEmpty(Directory.GetFiles(fixture.DirectoryPath));
+    }
+
+    private sealed class SummaryExecutionFixture : IDisposable
+    {
+        private readonly TestCommandLineOptions _options;
+        private readonly Mock<IConfiguration> _configuration = new();
+        private readonly Mock<IEnvironment> _environment = new();
+        private readonly Mock<IMessageBus> _bus = new();
+        private readonly Mock<IOutputDevice> _output = new();
+        private readonly Mock<ITestApplicationModuleInfo> _module = new();
+        private readonly Mock<ITestApplicationProcessExitCode> _exit = new();
+        private readonly Mock<ITestCoverageResult> _coverage = new();
+        private readonly Mock<ILoggerFactory> _factory = new();
+
+        public SummaryExecutionFixture(bool historyOnly = false, bool summaryPathMissing = false, bool onFailureOnly = false, int exitCode = 0)
+        {
+            DirectoryPath = Path.Combine(Path.GetTempPath(), "github-summary-coverage-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(DirectoryPath);
+            SummaryPath = Path.Combine(DirectoryPath, "summary.md");
+            Dictionary<string, string[]> options = new() { [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [] };
+            if (historyOnly || onFailureOnly)
+            {
+                options[GitHubActionsCommandLineOptions.GitHubActionsStepSummary] =
+                    [historyOnly ? "off" : GitHubActionsCommandLineOptions.StepSummaryOnFailureValue];
+            }
+
+            _options = new TestCommandLineOptions(options);
+            _environment.Setup(value => value.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+            _environment.Setup(value => value.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(summaryPathMissing ? null : SummaryPath);
+            _module.Setup(value => value.TryGetAssemblyName()).Returns("Coverage.Reporter.Tests");
+            _module.Setup(value => value.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(DirectoryPath, "Tests.dll"));
+            _exit.Setup(value => value.GetProcessExitCode()).Returns(exitCode);
+            _coverage.SetupGet(value => value.Scopes).Returns([]);
+            _coverage.SetupGet(value => value.Thresholds).Returns([]);
+            Logger.Setup(value => value.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+            _factory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(Logger.Object);
+            _output.Setup(value => value.DisplayAsync(It.IsAny<Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer>(), It.IsAny<Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+                .Callback<Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData, CancellationToken>((_, data, _) => Warnings.Add(((WarningMessageOutputDeviceData)data).Message))
+                .Returns(Task.CompletedTask);
+            Session.SetupGet(value => value.SessionUid).Returns(new SessionUid("summary-coverage-session"));
+            Session.SetupGet(value => value.CancellationToken).Returns(CancellationToken.None);
+            Reporter = CreateReporter(new SystemFileSystem());
+        }
+
+        public string DirectoryPath { get; }
+
+        public string SummaryPath { get; }
+
+        public CapturingHistoryService History { get; } = new(isEnabled: true);
+
+        public Mock<ITestSessionContext> Session { get; } = new();
+
+        public GitHubActionsSummaryReporter Reporter { get; }
+
+        public List<string> Warnings { get; } = [];
+
+        public Mock<ILogger> Logger { get; } = new();
+
+        public GitHubActionsSummaryReporter CreateReporter(IFileSystem fileSystem)
+            => new(_options, _configuration.Object, _environment.Object, fileSystem, _bus.Object,
+                _output.Object, _module.Object, _exit.Object, _coverage.Object, _factory.Object, static () => false, History);
+
+        public void Dispose() => Directory.Delete(DirectoryPath, recursive: true);
+    }
+
+>>>>>>> Show data-row arguments in GitHub Actions summaries
     // ExitCode.Success (0): a normal passing run — no exit-code callout expected.
     private const int SuccessExitCode = 0;
 
@@ -543,6 +890,62 @@ public sealed class GitHubActionsSummaryReporterTests
         {
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    [TestMethod]
+    [DataRow("RunDataTest (1)", "RunDataTest (2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Data rows with a space")]
+    [DataRow("RunDataTest(1)", "RunDataTest(2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Data rows without a space")]
+    [DataRow("Tests.RunDataTest (1)", "Tests.RunDataTest (2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Fully qualified data rows")]
+    [DataRow("Tests.RunDataTest(1)", "Tests.RunDataTest(2)", "Tests.RunDataTest (1)", "Tests.RunDataTest (2)", DisplayName = "Fully qualified data rows without a space")]
+    [DataRow("First scenario", "RunDataTestology", "Tests.RunDataTest (First scenario)", "Tests.RunDataTest (RunDataTestology)", DisplayName = "Custom display names")]
+    public void BuildMarkdown_TestDisplayNames_DistinguishesRowsInEverySection(
+        string failedDisplayName,
+        string flakyDisplayName,
+        string failedLabel,
+        string flakyLabel)
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new(failedDisplayName, "Tests.RunDataTest", GitHubActionsTerminalKind.Failed, TimeSpan.FromSeconds(2),
+                new GitHubActionsTestFailureDetails("row failed", null, null, null, 0)),
+            new(flakyDisplayName, "Tests.RunDataTest", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(1), isFlaky: true),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "Tests", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.AreEqual(
+            $$"""
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — Tests (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 1 | 3.00s |
+
+            ### ❌ Failures (1)
+
+            <details>
+            <summary><code>{{failedLabel}}</code> — 2.00s</summary>
+
+            ```text
+            row failed
+            ```
+
+            </details>
+
+
+            ### ⚠️ Flaky tests (1)
+
+            - `{{flakyLabel}}`
+
+            ### ⏱ Slowest tests
+
+            - `{{failedLabel}}` — 2.00s
+            - `{{flakyLabel}}` — 1.00s
+
+
+            """.ReplaceLineEndings("\n"),
+            markdown.ReplaceLineEndings("\n"));
     }
 
     [TestMethod]
@@ -1087,19 +1490,21 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildMarkdown_HtmlEncodesFailureNameInSummaryElement()
+    [DataRow("T.Map<string,int>", "T.Map<string,int>", "T.Map&lt;string,int&gt;", "T.Map<string,int>", DisplayName = "Generic identity")]
+    [DataRow("T.Map", "Map (<string,int>)", "T.Map (&lt;string,int&gt;)", "T.Map (<string,int>)", DisplayName = "Data-row display name")]
+    public void BuildMarkdown_HtmlEncodesFailureNameInSummaryElement(string identity, string displayName, string htmlLabel, string inlineLabel)
     {
         // A generic test name would otherwise be parsed as an HTML tag and swallow the rest of the <summary> line.
         var failure = new GitHubActionsTestFailureDetails("boom", null, null, null, 0);
         GitHubActionsTestRecord[] records =
         [
-            new("Map", "T.Map<string,int>", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1), failure),
+            new(displayName, identity, GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1), failure),
         ];
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
 
         Assert.AreEqual(
-            """
+            $$"""
             <!-- microsoft-testing-platform:github:project-section -->
             ## ❌ Test Run Summary — T (net9.0)
 
@@ -1110,7 +1515,7 @@ public sealed class GitHubActionsSummaryReporterTests
             ### ❌ Failures (1)
 
             <details>
-            <summary><code>T.Map&lt;string,int&gt;</code> — 1ms</summary>
+            <summary><code>{{htmlLabel}}</code> — 1ms</summary>
 
             ```text
             boom
@@ -1121,7 +1526,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
             ### ⏱ Slowest tests
 
-            - `T.Map<string,int>` — 1ms
+            - `{{inlineLabel}}` — 1ms
 
 
             """.Replace("\r\n", "\n"),
@@ -1129,6 +1534,43 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+<<<<<<< HEAD
+=======
+    [DataRow("T.Backtick`Name\r\nNext", "T.Backtick`Name\r\nNext", "T.Backtick'Name Next", DisplayName = "Identity control characters")]
+    [DataRow("T.Boom", "Boom (`Name\r\nNext)", "T.Boom ('Name Next)", DisplayName = "Display-name control characters")]
+    public void BuildMarkdown_FailureNameWithLineBreakAndBacktick_EscapesInlineCode(string identity, string displayName, string label)
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new(displayName, identity, GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.AreEqual(
+            $$"""
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ❌ Test Run Summary — T (net9.0)
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 1 | 0 | 1 | 0 | 0 | 1ms |
+
+            ### ❌ Failures (1)
+
+            - `{{label}}` — 1ms
+
+            ### ⏱ Slowest tests
+
+            - `{{label}}` — 1ms
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
+    }
+
+    [TestMethod]
+>>>>>>> Show data-row arguments in GitHub Actions summaries
     public void BuildMarkdown_FailureMessageContainingCodeFence_DoesNotBreakOutOfTheBlock()
     {
         // A message that itself contains a ``` fence must not terminate the block we open around it.
@@ -1742,6 +2184,72 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.AreEqual("short", GitHubActionsFailureDetails.Clip("short", maxLength: 10));
         Assert.IsNull(GitHubActionsFailureDetails.Clip("   ", maxLength: 10));
         Assert.IsNull(GitHubActionsFailureDetails.Clip(null, maxLength: 10));
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_DataDrivenTests_DistinguishesRowsInEverySection()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("RunDataTest (1)", "Tests.RunDataTest", GitHubActionsTerminalKind.Failed, TimeSpan.FromSeconds(2)),
+            new("RunDataTest (2)", "Tests.RunDataTest", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(1), isFlaky: true),
+        ];
+        GitHubCiRunSummaryModule module = GitHubCiRunSummaryAggregation.CreateModule(
+            records, "Tests", "Tests.dll", "net9.0", "x64", "execution", "session", 1, AtLeastOneTestFailedExitCode);
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(3),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
+
+        Assert.AreEqual(
+            """
+            ## ❌ Overall Test Run Summary
+
+            | Total | Passed | Failed | Skipped | Flaky | Duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 1 | 3.00s |
+
+            ### ⚠️ Flaky tests (1)
+
+            - `Tests.RunDataTest (2)`
+
+            <!-- microsoft-testing-platform:github:project-section -->
+            <details>
+            <summary>Tests (net9.0, x64)</summary>
+
+            ### ❌ Tests
+
+            | Total | Passed | Failed | Skipped | Flaky | Test duration |
+            |---:|---:|---:|---:|---:|---:|
+            | 2 | 1 | 1 | 0 | 1 | 3.00s |
+
+            #### ❌ Failures (1)
+
+            - `Tests.RunDataTest (1)` — 2.00s
+
+            #### ⚠️ Flaky tests (1)
+
+            - `Tests.RunDataTest (2)`
+
+            #### ⏱ Slowest tests
+
+            - `Tests.RunDataTest (1)` — 2.00s
+            - `Tests.RunDataTest (2)` — 1.00s
+
+            </details>
+
+
+            """.ReplaceLineEndings("\n"),
+            markdown.ReplaceLineEndings("\n"));
     }
 
     [TestMethod]
