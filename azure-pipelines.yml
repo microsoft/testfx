@@ -466,6 +466,13 @@ stages:
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           - task: PowerShell@2
+            displayName: 'Validate sample output capture'
+            inputs:
+              targetType: filePath
+              filePath: './eng/test-samples-output.ps1'
+              failOnStderr: false
+
+          - task: PowerShell@2
             displayName: 'Test Samples'
             inputs:
               targetType: filePath

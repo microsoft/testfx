@@ -9,6 +9,8 @@
     with --help to verify their executable and extension composition without exercising that
     external dependency. Library and application-under-test projects are explicitly classified as
     dependencies so newly added projects cannot silently escape CI validation.
+    In Azure Pipelines, native stdout and stderr are saved below BinaryLogDirectory (or
+    artifacts/log/<Configuration>) and replayed for failed attempts. Local runs keep live output.
 
 .PARAMETER Configuration
     The build configuration to use (default: Release).
@@ -43,6 +45,14 @@ $env:DOTNET_ROLL_FORWARD = "Major"
 
 if ($BinaryLogDirectory) {
     New-Item -ItemType Directory -Path $BinaryLogDirectory -Force | Out-Null
+}
+
+$captureSampleOutput = $env:TF_BUILD -eq "true"
+$sampleOutputDirectory = $null
+if ($captureSampleOutput) {
+    $logRoot = if ($BinaryLogDirectory) { $BinaryLogDirectory } else { Join-Path $repoRoot "artifacts/log/$Configuration" }
+    $sampleOutputDirectory = Join-Path (Join-Path $logRoot "sample-output") ([guid]::NewGuid().ToString("N"))
+    $sampleOutputDirectory = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($sampleOutputDirectory)
 }
 
 $dependencyProjects = @(
@@ -134,7 +144,8 @@ function Invoke-SampleCommand {
     $binlogArgument = Get-BinlogArgument -Project $Project -Mode $Mode
     $platformArgument = if ($Platform) { "/p:Platform=$Platform" } else { $null }
 
-    Write-Host "Validating sample: $Project ($Mode)"
+    $displayMode = if ($Mode -in @("Smoke", "ExecutableSmoke")) { "$Mode; help only" } else { $Mode }
+    Write-Host "Validating sample: $Project ($displayMode)"
     Push-Location (Split-Path -Parent $projectPath)
 
     try {
@@ -142,6 +153,7 @@ function Invoke-SampleCommand {
             Get-AppxPackage -Name $PackageName | Remove-AppxPackage
         }
 
+        $commandPath = $dotnetPath
         switch ($Mode) {
             "Run" {
                 $executableArguments = @()
@@ -161,14 +173,8 @@ function Invoke-SampleCommand {
                     throw "Could not find the built executable '$executableName' for '$Project'."
                 }
 
-                & $executable.FullName $executableArguments
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Sample validation failed for '$Project' with exit code $LASTEXITCODE."
-                }
-
-                Write-Host "SUCCESS: Validated $Project"
-                Write-Host ""
-                return
+                $commandPath = $executable.FullName
+                $arguments = $executableArguments
             }
             "VSTest" {
                 $arguments = @("test", $projectPath, "--configuration", $Configuration, $binlogArgument)
@@ -180,7 +186,7 @@ function Invoke-SampleCommand {
                 $arguments = @("msbuild", $projectPath, "-restore", "-t:Build;InvokeTestingPlatform", "-p:Configuration=$Configuration", $binlogArgument)
             }
             "VisualStudioInvoke" {
-                $msbuildPath = InitializeVisualStudioMSBuild -install:$true
+                $commandPath = InitializeVisualStudioMSBuild -install:$true
                 $arguments = @(
                     $projectPath,
                     "/restore",
@@ -191,47 +197,49 @@ function Invoke-SampleCommand {
                     "/bl:$($binlogArgument.Substring(4))",
                     "/v:minimal"
                 )
-
-                & $msbuildPath $arguments
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Sample validation failed for '$Project' with exit code $LASTEXITCODE."
-                }
-
-                Write-Host "SUCCESS: Validated $Project"
-                Write-Host ""
-                return
             }
             default {
                 throw "Unknown sample validation mode '$Mode'."
             }
         }
 
-        if ($platformArgument) {
-            $arguments += $platformArgument
-        }
+        if ($Mode -in @("VSTest", "MtpTest", "Invoke")) {
+            if ($platformArgument) {
+                $arguments += $platformArgument
+            }
 
-        if ($Timeout) {
-            $arguments += @("--timeout", $Timeout)
+            if ($Timeout) {
+                $arguments += @("--timeout", $Timeout)
+            }
         }
 
         $maxAttempts = if ($RetryHandshakeFailure) { 2 } else { 1 }
         for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-            if (!$RetryHandshakeFailure) {
-                & $dotnetPath $arguments
+            $hasHandshakeFailure = $false
+            if ($captureSampleOutput) {
+                $logName = "$($Project.Replace('/', '.').Replace('\', '.')).$Mode.attempt$attempt"
+                $description = "$Project ($displayMode; attempt $attempt/$maxAttempts)"
+                $result = Invoke-SampleProcess -FilePath $commandPath -Arguments $arguments `
+                    -LogFilePrefix (Join-Path $sampleOutputDirectory $logName) -Description $description
+                $exitCode = $result.ExitCode
+                $hasHandshakeFailure = $RetryHandshakeFailure -and
+                    (Select-String -LiteralPath $result.StandardOutputPath -SimpleMatch "Handshake failures:" -Quiet)
+            }
+            elseif (!$RetryHandshakeFailure) {
+                & $commandPath $arguments
                 $exitCode = $LASTEXITCODE
             }
             else {
                 $commandOutput = @()
-                & $dotnetPath $arguments | Tee-Object -Variable commandOutput
+                & $commandPath $arguments | Tee-Object -Variable commandOutput
                 $exitCode = $LASTEXITCODE
+                $hasHandshakeFailure = @($commandOutput | Where-Object { $_ -match "Handshake failures:" }).Count -ne 0
             }
 
             if ($exitCode -eq 0) {
                 break
             }
 
-            $hasHandshakeFailure = $RetryHandshakeFailure -and
-                @($commandOutput | Where-Object { $_ -match "Handshake failures:" }).Count -ne 0
             if (!$hasHandshakeFailure -or $attempt -eq $maxAttempts) {
                 throw "Sample validation failed for '$Project' with exit code $exitCode."
             }
@@ -240,8 +248,10 @@ function Invoke-SampleCommand {
             Start-Sleep -Seconds 5
         }
 
-        Write-Host "SUCCESS: Validated $Project"
-        Write-Host ""
+        if (!$captureSampleOutput) {
+            Write-Host "SUCCESS: Validated $Project"
+            Write-Host ""
+        }
     }
     finally {
         Pop-Location
