@@ -36,6 +36,8 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
 
     private IStopwatch? _clock;
 
+    // Initialized in OnStart before the rendering thread starts. OnWrite and OnTick accesses are protected
+    // by TestProgressStateAwareTerminal's lock; OnTestCompleted does not access this field.
     private long _lastVisibleOutputTicks;
 
     // Completion notifications arrive outside the rendering lock. -1 means no completion in this run.

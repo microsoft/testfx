@@ -2906,7 +2906,7 @@ public sealed class TerminalTestReporterTests
         };
         reporter.OnProgressStopUpdate += (_, _) =>
         {
-            if (Interlocked.Read(ref elapsedTicks) >= TimeSpan.FromSeconds(60).Ticks)
+            if (console.Output.Length > 0)
             {
                 rendered.Set();
             }

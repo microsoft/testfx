@@ -17,8 +17,11 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// run goes silent or a test runs slowly (used for <see cref="AnsiMode.SimpleAnsi"/> and
 /// <see cref="AnsiMode.NoAnsi"/>, e.g. CI / piped / redirected output).</description></item>
 /// </list>
-/// All members are invoked by <see cref="TestProgressStateAwareTerminal"/> while it holds the terminal lock,
-/// except <see cref="OnTestCompleted"/> which may be called from the message pump and MUST be thread-safe.
+/// <see cref="OnWrite"/> and <see cref="OnTick"/> are invoked by <see cref="TestProgressStateAwareTerminal"/>
+/// while it holds the terminal lock. <see cref="OnStart"/> runs during initialization, before the rendering
+/// thread starts, without that lock. <see cref="TickInterval"/> is read by the rendering thread without the
+/// lock. <see cref="OnTestCompleted"/> may be called from the message pump without the lock and MUST be
+/// thread-safe.
 /// </remarks>
 [UnsupportedOSPlatform("browser")]
 [Embedded]
