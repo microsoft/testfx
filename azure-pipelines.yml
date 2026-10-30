@@ -369,10 +369,12 @@ stages:
         # Linux and Windows pools. Keep macOS coverage on main CI, nightly, and manually queued builds, but
         # exclude it from PR validation so agent availability does not delay the required PR status.
         condition: and(succeededOrFailed(), or(eq(${{ and(parameters.EnableAffectedTests, parameters.EnableNonWindowsAffectedTests) }}, false), eq(dependencies.DetectChanges.result, 'Succeeded')), ne(variables['Build.Reason'], 'PullRequest'), ne(dependencies.DetectChanges.outputs['detect.xmlDocsOnly'], 'true'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        # Build, tests, and report merging have exhausted 90 minutes even when all tests pass.
+        # Leave headroom for hosted-agent variability and artifact publishing, without changing hang detection.
         ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(parameters.SkipTests, False), eq(parameters.EnableAffectedTests, true), eq(parameters.EnableNonWindowsAffectedTests, true)) }}:
           timeoutInMinutes: 240
         ${{ else }}:
-          timeoutInMinutes: 90
+          timeoutInMinutes: 120
         pool:
           name: Azure Pipelines
           vmImage: macos-latest

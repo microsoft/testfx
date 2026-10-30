@@ -329,6 +329,11 @@ function Assert-NonWindowsAffectedTestsWiring {
             throw "NonWindowsCollectionHonorsRolloutGates: $osName collection and its independent budget must require main, enabled tests, and both rollout parameters."
         }
 
+        $validationTimeoutInMinutes = if ($osName -eq "MacOS") { 120 } else { 90 }
+        if ($job -notmatch ('\$\{\{ else \}\}:\r?\n          timeoutInMinutes: ' + $validationTimeoutInMinutes + '\r?\n')) {
+            throw "NonWindowsFullValidationHasBoundedBudget: $osName full validation must retain its $validationTimeoutInMinutes-minute job budget."
+        }
+
         $condition = [regex]::Match($job, '(?m)^        condition: (?<condition>[^\r\n]+)').Groups["condition"].Value
         if (-not $condition.StartsWith("and(succeededOrFailed(), $preflightGate, ", [System.StringComparison]::Ordinal)) {
             throw "NonWindowsOptInRequiresSuccessfulPreflight: $osName must require successful DetectChanges for affected tests and retain ordinary full-validation behavior when either rollout parameter is disabled."
@@ -483,6 +488,11 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
             '(?ms)^      - job: ' + $osName + '\r?\n(?<job>.*?)(?=^      - job: |^  - template: |\z)').Groups["job"].Value
         foreach ($mutation in @(
             @{
+                Name = "${osName}UnboundedValidationIsRejected"
+                Job = [regex]::Replace($job, '(\$\{\{ else \}\}:\r?\n          timeoutInMinutes: )\d+', '${1}0')
+                ExpectedFailure = "NonWindowsFullValidationHasBoundedBudget"
+            },
+            @{
                 Name = "${osName}CollectionJobRemovedIsRejected"
                 Job = $job.Replace("              AffectedTests:", "              RemovedCollection:")
                 ExpectedFailure = "NonWindowsCollectionUsesIndependentJob"
@@ -532,6 +542,14 @@ function Invoke-NonWindowsAffectedTestsSelfTest {
                 Name = $mutation.Name
                 Pipeline = $Pipeline.Replace($job, $mutation.Job)
                 ExpectedFailure = $mutation.ExpectedFailure
+            }
+        }
+
+        if ($osName -eq "MacOS") {
+            $cases += @{
+                Name = "MacOSPreviousValidationBudgetIsRejected"
+                Pipeline = $Pipeline.Replace($job, $job.Replace("timeoutInMinutes: 120", "timeoutInMinutes: 90"))
+                ExpectedFailure = "NonWindowsFullValidationHasBoundedBudget"
             }
         }
     }
