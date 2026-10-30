@@ -86,6 +86,14 @@ reliably. Only the exact leading artifact tool is labeled `artifact-worker`.
   The redundant optional default on the six-argument overload was removed to
   satisfy RS0060; its existing five-argument overload preserves omitted-argument
   call behavior. Both linked consumers' internal API baselines are updated.
+- 2026-10-30, review comment 4423698557: the standalone consumer currently
+  suppresses timings whenever `--report-azdo-summary` is present, but
+  `AzureDevOpsSummaryReporter` writes no summary unless `TF_BUILD` equals `true`
+  using `StringComparison.OrdinalIgnoreCase`. Match both gates before suppressing
+  the fallback. Preserve the public constructor and inject the raw environment
+  value through an internal overload for constructor tests; this avoids adding
+  a service dependency or mutating process-wide environment variables in the
+  method-parallel unit suite. Keep reporting, counters, and exit policies unchanged.
 
 ## Alternatives and decision
 
@@ -157,6 +165,58 @@ incremental build. Missing comparison SDK layout and Windows temporary-directory
 cleanup failures were corrected as environment setup, never counted as
 behavioral failures. Tests use task-owned temporary storage and preserve the
 existing method-level/CPU-count scheduling.
+
+### Review correction: summary-option fallback
+
+Review comment 4423698557 was accepted against
+`5e8d17e9263e6abe947a58b87017d155a44c60d6`. The local timing consumer now
+suppresses output only when the summary option is set and `TF_BUILD` equals
+`true` ordinally ignoring case, matching the summary reporter. Its public
+constructor signatures and the parameterless always-enabled behavior are unchanged.
+
+`CommandLineConstructor_DisablesOnlyWhenAzureDevOpsSummaryIsActive` now has
+eleven deterministic cases: `true`, `True`, and `TRUE` enable suppression;
+missing, false, empty, invalid, and padded values retain local timings; an
+absent summary option retains timings both inside and outside Azure DevOps.
+The tests inject the raw value, never change the process environment, and run
+with the existing method-level parallelization (32 workers on this host).
+
+| State / target | Executed | Passed | Failed | Skipped | Exit |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Original tests, net8.0 | 20 | 20 | 0 | 0 | 0 |
+| Corrected tests and helper, net8.0 | 29 | 29 | 0 | 0 | 0 |
+| Corrected tests and helper, net462 | 29 | 29 | 0 | 0 | 0 |
+| Isolated option-only suppression, net8.0 | 29 | 24 | 5 | 0 | 2 |
+| Same isolated comparison with the gate restored, net8.0 | 29 | 29 | 0 | 0 | 0 |
+
+This is a buildable behavior-removal comparison, not a pristine baseline:
+the injection overload stays present while only the environment gate is removed.
+The five failures are the missing, false, empty, invalid, and padded cases,
+each asserting enabled `true` but observing `false`. The final test source is
+identical in both variants, SHA-256
+`F02A6F5B338A38DBD92141BC41889A0983845C860315E505D26792D3DFA1439E`.
+The corrected and counterfactual helper hashes are respectively
+`39C34F1BE612647E91843CE02E9155BC601F9E2C33C2C1E650E0FA8CED81273B` and
+`9171E10F65DD13B3FB91210A9D1D3DC75AE8367FECE5183A295D595F62B0BEB8`.
+
+Validation uses the pinned SDK, Debug configuration, and process-scoped
+`TEMP`/`TMP` under `artifacts\tmp\timing-review-4423698557`. The unit project builds
+with `/warnaserror` for net8.0, net9.0, net10.0, net11.0, and net462; the owning
+test-infrastructure project builds for net12.0. Representative exact commands:
+
+```powershell
+.\.dotnet\dotnet.exe msbuild .\test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj /t:Build /p:Configuration=Debug /p:UseSharedCompilation=false /nr:false /v:minimal /warnaserror '-bl:artifacts\timing-review-4423698557\all-target-build-{}.binlog'
+.\.dotnet\dotnet.exe .\artifacts\bin\Microsoft.Testing.Platform.UnitTests\Debug\net8.0\Microsoft.Testing.Platform.UnitTests.dll --filter 'FullyQualifiedName~Microsoft.Testing.Platform.UnitTests.TestInfrastructure.SlowestTestsConsumerTests' --report-trx --report-trx-filename green.trx --results-directory .\artifacts\timing-review-4423698557\green --progress off --show-test-results all
+.\artifacts\bin\Microsoft.Testing.Platform.UnitTests\Debug\net462\Microsoft.Testing.Platform.UnitTests.exe --filter 'FullyQualifiedName~Microsoft.Testing.Platform.UnitTests.TestInfrastructure.SlowestTestsConsumerTests' --report-trx --report-trx-filename net462.trx --results-directory .\artifacts\timing-review-4423698557\net462 --progress off --show-test-results all
+```
+
+All three commands exit 0. Logs, parsed TRX results, hashes, and comparison
+sources are retained under the task-owned ignored
+`artifacts\timing-review-4423698557` directory. The isolated comparison needed
+explicit output overrides and the hash-verified existing runtime dependency
+layout; its initial incomplete-layout launch failure is not red evidence.
+No shipping package, reporter lifecycle, result counter, or exit policy changes,
+so this non-shipping helper correction does not require repacking products.
 
 ## Open questions
 
