@@ -19,6 +19,13 @@ discovery path and Azure DevOps upload request, and ships both `netstandard2.0` 
 extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
 are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
+The affected-test packages now use `18.13.0-preview.26530.1`, built from commit
+`fe4721e980b711722351edfd491577a03b8d4421`. This includes refill-on-completion collection scheduling: a completed
+child slot can start another batch without waiting for its sibling, retaining the two-child limit, cancellation,
+failure handling, and atomic map publication. The previous pin, `18.13.0-preview.26529.4`, already includes this
+scheduler fix; this update advances to the latest published build, not a different collection algorithm.
+The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates are unchanged.
+
 Affected-test execution is enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
 `907535df2f7eb8e1845571867684244ad04b031b`. It includes both
 [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450) and
