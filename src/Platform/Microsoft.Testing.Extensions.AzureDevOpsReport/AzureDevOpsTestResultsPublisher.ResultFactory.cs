@@ -20,7 +20,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        string automatedTestName = TestNodeIdentity.GetTestName(testNode);
+        // Azure DevOps shares test-reference metadata by automated name/storage, so different
+        // data rows need distinct automated names as well as distinct titles.
+        string automatedTestName = TestNodeIdentity.GetDisplayLabel(testNode);
 
         AzureDevOpsTestCaseResult? result = state switch
         {

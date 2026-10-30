@@ -379,6 +379,46 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    [DataRow(true, false, DisplayName = "Native unfolded rows")]
+    [DataRow(true, true, DisplayName = "Native folded rows")]
+    [DataRow(false, false, DisplayName = "VSTest unfolded rows")]
+    [DataRow(false, true, DisplayName = "VSTest folded rows")]
+    public void CreateTestCaseResult_DataDrivenRowsHaveDistinctAutomatedTestNames(bool useTestMethodIdentifier, bool shareUid)
+    {
+        TestNode firstRow = CreateRow("first-row", """MyMethod ("nonExistentUser","password")""", 1593);
+        TestNode secondRow = CreateRow(shareUid ? "first-row" : "second-row", """MyMethod ("administrator","wrongPassword")""", 1434);
+
+        AzureDevOpsTestCaseResult? firstResult = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(firstRow, "tests.dll")?.Result;
+        AzureDevOpsTestCaseResult? secondResult = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(secondRow, "tests.dll")?.Result;
+
+        Assert.IsNotNull(firstResult);
+        Assert.IsNotNull(secondResult);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod ("nonExistentUser","password")""", firstResult.AutomatedTestName);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod ("administrator","wrongPassword")""", secondResult.AutomatedTestName);
+        Assert.AreEqual(firstRow.DisplayName, firstResult.TestCaseTitle);
+        Assert.AreEqual(secondRow.DisplayName, secondResult.TestCaseTitle);
+        Assert.AreEqual(1593L, firstResult.DurationInMs);
+        Assert.AreEqual(1434L, secondResult.DurationInMs);
+
+        TestNode CreateRow(string uid, string displayName, int durationInMs)
+        {
+            IProperty identity = useTestMethodIdentifier
+                ? new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, ["System.String", "System.String"], "System.Void")
+                : new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "My.Namespace.MyType.MyMethod");
+            var duration = TimeSpan.FromMilliseconds(durationInMs);
+            return new TestNode
+            {
+                Uid = new TestNodeUid(uid),
+                DisplayName = displayName,
+                Properties = new PropertyBag(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    identity,
+                    new TimingProperty(new TimingInfo(RetryTestStartTime, RetryTestStartTime + duration, duration))),
+            };
+        }
+    }
+
+    [TestMethod]
     public async Task CreatePublisher_UsesSanitizedRunNameAndStorageFileName()
     {
         using TestDirectory directory = CreateTestDirectory();
@@ -4452,7 +4492,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, client.UpdateTestResultsCalls, "The persisted parent may be updated only once in this attempt.");
         Assert.HasCount(1, created);
-        Assert.AreEqual("SharedUid", created[0].AutomatedTestName);
+        Assert.AreEqual("SharedUid (Duplicate title)", created[0].AutomatedTestName);
     }
 
     [TestMethod]

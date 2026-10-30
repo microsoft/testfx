@@ -1,4 +1,6 @@
 #nullable enable
 *REMOVED*const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes = 16777216 -> long
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.MaxAttachmentSizeBytes = 78643200 -> long
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultResponse.TestCaseTitle.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultResponse.TestCaseTitle.set -> void
 static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(string! identity, string! displayName) -> string!
