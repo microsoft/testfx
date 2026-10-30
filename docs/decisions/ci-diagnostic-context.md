@@ -166,3 +166,40 @@ are validated, but job-wide Azure DevOps aggregation remains blocked by the
 separate SDK contract work described above. Servicing branches and other
 operating systems have not been validated; no backport is claimed. This PR's
 owner retains the exact package snapshots for the coordinator's composed run.
+
+## Authoritative policy follow-up
+
+The required-contract SDK composition exposed a previously hidden distinction:
+an invocation can retain genuinely failed tests while `--ignore-exit-code 2`
+makes its authoritative final runner exit zero. The existing Azure regression
+deliberately requires a failed test-result indicator in this situation; preserve
+it rather than making failed tests appear green. GitHub's aggregate heading
+already follows the runner exit and is not being changed.
+
+Render the authoritative runner-policy outcome and exit separately, including
+zero, in both aggregate reports. Keep raw counts, failure details, and partial
+warnings. Do not invent a policy verdict when authority is absent.
+
+The GitHub option documentation (`GitHubActionsResources.resx` and `PACKAGE.md`)
+says `on-failure` writes to `GITHUB_STEP_SUMMARY` only when the test invocation
+fails. The final integration decision preserves the existing visibility of failed
+tests and partial data even when runner policy accepts the invocation. This
+supersedes an intermediate proposal to make the writer gate exit-code-only.
+Standalone artifact generation remains separate, and both forms retain raw
+failure details and partial markers. Add explicit runner-policy context rather
+than suppressing producer fragments, summaries, or test outcomes.
+
+Freeze the original three-package feed at
+`0269e3cb4724521dfde20cdd10ea9ea8a87f57cf`, add focused authority/legacy/partial
+and writer-versus-artifact cases, and compare the old and corrected packages
+through the same real capable SDK. The coordinator retains ownership of the SDK
+contract; this follow-up stays in the independent reporting PR.
+
+The focused `CiRunSummaryPolicyTests` selection contains twelve cases. With
+the final tests retained against the isolated pre-correction revision, seven
+fail at missing runner-policy assertions and five legacy characterization cases
+pass. The corrected implementation passes all twelve on net8.0 and net462, and
+the combined reporter selection passes 275 cases. The original Azure test
+requiring a failed test-result indication with an accepted runner exit remains
+unchanged and passes. No on-failure writer gate, fragment capture, or raw outcome
+calculation was modified.
