@@ -92,8 +92,8 @@ public sealed class GitHubActionsSummaryReporterTests
             ### ⏱ Slowest tests
 
             - `Tests.RunDataTest (1)` — 1.00s
-            """.ReplaceLineEndings("\n"),
-            File.ReadAllText(fixture.SummaryPath).ReplaceLineEndings("\n"));
+            """.Replace("\r\n", "\n"),
+            File.ReadAllText(fixture.SummaryPath).Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -944,8 +944,8 @@ public sealed class GitHubActionsSummaryReporterTests
             - `{{flakyLabel}}` — 1.00s
 
 
-            """.ReplaceLineEndings("\n"),
-            markdown.ReplaceLineEndings("\n"));
+            """.Replace("\r\n", "\n"),
+            markdown.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
@@ -2248,8 +2248,8 @@ public sealed class GitHubActionsSummaryReporterTests
             </details>
 
 
-            """.ReplaceLineEndings("\n"),
-            markdown.ReplaceLineEndings("\n"));
+            """.Replace("\r\n", "\n"),
+            markdown.Replace("\r\n", "\n"));
     }
 
     [TestMethod]
