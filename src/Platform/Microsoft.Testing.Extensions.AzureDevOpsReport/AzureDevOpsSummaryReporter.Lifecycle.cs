@@ -143,7 +143,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
                     isFlaky);
                 _rows.Add(new SummaryRow(
                     uid,
-                    new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky, failure),
+                    new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky, failure,
+                        kind == TerminalKind.Skipped ? state?.Explanation : null),
                     historyTest,
                     dependencies));
                 if (isFlaky)
@@ -380,7 +381,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
                 record.Kind,
                 record.Duration,
                 isFlaky: false,
-                record.Failure);
+                record.Failure,
+                record.SkipReason);
             row.HistoryTest?.IsFlaky = false;
         }
     }
