@@ -240,3 +240,22 @@ stop; repository test scheduling is unchanged.
 These runs close the earlier global-aggregation evidence gap. Earlier
 renderer-only and unsupported-SDK captures remain labeled as such rather than
 being retroactively presented as composed execution.
+
+## Latest-base reconciliation
+
+Merged `origin/main` at `a0fcc2da5d7911dae128795184f99165f3332cae` in merge
+commit `72a3bc87add2b08c153e8eb56ad2a3631170e33c`, preserving published history.
+The single textual conflict was the GitHub reporter's internal API baseline;
+the resolution retains both the skip-reason APIs and main's display-label
+overload. The incoming data-row snapshot was reconciled with the separate
+runner-policy line without removing its data-row assertions.
+
+The merged tree passes 298 reporter/policy/display-name cases and 38
+serializer/acceptance-diagnostic cases. The three shipping packages were
+repacked from the merge commit into a new immutable feed; nuspec source stamps,
+resolved cache DLLs, and both actual module outputs were compared byte-for-byte.
+The same capable SDK reran normal failure and ignored-failure aggregation:
+32/25/1/6 and a two-module denominator are preserved, parent/manifest exits are
+2 and 0 respectively, the Azure global timing bound is ten, and both providers'
+standalone artifacts and existing on-failure detail remain correct. Earlier
+frozen package snapshots remain unchanged.
