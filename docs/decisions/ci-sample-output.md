@@ -136,6 +136,23 @@ Additional executed checks:
 | Keep local live output | `TF_BUILD` absent, `TestingPlatformExplorer` emitted 139 lines including help, one normal `SUCCESS` line, and no capture-summary line; exit zero |
 | Bounded progress for a quiet child | An actual child waited on a release file; the parent's `RUNNING` message at 60 seconds released it. The child exited zero and the parent reported `PASS` at 60.3 seconds. |
 
+Additional real-sample validation at implementation commit
+`cac21b0a44dbbd190c3a16fc78d955139a0d9588` exercised the VSTest command branch
+and an intentional retry demonstration:
+
+```powershell
+& $dotnet build .\samples\public\DemoMSTestSdk\ProjectUsingVSTest\ProjectUsingVSTest.csproj -c Release "-bl:$evidence\sample-vstest-{}.binlog" -v:minimal
+& $dotnet build .\samples\public\ReliableTestSuite\ReliableTestSuite.csproj -c Release "-bl:$evidence\sample-retry-{}.binlog" -v:minimal
+.\eng\test-samples.ps1 -Configuration Release -BinaryLogDirectory "$evidence\sample-additional-after" -Include @('ReliableTestSuite/*','DemoMSTestSdk/ProjectUsingVSTest/*')
+```
+
+Both builds and both invocations exited zero. The retained VSTest transcript
+contains one passed test. The retry sample retains its intended first-attempt
+failure and `failed -> passed (2 attempts)` detail, followed by 10 passed,
+one skipped, and zero failed tests. The CI console correctly reports successful
+invocations instead of surfacing the intentional intermediate failure as a
+pipeline failure.
+
 ```powershell
 .\eng\test-samples-output.ps1
 & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -File .\eng\test-samples-output.ps1
