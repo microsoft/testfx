@@ -162,10 +162,11 @@ existing method-level/CPU-count scheduling.
 
 This is a `main`-branch reporting improvement. No capability bit or downstream
 feature flag is enabled here. Per-module fallback and real TRX-worker diagnostics
-are validated, but job-wide Azure DevOps aggregation remains blocked by the
-separate SDK contract work described above. Servicing branches and other
-operating systems have not been validated; no backport is claimed. This PR's
-owner retains the exact package snapshots for the coordinator's composed run.
+are validated. The originally missing SDK contract was subsequently implemented
+and exercised in the real composed runs below; rollout still requires that
+companion SDK implementation. Servicing branches and other operating systems
+have not been validated; no backport is claimed. Exact package snapshots are
+retained for reproducibility.
 
 ## Authoritative policy follow-up
 
@@ -203,3 +204,39 @@ the combined reporter selection passes 275 cases. The original Azure test
 requiring a failed test-result indication with an accepted runner exit remains
 unchanged and passes. No on-failure writer gate, fragment capture, or raw outcome
 calculation was modified.
+
+## Real required-worker composition
+
+The final same-SDK comparisons use the frozen, committed
+`dotnet/sdk` build `6fc4e43c66eb03fb2383ab25a809ff7f4dda81aa`
+(parent `f5838f51c497a70fb60f3ed7e89102ca293b6838`), version
+`12.0.100-dev`, through its managed CLI and actual shipping layout. Its managed
+CLI SHA-256 is
+`852D141F067C6E2021F194A76DEFFFA67868E6B21F9F6565EB8064286C8354CF`.
+The kit was used read-only. Independent package caches and byte comparisons
+verify each packed DLL against both executed modules and its resolved cache.
+
+The deterministic Alpha/Beta fixtures each publish sixteen results. Reported
+durations are fixture inputs, not a benchmark. An identical observation-only
+hook in both variants copies the actual SDK-produced worker manifest before
+starting the platform tool; it does not supply or alter the manifest,
+capability negotiation, policy, results, or post-processing.
+
+| Comparison | Verified result |
+| --- | --- |
+| Original `7dd2407848979d58f0e9b2bd75101a2dbfa7d1bc` versus implementation `4d10341bf973cb94adcdab8e150f18431b07c04f` | One actual job-wide Azure artifact in each run; 32 reported, 25 passed, 1 failed, 6 skipped, two modules, parent/manifest exit 2. Timing rows decrease from 20 to 10; failed timing and grouped skip context remain. |
+| Policy baseline `0269e3cb4724521dfde20cdd10ea9ea8a87f57cf` versus `4d10341bf973cb94adcdab8e150f18431b07c04f`, `--ignore-exit-code 2` | Both retain 32/25/1/6 and parent/manifest exit 0. Azure keeps its failed test indication; GitHub keeps its accepted global indication and failed module detail. The corrected Azure artifact, GitHub artifact, and job summary explicitly show accepted runner policy and exit 0. |
+| Same ignored failure with `--report-gh-step-summary on-failure` | Job-summary visibility, standalone artifacts, raw failure details, and counts remain intact in both variants. No failure is rewritten or hidden. |
+| Successful candidate with `on-failure` | 32 reported, 26 passed, 6 skipped, parent/manifest exit 0; standalone artifacts exist and the job-summary file is absent. |
+| Zero-result candidate | Zero reported results, two modules, parent/manifest exit 8; required artifacts are still produced. This is a product-policy check, not regression-test execution evidence. |
+| Candidate stopped at one failure after Alpha completes | Parent/manifest exit 13, `maximumFailedTests` truncation, two-module denominator and one completed module's two provider fragments. Both real aggregates and the job summary retain partial-data warnings. |
+
+The initial concurrent stop-policy probe terminated both producers before any
+fragments were retained, so it produced no worker artifact and is not partial
+rendering proof. The final partial probe uses
+`--max-parallel-test-modules 1` solely to arrange a completed module before the
+stop; repository test scheduling is unchanged.
+
+These runs close the earlier global-aggregation evidence gap. Earlier
+renderer-only and unsupported-SDK captures remain labeled as such rather than
+being retroactively presented as composed execution.
