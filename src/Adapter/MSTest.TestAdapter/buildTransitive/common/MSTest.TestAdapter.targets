@@ -129,6 +129,8 @@
         <Link>%(MSTestV2Files.UICulture)%(FileName).dll</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
+        <!-- .NET ResourceManager loads these satellites directly; they do not need PRI indexing. -->
+        <ExcludeFromResourceIndex>true</ExcludeFromResourceIndex>
         <Visible>False</Visible>
       </Content>
     </ItemGroup>
