@@ -224,13 +224,53 @@ worker per processor. New renderer tests use per-test clocks and consoles, not
 shared environment/console mutation; reporter refresher threads must be joined
 before assertions or cleanup. Packed consumers use task-owned directories/caches.
 
-Native SDK composed-product evidence is owned by the coordinated SDK PR and
-remains separate from the executed TestFx-local proof.
+### Native SDK composed-product evidence
+
+On 2026-10-30, the SDK owner published the composed validation in
+[dotnet/sdk#56851](https://github.com/dotnet/sdk/pull/56851) at
+`f5838f51c497a70fb60f3ed7e89102ca293b6838`. The published source states,
+commands, captured output, package manifest identity, and results were read back
+for this record; these commands were executed by the SDK owner, not rerun by this
+TestFx session.
+
+The comparison uses baseline SDK CLI binaries from
+`c781c3cda4cf87f94291d04223e9146664d4f5f5` and final managed/Native AOT binaries
+from the SDK revision above in the built Windows x64 redist layout
+(`12.0.100-dev`). Both states use the frozen 32-package TestFx feed from
+`f4d8d35bf45ce0ece75a66e1b197c96684767e48`, genuine net9.0 MSTest applications,
+and .NET 9.0.0. The native invocation explicitly reports
+`AOT test tier: TestModules.`.
+
+In the real native multi-module hidden-pass capture, one module finishes ten
+tests while the other continues completing hidden passing tests. The baseline
+SDK remains silent; the final SDK emits the following captured line at
+`61.7903221` seconds, including the finished module's ten results:
+
+```text
+running... 18 completed, 0 failed, active modules: 1 | last completion: 4s ago
+```
+
+The final total remains 20. The compact verdict/counts precede artifact paths,
+already-printed successful modules are not repeated, and explicit progress
+suppression is preserved. The linked SDK evidence records 17 composed cases,
+50 passing composed checks, and 246 passing focused SDK tests with no failures
+or skips. Its scenarios also cover diagnostic workers, actual map collection,
+crash recovery, worker degradation, cancellation, and zero-result exit behavior.
+
+This closes the previously missing reporter-to-native-SDK evidence for these
+main-branch Windows x64 revisions. It does **not** prove required cross-module
+Azure DevOps/GitHub summary publication: the SDK PR deliberately does not
+advertise handshake field 19 (`RequiredPostProcessingSupported`). Required
+singleton processing (field 18) and the authoritative final-policy `runSummary`
+handoff remain a separate dependent SDK implementation/validation task. Ordinary
+TRX/CTRF/JUnit merging must not be presented as that aggregate proof.
 
 ## Open questions
 
-- The source/package pair has been delivered. Native SDK validation results are
-  pending; this PR does not claim that the outer SDK console changed.
+- The reporter's native SDK boundary has composed evidence at the pinned
+  revisions above. Required cross-module CI-summary aggregation remains outside
+  that proof and belongs to the separate dependent SDK work.
 - Backports, downstream SDK-pin updates, and feature-gate rollout are outside
   this main-only batch. Future work in those areas needs separate release-branch
-  validation; no existing SDK release or cross-repository completion is claimed.
+  validation; no existing SDK release or required global CI-summary completion
+  is claimed.
