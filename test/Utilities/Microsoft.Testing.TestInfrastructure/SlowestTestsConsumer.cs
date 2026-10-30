@@ -31,7 +31,15 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
     }
 
     public SlowestTestsConsumer(ICommandLineOptions commandLineOptions)
-        : this(Console.WriteLine, isEnabled: !commandLineOptions.IsOptionSet("report-azdo-summary"))
+        : this(commandLineOptions, Environment.GetEnvironmentVariable("TF_BUILD"))
+    {
+    }
+
+    internal SlowestTestsConsumer(ICommandLineOptions commandLineOptions, string? tfBuild)
+        : this(
+            Console.WriteLine,
+            isEnabled: !commandLineOptions.IsOptionSet("report-azdo-summary")
+                || !string.Equals(tfBuild, "true", StringComparison.OrdinalIgnoreCase))
     {
     }
 

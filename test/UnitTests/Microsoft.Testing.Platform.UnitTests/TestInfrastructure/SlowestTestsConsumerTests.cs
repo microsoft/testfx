@@ -196,15 +196,24 @@ public sealed class SlowestTestsConsumerTests
     }
 
     [TestMethod]
-    [DataRow(true, DisplayName = "AzdoSummaryDisablesLocalTimings")]
-    [DataRow(false, DisplayName = "NoAzdoSummaryKeepsLocalTimings")]
-    public async Task CommandLineConstructor_DisablesOnlyWhenAzureDevOpsSummaryIsSet(bool reportSummary)
+    [DataRow(true, "true", false, DisplayName = "AzdoSummaryTrueDisablesLocalTimings")]
+    [DataRow(true, "True", false, DisplayName = "AzdoSummaryTitleCaseDisablesLocalTimings")]
+    [DataRow(true, "TRUE", false, DisplayName = "AzdoSummaryUpperCaseDisablesLocalTimings")]
+    [DataRow(true, null, true, DisplayName = "AzdoSummaryWithoutTfBuildKeepsLocalTimings")]
+    [DataRow(true, "false", true, DisplayName = "AzdoSummaryFalseTfBuildKeepsLocalTimings")]
+    [DataRow(true, "", true, DisplayName = "AzdoSummaryEmptyTfBuildKeepsLocalTimings")]
+    [DataRow(true, "1", true, DisplayName = "AzdoSummaryInvalidTfBuildKeepsLocalTimings")]
+    [DataRow(true, " true ", true, DisplayName = "AzdoSummaryPaddedTfBuildKeepsLocalTimings")]
+    [DataRow(false, null, true, DisplayName = "NoAzdoSummaryWithoutTfBuildKeepsLocalTimings")]
+    [DataRow(false, "false", true, DisplayName = "NoAzdoSummaryFalseTfBuildKeepsLocalTimings")]
+    [DataRow(false, "true", true, DisplayName = "NoAzdoSummaryInAzureDevOpsKeepsLocalTimings")]
+    public async Task CommandLineConstructor_DisablesOnlyWhenAzureDevOpsSummaryIsActive(bool reportSummary, string? tfBuild, bool expectedEnabled)
     {
         var options = new Mock<ICommandLineOptions>(MockBehavior.Strict);
         options.Setup(value => value.IsOptionSet("report-azdo-summary")).Returns(reportSummary);
-        var consumer = new SlowestTestsConsumer(options.Object);
+        var consumer = new SlowestTestsConsumer(options.Object, tfBuild);
 
-        Assert.AreEqual(!reportSummary, await consumer.IsEnabledAsync());
+        Assert.AreEqual(expectedEnabled, await consumer.IsEnabledAsync());
     }
 
     [TestMethod]
