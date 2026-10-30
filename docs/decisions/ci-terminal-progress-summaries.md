@@ -258,19 +258,58 @@ or skips. Its scenarios also cover diagnostic workers, actual map collection,
 crash recovery, worker degradation, cancellation, and zero-result exit behavior.
 
 This closes the previously missing reporter-to-native-SDK evidence for these
-main-branch Windows x64 revisions. It does **not** prove required cross-module
+main-targeted Windows x64 revisions. It does **not** prove required cross-module
 Azure DevOps/GitHub summary publication: the SDK PR deliberately does not
-advertise handshake field 19 (`RequiredPostProcessingSupported`). Required
-singleton processing (field 18) and the authoritative final-policy `runSummary`
-handoff remain a separate dependent SDK implementation/validation task. Ordinary
-TRX/CTRF/JUnit merging must not be presented as that aggregate proof.
+advertise handshake field 19 (`RequiredPostProcessingSupported`). That distinct
+contract now has its own composed evidence in the dependent SDK companion below;
+ordinary TRX/CTRF/JUnit merging must not be presented as that aggregate proof.
+
+### Required CI-summary SDK companion
+
+On 2026-10-30, [dotnet/sdk#56852](https://github.com/dotnet/sdk/pull/56852)
+published required-processing evidence at
+`a629f41ab69bdb8f9c2c6ce63d1edf7b5f1aabfe`, stacked on
+`c6405adbf0aadab2a0419579f5bffcd72a72764a`. Its frozen before SDK is
+`4622ed3b6b3d58465613c5ac0a11243d40f61107`. Both states use the unchanged
+32-package feed from `f4d8d35bf45ce0ece75a66e1b197c96684767e48`.
+
+This session read the published record, checked all 27 final invocation records
+against the matrix's source/binary identities and parent exits, and compared the
+real before/after singleton and mixed captures. The corresponding application DLL
+and resolved-assets hashes match in both states. The SDK owner executed the runs;
+they were not rerun here.
+
+| Real comparison | Before | After |
+| --- | --- | --- |
+| One module, 10 passing outcomes, parent exit 0 | Per-module Azure summary, no required worker/global attachment. | Actual worker with one manifest input and one global Azure attachment; all 10 outcomes retained. |
+| Two modules, 20 reported outcomes: 17 passed, 1 failed, 2 skipped; parent exit 2 | Per-module CI fallback. | One global Azure attachment and one global GitHub section with the authoritative run summary and unchanged outcomes/exit. |
+
+The final matrix records 27 cases and 470 behavioral checks. The SDK publication
+also records separate real older-MTP and connected-worker Ctrl+C cases, plus
+343 passing SDK tests. Cases include optional/required dispatch, suppression,
+legacy/no-handshake paths, zero/minimum/ignored-exit policies, policy truncation,
+missing/partial inputs, worker failures/timeouts, and cancellation. The reviewed
+matrix SHA-256 is
+`68F80945F39612A08FB6644E59A3ED85D950ED355D0E3AE44A064EC128C0F320`.
+
+The raw-test versus runner-policy distinction remains explicit: an ignored
+failed-test exit can produce authoritative runner exit 0 while failed counts,
+test-result indicators/details, and established on-failure summary visibility
+remain intact. The separate runner-policy annotation is owned by
+[the diagnostic consumer change](https://github.com/microsoft/testfx/pull/12142);
+failed tests must not be rewritten as passed.
+
+This is Windows x64 candidate execution evidence, including local Azure logging
+commands and GitHub step-summary files, not proof of remote provider uploads,
+cross-OS validation, servicing, or release delivery. The companion remains a
+dependent open PR; it is not evidence that either SDK layer is merged or shipped.
 
 ## Open questions
 
 - The reporter's native SDK boundary has composed evidence at the pinned
-  revisions above. Required cross-module CI-summary aggregation remains outside
-  that proof and belongs to the separate dependent SDK work.
+  revisions above. Required cross-module CI-summary aggregation has separate
+  evidence at the companion's pinned revision; the two proof boundaries must not
+  be conflated.
 - Backports, downstream SDK-pin updates, and feature-gate rollout are outside
   this main-only batch. Future work in those areas needs separate release-branch
-  validation; no existing SDK release or required global CI-summary completion
-  is claimed.
+  validation; no existing SDK release, merge, or shipped fix is claimed.
