@@ -102,7 +102,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     builder,
                     "###",
                     [.. failures.Select(static failure => new GitHubActionsFailureEntry(
-                        failure.FullyQualifiedName,
+                        TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName),
                         failure.Duration,
                         failure.Failure?.Message,
                         failure.Failure?.ExceptionType,
@@ -114,7 +114,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     budget);
             }
 
-            AppendFlakyTests(builder, flakyTests.Select(static test => test.FullyQualifiedName), flaky);
+            AppendFlakyTests(builder, flakyTests.Select(static test => TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)), flaky);
         }
 
         if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0)
@@ -133,7 +133,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     slowestEmitted = true;
                 }
 
-                builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
+                builder.Append("- `").Append(EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(record.FullyQualifiedName, record.DisplayName))).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
             }
 
             if (slowestEmitted)
@@ -228,7 +228,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     builder,
                     heading + "#",
                     [.. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
-                        failure.FullyQualifiedName,
+                        TestNodeIdentity.GetDisplayLabel(failure.FullyQualifiedName, failure.DisplayName),
                         TimeSpan.FromTicks(failure.DurationTicks),
                         failure.ErrorMessage,
                         failure.ErrorType,
@@ -242,7 +242,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             AppendFlakyTests(
                 builder,
-                module.FlakyTests.Select(static test => test.FullyQualifiedName),
+                module.FlakyTests.Select(static test => TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName)),
                 module.FlakyTests.Length,
                 headingLevel + 1);
         }
@@ -253,7 +253,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)
             {
-                builder.Append("- `").Append(EscapeInlineCode(test.FullyQualifiedName)).Append("` — ")
+                builder.Append("- `").Append(EscapeInlineCode(TestNodeIdentity.GetDisplayLabel(test.FullyQualifiedName, test.DisplayName))).Append("` — ")
                     .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
             }
 

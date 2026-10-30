@@ -175,6 +175,32 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task WhenTestsAreDataDriven_SummaryDistinguishesRows(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(
+            tfm,
+            testMode: "data-driven",
+            extraArgs: "--report-gh-step-summary-sections slow-tests");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreEqual(
+            $$"""
+            <!-- microsoft-testing-platform:github:project-section -->
+            ## ✅ Test Run Summary — {{AssetName}} ({{tfm}})
+
+            ### ⏱ Slowest tests
+
+            - `Tests.RunDataTest (5)` — 5.00s
+            - `Tests.RunDataTest (3)` — 3.00s
+            - `Tests.RunDataTest (1)` — 1.00s
+
+
+            """.ReplaceLineEndings("\n"),
+            summary.ReplaceLineEndings("\n"));
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WhenStepSummarySectionsIsSlowTests_OnlyTheSlowestSectionIsRendered(string tfm)
     {
         (TestHostResult result, string summary) = await RunAsync(
@@ -581,6 +607,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         //   "pass"     -> publish a single passing test (exit code Success, unless --minimum-expected-tests forces a violation)
         //   "timed"    -> publish several passing tests, each carrying a TimingProperty with a distinct duration, so the
         //                 job summary's slow-tests section has real durations to rank
+        //   "data-driven" -> publish timed data rows sharing a method identity, distinguished by display-name arguments
         //   "location" -> publish a failing and a skipped test, both carrying a TestFileLocationProperty and no
         //                 exception, so the annotations can only be pinned through the declared-location fallback
         //   "discovery" -> publish one discovered test, leaving --list-tests json responsible for its rendering
@@ -649,27 +676,41 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                         new TestFileLocationProperty(file, new LinePositionSpan(new LinePosition(9, -1), new LinePosition(9, -1)))),
                 }));
         }
-        else if (mode == "timed")
+        else if (mode is "timed" or "data-driven")
         {
-            (string Uid, string DisplayName, TimeSpan Duration)[] timedTests =
-            [
-                ("test-1", "SlowTest", TimeSpan.FromSeconds(5)),
-                ("test-2", "MediumTest", TimeSpan.FromSeconds(3)),
-                ("test-3", "FastTest", TimeSpan.FromSeconds(1)),
-            ];
+            (string Uid, string DisplayName, TimeSpan Duration)[] timedTests = mode == "data-driven"
+                ?
+                [
+                    ("test-1", "RunDataTest (5)", TimeSpan.FromSeconds(5)),
+                    ("test-2", "Tests.RunDataTest (3)", TimeSpan.FromSeconds(3)),
+                    ("test-3", "RunDataTest (1)", TimeSpan.FromSeconds(1)),
+                ]
+                :
+                [
+                    ("test-1", "SlowTest", TimeSpan.FromSeconds(5)),
+                    ("test-2", "MediumTest", TimeSpan.FromSeconds(3)),
+                    ("test-3", "FastTest", TimeSpan.FromSeconds(1)),
+                ];
 
             foreach ((string uid, string displayName, TimeSpan duration) in timedTests)
             {
                 DateTimeOffset start = DateTimeOffset.UtcNow;
+                var properties = new PropertyBag(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    new TimingProperty(new TimingInfo(start, start + duration, duration)));
+                if (mode == "data-driven")
+                {
+                    properties.Add(new TestMethodIdentifierProperty(
+                        "GitHubActionsReportBehavior", string.Empty, "Tests", "RunDataTest", 0, ["System.Int32"], "System.Void"));
+                }
+
                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
                     context.Request.Session.SessionUid,
                     new TestNode()
                     {
                         Uid = uid,
                         DisplayName = displayName,
-                        Properties = new PropertyBag(
-                            PassedTestNodeStateProperty.CachedInstance,
-                            new TimingProperty(new TimingInfo(start, start + duration, duration))),
+                        Properties = properties,
                     }));
             }
         }

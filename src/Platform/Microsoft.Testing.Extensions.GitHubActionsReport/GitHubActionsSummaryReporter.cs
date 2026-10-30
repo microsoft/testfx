@@ -171,8 +171,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             string displayName = update.TestNode.DisplayName;
             RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
 
-            // Resolve the stable, fully-qualified name the same way the annotation and slow-test reporters do
-            // (preferring TestMethodIdentifierProperty) so a given test renders identically across all three surfaces.
+            // Keep the stable identity for history and aggregation; add distinguishing display names only when rendering.
             string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);
 
             TimingProperty? timing = null;
