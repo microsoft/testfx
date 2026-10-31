@@ -321,7 +321,8 @@ public class UnitTestDiscovererTests : TestContainer
         await discoverer.DiscoverTestsInSourceAsync(Source, logger.Object, sink.Object, null, null, true);
 
         published.Should().Equal(_test);
-        _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Info(
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Info(
             "MSTestDiscoverer: Found {0} tests from source {1}", 7, Source), Times.Once);
         logger.Verify(value => value.SendMessage(MessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
         logger.VerifyNoOtherCalls();

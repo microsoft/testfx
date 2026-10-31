@@ -3418,7 +3418,7 @@ public class TestMethodInfoTests : TestContainer
             result.TestFailureException.Should().BeSameAs(original);
         }
 
-        using (var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw new TargetInvocationException((Exception?)null)))
+        using (var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw new TargetInvocationException(null)))
         {
             _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
             TestResult result = await _testMethodInfo.InvokeAsync(null);
@@ -3534,6 +3534,5 @@ public class TestMethodInfoTests : TestContainer
         result.ExceptionMessage.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, nameof(DummyTestClass.DummyTestMethod)));
         context.Verify(value => value.SetOutcome(It.IsAny<UnitTestOutcome>()), Times.Once);
     }
-
 }
 #endregion

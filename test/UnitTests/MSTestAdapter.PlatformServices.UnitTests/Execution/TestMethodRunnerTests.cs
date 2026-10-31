@@ -897,7 +897,7 @@ public class TestMethodRunnerTests : TestContainer
             ([UnitTestOutcome.Passed, UnitTestOutcome.NotRunnable], false, true, "fail", "NotRunnable"),
             ([UnitTestOutcome.Passed, UnitTestOutcome.Unknown, UnitTestOutcome.Timeout], false, false, "fail", "Unknown"),
         ];
-        foreach (var item in cases)
+        foreach ((UnitTestOutcome[] Outcomes, bool MapInconclusive, bool MapNotRunnable, string Status, string? FirstFailure) item in cases)
         {
             MSTestSettings.PopulateSettings(
                 $"<RunSettings><MSTest><MapInconclusiveToFailed>{item.MapInconclusive.ToString().ToLowerInvariant()}</MapInconclusiveToFailed><MapNotRunnableToFailed>{item.MapNotRunnable.ToString().ToLowerInvariant()}</MapNotRunnableToFailed></MSTest></RunSettings>", null, null);
@@ -1016,7 +1016,7 @@ public class TestMethodRunnerTests : TestContainer
 
     private sealed class ContinuationActivity : IMSTestActivity
     {
-        internal Dictionary<string, object?> Tags { get; } = new(StringComparer.Ordinal);
+        internal Dictionary<string, object?> Tags { get; } = [with(StringComparer.Ordinal)];
 
         internal List<Exception> Exceptions { get; } = [];
 

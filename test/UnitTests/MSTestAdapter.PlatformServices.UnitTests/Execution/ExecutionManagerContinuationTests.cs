@@ -182,8 +182,8 @@ public sealed class ExecutionManagerContinuationTests : TestContainer
         harness.SourceParameters["source-only"] = 17;
         UnitTestElement element = harness.Element<FixtureA>(nameof(FixtureA.A1));
         element.ExecutionContextProperties = new Dictionary<string, object?> { ["collision"] = "tcm", ["tcm-only"] = "retained" };
-        element.Traits = [new("collision", "trait"), new("custom", "first"), new("custom", "second"), new("", "ignored")];
-        element.TestCategory = ["custom", "category", ""];
+        element.Traits = [new("collision", "trait"), new("custom", "first"), new("custom", "second"), new(string.Empty, "ignored")];
+        element.TestCategory = ["custom", "category", string.Empty];
         await harness.RunAsync([element], "<RunSettings><TestRunParameters><Parameter name='collision' value='session'/><Parameter name='session-only' value='session'/></TestRunParameters></RunSettings>");
 
         Dictionary<string, object?> observed = harness.State.Snapshots.Single();
@@ -200,7 +200,8 @@ public sealed class ExecutionManagerContinuationTests : TestContainer
     public async Task SessionParameterFailuresDoNotSilentlyClearThePreviousSession()
     {
         using var harness = new ManagerHarness(ExecutionScope.MethodLevel);
-        await harness.RunAsync([harness.Element<FixtureA>(nameof(FixtureA.A1))],
+        await harness.RunAsync(
+            [harness.Element<FixtureA>(nameof(FixtureA.A1))],
             "<RunSettings><TestRunParameters><Parameter name='retained' value='old'/></TestRunParameters></RunSettings>");
         await harness.RunAsync([harness.Element<FixtureA>(nameof(FixtureA.A1))], "<RunSettings><TestRunParameters>");
         await harness.RunAsync([harness.Element<FixtureA>(nameof(FixtureA.A1))], "<RunSettings><TestRunParameters /></RunSettings>");
@@ -239,7 +240,8 @@ public sealed class ExecutionManagerContinuationTests : TestContainer
 
         harness.State.Sequence.Should().Equal("A1");
         harness.Results.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Passed);
-        harness.Services.MockTraceLogger.Verify(value => value.Info(
+        harness.Services.MockTraceLogger.Verify(
+            value => value.Info(
             "Could not create TestAssemblySettingsProvider instance in child app-domain", cause), Times.Once);
     }
 
@@ -347,7 +349,7 @@ public sealed class ExecutionManagerContinuationTests : TestContainer
         internal Task ExecuteAsync(string name, TestContext context)
         {
             Sequence.Enqueue(name);
-            Snapshots.Enqueue(new Dictionary<string, object?>(context.Properties));
+            Snapshots.Enqueue([with(context.Properties)]);
             return Body?.Invoke(name, context) ?? Task.CompletedTask;
         }
     }

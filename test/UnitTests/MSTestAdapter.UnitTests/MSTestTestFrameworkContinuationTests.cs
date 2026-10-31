@@ -92,10 +92,12 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
         byte[] bytes = [0, 17, 128, 255, 42];
         File.WriteAllBytes(source, bytes);
         harness.SetRunSettings(new XDocument(
-            new XElement("RunSettings",
+            new XElement(
+                "RunSettings",
                 new XElement("MSTest", new XElement("DeploymentEnabled", false)),
                 new XElement("RunConfiguration", new XElement("DisableAppDomain", true)),
-                new XElement("TestRunParameters",
+                new XElement(
+                    "TestRunParameters",
                     new XElement("Parameter", new XAttribute("name", "attachment"), new XAttribute("value", source)),
                     new XElement("Parameter", new XAttribute("name", "missing"), new XAttribute("value", missing))))).ToString());
         await harness.OpenAsync();
@@ -139,7 +141,7 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
             .Callback(() => published.TrySetResult(null))
             .Returns(release.Task);
 
-        Task request = Task.Run(() => harness.DiscoverAsync(nameof(NativeCoverageFixture.Succeeds)));
+        var request = Task.Run(() => harness.DiscoverAsync(nameof(NativeCoverageFixture.Succeeds)));
         await published.Task;
         Task<CloseTestSessionResult> close = harness.Framework.CloseTestSessionAsync(new(harness.Session, CancellationToken.None));
         try
@@ -184,10 +186,12 @@ public sealed class MSTestTestFrameworkContinuationTests : TestContainer
         string missing = Path.Combine(harness.Directory, "missing.bin");
         File.WriteAllBytes(source, [17, 23, 42]);
         harness.SetRunSettings(new XDocument(
-            new XElement("RunSettings",
+            new XElement(
+                "RunSettings",
                 new XElement("MSTest", new XElement("DeploymentEnabled", false)),
                 new XElement("RunConfiguration", new XElement("DisableAppDomain", true)),
-                new XElement("TestRunParameters",
+                new XElement(
+                    "TestRunParameters",
                     new XElement("Parameter", new XAttribute("name", "attachment"), new XAttribute("value", source)),
                     new XElement("Parameter", new XAttribute("name", "missing"), new XAttribute("value", missing))))).ToString());
         var logger = Mock.Get(harness.Services.Services.OfType<ILoggerFactory>().Single().CreateLogger("mstest-trace"));

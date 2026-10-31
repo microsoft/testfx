@@ -13,6 +13,9 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class AzureDevOpsRunCoordinationBehaviorTests
 {
+    // Negative PIDs identify process groups on Unix, rather than nonexistent processes.
+    private const int DeadProcessId = int.MaxValue;
+
     [TestMethod]
     [DataRow(0, DisplayName = "RunId_TransientIo")]
     [DataRow(1, DisplayName = "RunId_TransientAccess")]
@@ -24,7 +27,7 @@ public sealed class AzureDevOpsRunCoordinationBehaviorTests
         AzureDevOpsPublishConfiguration configuration = fixture.PublishConfiguration();
         string ownerPath = Path.Combine(fixture.Root, "azdo-runid.123.owner");
         string runPath = Path.Combine(fixture.Root, "azdo-runid.123.json");
-        fixture.PutText(ownerPath, Lease(-1, CiReporterFixture.Epoch.AddHours(1)));
+        fixture.PutText(ownerPath, Lease(DeadProcessId, CiReporterFixture.Epoch.AddHours(1)));
         fixture.PutText(runPath, Run(88, 123, CiReporterFixture.Epoch.AddHours(1)));
         int reads = 0;
         fixture.FileSystem.Setup(value => value.ReadAllTextAsync(runPath)).Returns(() => ++reads == 1
@@ -91,7 +94,7 @@ public sealed class AzureDevOpsRunCoordinationBehaviorTests
         using var fixture = new CiReporterFixture();
         string owner = Path.Combine(fixture.Root, "azdo-runid.123.owner");
         string path = Path.Combine(fixture.Root, "azdo-runid.123.json");
-        fixture.PutText(owner, Lease(-1, CiReporterFixture.Epoch.AddHours(1)));
+        fixture.PutText(owner, Lease(DeadProcessId, CiReporterFixture.Epoch.AddHours(1)));
         fixture.PutText(path, Run(19, expired ? 123 : 456, expired ? CiReporterFixture.Epoch : CiReporterFixture.Epoch.AddHours(1)));
         fixture.Delay = (_, _) =>
         {
@@ -178,7 +181,7 @@ public sealed class AzureDevOpsRunCoordinationBehaviorTests
         // Observe only this test host's liveness. No child process is launched or waited for.
         using var current = Process.GetCurrentProcess();
         int livePid = current.Id;
-        fixture.Environment.SetupGet(value => value.ProcessId).Returns(-100);
+        fixture.Environment.SetupGet(value => value.ProcessId).Returns(DeadProcessId - 1);
         AzureDevOpsRunIdCoordinator coordinator = Coordinator(fixture);
         AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(fixture.PublishConfiguration(), _ => Task.FromResult(55), CancellationToken.None);
         string peer = Path.Combine(fixture.Root, partition switch
@@ -186,12 +189,12 @@ public sealed class AzureDevOpsRunCoordinationBehaviorTests
             6 => "orphan",
             7 => "azdo-runid.123.participant.unknown.json",
             2 or 5 or 8 => $"azdo-runid.123.participant.{livePid}.json",
-            _ => "azdo-runid.123.participant.-1.json",
+            _ => $"azdo-runid.123.participant.{DeadProcessId}.json",
         });
         if (partition != 4)
         {
             fixture.PutText(peer, partition == 3 ? "{ mid-write" : Lease(
-                partition is 2 or 8 ? livePid : -1,
+                partition is 2 or 8 ? livePid : DeadProcessId,
                 partition is 0 or 8 ? CiReporterFixture.Epoch.AddHours(1) : CiReporterFixture.Epoch.AddSeconds(-1)));
         }
 

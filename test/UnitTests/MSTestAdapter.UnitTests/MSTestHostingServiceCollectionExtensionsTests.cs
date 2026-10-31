@@ -651,7 +651,7 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
             .Returns(builder.Object);
         provider.GetRequiredService<ITestingPlatformBuilderConfigurator>().Configure(builder.Object);
         TestingPlatformBuilderHook.AddExtensions(builder.Object, []);
-        var nativeServices = MSTestTestFrameworkContinuationTests.CreateServices(
+        Testing.Platform.Services.ServiceProvider nativeServices = MSTestTestFrameworkContinuationTests.CreateServices(
             Path.GetTempPath(),
             Mock.Of<Microsoft.Testing.Platform.CommandLine.ICommandLineOptions>(),
             Mock.Of<Microsoft.Testing.Platform.Helpers.IFileSystem>());

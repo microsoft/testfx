@@ -278,7 +278,9 @@ public class MSTestDiscovererTests : TestContainer
         await discoverer.DiscoverTestsAsync(["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, sink.Object, null, true);
 
         sink.VerifyNoOtherCalls();
-        _mockMessageLogger.Verify(value => value.SendMessage(TestMessageLevel.Error,
+        _mockMessageLogger.Verify(
+            value => value.SendMessage(
+            TestMessageLevel.Error,
             "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
         _mockTestSourceHandler.Verify(value => value.GetTestSources(It.IsAny<IEnumerable<string>>()), Times.Never);
     }

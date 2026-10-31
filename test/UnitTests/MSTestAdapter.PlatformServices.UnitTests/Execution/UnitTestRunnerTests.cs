@@ -1104,13 +1104,14 @@ public sealed class UnitTestRunnerTests : TestContainer
     public void UnsupportedDiagnosticsCaptureIsReportedAndDisabled()
     {
         AssertionFailureSettings.CaptureDiagnosticsOnFailure = static (_, _, _) => { };
-        var settings = MSTestSettings.GetSettings(
+        MSTestSettings settings = MSTestSettings.GetSettings(
             "<RunSettings><MSTest><CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics></MSTest></RunSettings>",
             MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         _ = new UnitTestRunner(settings, []);
 
-        _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Warning(
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
             "CaptureAssertionFailureDiagnostics is not supported on UWP or WinUI and will be ignored."), Times.Once);
         AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().BeNull();
     }

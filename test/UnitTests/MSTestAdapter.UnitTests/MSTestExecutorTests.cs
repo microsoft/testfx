@@ -89,12 +89,14 @@ public class MSTestExecutorTests : TestContainer
 
     public void LegacyEntryPointsRejectInvalidInputsWithExactParameterNames()
     {
-        Action missingCases = () => _mstestExecutor.RunTests((IEnumerable<TestCase>?)null, null, _mockFrameworkHandle.Object);
-        Action missingSources = () => _mstestExecutor.RunTests((IEnumerable<string>?)null, null, _mockFrameworkHandle.Object);
-        Action missingCaseHandle = () => _mstestExecutor.RunTests(new[] { new TestCase("Type.Method", EngineConstants.ExecutorUri, "source.dll") }, null, null);
-        Action missingSourceHandle = () => _mstestExecutor.RunTests(new[] { "source.dll" }, null, null);
-        Action emptyCases = () => _mstestExecutor.RunTests(Array.Empty<TestCase>(), null, _mockFrameworkHandle.Object);
-        Action emptySources = () => _mstestExecutor.RunTests(Array.Empty<string>(), null, _mockFrameworkHandle.Object);
+        Action<IEnumerable<TestCase>?, IRunContext?, IFrameworkHandle?> runCases = GetLegacyEntryPoint<TestCase>();
+        Action<IEnumerable<string>?, IRunContext?, IFrameworkHandle?> runSources = GetLegacyEntryPoint<string>();
+        Action missingCases = () => runCases(null, null, _mockFrameworkHandle.Object);
+        Action missingSources = () => runSources(null, null, _mockFrameworkHandle.Object);
+        Action missingCaseHandle = () => runCases(new[] { new TestCase("Type.Method", EngineConstants.ExecutorUri, "source.dll") }, null, null);
+        Action missingSourceHandle = () => runSources(new[] { "source.dll" }, null, null);
+        Action emptyCases = () => runCases(Array.Empty<TestCase>(), null, _mockFrameworkHandle.Object);
+        Action emptySources = () => runSources(Array.Empty<string>(), null, _mockFrameworkHandle.Object);
 
         missingCases.Should().ThrowExactly<ArgumentNullException>().WithParameterName("tests");
         missingSources.Should().ThrowExactly<ArgumentNullException>().WithParameterName("sources");
@@ -103,6 +105,18 @@ public class MSTestExecutorTests : TestContainer
         emptyCases.Should().ThrowExactly<ArgumentException>().WithParameterName("tests");
         emptySources.Should().ThrowExactly<ArgumentException>().WithParameterName("sources");
         _mockFrameworkHandle.Verify(value => value.RecordResult(It.IsAny<ObjectModel.TestResult>()), Times.Never);
+    }
+
+    private Action<IEnumerable<T>?, IRunContext?, IFrameworkHandle?> GetLegacyEntryPoint<T>()
+    {
+        // Exercise the retained binary API, not a recommended source-level call to an obsolete method.
+        MethodInfo? method = typeof(MSTestExecutor).GetMethod(
+            nameof(MSTestExecutor.RunTests),
+            [typeof(IEnumerable<T>), typeof(IRunContext), typeof(IFrameworkHandle)]);
+        method.Should().NotBeNull();
+
+        return (Action<IEnumerable<T>?, IRunContext?, IFrameworkHandle?>)method!.CreateDelegate(
+            typeof(Action<IEnumerable<T>?, IRunContext?, IFrameworkHandle?>), _mstestExecutor);
     }
 
     public async Task SelectedCasesExecuteThroughTheNeutralEngineAndPreserveHostRecording()

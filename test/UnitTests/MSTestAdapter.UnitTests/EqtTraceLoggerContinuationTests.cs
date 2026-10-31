@@ -38,7 +38,7 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
             logger.Error("eqt-error-format {0}", 42);
             logger.Error(new InvalidOperationException("eqt-exception-marker"));
 #if NETFRAMEWORK
-            AppDomain owned = AppDomain.CreateDomain("eqt-bridge-owned-domain");
+            var owned = AppDomain.CreateDomain("eqt-bridge-owned-domain");
             try
             {
                 logger.SetupRemoteEqtTraceListeners(owned);
@@ -55,6 +55,7 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         string assemblyPath = typeof(EqtTraceLoggerContinuationTests).Assembly.Location;
         DirectoryInfo? directory = new(Path.GetDirectoryName(assemblyPath)!);
         string framework = directory.Name;
+        string configuration = directory.Parent!.Name;
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "global.json")))
         {
             directory = directory.Parent;
@@ -67,8 +68,8 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         string[] commandLine = Environment.GetCommandLineArgs();
         int resultsIndex = Array.IndexOf(commandLine, "--results-directory");
         resultsIndex.Should().BeGreaterThanOrEqualTo(0);
-        string childResults = Path.Combine(commandLine[resultsIndex + 1], "eqt-child");
-        Directory.Exists(childResults).Should().BeFalse("every enclosing native run has a distinct result directory");
+        string childResults = Path.Combine(commandLine[resultsIndex + 1], "eqt-child-" + Guid.NewGuid().ToString("N"));
+        Directory.Exists(childResults).Should().BeFalse("each child invocation owns an isolated result directory");
         Directory.CreateDirectory(childResults);
         string project = Path.Combine(root, "test", "UnitTests", "MSTestAdapter.UnitTests", "MSTestAdapter.UnitTests.csproj");
         var startInfo = new ProcessStartInfo(dotnet)
@@ -77,7 +78,7 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            Arguments = $"test --project \"{project}\" --framework \"{framework}\" --configuration Release --no-build --no-restore -p:BuildProjectReferences=false -p:UsingDotNetTest=true \"-p:ArtifactsTestResultsDir={childResults}\" --no-progress --no-ansi --treenode-filter \"/*/*/EqtTraceLoggerContinuationTests/*\"",
+            Arguments = $"test --project \"{project}\" --framework \"{framework}\" --configuration \"{configuration}\" --no-build --no-restore -p:BuildProjectReferences=false -p:UsingDotNetTest=true \"-p:ArtifactsTestResultsDir={childResults}\" --no-progress --no-ansi --treenode-filter \"/*/*/EqtTraceLoggerContinuationTests/*\"",
         };
         startInfo.EnvironmentVariables[ChildDirectoryVariable] = childResults;
         using Process child = Process.Start(startInfo)!;
@@ -91,7 +92,7 @@ public sealed class EqtTraceLoggerContinuationTests : TestContainer
         child.ExitCode.Should().Be(0, "the isolated owned test host must pass, output: {0}", output + error);
 
         string trxPath = Directory.GetFiles(childResults, "*.trx", SearchOption.AllDirectories).Single();
-        XDocument trx = XDocument.Load(trxPath);
+        var trx = XDocument.Load(trxPath);
         XElement counters = trx.Descendants().Single(element => element.Name.LocalName == "Counters");
         counters.Attribute("total")!.Value.Should().Be("1");
         counters.Attribute("passed")!.Value.Should().Be("1");

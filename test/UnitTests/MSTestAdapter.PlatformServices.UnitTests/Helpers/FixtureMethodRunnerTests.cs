@@ -263,6 +263,11 @@ public sealed class FixtureMethodRunnerTests : TestContainer
             return await action();
         }
 
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            throw new PlatformNotSupportedException("STA fixture execution requires Windows.");
+        }
+
         TestFailedException? result = null;
         await Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.StaThreadHelper.RunOnStaThreadAsync(async () => result = await action());
         return result;

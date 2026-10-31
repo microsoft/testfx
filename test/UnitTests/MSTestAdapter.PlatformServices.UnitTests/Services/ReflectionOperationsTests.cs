@@ -754,9 +754,9 @@ public class ReflectionOperationsTests : TestContainer
     public void RuntimeMethodLookupHonorsVisibilityAndInvokesTheSelectedMember()
     {
         var fixture = new VisibilityFixture();
-        _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), "Hidden", [typeof(int)], includeNonPublic: false)
+        _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), VisibilityFixture.HiddenMethodName, [typeof(int)], includeNonPublic: false)
             .Should().BeNull();
-        MethodInfo hidden = _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), "Hidden", [typeof(int)], includeNonPublic: true)!;
+        MethodInfo hidden = _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), VisibilityFixture.HiddenMethodName, [typeof(int)], includeNonPublic: true)!;
         hidden.Invoke(fixture, [3]).Should().Be(11);
         fixture.Last.Should().Be("hidden");
         MethodInfo visible = _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), "Visible", [typeof(int)], includeNonPublic: false)!;
@@ -821,6 +821,8 @@ public class ReflectionOperationsTests : TestContainer
 
     private sealed class VisibilityFixture
     {
+        internal const string HiddenMethodName = nameof(Hidden);
+
         internal string? Last { get; private set; }
 
         public int Visible(int value)

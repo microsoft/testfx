@@ -29,7 +29,7 @@ public sealed class SequentialIntPermutationTests : TestContainer
         var permutation = new SequentialIntPermutation(5);
         permutation.Should().Equal(0, 1, 2, 3, 4);
         permutation.Should().Equal(0, 1, 2, 3, 4);
-        ((IEnumerable)permutation).Cast<int>().Should().Equal(0, 1, 2, 3, 4);
+        permutation.Cast<int>().Should().Equal(0, 1, 2, 3, 4);
     }
 
     public void ExplicitNongenericEnumeratorReturnsBoxedOrderedValuesAndTerminates()

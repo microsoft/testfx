@@ -289,7 +289,8 @@ public class TypeCacheTestFilterProviderTests : TestContainer
         cache.GetOrLoadTestFilter(Source).Should().BeNull();
 
         _testablePlatformServiceProvider.MockFileOperations.Verify(value => value.LoadAssembly(Source), Times.Once);
-        _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Warning(
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
             "TypeCache: Could not load test assembly {0} for TestFilterProvider discovery. {1}", Source, cause), Times.Once);
     }
 

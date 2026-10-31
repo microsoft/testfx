@@ -313,10 +313,7 @@ public sealed class AssemblyDiscoveryContinuationTests : TestContainer
                 throw new SerializationException("payload cannot be serialized");
             }
 
-            set
-            {
-                _ = value;
-            }
+            set => _ = value;
         }
     }
 }

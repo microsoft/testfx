@@ -566,7 +566,8 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         methodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
         (await methodInfo.InvokeAsync(null)).Outcome.Should().Be(UnitTestOutcome.Passed);
         events.Should().Equal("initialize");
-        _testablePlatformServiceProvider.MockTraceLogger.Verify(value => value.Warning(
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
             "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}", host.FullName, cause), Times.Once);
     }
 
@@ -629,10 +630,7 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
 
 public sealed class TypeCacheGlobalContinuationFixture
 {
-    public static void Initialize(TestContext context)
-    {
-        ((List<string>)context.Properties["global-events"]!).Add("initialize");
-    }
+    public static void Initialize(TestContext context) => ((List<string>)context.Properties["global-events"]!).Add("initialize");
 
     public static Task Cleanup(TestContext context)
     {
@@ -644,10 +642,7 @@ public sealed class TypeCacheGlobalContinuationFixture
     {
     }
 
-    public static void InvalidNoContext()
-    {
-        ((List<string>)TestContext.Current!.Properties["global-events"]!).Add("invalid-no-context");
-    }
+    public static void InvalidNoContext() => ((List<string>)TestContext.Current!.Properties["global-events"]!).Add("invalid-no-context");
 
     public void InvalidInstance(TestContext context)
     {
