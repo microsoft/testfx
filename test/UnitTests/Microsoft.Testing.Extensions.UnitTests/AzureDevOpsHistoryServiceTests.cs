@@ -87,9 +87,9 @@ public sealed class AzureDevOpsHistoryServiceTests
             .ReturnsAsync(new AzureDevOpsTestResultsPage(
             [
                 new AzureDevOpsTestResult(canonicalName, "Passed", 100) { TestCaseTitle = displayName },
-                new AzureDevOpsTestResult($"{canonicalName} (1)", "Failed", 200) { TestCaseTitle = $"{displayName} (1)" },
-                new AzureDevOpsTestResult($"{canonicalName} (2)", "Passed", 300) { TestCaseTitle = $"{displayName} (2)" },
-                new AzureDevOpsTestResult($"{canonicalName} (Custom scenario)", "Failed", 400) { TestCaseTitle = "Custom scenario" },
+                new AzureDevOpsTestResult($"{canonicalName} (1)", "Failed", 200) { TestCaseTitle = $"{displayName} (1)", Comment = $"MTP.CanonicalTestName/1:{canonicalName.Length}" },
+                new AzureDevOpsTestResult($"{canonicalName} (2)", "Passed", 300) { TestCaseTitle = $"{displayName} (2)", Comment = $"MTP.CanonicalTestName/1:{canonicalName.Length}" },
+                new AzureDevOpsTestResult($"{canonicalName} (Custom scenario)", "Failed", 400) { TestCaseTitle = "Custom scenario", Comment = $"MTP.CanonicalTestName/1:{canonicalName.Length}" },
             ],
             continuationToken: null));
         AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
@@ -104,9 +104,7 @@ public sealed class AzureDevOpsHistoryServiceTests
         Assert.AreEqual(4, duration.SampleCount);
         Assert.AreEqual(400.0, duration.P95Milliseconds);
         Assert.AreEqual(400.0, duration.P99Milliseconds);
-        Assert.IsTrue(service.TryGetStats($"{canonicalName} (1)", out FlakyStats rowStats));
-        Assert.AreEqual(0, rowStats.PassCount);
-        Assert.AreEqual(1, rowStats.FailCount);
+        Assert.IsFalse(service.TryGetStats($"{canonicalName} (1)", out _), "Owned rows contribute only to their canonical method.");
     }
 
     [TestMethod]
@@ -139,8 +137,8 @@ public sealed class AzureDevOpsHistoryServiceTests
             .ReturnsAsync([new AzureDevOpsTestRun("https://example/run")]);
         AzureDevOpsTestResult[] results =
         [
-            .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (1)", "Passed", 100) { TestCaseTitle = "MyMethod (1)" }),
-            .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (2)", "Passed", 200) { TestCaseTitle = "MyMethod (2)" }),
+            .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (1)", "Passed", 100) { TestCaseTitle = "MyMethod (1)", Comment = "MTP.CanonicalTestName/1:24" }),
+            .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (2)", "Passed", 200) { TestCaseTitle = "MyMethod (2)", Comment = "MTP.CanonicalTestName/1:24" }),
         ];
         client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AzureDevOpsTestResultsPage(results.Take(700).ToArray(), continuationToken: "next"));
@@ -156,6 +154,132 @@ public sealed class AzureDevOpsHistoryServiceTests
         Assert.AreEqual(1000, duration.SampleCount);
         Assert.AreEqual(200.0, duration.P95Milliseconds);
         Assert.AreEqual(200.0, duration.P99Milliseconds);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Ordinary parenthesized method")]
+    [DataRow(true, DisplayName = "Row overlaps ordinary parenthesized method")]
+    public async Task HistoryService_UsesAuthoritativeOwnershipWhenMethodNamesOverlap(bool includeOwnedRow)
+    {
+        const string CanonicalName = "Namespace.Tests.Verify";
+        const string ParenthesizedName = "Namespace.Tests.Verify (empty)";
+        List<AzureDevOpsTestResult> results =
+        [
+            new(CanonicalName, "Passed", 100) { TestCaseTitle = "Verify" },
+            new(ParenthesizedName, "Failed", 10_000) { TestCaseTitle = "Verify (empty)" },
+        ];
+        if (includeOwnedRow)
+        {
+            results.Add(new(ParenthesizedName, "Passed", 200)
+            {
+                TestCaseTitle = "Verify (empty)",
+                Comment = "MTP.CanonicalTestName/1:22",
+            });
+        }
+
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/run")]);
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(results, null));
+        AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsTrue(service.TryGetStats(CanonicalName, out FlakyStats ordinary));
+        Assert.AreEqual(includeOwnedRow ? 2 : 1, ordinary.PassCount);
+        Assert.AreEqual(0, ordinary.FailCount);
+        Assert.IsFalse(service.IsLikelyFlaky(CanonicalName, 0.5));
+        Assert.IsTrue(service.TryGetStats(ParenthesizedName, out FlakyStats parenthesized));
+        Assert.AreEqual(0, parenthesized.PassCount);
+        Assert.AreEqual(1, parenthesized.FailCount);
+        Assert.IsTrue(service.TryGetDurationStats(CanonicalName, out DurationHistoryStats ordinaryDuration));
+        Assert.AreEqual(includeOwnedRow ? 200.0 : 100.0, ordinaryDuration.P95Milliseconds);
+        Assert.IsTrue(service.TryGetDurationStats(ParenthesizedName, out DurationHistoryStats parenthesizedDuration));
+        Assert.AreEqual(10_000.0, parenthesizedDuration.P95Milliseconds);
+    }
+
+    [TestMethod]
+    public async Task HistoryService_CapsSamplesInCrossRowSourceOrder()
+    {
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(0, 500).Select(i => new AzureDevOpsTestRun($"https://example/run/{i}")).ToArray());
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<string>(), 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(
+            [
+                new("Namespace.Tests.MyMethod (fast1)", "Passed", 100) { TestCaseTitle = "MyMethod (fast1)", Comment = "MTP.CanonicalTestName/1:24" },
+                new("Namespace.Tests.MyMethod (fast2)", "Passed", 100) { TestCaseTitle = "MyMethod (fast2)", Comment = "MTP.CanonicalTestName/1:24" },
+                new("Namespace.Tests.MyMethod (slow1)", "Passed", 10_000) { TestCaseTitle = "MyMethod (slow1)", Comment = "MTP.CanonicalTestName/1:24" },
+                new("Namespace.Tests.MyMethod (slow2)", "Passed", 10_000) { TestCaseTitle = "MyMethod (slow2)", Comment = "MTP.CanonicalTestName/1:24" },
+            ],
+            null));
+        AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsTrue(service.TryGetStats("Namespace.Tests.MyMethod", out FlakyStats counts));
+        Assert.AreEqual(2000, counts.PassCount);
+        Assert.IsTrue(service.TryGetDurationStats("Namespace.Tests.MyMethod", out DurationHistoryStats duration));
+        Assert.AreEqual(1000, duration.SampleCount);
+        Assert.AreEqual(10_000.0, duration.P95Milliseconds);
+        Assert.AreEqual(10_000.0, duration.P99Milliseconds);
+    }
+
+    [TestMethod]
+    public async Task HistoryService_CapsMixedLegacyAndRowSamplesInSourceOrder()
+    {
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/new"), new AzureDevOpsTestRun("https://example/legacy")]);
+        AzureDevOpsTestResult[] newResults =
+        [
+            .. Enumerable.Range(0, 200).SelectMany(_ => new AzureDevOpsTestResult[]
+            {
+                new("Namespace.Tests.MyMethod (fast1)", "Passed", 100) { TestCaseTitle = "MyMethod (fast1)", Comment = "MTP.CanonicalTestName/1:24" },
+                new("Namespace.Tests.MyMethod (fast2)", "Passed", 100) { TestCaseTitle = "MyMethod (fast2)", Comment = "MTP.CanonicalTestName/1:24" },
+                new("Namespace.Tests.MyMethod (slow1)", "Passed", 10_000) { TestCaseTitle = "MyMethod (slow1)", Comment = "MTP.CanonicalTestName/1:24" },
+                new("Namespace.Tests.MyMethod (slow2)", "Passed", 10_000) { TestCaseTitle = "MyMethod (slow2)", Comment = "MTP.CanonicalTestName/1:24" },
+            }),
+        ];
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/new", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(newResults, null));
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/legacy", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(
+                Enumerable.Range(0, 800).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod", "Passed", 50)).ToArray(),
+                null));
+        AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsTrue(service.TryGetStats("Namespace.Tests.MyMethod", out FlakyStats counts));
+        Assert.AreEqual(1600, counts.PassCount);
+        Assert.IsTrue(service.TryGetDurationStats("Namespace.Tests.MyMethod", out DurationHistoryStats duration));
+        Assert.AreEqual(1000, duration.SampleCount);
+        Assert.AreEqual(10_000.0, duration.P95Milliseconds);
+        Assert.AreEqual(10_000.0, duration.P99Milliseconds);
+    }
+
+    [TestMethod]
+    [DataRow("MTP.CanonicalTestName/1:0", DisplayName = "Empty canonical name")]
+    [DataRow("MTP.CanonicalTestName/1:999", DisplayName = "Out-of-range canonical boundary")]
+    [DataRow("MTP.CanonicalTestName/1:3", DisplayName = "Boundary is not a row suffix")]
+    [DataRow("MTP.CanonicalTestName/2:24", DisplayName = "Unsupported metadata version")]
+    public async Task HistoryService_ReportsInvalidOwnershipMetadata(string comment)
+    {
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/run")]);
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage([new AzureDevOpsTestResult("Namespace.Tests.MyMethod (1)", "Failed") { Comment = comment }], null));
+        TextLogger logger = new();
+        AzureDevOpsHistoryService service = CreateHistoryService(client, logger: logger);
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsFalse(service.TryGetStats("Namespace.Tests.MyMethod", out _));
+        Assert.AreEqual(0, service.HistoryWindowInDays);
+        Assert.Contains("WARNING:", string.Join(Environment.NewLine, logger.Logs));
     }
 
     [TestMethod]

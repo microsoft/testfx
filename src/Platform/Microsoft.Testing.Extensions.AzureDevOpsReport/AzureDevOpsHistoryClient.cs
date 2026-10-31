@@ -264,6 +264,7 @@ internal sealed class AzureDevOpsHistoryClient : IAzureDevOpsHistoryClient
                     .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!, result.DurationInMs)
                     {
                         TestCaseTitle = result.TestCaseTitle,
+                        Comment = result.Comment,
                     })],
                 continuationToken);
     }
@@ -361,6 +362,9 @@ internal sealed class AzureDevOpsResultResponse
     [JsonPropertyName("testCaseTitle")]
     public string? TestCaseTitle { get; set; }
 
+    [JsonPropertyName("comment")]
+    public string? Comment { get; set; }
+
     [JsonPropertyName("outcome")]
     public string? Outcome { get; set; }
 
@@ -386,6 +390,8 @@ internal sealed class AzureDevOpsTestResult
     public string AutomatedTestName { get; }
 
     public string? TestCaseTitle { get; set; }
+
+    public string? Comment { get; set; }
 
     public string Outcome { get; }
 

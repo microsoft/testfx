@@ -145,7 +145,7 @@ public sealed class AzureDevOpsHistoryClientTests
     {
         string body = JsonSerializer.Serialize(new
         {
-            value = new[] { new { automatedTestName, testCaseTitle, outcome = "Passed", durationInMs = 12.5 } },
+            value = new[] { new { automatedTestName, testCaseTitle, comment = "MTP.CanonicalTestName/1:26", outcome = "Passed", durationInMs = 12.5 } },
         });
         ScriptedHandler handler = new(() => Response(HttpStatusCode.OK, body));
         using HttpClient http = new(handler);
@@ -156,6 +156,7 @@ public sealed class AzureDevOpsHistoryClientTests
         AzureDevOpsTestResult result = Assert.ContainsSingle(page.Results);
         Assert.AreEqual(automatedTestName, result.AutomatedTestName);
         Assert.AreEqual(testCaseTitle, result.TestCaseTitle);
+        Assert.AreEqual("MTP.CanonicalTestName/1:26", result.Comment);
         Assert.AreEqual("Passed", result.Outcome);
         Assert.AreEqual(12.5, result.DurationMilliseconds);
     }

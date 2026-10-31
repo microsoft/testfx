@@ -62,6 +62,11 @@
         <target state="translated">Проверка подлинности через REST API Azure DevOps не удалась или произошел переход на страницу входа (статус: {0}), что указывает на недействительность или недоступность SYSTEM_ACCESSTOKEN. При сборке вилок с проверкой запросов на вытягивание не раскрывайте секреты недоверенному коду вилки. Публикуйте результаты из отдельного доверенного контекста конвейера или отключите публикацию в реальном времени в Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps: не удалось выполнить тестовый запуск при публикации в реальном времени.</target>
