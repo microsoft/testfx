@@ -2277,4 +2277,217 @@ public partial class AssertTests : TestContainer
             .Single(line => line.StartsWith(label, StringComparison.Ordinal));
         return line.Substring(label.Length).TrimStart();
     }
+
+    public void Equality_ReferenceComparerInterpolatedMessages_AreLazyAndKeepEqualTextOperands()
+    {
+        string expected = new(['s', 'a', 'm', 'e']);
+        string actual = new(['s', 'a', 'm', 'e']);
+        var comparer = new IdentityStringComparer();
+        int formatCalls = 0;
+        string Format()
+        {
+            formatCalls++;
+            return "comparer context";
+        }
+
+        Assert.AreEqual(expected, expected, comparer, $"{Format()}");
+        Assert.AreNotEqual(expected, actual, comparer, $"{Format()}");
+        formatCalls.Should().Be(0);
+
+        Action equal = () => Assert.AreEqual(expected, actual, comparer, $"{Format()}");
+        AssertFailedException equalFailure = equal.Should().ThrowExactly<AssertFailedException>().Which;
+        equalFailure.Message.Replace("\r\n", "\n").Should().Be(
+            """
+            Assertion failed. Expected strings to be equal.
+            comparer context
+
+            expected: "same"
+            actual:   "same"
+
+            Assert.AreEqual(expected, actual)
+            """.Replace("\r\n", "\n"));
+        equalFailure.ExpectedText.Should().Be("\"same\"");
+        equalFailure.ActualText.Should().Be("\"same\"");
+        formatCalls.Should().Be(1);
+
+        Action notEqual = () => Assert.AreNotEqual(expected, expected, comparer, $"{Format()}");
+        notEqual.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Expected values to differ.
+            comparer context
+
+            notExpected: "same"
+            actual:      "same"
+
+            Assert.AreNotEqual(expected, expected)
+            """);
+        formatCalls.Should().Be(2);
+    }
+
+    public void StringEquality_InterpolatedOverloads_RespectCaseCultureAndLazyMessages()
+    {
+        (bool ExplicitCulture, bool IgnoreCase, string Equivalent)[] cases =
+        [
+            (false, false, "i"),
+            (false, true, "I"),
+            (true, false, "i"),
+            (true, true, "İ"),
+        ];
+        foreach ((bool explicitCulture, bool ignoreCase, string equivalent) in cases)
+        {
+            int formatCalls = 0;
+            string expected = "i";
+            var culture = new CultureInfo("tr-TR");
+            string Format()
+            {
+                formatCalls++;
+                return "string context";
+            }
+
+            if (explicitCulture)
+            {
+                Assert.AreEqual(expected, equivalent, ignoreCase, culture, "unused");
+                Assert.AreNotEqual(expected, "x", ignoreCase, culture, "unused");
+            }
+            else
+            {
+                Assert.AreEqual(expected, equivalent, ignoreCase, "unused");
+                Assert.AreNotEqual(expected, "x", ignoreCase, "unused");
+            }
+
+            InvokeEqual(equivalent);
+            InvokeNotEqual("x");
+            formatCalls.Should().Be(0);
+
+            Action equal = () => InvokeEqual(null);
+            AssertFailedException equalFailure = equal.Should().ThrowExactly<AssertFailedException>().Which;
+            string equalRows = ignoreCase
+                ? "expected:    \"i\"\nactual:      null\nignore case: true"
+                : "expected: \"i\"\nactual:   null";
+            if (explicitCulture)
+            {
+                equalRows += ignoreCase ? "\nculture:     tr-TR" : "\nculture:  tr-TR";
+            }
+
+            string equalMessage = $"""
+                Assertion failed. Expected strings to be equal.
+                string context
+
+                {equalRows}
+
+                Assert.AreEqual(expected, actual)
+                """;
+            equalFailure.Message.Replace("\r\n", "\n").Should().Be(equalMessage.Replace("\r\n", "\n"));
+            equalFailure.ExpectedText.Should().Be("\"i\"");
+            equalFailure.ActualText.Should().Be("null");
+            formatCalls.Should().Be(1);
+
+            Action notEqual = () => InvokeNotEqual(equivalent);
+            AssertFailedException notEqualFailure = notEqual.Should().ThrowExactly<AssertFailedException>().Which;
+            string notEqualRows = $"not expected: \"i\"\nactual:       \"{equivalent}\"";
+            if (ignoreCase)
+            {
+                notEqualRows += "\nignore case:  true";
+            }
+
+            if (explicitCulture)
+            {
+                notEqualRows += "\nculture:      tr-TR";
+            }
+
+            string summary = ignoreCase ? "Expected strings to differ (case-insensitive)." : "Expected strings to differ.";
+            string notEqualMessage = $"""
+                Assertion failed. {summary}
+                string context
+
+                {notEqualRows}
+
+                Assert.AreNotEqual(expected, actual)
+                """;
+            notEqualFailure.Message.Replace("\r\n", "\n").Should().Be(notEqualMessage.Replace("\r\n", "\n"));
+            notEqualFailure.ExpectedText.Should().Be("not \"i\"");
+            notEqualFailure.ActualText.Should().Be($"\"{equivalent}\"");
+            formatCalls.Should().Be(2);
+
+            void InvokeEqual(string? actual)
+            {
+                if (explicitCulture)
+                {
+                    Assert.AreEqual(expected, actual, ignoreCase, culture, $"{Format()}");
+                }
+                else
+                {
+                    Assert.AreEqual(expected, actual, ignoreCase, $"{Format()}");
+                }
+            }
+
+            void InvokeNotEqual(string? actual)
+            {
+                if (explicitCulture)
+                {
+                    Assert.AreNotEqual(expected, actual, ignoreCase, culture, $"{Format()}");
+                }
+                else
+                {
+                    Assert.AreNotEqual(expected, actual, ignoreCase, $"{Format()}");
+                }
+            }
+        }
+    }
+
+    public void StringEquality_InterpolatedNullCulture_RejectsBeforeFormatting()
+    {
+        int formatCalls = 0;
+        string Format()
+        {
+            formatCalls++;
+            return "must not evaluate";
+        }
+
+        Action equal = () => Assert.AreEqual("a", "b", false, null!, $"{Format()}");
+        Action notEqual = () => Assert.AreNotEqual("a", "b", false, null!, $"{Format()}");
+        foreach (Action action in new[] { equal, notEqual })
+        {
+            action.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be("culture");
+        }
+
+        formatCalls.Should().Be(0);
+    }
+
+    public void NumericDelta_ScopedFailureContinuesForDecimalAndLong()
+    {
+        (Action Accepted, Action Rejected, string Message)[] cases =
+        [
+            (() => Assert.AreEqual(10m, 11m, 1m), () => Assert.AreEqual(10m, 12m, 1m),
+                CreateDeltaAreEqualFailureMessage("10", "12", "1", "Assert.AreEqual(10m, 12m, <delta>)")),
+            (() => Assert.AreNotEqual(10m, 12m, 1m), () => Assert.AreNotEqual(10m, 11m, 1m),
+                CreateDeltaAreNotEqualFailureMessage("10", "11", "1", "Assert.AreNotEqual(10m, 11m, <delta>)")),
+            (() => Assert.AreEqual(10L, 11L, 1L), () => Assert.AreEqual(10L, 12L, 1L),
+                CreateDeltaAreEqualFailureMessage("10", "12", "1", "Assert.AreEqual(10L, 12L, <delta>)")),
+            (() => Assert.AreNotEqual(10L, 12L, 1L), () => Assert.AreNotEqual(10L, 11L, 1L),
+                CreateDeltaAreNotEqualFailureMessage("10", "11", "1", "Assert.AreNotEqual(10L, 11L, <delta>)")),
+        ];
+        foreach ((Action accepted, Action rejected, string message) in cases)
+        {
+            accepted.Should().NotThrow();
+            int continued = 0;
+            Action scoped = () =>
+            {
+                using (Assert.Scope())
+                {
+                    rejected();
+                    continued++;
+                }
+            };
+            scoped.Should().ThrowExactly<AssertFailedException>().WithMessage(message);
+            continued.Should().Be(1);
+        }
+    }
+
+    private sealed class IdentityStringComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string? x, string? y) => ReferenceEquals(x, y);
+
+        public int GetHashCode(string obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+    }
 }

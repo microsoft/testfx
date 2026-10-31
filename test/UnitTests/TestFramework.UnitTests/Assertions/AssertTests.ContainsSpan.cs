@@ -183,6 +183,149 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void Contains_SpanMemoryComparerOverloads_PreserveComparerAndFailureContext()
+    {
+        string[] values = ["alpha", "beta"];
+        foreach (int shape in new[] { 0, 1, 2 })
+        {
+            Action contains = () => Invoke("ALPHA", shouldContain: true);
+            Action missing = () => Invoke("GAMMA", shouldContain: true);
+            Action excludes = () => Invoke("GAMMA", shouldContain: false);
+            Action unexpected = () => Invoke("ALPHA", shouldContain: false);
+
+            contains.Should().NotThrow();
+            excludes.Should().NotThrow();
+            AssertFailedException missingException = missing.Should().ThrowExactly<AssertFailedException>().Which;
+            missingException.ExpectedText.Should().Be("\"GAMMA\"");
+            missingException.Message.Should().Contain("comparer context").And.EndWith("Assert.Contains(item, collection)");
+            AssertFailedException unexpectedException = unexpected.Should().ThrowExactly<AssertFailedException>().Which;
+            unexpectedException.ExpectedText.Should().Be("\"ALPHA\"");
+            unexpectedException.Message.Should().Contain("comparer context").And.EndWith("Assert.DoesNotContain(item, collection)");
+
+            void Invoke(string item, bool shouldContain)
+            {
+                if (shape == 0)
+                {
+                    Span<string> collection = values;
+                    if (shouldContain)
+                    {
+                        Assert.Contains(item, collection, StringComparer.OrdinalIgnoreCase, "comparer context");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContain(item, collection, StringComparer.OrdinalIgnoreCase, "comparer context");
+                    }
+                }
+                else if (shape == 1)
+                {
+                    Memory<string> collection = values;
+                    if (shouldContain)
+                    {
+                        Assert.Contains(item, collection, StringComparer.OrdinalIgnoreCase, "comparer context");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContain(item, collection, StringComparer.OrdinalIgnoreCase, "comparer context");
+                    }
+                }
+                else
+                {
+                    ReadOnlyMemory<string> collection = values;
+                    if (shouldContain)
+                    {
+                        Assert.Contains(item, collection, StringComparer.OrdinalIgnoreCase, "comparer context");
+                    }
+                    else
+                    {
+                        Assert.DoesNotContain(item, collection, StringComparer.OrdinalIgnoreCase, "comparer context");
+                    }
+                }
+            }
+        }
+    }
+
+    public void Contains_SpanMemoryPredicateOverloads_RejectTheInverseCondition()
+    {
+        int[] values = [1, 42, 3];
+        foreach (int shape in new[] { 0, 1, 2 })
+        {
+            foreach (bool shouldContain in new[] { true, false })
+            {
+                int continued = 0;
+                Func<int, bool> predicate = shouldContain ? value => value == 42 : value => value == 99;
+                Action accepted = Invoke;
+                accepted.Should().NotThrow();
+
+                predicate = shouldContain ? value => value == 99 : value => value == 42;
+                Action rejected = () =>
+                {
+                    using (Assert.Scope())
+                    {
+                        Invoke();
+                        continued++;
+                    }
+                };
+                string expected = shouldContain
+                    ? """
+                        Assertion failed. Expected collection to contain an element matching the predicate.
+                        predicate context
+
+                        Assert.Contains(predicate, collection)
+                        """
+                    : """
+                        Assertion failed. Expected collection to not contain an element matching the predicate.
+                        predicate context
+
+                        Assert.DoesNotContain(predicate, collection)
+                        """;
+
+                rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                    .Should().Be(expected.Replace("\r\n", "\n"));
+                continued.Should().Be(1);
+
+                void Invoke()
+                {
+                    if (shape == 0)
+                    {
+                        Span<int> collection = values;
+                        if (shouldContain)
+                        {
+                            Assert.Contains(predicate, collection, "predicate context");
+                        }
+                        else
+                        {
+                            Assert.DoesNotContain(predicate, collection, "predicate context");
+                        }
+                    }
+                    else if (shape == 1)
+                    {
+                        Memory<int> collection = values;
+                        if (shouldContain)
+                        {
+                            Assert.Contains(predicate, collection, "predicate context");
+                        }
+                        else
+                        {
+                            Assert.DoesNotContain(predicate, collection, "predicate context");
+                        }
+                    }
+                    else
+                    {
+                        ReadOnlyMemory<int> collection = values;
+                        if (shouldContain)
+                        {
+                            Assert.Contains(predicate, collection, "predicate context");
+                        }
+                        else
+                        {
+                            Assert.DoesNotContain(predicate, collection, "predicate context");
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 #endif

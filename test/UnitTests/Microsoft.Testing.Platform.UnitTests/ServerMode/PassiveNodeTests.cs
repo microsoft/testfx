@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
 
 using Moq;
@@ -266,5 +267,24 @@ public sealed class PassiveNodeTests
         }
 
         public void Dispose() => IsDisposed = true;
+    }
+
+    [TestMethod]
+    public async Task PassiveConsumer_TelemetryIncludesDisabledPlatformIdentityRatherThanDroppingIt()
+    {
+        using PassiveNodeDataConsumer consumer = new(null);
+        ServiceProvider services = new();
+        services.AddService(consumer);
+
+        string? text = await ExtensionInformationCollector.CollectAndSerializeToJsonAsync(services);
+
+        Assert.IsNotNull(text);
+        using var document = System.Text.Json.JsonDocument.Parse(text);
+        System.Text.Json.JsonElement entry = Assert.ContainsSingle(document.RootElement.EnumerateArray());
+        Assert.HasCount(3, entry.EnumerateObject());
+        Assert.AreEqual("bce79cdb125352d420475a5e7188649e9d50ee265a9659edfa3bdaab8f8dd460", entry.GetProperty("Uid").GetString());
+        string platformVersion = typeof(ITestApplication).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
+        Assert.AreEqual(platformVersion, entry.GetProperty("Version").GetString());
+        Assert.IsFalse(entry.GetProperty("Enabled").GetBoolean());
     }
 }

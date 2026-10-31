@@ -311,4 +311,87 @@ public sealed class TestExecutionActivityBrokerTests
             Uid = new TestNodeUid(Guid.NewGuid().ToString()),
             DisplayName = "Test",
         })!;
+
+    [TestMethod]
+    public void Activate_ThrowingFactoryIsRethrownAndReservationIsPermanentlyRejected()
+    {
+        InvalidOperationException expected = new("activity rejected");
+        _service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>()))
+            .Throws(expected);
+        using TestExecutionActivityBroker broker = CreateBroker();
+        TestExecutionActivityReservation reservation = ReserveWithoutActivation(broker);
+
+        Assert.AreSame(expected, Assert.ThrowsExactly<InvalidOperationException>(reservation.Activate));
+        reservation.Activate();
+        reservation.RecordExecutionEnd(DateTimeOffset.UtcNow);
+        Assert.IsNull(reservation.Enter());
+        Assert.IsFalse(reservation.ProcessResult("pass", true, true, (_, _, _, _) => Assert.Fail("Rejected activation must not accept results.")));
+        _service.Verify(
+            s => s.StartTestExecutionActivity(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>()),
+            Times.Once);
+        _activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void Activate_ReentrantDisposeSealsAndStopsReturnedActivityExactlyOnce()
+    {
+        using TestExecutionActivityBroker broker = CreateBroker();
+        _service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>()))
+            .Returns(() =>
+            {
+                broker.Dispose();
+                return _activity.Object;
+            });
+        TestExecutionActivityReservation reservation = ReserveWithoutActivation(broker);
+
+        reservation.Activate();
+        reservation.Activate();
+        broker.Dispose();
+
+        _activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Once);
+        Assert.IsFalse(reservation.ProcessResult("fail", true, true, (_, _, _, _) => Assert.Fail("Disposed activity cannot be enriched.")));
+        Assert.IsNull(reservation.Enter());
+        Assert.IsNull(broker.Reserve(new TestNode { Uid = "late", DisplayName = "Late case" }));
+    }
+
+    [TestMethod]
+    public void CompleteWithoutResult_FinalizesOnlyAfterExecutionEndAndRejectsLateUpdates()
+    {
+        using TestExecutionActivityBroker broker = CreateBroker();
+        TestExecutionActivityReservation reservation = Reserve(broker);
+        reservation.CompleteWithoutResult();
+        _activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Never);
+        DateTimeOffset end = DateTimeOffset.UtcNow;
+
+        reservation.RecordExecutionEnd(end);
+        reservation.CompleteWithoutResult();
+        reservation.RecordExecutionEnd(end.AddHours(1));
+
+        _activity.Verify(a => a.Stop(end), Times.Once);
+        _activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Once);
+        Assert.IsFalse(reservation.ProcessResult("error", true, true, (_, _, _, _) => Assert.Fail("Finalized reservation cannot accept results.")));
+    }
+
+    [TestMethod]
+    [DataRow("error", "timeout", "error")]
+    [DataRow("timeout", "fail", "timeout")]
+    [DataRow("fail", "cancelled", "fail")]
+    [DataRow("cancelled", "pass", "cancelled")]
+    [DataRow("pass", "skipped", "pass")]
+    [DataRow("skipped", "unknown", "skipped")]
+    public void ProcessResult_PreservesWorstStatusAcrossEveryPriority(string higher, string lower, string expected)
+    {
+        using TestExecutionActivityBroker broker = CreateBroker();
+        TestExecutionActivityReservation reservation = Reserve(broker);
+        reservation.RecordExecutionEnd(DateTimeOffset.UtcNow);
+        string? actual = null;
+        Assert.IsTrue(reservation.ProcessResult(lower, true, false, (_, result, _, _) => actual = result));
+        Assert.IsTrue(reservation.ProcessResult(higher, true, false, (_, result, _, _) => actual = result));
+        Assert.IsTrue(reservation.ProcessResult(lower, true, true, (_, _, _, _) => Assert.Fail("A lower priority result cannot replace the winning enrichment.")));
+
+        Assert.AreEqual(expected, actual);
+        _activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Once);
+    }
 }

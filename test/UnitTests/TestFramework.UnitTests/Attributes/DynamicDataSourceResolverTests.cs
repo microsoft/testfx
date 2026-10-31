@@ -120,4 +120,51 @@ public class DynamicDataSourceResolverTests : TestContainer
         public static string ReflectionDisplayName(MethodInfo methodInfo, object[] data)
             => "reflection-display-name";
     }
+
+    public void RegisterProviders_NullArgumentsAreRejectedWithoutReplacingValidRegistrations()
+    {
+        const string DataKey = "FrameworkValidationData";
+        const string DisplayKey = "FrameworkValidationDisplay";
+        object[][] rows = [[37, "stable"]];
+        int dataCalls = 0;
+        int displayCalls = 0;
+        Func<object?[], object?> provider = _ =>
+        {
+            dataCalls++;
+            return rows;
+        };
+        Func<MethodInfo, object?[]?, string?> displayProvider = (method, data) =>
+        {
+            displayCalls++;
+            return $"{method.Name}:{data![0]}";
+        };
+        DynamicDataSourceResolver.RegisterDataProvider(typeof(ValidationFixture), DataKey, DynamicDataSourceType.AutoDetect, provider);
+        DynamicDataSourceResolver.RegisterDisplayNameProvider(typeof(ValidationFixture), DisplayKey, displayProvider);
+        (Action Register, string Parameter)[] cases =
+        [
+            (() => DynamicDataSourceResolver.RegisterDataProvider(null!, DataKey, DynamicDataSourceType.AutoDetect, provider), "declaringType"),
+            (() => DynamicDataSourceResolver.RegisterDataProvider(typeof(ValidationFixture), null!, DynamicDataSourceType.AutoDetect, provider), "sourceName"),
+            (() => DynamicDataSourceResolver.RegisterDataProvider(typeof(ValidationFixture), DataKey, DynamicDataSourceType.AutoDetect, null!), "dataProvider"),
+            (() => DynamicDataSourceResolver.RegisterDisplayNameProvider(null!, DisplayKey, displayProvider), "declaringType"),
+            (() => DynamicDataSourceResolver.RegisterDisplayNameProvider(typeof(ValidationFixture), null!, displayProvider), "methodName"),
+            (() => DynamicDataSourceResolver.RegisterDisplayNameProvider(typeof(ValidationFixture), DisplayKey, null!), "displayNameProvider"),
+        ];
+        foreach ((Action register, string parameter) in cases)
+        {
+            register.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be(parameter);
+        }
+
+        dataCalls.Should().Be(0);
+        displayCalls.Should().Be(0);
+        DynamicDataSourceResolver.TryGetData(typeof(ValidationFixture), DataKey, DynamicDataSourceType.AutoDetect, [], out object? data)
+            .Should().BeTrue();
+        data.Should().BeSameAs(rows);
+        DynamicDataSourceResolver.TryGetDisplayName(typeof(ValidationFixture), DisplayKey, _testMethodInfo, [37], out string? name)
+            .Should().BeTrue();
+        name.Should().Be("TestMethod:37");
+        dataCalls.Should().Be(1);
+        displayCalls.Should().Be(1);
+    }
+
+    private sealed class ValidationFixture;
 }

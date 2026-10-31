@@ -146,4 +146,19 @@ public sealed class TelemetryCollectorTests : TestContainer
         TelemetryCollector.DrainAssertionCallCounts()["TelemetryCollectorTests.Allocations"].Should().Be(11_000);
     }
 #endif
+
+    public void TrackAssertionCall_InvalidNameCannotEscapeOrCorruptOtherCounters()
+    {
+        const string Name = "FrameworkCoverage.InvalidTelemetryNeighbor";
+        TelemetryCollector.DrainAssertionCallCounts();
+        TelemetryCollector.TrackAssertionCall(Name, isEnabled: true);
+        TelemetryCollector.TrackAssertionCall(Name, isEnabled: true);
+        Action invalid = () => TelemetryCollector.TrackAssertionCall(null!, isEnabled: true);
+        invalid.Should().NotThrow();
+        TelemetryCollector.TrackAssertionCall(Name, isEnabled: true);
+
+        Dictionary<string, long> snapshot = TelemetryCollector.DrainAssertionCallCounts();
+        snapshot[Name].Should().Be(3);
+        TelemetryCollector.DrainAssertionCallCounts().Should().NotContainKey(Name);
+    }
 }

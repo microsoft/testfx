@@ -207,6 +207,124 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void SequenceEqual_SpanMemoryOverloads_PreserveComparerOrderAndDiagnostics()
+    {
+        string[] expected = ["a", "b", "a"];
+        string[] actual = [];
+        var comparer = new SpanSequenceComparer();
+        (Action Equal, Action NotEqual, int Mode)[] cases =
+        [
+            (() => Assert.AreSequenceEqual(expected.AsSpan(), actual.AsSpan(), SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual(expected.AsSpan(), actual.AsSpan(), SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"), 0),
+            (() => Assert.AreSequenceEqual((ReadOnlyMemory<string>)expected, actual.AsMemory(), SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual((ReadOnlyMemory<string>)expected, actual.AsMemory(), SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"), 0),
+            (() => Assert.AreSequenceEqual(expected.AsMemory(), actual.AsMemory(), SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual(expected.AsMemory(), actual.AsMemory(), SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"), 0),
+            (() => Assert.AreSequenceEqual(expected.AsSpan(), actual.AsSpan(), comparer, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual(expected.AsSpan(), actual.AsSpan(), comparer, "sequence context", "expected", "actual"), 1),
+            (() => Assert.AreSequenceEqual((ReadOnlyMemory<string>)expected, actual.AsMemory(), comparer, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual((ReadOnlyMemory<string>)expected, actual.AsMemory(), comparer, "sequence context", "expected", "actual"), 1),
+            (() => Assert.AreSequenceEqual(expected.AsMemory(), actual.AsMemory(), comparer, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual(expected.AsMemory(), actual.AsMemory(), comparer, "sequence context", "expected", "actual"), 1),
+            (() => Assert.AreSequenceEqual(expected.AsSpan(), actual.AsSpan(), comparer, SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual(expected.AsSpan(), actual.AsSpan(), comparer, SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"), 2),
+            (() => Assert.AreSequenceEqual((ReadOnlyMemory<string>)expected, actual.AsMemory(), comparer, SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual((ReadOnlyMemory<string>)expected, actual.AsMemory(), comparer, SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"), 2),
+            (() => Assert.AreSequenceEqual(expected.AsMemory(), actual.AsMemory(), comparer, SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"),
+                () => Assert.AreNotSequenceEqual(expected.AsMemory(), actual.AsMemory(), comparer, SequenceOrder.InAnyOrder, "sequence context", "expected", "actual"), 2),
+        ];
+        foreach ((Action equal, Action notEqual, int mode) in cases)
+        {
+            actual = mode switch
+            {
+                0 => ["b", "a", "a"],
+                1 => ["A", "B", "A"],
+                _ => ["B", "A", "A"],
+            };
+            string actualText = mode switch
+            {
+                0 => "[\"b\", \"a\", \"a\"]",
+                1 => "[\"A\", \"B\", \"A\"]",
+                _ => "[\"B\", \"A\", \"A\"]",
+            };
+            equal.Should().NotThrow();
+            AssertFailedException inverse = CaptureSequenceSpanScopedFailure(notEqual);
+            string inverseSummary = mode == 1 ? "Expected sequences to differ." : "Expected sequences to differ (in any order).";
+            string inverseRows = $"notExpected: [\"a\", \"b\", \"a\"]\nactual:      {actualText}";
+            if (mode != 0)
+            {
+                inverseRows += "\ncomparer:    SpanSequenceComparer";
+            }
+
+            string suffix = mode switch
+            {
+                0 => ", <order>",
+                1 => ", <comparer>",
+                _ => ", <comparer>, <order>",
+            };
+            string inverseMessage = $"""
+                Assertion failed. {inverseSummary}
+                sequence context
+
+                {inverseRows}
+
+                Assert.AreNotSequenceEqual(expected, actual{suffix})
+                """;
+            inverse.Message.Replace("\r\n", "\n").Should().Be(inverseMessage.Replace("\r\n", "\n"));
+            inverse.ExpectedText.Should().Be("[\"a\", \"b\", \"a\"]");
+            inverse.ActualText.Should().Be(actualText);
+
+            actual = ["z", "z", "z"];
+            notEqual.Should().NotThrow();
+            AssertFailedException mismatch = CaptureSequenceSpanScopedFailure(equal);
+            string equalSummary = mode == 1
+                ? "Expected sequences to be equal.\nSequences have 3 element(s). 3 element(s) differ. First difference at index 0."
+                : "Expected sequences to be equal (in any order).\nMissing 3 element(s) from actual. Found 3 unexpected element(s).";
+            string equalRows = mode == 1
+                ? "expected: [\"a\", \"b\", \"a\"]\nactual:   [\"z\", \"z\", \"z\"]"
+                : "missing:    [\"a\", \"b\", \"a\"]\nunexpected: [\"z\", \"z\", \"z\"]";
+            if (mode != 0)
+            {
+                equalRows += mode == 1 ? "\ncomparer: SpanSequenceComparer" : "\ncomparer:   SpanSequenceComparer";
+            }
+
+            string equalMessage = $"""
+                Assertion failed. {equalSummary}
+                sequence context
+
+                {equalRows}
+
+                Assert.AreSequenceEqual(expected, actual{suffix})
+                """;
+            mismatch.Message.Replace("\r\n", "\n").Should().Be(equalMessage.Replace("\r\n", "\n"));
+            mismatch.ExpectedText.Should().Be("[\"a\", \"b\", \"a\"]");
+            mismatch.ActualText.Should().Be("[\"z\", \"z\", \"z\"]");
+        }
+    }
+
+    private static AssertFailedException CaptureSequenceSpanScopedFailure(Action assertion)
+    {
+        int continued = 0;
+        Action action = () =>
+        {
+            using (Assert.Scope())
+            {
+                assertion();
+                continued++;
+            }
+        };
+        AssertFailedException failure = action.Should().ThrowExactly<AssertFailedException>().Which;
+        continued.Should().Be(1);
+        return failure;
+    }
+
+    private sealed class SpanSequenceComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string? x, string? y) => StringComparer.OrdinalIgnoreCase.Equals(x, y);
+
+        public int GetHashCode(string obj) => StringComparer.OrdinalIgnoreCase.GetHashCode(obj);
+    }
 }
 
 #endif

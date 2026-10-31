@@ -295,4 +295,27 @@ public class TestMethodFilterTests : TestContainer
     }
 
     private class DummyTestClassAttribute : TestClassAttribute;
+
+    public void TraitFilteringUsesFirstCaseInsensitiveMatchAndRejectsAbsentTraits()
+    {
+        var testCase = new TestCase("Namespace.Type.Method", EngineConstants.ExecutorUri, "source.dll");
+        testCase.Traits.Add(new Trait("Unrelated", "ignore"));
+        testCase.Traits.Add(new Trait("Platform", "first"));
+        testCase.Traits.Add(new Trait("platform", "second"));
+
+        _testMethodFilter.PropertyValueProvider(testCase, "PLATFORM").Should().Be("first");
+        _testMethodFilter.PropertyValueProvider(testCase, "missing").Should().BeNull();
+        _testMethodFilter.PropertyValueProvider(testCase, "Priority").Should().BeNull();
+    }
+
+    public void DiscoveryCallbackFailurePreservesTheOriginalException()
+    {
+        var failure = new InvalidOperationException("discovery filter failed");
+        var context = new TestableDiscoveryContextWithGetTestCaseFilter(() => throw failure);
+        var recorder = new TestableTestExecutionRecorder();
+        Action get = () => _testMethodFilter.GetFilterExpression(context, recorder.ToAdapterMessageLogger(), out _);
+
+        get.Should().ThrowExactly<InvalidOperationException>().Which.Should().BeSameAs(failure);
+        recorder.Message.Should().BeNull();
+    }
 }

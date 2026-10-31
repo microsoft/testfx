@@ -81,4 +81,31 @@ public class DataSerializationHelperTests : TestContainer
         actual[0]!.Equals(source).Should().BeTrue();
     }
 #endif
+
+    public void SerializationPreservesNullSlotsAndExactScalarWireValues()
+    {
+        DataSerializationHelper.Serialize(null).Should().BeNull();
+        DataSerializationHelper.Serialize([]).Should().BeEmpty();
+
+        string?[] serialized = DataSerializationHelper.Serialize([null, 17, "row"])!;
+
+        serialized.Should().Equal(null, null, typeof(int).AssemblyQualifiedName, "17", typeof(string).AssemblyQualifiedName, "\"row\"");
+    }
+
+    public void DeserializationRejectsOddPayloadsAndPreservesNullPairs()
+    {
+        DataSerializationHelper.Deserialize(null).Should().BeNull();
+        DataSerializationHelper.Deserialize(["unpaired"]).Should().BeNull();
+        DataSerializationHelper.Deserialize([]).Should().BeEmpty();
+        DataSerializationHelper.Deserialize([null, "17", typeof(int).AssemblyQualifiedName, null, null, null])
+            .Should().Equal(new object?[] { null, null, null });
+    }
+
+    public void IndependentJsonPayloadCreatesUncachedSerializer()
+    {
+        object?[] values = DataSerializationHelper.Deserialize(
+            [typeof(long).AssemblyQualifiedName, "9223372036854775806", "UnknownCoverageType", "\"fallback\""])!;
+
+        values.Should().Equal(9223372036854775806L, "fallback");
+    }
 }

@@ -246,4 +246,123 @@ public sealed class TestHostControllerCancellationTests
             return Task.CompletedTask;
         }
     }
+
+    [TestMethod]
+    public async Task CancellationListener_DisposalBeforeConnectionIsIdempotentAndNonCanceling()
+    {
+        using CTRLPlusCCancellationTokenSource application = new();
+        using TestHostControllerCancellationListener listener = new(
+            "owned-missing-controller-" + Guid.NewGuid().ToString("N"),
+            application, new SystemEnvironment(), new NopLogger());
+        Assert.IsFalse(listener.ShouldReportCompletionAfterCancellation);
+
+        await DisposeListenerJoinedAsync(listener);
+        Action disposeAgain = listener.Dispose;
+        disposeAgain();
+
+        Assert.IsFalse(application.CancellationToken.IsCancellationRequested);
+        Assert.IsFalse(listener.WasCancellationRequestedByController);
+        Assert.IsFalse(listener.ShouldReportCompletionAfterCancellation);
+    }
+
+    [TestMethod]
+    public async Task CancellationListener_PeerEofLogsDiagnosticWithoutCancelingApplication()
+    {
+        string name = NamedPipeServer.GetPipeName("listener-eof-" + Guid.NewGuid().ToString("N")).Name;
+        using System.IO.Pipes.NamedPipeServerStream peer = new(
+            name, System.IO.Pipes.PipeDirection.InOut, 1, System.IO.Pipes.PipeTransmissionMode.Byte, System.IO.Pipes.PipeOptions.Asynchronous);
+        TaskCompletionSource<bool> received = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> close = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var peerTask = Task.Run(
+            async () =>
+            {
+                await peer.WaitForConnectionAsync(TestContext.CancellationToken);
+                byte[] request = new byte[8];
+                int offset = 0;
+                while (offset < request.Length)
+                {
+                    int count = await peer.ReadAsync(request, offset, request.Length - offset, TestContext.CancellationToken);
+                    Assert.IsGreaterThan(0, count);
+                    offset += count;
+                }
+
+                byte[] expected = [.. BitConverter.GetBytes(4), .. BitConverter.GetBytes(13)];
+                Assert.AreSequenceEqual(expected, request);
+                received.TrySetResult(true);
+                await close.Task;
+                peer.Dispose();
+            },
+            TestContext.CancellationToken);
+        using CTRLPlusCCancellationTokenSource application = new();
+        Mock<IEnvironment> environment = new();
+        UnexpectedListenerFailureLogger logger = new();
+        using TestHostControllerCancellationListener listener = new(name, application, environment.Object, logger);
+        try
+        {
+            await received.Task.TimeoutAfterAsync(DisposalTestTimeout);
+            Assert.IsFalse(listener.ShouldReportCompletionAfterCancellation);
+            close.TrySetResult(true);
+
+            await logger.Failure.TimeoutAfterAsync(DisposalTestTimeout);
+            string diagnostic = await logger.Failure;
+
+            Assert.StartsWith("Test host controller cancellation channel stopped unexpectedly: System.IO.IOException:", diagnostic);
+            Assert.IsFalse(application.CancellationToken.IsCancellationRequested);
+            Assert.IsFalse(listener.WasCancellationRequestedByController);
+            Assert.IsFalse(listener.ShouldReportCompletionAfterCancellation);
+            environment.Verify(e => e.Exit(It.IsAny<int>()), Times.Never);
+            await DisposeListenerJoinedAsync(listener);
+            await DisposeListenerJoinedAsync(listener);
+        }
+        finally
+        {
+            close.TrySetResult(true);
+            await peerTask.TimeoutAfterAsync(DisposalTestTimeout);
+        }
+    }
+
+    [TestMethod]
+    public async Task CancellationListener_CallbackAndLoggerFailuresPreserveControllerReason()
+    {
+        Mock<ILogger> sourceLogger = new();
+        AggregateException loggingFailure = new("source logging sentinel", new IOException("provider sentinel"));
+        sourceLogger.Setup(l => l.Log(LogLevel.Warning, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Throws(loggingFailure);
+        using CTRLPlusCCancellationTokenSource application = new(logger: sourceLogger.Object);
+        using CancellationTokenRegistration callback = application.CancellationToken.Register(
+            () => throw new InvalidOperationException("cancellation callback sentinel"));
+        TaskCompletionSource<string> warned = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ILogger> listenerLogger = new();
+        listenerLogger.Setup(l => l.Log(LogLevel.Warning, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, text, _, _) => warned.TrySetResult(text));
+        using TestHostControllerCancellationServer server = new(
+            null, new SystemEnvironment(), CreateLoggerFactory().Object, new SystemTask());
+        server.Start();
+        using TestHostControllerCancellationListener listener = new(
+            server.PipeName, application, new SystemEnvironment(), listenerLogger.Object);
+        await server.WaitForRequestAsync().TimeoutAfterAsync(DisposalTestTimeout);
+        Assert.IsFalse(listener.ShouldReportCompletionAfterCancellation);
+
+        server.RequestCancellation();
+        await warned.Task.TimeoutAfterAsync(DisposalTestTimeout);
+        string warning = await warned.Task;
+
+        Assert.StartsWith("Exception while propagating test host controller cancellation:\nSystem.AggregateException:", warning);
+        Assert.Contains("source logging sentinel", warning);
+        Assert.Contains("provider sentinel", warning);
+        Assert.IsTrue(application.CancellationToken.IsCancellationRequested);
+        Assert.IsTrue(listener.WasCancellationRequestedByController);
+        Assert.IsTrue(listener.ShouldReportCompletionAfterCancellation);
+        sourceLogger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<string>(), null, LoggingExtensions.Formatter), Times.Once);
+        listenerLogger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<string>(), null, LoggingExtensions.Formatter), Times.Once);
+        await DisposeListenerJoinedAsync(listener);
+    }
+
+    private static Task DisposeListenerJoinedAsync(TestHostControllerCancellationListener listener)
+#if NETCOREAPP
+        => listener.DisposeAsync().AsTask().TimeoutAfterAsync(DisposalTestTimeout);
+#else
+        => Task.Factory.StartNew(listener.Dispose, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+            .TimeoutAfterAsync(DisposalTestTimeout);
+#endif
 }

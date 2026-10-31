@@ -762,4 +762,136 @@ public class MethodInfoExtensionsTests : TestContainer
     }
 
     #endregion
+
+    public async Task GeneratedInvokerUsesCachedParametersAndPreservesReturnShapes()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        MethodInfo method = typeof(GeneratedInvocationFixture).GetMethod(nameof(GeneratedInvocationFixture.Record))!;
+        var fixture = new GeneratedInvocationFixture();
+        object?[] shapes = [null, Task.CompletedTask, new ValueTask(Task.CompletedTask)];
+        try
+        {
+            foreach (object? shape in shapes)
+            {
+                var provider = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+                {
+                    TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+                    {
+                        [method] = (instance, args) =>
+                        {
+                            ((GeneratedInvocationFixture)instance!).Value = ((int)args![0]! * 3) + 1;
+                            return shape;
+                        },
+                    },
+                };
+                services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(provider));
+                Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+
+                Task? task = method.GetInvokeResultWithParametersAsync(fixture, method.GetParameters(), 4);
+                if (shape is null)
+                {
+                    task.Should().BeNull();
+                }
+                else
+                {
+                    task.Should().NotBeNull();
+                    await task!;
+                }
+
+                fixture.Value.Should().Be(13);
+                fixture.Value = -1;
+            }
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public void GeneratedInvokerRejectsMismatchedRowsBeforeCallingTheDelegate()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        MethodInfo method = typeof(GeneratedInvocationFixture).GetMethod(nameof(GeneratedInvocationFixture.Record))!;
+        int calls = 0;
+        var provider = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+        {
+            TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+            {
+                [method] = (_, _) =>
+                {
+                    calls++;
+                    return Task.CompletedTask;
+                },
+            },
+        };
+        services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(provider));
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+            Action mismatch = () => _ = method.GetInvokeResultWithParametersAsync(new GeneratedInvocationFixture(), method.GetParameters(), 7, "extra");
+            TestFailedException failure = mismatch.Should().ThrowExactly<TestFailedException>().Which;
+            failure.Outcome.Should().Be(UnitTestOutcome.Error);
+            failure.Message.Should().Be(string.Format(
+                CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError,
+                typeof(GeneratedInvocationFixture).FullName, "Record", 1, "Int32", 2, "Int32, String"));
+            failure.InnerException.Should().BeNull();
+            Action noData = () => _ = method.GetInvokeResultWithParametersAsync(new GeneratedInvocationFixture(), method.GetParameters(), arguments: null);
+            noData.Should().ThrowExactly<TestFailedException>().Which.Message.Should().Be(string.Format(
+                CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, typeof(GeneratedInvocationFixture).FullName, "Record"));
+            calls.Should().Be(0);
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public async Task GeneratedObjectArrayInvokerReceivesOneUnchangedArrayArgument()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        var services = new TestableImplementations.TestablePlatformServiceProvider();
+        MethodInfo method = typeof(GeneratedInvocationFixture).GetMethod(nameof(GeneratedInvocationFixture.RecordArray))!;
+        var fixture = new GeneratedInvocationFixture();
+        object?[] data = [17, "row"];
+        var provider = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+        {
+            TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+            {
+                [method] = (instance, args) =>
+                {
+                    args.Should().HaveCount(1);
+                    args![0].Should().BeSameAs(data);
+                    ((GeneratedInvocationFixture)instance!).ArrayMode = "generated";
+                    return Task.CompletedTask;
+                },
+            },
+        };
+        services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(provider));
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = services;
+            await method.GetInvokeResultAsync(fixture, data)!;
+            fixture.ArrayMode.Should().Be("generated");
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    private sealed class GeneratedInvocationFixture
+    {
+        internal int Value { get; set; }
+
+        internal string? ArrayMode { get; set; }
+
+        public void Record(int value) => Value = value * 2;
+
+        public void RecordArray(object?[] values) => ArrayMode = "reflection";
+    }
 }

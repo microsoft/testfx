@@ -24,15 +24,21 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.SourceGeneration\TestFramework.SourceGeneration.csproj" Condition=" '$(IsNetCoreApp)' == 'true' " />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(IsNetCoreApp)' != 'true' ">
+    <Compile Remove="Assertions\AssertInterpolatedStringAppendMethodsGeneratorTests.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" PrivateAssets="all" Condition=" '$(IsNetCoreApp)' == 'true' " />
     <!-- Needed to execute the shipping WinUI Extensions assembly; its private SDK dependency does not flow here. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " PrivateAssets="all" />
   </ItemGroup>

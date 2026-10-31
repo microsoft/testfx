@@ -690,6 +690,21 @@ public partial class AssertTests
         o.WasToStringCalled.Should().BeFalse();
     }
 
+    public void Single_InterpolatedString_EnumerableWithoutIndexer_ReturnsItemWithoutFormatting()
+    {
+        static IEnumerable<int> EnumerateOne()
+        {
+            yield return 37;
+        }
+
+        DummyClassTrackingToStringCalls formatter = new();
+
+        int item = Assert.ContainsSingle(EnumerateOne(), $"User-provided message: {formatter}");
+
+        item.Should().Be(37);
+        formatter.WasToStringCalled.Should().BeFalse();
+    }
+
     public void Single_WhenNoItems_ShouldFail()
     {
         Action action = () => Assert.ContainsSingle(Array.Empty<int>());
@@ -1016,4 +1031,167 @@ public partial class AssertTests
             throw new InvalidOperationException("The ICollection fast path should not enumerate.");
         }
     }
+
+#if NETCOREAPP3_1_OR_GREATER
+    public void EmptyAssertions_InterpolatedSpanMemoryOverloads_AreLazyAndReportExactCounts()
+    {
+        foreach (int shape in new[] { 0, 1, 2 })
+        {
+            foreach (bool shouldBeEmpty in new[] { true, false })
+            {
+                int formatCalls = 0;
+                int[] values = shouldBeEmpty ? [] : [17, 23];
+                Action accepted = Invoke;
+                accepted.Should().NotThrow();
+                formatCalls.Should().Be(0);
+
+                values = shouldBeEmpty ? [17, 23] : [];
+                Action rejected = Invoke;
+                AssertFailedException exception = rejected.Should().ThrowExactly<AssertFailedException>().Which;
+                string expected = shouldBeEmpty
+                    ? """
+                        Assertion failed. Expected collection to be empty.
+                        empty context
+
+                        expected count: 0
+                        actual count:   2
+
+                        Assert.IsEmpty(collection)
+                        """
+                    : """
+                        Assertion failed. Expected collection to not be empty.
+                        empty context
+
+                        actual count: 0
+
+                        Assert.IsNotEmpty(collection)
+                        """;
+                exception.Message.Replace("\r\n", "\n").Should().Be(expected.Replace("\r\n", "\n"));
+                exception.ExpectedText.Should().Be(shouldBeEmpty ? "0" : "> 0");
+                exception.ActualText.Should().Be(shouldBeEmpty ? "2" : "0");
+                formatCalls.Should().Be(1);
+
+                string Format()
+                {
+                    formatCalls++;
+                    return "empty context";
+                }
+
+                void Invoke()
+                {
+                    if (shape == 0)
+                    {
+                        int[] collection = values;
+                        if (shouldBeEmpty)
+                        {
+                            Assert.IsEmpty(collection, $"{Format()}");
+                        }
+                        else
+                        {
+                            Assert.IsNotEmpty(collection, $"{Format()}");
+                        }
+                    }
+                    else if (shape == 1)
+                    {
+                        Span<int> collection = values;
+                        if (shouldBeEmpty)
+                        {
+                            Assert.IsEmpty(collection, $"{Format()}");
+                        }
+                        else
+                        {
+                            Assert.IsNotEmpty(collection, $"{Format()}");
+                        }
+                    }
+                    else
+                    {
+                        ReadOnlyMemory<int> collection = values;
+                        if (shouldBeEmpty)
+                        {
+                            Assert.IsEmpty(collection, $"{Format()}");
+                        }
+                        else
+                        {
+                            Assert.IsNotEmpty(collection, $"{Format()}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void IsNotEmpty_SpanAndReadOnlyMemory_EmptyInputReportsFailure()
+    {
+        int[] values = [17];
+        Action span = () => Assert.IsNotEmpty(values.AsSpan(), collectionExpression: "collection");
+        Action memory = () => Assert.IsNotEmpty((ReadOnlyMemory<int>)values, collectionExpression: "collection");
+        span.Should().NotThrow();
+        memory.Should().NotThrow();
+        values = [];
+        foreach (Action action in new[] { span, memory })
+        {
+            action.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+
+                actual count: 0
+
+                Assert.IsNotEmpty(collection)
+                """);
+        }
+    }
+
+    public void Count_ScopedFailureContinuesAcrossEnumerableAndSpanMemoryOverloads()
+    {
+        int[] values = [17, 23];
+        int formatCalls = 0;
+        string Format()
+        {
+            formatCalls++;
+            return "count scope";
+        }
+
+        (Action<int> AssertCount, bool Interpolated)[] cases =
+        [
+            (expected => Assert.HasCount(expected, values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, (IEnumerable<int>)values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, (IEnumerable)values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, (ReadOnlySpan<int>)values, "count scope", "collection"), false),
+            (expected => Assert.HasCount(expected, values.AsSpan(), $"{Format()}", "collection"), true),
+            (expected => Assert.HasCount(expected, (ReadOnlyMemory<int>)values, $"{Format()}", "collection"), true),
+            (expected => Assert.HasCount(expected, values.AsMemory(), $"{Format()}", "collection"), true),
+        ];
+        foreach ((Action<int> assertCount, bool interpolated) in cases)
+        {
+            formatCalls = 0;
+            Action accepted = () => assertCount(2);
+            accepted.Should().NotThrow();
+            formatCalls.Should().Be(0);
+            int continued = 0;
+            Action rejected = () =>
+            {
+                using (Assert.Scope())
+                {
+                    assertCount(3);
+                    continued++;
+                }
+            };
+            AssertFailedException failure = rejected.Should().ThrowExactly<AssertFailedException>().Which;
+            failure.Message.Replace("\r\n", "\n").Should().Be(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                count scope
+
+                expected count: 3
+                actual count:   2
+
+                Assert.HasCount(3, collection)
+                """.Replace("\r\n", "\n"));
+            failure.ExpectedText.Should().Be("3");
+            failure.ActualText.Should().Be("2");
+            continued.Should().Be(1);
+            formatCalls.Should().Be(interpolated ? 1 : 0);
+        }
+    }
+#endif
 }

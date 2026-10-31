@@ -29,4 +29,31 @@ public sealed class RetryAttemptPropertyExtensionsTests
             DisplayName = "test",
             Properties = new PropertyBag(properties),
         };
+
+    [TestMethod]
+    public void RetryAttempt_EqualityUsesAttemptAndSupersession()
+    {
+        RetryAttemptProperty original = new(3, isSuperseded: true);
+        RetryAttemptProperty equal = new(3, isSuperseded: true);
+        Assert.IsTrue(original.Equals(equal));
+        Assert.IsTrue(original.Equals((object)equal));
+        Assert.IsFalse(original.Equals(new RetryAttemptProperty(4, isSuperseded: true)));
+        Assert.IsFalse(original.Equals(new RetryAttemptProperty(3, isSuperseded: false)));
+        Assert.IsFalse(original.Equals((object?)null));
+        Assert.IsFalse(original.Equals("3"));
+        Assert.AreEqual(3, original.AttemptNumber);
+        Assert.IsTrue(original.IsSuperseded);
+        Assert.AreEqual("RetryAttemptProperty { AttemptNumber = 3, IsSuperseded = True }", original.ToString());
+        Dictionary<RetryAttemptProperty, string> attempts = new() { [original] = "superseded third attempt" };
+        Assert.AreEqual("superseded third attempt", attempts[equal]);
+        Assert.AreEqual("RetryAttemptProperty { AttemptNumber = 2147483647, IsSuperseded = False }", new RetryAttemptProperty(int.MaxValue, false).ToString());
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(int.MinValue)]
+    public void RetryAttempt_NonPositiveAttemptIsRejected(int attempt)
+        => Assert.AreEqual(
+            "attemptNumber",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new RetryAttemptProperty(attempt, false)).ParamName);
 }
