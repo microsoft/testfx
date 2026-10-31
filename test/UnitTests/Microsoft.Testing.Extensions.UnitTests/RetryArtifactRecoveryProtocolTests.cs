@@ -103,7 +103,7 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Assert.Contains("  succeeded: 2", text);
             Assert.IsEmpty(fixture.Warnings);
             Assert.HasCount(10, fixture.Copies);
-            foreach (var copy in fixture.Copies)
+            foreach ((string Source, string Destination, bool Overwrite) copy in fixture.Copies)
             {
                 Assert.AreEqual(second.Directory, Path.GetDirectoryName(copy.Source));
                 Assert.AreEqual(Path.Combine(fixture.ResultsDirectory, Path.GetFileName(copy.Source)), copy.Destination);
@@ -131,7 +131,8 @@ public sealed class RetryArtifactRecoveryProtocolTests
         {
             string tail = attempt.PathFor("résultat-東京.report");
             attempt.AddArtifact(tail, "independent surviving Unicode artifact");
-            attempt.SetManifest(string.Join("\n",
+            attempt.SetManifest(string.Join(
+                "\n",
                 "missing separator",
                 "\tQQ==",
                 InvalidPathBase64 + "\t-",
@@ -150,7 +151,8 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Attempt attempt = Assert.ContainsSingle(fixture.Attempts);
             string malformed = $"Ignoring malformed recovered retry artifact manifest entry in '{attempt.ManifestPath}'";
             string escaped = attempt.PathFor(Path.Combine("nested", "..", "..", "escape.report"));
-            Assert.AreSequenceEqual(new[]
+            Assert.AreSequenceEqual(
+                new[]
             {
                 malformed + ".", malformed + ".",
                 malformed + ": " + Base64Error(InvalidPathBase64),
@@ -433,7 +435,8 @@ public sealed class RetryArtifactRecoveryProtocolTests
                 }
             }
 
-            Assert.AreSequenceEqual(new[]
+            Assert.AreSequenceEqual(
+                new[]
             {
                 deleteFailure
                     ? $"Failed to delete recovered retry artifact manifest '{attempt.ManifestPath}': {original}"
@@ -564,13 +567,15 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Assert.IsEmpty(rejectedChild.Calls);
             Assert.IsEmpty(rejectedSibling.Calls);
             Assert.IsEmpty(rejectedTraversal.Calls);
-            Assert.AreSequenceEqual(new[]
+            Assert.AreSequenceEqual(
+                new[]
             {
                 OutsideRoots(Path.Combine(source + "-sibling", "rejected.report")),
                 OutsideRoots(attempt.PathFor("outside.report")),
                 OutsideRoots(Path.Combine(allowed + "-sibling", "rejected.report")),
             }, fixture.Warnings);
-            Assert.AreSequenceEqual(new[]
+            Assert.AreSequenceEqual(
+                new[]
             {
                 (Path.Combine(diagnosticDestination, "live.diag"), snapshot, true),
                 (Path.Combine(allowed + "-sibling", "rejected.report"), Path.Combine(fixture.ResultsDirectory, "allowed-sibling", "rejected.report"), true),
@@ -712,7 +717,8 @@ public sealed class RetryArtifactRecoveryProtocolTests
             AssertBefore(fixture, "waited-process:1", "dispose-process:1");
             AssertBefore(fixture, "dispose-process:1", "delete:" + attempt.ManifestPath);
             AssertBefore(fixture, "delete:" + attempt.ManifestPath, "delete:" + ArgumentsPath(attempt));
-            fixture.FileSystem.Verify(value => value.NewFileStream(
+            fixture.FileSystem.Verify(
+                value => value.NewFileStream(
                 attempt.ManifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Times.Never);
             fixture.FileSystem.Verify(value => value.DeleteFile(attempt.ManifestPath), Times.Once);
             fixture.AssertInputsPreserved();
@@ -727,8 +733,11 @@ public sealed class RetryArtifactRecoveryProtocolTests
     public async Task Orchestrate_LaunchFailureDeletesOwnedManifestAndGeneratedArguments()
     {
         var original = new InvalidOperationException("mock process handler refused the launch");
-        var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken) { LaunchFailure = original };
-        fixture.OnStart = attempt => attempt.SetManifest("owned manifest from a failed launch");
+        var fixture = new RetryRecoveryProtocolFixture(TestContext.CancellationToken)
+        {
+            LaunchFailure = original,
+            OnStart = attempt => attempt.SetManifest("owned manifest from a failed launch"),
+        };
         ArtifactProbe probe = fixture.WatchKind("report");
         try
         {
@@ -745,7 +754,8 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Assert.IsEmpty(fixture.Copies);
             AssertBefore(fixture, "delete:" + attempt.ManifestPath, "delete:" + ArgumentsPath(attempt));
             fixture.FileSystem.Verify(value => value.DeleteFile(attempt.ManifestPath), Times.Once);
-            fixture.FileSystem.Verify(value => value.NewFileStream(
+            fixture.FileSystem.Verify(
+                value => value.NewFileStream(
                 attempt.ManifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Times.Never);
             attempt.Process.VerifyNoOtherCalls();
             fixture.AssertInputsPreserved();
@@ -796,7 +806,7 @@ public sealed class RetryArtifactRecoveryProtocolTests
     private static void AssertInputs(
         ArtifactProbe probe, CancellationToken token, params (string Path, string? Kind, string Attempt)[] expected)
     {
-        var call = Assert.ContainsSingle(probe.Calls);
+        (InputArtifact[] Inputs, string Directory, ArtifactPostProcessingContext Context, CancellationToken Token) call = Assert.ContainsSingle(probe.Calls);
         Assert.AreSequenceEqual(expected.Select(value => value.Path), call.Inputs.Select(value => value.Path));
         Assert.AreSequenceEqual(expected.Select(value => value.Kind), call.Inputs.Select(value => value.Kind));
         Assert.AreSequenceEqual(expected.Select(value => value.Attempt), call.Inputs.Select(value => value.ExecutionId));
@@ -813,7 +823,8 @@ public sealed class RetryArtifactRecoveryProtocolTests
             Assert.IsTrue(attempt.ManifestStream!.Disposed);
             Assert.IsFalse(fixture.Files.ContainsKey(attempt.ManifestPath));
             Assert.IsFalse(fixture.Files.ContainsKey(ArgumentsPath(attempt)));
-            fixture.FileSystem.Verify(value => value.NewFileStream(
+            fixture.FileSystem.Verify(
+                value => value.NewFileStream(
                 attempt.ManifestPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Times.Once);
             fixture.FileSystem.Verify(value => value.DeleteFile(attempt.ManifestPath), Times.Once);
             fixture.FileSystem.Verify(value => value.DeleteFile(ArgumentsPath(attempt)), Times.Once);

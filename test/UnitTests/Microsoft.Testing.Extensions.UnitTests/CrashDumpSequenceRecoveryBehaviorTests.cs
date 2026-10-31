@@ -14,7 +14,7 @@ using Moq;
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
-[ResourceLock("Microsoft.Testing.Extensions.CrashDump.ProcessKilledByHangDumpAppDomainData", Mode = ResourceAccessMode.Read)]
+[ResourceLock(CrashDumpArtifactPublisherMutationTests.ProcessKilledByHangDumpAppDomainDataResource, Mode = ResourceAccessMode.Read)]
 public sealed class CrashDumpSequenceRecoveryBehaviorTests
 {
     [TestMethod]

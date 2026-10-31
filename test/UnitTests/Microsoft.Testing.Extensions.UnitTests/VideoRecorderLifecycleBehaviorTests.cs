@@ -49,7 +49,6 @@ public sealed class VideoRecorderLifecycleBehaviorTests
 
     [TestMethod]
     public async Task Start_UnavailableRecorder_WarnsAndLeavesFinishingInert()
-
     {
         using var cancellation = new CancellationTokenSource();
         var context = new VideoRecorderBehaviorContext(cancellationToken: cancellation.Token) { Available = false };
@@ -174,16 +173,16 @@ public sealed class VideoRecorderLifecycleBehaviorTests
             () => context.Handler.OnTestSessionStartingAsync(context.Session.Object));
 
         Assert.AreSame(expected, actual);
-        (IOutputDeviceDataProducer Producer, IOutputDeviceData Data, CancellationToken Token) = Assert.ContainsSingle(context.OutputMessages);
-        Assert.AreSame(context.Handler, Producer);
-        Assert.AreEqual(cancellation.Token, Token);
+        (IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken token) = Assert.ContainsSingle(context.OutputMessages);
+        Assert.AreSame(context.Handler, producer);
+        Assert.AreEqual(cancellation.Token, token);
         if (available)
         {
-            Assert.IsInstanceOfType<FormattedTextOutputDeviceData>(Data);
+            Assert.IsInstanceOfType<FormattedTextOutputDeviceData>(data);
         }
         else
         {
-            Assert.AreEqual(VideoRecorderResources.FfmpegNotFound, Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(Data).Message);
+            Assert.AreEqual(VideoRecorderResources.FfmpegNotFound, Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(data).Message);
         }
 
         context.Recorder.Verify(recorder => recorder.Start(), available ? Times.Once() : Times.Never());

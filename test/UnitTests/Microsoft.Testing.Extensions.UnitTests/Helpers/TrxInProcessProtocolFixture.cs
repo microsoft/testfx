@@ -27,14 +27,18 @@ using TestSessionContext = Microsoft.Testing.Platform.Services.TestSessionContex
 
 namespace Microsoft.Testing.Extensions.UnitTests.Helpers;
 
-internal sealed class TrxInProcessProtocolFixture
+internal sealed class TrxInProcessProtocolFixture : IAsyncDisposable
 {
     private readonly CancellationTokenSource _lifetime;
     private readonly RunningTrxTask _task = new();
     private readonly TestHostControllersManager _controllers = new();
     private readonly ServiceProvider _controllerServices;
     private readonly TrxReportGenerator _generator;
+#if NET9_0_OR_GREATER
+    private readonly Lock _logSync = new();
+#else
     private readonly object _logSync = new();
+#endif
     private bool _generatorDisposed;
 
     public TrxInProcessProtocolFixture(CancellationToken cancellationToken)
@@ -205,7 +209,7 @@ internal sealed class TrxInProcessProtocolFixture
         Memory.Files.Remove(sidecarPath);
     }
 
-    public async Task CloseAsync()
+    public async ValueTask DisposeAsync()
     {
         try
         {
@@ -228,7 +232,7 @@ internal sealed class TrxInProcessProtocolFixture
                 {
                     try
                     {
-                        await _task.DrainAsync();
+                        await _task.DisposeAsync();
                         Memory.Environment.Verify(value => value.Exit(It.IsAny<int>()), Times.Never);
                         Memory.Environment.Verify(value => value.FailFast(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
                         Memory.Environment.Verify(value => value.FailFast(It.IsAny<string>()), Times.Never);
@@ -262,7 +266,7 @@ internal sealed class TrxInProcessProtocolFixture
         }
     }
 
-    private sealed class RunningTrxTask : ITask
+    private sealed class RunningTrxTask : ITask, IAsyncDisposable
     {
         private readonly ConcurrentQueue<Task> _work = new();
         private readonly ConcurrentQueue<CancellationTokenSource> _delayTokens = new();
@@ -288,13 +292,13 @@ internal sealed class TrxInProcessProtocolFixture
             return Track(Task.Delay(timeSpan, linked.Token));
         }
 
-        public async Task DrainAsync()
+        public async ValueTask DisposeAsync()
         {
             _shutdown.Cancel();
             Task[] tasks = _work.ToArray();
-            Task joined = Task.WhenAll(tasks);
+            var joined = Task.WhenAll(tasks);
             using var timeout = new CancellationTokenSource();
-            Task guard = Task.Delay(TimeSpan.FromMinutes(1), timeout.Token);
+            var guard = Task.Delay(TimeSpan.FromMinutes(1), timeout.Token);
             try
             {
                 if (await Task.WhenAny(joined, guard) != joined)

@@ -83,7 +83,7 @@ public sealed class AzureDevOpsOrchestratorBehaviorTests
         Assert.Contains(failure == 2 ? "progress output denied" : "handoff denied", fixture.LogText);
         if (failure == 2)
         {
-            var display = Assert.ContainsSingle(fixture.DisplayAttempts);
+            (IOutputDeviceDataProducer Owner, IOutputDeviceData Data, CancellationToken Token) display = Assert.ContainsSingle(fixture.DisplayAttempts);
             Assert.AreSame(lifetime, display.Owner);
             Assert.AreEqual("AzureDevOpsTestRunOrchestratorLifetime", display.Owner.Uid);
             Assert.AreEqual(AzureDevOpsResources.DisplayName, display.Owner.DisplayName);

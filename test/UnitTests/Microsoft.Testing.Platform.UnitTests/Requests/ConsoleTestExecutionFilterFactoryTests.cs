@@ -86,8 +86,8 @@ public sealed class ConsoleTestExecutionFilterFactoryTests
         Assert.AreEqual("ServerTestExecutionFilterFactory", server.Uid);
         Assert.AreEqual("Server test execution filter factory", server.DisplayName);
         Assert.AreEqual("Creates the right test execution filter for server mode", server.Description);
-        Assert.AreEqual("2.6.0-dev", console.Version);
-        Assert.AreEqual("2.6.0-dev", server.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, console.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, server.Version);
         Assert.IsTrue(await console.IsEnabledAsync());
         Assert.IsTrue(await server.IsEnabledAsync());
         (bool success, ITestExecutionFilter? filter) = await server.TryCreateAsync();

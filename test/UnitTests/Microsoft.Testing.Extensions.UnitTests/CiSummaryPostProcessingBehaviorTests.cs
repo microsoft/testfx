@@ -96,7 +96,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
         last.GitHubActionsHistoryWindowInDays = 30;
         last.HistoryTests = [History("Tests.A", "passed", 29)];
         InputArtifact[] inputs = [await FragmentAsync(fixture, last), await FragmentAsync(fixture, first)];
-        var (processor, history, writes) = Processor(fixture);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, Mock<GitHub.IGitHubActionsHistoryService> history, List<GitHubModule[]> writes) = Processor(fixture);
 
         ProcessedArtifact? output = await processor.ProcessAsync(inputs, fixture.Root, RetryContext(authoritative: false), CancellationToken.None);
 
@@ -137,7 +137,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
         last.HistoryTests = [History("Tests.A", "passed", 20)];
         last.TestDurationTicks = 20;
         last.SlowestTests = [Slow("Tests.A", 20)];
-        var (processor, history, writes) = Processor(fixture, downstream);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, Mock<GitHub.IGitHubActionsHistoryService> history, List<GitHubModule[]> writes) = Processor(fixture, downstream);
 
         ProcessedArtifact? output = await processor.ProcessAsync(
             [await FragmentAsync(fixture, first), await FragmentAsync(fixture, last)], fixture.Root, RetryContext(authoritative: true), CancellationToken.None);
@@ -183,7 +183,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
         first.HistoryTests = [.. Enumerable.Range(0, 9999).Select(index => History($"Tests.Case{index:D5}", index == 0 ? "failed" : "passed", index))];
         GitHubModule last = Module(fixture, 2, passed: 2);
         last.HistoryTests = [History("Tests.Case00000", "passed", 20000), History("Tests.Excess", "passed", 30000)];
-        var (processor, _, writes) = Processor(fixture);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, _, List<GitHubModule[]> writes) = Processor(fixture);
 
         _ = await processor.ProcessAsync(
             [await FragmentAsync(fixture, first), await FragmentAsync(fixture, last)], fixture.Root, RetryContext(authoritative: false), CancellationToken.None);
@@ -222,7 +222,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
 
         GitHubModule module = Module(fixture, 1, passed: 1, failed: 1);
         module.Failures = [new GitHubSummaryTest { DisplayName = "Failed row", FullyQualifiedName = "Tests.Failed", ErrorMessage = "literal failure" }];
-        var (processor, _, writes) = Processor(fixture);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, _, List<GitHubModule[]> writes) = Processor(fixture);
         var context = new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None);
 
         ProcessedArtifact? output = await processor.ProcessAsync([await FragmentAsync(fixture, module, retry: false)], fixture.Root, context, CancellationToken.None);
@@ -265,7 +265,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
             cancellation.Cancel();
         }
 
-        var (processor, _, writes) = Processor(fixture);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, _, List<GitHubModule[]> writes) = Processor(fixture);
         InputArtifact input = await FragmentAsync(fixture, Module(fixture, 1, passed: 1), retry: false);
 
         OperationCanceledException error = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => processor.ProcessAsync(
@@ -305,7 +305,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
         [
             new GitHubSummaryTest { DisplayName = "failed row", FullyQualifiedName = "Tests.Failed", ErrorMessage = "literal diagnostic retained in standalone artifact" },
         ];
-        var (processor, _, _) = Processor(fixture);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, _, _) = Processor(fixture);
 
         ProcessedArtifact? output = await processor.ProcessAsync(
             [await FragmentAsync(fixture, module, retry: false)], fixture.Root,
@@ -353,7 +353,7 @@ public sealed class CiSummaryPostProcessingBehaviorTests
             new GitHubSummaryTest { DisplayName = "first failed row", FullyQualifiedName = "Tests.FailedA", ErrorMessage = new string('a', 2000) },
             new GitHubSummaryTest { DisplayName = "second failed row", FullyQualifiedName = "Tests.FailedB", ErrorMessage = new string('b', 2000) },
         ];
-        var (processor, _, _) = Processor(fixture);
+        (GitHub.GitHubActionsSummaryArtifactPostProcessor processor, _, _) = Processor(fixture);
 
         ProcessedArtifact? output = await processor.ProcessAsync(
             [await FragmentAsync(fixture, module, retry: false)], fixture.Root,

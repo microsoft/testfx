@@ -39,7 +39,7 @@ public sealed class WasiOutputDeviceTests
         Assert.AreEqual("WasiOutputDevice", device.Uid);
         Assert.AreEqual("Test Platform WASI Console Service", device.DisplayName);
         Assert.AreEqual("Test Platform WASI console service", device.Description);
-        Assert.AreEqual("2.6.0-dev", device.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, device.Version);
         await device.DisplayBannerAsync("banner", CancellationToken.None);
         await device.DisplayBannerAsync("must not repeat", CancellationToken.None);
         IOutputDeviceDataProducer producer = new Mock<IOutputDeviceDataProducer>().Object;

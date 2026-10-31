@@ -39,7 +39,7 @@ public sealed class ConsoleTestHostTests
         Assert.IsFalse(fixture.BuilderData.IsForDiscoveryRequest);
         Assert.AreSame(fixture.Invoker.Object, fixture.BuilderData.TestExecutionRequestInvoker);
         Assert.AreEqual("testingplatform-console", fixture.Client!.Id);
-        Assert.AreEqual("2.6.0-dev", fixture.Client.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, fixture.Client.Version);
         Assert.AreEqual(cancellation.Token, fixture.RequestToken);
         fixture.Output.Verify(o => o.DisplayBeforeSessionStartAsync(cancellation.Token), Times.Once);
         fixture.Output.Verify(o => o.DisplayAfterSessionEndRunAsync(CancellationToken.None), cancelRequest ? Times.Never() : Times.Once());

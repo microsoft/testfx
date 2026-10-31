@@ -278,12 +278,9 @@ public sealed class HangDumpProcessTreeBehaviorTests
             {
                 enumerationToken = token;
 
-                if (scenario == 0)
-                {
-                    throw failure;
-                }
-
-                return scenario == 2
+                return scenario == 0
+                    ? throw failure
+                    : scenario == 2
                     ? Task.FromCanceled<List<ProcessTreeNode>>(token)
                     : Task.FromException<List<ProcessTreeNode>>(failure);
             },

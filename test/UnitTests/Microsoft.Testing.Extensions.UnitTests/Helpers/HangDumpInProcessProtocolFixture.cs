@@ -77,7 +77,7 @@ internal sealed class HangDumpInProcessProtocolFixture
         Scheduler.Setup(value => value.Run(It.IsAny<Func<Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<Task> callback, CancellationToken token) =>
             {
-                Task task = Task.Run(callback, token);
+                var task = Task.Run(callback, token);
                 _transportTasks.Enqueue(task);
                 return task;
             });
@@ -110,8 +110,8 @@ internal sealed class HangDumpInProcessProtocolFixture
 
         Assert.IsNotNull(consumerFactory);
         Assert.AreSame(consumerFactory, sessionFactory);
-        _consumerFactory = (ICompositeExtensionFactory)consumerFactory;
-        _sessionFactory = (ICompositeExtensionFactory)sessionFactory!;
+        _consumerFactory = consumerFactory;
+        _sessionFactory = sessionFactory!;
     }
 
     public bool TraceEnabled { get; }
@@ -211,7 +211,8 @@ internal sealed class HangDumpInProcessProtocolFixture
         _child = Assert.IsInstanceOfType<HangDumpActivityIndicator>(Consumer);
         Assert.IsTrue(await Consumer.IsEnabledAsync());
         Assert.IsTrue(await SessionLifetime.IsEnabledAsync());
-        Assert.AreSequenceEqual(new[] { "Hang dump timeout setup 01:00:00." },
+        Assert.AreSequenceEqual(
+            new[] { "Hang dump timeout setup 01:00:00." },
             Logs.Where(value => value.Level == LogLevel.Information).Select(value => value.Message));
     }
 
@@ -382,7 +383,7 @@ internal sealed class HangDumpInProcessProtocolFixture
     private static async Task BoundAsync(Task operation)
     {
         using var cancellation = new CancellationTokenSource();
-        Task guard = Task.Delay(TimeSpan.FromSeconds(30), cancellation.Token);
+        var guard = Task.Delay(TimeSpan.FromSeconds(30), cancellation.Token);
         try
         {
             if (await Task.WhenAny(operation, guard) != operation)

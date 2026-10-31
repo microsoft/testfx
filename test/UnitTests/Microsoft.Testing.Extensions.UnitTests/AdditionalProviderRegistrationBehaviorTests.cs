@@ -47,8 +47,8 @@ public sealed class AdditionalProviderRegistrationBehaviorTests
         IExtension consumer = Assert.ContainsSingle((await host.BuildDataConsumersAsync(fixture.Services, built)).Select(value => value.Consumer));
         IExtension lifetime = Assert.ContainsSingle((await host.BuildTestSessionLifetimeHandleAsync(fixture.Services, built)).Select(value => value.TestSessionLifetimeHandler));
         Assert.AreSame(consumer, lifetime);
-        var generator = Assert.IsInstanceOfType<IDataConsumer>(consumer);
-        var sessionHandler = Assert.IsInstanceOfType<ITestSessionLifetimeHandler>(lifetime);
+        IDataConsumer generator = Assert.IsInstanceOfType<IDataConsumer>(consumer);
+        ITestSessionLifetimeHandler sessionHandler = Assert.IsInstanceOfType<ITestSessionLifetimeHandler>(lifetime);
         var session = new ReportBehaviorFixture.Session();
         await sessionHandler.OnTestSessionStartingAsync(session);
         await generator.ConsumeAsync(

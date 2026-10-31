@@ -47,7 +47,7 @@ public sealed class ServerTestHostTests
         Assert.AreEqual("ServerTestHost", fixture.Host.Uid);
         Assert.AreEqual("Server mode test host", fixture.Host.DisplayName);
         Assert.AreEqual("The 'ITestHost' implementation used when running server mode.", fixture.Host.Description);
-        Assert.AreEqual("2.6.0-dev", fixture.Host.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, fixture.Host.Version);
         Assert.AreEqual(0, fixture.FrameworkBuilds);
         fixture.Handler.Verify(h => h.ReadAsync(It.IsAny<CancellationToken>()), Times.Exactly(4));
         fixture.HandlerDisposal.Verify(d => d.Dispose(), Times.Once);

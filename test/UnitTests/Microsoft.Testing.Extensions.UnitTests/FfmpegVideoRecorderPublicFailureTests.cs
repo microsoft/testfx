@@ -77,7 +77,7 @@ public sealed class FfmpegVideoRecorderPublicFailureTests
             Assert.StartsWith(warningParts[0], warning);
             Assert.EndsWith(warningParts[1], warning);
 
-            Assert.IsTrue(warning.Length > warningParts[0].Length + warningParts[1].Length, "The warning must retain the failure detail.");
+            Assert.IsGreaterThan(warningParts[0].Length + warningParts[1].Length, warning.Length, "The warning must retain the failure detail.");
         }
 
         Assert.IsEmpty(logs, "No launch message or process work is reached after invalid-directory validation fails.");

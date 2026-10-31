@@ -219,7 +219,7 @@ public sealed class TestNodePropertiesTests
         Assert.AreEqual(expectedEqual, value.Equals((object)other));
         Assert.AreEqual(expectedEqual, value == other);
         Assert.AreEqual(!expectedEqual, value != other);
-        Assert.IsFalse(value.Equals(null));
+        Assert.IsFalse(value.Equals(null!));
         Assert.IsFalse(value.Equals("not a timing"));
         if (expectedEqual)
         {
@@ -430,7 +430,7 @@ public sealed class TestNodePropertiesTests
         Assert.IsTrue(value.Equals(equal));
         Assert.IsTrue(value.Equals((object)equal));
         Assert.AreEqual(value.GetHashCode(), equal.GetHashCode());
-        Assert.IsFalse(value.Equals(null));
+        Assert.IsFalse(value.Equals(null!));
         Assert.IsFalse(value.Equals(new object()));
         foreach (T other in different)
         {

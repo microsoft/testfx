@@ -278,7 +278,7 @@ public sealed class TrxConsumerBehaviorTests
         Assert.AreEqual("0", (string?)fixture.Report.Descendants(Ns + "Counters").Single().Attribute("total"));
         Assert.IsEmpty(fixture.Report.Descendants(Ns + "UnitTestResult"));
 
-        var error = Assert.ContainsSingle(fixture.Logs.Where(value => value.Level == LogLevel.Error));
+        (LogLevel Level, string Message, Exception? Error) error = Assert.ContainsSingle(fixture.Logs.Where(value => value.Level == LogLevel.Error));
         Assert.AreSame(original, error.Error);
         Assert.Contains("1 record(s) were dropped", error.Message);
         Assert.Contains(

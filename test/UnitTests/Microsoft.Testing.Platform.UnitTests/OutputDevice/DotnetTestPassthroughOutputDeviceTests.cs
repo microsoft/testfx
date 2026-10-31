@@ -190,7 +190,7 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         Assert.IsFalse(await device.IsEnabledAsync());
         Assert.AreEqual("DotnetTestPassthroughOutputDevice", device.Uid);
         Assert.AreEqual("DotnetTestPassthroughOutputDevice", device.DisplayName);
-        Assert.AreEqual("2.6.0-dev", device.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, device.Version);
         Assert.AreEqual(
             "Output device that discards regular informational host output but forwards durable session messages, CI logging commands, and warning/error messages to the SDK under the dotnet test pipe protocol.",
             device.Description);

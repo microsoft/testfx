@@ -28,6 +28,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class ReportGeneratorContractBehaviorTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     [DataRow(false, DisplayName = "Shared generator service constructor")]
     [DataRow(true, DisplayName = "Shared generator legacy full constructor")]
@@ -142,7 +144,8 @@ public sealed class ReportGeneratorContractBehaviorTests
         Assert.ContainsSingle(fixture.Artifacts);
         Assert.IsEmpty(fixture.WrittenFiles);
         string expected = $"Failed to drain report recovery journal 'journal.jsonl' during disposal: {new AggregateException(original).Message}";
-        fixture.Logger.Verify(value => value.Log(
+        fixture.Logger.Verify(
+            value => value.Log(
             LogLevel.Debug, expected, null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
     }
 
@@ -171,7 +174,8 @@ public sealed class ReportGeneratorContractBehaviorTests
         Assert.AreEqual(Path.GetFullPath("probe.report"), completion.RootElement.GetProperty("ReportFileName").GetString());
         Assert.ContainsSingle(fixture.Artifacts);
         stream.Verify(value => value.Dispose(), Times.Once);
-        fixture.Logger.Verify(value => value.Log(
+        fixture.Logger.Verify(
+            value => value.Log(
             LogLevel.Debug, "Failed to close report recovery journal 'journal.jsonl': close denied",
             null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
     }
@@ -204,7 +208,9 @@ public sealed class ReportGeneratorContractBehaviorTests
         await generator.ConsumeAsync(null!, large, CancellationToken.None);
         await generator.ConsumeAsync(null!, Node("queued-after-large", "Queued", true), CancellationToken.None);
         Assert.IsNotNull(writer);
-        Task runningWriter = Task.Run(async () =>
+        // The writer must start even if the test is canceled so cleanup can seal and join it.
+        var runningWriter = Task.Run(
+            async () =>
         {
             try
             {
@@ -215,17 +221,17 @@ public sealed class ReportGeneratorContractBehaviorTests
             {
                 joined.TrySetException(error);
             }
-        });
+        }, CancellationToken.None);
         bool finishingStarted = false;
         try
         {
             // This is a failure guard, not a timing oracle. Flush occurs only after the prepared
             // batch's byte-limit decision, before the next update is supplied.
-            await flushed.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            await flushed.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
             await generator.ConsumeAsync(null!, Node("after-budget", "After budget", true), CancellationToken.None);
             finishingStarted = true;
             await generator.OnTestSessionFinishingAsync(session);
-            await runningWriter.WaitAsync(TimeSpan.FromSeconds(30));
+            await runningWriter.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
 
             Assert.AreSequenceEqual(new[] { "oversized", "queued-after-large", "after-budget" }, generator.RenderedTests.Select(value => value.Uid));
             Assert.ContainsSingle(fixture.Artifacts);
@@ -247,7 +253,7 @@ public sealed class ReportGeneratorContractBehaviorTests
                 await generator.OnTestSessionFinishingAsync(session);
             }
 
-            await runningWriter.WaitAsync(TimeSpan.FromSeconds(30));
+            await runningWriter.WaitAsync(TimeSpan.FromSeconds(30), CancellationToken.None);
         }
     }
 #endif
@@ -339,7 +345,7 @@ public sealed class ReportGeneratorContractBehaviorTests
         public static int MeasureRecordBytes(TestNodeUpdateMessage update)
         {
             var result = new CapturedTestResult { Uid = update.TestNode.Uid.Value, DisplayName = update.TestNode.DisplayName!, Status = "passed" };
-            JournalRecord record = JournalRecord.CreateTest(result, parent: null);
+            var record = JournalRecord.CreateTest(result, parent: null);
             return Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(record, typeof(JournalRecord), ReportJournalJsonSerializerContext.Default)) + 1;
         }
 

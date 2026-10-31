@@ -149,7 +149,7 @@ public sealed class TestHostTestFrameworkInvokerTests
         Assert.AreSequenceEqual(new[] { typeof(TestRequestExecutionTimeInfo) }, invoker.DataTypesProduced);
 #pragma warning restore CS0618
         Assert.AreEqual("TestHostTestFrameworkInvoker", invoker.Uid);
-        Assert.AreEqual("2.6.0-dev", invoker.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, invoker.Version);
         Assert.AreEqual(string.Empty, invoker.DisplayName);
         Assert.AreEqual(string.Empty, invoker.Description);
         Assert.IsTrue(await invoker.IsEnabledAsync());

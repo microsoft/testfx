@@ -93,7 +93,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
         }
         finally
         {
-            await fixture.CloseAsync();
+            await fixture.DisposeAsync();
         }
     }
 
@@ -152,7 +152,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
             Assert.AreEqual(
                 aborted ? "Test host process pid: 678 was terminated because the test session was aborted." : "Test host process pid: 678 crashed.",
                 runInfo.Element(Ns + "Text")!.Value);
-            var display = Assert.ContainsSingle(fixture.Memory.Displays);
+            (IOutputDeviceDataProducer Producer, IOutputDeviceData Data, CancellationToken Token) display = Assert.ContainsSingle(fixture.Memory.Displays);
             Assert.AreSame<IExtension>(fixture.Controller, display.Producer);
             Assert.AreEqual(exitCancellation.Token, display.Token);
             Assert.AreEqual(
@@ -160,7 +160,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
                     ? "Test session was aborted; recovered 2 test result(s) from the TRX streaming sidecar (additional results that were in flight at termination time may be missing)."
                     : "Test host crashed; recovered 2 test result(s) from the TRX streaming sidecar (additional results that were in flight at crash time may be missing).",
                 Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(display.Data).Message);
-            var recoveryError = Assert.ContainsSingle(fixture.Memory.Logs.Where(value => value.Level == LogLevel.Error));
+            (LogLevel Level, string Message, Exception? Error) recoveryError = Assert.ContainsSingle(fixture.Memory.Logs.Where(value => value.Level == LogLevel.Error));
             Assert.AreEqual("Encountered an error while recovering TRX streaming records; salvaged 2 record(s) before stopping.", recoveryError.Message);
             Assert.IsInstanceOfType<EndOfStreamException>(recoveryError.Error);
             Assert.Contains(
@@ -172,7 +172,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
             Assert.AreEqual("Collecteur 東京", (string?)collectorElement.Attribute("collectorDisplayName"));
             Assert.AreEqual("agent", (string?)collectorElement.Attribute("agentName"));
             Assert.AreEqual(Path.Combine("agent", "trace-é-東京.bin"), (string?)Assert.ContainsSingle(collectorElement.Descendants(Ns + "A")).Attribute("href"));
-            var copy = Assert.ContainsSingle(fixture.Memory.Copies);
+            (string Source, string Destination) copy = Assert.ContainsSingle(fixture.Memory.Copies);
             Assert.AreEqual(attachmentPath, copy.Source);
             Assert.AreEqual(
                 Path.Combine(fixture.ResultsDirectory, "zoë_agent_2026-10-30_11_12_23.0000000", "In", "agent", "trace-é-東京.bin"), copy.Destination);
@@ -188,7 +188,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
         }
         finally
         {
-            await fixture.CloseAsync();
+            await fixture.DisposeAsync();
         }
     }
 
@@ -237,7 +237,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
         }
         finally
         {
-            await fixture.CloseAsync();
+            await fixture.DisposeAsync();
         }
     }
 
@@ -268,7 +268,7 @@ public sealed class TrxInProcessProtocolBehaviorTests
 
     private static void AssertControllerArtifact(TrxInProcessProtocolFixture fixture)
     {
-        var publication = Assert.ContainsSingle(fixture.Memory.Publications);
+        (IDataProducer Producer, IData Data) publication = Assert.ContainsSingle(fixture.Memory.Publications);
         Assert.AreSame<IExtension>(fixture.Controller, publication.Producer);
         FileArtifact artifact = Assert.IsInstanceOfType<FileArtifact>(publication.Data);
         Assert.AreEqual(fixture.ReportPath, artifact.FileInfo.FullName);
@@ -314,15 +314,18 @@ public sealed class TrxInProcessProtocolBehaviorTests
         XElement[] definitions = [.. report.Descendants(Ns + "UnitTest")];
         Assert.AreSequenceEqual(new[] { FirstId, SecondId }, definitions.Select(value => (string?)value.Attribute("id")));
         Assert.AreSequenceEqual(methodNames.Select(value => "Définition " + value), definitions.Select(value => (string?)value.Attribute("name")));
-        Assert.AreSequenceEqual(new[] { fixture.ModulePath.ToLowerInvariant(), fixture.ModulePath.ToLowerInvariant() },
+        Assert.AreSequenceEqual(
+            new[] { fixture.ModulePath.ToLowerInvariant(), fixture.ModulePath.ToLowerInvariant() },
             definitions.Select(value => (string?)value.Attribute("storage")));
         XElement[] methods = [.. definitions.Select(value => value.Element(Ns + "TestMethod")!)];
         Assert.AreSequenceEqual(new[] { fixture.ModulePath, fixture.ModulePath }, methods.Select(value => (string?)value.Attribute("codeBase")));
-        Assert.AreSequenceEqual(new[] { "executor://adapter.équipe.東京/7.8.9-preview.4", "executor://adapter.équipe.東京/7.8.9-preview.4" },
+        Assert.AreSequenceEqual(
+            new[] { "executor://adapter.équipe.東京/7.8.9-preview.4", "executor://adapter.équipe.東京/7.8.9-preview.4" },
             methods.Select(value => (string?)value.Attribute("adapterTypeName")));
         Assert.AreSequenceEqual(new[] { "Protocole.Tests", "Protocole.Tests" }, methods.Select(value => (string?)value.Attribute("className")));
         Assert.AreSequenceEqual(methodNames, methods.Select(value => (string?)value.Attribute("name")));
-        Assert.AreSequenceEqual(new[] { "protocole", "東京", "protocole", "東京" },
+        Assert.AreSequenceEqual(
+            new[] { "protocole", "東京", "protocole", "東京" },
             definitions.SelectMany(value => value.Descendants(Ns + "TestCategoryItem")).Select(value => (string?)value.Attribute("TestCategory")));
         XElement[] entries = [.. report.Descendants(Ns + "TestEntry")];
         Assert.AreSequenceEqual(new[] { FirstId, SecondId }, entries.Select(value => (string?)value.Attribute("testId")));

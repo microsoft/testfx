@@ -311,7 +311,8 @@ public sealed class HangDumpInProcessLifecycleTests
             }
 
             await fixture.AwaitAsync(fixture.ControllerAccepted.Task);
-            Assert.AreSequenceEqual(new[]
+            Assert.AreSequenceEqual(
+                new[]
             {
                 $"Connecting to the process lifetime handler {fixture.PipeName}",
                 "Connected to the process lifetime handler",
@@ -449,7 +450,8 @@ public sealed class HangDumpInProcessLifecycleTests
             await fixture.AwaitAsync(fixture.Controller.OnTestHostProcessExitedAsync(fixture.ProcessInformation.Object, fixture.Token));
             fixture.ProcessInformation.VerifyGet(value => value.HasExitedGracefully, Times.Exactly(2));
             fixture.ProcessInformation.VerifyGet(value => value.ExitCode, Times.Exactly(2));
-            Assert.AreSequenceEqual(new[] { "Testhost didn't exit gracefully '27')", "Testhost didn't exit gracefully '27')" },
+            Assert.AreSequenceEqual(
+                new[] { "Testhost didn't exit gracefully '27')", "Testhost didn't exit gracefully '27')" },
                 fixture.ControllerMessages.Where(message => message.StartsWith("Testhost didn't exit gracefully ", StringComparison.Ordinal)));
             fixture.AssertSignalCount(0);
             fixture.AssertNoDumpWork();

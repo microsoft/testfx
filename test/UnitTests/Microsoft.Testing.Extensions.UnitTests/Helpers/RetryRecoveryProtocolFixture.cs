@@ -198,7 +198,7 @@ internal sealed class RetryRecoveryProtocolFixture
         builder.Object.AddRetryProvider();
         Assert.AreSame(consumerFactory, sessionFactory);
         _lifecycleFactory = lifecycleFactory!;
-        _consumerFactory = (ICompositeExtensionFactory)consumerFactory!;
+        _consumerFactory = consumerFactory!;
         _orchestrator = orchestratorFactory!(_services);
     }
 
@@ -220,7 +220,7 @@ internal sealed class RetryRecoveryProtocolFixture
 
     public Mock<IOutputDevice> Output { get; } = new(MockBehavior.Strict);
 
-    public Dictionary<string, string?> EnvironmentValues { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, string?> EnvironmentValues { get; } = [with(StringComparer.Ordinal)];
 
     public ConcurrentDictionary<string, byte[]> Files { get; } = new(StringComparer.Ordinal);
 
@@ -455,7 +455,7 @@ internal sealed class RetryRecoveryProtocolFixture
 
         public string[] LaunchArguments { get; }
 
-        public Dictionary<string, string?> EnvironmentValues { get; } = new(StringComparer.Ordinal);
+        public Dictionary<string, string?> EnvironmentValues { get; } = [with(StringComparer.Ordinal)];
 
         public Mock<IProcess> Process { get; } = new(MockBehavior.Strict);
 
@@ -658,11 +658,11 @@ internal sealed class RetryRecoveryProtocolFixture
         public async Task DrainAsync()
         {
             using var timeout = new CancellationTokenSource();
-            Task guard = Task.Delay(TimeSpan.FromMinutes(1), timeout.Token);
+            var guard = Task.Delay(TimeSpan.FromMinutes(1), timeout.Token);
             try
             {
                 Task[] tasks = _work.ToArray();
-                Task joined = Task.WhenAll(tasks);
+                var joined = Task.WhenAll(tasks);
                 if (await Task.WhenAny(joined, guard) != joined)
                 {
                     throw new TimeoutException("Task-owned retry child/pipe delegates did not drain.");

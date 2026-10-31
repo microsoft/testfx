@@ -16,6 +16,7 @@ using Microsoft.Testing.Platform.TestHost;
 using Moq;
 
 using GitHub = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
+using GitHubHistoryTest = ghactions::Microsoft.Testing.Extensions.CiRunSummaryHistoryTest;
 using GitHubModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -127,7 +128,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
         string[] dependencies = ["PClass\nMethod", "SClass\n", "BareMethod", "P\nMethod", "SClass\nMethod", "PClass\nMethod", "P", string.Empty, "\t", new string('x', 1025)];
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update(
             "Tests.Retry",
-        [
+            [
             new PassedTestNodeStateProperty(), new RetryAttemptProperty(2, false), Timing(1),
             .. dependencies.Select(Dependency),
         ]), CancellationToken.None);
@@ -270,7 +271,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
     public async Task GitHubActions_MalformedUpdateDoesNotPoisonFollowingHistory()
     {
         using var fixture = new CiReporterFixture();
-        var (reporter, writes) = GitHubHistoryOnly(fixture);
+        (GitHub.GitHubActionsSummaryReporter reporter, List<GitHubModule[]> writes) = GitHubHistoryOnly(fixture);
         await reporter.OnTestSessionStartingAsync(new CiReporterFixture.Session());
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Malformed", new PassedTestNodeStateProperty(), new RetryAttemptProperty(1, false), new RetryAttemptProperty(2, false)), CancellationToken.None);
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.Nonterminal", new InProgressTestNodeStateProperty()), CancellationToken.None);
@@ -295,7 +296,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
     public async Task GitHubActions_ResetAndMixedUidOutcomesDoNotInventRecovery()
     {
         using var fixture = new CiReporterFixture();
-        var (reporter, writes) = GitHubHistoryOnly(fixture);
+        (GitHub.GitHubActionsSummaryReporter reporter, List<GitHubModule[]> writes) = GitHubHistoryOnly(fixture);
         fixture.Variables["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"] = "2";
         await reporter.OnTestSessionStartingAsync(new CiReporterFixture.Session());
         await reporter.ConsumeAsync(null!, CiReporterFixture.Update("Tests.PreviousSession", new FailedTestNodeStateProperty("previous")), CancellationToken.None);
@@ -315,7 +316,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
         Assert.AreEqual(0L, module.FailedTests);
         Assert.IsEmpty(module.Failures);
         Assert.IsEmpty(module.FlakyTests);
-        var history = Assert.ContainsSingle(module.HistoryTests);
+        GitHubHistoryTest history = Assert.ContainsSingle(module.HistoryTests);
         Assert.AreEqual("Tests.Mixed", history.FullyQualifiedName);
         Assert.AreEqual("passed", history.Outcome);
         Assert.AreEqual(TimeSpan.FromSeconds(3).Ticks, history.DurationTicks);
@@ -327,7 +328,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
     public async Task GitHubActions_CanceledConsumePreservesToken()
     {
         using var fixture = new CiReporterFixture();
-        var (reporter, writes) = GitHubHistoryOnly(fixture);
+        (GitHub.GitHubActionsSummaryReporter reporter, List<GitHubModule[]> writes) = GitHubHistoryOnly(fixture);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
@@ -343,7 +344,7 @@ public sealed class CiSummaryLifecycleBehaviorTests
     public async Task GitHubActions_DisabledSummaryIgnoresUpdatesAndFinish()
     {
         using var fixture = new CiReporterFixture();
-        var (reporter, writes) = GitHubHistoryOnly(fixture, enabled: false);
+        (GitHub.GitHubActionsSummaryReporter reporter, List<GitHubModule[]> writes) = GitHubHistoryOnly(fixture, enabled: false);
         Assert.IsFalse(await reporter.IsEnabledAsync());
         await reporter.OnTestSessionStartingAsync(new CiReporterFixture.Session());
 

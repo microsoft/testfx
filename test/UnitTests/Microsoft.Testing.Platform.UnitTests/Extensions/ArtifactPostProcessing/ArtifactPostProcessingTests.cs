@@ -1237,7 +1237,7 @@ public sealed class ArtifactPostProcessingTests
         Assert.AreEqual("Microsoft.Testing.Platform.ArtifactPostProcessing.Dispatcher.CommandLine", provider.Uid);
         Assert.AreEqual("Artifact post-processing dispatcher", provider.DisplayName);
         Assert.AreEqual("Internal command line for artifact post-processing.", provider.Description);
-        Assert.AreEqual("2.6.0-dev", provider.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, provider.Version);
         Assert.IsTrue(await provider.IsEnabledAsync());
         Assert.IsTrue((await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([]))).IsValid);
         Assert.IsTrue((await provider.ValidateOptionArgumentsAsync(option, [fixture.ManifestPath])).IsValid);

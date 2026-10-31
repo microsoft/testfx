@@ -137,7 +137,7 @@ public sealed class ServerModePerCallOutputDeviceTests
             Assert.AreEqual("ServerModePerCallOutputDevice", device.Uid);
             Assert.AreEqual("ServerModePerCallOutputDevice", device.DisplayName);
             Assert.AreEqual("ServerModePerCallOutputDevice", device.Description);
-            Assert.AreEqual("2.6.0-dev", device.Version);
+            Assert.AreEqual(PlatformTestMetadata.Version, device.Version);
             Assert.IsTrue(await device.IsEnabledAsync());
             policies.Verify(p => p.RegisterOnMaxFailedTestsCallbackAsync(It.IsAny<Func<int, CancellationToken, Task>>()), Times.Once);
         });

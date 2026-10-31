@@ -335,7 +335,7 @@ public sealed class ShutdownProgressReporterTests : IAsyncDisposable
             ShutdownProgressReporter.DefaultQuietWindow, ShutdownProgressReporter.DefaultPollInterval, _task.Object);
         using IDisposable tracking = reporter.Track("uid", "Extension", "finalizing");
         Assert.IsTrue(await reporter.IsEnabledAsync());
-        Assert.AreEqual("2.6.0-dev", reporter.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, reporter.Version);
 
         CancelTokenSource();
         await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);

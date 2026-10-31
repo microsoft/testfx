@@ -1,5 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Hosting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
@@ -37,7 +37,7 @@ public sealed class HotReloadRegistrationBehaviorTests
         fixture.Services.AddService(stopPolicies.Object);
         ActionResult<ITestFrameworkInvoker> result = await ((TestHostManager)builder.TestHost).TryBuildTestAdapterInvokerAsync(fixture.Services);
         Assert.IsTrue(result.IsSuccess);
-        var invoker = Assert.IsInstanceOfType<HotReloadTestHostTestFrameworkInvoker>(result.Result);
+        HotReloadTestHostTestFrameworkInvoker invoker = Assert.IsInstanceOfType<HotReloadTestHostTestFrameworkInvoker>(result.Result);
         using var cancellation = new CancellationTokenSource();
         var request = new RunTestExecutionRequest(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("registered-session")));
         ExecuteRequestContext? received = null;

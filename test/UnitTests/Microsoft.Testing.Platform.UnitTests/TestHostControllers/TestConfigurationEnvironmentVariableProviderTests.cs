@@ -233,7 +233,7 @@ public sealed class TestConfigurationEnvironmentVariableProviderTests
         Assert.AreEqual(
             "Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.",
             provider.Description);
-        Assert.AreEqual("2.6.0-dev", provider.Version);
+        Assert.AreEqual(PlatformTestMetadata.Version, provider.Version);
         Mock<ITestHostEnvironmentVariableProvider> later = new();
         later.SetupGet(p => p.Uid).Returns("later");
         variables.CurrentProvider = later.Object;

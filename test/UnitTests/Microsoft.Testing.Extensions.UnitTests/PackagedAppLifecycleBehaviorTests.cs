@@ -43,7 +43,7 @@ public sealed class PackagedAppLifecycleBehaviorTests
     {
         using var directory = new OwnedDirectory();
         // This is a query-only wrapper for this process. Never call Terminate on it.
-        using Process process = Process.GetCurrentProcess();
+        using var process = Process.GetCurrentProcess();
         using var handle = new PackagedAppTestHostHandle(process, directory.Root);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
@@ -183,7 +183,7 @@ public sealed class PackagedAppLifecycleBehaviorTests
 
         Assert.IsNotNull(factory);
         ITestHostLauncher launcher = factory(Mock.Of<IServiceProvider>());
-        var authorizer = Assert.IsInstanceOfType<ITestHostControllerConnectionAuthorizer>(launcher);
+        ITestHostControllerConnectionAuthorizer authorizer = Assert.IsInstanceOfType<ITestHostControllerConnectionAuthorizer>(launcher);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         OperationCanceledException error = await Assert.ThrowsExactlyAsync<OperationCanceledException>(
@@ -200,7 +200,8 @@ public sealed class PackagedAppLifecycleBehaviorTests
     {
         string family = "Coverage.Owned." + Guid.NewGuid().ToString("N");
         string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(family.ToUpperInvariant())));
-        string expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        string expected = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Microsoft.Testing.Platform", "PackagedApp", "RegistrationLocks", hash + ".lock");
         try
         {
