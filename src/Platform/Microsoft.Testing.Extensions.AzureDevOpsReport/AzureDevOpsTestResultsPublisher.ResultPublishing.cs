@@ -53,6 +53,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // create duplicate result rows in AzDO).
         if (publishedResults is null)
         {
+            if (batch.Any(static result => result.Result.Comment is not null))
+            {
+                TryLogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed);
+            }
+
             if (BatchHasAttachments(batch))
             {
                 Interlocked.Add(ref _failedAttachmentCount, CountAttachments(batch));
@@ -80,7 +85,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
 
             bool hasAttachments = attempts.Any(static attempt => attempt.Attachments.Count > 0);
-            if (attempts.Count > 1 || (_resultIdStore is not null && hasAttachments))
+            if (attempts.Count > 1 || (_resultIdStore is not null && hasAttachments) || batch[i].Result.Comment is not null)
             {
                 initialAttemptSeeds.Add((publishedResults[i].Id, batch[i], attempts));
             }

@@ -62,6 +62,11 @@
         <target state="translated">Azure DevOps REST API 驗證失敗或已重新導向至登入畫面 (狀態: {0})，這表示 SYSTEM_ACCESSTOKEN 無效或無法使用。對於派生提取要求驗證組建，請不要將密碼資訊公開給不受信任的派生程式碼；請改從另一個受信任的管線內容發佈結果，或停用 Azure DevOps 即時發佈。</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps 即時發佈無法完成測試執行。</target>

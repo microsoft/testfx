@@ -261,7 +261,11 @@ internal sealed class AzureDevOpsHistoryClient : IAzureDevOpsHistoryClient
             : new AzureDevOpsTestResultsPage(
                 [.. payload.Value
                     .Where(static result => !RoslynString.IsNullOrWhiteSpace(result.AutomatedTestName) && !RoslynString.IsNullOrWhiteSpace(result.Outcome))
-                    .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!, result.DurationInMs))],
+                    .Select(static result => new AzureDevOpsTestResult(result.AutomatedTestName!, result.Outcome!, result.DurationInMs)
+                    {
+                        TestCaseTitle = result.TestCaseTitle,
+                        Comment = result.Comment,
+                    })],
                 continuationToken);
     }
 
@@ -355,6 +359,12 @@ internal sealed class AzureDevOpsResultResponse
     [JsonPropertyName("automatedTestName")]
     public string? AutomatedTestName { get; set; }
 
+    [JsonPropertyName("testCaseTitle")]
+    public string? TestCaseTitle { get; set; }
+
+    [JsonPropertyName("comment")]
+    public string? Comment { get; set; }
+
     [JsonPropertyName("outcome")]
     public string? Outcome { get; set; }
 
@@ -378,6 +388,10 @@ internal sealed class AzureDevOpsTestResult
     }
 
     public string AutomatedTestName { get; }
+
+    public string? TestCaseTitle { get; set; }
+
+    public string? Comment { get; set; }
 
     public string Outcome { get; }
 

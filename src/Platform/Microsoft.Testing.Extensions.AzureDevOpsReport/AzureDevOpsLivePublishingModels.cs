@@ -10,6 +10,8 @@ internal static class AzureDevOpsLivePublishingConstants
     public const string AbortedTestOutcome = "Aborted";
     public const string AbortedTestRunState = "Aborted";
     public const string CompletedTestRunState = "Completed";
+    public const string CanonicalTestNameMetadataFamily = "MTP.CanonicalTestName/";
+    public const string CanonicalTestNameMetadataPrefix = CanonicalTestNameMetadataFamily + "1:";
     public const string FailedTestOutcome = "Failed";
     public const string InProgressTestRunState = "InProgress";
     public const int MaxRunNameLength = 256;
@@ -117,6 +119,10 @@ internal sealed record AzureDevOpsTestCaseResult(
     /// </remarks>
     [JsonPropertyName("id")]
     public int? Id { get; init; }
+
+    [JsonPropertyName("comment")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Comment { get; init; }
 
     /// <summary>
     /// Gets the hierarchy type of the result; <see cref="AzureDevOpsLivePublishingConstants.RerunResultGroupType"/>

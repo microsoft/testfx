@@ -62,6 +62,11 @@
         <target state="translated">A autenticação da REST API do Azure DevOps falhou ou foi redirecionada para a página de entrada (status: {0}), o que indica que o SYSTEM_ACCESSTOKEN é inválido ou não está disponível. Para compilações de validação de pull request de fork, não exponha segredos a código de bifurcação não confiável; publique os resultados de um contexto de pipeline confiável separado ou desabilite a publicação ao vivo do Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">A publicação ao vivo do Azure DevOps falhou ao concluir a execução de teste.</target>
