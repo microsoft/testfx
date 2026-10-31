@@ -778,6 +778,20 @@ Assert-Containment `
     -Substrings '<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" VersionOverride="$(MicrosoftTestingExtensionsAffectedTestsVersion)"' `
     -Message "Affected-test applications must use the matching preview CodeCoverage dependency without changing the shipping version."
 
+$mstestAcceptanceProjectPath = Join-Path $repoRoot "test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj"
+$mstestAcceptanceProject = Get-Content -LiteralPath $mstestAcceptanceProjectPath -Raw
+Assert-Containment `
+    -Text $mstestAcceptanceProject `
+    -Substrings '<PackageDownload Include="Microsoft.Testing.Extensions.CodeCoverage" Version="[$(MicrosoftTestingExtensionsCodeCoverageVersion)]" />' `
+    -Message "AcceptanceAssetsStageShippingCodeCoverage: generated assets require the shipping CodeCoverage package to be downloaded separately from the affected-test dependency."
+Assert-Containment `
+    -Text $mstestAcceptanceProject `
+    -Substrings '$(NuGetPackageRoot)microsoft.testing.extensions.codecoverage\$(MicrosoftTestingExtensionsCodeCoverageVersion)\microsoft.testing.extensions.codecoverage.$(MicrosoftTestingExtensionsCodeCoverageVersion).nupkg' `
+    -Message "AcceptanceAssetsStageShippingCodeCoverage: the generated-asset feed must stage the shipping CodeCoverage version alongside the affected-test version."
+if ($SelfTest) {
+    Write-Output "PASS AcceptanceAssetsStageShippingCodeCoverage"
+}
+
 $manualEntryPoints = @(
     Get-ChildItem -LiteralPath (Join-Path $repoRoot "test") -Filter "Program.cs" -Recurse -File
     Get-Item -LiteralPath (Join-Path $repoRoot "samples/CtrfPlayground/Mtp/Program.cs")
