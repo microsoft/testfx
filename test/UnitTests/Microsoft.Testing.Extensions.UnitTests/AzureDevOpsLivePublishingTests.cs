@@ -394,8 +394,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.IsNotNull(firstResult);
         Assert.IsNotNull(secondResult);
-        Assert.AreEqual("""My.Namespace.MyType.MyMethod ("nonExistentUser","password")""", firstResult.AutomatedTestName);
-        Assert.AreEqual("""My.Namespace.MyType.MyMethod ("administrator","wrongPassword")""", secondResult.AutomatedTestName);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod (MyMethod ("nonExistentUser","password"))""", firstResult.AutomatedTestName);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod (MyMethod ("administrator","wrongPassword"))""", secondResult.AutomatedTestName);
         Assert.AreEqual(firstRow.DisplayName, firstResult.TestCaseTitle);
         Assert.AreEqual(secondRow.DisplayName, secondResult.TestCaseTitle);
         Assert.AreEqual(1593L, firstResult.DurationInMs);
@@ -419,6 +419,54 @@ public sealed class AzureDevOpsLivePublishingTests
                     new TimingProperty(new TimingInfo(RetryTestStartTime, RetryTestStartTime + duration, duration))),
             };
         }
+    }
+
+    [TestMethod]
+    public void CreateTestCaseResult_OrdinaryDottedMethod_PreservesIdentity()
+    {
+        TestNode node = new()
+        {
+            Uid = "method",
+            DisplayName = "Verify.thing",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "Verify.thing", 0, [], "System.Void")),
+        };
+
+        AzureDevOpsTestCaseResult result = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(node, "tests.dll")!.Result;
+
+        Assert.AreEqual("My.Namespace.MyType.Verify.thing", result.AutomatedTestName);
+        Assert.AreEqual("Verify.thing", result.TestCaseTitle);
+        Assert.IsNull(result.Comment);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Native custom row title remains distinct")]
+    [DataRow(false, DisplayName = "Bridge custom row title remains distinct")]
+    public void CreateTestCaseResult_CustomRowNamesDoNotCollapse(bool nativeMetadata)
+    {
+        IProperty identity = nativeMetadata
+            ? new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, ["System.Int32"], "System.Void")
+            : new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "My.Namespace.MyType.MyMethod");
+        AzureDevOpsTestCaseResult normal = CreateRow("MyMethod (1)");
+        AzureDevOpsTestCaseResult custom = CreateRow("1");
+
+        Assert.AreNotEqual(normal.AutomatedTestName, custom.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethod (1))", normal.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (1)", custom.AutomatedTestName);
+        Assert.AreEqual("MyMethod (1)", normal.TestCaseTitle);
+        Assert.AreEqual("1", custom.TestCaseTitle);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", normal.Comment);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", custom.Comment);
+
+        AzureDevOpsTestCaseResult CreateRow(string title)
+            => AzureDevOpsTestResultsPublisher.CreateTestCaseResult(
+                new TestNode
+                {
+                    Uid = "shared-row-uid",
+                    DisplayName = title,
+                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, identity),
+                }, "tests.dll")!.Result;
     }
 
     [TestMethod]
@@ -460,7 +508,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(1, createCount);
         AzureDevOpsTestCaseResult update = Assert.ContainsSingle(Assert.ContainsSingle(client.UpdateTestResultsCalls).Results);
         Assert.AreEqual(401, update.Id);
-        Assert.AreEqual("My.Namespace.MyType.MyMethod (1)", update.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethod (1))", update.AutomatedTestName);
         Assert.AreEqual("MyMethod (1)", update.TestCaseTitle);
         Assert.AreEqual("MTP.CanonicalTestName/1:28", update.Comment);
         Assert.IsNull(update.ResultGroupType);

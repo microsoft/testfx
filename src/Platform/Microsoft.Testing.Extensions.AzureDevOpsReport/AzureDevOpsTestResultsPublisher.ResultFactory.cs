@@ -20,9 +20,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        // Azure DevOps shares test-reference metadata by automated name/storage, so different
-        // data rows need distinct automated names as well as distinct titles.
-        string automatedTestName = TestNodeIdentity.GetDisplayLabel(testNode);
+        string canonicalName = TestNodeIdentity.GetTestName(testNode);
+        TestMethodIdentifierProperty? identifier = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        string methodName = identifier?.MethodName ?? canonicalName.Substring(canonicalName.LastIndexOf('.') + 1);
+        bool isDefaultTitle = identifier?.ParameterTypeFullNames.Length is null or 0
+            && (RoslynString.IsNullOrEmpty(testNode.DisplayName)
+                || string.Equals(testNode.DisplayName, canonicalName, StringComparison.Ordinal)
+                || string.Equals(testNode.DisplayName, methodName, StringComparison.Ordinal));
+        // Display-label normalization is lossy. Keep the complete original title in row identities.
+        string automatedTestName = isDefaultTitle ? canonicalName : $"{canonicalName} ({testNode.DisplayName})";
 
         AzureDevOpsTestCaseResult? result = state switch
         {
@@ -42,7 +48,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             return null;
         }
 
-        string canonicalName = TestNodeIdentity.GetTestName(testNode);
         if (canonicalName.Length > 0 && !string.Equals(canonicalName, automatedTestName, StringComparison.Ordinal))
         {
             result = result with
