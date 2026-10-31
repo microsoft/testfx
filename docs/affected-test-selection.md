@@ -389,6 +389,30 @@ not source control. Text transcripts and these assertions communicate the CLI ch
 Initial scratch failures from missing feeds/native layout, duplicate generated inputs and an artifact-root
 lookup were repaired in owned layouts; none is counted as regression detection.
 
+#### Committed-source package handoff
+
+The implementation commit is `24644925e47e5c8d8f55bb8c71e37a8b9d1b9a80`.
+Both MTP projects were repacked from that clean source using `VersionSuffix=preview.local.acceleration.20261101.1`,
+with `SourceRevisionId` and `RepositoryCommit` set to the exact commit. Both resulting nuspecs were read back.
+This unique local version avoids confusing the corrected package with the existing published preview.
+
+| Final local package | SHA-256 |
+| --- | --- |
+| `Microsoft.Testing.Platform.2.6.0-preview.local.acceleration.20261101.1.nupkg` | `BD4DFB3AFF38D16A6DD8951C7102182C1B0215682913B7123C9483A598D14C16` |
+| `Microsoft.Testing.Platform.ServerMode.Client.Sources.2.6.0-preview.local.acceleration.20261101.1.nupkg` | `220AEF9493A6A8A476B6F1CB8BFAE605807618E226B174A775C6AA8D57306158` |
+
+The unchanged test sources were rebuilt from clean fixture commit `a3d06d3c82e43f3409555461e10501c1f2a3e446`
+against these packages and the committed coverage packages, in a fresh dedicated cache.
+`project.assets.json`, cached nupkg bytes and both executed DLLs match the selected feed/payloads:
+.NET 10 DLL `AAE770725CBA12123608879C33F3162CCAC137F279A4C988A3ACFB0CC1A2E534`;
+.NET Framework/netstandard2.0 DLL `DB81A2E23C28C0F2E3BB7AB5ABC707C7A227BDC9804ED66F0366B69369625FA5`.
+The final default affected entry point took 27.060 seconds, returned 0, retained both exact 1,026-UID maps
+and every baseline association, and reported 11 measured/zero fallback batches per framework.
+Native CTS at the same four-child ceiling took 23.387 seconds, executed/passed all 2,052 planned identities,
+returned 0, and passed both canonical TRX gates with UTC timestamps. These sequential final-composition checks
+confirm the committed packages; the earlier interleaved samples remain the controlled performance comparison.
+Exact final package metadata, loaded paths, commands and outcomes are retained in `final-package-evidence.json`.
+
 **Remaining delivery gates:** full TestFx collection/selection on a capable main CI agent, complete
 74-module artifact/runtime parity, public package flow and Azure multi-agent publication, release-branch
 proof/servicing decisions, ARM64/native rebuild and non-Windows support remain unverified.
