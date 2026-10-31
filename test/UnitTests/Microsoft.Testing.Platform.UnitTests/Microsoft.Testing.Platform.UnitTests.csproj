@@ -25,7 +25,7 @@
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
     <AdditionalFiles Include="BannedSymbols.txt" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer*.cs" Link="IPC\Serializers\%(Filename)%(Extension)" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\NamedPipeSerializer.cs" Link="IPC\Serializers\NamedPipeSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
@@ -54,6 +54,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\JsonRpc\RpcIdParser.cs" Link="ServerMode\RpcIdParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
     <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\SlowestTestsConsumer.cs" Link="TestInfrastructure\SlowestTestsConsumer.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\AcceptanceDiagnostics.cs" Link="TestInfrastructure\AcceptanceDiagnostics.cs" />
     <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
     <!-- The terminal reporter types are [Embedded] (hidden cross-assembly) so they can be shared as source.
          Link the source here so the unit tests compile their own copy instead of relying on IVT. -->

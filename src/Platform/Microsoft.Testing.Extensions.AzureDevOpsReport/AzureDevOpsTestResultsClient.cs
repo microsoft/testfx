@@ -151,6 +151,17 @@ internal sealed partial class AzureDevOpsTestResultsClient : IAzureDevOpsTestRes
         return await TryReadAndParsePublishedResultsAsync(response, requestTimeoutSource.Token, cancellationToken, results, validateAutomatedTestName: false).ConfigureAwait(false);
     }
 
+    public async Task UpdateTestResultMetadataAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyDictionary<int, string> metadata, CancellationToken cancellationToken)
+    {
+        using HttpRequestMessage request = CreateRequest(
+            PatchMethod,
+            BuildResultsUri(configuration.CollectionUri, configuration.Project, runId),
+            configuration.AccessToken,
+            metadata.Select(static entry => new UpdateTestResultMetadataRequest(entry.Key, entry.Value)).ToArray());
+
+        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
     {
         AttachmentRequest payload = BuildAttachmentRequest(attachment);

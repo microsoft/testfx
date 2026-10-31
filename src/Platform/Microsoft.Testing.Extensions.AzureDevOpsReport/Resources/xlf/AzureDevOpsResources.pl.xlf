@@ -62,6 +62,11 @@
         <target state="translated">Uwierzytelnianie Azure DevOps REST API nie powiodło się lub nastąpiło przekierowanie do logowania (status: {0}), co oznacza, że SYSTEM_ACCESSTOKEN jest nieprawidłowy lub niedostępny. W przypadku kompilacji weryfikacyjnych żądań ściągnięcia z forka nie ujawniaj sekretów niezaufanemu kodowi z forka; publikuj wyniki z oddzielnego zaufanego kontekstu potoku lub wyłącz publikowanie na żywo w Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może ukończyć przebiegu testu.</target>

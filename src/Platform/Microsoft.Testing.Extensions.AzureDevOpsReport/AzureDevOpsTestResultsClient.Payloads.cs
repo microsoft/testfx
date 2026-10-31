@@ -240,6 +240,10 @@ internal sealed partial class AzureDevOpsTestResultsClient
 
     private sealed record UpdateTestRunStateRequest([property: JsonPropertyName("state")] string State);
 
+    private sealed record UpdateTestResultMetadataRequest(
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("comment")] string Comment);
+
     private sealed record PublishTestResultsResponse(
         [property: JsonPropertyName("count")] int Count,
         [property: JsonPropertyName("value")] PublishedTestResult[]? Value);

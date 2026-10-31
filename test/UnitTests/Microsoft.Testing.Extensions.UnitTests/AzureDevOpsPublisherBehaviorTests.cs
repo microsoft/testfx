@@ -361,7 +361,8 @@ public sealed class AzureDevOpsPublisherBehaviorTests
         }
 
         Assert.IsNotNull(captured);
-        Assert.AreEqual("Tests.Result", captured.Result.AutomatedTestName);
+        Assert.AreEqual("Tests.Result (specific data row)", captured.Result.AutomatedTestName);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix + "12", captured.Result.Comment);
         Assert.AreEqual("specific data row", captured.Result.TestCaseTitle);
         Assert.AreEqual("storage.dll", captured.Result.AutomatedTestStorage);
         Assert.AreEqual(expectedMilliseconds, captured.Result.DurationInMs);
