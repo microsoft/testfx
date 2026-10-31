@@ -1,6 +1,8 @@
 Excluded-from-upstream skills and helpers are repository-owned and are NOT checked by `gh copilot-curate verify`; compare them explicitly on refresh. Details: .agents/skills/CURATION.md
 
-Use [msbuild](.agents/skills/msbuild/SKILL.md) as the MSBuild entry point; nine legacy SKILL.md files are excluded from upstream curation.
+Use [msbuild](.agents/skills/msbuild/SKILL.md) as the MSBuild entry point; nine legacy SKILL.md files are excluded from upstream curation. The grading rubric is not forked.
+
+Use [curation-exceptions](.agents/skills/curation-exceptions/SKILL.md) for `gh copilot-curate update`/`verify` and repository-owned skill edits.
 
 <!-- BEGIN gh-copilot-curate managed -->
 ## Available skills (managed by gh-copilot-curate — do not edit by hand)
