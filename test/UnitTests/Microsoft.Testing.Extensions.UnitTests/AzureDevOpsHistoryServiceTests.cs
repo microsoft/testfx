@@ -76,6 +76,89 @@ public sealed class AzureDevOpsHistoryServiceTests
     }
 
     [TestMethod]
+    [DataRow("Namespace.MyType.MyMethod", "MyMethod", DisplayName = "Ordinary canonical identity")]
+    [DataRow("Namespace.MyType.Verify (empty)", "Verify (empty)", DisplayName = "Parenthesized canonical identity")]
+    public async Task HistoryService_AggregatesRowsUsingKnownCanonicalIdentity(string canonicalName, string displayName)
+    {
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/run")]);
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(
+            [
+                new AzureDevOpsTestResult(canonicalName, "Passed", 100) { TestCaseTitle = displayName },
+                new AzureDevOpsTestResult($"{canonicalName} (1)", "Failed", 200) { TestCaseTitle = $"{displayName} (1)" },
+                new AzureDevOpsTestResult($"{canonicalName} (2)", "Passed", 300) { TestCaseTitle = $"{displayName} (2)" },
+                new AzureDevOpsTestResult($"{canonicalName} (Custom scenario)", "Failed", 400) { TestCaseTitle = "Custom scenario" },
+            ],
+            continuationToken: null));
+        AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsTrue(service.TryGetStats(canonicalName, out FlakyStats stats));
+        Assert.AreEqual(2, stats.PassCount);
+        Assert.AreEqual(2, stats.FailCount);
+        Assert.IsTrue(service.IsLikelyFlaky(canonicalName, 0.5));
+        Assert.IsTrue(service.TryGetDurationStats(canonicalName, out DurationHistoryStats duration));
+        Assert.AreEqual(4, duration.SampleCount);
+        Assert.AreEqual(400.0, duration.P95Milliseconds);
+        Assert.AreEqual(400.0, duration.P99Milliseconds);
+        Assert.IsTrue(service.TryGetStats($"{canonicalName} (1)", out FlakyStats rowStats));
+        Assert.AreEqual(0, rowStats.PassCount);
+        Assert.AreEqual(1, rowStats.FailCount);
+    }
+
+    [TestMethod]
+    [DataRow(null, DisplayName = "Missing row title")]
+    [DataRow("OtherMethod (1)", DisplayName = "Mismatched row title")]
+    public async Task HistoryService_DoesNotAliasRowsWithoutMatchingTitles(string? title)
+    {
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/run")]);
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(
+                [new AzureDevOpsTestResult("Namespace.Tests.MyMethod (1)", "Failed", 100) { TestCaseTitle = title }],
+                continuationToken: null));
+        AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsFalse(service.TryGetStats("Namespace.Tests.MyMethod", out _));
+        Assert.IsFalse(service.TryGetDurationStats("Namespace.Tests.MyMethod", out _));
+        Assert.IsTrue(service.TryGetStats("Namespace.Tests.MyMethod (1)", out FlakyStats stats));
+        Assert.AreEqual(1, stats.FailCount);
+    }
+
+    [TestMethod]
+    public async Task HistoryService_CapsCombinedRowDurationSamples()
+    {
+        Mock<IAzureDevOpsHistoryClient> client = new();
+        client.Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/run")]);
+        AzureDevOpsTestResult[] results =
+        [
+            .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (1)", "Passed", 100) { TestCaseTitle = "MyMethod (1)" }),
+            .. Enumerable.Range(0, 700).Select(_ => new AzureDevOpsTestResult("Namespace.Tests.MyMethod (2)", "Passed", 200) { TestCaseTitle = "MyMethod (2)" }),
+        ];
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(results.Take(700).ToArray(), continuationToken: "next"));
+        client.Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/run", 0, 1000, "next", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(results.Skip(700).ToArray(), continuationToken: null));
+        AzureDevOpsHistoryService service = CreateHistoryService(client, CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"])));
+
+        await service.OnTestSessionStartingAsync(new TestSessionContextStub());
+
+        Assert.IsTrue(service.TryGetStats("Namespace.Tests.MyMethod", out FlakyStats stats));
+        Assert.AreEqual(1400, stats.PassCount);
+        Assert.IsTrue(service.TryGetDurationStats("Namespace.Tests.MyMethod", out DurationHistoryStats duration));
+        Assert.AreEqual(1000, duration.SampleCount);
+        Assert.AreEqual(200.0, duration.P95Milliseconds);
+        Assert.AreEqual(200.0, duration.P99Milliseconds);
+    }
+
+    [TestMethod]
     public async Task HistoryService_ComputesDurationStatsWhenSlowTestHistoryEnabledAsync()
     {
         Mock<IAzureDevOpsHistoryClient> historyClientMock = new();

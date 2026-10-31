@@ -37,6 +37,8 @@ Enable Azure DevOps reporting with the `--report-azdo` command line option.
 
 Modules using `--publish-azdo-test-results` and the same results directory can share a test run. The owner waits for registered modules to finish publishing before completing the run. Modules scheduled after completion acquire a new run, so a solution invocation can produce several runs; all modules in a shared directory must use the same extension version.
 
+Data-driven rows use fully qualified automated test names that include the distinguishing display-name suffix. This keeps rows separate in the Tests tab while preserving each row's own display name and duration. Non-parameterized tests with the default display name keep their existing automated identity. History-based annotations and slow-test thresholds continue to aggregate by the fully qualified method name.
+
 Coordination uses an exclusive handle to an `azdo-runid.<buildId>.lock` file. This file remains in the results directory, but its existence does not indicate an active run: the operating system releases the handle when the owning process exits. The file also records pending cleanup so later modules retry failed coordination-file deletions before acquiring a new run, rather than joining a completed run or waiting for its owner lease to expire. Do not remove coordination files while modules are running. Per-project results directories disable sharing between projects.
 
 Attachments up to 75 MiB per file are supported. This limit applies to the raw file; base64 encoding expands a 75 MiB attachment to 100 MiB, matching the Azure Pipelines agent's attachment guards. Attachments larger than 75 MiB or files that cannot be read are reported as upload failures without failing otherwise successful tests.
