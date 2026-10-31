@@ -473,6 +473,101 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    [DataRow(false, false, DisplayName = "Shutdown saves accepted row metadata")]
+    [DataRow(true, false, DisplayName = "Shutdown metadata failure is reported")]
+    [DataRow(false, true, DisplayName = "Inherited shutdown saves accepted row metadata")]
+    [DataRow(true, true, DisplayName = "Metadata failure preserves remaining results")]
+    public async Task DataRows_ShutdownDuringMetadataPatch_RetriesOnlyCanonicalMetadata(bool failFinalMetadata, bool inheritedRun)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId(inheritedRun ? "123:42" : null);
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            new AzureDevOpsTestResultsPublisherOptions(20, TimeSpan.FromMilliseconds(20), 2, TimeSpan.FromMilliseconds(1)),
+            out FakeAzureDevOpsTestResultsClient client,
+            out FakeClock clock,
+            out CollectingLogger logger,
+            environment: environment);
+        TaskCompletionSource<bool> patchStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releasePatch = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var rendezvousTimeout = TimeSpan.FromSeconds(30);
+        int creates = 0;
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) =>
+        {
+            creates++;
+            return Task.FromResult<IReadOnlyList<int>?>([400 + creates]);
+        };
+        client.UpdateTestResultsAsyncFunc = async (_, _, _, token) =>
+        {
+            patchStarted.TrySetResult(true);
+            using (token.Register(() => releasePatch.TrySetResult(true)))
+            {
+                await releasePatch.Task;
+            }
+
+            token.ThrowIfCancellationRequested();
+        };
+        if (failFinalMetadata)
+        {
+            client.UpdateTestResultMetadataAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("metadata failed"));
+        }
+
+        Task? finishing = null;
+        Task? remaining = null;
+        try
+        {
+            await StartPublisherAsync(publisher);
+            await publisher.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(new TestNode
+                {
+                    Uid = "row",
+                    DisplayName = "MyMethod (1)",
+                    Properties = new PropertyBag(
+                        PassedTestNodeStateProperty.CachedInstance,
+                        new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void")),
+                }),
+                CancellationToken.None);
+            clock.UtcNow += TimeSpan.FromSeconds(1);
+            Assert.AreSame(patchStarted.Task, await Task.WhenAny(patchStarted.Task, Task.Delay(rendezvousTimeout, CancellationToken.None)));
+            await patchStarted.Task;
+
+            if (inheritedRun)
+            {
+                remaining = publisher.ConsumeAsync(
+                    Mock.Of<IDataProducer>(),
+                    CreateMessage(CreateNode("ordinary", PassedTestNodeStateProperty.CachedInstance, RetryTestStartTime)),
+                    CancellationToken.None);
+            }
+
+            finishing = publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+            Assert.AreSame(finishing, await Task.WhenAny(finishing, Task.Delay(rendezvousTimeout, CancellationToken.None)));
+            await finishing;
+            if (remaining is not null)
+            {
+                await remaining;
+            }
+
+            Assert.AreEqual(inheritedRun ? 2 : 1, creates, string.Join(Environment.NewLine, logger.Logs));
+            IReadOnlyDictionary<int, string> metadata = Assert.ContainsSingle(client.MetadataUpdateCalls);
+            Assert.HasCount(1, metadata);
+            Assert.AreEqual("MTP.CanonicalTestName/1:28", metadata[401]);
+            Assert.AreEqual(
+                failFinalMetadata,
+                logger.Logs.Any(log => log.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed)));
+        }
+        finally
+        {
+            releasePatch.TrySetResult(true);
+            await (finishing ?? publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None)));
+            if (remaining is not null)
+            {
+                await remaining;
+            }
+        }
+    }
+
+    [TestMethod]
     public async Task CreatePublisher_UsesSanitizedRunNameAndStorageFileName()
     {
         using TestDirectory directory = CreateTestDirectory();
@@ -639,6 +734,28 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(3, pipelineReference.GetProperty("phaseReference").GetProperty("attempt").GetInt32());
         Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
         Assert.AreEqual(4, pipelineReference.GetProperty("jobReference").GetProperty("attempt").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_MetadataUpdate_PreservesAllOtherResultFields()
+    {
+        string? body = null;
+        QueueHttpMessageHandler handler = new(async (request, token) =>
+        {
+            Assert.AreEqual("PATCH", request.Method.Method);
+            body = await ReadRequestBodyAsync(request, token);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}", Encoding.UTF8, "application/json"),
+            };
+        });
+        using HttpClient httpClient = new(handler);
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+        await client.UpdateTestResultMetadataAsync(configuration, 42, new Dictionary<int, string> { [401] = "MTP.CanonicalTestName/1:28" }, CancellationToken.None);
+
+        Assert.AreEqual("""[{"id":401,"comment":"MTP.CanonicalTestName/1:28"}]""", body);
     }
 
     [TestMethod]
@@ -5647,6 +5764,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public List<(int RunId, IReadOnlyList<AzureDevOpsTestCaseResult> Results)> UpdateTestResultsCalls { get; } = [];
 
+        public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyDictionary<int, string>, CancellationToken, Task> UpdateTestResultMetadataAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
+
+        public List<IReadOnlyDictionary<int, string>> MetadataUpdateCalls { get; } = [];
+
         public Func<AzureDevOpsPublishConfiguration, int, int, int?, AzureDevOpsTestResultAttachment, CancellationToken, Task> UploadTestResultAttachmentAsyncFunc { get; set; } = (_, _, _, _, _, _) => Task.CompletedTask;
 
         public Func<AzureDevOpsPublishConfiguration, int, AzureDevOpsTestResultAttachment, CancellationToken, Task> UploadTestRunAttachmentAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
@@ -5697,6 +5818,12 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             UpdateTestRunStateCalls.Add((configuration, runId, state));
             return UpdateTestRunStateAsyncFunc(configuration, runId, state, cancellationToken);
+        }
+
+        public Task UpdateTestResultMetadataAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyDictionary<int, string> metadata, CancellationToken cancellationToken)
+        {
+            MetadataUpdateCalls.Add(metadata.ToDictionary(static entry => entry.Key, static entry => entry.Value));
+            return UpdateTestResultMetadataAsyncFunc(configuration, runId, metadata, cancellationToken);
         }
 
         public Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)

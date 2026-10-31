@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.AzureDevOpsReport.IAzureDevOpsTestResultsClient.UpdateTestResultMetadataAsync(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishConfiguration! configuration, int runId, System.Collections.Generic.IReadOnlyDictionary<int, string!>! metadata, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataFamily = "MTP.CanonicalTestName/" -> string!
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix = "MTP.CanonicalTestName/1:" -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Comment.get -> string?
