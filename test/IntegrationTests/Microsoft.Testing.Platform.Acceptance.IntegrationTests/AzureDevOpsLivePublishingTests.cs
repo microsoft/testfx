@@ -16,8 +16,79 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDevOpsLivePublishingTests.TestAssetFixture>
 {
     private const string AssetName = "AzureDevOpsLivePublishing";
+    private const string DataDrivenTargetFramework = "net10.0";
 
     public TestContext TestContext { get; set; } = null!;
+
+    public static IEnumerable<object[]> DataDrivenMetadataModes()
+    {
+        foreach (MetadataMode mode in MetadataModesToRun)
+        {
+            if (mode is MetadataMode.Reflection or MetadataMode.SourceGeneration)
+            {
+                yield return [mode];
+            }
+        }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(DataDrivenMetadataModes))]
+    public async Task DataDrivenRows_PublishDistinctAutomatedTestNames(MetadataMode metadataMode)
+    {
+        using TempDirectory directory = new();
+        await using AzureDevOpsService service = new();
+        service.AllowFirstCompletion.SetResult(true);
+        var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, DataDrivenTargetFramework, metadataMode: metadataMode);
+        TestContext.WriteLine($"Packaged DataRow consumer: {host.DirectoryName}");
+        Dictionary<string, string?> environment = new()
+        {
+            ["TF_BUILD"] = "true",
+            ["SYSTEM_COLLECTIONURI"] = service.CollectionUri,
+            ["SYSTEM_TEAMPROJECT"] = "project",
+            ["SYSTEM_ACCESSTOKEN"] = "local-test-token",
+            ["BUILD_BUILDID"] = "123",
+            ["TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID"] = null,
+            ["TESTINGPLATFORM_AZUREDEVOPS_RESULTMAP"] = null,
+            ["AZDO_DATA_ROWS"] = "true",
+            ["AZDO_NATIVE_RENDEZVOUS"] = "false",
+            ["AZDO_FAIL"] = "false",
+            ["AZDO_MODULE"] = "DataRows",
+            ["AZDO_RENDEZVOUS"] = directory.Path,
+        };
+        TestHostResult result = await host.ExecuteAsync(
+            $"--publish-azdo-test-results --results-directory \"{directory.Path}\"",
+            environment,
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        result.AssertOutputContainsSummary(failed: 0, passed: 7, skipped: 0);
+        (string AutomatedTestName, string TestCaseTitle)[] expected =
+        [
+            ("AzureDevOpsDataRows.AuthenticationTests.Collision (1)", "1"),
+            ("AzureDevOpsDataRows.AuthenticationTests.Collision (Collision (1))", "Collision (1)"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("administrator","wrongPassword"))""", """Folded ("administrator","wrongPassword")"""),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("nonExistentUser","password"))""", """Folded ("nonExistentUser","password")"""),
+            ("AzureDevOpsDataRows.AuthenticationTests.Ordinary", "Ordinary"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("administrator","wrongPassword"))""", """Unfolded ("administrator","wrongPassword")"""),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("nonExistentUser","password"))""", """Unfolded ("nonExistentUser","password")"""),
+        ];
+        (string AutomatedTestName, string TestCaseTitle)[] actual = [.. service.TestIdentities.OrderBy(identity => identity.AutomatedTestName, StringComparer.Ordinal)];
+        TestContext.WriteLine(JsonSerializer.Serialize(actual.Select(identity => new { identity.AutomatedTestName, identity.TestCaseTitle })));
+        Assert.AreSequenceEqual(expected, actual);
+        Assert.AreEqual(1, service.CreatedRunCount);
+        Assert.AreEqual(1, service.CompletedRunCount);
+        Assert.AreEqual(0, service.RejectedResultCount);
+        Assert.HasCount(6, service.CanonicalMetadata);
+        foreach ((string automatedTestName, string comment) in service.CanonicalMetadata)
+        {
+            string expectedComment = automatedTestName.StartsWith("AzureDevOpsDataRows.AuthenticationTests.Collision (", StringComparison.Ordinal)
+                ? "MTP.CanonicalTestName/1:49"
+                : automatedTestName.StartsWith("AzureDevOpsDataRows.AuthenticationTests.Folded (", StringComparison.Ordinal)
+                    ? "MTP.CanonicalTestName/1:46"
+                    : "MTP.CanonicalTestName/1:48";
+            Assert.AreEqual(expectedComment, comment);
+        }
+    }
 
     [TestMethod]
     [DataRow(false)]
@@ -55,6 +126,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             ["BUILD_BUILDID"] = "123",
             ["TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID"] = null,
             ["TESTINGPLATFORM_AZUREDEVOPS_RESULTMAP"] = null,
+            ["AZDO_DATA_ROWS"] = "false",
             ["AZDO_NATIVE_RENDEZVOUS"] = "true",
             ["AZDO_RENDEZVOUS"] = directory.Path,
             ["AZDO_FAIL"] = failingTests ? "true" : "false",
@@ -106,6 +178,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 ["BUILD_BUILDID"] = "123",
                 ["TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID"] = null,
                 ["TESTINGPLATFORM_AZUREDEVOPS_RESULTMAP"] = null,
+                ["AZDO_DATA_ROWS"] = "false",
                 ["AZDO_MODULE"] = module,
                 ["AZDO_NATIVE_RENDEZVOUS"] = "false",
                 ["AZDO_RENDEZVOUS"] = directory.Path,
@@ -209,9 +282,13 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         private readonly ConcurrentBag<Task> _requests = [];
         private readonly ConcurrentDictionary<int, string> _states = new();
         private readonly ConcurrentBag<string> _testNames = [];
+        private readonly ConcurrentBag<(string AutomatedTestName, string TestCaseTitle)> _testIdentities = [];
+        private readonly ConcurrentDictionary<(int RunId, int ResultId), string> _namesByResult = new();
+        private readonly ConcurrentDictionary<string, string> _canonicalMetadata = new();
         private readonly ConcurrentBag<(string FileName, long Size)> _attachments = [];
         private readonly Task _acceptLoop;
         private int _nextRunId;
+        private int _nextResultId;
         private int _rejectedResultCount;
 
         public AzureDevOpsService()
@@ -230,6 +307,10 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         public TaskCompletionSource<bool> AllowFirstCompletion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public IEnumerable<string> TestNames => _testNames;
+
+        public IEnumerable<(string AutomatedTestName, string TestCaseTitle)> TestIdentities => _testIdentities;
+
+        public IEnumerable<KeyValuePair<string, string>> CanonicalMetadata => _canonicalMetadata;
 
         public int CompletedRunCount => _states.Count(state => state.Value == "Completed");
 
@@ -348,12 +429,39 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                     return (400, """{"message":"The run is already completed."}""");
                 }
 
-                var results = body.EnumerateArray().Select((result, index) =>
+                var results = body.EnumerateArray().Select(result =>
                 {
-                    _testNames.Add(result.GetProperty("testCaseTitle").GetString()!);
-                    return new { id = index + 1, automatedTestName = result.GetProperty("automatedTestName").GetString() };
+                    string testCaseTitle = result.GetProperty("testCaseTitle").GetString()!;
+                    string automatedTestName = result.GetProperty("automatedTestName").GetString()!;
+                    _testNames.Add(testCaseTitle);
+                    _testIdentities.Add((automatedTestName, testCaseTitle));
+                    int id = Interlocked.Increment(ref _nextResultId);
+                    _namesByResult[(runId, id)] = automatedTestName;
+                    return new { id, automatedTestName };
                 }).ToArray();
                 FirstResultPublished.TrySetResult(true);
+                return (200, JsonSerializer.Serialize(new { count = results.Length, value = results }));
+            }
+
+            if (segments.Length == 6 && segments[5] == "results" && method == "PATCH")
+            {
+                var results = body.EnumerateArray().Select(result =>
+                {
+                    int id = result.GetProperty("id").GetInt32();
+                    string automatedTestName = _namesByResult[(runId, id)];
+                    if (result.TryGetProperty("automatedTestName", out JsonElement publishedName))
+                    {
+                        Assert.AreEqual(automatedTestName, publishedName.GetString());
+                    }
+
+                    if (result.TryGetProperty("subResults", out JsonElement subResults))
+                    {
+                        Assert.AreEqual(JsonValueKind.Null, subResults.ValueKind, "Metadata must not manufacture retry attempts.");
+                    }
+
+                    _canonicalMetadata[automatedTestName] = result.GetProperty("comment").GetString()!;
+                    return new { id, automatedTestName };
+                }).ToArray();
                 return (200, JsonSerializer.Serialize(new { count = results.Length, value = results }));
             }
 
@@ -381,6 +489,8 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 </Project>
 
@@ -393,6 +503,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 bool nativeRendezvous = Environment.GetEnvironmentVariable("AZDO_NATIVE_RENDEZVOUS") == "true";
 string module = nativeRendezvous
@@ -401,7 +512,14 @@ string module = nativeRendezvous
 string rendezvous = Environment.GetEnvironmentVariable("AZDO_RENDEZVOUS")!;
 File.WriteAllText(Path.Combine(rendezvous, $"{module}.started"), string.Empty);
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new Framework(module, rendezvous, nativeRendezvous));
+if (Environment.GetEnvironmentVariable("AZDO_DATA_ROWS") == "true")
+{
+    builder.AddMSTest(() => [typeof(AzureDevOpsDataRows.AuthenticationTests).Assembly]);
+}
+else
+{
+    builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new Framework(module, rendezvous, nativeRendezvous));
+}
 builder.AddAzureDevOpsProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
@@ -461,12 +579,45 @@ sealed class Framework(string module, string rendezvous, bool nativeRendezvous) 
         context.Complete();
     }
 }
+
+#file AuthenticationTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace AzureDevOpsDataRows;
+
+[TestClass]
+public sealed class AuthenticationTests
+{
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Unfold)]
+    [DataRow("nonExistentUser", "password")]
+    [DataRow("administrator", "wrongPassword")]
+    public void Unfolded(string username, string password)
+        => Assert.AreNotEqual(username, password);
+
+    [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
+    [DataRow("nonExistentUser", "password")]
+    [DataRow("administrator", "wrongPassword")]
+    public void Folded(string username, string password)
+        => Assert.AreNotEqual(username, password);
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2, DisplayName = "1")]
+    public void Collision(int value)
+        => Assert.IsGreaterThan(0, value);
+
+    [TestMethod]
+    public void Ordinary()
+    {
+    }
+}
 """;
 
         public string TargetAssetPath => GetAssetPath(AssetName);
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
-            Sources.PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+            Sources.PatchTargetFrameworks(TargetFrameworks.NetCurrent, DataDrivenTargetFramework)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
     }
 }

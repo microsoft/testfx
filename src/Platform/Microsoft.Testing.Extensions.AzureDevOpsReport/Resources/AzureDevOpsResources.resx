@@ -207,6 +207,9 @@
   <data name="AzureDevOpsLivePublishingPublishResultsFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to publish test results.</value>
   </data>
+  <data name="AzureDevOpsLivePublishingCanonicalMetadataFailed" xml:space="preserve">
+    <value>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</value>
+  </data>
   <data name="AzureDevOpsLivePublishingRequestFailed" xml:space="preserve">
     <value>Azure DevOps REST API request failed after all retries.</value>
     <comment>{Locked="REST API"}</comment>

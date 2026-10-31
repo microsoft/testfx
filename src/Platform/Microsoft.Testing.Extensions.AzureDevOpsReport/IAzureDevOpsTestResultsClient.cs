@@ -36,6 +36,11 @@ internal interface IAzureDevOpsTestResultsClient
     Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> UpdateTestResultsWithSubResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Updates only canonical metadata by result ID, preserving outcomes, diagnostics and retry sub-results.
+    /// </summary>
+    Task UpdateTestResultMetadataAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyDictionary<int, string> metadata, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Uploads an attachment to a specific test case result or sub-result within a test run.
     /// </summary>
     Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken);
