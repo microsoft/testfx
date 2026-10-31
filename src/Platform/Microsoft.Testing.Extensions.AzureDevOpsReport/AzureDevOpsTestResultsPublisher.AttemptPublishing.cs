@@ -93,6 +93,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             {
                 foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
                 {
+                    if (parent.Result.Comment is { } comment)
+                    {
+                        _pendingResultMetadata[resultId] = comment;
+                    }
+
                     foreach (AzureDevOpsTestResultAttachment attachment in parent.Attachments)
                     {
                         _pendingResultAttachments.Enqueue((resultId, attachment));

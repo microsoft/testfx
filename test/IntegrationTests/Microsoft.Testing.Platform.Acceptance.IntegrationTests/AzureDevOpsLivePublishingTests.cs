@@ -444,8 +444,12 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 var results = body.EnumerateArray().Select(result =>
                 {
                     int id = result.GetProperty("id").GetInt32();
-                    string automatedTestName = result.GetProperty("automatedTestName").GetString()!;
-                    Assert.AreEqual(_namesByResult[(runId, id)], automatedTestName);
+                    string automatedTestName = _namesByResult[(runId, id)];
+                    if (result.TryGetProperty("automatedTestName", out JsonElement publishedName))
+                    {
+                        Assert.AreEqual(automatedTestName, publishedName.GetString());
+                    }
+
                     if (result.TryGetProperty("subResults", out JsonElement subResults))
                     {
                         Assert.AreEqual(JsonValueKind.Null, subResults.ValueKind, "Metadata must not manufacture retry attempts.");
