@@ -1,6 +1,7 @@
 # Skill curation
 
-The sections below are preserved verbatim from the root `AGENTS.md`.
+The sections below preserve the guidance from the root `AGENTS.md`, with link
+destinations adjusted for this directory.
 
 ## Repository-owned test guidance
 
@@ -12,31 +13,31 @@ in `.github/workflows/shared/test-reviewer-shared.md`, not a fork of the skill.
 The installation deliberately excludes the repository-owned review corrections
 below so a refresh cannot silently overwrite them:
 
-- [Code testing reference helper](.agents/skills/code-testing-extensions/SKILL.md),
-  [test analysis reference helper](.agents/skills/test-analysis-extensions/SKILL.md),
-  and [filter syntax reference](.agents/skills/filter-syntax/SKILL.md)
+- [Code testing reference helper](code-testing-extensions/SKILL.md),
+  [test analysis reference helper](test-analysis-extensions/SKILL.md),
+  and [filter syntax reference](filter-syntax/SKILL.md)
   keep internal language guidance callable by the model while hidden from the
   user menu.
-- [Python generation guidance](.agents/skills/code-testing-extensions/extensions/python.md)
+- [Python generation guidance](code-testing-extensions/extensions/python.md)
   preserves requested regression tests and reports production or tooling blockers.
-- [Ruby generation guidance](.agents/skills/code-testing-extensions/extensions/ruby.md)
+- [Ruby generation guidance](code-testing-extensions/extensions/ruby.md)
   preserves the selected runner's exit status and uses real test counts rather
   than counting Rake tasks or falling back after a failure.
-- [.NET generation guidance](.agents/skills/code-testing-extensions/extensions/dotnet.md)
+- [.NET generation guidance](code-testing-extensions/extensions/dotnet.md)
   distinguishes VSTest command mode from native MTP command mode.
-- [Coverage setup discovery](.agents/skills/coverage-analysis/references/setup-discovery.md)
+- [Coverage setup discovery](coverage-analysis/references/setup-discovery.md)
   recognizes `.slnx`, preserves the selected repository/user entry point, and
   bounds test-project discovery to that root and its containing Git repository.
-- [Test project scaffolding](.agents/skills/scaffold-dotnet-test-project/SKILL.md)
+- [Test project scaffolding](scaffold-dotnet-test-project/SKILL.md)
   adds bridge properties only for VSTest command mode.
-- [PowerShell pipeline example](.agents/skills/code-testing-extensions/extensions/powershell-examples.md)
+- [PowerShell pipeline example](code-testing-extensions/extensions/powershell-examples.md)
   loads module-defined types at parse time, uses valid Pester identity checks,
   and covers the planned missing-invoice path.
-- [C++ pipeline example](.agents/skills/code-testing-extensions/extensions/cpp-examples.md)
+- [C++ pipeline example](code-testing-extensions/extensions/cpp-examples.md)
   includes the planned missing-invoice case and its required Catch2 header.
-- [Kotlin](.agents/skills/code-testing-extensions/extensions/kotlin-examples.md),
-  [Ruby](.agents/skills/code-testing-extensions/extensions/ruby-examples.md), and
-  [Rust](.agents/skills/code-testing-extensions/extensions/rust-examples.md)
+- [Kotlin](code-testing-extensions/extensions/kotlin-examples.md),
+  [Ruby](code-testing-extensions/extensions/ruby-examples.md), and
+  [Rust](code-testing-extensions/extensions/rust-examples.md)
   examples include the planned missing-invoice case and align their reports
   with the actual test counts.
 
@@ -47,7 +48,7 @@ These excluded files are not checked by `gh copilot-curate verify`; that check
 still verifies the remaining imported files. They do not fork the grading rubric.
 
 The installation also excludes
-[Find-UntestedSources.cs](.agents/skills/find-untested-sources/scripts/Find-UntestedSources.cs).
+[Find-UntestedSources.cs](find-untested-sources/scripts/Find-UntestedSources.cs).
 It matches upstream commit `0608d8924cd3173411e36650a7a01b4063e1f55a` except
 for the UTF-8 BOM required by `.editorconfig`.
 
@@ -55,11 +56,11 @@ This helper is repository-owned, not checked by `gh copilot-curate verify`.
 Compare it explicitly when refreshing upstream and preserve its C# encoding.
 The manifest's include list keeps updates from overwriting it.
 
-[Test generation guidance](.github/skills/code-testing/unit-test-generation.prompt.md)
+[Test generation guidance](../../.github/skills/code-testing/unit-test-generation.prompt.md)
 adapts upstream agents' relative links to the `.agents/skills` installation
-layout. The legacy [code-testing-generator](.github/agents/code-testing-generator.agent.md)
+layout. The legacy [code-testing-generator](../../.github/agents/code-testing-generator.agent.md)
 agent remains available for existing workflows; new upstream guidance uses
-[test-engineer](.github/agents/test-engineer.agent.md). The retained generator
+[test-engineer](../../.github/agents/test-engineer.agent.md). The retained generator
 resolves one absolute non-stageable state directory for phased work and passes
 its canonical artifact paths through each worker, retry, and iteration.
 
@@ -69,34 +70,34 @@ These skills retain their testing functionality without referrals to removed
 framework/platform migration skills. They are excluded from upstream curation
 updates to preserve that routing.
 
-The [test-engineer agent](.github/agents/test-engineer.agent.md) is also
+The [test-engineer agent](../../.github/agents/test-engineer.agent.md) is also
 repository-maintained so its routing cannot restore the removed migration
 dispatcher. Framework/platform migration plugins remain intentionally absent.
 
-- [MTP hot reload](.agents/skills/mtp-hot-reload/SKILL.md) - Iterate on test fixes without rebuilding.
-- [Running .NET tests](.agents/skills/run-tests/SKILL.md) - Detect the current runner and select compatible commands.
-- [Test filter syntax](.agents/skills/filter-syntax/SKILL.md) - Reference filter syntax by platform and framework.
-- [Test platform detection](.agents/skills/platform-detection/SKILL.md) - Reference runner and framework detection.
-- [Writing MSTest tests](.agents/skills/writing-mstest-tests/SKILL.md) - Write and modernize MSTest tests without major-version migrations.
-- [Code testing](.agents/skills/code-testing/SKILL.md) - Generate and repair tests without referrals to removed framework/platform migration workflows.
-- [Test anti-patterns](.agents/skills/test-anti-patterns/SKILL.md) - Diagnose test quality without offering an unavailable framework/version migration workflow.
-- [Test tagging](.agents/skills/test-tagging/SKILL.md) - Classify/tag tests while keeping framework/platform migrations out of scope.
-- [Static dependency migration](.agents/skills/migrate-static-to-wrapper/SKILL.md) - Replace static dependencies with testable abstractions, not test frameworks.
+- [MTP hot reload](mtp-hot-reload/SKILL.md) - Iterate on test fixes without rebuilding.
+- [Running .NET tests](run-tests/SKILL.md) - Detect the current runner and select compatible commands.
+- [Test filter syntax](filter-syntax/SKILL.md) - Reference filter syntax by platform and framework.
+- [Test platform detection](platform-detection/SKILL.md) - Reference runner and framework detection.
+- [Writing MSTest tests](writing-mstest-tests/SKILL.md) - Write and modernize MSTest tests without major-version migrations.
+- [Code testing](code-testing/SKILL.md) - Generate and repair tests without referrals to removed framework/platform migration workflows.
+- [Test anti-patterns](test-anti-patterns/SKILL.md) - Diagnose test quality without offering an unavailable framework/version migration workflow.
+- [Test tagging](test-tagging/SKILL.md) - Classify/tag tests while keeping framework/platform migrations out of scope.
+- [Static dependency migration](migrate-static-to-wrapper/SKILL.md) - Replace static dependencies with testable abstractions, not test frameworks.
 
 ## Repository-maintained MSBuild guidance
 
-Use [msbuild](.agents/skills/msbuild/SKILL.md) as the general entry point.
+Use [msbuild](msbuild/SKILL.md) as the general entry point.
 The legacy `binlog-failure-analysis`, `binlog-generation`, `build-perf-baseline`,
 `build-perf-diagnostics`, `eval-performance`, `extension-points`,
 `incremental-build`, and `msbuild-antipatterns` skills have compact activation
 descriptions; their original scope, routing rules, and full procedures remain in
 their bodies.
 
-- [copy-to-output-directory](.agents/skills/copy-to-output-directory/SKILL.md): compatibility redirect to the umbrella's copy-mode reference.
+- [copy-to-output-directory](copy-to-output-directory/SKILL.md): compatibility redirect to the umbrella's copy-mode reference.
 
 These nine `SKILL.md` files are excluded from upstream curation; supporting
 references remain managed. Compare the excluded files explicitly against
 `plugins/dotnet-msbuild/skills/` in `dotnet/skills` during refreshes, preserving
 their scope and correctness rules.
 
-Paths in these sections are relative to the [repository root](../../).
+Paths shown in code spans are relative to the [repository root](../../).
