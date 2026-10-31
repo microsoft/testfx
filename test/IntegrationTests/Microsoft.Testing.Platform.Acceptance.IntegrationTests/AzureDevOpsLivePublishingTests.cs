@@ -61,14 +61,16 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             cancellationToken: TestContext.CancellationToken);
 
         result.AssertExitCodeIs(ExitCode.Success);
-        result.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 7, skipped: 0);
         (string AutomatedTestName, string TestCaseTitle)[] expected =
         [
-            ("""AzureDevOpsDataRows.AuthenticationTests.Folded ("administrator","wrongPassword")""", """Folded ("administrator","wrongPassword")"""),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Folded ("nonExistentUser","password")""", """Folded ("nonExistentUser","password")"""),
+            ("AzureDevOpsDataRows.AuthenticationTests.Collision (1)", "1"),
+            ("AzureDevOpsDataRows.AuthenticationTests.Collision (Collision (1))", "Collision (1)"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("administrator","wrongPassword"))""", """Folded ("administrator","wrongPassword")"""),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("nonExistentUser","password"))""", """Folded ("nonExistentUser","password")"""),
             ("AzureDevOpsDataRows.AuthenticationTests.Ordinary", "Ordinary"),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded ("administrator","wrongPassword")""", """Unfolded ("administrator","wrongPassword")"""),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded ("nonExistentUser","password")""", """Unfolded ("nonExistentUser","password")"""),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("administrator","wrongPassword"))""", """Unfolded ("administrator","wrongPassword")"""),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("nonExistentUser","password"))""", """Unfolded ("nonExistentUser","password")"""),
         ];
         (string AutomatedTestName, string TestCaseTitle)[] actual = [.. service.TestIdentities.OrderBy(identity => identity.AutomatedTestName, StringComparer.Ordinal)];
         TestContext.WriteLine(JsonSerializer.Serialize(actual.Select(identity => new { identity.AutomatedTestName, identity.TestCaseTitle })));
@@ -76,12 +78,14 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         Assert.AreEqual(1, service.CreatedRunCount);
         Assert.AreEqual(1, service.CompletedRunCount);
         Assert.AreEqual(0, service.RejectedResultCount);
-        Assert.HasCount(4, service.CanonicalMetadata);
+        Assert.HasCount(6, service.CanonicalMetadata);
         foreach ((string automatedTestName, string comment) in service.CanonicalMetadata)
         {
-            string expectedComment = automatedTestName.StartsWith("AzureDevOpsDataRows.AuthenticationTests.Folded (", StringComparison.Ordinal)
-                ? "MTP.CanonicalTestName/1:46"
-                : "MTP.CanonicalTestName/1:48";
+            string expectedComment = automatedTestName.StartsWith("AzureDevOpsDataRows.AuthenticationTests.Collision (", StringComparison.Ordinal)
+                ? "MTP.CanonicalTestName/1:49"
+                : automatedTestName.StartsWith("AzureDevOpsDataRows.AuthenticationTests.Folded (", StringComparison.Ordinal)
+                    ? "MTP.CanonicalTestName/1:46"
+                    : "MTP.CanonicalTestName/1:48";
             Assert.AreEqual(expectedComment, comment);
         }
     }
@@ -595,6 +599,12 @@ public sealed class AuthenticationTests
     [DataRow("administrator", "wrongPassword")]
     public void Folded(string username, string password)
         => Assert.AreNotEqual(username, password);
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2, DisplayName = "1")]
+    public void Collision(int value)
+        => Assert.IsGreaterThan(0, value);
 
     [TestMethod]
     public void Ordinary()
