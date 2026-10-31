@@ -42,6 +42,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             return null;
         }
 
+        string canonicalName = TestNodeIdentity.GetTestName(testNode);
+        if (canonicalName.Length > 0 && !string.Equals(canonicalName, automatedTestName, StringComparison.Ordinal))
+        {
+            result = result with
+            {
+                Comment = AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix
+                    + canonicalName.Length.ToString(CultureInfo.InvariantCulture),
+            };
+        }
+
         // Only attach artifacts for non-passing outcomes to avoid uploading large dumps/logs for every
         // passing test. Users who want pass-time artifacts can use the pipeline-level
         // `--report-azdo-upload-artifacts files` option instead.

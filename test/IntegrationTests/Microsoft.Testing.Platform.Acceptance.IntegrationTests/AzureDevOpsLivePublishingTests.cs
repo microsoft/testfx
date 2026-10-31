@@ -39,6 +39,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         await using AzureDevOpsService service = new();
         service.AllowFirstCompletion.SetResult(true);
         var host = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, DataDrivenTargetFramework, metadataMode: metadataMode);
+        TestContext.WriteLine($"Packaged DataRow consumer: {host.DirectoryName}");
         Dictionary<string, string?> environment = new()
         {
             ["TF_BUILD"] = "true",
@@ -75,6 +76,14 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         Assert.AreEqual(1, service.CreatedRunCount);
         Assert.AreEqual(1, service.CompletedRunCount);
         Assert.AreEqual(0, service.RejectedResultCount);
+        Assert.HasCount(4, service.CanonicalMetadata);
+        foreach ((string automatedTestName, string comment) in service.CanonicalMetadata)
+        {
+            string expectedComment = automatedTestName.StartsWith("AzureDevOpsDataRows.AuthenticationTests.Folded (", StringComparison.Ordinal)
+                ? "MTP.CanonicalTestName/1:46"
+                : "MTP.CanonicalTestName/1:48";
+            Assert.AreEqual(expectedComment, comment);
+        }
     }
 
     [TestMethod]
@@ -270,9 +279,12 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         private readonly ConcurrentDictionary<int, string> _states = new();
         private readonly ConcurrentBag<string> _testNames = [];
         private readonly ConcurrentBag<(string AutomatedTestName, string TestCaseTitle)> _testIdentities = [];
+        private readonly ConcurrentDictionary<(int RunId, int ResultId), string> _namesByResult = new();
+        private readonly ConcurrentDictionary<string, string> _canonicalMetadata = new();
         private readonly ConcurrentBag<(string FileName, long Size)> _attachments = [];
         private readonly Task _acceptLoop;
         private int _nextRunId;
+        private int _nextResultId;
         private int _rejectedResultCount;
 
         public AzureDevOpsService()
@@ -293,6 +305,8 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         public IEnumerable<string> TestNames => _testNames;
 
         public IEnumerable<(string AutomatedTestName, string TestCaseTitle)> TestIdentities => _testIdentities;
+
+        public IEnumerable<KeyValuePair<string, string>> CanonicalMetadata => _canonicalMetadata;
 
         public int CompletedRunCount => _states.Count(state => state.Value == "Completed");
 
@@ -411,15 +425,35 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                     return (400, """{"message":"The run is already completed."}""");
                 }
 
-                var results = body.EnumerateArray().Select((result, index) =>
+                var results = body.EnumerateArray().Select(result =>
                 {
                     string testCaseTitle = result.GetProperty("testCaseTitle").GetString()!;
                     string automatedTestName = result.GetProperty("automatedTestName").GetString()!;
                     _testNames.Add(testCaseTitle);
                     _testIdentities.Add((automatedTestName, testCaseTitle));
-                    return new { id = index + 1, automatedTestName };
+                    int id = Interlocked.Increment(ref _nextResultId);
+                    _namesByResult[(runId, id)] = automatedTestName;
+                    return new { id, automatedTestName };
                 }).ToArray();
                 FirstResultPublished.TrySetResult(true);
+                return (200, JsonSerializer.Serialize(new { count = results.Length, value = results }));
+            }
+
+            if (segments.Length == 6 && segments[5] == "results" && method == "PATCH")
+            {
+                var results = body.EnumerateArray().Select(result =>
+                {
+                    int id = result.GetProperty("id").GetInt32();
+                    string automatedTestName = result.GetProperty("automatedTestName").GetString()!;
+                    Assert.AreEqual(_namesByResult[(runId, id)], automatedTestName);
+                    if (result.TryGetProperty("subResults", out JsonElement subResults))
+                    {
+                        Assert.AreEqual(JsonValueKind.Null, subResults.ValueKind, "Metadata must not manufacture retry attempts.");
+                    }
+
+                    _canonicalMetadata[automatedTestName] = result.GetProperty("comment").GetString()!;
+                    return new { id, automatedTestName };
+                }).ToArray();
                 return (200, JsonSerializer.Serialize(new { count = results.Length, value = results }));
             }
 

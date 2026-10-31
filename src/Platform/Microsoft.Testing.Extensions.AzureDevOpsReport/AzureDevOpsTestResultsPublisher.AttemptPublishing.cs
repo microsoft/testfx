@@ -8,8 +8,8 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
     /// <summary>
-    /// Appends the first attempt after its parent has been created, then targets that stable sub-result with
-    /// the attempt's attachments.
+    /// Records canonical identity metadata after creation and appends first attempts when needed,
+    /// then targets their stable sub-results with the attempts' attachments.
     /// </summary>
     /// <remarks>
     /// Azure DevOps appends sub-results supplied by PATCH. Sending the first attempt in the create request and
@@ -25,6 +25,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         var parents = new AzureDevOpsTestCaseResult[seeds.Count];
         for (int i = 0; i < seeds.Count; i++)
         {
+            if (seeds[i].Attempts.Count == 1
+                && (_resultIdStore is null || seeds[i].Parent.Attachments.Count == 0))
+            {
+                // Azure DevOps stores result comments on PATCH, not POST. Metadata alone must not
+                // turn a single execution into a rerun or append an artificial first attempt.
+                parents[i] = seeds[i].Parent.Result with { Id = seeds[i].ResultId };
+                continue;
+            }
+
             AzureDevOpsTestCaseResult[] attemptResults = [.. seeds[i].Attempts.Select(static attempt => attempt.Result)];
             IReadOnlyList<AzureDevOpsTestSubResult> subResults = AzureDevOpsResultIdStore.CreateAttempts(attemptResults, firstSequenceId: 1);
             (DateTimeOffset? startedDate, DateTimeOffset? completedDate) = GetDateRange(attemptResults);
@@ -58,14 +67,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         catch (Exception ex)
         {
             // The parent POST already succeeded, but the PATCH may have reached Azure DevOps. Forget the
-            // mapping before propagating cancellation or falling back so a later attempt cannot replay an
-            // uncertain first sub-result and duplicate sequence 1. The POST contained only the final
+            // mapping for appended attempts before propagating cancellation or falling back so a later
+            // attempt cannot replay an uncertain first sub-result and duplicate sequence 1. Metadata-only
+            // updates append nothing, so their original mapping remains safe to reuse. The POST contained only the final
             // outcome, so preserve earlier in-process executions as independent results rather than losing
             // their outcomes and diagnostics.
             List<AzureDevOpsTestCaseResultWithAttachments> previousAttempts = [];
-            foreach ((int resultId, AzureDevOpsTestCaseResultWithAttachments parent, IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> _) in seeds)
+            for (int i = 0; i < seeds.Count; i++)
             {
-                if (_resultIdStore?.TryGet(parent.Result) is { } published)
+                AzureDevOpsTestCaseResultWithAttachments parent = seeds[i].Parent;
+                if (parents[i].SubResults is not null && _resultIdStore?.TryGet(parent.Result) is { } published)
                 {
                     _resultIdStore.Forget(published);
                 }
@@ -96,12 +107,21 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 deferredAttachments.Add((resultId, TestSubResultId: null, parent.Attachments));
             }
 
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            string warning = parents.Any(static parent => parent.Comment is not null)
+                ? AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed
+                : AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed;
+            TryLogWarning($"{warning} {ex.Message}");
             return;
         }
 
         for (int i = 0; i < seeds.Count; i++)
         {
+            if (parents[i].SubResults is null)
+            {
+                deferredAttachments.Add((seeds[i].ResultId, TestSubResultId: null, seeds[i].Parent.Attachments));
+                continue;
+            }
+
             int lastSequenceId = parents[i].SubResults![^1].SequenceId;
             _resultIdStore?.RecordPublishedSubResults(
                 seeds[i].Parent.Result,
