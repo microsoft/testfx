@@ -271,6 +271,19 @@ internal static partial class SerializerUtilities
                     if (property is TimingProperty timingProperty)
                     {
                         properties["time.duration-ms"] = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
+
+                        // Default endpoints mean unknown timing. Preserve each available endpoint independently;
+                        // the consumer, not the producer, validates the supplied interval and duration.
+                        if (timingProperty.GlobalTiming.StartTime != DateTimeOffset.MinValue)
+                        {
+                            properties["time.start-utc"] = timingProperty.GlobalTiming.StartTime.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+                        }
+
+                        if (timingProperty.GlobalTiming.EndTime != DateTimeOffset.MinValue)
+                        {
+                            properties["time.stop-utc"] = timingProperty.GlobalTiming.EndTime.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+                        }
+
                         continue;
                     }
 

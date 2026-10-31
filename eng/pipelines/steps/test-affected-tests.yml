@@ -14,6 +14,10 @@ steps:
 # The SDK owns DOTNET_CLI_TEST_AFFECTED_TESTS_MODE; pipelines must not set it.
 - pwsh: |
     $affectedTestsMode = '${{ parameters.affectedTestsMode }}'
+    if ($affectedTestsMode -eq 'collect' -and $IsWindows) {
+      & .\eng\collect-affected-test-maps.ps1 -Configuration '$(_BuildConfig)'
+      exit $LASTEXITCODE
+    }
     $binlogName = switch ($affectedTestsMode) {
       'collect' { 'TestCollect' }
       default { 'TestAffected' }

@@ -59,6 +59,31 @@ public sealed class JsonTests
     }
 
     [TestMethod]
+    [DynamicData(
+        nameof(TestNodeTimingData.Cases),
+        typeof(TestNodeTimingData),
+        DynamicDataDisplayName = nameof(TestNodeTimingData.GetDisplayName),
+        DynamicDataDisplayNameDeclaringType = typeof(TestNodeTimingData))]
+    public async Task Serialize_TestNodeTiming_PreservesUtcPresenceDurationAndState(string caseName)
+    {
+        var data = TestNodeTimingData.Create(caseName);
+        CultureInfo previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(data.CultureName);
+            Json json = new();
+
+            string actual = await json.SerializeAsync(data.TestNode);
+
+            Assert.AreEqual(data.ExpectedJson, actual, caseName);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
+    [TestMethod]
     public async Task Serialize_Array()
     {
         // Arrange
