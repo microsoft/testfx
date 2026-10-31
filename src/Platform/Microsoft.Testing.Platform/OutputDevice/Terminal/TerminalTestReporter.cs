@@ -53,6 +53,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private readonly TerminalTestReporterOptions _options;
 
+    private readonly bool _useCompactSummary;
+
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
 
 #if NET9_0_OR_GREATER
@@ -150,9 +152,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
             useCursorRenderer = useAnsi;
         }
 
+        _useCompactSummary = !useCursorRenderer;
         IProgressRenderer renderer = useCursorRenderer
             ? new CursorProgressRenderer()
-            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch());
+            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch(), () => _assemblies.Values);
 
         _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer, logger);
     }

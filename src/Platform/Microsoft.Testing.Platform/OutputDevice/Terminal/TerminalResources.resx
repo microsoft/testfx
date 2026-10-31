@@ -242,8 +242,15 @@ This option takes precedence over the deprecated --no-progress flag.</value>
     <comment>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="TerminalProgressHeartbeat" xml:space="preserve">
-    <value>running... {0} completed, {1} failed</value>
-    <comment>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</comment>
+    <value>running... {0} completed, {1} failed, active modules: {2}</value>
+    <comment>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</comment>
+  </data>
+  <data name="TerminalProgressHeartbeatLastCompletionSuffix" xml:space="preserve">
+    <value> | last completion: {0} ago</value>
+    <comment>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</comment>
+  </data>
+  <data name="TerminalProgressHeartbeatNoCompletionSuffix" xml:space="preserve">
+    <value> | no tests completed yet</value>
   </data>
   <data name="TerminalProgressHeartbeatActiveSuffix" xml:space="preserve">
     <value> | active: {0}</value>

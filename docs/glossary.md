@@ -498,15 +498,28 @@ A sealed class (`Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest`, curr
 
 ### --progress
 
-An MTP terminal-reporter command-line option that controls whether animated progress output is shown during a test run. Accepts three values:
+An MTP terminal-reporter command-line option that controls progress output during a test run. Accepts three values:
 
 | Value | Behavior |
 | --- | --- |
-| `auto` (default) | Show progress unless the terminal cannot update in place (non-ANSI/simple terminal), or the session is a test-host controller, `--list-tests`, or server mode |
-| `on` | Same as `auto` (a dedicated heartbeat renderer for non-cursor modes is tracked separately) |
+| `auto` (default) | Update progress in place on cursor-capable terminals; emit bounded durable progress on non-cursor terminals. Test-host controllers, `--list-tests`, and server mode do not render progress. |
+| `on` | Same as `auto` |
 | `off` | Suppress all progress output |
 
 Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a replacement for the former `--no-progress` flag. `--no-progress` continues to work as a deprecated alias that routes to `--progress off`; outside of CI it emits a one-per-process deprecation warning on stderr. The warning is suppressed in CI environments, where it would be invisible noise and where build infrastructure (such as the Arcade SDK test runner) passes `--no-progress` unconditionally. `--progress` always wins when both are supplied.
+
+On CI, piped, and redirected non-cursor terminals, a progress line is emitted after
+60 seconds without visible reporter output. Hidden passing results do not postpone
+it. The line reports cumulative completed/failed counts, active modules, and the
+age of the last test completion (or that no test has completed yet); a heartbeat
+does not imply that work completed. `MTP_PROGRESS_SILENCE_SECONDS` overrides this
+interval and `0` disables it. Slow-test notices retain their independent
+`MTP_PROGRESS_SLOW_TEST_SECONDS` threshold and exponential backoff.
+
+Non-cursor run summaries place the verdict, aggregate counts, and failures before
+artifact paths. Successful module results already printed at completion are not
+repeated in the final summary. Artifact paths and failure diagnostics remain
+available in full; cursor-capable interactive output is unchanged.
 
 ### PropertyBag
 

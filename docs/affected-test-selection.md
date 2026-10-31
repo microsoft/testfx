@@ -19,6 +19,33 @@ discovery path and Azure DevOps upload request, and ships both `netstandard2.0` 
 extension, collector, CodeCoverage extension, and Azure DevOps provider. The currently consumed package versions
 are recorded in [`eng/Versions.props`](../eng/Versions.props).
 
+The affected-test packages now use `18.13.0-preview.26530.1`, built from commit
+`fe4721e980b711722351edfd491577a03b8d4421`. This includes refill-on-completion collection scheduling: a completed
+child slot can start another batch without waiting for its sibling, retaining the two-child limit, cancellation,
+failure handling, and atomic map publication. The previous pin, `18.13.0-preview.26529.4`, already includes this
+scheduler fix; this update advances to the latest published build, not a different collection algorithm.
+The SDK version, collection budgets, shipping CodeCoverage version, and rollout gates are unchanged.
+
+Generated acceptance assets need the shipping CodeCoverage package in their local feed even when the affected-test
+host uses a newer preview. The MSTest acceptance project downloads that shipping package separately and stages it
+alongside the test-host version, without referencing the older assemblies or enabling extra consumer feeds.
+[Build 1656046](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1656046)
+failed Windows Release, Linux Release, and Windows app-model acceptance with `NU1603` because only the newer
+test-host package had been staged. The `AcceptanceAssetsStageShippingCodeCoverage` rollout-validator guard protects
+this separate shipping/test dependency contract.
+
+For the staging regression comparison, the shipping download and new guard were retained while the old copy target
+remained unchanged. Restore and the real `net12.0` copy target succeeded, but `ShippingCodeCoveragePackageIsStaged`
+failed while `AffectedTestCodeCoveragePackageIsStaged` passed. Adding the shipping item makes the same two package
+identity/version assertions pass. An isolated consumer then restores the exact shipping package with warnings as
+errors; its cached nupkg hash matches the staged file. This is package-staging proof, not a full acceptance-suite run.
+Both validator invocations below pass the new guard, 19 Windows isolation cases, and 39 non-Windows rollout cases:
+
+```powershell
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests true -EnableNonWindowsAffectedTests false
+pwsh -NoProfile -File .\eng\validate-affected-tests.ps1 -SelfTest -EnableAffectedTests false -EnableNonWindowsAffectedTests true
+```
+
 Affected-test execution is enabled with public SDK `12.0.100-alpha.1.26509.101`, built from VMR commit
 `907535df2f7eb8e1845571867684244ad04b031b`. It includes both
 [dotnet/sdk#56450](https://github.com/dotnet/sdk/pull/56450) and

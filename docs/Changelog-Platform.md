@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 * Align the CTRF reporter with specification 0.2.0 by emitting native final-attempt identities, retaining legacy retry identity support, and keeping compatible mixed-version merges correctly versioned and identified.
 * Graduate `Microsoft.Testing.Extensions.CtrfReport` to stable, align its package version with Microsoft.Testing.Platform, and remove the experimental registration API warning. The producer remains pinned to CTRF 0.2.0 and stays opt-in in MSTest.Sdk.
+* Increase the default non-cursor progress heartbeat silence threshold from 30 to 60 seconds and measure it from visible reporter output, so hidden test results no longer postpone heartbeats. `MTP_PROGRESS_SILENCE_SECONDS` still overrides the interval, and `0` disables the heartbeat.
 
 ## <a name="2.5.2" />[2.5.2] - 2026-10-27
 
