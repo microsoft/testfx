@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-using System.Reflection;
-#if !NETFRAMEWORK
-using System.Reflection.Emit;
-#endif
-
 using AwesomeAssertions;
+
+using Microsoft.Testing.TestInfrastructure;
 
 using TestFramework.ForTestingMSTest;
 
@@ -17,100 +13,18 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Extensions
 
 public sealed class TestContextTests : TestContainer
 {
-#if NETFRAMEWORK
     public void InvalidPropertyTypesReportTheKeyAndActualType()
     {
-        // Debug.Fail must remain observable without opening an interactive assertion dialog.
-        TraceListener[] previous = Debug.Listeners.Cast<TraceListener>().ToArray();
-        using var listener = new AssertionListener();
-        using var context = new Context();
-        try
-        {
-            Debug.Listeners.Clear();
-            Debug.Listeners.Add(listener);
-            context.Properties["TestName"] = 42;
-            Action read = () => _ = context.TestName;
-            read.Should().ThrowExactly<InvalidCastException>().WithMessage("*TestName*System.Int32*System.String*");
-#if DEBUG
-            listener.Failure.Should().Be("How did an invalid value get in here?");
-#endif
-        }
-        finally
-        {
-            Debug.Listeners.Clear();
-            Debug.Listeners.AddRange(previous);
-        }
-    }
-
-    private sealed class AssertionListener : TraceListener
-    {
-        public string? Failure { get; private set; }
-
-        public override void Fail(string? message) => Failure = message;
-
-        public override void Fail(string? message, string? detailMessage) => Failure = message;
-
-        public override void Write(string? message)
-        {
-        }
-
-        public override void WriteLine(string? message)
-        {
-        }
-    }
-#endif
-
-#if !NETFRAMEWORK
-    public void InvalidPropertyTypesReportTheKeyAndActualType()
-    {
-        // DebugProvider is public in the runtime but omitted from net8/net9 reference assemblies.
-        // Use the runtime's own diagnostic provider hook, not a replacement TestContext assembly.
-        Type providerType = typeof(Debug).Assembly.GetType("System.Diagnostics.DebugProvider", throwOnError: true)!;
-        MethodInfo setProvider = typeof(Debug).GetMethod("SetProvider", BindingFlags.Public | BindingFlags.Static)!;
         string? failure = null;
-        object provider = CreateDiagnosticProvider(providerType, message => failure = message);
-        object previous = setProvider.Invoke(null, [provider])!;
+        using var observer = new DiagnosticAssertionObserver(message => failure = message);
         using var context = new Context();
-        try
-        {
-            context.Properties["TestName"] = 42;
-            Action read = () => _ = context.TestName;
-            read.Should().ThrowExactly<InvalidCastException>().WithMessage("*TestName*System.Int32*System.String*");
+        context.Properties["TestName"] = 42;
+        Action read = () => _ = context.TestName;
+        read.Should().ThrowExactly<InvalidCastException>().WithMessage("*TestName*System.Int32*System.String*");
 #if DEBUG
-            failure.Should().Be("How did an invalid value get in here?");
+        failure.Should().Be("How did an invalid value get in here?");
 #endif
-        }
-        finally
-        {
-            setProvider.Invoke(null, [previous]);
-        }
     }
-
-    private static object CreateDiagnosticProvider(Type baseType, Action<string?> record)
-    {
-        var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("DiagnosticObserver_" + Guid.NewGuid().ToString("N")), AssemblyBuilderAccess.Run);
-        TypeBuilder type = assembly.DefineDynamicModule("Observer").DefineType("AssertionObserver", TypeAttributes.Public | TypeAttributes.Sealed, baseType);
-        FieldBuilder callback = type.DefineField("_callback", typeof(Action<string>), FieldAttributes.Private | FieldAttributes.InitOnly);
-        ConstructorBuilder constructor = type.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, [typeof(Action<string>)]);
-        ILGenerator body = constructor.GetILGenerator();
-        body.Emit(OpCodes.Ldarg_0);
-        body.Emit(OpCodes.Call, baseType.GetConstructor(Type.EmptyTypes)!);
-        body.Emit(OpCodes.Ldarg_0);
-        body.Emit(OpCodes.Ldarg_1);
-        body.Emit(OpCodes.Stfld, callback);
-        body.Emit(OpCodes.Ret);
-
-        MethodBuilder fail = type.DefineMethod("Fail", MethodAttributes.Public | MethodAttributes.Virtual, typeof(void), [typeof(string), typeof(string)]);
-        ILGenerator failBody = fail.GetILGenerator();
-        failBody.Emit(OpCodes.Ldarg_0);
-        failBody.Emit(OpCodes.Ldfld, callback);
-        failBody.Emit(OpCodes.Ldarg_1);
-        failBody.Emit(OpCodes.Callvirt, typeof(Action<string>).GetMethod("Invoke")!);
-        failBody.Emit(OpCodes.Ret);
-        type.DefineMethodOverride(fail, baseType.GetMethod("Fail")!);
-        return Activator.CreateInstance(type.CreateType()!, record)!;
-    }
-#endif
 
     public void MissingAndNullPropertiesHaveDefinedDefaults()
     {

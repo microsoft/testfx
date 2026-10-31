@@ -3418,14 +3418,34 @@ public class TestMethodInfoTests : TestContainer
             result.TestFailureException.Should().BeSameAs(original);
         }
 
-        using (var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw new TargetInvocationException(null)))
+#if DEBUG
+        await DebugAssertionChildProbe.VerifyAsync(
+            DebugAssertionChildProbe.MalformedReflectionMode,
+            "Inner exception of TargetInvocationException is null.");
+#else
+        await VerifyMalformedReflectionResultAsync(reportReady: false);
+#endif
+    }
+
+    private async Task VerifyMalformedReflectionResultAsync(bool reportReady)
+    {
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw new TargetInvocationException(null));
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        if (reportReady)
         {
-            _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
-            TestResult result = await _testMethodInfo.InvokeAsync(null);
-            result.Outcome.Should().Be(UnitTestOutcome.Error);
-            result.ExceptionMessage.Should().Be(string.Format(
-                CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, typeof(DummyTestClass).FullName, nameof(DummyTestClass.DummyTestMethod)));
+            Console.WriteLine(DebugAssertionChildProbe.ReadyMarker);
         }
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+        result.Outcome.Should().Be(UnitTestOutcome.Error);
+        result.ExceptionMessage.Should().Be(string.Format(
+            CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, typeof(DummyTestClass).FullName, nameof(DummyTestClass.DummyTestMethod)));
+    }
+
+    internal static async Task RunMalformedReflectionProbeAsync()
+    {
+        using var fixture = new TestMethodInfoTests();
+        await fixture.VerifyMalformedReflectionResultAsync(reportReady: true);
     }
 
     public async Task WrongThreadFailureAddsTheActionableUiDiagnostic()

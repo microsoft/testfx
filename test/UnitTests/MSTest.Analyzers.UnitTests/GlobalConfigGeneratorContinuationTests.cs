@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Reflection;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -29,6 +30,12 @@ public sealed class GlobalConfigGeneratorContinuationTests
     [TestMethod]
     public async Task ActualAnalyzerAssemblyProducesAllFourModeConfigurations()
     {
+#if DEBUG
+        const string expectedConfiguration = "Debug";
+#else
+        const string expectedConfiguration = "Release";
+#endif
+        Assert.AreEqual(expectedConfiguration, Directory.GetParent(System.IO.Path.GetDirectoryName(GetToolPath())!)!.Name);
         using var directory = new OwnedDirectory();
         File.Copy(typeof(UseParallelizeAttributeAnalyzer).Assembly.Location, System.IO.Path.Combine(directory.Path, "MSTest.Analyzers.dll"));
 
@@ -273,7 +280,11 @@ public sealed class GlobalConfigGeneratorContinuationTests
     private sealed record ToolResult(int ExitCode, string StandardOutput, string StandardError);
 
     private static string GetToolPath()
-        => System.IO.Path.Combine(RootFinder.Find(), "artifacts", "bin", "MSTest.GlobalConfigsGenerator", "Release", "net12.0", "MSTest.GlobalConfigsGenerator.dll");
+    {
+        string configuration = typeof(GlobalConfigGeneratorContinuationTests).Assembly
+            .GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
+        return System.IO.Path.Combine(RootFinder.Find(), "artifacts", "bin", "MSTest.GlobalConfigsGenerator", configuration, "net12.0", "MSTest.GlobalConfigsGenerator.dll");
+    }
 
     private sealed class OwnedDirectory : IDisposable
     {

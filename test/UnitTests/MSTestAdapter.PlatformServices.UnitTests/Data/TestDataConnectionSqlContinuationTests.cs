@@ -11,10 +11,13 @@ using AwesomeAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
+#if !DEBUG
 using Moq.Protected;
+#endif
 
 using TestFramework.ForTestingMSTest;
 
@@ -41,9 +44,26 @@ public sealed class TestDataConnectionSqlContinuationTests : TestContainer
         }
     }
 
-    public void OleProviderDetectionDoesNotQuerySqlForAnUnconfiguredProvider()
+    public Task OleProviderDetectionDoesNotQuerySqlForAnUnconfiguredProvider()
+    {
+#if DEBUG
+        return DebugAssertionChildProbe.VerifyAsync(DebugAssertionChildProbe.ClosedOleSchemaMode, "The connection must be open!");
+#else
+        VerifyClosedOleSchema(reportReady: false);
+        return Task.CompletedTask;
+#endif
+    }
+
+    internal static void RunClosedOleSchemaProbe() => VerifyClosedOleSchema(reportReady: true);
+
+    private static void VerifyClosedOleSchema(bool reportReady)
     {
         using OleDataConnection connection = new("System.Data.OleDb", string.Empty, []);
+        if (reportReady)
+        {
+            Console.WriteLine(DebugAssertionChildProbe.ReadyMarker);
+        }
+
         connection.GetDefaultSchema().Should().BeNull();
         connection.GetDefaultSchema().Should().BeNull();
         connection.IsOpen().Should().BeFalse();
@@ -65,6 +85,8 @@ public sealed class TestDataConnectionSqlContinuationTests : TestContainer
     {
         using var connection = TestDataConnectionSql.Create("System.Data.OracleClient", string.Empty, []);
         connection.Should().BeOfType<TestDataConnectionSql>();
+        connection.QuotePrefix = "[";
+        connection.QuoteSuffix = "]";
         connection.GetDataTablesAndViews().Should().BeEmpty();
         connection.GetColumns("orders").Should().BeNull();
         connection.Connection.State.Should().Be(ConnectionState.Closed);
@@ -81,10 +103,26 @@ public sealed class TestDataConnectionSqlContinuationTests : TestContainer
         exception.Errors.Cast<OdbcError>().Select(error => error.SQLState).Should().Contain("IM002");
     }
 
-    public void DefaultProviderDetectionDoesNotExecuteSql()
+    public Task DefaultProviderDetectionDoesNotExecuteSql()
+    {
+#if DEBUG
+        return DebugAssertionChildProbe.VerifyAsync(DebugAssertionChildProbe.ClosedDefaultSchemaMode, "The connection must be open!");
+#else
+        VerifyClosedDefaultSchema(reportReady: false);
+        return Task.CompletedTask;
+#endif
+    }
+
+    internal static void RunClosedDefaultSchemaProbe() => VerifyClosedDefaultSchema(reportReady: true);
+
+    private static void VerifyClosedDefaultSchema(bool reportReady)
     {
         Mock<DbConnection> database = new();
         using DefaultDetectionConnection connection = new(database.Object);
+        if (reportReady)
+        {
+            Console.WriteLine(DebugAssertionChildProbe.ReadyMarker);
+        }
 
         connection.GetDefaultSchema().Should().BeNull();
         connection.GetDefaultSchema().Should().BeNull();
@@ -92,8 +130,11 @@ public sealed class TestDataConnectionSqlContinuationTests : TestContainer
         database.VerifyNoOtherCalls();
     }
 
-    public void DefaultSchemaSelectsVersionSpecificSqlAndDisposesCommands()
+    public Task DefaultSchemaSelectsVersionSpecificSqlAndDisposesCommands()
     {
+#if DEBUG
+        return VerifyUnsupportedSqlMockAsync();
+#else
         foreach ((string version, string sql) in new[]
         {
             ("8.00.123", "select user_name()"),
@@ -116,10 +157,16 @@ public sealed class TestDataConnectionSqlContinuationTests : TestContainer
             command.Protected().Verify("Dispose", Times.Once(), new object[] { true });
             database.Protected().Verify("CreateDbCommand", Times.Once());
         }
+
+        return Task.CompletedTask;
+#endif
     }
 
-    public void DefaultSchemaMalformedVersionsAndCommandFailuresReturnNull()
+    public Task DefaultSchemaMalformedVersionsAndCommandFailuresReturnNull()
     {
+#if DEBUG
+        return VerifyUnsupportedSqlMockAsync();
+#else
         foreach (string version in new[] { string.Empty, "broken", "x.0", "999999999999.0" })
         {
             Mock<DbConnection> database = new();
@@ -152,6 +199,25 @@ public sealed class TestDataConnectionSqlContinuationTests : TestContainer
         failing.ReadDefaultSchema().Should().BeNull();
         failingCommand.Verify(value => value.ExecuteScalar(), Times.Once);
         failingCommand.Protected().Verify("Dispose", Times.Once(), new object[] { true });
+        return Task.CompletedTask;
+#endif
+    }
+
+#if DEBUG
+    private static Task VerifyUnsupportedSqlMockAsync()
+        => DebugAssertionChildProbe.VerifyAsync(
+            DebugAssertionChildProbe.UnsupportedSqlMockMode,
+            "GetDefaultSchemaMSSql should be called only for MS SQL (either native or Ole Db or Odbc).");
+#endif
+
+    internal static void RunUnsupportedSqlMockProbe()
+    {
+        Mock<DbConnection> database = new();
+        database.SetupGet(value => value.State).Returns(ConnectionState.Open);
+        database.SetupGet(value => value.ServerVersion).Returns("16.0.1000");
+        using SqlSchemaConnection connection = new(database.Object);
+        Console.WriteLine(DebugAssertionChildProbe.ReadyMarker);
+        connection.ReadDefaultSchema().Should().BeNull();
     }
 
     public void UnsupportedMetadataLogsWarningAndReturnsAnEmptyTableList()

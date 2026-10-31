@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -145,9 +146,11 @@ public sealed class SystemWrappersTests
         else
         {
             Assert.AreNotEqual(0, child.ExitCode);
-#if NETFRAMEWORK
-            Assert.AreEqual(unchecked((int)0x80131623), child.ExitCode, "The CLR's FailFast HRESULT distinguishes this from an unrelated startup crash.");
             Assert.AreEqual(mode == "fail-fast" ? "FAIL_FAST_WITHOUT_EXCEPTION" : "FAIL_FAST_WITH_EXCEPTION", child.Output.Trim());
+#if NETFRAMEWORK
+            Assert.IsTrue(
+                child.ExitCode is unchecked((int)0x80131623) or 0xDEAD,
+                $"The child must reach FailFast and terminate through the CLR, not an unrelated startup failure. Exit code: 0x{child.ExitCode:X8}.");
 #else
             Assert.Contains("core-wrapper-fail-fast", child.Error);
             if (mode == "fail-fast-exception")
@@ -472,7 +475,14 @@ public sealed class SystemWrappersTests
             .Where(line => line.StartsWith("PROBE|", StringComparison.Ordinal))
             .Select(line => Encoding.UTF8.GetString(Convert.FromBase64String(line["PROBE|".Length..])))
             .ToArray();
+#if DEBUG
+        Assert.HasCount(4, records);
+        Assert.AreSequenceEqual(new[] { "case-sensitive:False", "sentinel:owned sentinel", "assertion-count:1" }, records.Take(3));
+        Assert.StartsWith("assertion:Casing test failed: System.IO.DirectoryNotFoundException:", records[3]);
+        Assert.Contains("ordinary-file", records[3]);
+#else
         Assert.AreSequenceEqual(new[] { "case-sensitive:False", "sentinel:owned sentinel" }, records);
+#endif
     }
 
     internal sealed record ChildResult(int ExitCode, string Output, string Error);
@@ -511,11 +521,20 @@ internal static class SystemWrapperChildProbe
                     {
                         string barrier = Path.Combine(root, "ordinary-file");
                         File.WriteAllText(barrier, "owned sentinel");
+                        _ = Microsoft.Testing.Platform.OutputDevice.Terminal.FileUtilities.PathComparison;
+#if DEBUG
+                        var assertions = new List<string?>();
+                        using var observer = new DiagnosticAssertionObserver(assertions.Add);
+#endif
                         Environment.SetEnvironmentVariable("TEMP", barrier);
                         Environment.SetEnvironmentVariable("TMP", barrier);
                         Environment.SetEnvironmentVariable("TMPDIR", barrier);
                         Record("case-sensitive:" + Microsoft.Testing.Platform.OutputDevice.Terminal.FileUtilities.GetIsFileSystemCaseSensitive());
                         Record("sentinel:" + File.ReadAllText(barrier));
+#if DEBUG
+                        Record("assertion-count:" + assertions.Count.ToString(CultureInfo.InvariantCulture));
+                        Record("assertion:" + assertions.Single());
+#endif
                     }
                     finally
                     {
@@ -529,12 +548,26 @@ internal static class SystemWrapperChildProbe
                 environment.Exit(37);
                 break;
             case "fail-fast":
-                Console.WriteLine("FAIL_FAST_WITHOUT_EXCEPTION");
-                environment.FailFast("core-wrapper-fail-fast");
-                break;
             case "fail-fast-exception":
-                Console.WriteLine("FAIL_FAST_WITH_EXCEPTION");
-                environment.FailFast("core-wrapper-fail-fast", new ProbeException());
+                Console.WriteLine(mode == "fail-fast" ? "FAIL_FAST_WITHOUT_EXCEPTION" : "FAIL_FAST_WITH_EXCEPTION");
+                try
+                {
+                    if (mode == "fail-fast")
+                    {
+                        environment.FailFast("core-wrapper-fail-fast");
+                    }
+                    else
+                    {
+                        environment.FailFast("core-wrapper-fail-fast", new ProbeException());
+                    }
+
+                    Console.WriteLine("FAIL_FAST_RETURNED");
+                }
+                finally
+                {
+                    Console.WriteLine("FAIL_FAST_FINALLY");
+                }
+
                 break;
             case "block":
                 Console.WriteLine("READY");

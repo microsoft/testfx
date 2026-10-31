@@ -8,6 +8,10 @@ using System.Xml.Linq;
 
 using AwesomeAssertions;
 
+#if NETFRAMEWORK && DEBUG
+using Microsoft.Testing.TestInfrastructure;
+#endif
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
@@ -47,6 +51,12 @@ public sealed class TestDataSourceContinuationTests : TestContainer
             rows.Labels.Should().Equal("alpha", "beta", "gamma");
             rows.ContextCalls.Should().Be(1);
             rows.ConnectionWasNull.Should().BeTrue("the XML data source has no DbConnection");
+#if DEBUG
+            string?[] expectedAssertions = access == (DataAccessMethod)123 ? ["Unknown DataAccessMethod: 123"] : [];
+            rows.Assertions.Should().Equal(expectedAssertions);
+#else
+            rows.Assertions.Should().BeEmpty();
+#endif
         }
     }
 
@@ -119,6 +129,8 @@ public sealed class TestDataSourceContinuationTests : TestContainer
         public int ContextCalls { get; set; }
 
         public bool ConnectionWasNull { get; set; }
+
+        public string?[] Assertions { get; set; } = [];
     }
 
     public sealed class DataSourceWorker : MarshalByRefObject
@@ -132,7 +144,17 @@ public sealed class TestDataSourceContinuationTests : TestContainer
         public int ContextCallCount() => _contextCalls;
 
         public RowObservation ReadDirect(string provider, string connection, string table, DataAccessMethod access)
-            => Read(new DataSourceAttribute(provider, connection, table, access));
+        {
+#if DEBUG
+            var assertions = new List<string?>();
+            using DiagnosticAssertionObserver? observer = access == (DataAccessMethod)123 ? new DiagnosticAssertionObserver(assertions.Add) : null;
+            RowObservation result = Read(new DataSourceAttribute(provider, connection, table, access));
+            result.Assertions = assertions.ToArray();
+            return result;
+#else
+            return Read(new DataSourceAttribute(provider, connection, table, access));
+#endif
+        }
 
         public RowObservation ReadConfigured(string name) => Read(new DataSourceAttribute(name));
 

@@ -6,6 +6,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -116,14 +117,16 @@ public sealed class FileUtilityContinuationTests : TestContainer
         File.ReadAllText(Path.ChangeExtension(destination, ".pdb")).Should().Be("symbols");
     }
 
-    public void PdbValidationRejectsNonBinariesMissingAndInvalidSymbolSources()
+    public Task PdbValidationRejectsNonBinariesMissingAndInvalidSymbolSources()
     {
         using FileDirectory fixture = new();
         FileUtility utility = new();
         Dictionary<string, string> map = [];
         string destination = Path.Combine(fixture.Root, "out", "sample.dll");
 
+#if !DEBUG
         utility.FindAndDeployPdb(destination, "sample.dll", null!, map).Should().BeNull();
+#endif
         utility.FindAndDeployPdb(destination, "sample.dll", "\0", map).Should().BeNull();
         utility.FindAndDeployPdb(destination, "sample.dll", Path.Combine(fixture.Root, "missing.dll"), map).Should().BeNull();
         string ordinary = fixture.Write("sample.txt", "not a binary");
@@ -134,8 +137,30 @@ public sealed class FileUtilityContinuationTests : TestContainer
         Directory.Exists(Path.Combine(fixture.Root, "out")).Should().BeFalse();
         _provider.MockTraceLogger.Verify(
             logger => logger.Warning("Path is either null or invalid. Path = '{0}'", It.Is<object?[]>(arguments => arguments.Length == 1 && arguments[0] == null)),
+#if DEBUG
+            Times.Never);
+#else
             Times.Once);
+#endif
         _provider.MockTraceLogger.Verify(logger => logger.Warning("Path is either null or invalid. Path = '{0}'", "\0"), Times.Once);
+#if DEBUG
+        return DebugAssertionChildProbe.VerifyAsync(DebugAssertionChildProbe.NullPdbSourceMode, "sourceFile should not be null or empty.");
+#else
+        return Task.CompletedTask;
+#endif
+    }
+
+    internal static void RunNullPdbSourceProbe()
+    {
+        using var test = new FileUtilityContinuationTests();
+        using FileDirectory fixture = new();
+        string destination = Path.Combine(fixture.Root, "out", "sample.dll");
+        Dictionary<string, string> map = [];
+        FileUtility utility = new();
+        Console.WriteLine(DebugAssertionChildProbe.ReadyMarker);
+        utility.FindAndDeployPdb(destination, "sample.dll", null!, map).Should().BeNull();
+        map.Should().BeEmpty();
+        Directory.Exists(Path.Combine(fixture.Root, "out")).Should().BeFalse();
     }
 
     public void InvalidPdbDestinationIsReportedWithoutChangingMap()

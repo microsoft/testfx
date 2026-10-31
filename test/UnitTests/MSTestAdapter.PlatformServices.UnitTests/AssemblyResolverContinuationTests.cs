@@ -10,6 +10,8 @@ using System.Runtime.Remoting;
 
 using AwesomeAssertions;
 
+using Microsoft.Testing.TestInfrastructure;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -70,11 +72,20 @@ public sealed class AssemblyResolverContinuationTests : TestContainer
 
     public void EmptyNamesAndNullRunSettingsDoNotResolveOrLog()
     {
+#if DEBUG
+        var assertions = new List<string?>();
+        using var observer = new DiagnosticAssertionObserver(assertions.Add);
+#endif
         using AssemblyResolver resolver = new([string.Empty]);
         resolver.AddSearchDirectoriesFromRunSetting(null!);
         resolver.OnResolve(null, new ResolveEventArgs(string.Empty)).Should().BeNull();
         resolver.OnResolve(null, new ResolveEventArgs(null!)).Should().BeNull();
         _provider.MockTraceLogger.Invocations.Should().BeEmpty();
+#if DEBUG
+        assertions.Should().Equal(
+            "MSTest.AssemblyResolver.OnResolve: args.Name is null or empty.",
+            "MSTest.AssemblyResolver.OnResolve: args.Name is null or empty.");
+#endif
     }
 
     public void MissingAssemblyIsNegativelyCachedAndSystemFallbackIsCached()

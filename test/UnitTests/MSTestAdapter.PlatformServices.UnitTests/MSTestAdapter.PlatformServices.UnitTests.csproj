@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)test\Utilities\DiagnosticAssertionObserver.cs" Link="TestInfrastructure\DiagnosticAssertionObserver.cs" />
   </ItemGroup>
 
   <ItemGroup>

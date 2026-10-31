@@ -1798,24 +1798,29 @@ public partial class AssertTests : TestContainer
         (int? Left, int Expected, int Calls)[] cases = [(null, 1, 1), (7, 7, 0)];
         foreach ((int? left, int expected, int calls) in cases)
         {
-            var counter = new SideEffectCounter();
-            Action accepted = () => Assert.That(() => (left ?? counter.Increment()) == expected);
-            accepted.Should().NotThrow();
-            counter.Count.Should().Be(calls);
-
-            counter = new SideEffectCounter();
-            Action rejected = () => Assert.That(() => (left ?? counter.Increment()) == 99, conditionExpression: "coalescing fallback");
-            string leftText = left is null ? "null" : "7";
-            string message = $"""
-                Assert.That(coalescing fallback) failed.
-                Details:
-                  counter.Increment() = 1
-                  left = {leftText}
-                """;
-            rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
-                .Should().Be(message.Replace("\r\n", "\n"));
-            counter.Count.Should().Be(1);
+            VerifyCoalescingFallback(left, expected, calls);
         }
+    }
+
+    private static void VerifyCoalescingFallback(int? left, int expected, int calls)
+    {
+        var counter = new SideEffectCounter();
+        Action accepted = () => Assert.That(() => (left ?? counter.Increment()) == expected);
+        accepted.Should().NotThrow();
+        counter.Count.Should().Be(calls);
+
+        counter = new SideEffectCounter();
+        Action rejected = () => Assert.That(() => (left ?? counter.Increment()) == 99, conditionExpression: "coalescing fallback");
+        string leftText = left is null ? "null" : "7";
+        string message = $"""
+            Assert.That(coalescing fallback) failed.
+            Details:
+              counter.Increment() = 1
+              left = {leftText}
+            """;
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+            .Should().Be(message.Replace("\r\n", "\n"));
+        counter.Count.Should().Be(1);
     }
 
     public void That_ListInitializerDiagnostics_RenderPrimitiveTypesAndPreserveMalformedLiteralPatterns()

@@ -6,6 +6,10 @@ using System.Reflection.Emit;
 
 using AwesomeAssertions;
 
+#if DEBUG
+using Microsoft.Testing.TestInfrastructure;
+#endif
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -71,6 +75,10 @@ public sealed class AssemblyUtilityContinuationTests : TestContainer
         {
             string nonAssembly = Path.Combine(root, "data.txt");
             File.WriteAllText(nonAssembly, "plain data");
+#if DEBUG
+            var assertions = new List<string?>();
+            using var observer = new DiagnosticAssertionObserver(assertions.Add);
+#endif
             AssemblyUtility utility = new();
             utility.GetSatelliteAssemblies(nonAssembly).Should().BeEmpty();
             _provider.MockTraceLogger.Verify(
@@ -86,6 +94,9 @@ public sealed class AssemblyUtilityContinuationTests : TestContainer
             _provider.MockTraceLogger.Verify(
                 logger => logger.Error("AssemblyUtilities.GetSatelliteAssemblies: found assembly '{0}' installed as satellite but it's not managed assembly.", invalidSatellite),
                 Times.Once);
+#if DEBUG
+            assertions.Should().Equal($"AssemblyUtilities.GetSatelliteAssemblies: the file '{nonAssembly}' is not an assembly.");
+#endif
         }
         finally
         {

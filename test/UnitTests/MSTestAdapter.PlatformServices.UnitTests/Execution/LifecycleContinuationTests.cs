@@ -182,7 +182,8 @@ public sealed class LifecycleContinuationTests : TestContainer
         };
         TestContextImplementation context = harness.CreateContext();
 
-        await empty.RunClassInitializeAsync(context);
+        TestResult initialized = await empty.GetResultOrRunClassInitializeAsync(context, null, null, null, null);
+        initialized.Outcome.Should().Be(UnitTestOutcome.Passed);
         (await empty.ExecuteClassCleanupAsync(context)).Should().BeNull();
 
         harness.Events.Should().ContainSingle();
