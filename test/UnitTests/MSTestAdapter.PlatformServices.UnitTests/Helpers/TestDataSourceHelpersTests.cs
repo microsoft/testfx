@@ -280,4 +280,33 @@ public class TestDataSourceHelpersTests : TestContainer
 
     private static ParameterInfo[] GetCancellationTokenParameters<T>()
         => typeof(Action<T, CancellationToken>).GetMethod(nameof(Action.Invoke))!.GetParameters();
+
+    public void LongReferenceAndValueTuplesExpandInExactOrder()
+    {
+        object[] tuples =
+        [
+            (1, 2, 3, 4, 5, 6, 7, 8, 9),
+            new Tuple<int, int, int, int, int, int, int, Tuple<int, int>>(1, 2, 3, 4, 5, 6, 7, Tuple.Create(8, 9)),
+        ];
+        foreach (object tuple in tuples)
+        {
+            TestDataSourceHelpers.TryHandleTupleDataSource(tuple, [], out object?[] data).Should().BeTrue();
+            data.Should().Equal(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        }
+
+#if NET462
+        object flatRest = default(ValueTuple<int, int, int, int, int, int, int, int>);
+        TestDataSourceHelpers.TryHandleTupleDataSource(flatRest, [], out object?[] flat).Should().BeTrue();
+        flat.Should().Equal(0, 0, 0, 0, 0, 0, 0, 0);
+#endif
+    }
+
+    public void TupleRejectionDoesNotLeakPartialArguments()
+    {
+        foreach (object? value in new object?[] { null, 17, new List<int> { 1, 2 }, "not a tuple" })
+        {
+            TestDataSourceHelpers.TryHandleTupleDataSource(value, [], out object?[] data).Should().BeFalse();
+            data.Should().BeEmpty();
+        }
+    }
 }

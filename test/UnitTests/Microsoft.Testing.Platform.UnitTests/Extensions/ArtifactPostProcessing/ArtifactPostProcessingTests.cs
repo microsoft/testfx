@@ -1195,4 +1195,59 @@ public sealed class ArtifactPostProcessingTests
         IReadOnlyList<ArtifactPostProcessingMode>? supportedModes = null)
         : StubProcessor(uid, supportedKinds, [], supportedModes: supportedModes),
         IArtifactPostProcessorRequiresPostProcessing;
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task Manager_InvalidModeSetsAreRejectedBeforeInitialization(int kind)
+    {
+        ArtifactPostProcessingMode[] modes = kind switch
+        {
+            0 => [],
+            1 => [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.TestModules],
+            _ => [(ArtifactPostProcessingMode)42],
+        };
+        Mock<IArtifactPostProcessor> processor = CreateProcessor("processor", ["kind"], [".ext"], modes: modes);
+        processor.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        Mock<Microsoft.Testing.Platform.Extensions.IAsyncInitializableExtension> initialization = processor.As<Microsoft.Testing.Platform.Extensions.IAsyncInitializableExtension>();
+        ArtifactPostProcessingManager manager = new();
+        manager.AddArtifactPostProcessor(_ => processor.Object);
+
+        InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(new ServiceProvider()));
+
+        Assert.AreEqual(
+            "Artifact post-processor 'processor' declares invalid capability 'SupportedModes'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.",
+            failure.Message);
+        initialization.Verify(i => i.InitializeAsync(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task DispatcherCommandLine_ManifestExistenceArityAndHiddenOptionAreContractual()
+    {
+        using DispatcherFixture fixture = new();
+        fixture.WriteCoverageManifest();
+        ArtifactPostProcessingDispatcherToolCommandLine provider = new();
+        Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption option = Assert.ContainsSingle(provider.GetCommandLineOptions());
+        Assert.AreEqual("manifest", option.Name);
+        Assert.AreEqual("Path to the artifact post-processing manifest.", option.Description);
+        Assert.AreEqual(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.ExactlyOne, option.Arity);
+        Assert.IsTrue(option.IsHidden);
+        Assert.AreEqual("internal-merge-artifacts", provider.ToolName);
+        Assert.AreEqual("Microsoft.Testing.Platform.ArtifactPostProcessing.Dispatcher.CommandLine", provider.Uid);
+        Assert.AreEqual("Artifact post-processing dispatcher", provider.DisplayName);
+        Assert.AreEqual("Internal command line for artifact post-processing.", provider.Description);
+        Assert.AreEqual("2.6.0-dev", provider.Version);
+        Assert.IsTrue(await provider.IsEnabledAsync());
+        Assert.IsTrue((await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions([]))).IsValid);
+        Assert.IsTrue((await provider.ValidateOptionArgumentsAsync(option, [fixture.ManifestPath])).IsValid);
+        foreach (string[] arguments in new string[][] { [], [fixture.ManifestPath, fixture.ManifestPath], [Path.Combine(fixture.Root, "absent.json")] })
+        {
+            Microsoft.Testing.Platform.Extensions.ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, arguments);
+            Assert.IsFalse(result.IsValid);
+            Assert.AreEqual("The artifact post-processing manifest does not exist.", result.ErrorMessage);
+        }
+
+        fixture.AssertInputsUnchanged();
+    }
 }

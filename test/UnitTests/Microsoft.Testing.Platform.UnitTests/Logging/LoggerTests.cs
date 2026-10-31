@@ -127,4 +127,21 @@ public sealed class LoggerTests
         Assert.AreSame(expectedFailure, actualFailure);
         later.VerifyNoOtherCalls();
     }
+
+    [TestMethod]
+    public void ServerLogMessage_ToStringPreservesLevelAndMultilinePayload()
+    {
+        ServerLogMessage message = new(LogLevel.Warning, "first line\n  second line");
+
+        Assert.AreEqual(
+            """
+            Server log message:
+            Level: Warning
+            Message: first line
+              second line
+            """.Replace("\r\n", "\n") + "\n",
+            message.ToString().Replace("\r\n", "\n"));
+        Assert.AreEqual(LogLevel.Warning, message.Level);
+        Assert.AreEqual("first line\n  second line", message.Message);
+    }
 }

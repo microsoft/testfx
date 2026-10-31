@@ -120,4 +120,139 @@ public sealed class BaseSerializerPrimitiveTests
 
         public static void WriteLongSize(Stream stream) => WriteSize<long>(stream);
     }
+
+    [TestMethod]
+    public void BoundedPayload_SeeksAndReadsCannotEscapeOwnedField()
+    {
+        using MemoryStream stream = new([99, 10, 20, 30, 40, 88]);
+        stream.Position = 1;
+
+        int result = FieldProbe.ReadPayload(stream, 4, window =>
+        {
+            Assert.IsTrue(window.CanRead);
+            Assert.IsTrue(window.CanSeek);
+            Assert.IsFalse(window.CanWrite);
+            Assert.AreEqual(4, window.Length);
+            Assert.AreEqual(0, window.Position);
+            Assert.AreEqual(10, window.ReadByte());
+            Assert.AreEqual(1, window.Seek(1, SeekOrigin.Begin));
+            Assert.AreEqual(20, window.ReadByte());
+            Assert.AreEqual(1, window.Seek(-1, SeekOrigin.Current));
+            Assert.AreEqual(20, window.ReadByte());
+            Assert.AreEqual(3, window.Seek(-1, SeekOrigin.End));
+            Assert.AreEqual(40, window.ReadByte());
+            Assert.AreEqual(-1, window.ReadByte());
+            Assert.AreEqual(0, window.Read(new byte[8], 2, 5));
+            window.Flush();
+            Assert.AreEqual("value", Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => window.Position = -1).ParamName);
+            Assert.AreEqual("value", Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => window.Position = 5).ParamName);
+            Assert.AreEqual("origin", Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => window.Seek(0, (SeekOrigin)999)).ParamName);
+            Assert.ThrowsExactly<NotSupportedException>(() => window.SetLength(2));
+            Assert.ThrowsExactly<NotSupportedException>(() => window.Write([1], 0, 1));
+            return 17;
+        });
+
+        Assert.AreEqual(17, result);
+        Assert.AreEqual(5, stream.Position);
+        Assert.AreEqual(88, stream.ReadByte());
+        Assert.AreEqual(6, stream.Length);
+    }
+
+    [TestMethod]
+    [DataRow(false, -1)]
+    [DataRow(false, 2)]
+    [DataRow(true, -1)]
+    [DataRow(true, 2)]
+    public void ReadFields_MalformedSizeRejectsBeforeCallback(bool stateful, int size)
+    {
+        using MemoryStream stream = new([.. BitConverter.GetBytes((ushort)1), .. BitConverter.GetBytes((ushort)9), .. BitConverter.GetBytes(size), 42]);
+        int invocations = 0;
+        string expected = size < 0 ? "Field 9 has a negative size." : "Field 9 extends beyond the end of the stream.";
+
+        Exception error = size < 0
+            ? Assert.ThrowsExactly<InvalidDataException>(() => FieldProbe.ReadEnvelope(stream, stateful, () => invocations++))
+            : Assert.ThrowsExactly<EndOfStreamException>(() => FieldProbe.ReadEnvelope(stream, stateful, () => invocations++));
+
+        Assert.AreEqual(expected, error.Message);
+        Assert.AreEqual(0, invocations);
+        Assert.AreEqual(8, stream.Position);
+    }
+
+    [TestMethod]
+    [DataRow("string")]
+    [DataRow("byte")]
+    [DataRow("identified-byte")]
+    public void WriteNullableFields_OmittedValuesDoNotDisturbPrefix(string shape)
+    {
+        using MemoryStream stream = new();
+        stream.WriteByte(0xAA);
+        FieldProbe.WriteNullable(stream, shape, omit: true);
+        Assert.AreSequenceEqual(new byte[] { 0xAA }, stream.ToArray());
+
+        FieldProbe.WriteNullable(stream, shape, omit: false);
+
+        byte[] expected = shape switch
+        {
+            "string" => [0xAA, .. BitConverter.GetBytes(1), 0x41],
+            "byte" => [0xAA, 0x7F],
+            _ => [0xAA, .. BitConverter.GetBytes((ushort)9), .. BitConverter.GetBytes(1), 0x7F],
+        };
+        Assert.AreSequenceEqual(expected, stream.ToArray());
+    }
+
+    [TestMethod]
+    public void PrimitiveSize_UnsupportedStructDoesNotWrite()
+    {
+        using MemoryStream stream = new();
+        stream.WriteByte(0xAA);
+
+        InvalidOperationException error = Assert.ThrowsExactly<InvalidOperationException>(() => FieldProbe.WriteUnsupportedSize(stream));
+
+        Assert.StartsWith("This program location is thought to be unreachable. File='", error.Message);
+        Assert.AreSequenceEqual(new byte[] { 0xAA }, stream.ToArray());
+    }
+
+    private sealed class FieldProbe : BaseSerializer
+    {
+        internal static int ReadPayload(Stream stream, int size, Func<Stream, int> read)
+            => ReadFieldPayload(stream, size, read);
+
+        internal static void ReadEnvelope(Stream stream, bool stateful, Action invoked)
+        {
+            if (stateful)
+            {
+                _ = ReadFields(stream, 0, (_, _, _, state) =>
+                {
+                    invoked();
+                    return state;
+                });
+            }
+            else
+            {
+                ReadFields(stream, (_, _) =>
+                {
+                    invoked();
+                    return true;
+                });
+            }
+        }
+
+        internal static void WriteNullable(Stream stream, string shape, bool omit)
+        {
+            switch (shape)
+            {
+                case "string":
+                    WriteField(stream, omit ? null : "A");
+                    break;
+                case "byte":
+                    WriteField(stream, omit ? null : 0x7F);
+                    break;
+                default:
+                    WriteField(stream, 9, omit ? null : 0x7F);
+                    break;
+            }
+        }
+
+        internal static void WriteUnsupportedSize(Stream stream) => WriteSize<double>(stream);
+    }
 }

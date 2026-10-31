@@ -368,4 +368,40 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void ComparisonAssertions_ScopedFailureContinuesAndPreservesStructuredValues()
+    {
+        (Action Accepted, Action Rejected, string Expected, string Actual)[] cases =
+        [
+            (() => Assert.IsGreaterThan(5, 6), () => Assert.IsGreaterThan(5, 5), "5", "5"),
+            (() => Assert.IsGreaterThanOrEqualTo(5, 5), () => Assert.IsGreaterThanOrEqualTo(5, 4), "5", "4"),
+            (() => Assert.IsLessThan(5, 4), () => Assert.IsLessThan(5, 5), "5", "5"),
+            (() => Assert.IsLessThanOrEqualTo(5, 5), () => Assert.IsLessThanOrEqualTo(5, 6), "5", "6"),
+            (() => Assert.IsPositive(1), () => Assert.IsPositive(0), "> 0", "0"),
+            (() => Assert.IsNegative(-1), () => Assert.IsNegative(0), "< 0", "0"),
+            (() => Assert.IsPositive(1f), () => Assert.IsPositive(float.NaN), "> 0", "NaN"),
+            (() => Assert.IsPositive(1d), () => Assert.IsPositive(double.NaN), "> 0", "NaN"),
+            (() => Assert.IsNegative(-1f), () => Assert.IsNegative(float.NaN), "< 0", "NaN"),
+            (() => Assert.IsNegative(-1d), () => Assert.IsNegative(double.NaN), "< 0", "NaN"),
+        ];
+        foreach ((Action accepted, Action rejected, string expected, string actual) in cases)
+        {
+            int continued = 0;
+            accepted.Should().NotThrow();
+            Action scoped = () =>
+            {
+                using (Assert.Scope())
+                {
+                    rejected();
+                    continued++;
+                }
+            };
+
+            AssertFailedException failure = scoped.Should().ThrowExactly<AssertFailedException>().Which;
+            continued.Should().Be(1);
+            failure.ExpectedText.Should().Be(expected);
+            failure.ActualText.Should().Be(actual);
+            failure.InnerException.Should().BeNull();
+        }
+    }
 }

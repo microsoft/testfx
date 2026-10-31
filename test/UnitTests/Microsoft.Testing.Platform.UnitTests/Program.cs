@@ -10,6 +10,11 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
+if (Microsoft.Testing.Platform.UnitTests.SystemWrapperChildProbe.TryRun())
+{
+    return 0;
+}
+
 // Opt-out telemetry
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 

@@ -600,4 +600,94 @@ public sealed class CommonHostTests
             return Task.CompletedTask;
         }
     }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_ProtocolCompatibilityControlsLifecycleAndAlwaysClosesProtocol(bool compatible)
+    {
+        ServiceProvider services = new();
+        services.AddService(new TestApplicationCancellationTokenSource());
+        AsyncCleanableTestHostApplicationLifetime lifetime = new();
+        services.AddService(lifetime);
+        Mock<Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol> protocol = new();
+        protocol.SetupGet(p => p.IsServerMode).Returns(true);
+        protocol.SetupGet(p => p.IsServerControlChannelSupported).Returns(true);
+        protocol.Setup(p => p.IsCompatibleProtocolAsync("TestHost", It.IsAny<IReadOnlyDictionary<byte, string>?>())).ReturnsAsync(compatible);
+        protocol.Setup(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>())).Returns(Task.CompletedTask);
+        protocol.Setup(p => p.OnExitAsync()).Returns(Task.CompletedTask);
+        services.AddService(protocol.Object);
+        TestableCommonHost host = new(services, runTestApplicationLifeCycleCallbacks: true);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(compatible ? 0 : (int)ExitCode.IncompatibleProtocolVersion, exitCode);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.BeforeRunCount);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.AfterRunCount);
+        Assert.AreEqual(1, lifetime.CleanupCount);
+        protocol.Verify(p => p.IsCompatibleProtocolAsync("TestHost", It.IsAny<IReadOnlyDictionary<byte, string>?>()), Times.Once);
+        protocol.Verify(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()), compatible ? Times.Once() : Times.Never());
+        protocol.Verify(p => p.OnExitAsync(), Times.Once);
+        protocol.Verify(p => p.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_ThrowingShutdownLoggerCannotReplaceFrameworkFailure()
+    {
+        InvalidOperationException primary = new("framework failure");
+        Mock<ITestFrameworkInvoker> invoker = new();
+        invoker.Setup(i => i.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), CancellationToken.None)).ThrowsAsync(primary);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Throws(new ObjectDisposedException("logger"));
+        Mock<BaseMessageBus> bus = new();
+        bus.Setup(b => b.DisableAsync()).ThrowsAsync(new IOException("shutdown failed"));
+        Mock<IPlatformOutputDevice> output = new();
+        ServiceProvider services = new();
+        services.AddServices(
+        [
+            invoker.Object, loggerFactory.Object, new TestCoverageResult(),
+            new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object,
+        ]);
+        Mock<ITestSessionContext> session = new();
+        session.SetupGet(s => s.SessionUid).Returns(new SessionUid("session"));
+
+        InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+            TestableCommonHost.ExecuteRequestForTestingAsync(
+                new ProxyOutputDevice(output.Object, null), session.Object, services, bus.Object,
+                new Mock<ITestFramework>().Object, new ClientInfo("client", "1.0")));
+
+        Assert.AreSame(primary, failure);
+        bus.Verify(b => b.DisableAsync(), Times.Once);
+        loggerFactory.Verify(f => f.CreateLogger(nameof(CommonHost)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task FrameworkProxy_ExposesIdentityButCannotDriveFrameworkLifecycle()
+    {
+        Mock<ITestFramework> framework = new(MockBehavior.Strict);
+        framework.SetupGet(f => f.Uid).Returns("framework-uid");
+        framework.SetupGet(f => f.Version).Returns("7.8.9");
+        framework.SetupGet(f => f.DisplayName).Returns("Isolated framework");
+        framework.SetupGet(f => f.Description).Returns("Read-only framework information");
+        TestFrameworkProxy proxy = new(framework.Object);
+
+        Assert.AreEqual("framework-uid", proxy.Uid);
+        Assert.AreEqual("7.8.9", proxy.Version);
+        Assert.AreEqual("Isolated framework", proxy.DisplayName);
+        Assert.AreEqual("Read-only framework information", proxy.Description);
+        Assert.IsTrue(await proxy.IsEnabledAsync());
+        Assert.AreEqual(
+            "Method 'CreateTestSessionAsync' should not have been called on this proxy object",
+            Assert.ThrowsExactly<InvalidOperationException>(() => proxy.CreateTestSessionAsync(null!)).Message);
+        Assert.AreEqual(
+            "Method 'ExecuteRequestAsync' should not have been called on this proxy object",
+            Assert.ThrowsExactly<InvalidOperationException>(() => proxy.ExecuteRequestAsync(null!)).Message);
+        Assert.AreEqual(
+            "Method 'CloseTestSessionAsync' should not have been called on this proxy object",
+            Assert.ThrowsExactly<InvalidOperationException>(() => proxy.CloseTestSessionAsync(null!)).Message);
+        framework.Verify(f => f.IsEnabledAsync(), Times.Never);
+        framework.Verify(f => f.CreateTestSessionAsync(It.IsAny<CreateTestSessionContext>()), Times.Never);
+        framework.Verify(f => f.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()), Times.Never);
+        framework.Verify(f => f.CloseTestSessionAsync(It.IsAny<CloseTestSessionContext>()), Times.Never);
+    }
 }

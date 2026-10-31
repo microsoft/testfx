@@ -291,4 +291,81 @@ public sealed class ShutdownProgressReporterTests : IAsyncDisposable
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
             => Task.CompletedTask;
     }
+
+    [TestMethod]
+    public async Task Watchdog_MultipleEntriesUseNewestFirstOrderAndIndependentRoundedDurations()
+    {
+        _clock.SetupSequence(c => c.UtcNow).Returns(_now).Returns(_now.AddSeconds(7)).Returns(_now.AddMilliseconds(10_500));
+        using ShutdownProgressReporter reporter = CreateReporter();
+        using IDisposable first = reporter.Track("first", "First extension", "flush");
+        using IDisposable second = reporter.Track("second", "Second extension", "close");
+
+        CancelTokenSource();
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
+
+        Assert.AreEqual(
+            "Still waiting for: Second extension (close, 4s); First extension (flush, 10s)",
+            Assert.ContainsSingle(_outputDevice.Messages));
+        Assert.AreSequenceEqual(["second", "first"], reporter.Snapshot().Select(work => work.Uid));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Watchdog_LoggerAndOutputFailuresDoNotStopPolling(bool cancellationFailure)
+    {
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(LogLevel.Information, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .ThrowsAsync(new IOException("logging failed"));
+        Mock<ILoggerFactory> factory = new();
+        factory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+        Mock<IOutputDevice> output = new();
+        List<string> messages = [];
+        output.Setup(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((producer, data, _) =>
+            {
+                Assert.AreEqual("ShutdownProgressReporter", producer.Uid);
+                Assert.AreEqual("ShutdownProgressReporter", producer.DisplayName);
+                Assert.AreEqual("Reports extensions still running during shutdown.", producer.Description);
+                messages.Add(Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(data).Message);
+            })
+            .Returns(cancellationFailure ? Task.FromException(new OperationCanceledException()) : Task.FromException(new IOException("output failed")));
+        using ShutdownProgressReporter reporter = new(
+            _cancellationTokenSource.Object, output.Object, factory.Object, _clock.Object,
+            ShutdownProgressReporter.DefaultQuietWindow, ShutdownProgressReporter.DefaultPollInterval, _task.Object);
+        using IDisposable tracking = reporter.Track("uid", "Extension", "finalizing");
+        Assert.IsTrue(await reporter.IsEnabledAsync());
+        Assert.AreEqual("2.6.0-dev", reporter.Version);
+
+        CancelTokenSource();
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultQuietWindow);
+        await AdvanceDelayAsync(ShutdownProgressReporter.DefaultPollInterval);
+
+        Assert.AreSequenceEqual(["Still waiting for: Extension (finalizing, 1s)", "Still waiting for: Extension (finalizing, 1s)"], messages);
+        logger.Verify(l => l.LogAsync(LogLevel.Information, "Still waiting for: Extension (finalizing, 1s)", null, LoggingExtensions.Formatter), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    public async Task Watchdog_DelayFailureAndThrowingWarningLoggerAreBestEffort()
+    {
+        IOException expected = new("quiet-window failure");
+        _task.Setup(t => t.Delay(It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>())).Returns(Task.FromException(expected));
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(LogLevel.Warning, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .ThrowsAsync(new InvalidOperationException("warning sink failed"));
+        Mock<ILoggerFactory> factory = new();
+        factory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+        using ShutdownProgressReporter reporter = new(
+            _cancellationTokenSource.Object, _outputDevice, factory.Object, _clock.Object,
+            ShutdownProgressReporter.DefaultQuietWindow, ShutdownProgressReporter.DefaultPollInterval, _task.Object);
+
+        CancelTokenSource();
+        await _watchdogTask;
+
+        Assert.AreEqual(TaskStatus.RanToCompletion, _watchdogTask.Status);
+        Assert.IsEmpty(_outputDevice.Messages);
+        logger.Verify(
+            l => l.LogAsync(LogLevel.Warning, It.Is<string>(message => message.StartsWith("Shutdown progress watchdog failed: System.IO.IOException: quiet-window failure", StringComparison.Ordinal)), null, LoggingExtensions.Formatter),
+            Times.Once);
+    }
 }

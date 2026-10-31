@@ -416,4 +416,59 @@ public sealed class StopPoliciesServiceTests : IDisposable
 
         await callbackInvoked.Task;
     }
+
+    [TestMethod]
+    public async Task Abort_CallbackFailureIsSharedAndDoesNotInvokeLaterHandlers()
+    {
+        using StopPoliciesService service = new(_cancellationTokenSource.Object);
+        InvalidOperationException expected = new("abort callback failed");
+        List<string> invoked = [];
+        await service.RegisterOnAbortCallbackAsync(() =>
+        {
+            invoked.Add("first");
+            return Task.FromException(expected);
+        });
+        await service.RegisterOnAbortCallbackAsync(() =>
+        {
+            invoked.Add("must not run");
+            return Task.CompletedTask;
+        });
+
+        Task first = service.ExecuteAbortCallbacksAsync();
+        Task repeated = service.ExecuteAbortCallbacksAsync();
+        Assert.AreSame(first, repeated);
+        Assert.AreSame(expected, await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => first));
+        Assert.AreSequenceEqual(["first"], invoked);
+        Assert.IsTrue(service.IsAbortTriggered);
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
+    public async Task DeadlineFallback_AbsentReturnsFalseAndLatestRegisteredResultIsForwarded()
+    {
+        using StopPoliciesService service = new(_cancellationTokenSource.Object);
+        Assert.IsFalse(await service.TryExecuteDeadlineStopFallbackAsync());
+        int firstCalls = 0;
+        int replacementCalls = 0;
+        Task<bool> rejected = Task.FromResult(false);
+        Task<bool> accepted = Task.FromResult(true);
+        service.RegisterDeadlineStopFallback(() =>
+        {
+            firstCalls++;
+            return rejected;
+        });
+        Assert.AreSame(rejected, service.TryExecuteDeadlineStopFallbackAsync());
+        service.RegisterDeadlineStopFallback(() =>
+        {
+            replacementCalls++;
+            return accepted;
+        });
+        Task<bool> latest = service.TryExecuteDeadlineStopFallbackAsync();
+
+        Assert.AreSame(accepted, latest);
+        Assert.IsTrue(await latest);
+        Assert.AreEqual(1, firstCalls);
+        Assert.AreEqual(1, replacementCalls);
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
 }

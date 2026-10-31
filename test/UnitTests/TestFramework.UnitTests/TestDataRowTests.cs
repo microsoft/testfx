@@ -88,4 +88,18 @@ public class TestDataRowTests : TestContainer
         dataRow.TestCategories.Should().NotBeNull();
         dataRow.TestCategories.Should().HaveCount(0);
     }
+
+    public void TestDataRow_InterfaceValuePreservesTupleShapeAndReferenceIdentity()
+    {
+        ITestDataRow tupleRow = new TestDataRow<(int, string)>((37, "label"));
+        (int Number, string Label) tuple = tupleRow.Value.Should().BeOfType<(int, string)>().Which;
+        tuple.Number.Should().Be(37);
+        tuple.Label.Should().Be("label");
+
+        object identity = new();
+        ITestDataRow referenceRow = new TestDataRow<object>(identity);
+        referenceRow.Value.Should().BeSameAs(identity);
+        ITestDataRow nullRow = new TestDataRow<string?>(null);
+        nullRow.Value.Should().BeNull();
+    }
 }

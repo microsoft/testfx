@@ -81,4 +81,55 @@ public sealed class StackTraceHelperTests
         => Assert.AreEqual(
             @"^   at (?<code>.+) in (?<file>.+):line (?<line>\d+)$",
             StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false));
+
+    [TestMethod]
+    [DoNotParallelize] // Replaces the process-wide regex cache also used by task execution.
+    public void TryFindLocationFromStackFrame_RegexTimeout_ReturnsNoLocation()
+    {
+        FieldInfo regexField = typeof(StackTraceHelper).GetField("s_regex", BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("Could not resolve StackTraceHelper.s_regex.");
+        object? original = regexField.GetValue(null);
+        try
+        {
+            regexField.SetValue(null, new TimeoutRegex());
+
+            bool foundLocation = StackTraceHelper.TryFindLocationFromStackFrame(
+                "   at Program.Main() in /repo/Program.cs:line 42",
+                out string? file,
+                out int lineNumber,
+                out string? place);
+
+            Assert.IsFalse(foundLocation);
+            Assert.IsNull(file);
+            Assert.AreEqual(0, lineNumber);
+            Assert.IsNull(place);
+        }
+        finally
+        {
+            regexField.SetValue(null, original);
+        }
+    }
+
+    private sealed class TimeoutRegex : Regex
+    {
+        public TimeoutRegex()
+            : base(".*")
+            => factory = new TimeoutRegexRunnerFactory();
+    }
+
+    private sealed class TimeoutRegexRunnerFactory : RegexRunnerFactory
+    {
+        protected override RegexRunner CreateInstance() => new TimeoutRegexRunner();
+    }
+
+    private sealed class TimeoutRegexRunner : RegexRunner
+    {
+        protected override void Go() => throw new RegexMatchTimeoutException();
+
+        protected override bool FindFirstChar() => throw new RegexMatchTimeoutException();
+
+        protected override void InitTrackCount()
+        {
+        }
+    }
 }

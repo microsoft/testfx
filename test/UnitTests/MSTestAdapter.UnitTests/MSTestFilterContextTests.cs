@@ -211,4 +211,40 @@ public sealed class MSTestFilterContextTests : TestContainer
     }
 
     private sealed class CustomFilter : ITestExecutionFilter;
+
+    public void GuidAndEscapedUidFiltersPreserveSelection()
+    {
+        const string Id = "71e451e4-8a84-4526-ae58-ea1800667a84";
+        const string Name = @"Namespace.Type.Method(a&b|c=d!e~f)";
+        MSTestRunContext mixed = CreateContext(EmptyRunSettings, CreateUidFilter(Id, Name));
+        GetFilterValue(mixed).Should().Be(
+            @"(Id=71e451e4-8a84-4526-ae58-ea1800667a84|FullyQualifiedName=Namespace.Type.Method\(a\&b\|c\=d\!e\~f\))");
+        ITestCaseFilterExpression expression = mixed.GetTestCaseFilter(null, _ => null)!;
+        var testCase = new TestCase("unrelated", new Uri("executor://unit"), "source.dll");
+        expression.MatchTestCase(testCase, property => property == "Id" ? Id : null).Should().BeTrue();
+        expression.MatchTestCase(testCase, property => property == "Id" ? Guid.Empty.ToString() : property == "FullyQualifiedName" ? Name : null)
+            .Should().BeTrue();
+        expression.MatchTestCase(testCase, property => property == "Id" ? Guid.Empty.ToString() : property == "FullyQualifiedName" ? "other" : null)
+            .Should().BeFalse();
+
+        MSTestRunContext alreadyEscaped = CreateContext(EmptyRunSettings, CreateUidFilter(@"A\&B"));
+        GetFilterValue(alreadyEscaped).Should().Be(@"(FullyQualifiedName=A\\&B)");
+    }
+
+    public void NullRunsettingsAndMalformedArgumentListsDoNotInventFilters()
+    {
+        var settings = new Mock<IRunSettings>();
+        var options = new Mock<ICommandLineOptions>();
+        string[]? tooMany = ["Name=first", "Name=second"];
+        options.Setup(value => value.TryGetOptionArgumentList("filter", out tooMany)).Returns(true);
+        var context = new MSTestRunContext(options.Object, settings.Object, new NopFilter());
+
+        context.GetTestCaseFilter(null, _ => null).Should().BeNull();
+        context.TestRunDirectory.Should().BeNull();
+        context.KeepAlive.Should().BeFalse();
+        context.InIsolation.Should().BeFalse();
+        context.IsDataCollectionEnabled.Should().BeFalse();
+        context.IsBeingDebugged.Should().Be(Debugger.IsAttached);
+        context.SolutionDirectory.Should().BeNull();
+    }
 }

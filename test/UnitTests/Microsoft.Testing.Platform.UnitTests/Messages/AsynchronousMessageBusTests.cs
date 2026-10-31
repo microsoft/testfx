@@ -1556,4 +1556,92 @@ public sealed class AsynchronousMessageBusTests
             public string? Description => nameof(DataTypeB);
         }
     }
+
+    [TestMethod]
+    public async Task Processor_DirectDefaultConstructorCountsAndDrainsExactPayloads()
+    {
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        consumer.Setup(c => c.ConsumeAsync(producer, data, CancellationToken.None)).Returns(Task.CompletedTask);
+        using AsyncConsumerDataProcessor processor = new(consumer.Object, new SystemTask(), CancellationToken.None);
+
+        await processor.PublishAsync(producer, data);
+        await processor.PublishAsync(new DummyProducer("consumer"), new GatedData());
+        await processor.DrainDataAsync();
+
+        Assert.AreEqual(2L, processor.ReceivedCount);
+        consumer.Verify(c => c.ConsumeAsync(producer, data, CancellationToken.None), Times.Once);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.IsTrue(processor.IsConsumerRunning);
+        await processor.CompleteAddingAsync();
+        Assert.IsFalse(processor.IsConsumerRunning);
+        await processor.DrainDataAsync();
+        Assert.AreEqual(2L, processor.ReceivedCount);
+    }
+
+    [TestMethod]
+    public async Task Processor_ClosedAndCanceledPublishingPreservesCountAndCancellationContract()
+    {
+        CancellationToken token = new(canceled: true);
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        using AsyncConsumerDataProcessor processor = new(consumer.Object, new SystemTask(), token);
+
+        OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => processor.PublishAsync(new DummyProducer("producer"), new GatedData()));
+
+        Assert.AreEqual(token, exception.CancellationToken);
+#if NETCOREAPP
+        Assert.AreEqual(1L, processor.ReceivedCount, "Modern channels increment before honoring cancellation.");
+#else
+        Assert.AreEqual(0L, processor.ReceivedCount, "The netstandard channel honors cancellation before incrementing.");
+#endif
+        await processor.CompleteAddingAsync();
+        await processor.DrainDataAsync();
+        Assert.IsFalse(processor.IsConsumerRunning);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BlockingProcessor_DirectPublishingCountsSelfSkippedDataAndDoesNotLeaveWorkRunning()
+    {
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        consumer.Setup(c => c.ConsumeAsync(producer, data, CancellationToken.None)).Returns(Task.CompletedTask);
+        using BlockingConsumerDataProcessor processor = new(consumer.Object, CancellationToken.None);
+
+        await processor.PublishAsync(producer, data);
+        await processor.PublishAsync(new DummyProducer("consumer"), new GatedData());
+        await processor.DrainDataAsync();
+        await processor.CompleteAddingAsync();
+
+        Assert.AreEqual(2L, processor.ReceivedCount);
+        Assert.IsFalse(processor.IsConsumerRunning);
+        consumer.Verify(c => c.ConsumeAsync(producer, data, CancellationToken.None), Times.Once);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Proxy_InitAndDefaultRunningConsumersDelegateToConcreteBus()
+    {
+        using MessageBusProxy proxy = new();
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(proxy.InitAsync);
+        Mock<BaseMessageBus> bus = new() { CallBase = true };
+        bus.Setup(b => b.InitAsync()).Returns(Task.CompletedTask);
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        bus.Setup(b => b.PublishAsync(producer, data)).Returns(Task.CompletedTask);
+        proxy.SetBuiltMessageBus(bus.Object);
+
+        await proxy.InitAsync();
+        await proxy.PublishAsync(producer, data);
+
+        Assert.IsEmpty(proxy.ConsumersStillRunning);
+        bus.Verify(b => b.InitAsync(), Times.Once);
+        bus.Verify(b => b.PublishAsync(producer, data), Times.Once);
+    }
 }

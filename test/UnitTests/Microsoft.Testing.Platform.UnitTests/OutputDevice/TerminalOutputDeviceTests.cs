@@ -838,4 +838,163 @@ public sealed class TerminalOutputDeviceTests
             testApplicationCancellationTokenSource.Object,
             new TestCoverageResult());
     }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task OutputManager_CustomEnabledAndDisabledFactoriesPreserveFallbackContract(bool enabled)
+    {
+        using RecordingDeviceFixture fixture = new();
+        PlatformOutputDeviceManager manager = new();
+        Assert.AreEqual(
+            "platformOutputDeviceFactory",
+            Assert.ThrowsExactly<ArgumentNullException>(() => manager.SetPlatformOutputDevice(null!)).ParamName);
+        Mock<IPlatformOutputDevice> custom = new();
+        custom.Setup(c => c.IsEnabledAsync()).ReturnsAsync(enabled);
+        int created = 0;
+        manager.SetPlatformOutputDevice(services =>
+        {
+            Assert.AreSame(fixture.Services, services);
+            created++;
+            return custom.Object;
+        });
+        using (ProxyOutputDevice pipe = await manager.BuildAsync(fixture.Services, useServerModeOutputDevice: false, isPipeProtocol: true))
+        {
+            Assert.IsInstanceOfType<DotnetTestPassthroughOutputDevice>(pipe.OriginalOutputDevice);
+            Assert.AreEqual(0, created);
+            custom.Verify(c => c.IsEnabledAsync(), Times.Never);
+        }
+
+        using ProxyOutputDevice output = await manager.BuildAsync(fixture.Services, useServerModeOutputDevice: false, isPipeProtocol: false);
+        Assert.AreEqual(1, created);
+        custom.Verify(c => c.IsEnabledAsync(), Times.Once);
+        if (enabled)
+        {
+            Assert.AreSame(custom.Object, output.OriginalOutputDevice);
+        }
+        else
+        {
+            Assert.IsInstanceOfType<TerminalOutputDevice>(output.OriginalOutputDevice).Dispose();
+            Assert.AreNotSame(fixture.Device, output.OriginalOutputDevice);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DisplayBanner_CustomBannerAndSyncModeKeepDiagnosticNoticeContract(bool synchronous)
+    {
+        using RecordingDeviceFixture fixture = new();
+        FileInfo logFile = new(Path.Combine(Path.GetTempPath(), "owned-banner.diag"));
+        Mock<IFileLoggerInformation> log = new();
+        log.SetupGet(l => l.SynchronousWrite).Returns(synchronous);
+        log.SetupGet(l => l.LogLevel).Returns(LogLevel.Warning);
+        log.SetupGet(l => l.LogFile).Returns(logFile);
+        using TerminalOutputDevice device = CreateDeviceWithLog(fixture, log.Object);
+        await device.InitializeAsync();
+        string notice = $"Diagnostic file (level 'Warning' with {(synchronous ? "sync" : "async")} flush): {logFile.FullName}";
+
+        await device.DisplayBannerAsync("contract banner", TestContext.CancellationToken);
+        Assert.AreEqual("contract banner" + Environment.NewLine + notice + Environment.NewLine, fixture.Output.ToString());
+        fixture.Output.Clear();
+        await device.DisplayBannerAsync("must not replace the first banner", TestContext.CancellationToken);
+
+        Assert.AreEqual(notice + Environment.NewLine, fixture.Output.ToString());
+        Mock.Get(fixture.Services.GetEnvironment()).Verify(
+            e => e.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1"), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow("json")]
+    [DataRow("inherited")]
+    public async Task DisplayBanner_JsonAndInheritedSuppressionNeverPolluteOutput(string mode)
+    {
+        Dictionary<string, string[]> options = [];
+        Dictionary<string, string?> environment = [];
+        if (mode == "json")
+        {
+            options[PlatformCommandLineProvider.DiscoverTestsOptionKey] = [PlatformCommandLineProvider.DiscoverTestsJsonArgument];
+        }
+        else
+        {
+            environment[OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER] = "1";
+        }
+
+        using RecordingDeviceFixture fixture = new(extraOptions: options, environmentVariables: environment);
+        await fixture.Device.InitializeAsync();
+
+        await fixture.Device.DisplayBannerAsync("must not be printed", TestContext.CancellationToken);
+
+        Assert.AreEqual(string.Empty, fixture.Output.ToString());
+        Mock.Get(fixture.Services.GetEnvironment()).Verify(
+            e => e.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1"),
+            mode == "json" ? Times.Once() : Times.Never());
+    }
+
+    [TestMethod]
+    public async Task HandleProcessRole_MaxFailureCallbackIsHostOnlyAndRendersThreshold()
+    {
+        using RecordingDeviceFixture fixture = new();
+        var policies = Mock.Get(fixture.Services.GetRequiredService<IStopPoliciesService>());
+        Func<int, CancellationToken, Task>? callback = null;
+        policies.Setup(p => p.RegisterOnMaxFailedTestsCallbackAsync(It.IsAny<Func<int, CancellationToken, Task>>()))
+            .Callback<Func<int, CancellationToken, Task>>(value => callback = value)
+            .Returns(Task.CompletedTask);
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHostController, TestContext.CancellationToken);
+        Assert.IsNull(callback);
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        Assert.IsNotNull(callback);
+
+        await callback(7, new CancellationToken(canceled: true));
+
+        Assert.AreEqual(
+            "Test session is aborting due to reaching failures ('7') specified by the '--maximum-failed-tests' option." + Environment.NewLine,
+            fixture.Output.ToString());
+        policies.Verify(p => p.RegisterOnMaxFailedTestsCallbackAsync(It.IsAny<Func<int, CancellationToken, Task>>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisplayAfterSession_HotReloadDefersOrdinarySummaryUntilHotReloadEnd()
+    {
+        using RecordingDeviceFixture fixture = new();
+        Mock.Get(fixture.Services.GetRuntimeFeature()).SetupGet(r => r.IsHotReloadEnabled).Returns(true);
+        await fixture.Device.InitializeAsync();
+        await fixture.Device.HandleProcessRoleAsync(TestProcessRole.TestHost, TestContext.CancellationToken);
+        await fixture.Device.DisplayBeforeHotReloadSessionStartAsync(TestContext.CancellationToken);
+        TestNodeUpdateMessage update = new(default, new TestNode
+        {
+            Uid = "hot-reload-pass",
+            DisplayName = "hot reload case",
+            Properties = new(PassedTestNodeStateProperty.CachedInstance),
+        });
+        await fixture.Device.ConsumeAsync(Mock.Of<IDataProducer>(), update, TestContext.CancellationToken);
+        string beforeEnd = fixture.Output.ToString();
+
+        await fixture.Device.DisplayAfterSessionEndRunAsync(TestContext.CancellationToken);
+        Assert.AreEqual(beforeEnd, fixture.Output.ToString());
+        await fixture.Device.DisplayAfterHotReloadSessionEndAsync(TestContext.CancellationToken);
+
+        string output = fixture.Output.ToString().Replace("\r\n", "\n");
+        Assert.Contains("Test run summary: Passed!", output);
+        Assert.Contains("  total: 1\n  failed: 0\n  succeeded: 1\n  skipped: 0", output);
+        Assert.AreEqual(1, CountOccurrences(output, "Test run summary:"));
+    }
+
+    private static TerminalOutputDevice CreateDeviceWithLog(RecordingDeviceFixture fixture, IFileLoggerInformation information)
+        => new(
+            fixture.Services.GetConsole(),
+            fixture.Services.GetTestApplicationModuleInfo(),
+            fixture.Services.GetTestHostControllerInfo(),
+            fixture.Services.GetAsyncMonitorFactory().Create(),
+            fixture.Services.GetRuntimeFeature(),
+            fixture.Services.GetEnvironment(),
+            fixture.Services.GetPlatformInformation(),
+            fixture.Services.GetCommandLineOptions(),
+            information,
+            fixture.Services.GetLoggerFactory(),
+            fixture.Services.GetClock(),
+            fixture.Services.GetRequiredService<IStopPoliciesService>(),
+            fixture.Services.GetTestApplicationCancellationTokenSource(),
+            fixture.Services.GetRequiredService<ITestCoverageResult>());
 }

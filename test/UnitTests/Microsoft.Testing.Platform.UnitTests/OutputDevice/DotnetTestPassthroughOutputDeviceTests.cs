@@ -3,6 +3,8 @@
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -131,5 +133,70 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring test assets"), CancellationToken.None);
 
         serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow("1.1.0", 0, 0)]
+    [DataRow("1.2.0", 0, 1)]
+    [DataRow("1.3.0", 4, 1)]
+    public async Task Passthrough_NegotiatedVersionsGateTypedCiAndDisplayMessages(string version, int expectedDisplays, int expectedAzure)
+    {
+        using CancellationTokenSource application = new();
+        using CancellationTokenSource call = new();
+        using DotnetTestConnectionTests.ConnectionFixture fixture = DotnetTestConnectionTests.CreateConnection(application.Token);
+        fixture.Client.Respond(
+            new HandshakeMessage(new()
+            {
+                [HandshakeMessagePropertyNames.SupportedProtocolVersions] = version,
+            }),
+            application.Token);
+        Assert.IsTrue(await fixture.Connection.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost));
+        List<DisplayMessage> displays = [];
+        List<AzureDevOpsLogMessage> azure = [];
+        fixture.Client.RespondVoid<DisplayMessage>(application.Token, displays.Add);
+        fixture.Client.RespondVoid<AzureDevOpsLogMessage>(application.Token, azure.Add);
+        Mock<IConsole> console = new(MockBehavior.Strict);
+        ServiceProvider services = new();
+        services.AddServices([fixture.Connection, fixture.Environment.Object, console.Object]);
+        DotnetTestPassthroughOutputDevice device = new(services);
+
+        await device.DisplayAsync(Producer, new SessionMessageOutputDeviceData("durable session"), call.Token);
+        await device.DisplayAsync(Producer, new GitHubActionsCommandOutputDeviceData("::group::exact workflow"), call.Token);
+        await device.DisplayAsync(Producer, new WarningMessageOutputDeviceData("warning payload"), call.Token);
+        await device.DisplayAsync(Producer, new ErrorMessageOutputDeviceData("error payload"), call.Token);
+        await device.DisplayAsync(Producer, new AzureDevOpsCommandOutputDeviceData("##[group]exact azure"), call.Token);
+        await device.DisplayAsync(Producer, new TextOutputDeviceData("must be discarded"), call.Token);
+        await device.DisplayBannerAsync("must be discarded", call.Token);
+        await device.DisplayBeforeSessionStartAsync(call.Token);
+        await device.DisplayAfterSessionEndRunAsync(call.Token);
+        await device.HandleProcessRoleAsync(TestProcessRole.TestHost, call.Token);
+
+        Assert.HasCount(expectedDisplays, displays);
+        Assert.HasCount(expectedAzure, azure);
+        if (expectedDisplays > 0)
+        {
+            Assert.AreSequenceEqual(new byte[] { 0, 0, 1, 2 }, displays.Select(message => message.Level));
+            Assert.AreSequenceEqual(["durable session", "::group::exact workflow", "warning payload", "error payload"], displays.Select(message => message.Text));
+            Assert.IsTrue(displays.All(message => message.ExecutionId == "execution" && message.InstanceId == DotnetTestConnection.InstanceId));
+        }
+
+        if (expectedAzure > 0)
+        {
+            Assert.AreEqual("##[group]exact azure", azure[0].LogText);
+            Assert.AreEqual("execution", azure[0].ExecutionId);
+            Assert.AreEqual(DotnetTestConnection.InstanceId, azure[0].InstanceId);
+        }
+
+        Assert.IsFalse(await device.IsEnabledAsync());
+        Assert.AreEqual("DotnetTestPassthroughOutputDevice", device.Uid);
+        Assert.AreEqual("DotnetTestPassthroughOutputDevice", device.DisplayName);
+        Assert.AreEqual("2.6.0-dev", device.Version);
+        Assert.AreEqual(
+            "Output device that discards regular informational host output but forwards durable session messages, CI logging commands, and warning/error messages to the SDK under the dotnet test pipe protocol.",
+            device.Description);
+        Assert.IsTrue(fixture.Client.Mock.Invocations
+            .Where(invocation => invocation.Method.Name == "RequestReplyAsync")
+            .All(invocation => (CancellationToken)invocation.Arguments[1] == application.Token));
+        console.VerifyNoOtherCalls();
     }
 }

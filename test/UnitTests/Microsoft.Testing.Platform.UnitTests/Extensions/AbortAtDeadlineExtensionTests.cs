@@ -515,6 +515,98 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             reportTimeout,
             isHangDumpEnabled);
     }
+
+    [TestMethod]
+    public async Task WhenGracefulStopThrowsSynchronously_DiagnosticsCannotCommitDeadline()
+    {
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability.Setup(c => c.TryStopTestExecutionAsync(_cts.Token)).Callback(() => stopping.TrySetResult(true))
+            .Throws(new InvalidOperationException("synchronous stop failed"));
+        using AbortAtDeadlineExtension extension = CreateExtension(TimeSpan.Zero);
+
+        await WaitForAsync(stopping.Task);
+        await WaitForAsync(extension.WaitForDeadlineHandlingAsync());
+
+        _capability.Verify(c => c.TryStopTestExecutionAsync(_cts.Token), Times.Once);
+        _policiesService.Verify(p => p.ExecuteDeadlineCallbacksAsync(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task WhenStopIsRejectedAfterExecutionCompletes_DeadlineClaimDoesNotCommit()
+    {
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability.Setup(c => c.TryStopTestExecutionAsync(_cts.Token)).Returns(() =>
+        {
+            stopping.TrySetResult(true);
+            return release.Task;
+        });
+        List<IOutputDeviceData> messages = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(TimeSpan.Zero, onDisplayData: messages.Add);
+        await WaitForAsync(stopping.Task);
+        extension.NotifyTestExecutionCompleted();
+
+        release.SetResult(false);
+        await WaitForAsync(extension.WaitForDeadlineHandlingAsync());
+
+        _capability.Verify(c => c.TryStopTestExecutionAsync(_cts.Token), Times.Once);
+        _policiesService.Verify(p => p.TryExecuteDeadlineStopFallbackAsync(), Times.Once);
+        _policiesService.Verify(p => p.ExecuteDeadlineCallbacksAsync(), Times.Never);
+        Assert.IsEmpty(messages);
+    }
+
+    [TestMethod]
+    public async Task WhenAllDeadlineDiagnosticsThrow_GracefulStopStillCommitsOnce()
+    {
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability.Setup(c => c.TryStopTestExecutionAsync(_cts.Token)).Callback(() => stopping.TrySetResult(true)).ReturnsAsync(true);
+        List<LogLevel> logs = [];
+        List<IOutputDeviceData> messages = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            TimeSpan.Zero,
+            onLog: level =>
+            {
+                logs.Add(level);
+                return Task.FromException(new IOException("logging failed"));
+            },
+            onDisplay: () => Task.FromException(new IOException("display failed")),
+            onDisplayData: messages.Add);
+
+        await WaitForAsync(stopping.Task);
+        await WaitForAsync(extension.WaitForDeadlineHandlingAsync());
+
+        Assert.AreSequenceEqual([LogLevel.Information, LogLevel.Error, LogLevel.Error], logs);
+        Assert.IsInstanceOfType<SessionMessageOutputDeviceData>(Assert.ContainsSingle(messages));
+        _capability.Verify(c => c.TryStopTestExecutionAsync(_cts.Token), Times.Once);
+        _policiesService.Verify(p => p.ExecuteDeadlineCallbacksAsync(), Times.Once);
+    }
+
+#if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_InFlightStopDrainsBeforeCompletingAndDoesNotRepeatCallbacks()
+    {
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability.Setup(c => c.TryStopTestExecutionAsync(_cts.Token)).Returns(() =>
+        {
+            stopping.TrySetResult(true);
+            return release.Task;
+        });
+        List<IOutputDeviceData> messages = [];
+        await using AbortAtDeadlineExtension extension = CreateExtension(TimeSpan.Zero, onDisplayData: messages.Add);
+        await WaitForAsync(stopping.Task);
+
+        Task disposal = extension.DisposeAsync().AsTask();
+        Assert.IsFalse(disposal.IsCompleted);
+        release.SetResult(true);
+        await WaitForAsync(disposal);
+        await extension.DisposeAsync();
+
+        Assert.IsInstanceOfType<SessionMessageOutputDeviceData>(Assert.ContainsSingle(messages));
+        _capability.Verify(c => c.TryStopTestExecutionAsync(_cts.Token), Times.Once);
+        _policiesService.Verify(p => p.ExecuteDeadlineCallbacksAsync(), Times.Once);
+    }
+#endif
 }
 
 #pragma warning restore TPEXP

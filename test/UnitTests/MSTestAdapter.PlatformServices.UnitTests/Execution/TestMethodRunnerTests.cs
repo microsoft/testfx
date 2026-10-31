@@ -886,4 +886,150 @@ public class TestMethodRunnerTests : TestContainer
     }
 
     #endregion
+
+    public async Task AggregateActivityStatusHonorsMappingsAndSelectsTheFirstFailure()
+    {
+        (UnitTestOutcome[] Outcomes, bool MapInconclusive, bool MapNotRunnable, string Status, string? FirstFailure)[] cases =
+        [
+            ([UnitTestOutcome.Passed, UnitTestOutcome.Inconclusive, UnitTestOutcome.Ignored], false, false, "pass", null),
+            ([UnitTestOutcome.Ignored, UnitTestOutcome.Inconclusive, UnitTestOutcome.NotRunnable], false, false, "skipped", null),
+            ([UnitTestOutcome.Passed, UnitTestOutcome.Inconclusive], true, false, "fail", "Inconclusive"),
+            ([UnitTestOutcome.Passed, UnitTestOutcome.NotRunnable], false, true, "fail", "NotRunnable"),
+            ([UnitTestOutcome.Passed, UnitTestOutcome.Unknown, UnitTestOutcome.Timeout], false, false, "fail", "Unknown"),
+        ];
+        foreach (var item in cases)
+        {
+            MSTestSettings.PopulateSettings(
+                $"<RunSettings><MSTest><MapInconclusiveToFailed>{item.MapInconclusive.ToString().ToLowerInvariant()}</MapInconclusiveToFailed><MapNotRunnableToFailed>{item.MapNotRunnable.ToString().ToLowerInvariant()}</MapNotRunnableToFailed></MSTest></RunSettings>", null, null);
+            var activity = new ContinuationActivity();
+            MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+            TestResult[] expected = item.Outcomes.Select(outcome => new TestResult { Outcome = outcome, Duration = TimeSpan.FromSeconds(7) }).ToArray();
+            var executor = new ContinuationExecutor(() => expected);
+            var info = new TestableTestMethodInfo(_methodInfo, _testClassInfo, new TestMethodOptions(TimeoutInfo.FromTimeout(0), executor), null!);
+
+            TestResult[] actual = await new TestMethodRunner(info, _testMethod, _testContextImplementation).ExecuteAsync("prefix", null, null, null);
+
+            actual.Select(result => result.Outcome).Should().Equal(item.Outcomes);
+            actual.Select(result => result.Duration).Should().OnlyContain(duration => duration == TimeSpan.FromSeconds(7));
+            activity.Tags["test.case.result.status"].Should().Be(item.Status);
+            activity.Tags["test.case.data_row.count"].Should().Be(expected.Length);
+            activity.Exceptions.Should().BeEmpty();
+            activity.FailureDescription.Should().Be(item.FirstFailure);
+            executor.Calls.Should().Be(1);
+            actual[0].LogOutput.Should().Be("prefix");
+        }
+
+        var firstFailure = new InvalidOperationException("first failure");
+        var laterFailure = new InvalidOperationException("later failure");
+        var failedActivity = new ContinuationActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => failedActivity);
+        var failedExecutor = new ContinuationExecutor(() =>
+        [
+            new() { Outcome = UnitTestOutcome.Passed },
+            new() { Outcome = UnitTestOutcome.Failed, TestFailureException = firstFailure },
+            new() { Outcome = UnitTestOutcome.Timeout, TestFailureException = laterFailure },
+        ]);
+        var failedInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, new TestMethodOptions(TimeoutInfo.FromTimeout(0), failedExecutor), null!);
+        await new TestMethodRunner(failedInfo, _testMethod, _testContextImplementation).ExecuteAsync(null, null, null, null);
+        failedActivity.Exceptions.Should().Equal(firstFailure);
+        failedActivity.Tags["test.case.result.status"].Should().Be("fail");
+    }
+
+    public async Task UnexpectedExecutorStateProducesOneErrorAndOneRecordedException()
+    {
+        var activity = new ContinuationActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var info = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, null!) { Executor = null! };
+
+        TestResult[] results = await new TestMethodRunner(info, _testMethod, _testContextImplementation)
+            .ExecuteAsync("out", "error", "trace", "messages");
+
+        results.Should().ContainSingle();
+        results[0].Outcome.Should().Be(UnitTestOutcome.Error);
+        results[0].ExceptionMessage.Should().Contain("TestMethodRunner.cs");
+        results[0].LogOutput.Should().Be("out");
+        results[0].LogError.Should().Be("error");
+        results[0].DebugTrace.Should().Be("trace");
+        results[0].TestContextMessages.Should().Be("messages");
+        activity.Exceptions.Should().ContainSingle();
+        activity.Tags["test.case.result.status"].Should().Be("fail");
+        activity.Tags["test.case.data_row.count"].Should().Be(1);
+    }
+
+    public async Task EmptyExecutorResultsBecomeTheDocumentedUnknownSentinel()
+    {
+        var executor = new ContinuationExecutor(() => []);
+        var info = new TestableTestMethodInfo(_methodInfo, _testClassInfo, new TestMethodOptions(TimeoutInfo.FromTimeout(0), executor), null!);
+
+        TestResult[] results = await new TestMethodRunner(info, _testMethod, _testContextImplementation).RunTestMethodAsync();
+
+        results.Should().ContainSingle();
+        results[0].Outcome.Should().Be(UnitTestOutcome.Unknown);
+        results[0].ExceptionMessage.Should().Be(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource.UTA_NoTestResult);
+        executor.Calls.Should().Be(1);
+    }
+
+    public async Task DuplicateLegacyDataSourcesFallBackWithoutOpeningDataConnections()
+    {
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(_methodInfo))
+            .Returns([new DataSourceAttribute("first", "table"), new DataSourceAttribute("second", "table")]);
+        var executor = new ContinuationExecutor(() => [new TestResult { Outcome = UnitTestOutcome.Passed }]);
+        var info = new TestableTestMethodInfo(_methodInfo, _testClassInfo, new TestMethodOptions(TimeoutInfo.FromTimeout(0), executor), null!);
+
+        TestResult[] results = await new TestMethodRunner(info, _testMethod, _testContextImplementation).RunTestMethodAsync();
+
+        results.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Passed);
+        executor.Calls.Should().Be(1);
+        _testablePlatformServiceProvider.MockTestDataSource.Verify(value => value.GetData(info, _testContextImplementation), Times.Never);
+    }
+
+    public async Task LegacyDataSourceNullAndFailureHaveDistinctOutcomesAndOriginalCause()
+    {
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(_methodInfo))
+            .Returns([new DataSourceAttribute("connection", "table")]);
+        var info = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new InvalidOperationException("no row should execute"));
+        _testablePlatformServiceProvider.MockTestDataSource.Setup(value => value.GetData(info, _testContextImplementation))
+            .Returns((IEnumerable<object>?)null);
+        TestResult[] absent = await new TestMethodRunner(info, _testMethod, _testContextImplementation).RunTestMethodAsync();
+        absent.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+        var cause = new InvalidOperationException("legacy source failed");
+        _testablePlatformServiceProvider.MockTestDataSource.Setup(value => value.GetData(info, _testContextImplementation)).Throws(cause);
+
+        TestResult[] failed = await new TestMethodRunner(info, _testMethod, _testContextImplementation).RunTestMethodAsync();
+
+        failed.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+        failed[0].TestFailureException.Should().BeSameAs(cause);
+        failed[0].ExecutionId.Should().NotBe(Guid.Empty);
+        failed[0].ParentExecId.Should().NotBe(Guid.Empty);
+    }
+
+    private sealed class ContinuationExecutor(Func<TestResult[]> execute) : TestMethodAttribute
+    {
+        internal int Calls { get; private set; }
+
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            Calls++;
+            return Task.FromResult(execute());
+        }
+    }
+
+    private sealed class ContinuationActivity : IMSTestActivity
+    {
+        internal Dictionary<string, object?> Tags { get; } = new(StringComparer.Ordinal);
+
+        internal List<Exception> Exceptions { get; } = [];
+
+        internal string? FailureDescription { get; private set; }
+
+        public void SetTag(string key, object? value) => Tags[key] = value;
+
+        public void RecordException(Exception exception) => Exceptions.Add(exception);
+
+        public void SetFailed(string? description) => FailureDescription = description;
+
+        public void Dispose()
+        {
+        }
+    }
 }

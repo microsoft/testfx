@@ -491,4 +491,225 @@ public sealed class IPCTests
         protected override void SerializeCore(TestHostCompletedRequest objectToSerialize, Stream stream)
             => WriteInt(stream, objectToSerialize.ExitCode);
     }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task Client_SerializerWriteFailuresPreserveIdentityAndPrimaryExitPolicy(bool primary, bool disposed)
+    {
+        Exception expected = disposed
+            ? new ObjectDisposedException("owned serializer")
+            : new IOException("owned serialization failure");
+        Mock<IEnvironment> environment = new();
+        using NamedPipeClient client = new(Guid.NewGuid().ToString("N"), environment.Object, primary);
+        client.RegisterSerializer(new WriteFailureSerializer(expected), typeof(IntMessage));
+
+        Exception actual = disposed
+            ? await Assert.ThrowsExactlyAsync<ObjectDisposedException>(
+                () => client.RequestReplyAsync<IntMessage, VoidResponse>(new(42), _testContext.CancellationToken))
+            : await Assert.ThrowsExactlyAsync<IOException>(
+                () => client.RequestReplyAsync<IntMessage, VoidResponse>(new(42), _testContext.CancellationToken));
+
+        Assert.AreSame(expected, actual);
+        environment.Verify(e => e.Exit(1), primary ? Times.Once() : Times.Never());
+    }
+
+    [TestMethod]
+    [DataRow("primary")]
+    [DataRow("auxiliary")]
+    [DataRow("broken-stderr")]
+    public async Task Client_PeerEofPreservesPrimaryAndAuxiliaryDiagnostics(string kind)
+    {
+        SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("pipe-eof-" + kind);
+
+        Assert.AreEqual(0, child.ExitCode, child.Error);
+        Assert.AreSequenceEqual(
+            new[] { "request-frame:8,3,42", "eof-contract:" + kind },
+            ReadPipeChildRecords(child.Output));
+    }
+
+    [TestMethod]
+    [DataRow("sync")]
+    [DataRow("missing-loop")]
+#if NETCOREAPP
+    [DataRow("async")]
+#endif
+    public async Task Server_ZeroOwnedHangTimeoutReportsBlockedLoopAndNullLoopCompletes(string kind)
+    {
+        SystemWrappersTests.ChildResult child = await SystemWrappersTests.RunChildAsync("pipe-lifecycle-" + kind);
+
+        Assert.AreEqual(0, child.ExitCode, child.Error);
+        string[] expected = kind == "missing-loop"
+            ? ["disconnect:False", "dispose:completed", "errors:0"]
+            : ["disconnect:False", "dispose:Method 'InternalLoopAsync' did not exit successfully", "errors:1"];
+        Assert.AreSequenceEqual(expected, ReadPipeChildRecords(child.Output));
+    }
+
+    internal static async Task RunPeerEofChildAsync(string mode, Action<string> record)
+    {
+        bool primary = mode != "pipe-eof-auxiliary";
+        bool brokenDiagnostic = mode == "pipe-eof-broken-stderr";
+        string name = NamedPipeServer.GetPipeName("eof-" + Guid.NewGuid().ToString("N")).Name;
+        using System.IO.Pipes.NamedPipeServerStream peer = new(
+            name, System.IO.Pipes.PipeDirection.InOut, 1, System.IO.Pipes.PipeTransmissionMode.Byte, System.IO.Pipes.PipeOptions.Asynchronous);
+        Mock<IEnvironment> environment = new();
+        using NamedPipeClient client = new(name, environment.Object, primary);
+        client.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        Task accepted = peer.WaitForConnectionAsync(CancellationToken.None);
+        await client.ConnectAsync(CancellationToken.None);
+        await accepted;
+        TextWriter originalError = Console.Error;
+        using StringWriter diagnostic = new(CultureInfo.InvariantCulture);
+        using ThrowingPipeDiagnosticWriter unavailableDiagnostic = new();
+        Console.SetError(brokenDiagnostic ? unavailableDiagnostic : diagnostic);
+        try
+        {
+            // Windows pipe draining may complete synchronously; let the owned peer drain in parallel.
+            Task<VoidResponse> request = Task.Run(
+                () => client.RequestReplyAsync<IntMessage, VoidResponse>(new(42), CancellationToken.None),
+                CancellationToken.None);
+            byte[] frame = new byte[12];
+            int offset = 0;
+            while (offset < frame.Length)
+            {
+                int read = await peer.ReadAsync(frame, offset, frame.Length - offset, CancellationToken.None);
+                Assert.IsGreaterThan(0, read);
+                offset += read;
+            }
+
+            byte[] expectedFrame = [.. BitConverter.GetBytes(8), .. BitConverter.GetBytes(3), .. BitConverter.GetBytes(42)];
+            Assert.AreSequenceEqual(expectedFrame, frame);
+            record("request-frame:8,3,42");
+            peer.Dispose();
+            Exception failure = primary
+                ? await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => request)
+                : await Assert.ThrowsExactlyAsync<IOException>(() => request);
+            Assert.AreEqual($"Pipe '{name}' was closed by the server before a response was received.", failure.Message);
+            environment.Verify(e => e.Exit(1), primary ? Times.Once() : Times.Never());
+            string expectedDiagnostic = primary && !brokenDiagnostic
+                ? $"[NamedPipeClient] Pipe '{name}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code 1." + Environment.NewLine
+                : string.Empty;
+            Assert.AreEqual(expectedDiagnostic, diagnostic.ToString());
+            record("eof-contract:" + mode["pipe-eof-".Length..]);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+    }
+
+    internal static async Task RunLifecycleChildAsync(string mode, Action<string> record)
+    {
+        Environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT, "0s");
+        Assert.AreEqual(TimeSpan.Zero, TimeoutHelper.DefaultHangTimeSpanTimeout);
+        bool missingLoop = mode == "pipe-lifecycle-missing-loop";
+        TaskCompletionSource<bool> loop = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Mock<ITask> task = new();
+        task.Setup(t => t.Run(It.IsAny<Func<Task>>(), CancellationToken.None))
+            .Returns(missingLoop ? null! : loop.Task);
+        List<string> errors = [];
+        PipeErrorLogger logger = new(errors);
+        NamedPipeServer server = new(
+            "lifecycle-" + Guid.NewGuid().ToString("N"),
+            _ => throw new UnreachableException(),
+            Mock.Of<IEnvironment>(), logger, task.Object, CancellationToken.None);
+        try
+        {
+            using System.IO.Pipes.NamedPipeClientStream client = new(
+                ".", server.PipeName.Name, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous);
+            Task accepted = server.WaitConnectionAsync(CancellationToken.None);
+            await client.ConnectAsync(CancellationToken.None);
+            await accepted;
+            Assert.IsTrue(server.WasConnected);
+            bool disconnected = await server.WaitForDisconnectAsync(TimeSpan.Zero);
+            Assert.IsFalse(disconnected);
+            record("disconnect:" + disconnected);
+            if (missingLoop)
+            {
+                server.Dispose();
+                Assert.IsEmpty(errors);
+                record("dispose:completed");
+            }
+            else
+            {
+                InvalidOperationException failure;
+#if NETCOREAPP
+                if (mode == "pipe-lifecycle-async")
+                {
+                    failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(async () => await server.DisposeAsync());
+                }
+                else
+#endif
+                {
+                    Action dispose = server.Dispose;
+                    failure = Assert.ThrowsExactly<InvalidOperationException>(dispose);
+                }
+
+                Assert.AreEqual("Method 'InternalLoopAsync' did not exit successfully", failure.Message);
+                string method = mode == "pipe-lifecycle-async" ? "DisposeAsync" : "Dispose";
+                Assert.AreEqual(
+                    $"NamedPipeServer.{method}: 'InternalLoopAsync' for pipe '{server.PipeName.Name}' did not complete within 00:00:00. WasConnected=True, LoopTaskStatus=WaitingForActivation.",
+                    Assert.ContainsSingle(errors));
+                record("dispose:" + failure.Message);
+            }
+
+            record("errors:" + errors.Count.ToString(CultureInfo.InvariantCulture));
+            task.Verify(t => t.Run(It.IsAny<Func<Task>>(), CancellationToken.None), Times.Once);
+        }
+        finally
+        {
+            loop.TrySetResult(true);
+            server.GetServerStream().Dispose();
+            server.Dispose();
+        }
+    }
+
+    private static string[] ReadPipeChildRecords(string output)
+        => output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.TrimStart('\uFEFF'))
+            .Where(line => line.StartsWith("PROBE|", StringComparison.Ordinal))
+            .Select(line => Encoding.UTF8.GetString(Convert.FromBase64String(line["PROBE|".Length..])))
+            .ToArray();
+
+    private sealed class WriteFailureSerializer(Exception failure) : NamedPipeSerializer<IntMessage>
+    {
+        public override int Id => 99;
+
+        protected override IntMessage DeserializeCore(Stream stream) => throw new UnreachableException();
+
+        protected override void SerializeCore(IntMessage objectToSerialize, Stream stream) => throw failure;
+    }
+
+    private sealed class ThrowingPipeDiagnosticWriter : TextWriter
+    {
+        public override Encoding Encoding => Encoding.UTF8;
+
+        public override Task WriteLineAsync(string? value) => Task.FromException(new IOException("owned unavailable stderr"));
+
+#if NETCOREAPP
+        public override Task WriteLineAsync(ReadOnlyMemory<char> buffer, CancellationToken cancellationToken = default)
+            => Task.FromException(new IOException("owned unavailable stderr"));
+#endif
+    }
+
+    private sealed class PipeErrorLogger(List<string> errors) : ILogger
+    {
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == LogLevel.Error)
+            {
+                errors.Add(formatter(state, exception));
+            }
+        }
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Log(logLevel, state, exception, formatter);
+            return Task.CompletedTask;
+        }
+    }
 }

@@ -786,4 +786,63 @@ public class DynamicDataAttributeTests : TestContainer
         {
         }
     }
+
+    public void GetData_OwnDeclaringTypeArgumentConstructor_PreservesArgumentsAndRejectsWrongArity()
+    {
+        MethodInfo method = typeof(ArgumentConstructorFixture).GetMethod(nameof(ArgumentConstructorFixture.Consumer))!;
+        var attribute = new DynamicDataAttribute(nameof(ArgumentConstructorFixture.Rows), 7, "label");
+        object[][] rows = attribute.GetData(method).ToArray();
+        rows.Should().HaveCount(2);
+        rows[0].Should().Equal(7, "label");
+        rows[1].Should().Equal("label", 8);
+
+        var wrongArity = new DynamicDataAttribute(nameof(ArgumentConstructorFixture.Rows), 7);
+        Action action = () => wrongArity.GetData(method);
+        action.Should().ThrowExactly<TargetParameterCountException>().WithMessage("Parameter count mismatch.");
+    }
+
+    private sealed class ArgumentConstructorFixture
+    {
+        public static IEnumerable<object[]> Rows(int number, string label) => [[number, label], [label, number + 1]];
+
+        public void Consumer(int number, string label)
+        {
+            _ = number;
+            _ = label;
+        }
+    }
+
+    public void EmptyDataSourceDiagnostic_UsesNamedCapabilityOrGenericFallbackWithoutReadingDataAgain()
+    {
+        ITestDataSource named = new DynamicDataAttribute(nameof(EmptySourceFixture.Rows), typeof(EmptySourceFixture));
+        named.GetData(_testMethodInfo).Should().BeEmpty();
+        ArgumentException namedError = named.GetExceptionForEmptyDataSource(_testMethodInfo);
+        namedError.Message.Should().Be(
+            $"Property or method Rows on {typeof(EmptySourceFixture).FullName} returns empty IEnumerable<object[]>.");
+        namedError.ParamName.Should().BeNull();
+
+        var unnamed = new UnnamedEmptySource();
+        ArgumentException genericError = unnamed.GetExceptionForEmptyDataSource(_testMethodInfo);
+        genericError.Message.Should().Be("Property or method GetData on UnnamedEmptySource returns empty IEnumerable<object[]>.");
+        genericError.ParamName.Should().BeNull();
+        unnamed.ReadCalls.Should().Be(0);
+    }
+
+    private sealed class EmptySourceFixture
+    {
+        public static IEnumerable<object?[]> Rows => [];
+    }
+
+    private sealed class UnnamedEmptySource : ITestDataSource
+    {
+        public int ReadCalls { get; private set; }
+
+        public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
+        {
+            ReadCalls++;
+            return [];
+        }
+
+        public string? GetDisplayName(MethodInfo methodInfo, object?[]? data) => null;
+    }
 }

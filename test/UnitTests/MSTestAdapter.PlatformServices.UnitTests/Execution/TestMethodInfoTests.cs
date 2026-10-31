@@ -3407,5 +3407,133 @@ public class TestMethodInfoTests : TestContainer
     }
 #endif
 
+    public async Task DirectInvokerPreservesFrameworkFailuresAndReportsMalformedReflectionFailures()
+    {
+        var original = new TestFailedException(UnitTestOutcome.Inconclusive, "registered invoker failure");
+        using (var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw original))
+        {
+            _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+            result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+            result.TestFailureException.Should().BeSameAs(original);
+        }
+
+        using (var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw new TargetInvocationException((Exception?)null)))
+        {
+            _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+            result.Outcome.Should().Be(UnitTestOutcome.Error);
+            result.ExceptionMessage.Should().Be(string.Format(
+                CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, typeof(DummyTestClass).FullName, nameof(DummyTestClass.DummyTestMethod)));
+        }
+    }
+
+    public async Task WrongThreadFailureAddsTheActionableUiDiagnostic()
+    {
+        var original = new System.Runtime.InteropServices.COMException("wrong apartment", -2147417842);
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw original);
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        result.TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException.Should().BeSameAs(original);
+        result.ExceptionMessage.Should().Contain("wrong apartment")
+            .And.EndWith(string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, string.Empty));
+    }
+
+    public async Task CooperativeTimeoutPreservesSuccessAndCancellationWithoutElapsedTime()
+    {
+        int calls = 0;
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) =>
+        {
+            _testContextImplementation.CancellationToken.ThrowIfCancellationRequested();
+            calls++;
+            return Task.CompletedTask;
+        });
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(int.MaxValue) { CooperativeCancellation = true });
+        TestResult passed = await _testMethodInfo.InvokeAsync(null);
+        _testContextImplementation.CancellationTokenSource.Cancel();
+
+        TestResult canceled = await _testMethodInfo.InvokeAsync(null);
+
+        passed.Outcome.Should().Be(UnitTestOutcome.Passed);
+        canceled.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        canceled.ExceptionMessage.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, nameof(DummyTestClass.DummyTestMethod)));
+        calls.Should().Be(1);
+    }
+
+    public async Task CompletedThreadOperationPreservesTheOriginalInfrastructureFailure()
+    {
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => Task.CompletedTask);
+        var original = new InvalidOperationException("outcome observer failed");
+        var context = new Mock<ITestContext>();
+        context.SetupGet(value => value.Context).Returns(_testContextImplementation);
+        context.Setup(value => value.SetOutcome(It.IsAny<UnitTestOutcome>())).Throws(original);
+        _testMethodInfo.TestContext = context.Object;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(17);
+        provider.Services.MockThreadOperations
+            .Setup(value => value.Execute(It.IsAny<Action>(), 17, It.IsAny<CancellationToken>()))
+            .Returns<Action, int, CancellationToken>((action, _, _) =>
+            {
+                action();
+                return true;
+            });
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(null);
+        try
+        {
+            Func<Task> invoke = () => _testMethodInfo.InvokeAsync(null);
+
+            (await invoke.Should().ThrowExactlyAsync<InvalidOperationException>()).Which.Should().BeSameAs(original);
+            provider.Services.MockThreadOperations.Verify(value => value.Execute(It.IsAny<Action>(), 17, It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+    }
+
+    private sealed class DirectInvokerProvider : IDisposable
+    {
+        private readonly IPlatformServiceProvider _previous;
+
+        internal DirectInvokerProvider(MethodInfo method, Func<object?, object?[]?, object?> invoke)
+        {
+            _previous = PlatformServiceProvider.Instance;
+            Services = new TestablePlatformServiceProvider();
+            Services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(
+                new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+                {
+                    TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>> { [method] = invoke },
+                }));
+            PlatformServiceProvider.Instance = Services;
+        }
+
+        internal TestablePlatformServiceProvider Services { get; }
+
+        public void Dispose() => PlatformServiceProvider.Instance = _previous;
+    }
+
+    public async Task CooperativeInfrastructureCancellationUsesTheFailureFactory()
+    {
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => Task.CompletedTask);
+        var context = new Mock<ITestContext>();
+        context.SetupGet(value => value.Context).Returns(_testContextImplementation);
+        context.Setup(value => value.SetOutcome(It.IsAny<UnitTestOutcome>())).Callback(() =>
+        {
+            _testContextImplementation.CancellationTokenSource.Cancel();
+            throw new OperationCanceledException(_testContextImplementation.CancellationToken);
+        });
+        _testMethodInfo.TestContext = context.Object;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(int.MaxValue) { CooperativeCancellation = true });
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.ExceptionMessage.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, nameof(DummyTestClass.DummyTestMethod)));
+        context.Verify(value => value.SetOutcome(It.IsAny<UnitTestOutcome>()), Times.Once);
+    }
+
 }
 #endregion

@@ -188,6 +188,136 @@ public sealed class CommandLineInformationalOutputTests
             [HandshakeMessagePropertyNames.SupportedProtocolVersions] = version,
             [HandshakeMessagePropertyNames.ExecutionMode] = help ? HandshakeMessageExecutionModes.Help : HandshakeMessageExecutionModes.Discover,
         });
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PipeProtocol_CompletedDiscoveryWritesExactFinalResult(bool json)
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", json ? ["--list-tests", "json"] : ["--list-tests"], text);
+        using (InformationalWirePeer peer = new(output.PipeName))
+        {
+            await peer.ConnectAsync();
+            HandshakeMessage reply = await peer.HandshakeAsync(CreateHandshake(help: false));
+            Assert.AreEqual("1.4.0", reply.Properties![HandshakeMessagePropertyNames.SupportedProtocolVersions]);
+            Assert.AreEqual(json ? "True" : "False", reply.Properties[HandshakeMessagePropertyNames.IsIDE]);
+            await peer.SendAsync(new TestSessionEvent(SessionEventTypes.TestSessionStart, "session", "execution"), new Microsoft.Testing.Platform.IPC.Serializers.TestSessionEventSerializer(), 8);
+            await peer.SendAsync(new DisplayMessage("execution", "instance", DisplayMessageLevels.Information, "note"), new Microsoft.Testing.Platform.IPC.Serializers.DisplayMessageSerializer(), 12);
+            await peer.SendAsync(
+                new DiscoveredTestMessages("execution", "instance", [new("uid-17", "Visible case", null, null, null, null, null, null, [])]),
+                new Microsoft.Testing.Platform.IPC.Serializers.DiscoveredTestMessagesSerializer(),
+                5);
+            await peer.SendAsync(new TestSessionEvent(SessionEventTypes.TestSessionEnd, "session", "execution"), new Microsoft.Testing.Platform.IPC.Serializers.TestSessionEventSerializer(), 8);
+        }
+
+        await output.CompleteAsync();
+
+        string expected = json
+            ? """
+              note
+
+              {
+                "schemaVersion": 1,
+                "tests": [
+                  {
+                    "uid": "uid-17",
+                    "displayName": "Visible case"
+                  }
+                ]
+              }
+              """
+            : """
+              note
+                Visible case
+              Discovered 1 test(s) in assembly
+              """;
+        Assert.AreEqual(expected.ReplaceLineEndings() + Environment.NewLine, text.ToString().ReplaceLineEndings());
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PipeProtocol_InvalidOrderOrUnexpectedRequestNeverCompletes(bool beforeHandshake)
+    {
+        using StringWriter text = new();
+        await using CommandLineInformationalOutput output = new("Tests.exe", ["--help"], text);
+        using (InformationalWirePeer peer = new(output.PipeName))
+        {
+            await peer.ConnectAsync();
+            if (beforeHandshake)
+            {
+                await peer.SendAsync(new DisplayMessage(null, null, DisplayMessageLevels.Error, "must not print"), new Microsoft.Testing.Platform.IPC.Serializers.DisplayMessageSerializer(), 12);
+            }
+
+            _ = await peer.HandshakeAsync(CreateHandshake(help: true));
+            if (!beforeHandshake)
+            {
+                await peer.SendAsync(new TestHostProcessPIDRequest(17), new Microsoft.Testing.Platform.IPC.Serializers.TestHostProcessPIDRequestSerializer(), 2);
+            }
+
+            await peer.SendAsync(new CommandLineOptionMessages("Tests", []), new Microsoft.Testing.Platform.IPC.Serializers.CommandLineOptionMessagesSerializer(), 3);
+        }
+
+        InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(output.CompleteAsync);
+        Assert.AreEqual(IncompleteResponse, failure.Message);
+        Assert.DoesNotContain("must not print", text.ToString());
+        Assert.AreEqual(
+            """
+            Usage Tests.exe [option providers] [extension option providers]
+
+            Execute a .NET Test Application.
+
+            Options:
+
+            Extension options:
+                No extension registered.
+
+
+            """.ReplaceLineEndings(),
+            text.ToString().ReplaceLineEndings());
+    }
+
+    private sealed class InformationalWirePeer(string pipeName) : IDisposable
+    {
+        private readonly System.IO.Pipes.NamedPipeClientStream _stream = new(
+            ".", pipeName, System.IO.Pipes.PipeDirection.InOut, System.IO.Pipes.PipeOptions.Asynchronous | System.IO.Pipes.PipeOptions.CurrentUserOnly);
+
+        public Task ConnectAsync() => _stream.ConnectAsync(CancellationToken.None);
+
+        public async Task<HandshakeMessage> HandshakeAsync(HandshakeMessage request)
+        {
+            var serializer = new Microsoft.Testing.Platform.IPC.Serializers.HandshakeMessageSerializer();
+            byte[] response = await ExchangeAsync(request, serializer, 9);
+            Assert.AreEqual(9, BitConverter.ToInt32(response, 0));
+            using MemoryStream payload = new(response, sizeof(int), response.Length - sizeof(int));
+            return (HandshakeMessage)ProtocolSerializerTestHelper.Deserialize(serializer, payload);
+        }
+
+        public async Task SendAsync<TMessage>(TMessage message, object serializer, int serializerId)
+        {
+            byte[] response = await ExchangeAsync(message, serializer, serializerId);
+            Assert.AreSequenceEqual(new byte[] { 0, 0, 0, 0 }, response);
+        }
+
+        public void Dispose() => _stream.Dispose();
+
+        private async Task<byte[]> ExchangeAsync<TMessage>(TMessage message, object serializer, int serializerId)
+        {
+            using MemoryStream payload = new();
+            // Reuse the canonical helper only to bridge source-linked and shipping serializer base types.
+            // All assertions concern the actual framed pipe replies and externally rendered output.
+            ProtocolSerializerTestHelper.Serialize(serializer, message, payload);
+            byte[] frame = [.. BitConverter.GetBytes(checked((int)payload.Length + sizeof(int))), .. BitConverter.GetBytes(serializerId), .. payload.ToArray()];
+            await _stream.WriteAsync(frame);
+            await _stream.FlushAsync();
+            byte[] header = new byte[sizeof(int)];
+            await _stream.ReadExactlyAsync(header);
+            byte[] response = new byte[BitConverter.ToInt32(header, 0)];
+            await _stream.ReadExactlyAsync(response);
+            return response;
+        }
+    }
 }
 
 #endif
