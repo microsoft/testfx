@@ -482,7 +482,7 @@ Os valores válidos são ''Minimal'', ''Normal'' e ''Detailed''. O padrão é ''
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed, active modules: {2}</source>
-        <target state="new">running... {0} completed, {1} failed, active modules: {2}</target>
+        <target state="translated">executando... {0} concluídos, {1} com falha, módulos ativos: {2}</target>
         <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
@@ -492,12 +492,12 @@ Os valores válidos são ''Minimal'', ''Normal'' e ''Detailed''. O padrão é ''
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatLastCompletionSuffix">
         <source> | last completion: {0} ago</source>
-        <target state="new"> | last completion: {0} ago</target>
+        <target state="translated"> | última conclusão: {0} atrás</target>
         <note>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatNoCompletionSuffix">
         <source> | no tests completed yet</source>
-        <target state="new"> | no tests completed yet</target>
+        <target state="translated"> | nenhum teste concluído ainda</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">

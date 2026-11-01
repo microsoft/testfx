@@ -482,7 +482,7 @@ I valori validi sono 'Minimal', 'Normal' e 'Detailed'. L'impostazione predefinit
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed, active modules: {2}</source>
-        <target state="new">running... {0} completed, {1} failed, active modules: {2}</target>
+        <target state="translated">in esecuzione... {0} completato, {1} non riuscito, moduli attivi: {2}</target>
         <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">

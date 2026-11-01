@@ -482,7 +482,7 @@ Platné hodnoty jsou Minimal, Normal a Detailed. Výchozí hodnota je Normal. K 
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed, active modules: {2}</source>
-        <target state="new">running... {0} completed, {1} failed, active modules: {2}</target>
+        <target state="translated">Spuštěno... {0} dokončeno, {1} neúspěšné, aktivní moduly: {2}</target>
         <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
