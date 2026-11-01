@@ -413,11 +413,46 @@ returned 0, and passed both canonical TRX gates with UTC timestamps. These seque
 confirm the committed packages; the earlier interleaved samples remain the controlled performance comparison.
 Exact final package metadata, loaded paths, commands and outcomes are retained in `final-package-evidence.json`.
 
-**Remaining delivery gates:** full TestFx collection/selection on a capable main CI agent, complete
-74-module artifact/runtime parity, public package flow and Azure multi-agent publication, release-branch
+#### Full real-solution collection validation
+
+An isolated checkout of the committed implementation was built and packed with the final coverage packages,
+the pinned SDK/runtimes, `FastAcceptanceTest=true` (as in the Windows pipeline), local storage and the short
+local package suffix `preview.full1`. The validation-only configuration commit is
+`f3a630003e981ec94d3759c714074cf18535d015`. The complete Windows solution builds/packs with
+zero warnings/errors and produces the same 74 module/framework inputs as the original pipeline inventory.
+No main checkout, global credentials, product pins or publishing configuration was changed.
+
+The corrected real collection completes **74/74 modules in 2,366.615 seconds (39.444 minutes)**,
+parent exit 0, with **828 measured batches, zero timing fallback and confirmed teardown**.
+All module caches are removed after their owners finish. Independent JSON discovery agrees exactly with
+all **70,935 unique module/UID identities** in the committed shards, and every UID has a source association.
+This includes all .NET/.NET Framework targets, internal TestContainer hosts and the playground modules.
+MTP acceptance takes 26.681 minutes and MSTest acceptance 23.546 minutes, overlapping in the bounded pool.
+The original 224.42-minute CI run is not a controlled machine/revision comparison, so no full-suite
+speedup factor is inferred from these different environments.
+
+A preliminary run is **not performance evidence**: superseded packages from an earlier, longer local suffix
+made acceptance-fixture version resolution ambiguous and caused class initialization failures.
+The 32 specifically identified, task-owned superseded nupkgs were moved out of the active feeds; a real
+package-consuming help fixture then passes both .NET 11/.NET Framework cases before the full rerun.
+Discovery was refreshed for both acceptance modules after that repair. The NUnit playground intentionally
+declares `[Values("one", "one")]`; its two byte-equivalent discovery records represent one UID.
+The inventory verifier records that multiplicity, rejects conflicting records and still forbids duplicated
+or missing UIDs in maps. None of these harness/setup failures is counted as behavioral red proof.
+
+The earlier oversized inherited PATH prevented CMD from resolving PowerShell. A process-only bounded PATH
+restored the normal Windows launcher; the missing declared runtimes were installed only into the task's
+local SDK layout. Correcting the isolated clone's origin restored package URL provenance. The short suffix
+keeps NuGet's long-path guard enabled rather than suppressing NU5123 or dropping source/native entries.
+The final linear-time inventory checker and complete build/collection logs are retained with
+`corrected-full-summary.json` and `verified-inventory.json` in the validation artifacts.
+Collection still accepts failed-test batch exit 2 by contract; its successful map outcome is not a claim
+that every acceptance test passed or a substitute for ordinary authoritative CI validation.
+
+**Remaining delivery gates:** collection/selection on a capable live main CI agent, public package flow
+and Azure multi-agent publication, release-branch
 proof/servicing decisions, ARM64/native rebuild and non-Windows support remain unverified.
-The selector's pattern covers all 18 project names in the original 74-map inventory and existing empty
-launch profiles; that static comparison is not proof of a full rebuilt solution's runtime inventory.
+The full rebuilt 74-module local runtime/discovery/map inventory is now verified, not just statically predicted.
 Public dependency pins are unchanged. `EnableCTSCollection` remains off until the corrected CTS tool is
 approved/published and its pipeline pin updated. The coordinator retains dependency-flow and rollout
 ownership; the local performance results do not authorize downstream activation or private publication.
