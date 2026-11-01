@@ -808,4 +808,45 @@ public sealed class FileLoggerTests : IDisposable
             => throw new NotSupportedException("Simulated I/O failure.");
 #endif
     }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task FileLoggerCategory_DirectLoggerPreservesCategoryFilteringAndFormatterArguments(bool asynchronous)
+    {
+        _mockFileStreamFactory.Setup(f => f.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read)).Returns(_mockStream.Object);
+        using FileLogger logger = new(
+            new(LogFolder, LogPrefix, FileName, syncFlush: true), LogLevel.Warning,
+            _mockClock.Object, new SystemTask(), _mockConsole.Object, _mockFileSystem.Object, _mockFileStreamFactory.Object);
+        FileLoggerCategory category = new(logger, "audit-category");
+        InvalidOperationException expectedException = new("category exception");
+        int formatted = 0;
+        string Format(string state, Exception? exception)
+        {
+            Assert.AreEqual("payload", state);
+            Assert.AreSame(expectedException, exception);
+            formatted++;
+            return "formatted payload";
+        }
+
+        Assert.IsFalse(category.IsEnabled(LogLevel.Debug));
+        Assert.IsTrue(category.IsEnabled(LogLevel.Error));
+        if (asynchronous)
+        {
+            await category.LogAsync(LogLevel.Debug, "not formatted", null, Format);
+            await category.LogAsync(LogLevel.Error, "payload", expectedException, Format);
+        }
+        else
+        {
+            category.Log(LogLevel.Debug, "not formatted", null, Format);
+            category.Log(LogLevel.Error, "payload", expectedException, Format);
+        }
+
+        Assert.AreEqual(1, formatted);
+        Assert.AreEqual(
+            (asynchronous
+                ? "0001-01-01T00:00:00.0000000+00:00 audit-category ERROR formatted payload"
+                : "[00:00:00.000 audit-category - ERROR] formatted payload") + Environment.NewLine,
+            Encoding.UTF8.GetString(_memoryStream.ToArray()));
+    }
 }

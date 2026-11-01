@@ -52,4 +52,45 @@ public class CIConditionAttributeTests : TestContainer
         // Act & Assert
         attribute.IgnoreMessage.Should().Be("Test is not supported in CI environments");
     }
+
+    public void IsConditionMet_UsesLiveCIEnvironmentWithoutInvertingExcludeMode()
+    {
+        string[] variables =
+        [
+            "TF_BUILD", "GITHUB_ACTIONS", "APPVEYOR", "CI", "TRAVIS", "CIRCLECI",
+            "CODEBUILD_BUILD_ID", "AWS_REGION", "BUILD_ID", "BUILD_URL", "PROJECT_ID",
+            "TEAMCITY_VERSION", "JB_SPACE_API_URL",
+        ];
+        Dictionary<string, string?> original = variables.ToDictionary(name => name, Environment.GetEnvironmentVariable);
+        try
+        {
+            foreach (string variable in variables)
+            {
+                Environment.SetEnvironmentVariable(variable, null);
+            }
+
+            var include = new CIConditionAttribute(ConditionMode.Include);
+            var exclude = new CIConditionAttribute(ConditionMode.Exclude);
+            include.IsConditionMet.Should().BeFalse();
+            exclude.IsConditionMet.Should().BeFalse();
+
+            Environment.SetEnvironmentVariable("GITHUB_ACTIONS", "true");
+            include.IsConditionMet.Should().BeTrue();
+            exclude.IsConditionMet.Should().BeTrue();
+            include.Mode.Should().Be(ConditionMode.Include);
+            exclude.Mode.Should().Be(ConditionMode.Exclude);
+            include.GroupName.Should().Be("CIConditionAttribute");
+
+            Environment.SetEnvironmentVariable("GITHUB_ACTIONS", "false");
+            include.IsConditionMet.Should().BeFalse();
+            exclude.IsConditionMet.Should().BeFalse();
+        }
+        finally
+        {
+            foreach (KeyValuePair<string, string?> entry in original)
+            {
+                Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            }
+        }
+    }
 }

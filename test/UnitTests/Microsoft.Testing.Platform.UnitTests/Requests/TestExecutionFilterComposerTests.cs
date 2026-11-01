@@ -465,4 +465,38 @@ public sealed class TestExecutionFilterComposerTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
     }
+
+    [TestMethod]
+    public void GetLeafFilters_NestedConjunctionPreservesDepthFirstIdentityAndOrder()
+    {
+        TreeNodeFilter first = new("/Assembly/**");
+        TestNodeUidListFilter second = new([new("uid-b"), new("uid-a")]);
+        NopFilter third = new();
+        TreeNodeFilter fourth = new("/Assembly/Namespace/Class/Case");
+        CompositeTestExecutionFilter root = new(
+            TestExecutionFilterOperator.And,
+            first,
+            new CompositeTestExecutionFilter(
+                TestExecutionFilterOperator.And,
+                second,
+                new CompositeTestExecutionFilter(TestExecutionFilterOperator.And, third, fourth)));
+
+        Assert.AreSequenceEqual<ITestExecutionFilter>([first, second, third, fourth], TestExecutionFilterComposer.GetLeafFilters(root));
+        Assert.AreSame(first, Assert.ContainsSingle(TestExecutionFilterComposer.GetLeafFilters(first)));
+        Assert.AreSequenceEqual(["uid-b", "uid-a"], second.TestNodeUids.Select(uid => uid.Value));
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_OnlyNopConstraintsProducesUnconstrainedFilter()
+    {
+        StubFilterProvider provider = new(
+            "unconstrained",
+            new CompositeTestExecutionFilter(TestExecutionFilterOperator.And, new NopFilter(), new NopFilter()));
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            new NopFilter(), [provider], RunConsoleContext, true, CancellationToken.None);
+
+        Assert.IsInstanceOfType<NopFilter>(result);
+        Assert.AreSame(result, Assert.ContainsSingle(TestExecutionFilterComposer.GetLeafFilters(result)));
+    }
 }

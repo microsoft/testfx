@@ -51,4 +51,26 @@ public class RunContextAdapterTests
         Assert.IsNull(runContextAdapter.TestRunDirectory);
         Assert.IsNotNull(runContextAdapter.RunSettings);
     }
+
+    [TestMethod]
+    public void Constructor_ExposesInProcessContextAndUsableFilter()
+    {
+        const string xml = "<RunSettings><RunConfiguration><ResultsDirectory>chosen-results</ResultsDirectory><TestCaseFilter>Name=Selected</TestCaseFilter></RunConfiguration></RunSettings>";
+        _runSettings.SetupGet(value => value.SettingsXml).Returns(xml);
+        var context = new RunContextAdapter(_commandLineOptions.Object, _runSettings.Object, new NopFilter());
+
+        ITestCaseFilterExpression? filter = context.GetTestCaseFilter(null, _ => null);
+
+        Assert.AreSame(_runSettings.Object, context.RunSettings);
+        Assert.AreEqual("chosen-results", context.TestRunDirectory);
+        Assert.IsFalse(context.KeepAlive);
+        Assert.IsFalse(context.InIsolation);
+        Assert.IsFalse(context.IsDataCollectionEnabled);
+        Assert.AreEqual(System.Diagnostics.Debugger.IsAttached, context.IsBeingDebugged);
+        Assert.IsNull(context.SolutionDirectory);
+        Assert.IsNotNull(filter);
+        Assert.AreEqual("(Name=Selected)", filter.TestCaseFilterValue);
+        Assert.IsTrue(filter.MatchTestCase(null!, key => key == "Name" ? "Selected" : null));
+        Assert.IsFalse(filter.MatchTestCase(null!, key => key == "Name" ? "Other" : null));
+    }
 }

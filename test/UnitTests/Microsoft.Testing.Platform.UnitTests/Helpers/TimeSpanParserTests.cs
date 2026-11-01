@@ -329,6 +329,61 @@ public sealed class TimeSpanParserTests
     }
 
     [TestMethod]
+    [DataRow("0ms", 0L)]
+    [DataRow("1.5s", 15_000_000L)]
+    [DataRow("0.5s", 5_000_000L)]
+    [DataRow("2.5m", 1_500_000_000L)]
+    [DataRow("1.5h", 54_000_000_000L)]
+    [DataRow("0.5d", 432_000_000_000L)]
+#if NETFRAMEWORK
+    [DataRow("500.5ms", 5_010_000L)]
+#else
+    [DataRow("500.5ms", 5_005_000L)]
+#endif
+    [DataRow("5 s", 50_000_000L)]
+    [DataRow("5 ms", 50_000L)]
+    [DataRow("5 m", 3_000_000_000L)]
+    [DataRow("5\ts", 50_000_000L, DisplayName = "Tab between value and unit")]
+    public void TryParse_FractionalAndWhitespaceInputs_PreservesExactTicks(string input, long expectedTicks)
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse(input, out TimeSpan value));
+        Assert.AreEqual(expectedTicks, value.Ticks);
+        Assert.AreEqual(expectedTicks, TimeSpanParser.ParseRequireSuffix(input).Ticks);
+    }
+
+    [TestMethod]
+    [DataRow(-1)]
+    [DataRow(int.MaxValue)]
+    public void TryParse_InvalidDefaultUnit_RejectsBareNumbers(int unitValue)
+    {
+        bool result = TimeSpanParser.TryParse("7", (TimeSpanDefaultUnit)unitValue, out TimeSpan value);
+
+        Assert.IsFalse(result);
+        Assert.AreEqual(TimeSpan.Zero, value);
+    }
+
+    [TestMethod]
+    [DataRow(-1)]
+    [DataRow(int.MaxValue)]
+    public void Parse_InvalidDefaultUnit_ReportsFormatErrorForBareNumber(int unitValue)
+    {
+        string expected = $"The value '7' is not a valid time string. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'. A bare number defaults to {unitValue}.";
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(() => TimeSpanParser.Parse("7", (TimeSpanDefaultUnit)unitValue));
+
+        Assert.AreEqual(expected, exception.Message);
+    }
+
+    [TestMethod]
+    [DataRow(-1)]
+    [DataRow(int.MaxValue)]
+    public void TryParse_ExplicitSuffix_IgnoresInvalidDefaultUnit(int unitValue)
+    {
+        Assert.IsTrue(TimeSpanParser.TryParse("2.5m", (TimeSpanDefaultUnit)unitValue, out TimeSpan value));
+        Assert.AreEqual(1_500_000_000L, value.Ticks);
+    }
+
+    [TestMethod]
     public void TryParse_And_Parse_AreConsistent()
     {
         string[] inputs = ["1000", "30s", "5m", "2h", "1d", "500ms"];

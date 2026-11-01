@@ -276,4 +276,94 @@ public class TypeCacheTestFilterProviderTests : TestContainer
 
         public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
     }
+
+    public void AssemblyLoadFailureIsCachedAndWarnsWithoutInstantiatingAFilter()
+    {
+        const string Source = "missing-filter-source";
+        var cause = new FileLoadException("filter source unavailable");
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(Source)).Throws(cause);
+        _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+        var cache = new TypeCache();
+
+        cache.GetOrLoadTestFilter(Source).Should().BeNull();
+        cache.GetOrLoadTestFilter(Source).Should().BeNull();
+
+        _testablePlatformServiceProvider.MockFileOperations.Verify(value => value.LoadAssembly(Source), Times.Once);
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
+            "TypeCache: Could not load test assembly {0} for TestFilterProvider discovery. {1}", Source, cause), Times.Once);
+    }
+
+    public void MarkerMaterializationFailureIsCachedWithOriginalCause()
+    {
+        const string Source = "broken-filter-marker";
+        Assembly assembly = CreateDynamicAssemblyWithTestFilterProviderAttribute();
+        var cause = new TypeLoadException("filter dependency unavailable");
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(Source)).Returns(assembly);
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute))).Throws(cause);
+        var cache = new TypeCache();
+        foreach (int attempt in new[] { 1, 2 })
+        {
+            Action load = () => cache.GetOrLoadTestFilter(Source);
+            TypeInspectionException failure = load.Should().ThrowExactly<TypeInspectionException>().Which;
+            failure.InnerException.Should().BeSameAs(cause);
+            failure.Message.Should().Be(string.Format(
+                CultureInfo.CurrentCulture,
+                Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource.UTA_TestFilterProviderLoadFailed,
+                assembly.GetName().Name, "filter dependency unavailable"));
+        }
+
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Verify(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)), Times.Once);
+    }
+
+    public void DuplicateEmittedMarkersFailInsteadOfSelectingAnArbitraryFilter()
+    {
+        const string Source = "duplicate-filter-marker";
+        Assembly assembly = CreateDynamicAssemblyWithTestFilterProviderAttribute();
+        ((AssemblyBuilder)assembly).SetCustomAttribute(new CustomAttributeBuilder(
+            typeof(TestFilterProviderAttribute).GetConstructor([typeof(Type)])!, [typeof(NoOpFilter)]));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(Source)).Returns(assembly);
+        Action load = () => new TypeCache().GetOrLoadTestFilter(Source);
+
+        load.Should().ThrowExactly<TypeInspectionException>().Which.Message.Should().Be(string.Format(
+            CultureInfo.CurrentCulture,
+            Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource.UTA_TestFilterProviderMultipleDeclared,
+            assembly.GetName().Name));
+    }
+
+    public void AbsentMaterializedMarkerIsCachedAsNoFilter()
+    {
+        const string Source = "absent-materialized-marker";
+        Assembly assembly = CreateDynamicAssemblyWithTestFilterProviderAttribute();
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(Source)).Returns(assembly);
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Setup(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute))).Returns([]);
+        var cache = new TypeCache();
+
+        cache.GetOrLoadTestFilter(Source).Should().BeNull();
+        cache.GetOrLoadTestFilter(Source).Should().BeNull();
+        _testablePlatformServiceProvider.MockReflectionOperations
+            .Verify(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)), Times.Once);
+    }
+
+#if NET
+    public void GenericMarkerDiscoversAnExecutableFilter()
+    {
+        const string Source = "generic-filter-marker";
+        AssemblyBuilder assembly = DefineDynamicAssembly();
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(
+            typeof(TestFilterProviderAttribute<NoOpFilter>).GetConstructor(Type.EmptyTypes)!, []));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(Source)).Returns(assembly);
+        var cache = new TypeCache();
+
+        ITestFilter filter = cache.GetOrLoadTestFilter(Source)!;
+        filter.Filter(new TestFilterContext { FullyQualifiedName = "Namespace.Type.Method", DisplayName = "Method" })
+            .Should().Be(TestFilterResult.Run);
+        cache.GetOrLoadTestFilter(Source).Should().BeSameAs(filter);
+    }
+#endif
 }

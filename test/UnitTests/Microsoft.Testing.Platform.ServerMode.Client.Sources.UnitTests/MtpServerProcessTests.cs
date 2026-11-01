@@ -42,6 +42,34 @@ public sealed class MtpServerProcessTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public async Task StartAsync_NullSource_RejectsBeforeLaunching()
+    {
+        ArgumentNullException asynchronous = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+            () => MtpServerProcess.StartAsync(null!, cancellationToken: TestContext.CancellationToken));
+        ArgumentNullException synchronous = Assert.ThrowsExactly<ArgumentNullException>(() => MtpServerProcess.Start(null!));
+
+        Assert.AreEqual("source", asynchronous.ParamName);
+        Assert.AreEqual("source", synchronous.ParamName);
+    }
+
+    [TestMethod]
+    public void ProcessState_WhenUnderlyingProcessHasNoReadableState_ReturnsSafeDefaults()
+    {
+        using Process process = new();
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        using MtpJsonRpcConnection connection = new(new EmptyMessageHandler());
+        ConstructorInfo constructor = typeof(MtpServerProcess).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
+        using var owner = (MtpServerProcess)constructor.Invoke(
+            [listener, process, connection, new StringBuilder(), NullMtpClientLogger.Instance]);
+
+        Assert.AreEqual(0, owner.ProcessId);
+        Assert.IsNull(owner.ExitCode);
+        owner.Dispose();
+        Assert.AreEqual(0, owner.ProcessId);
+        Assert.IsNull(owner.ExitCode);
+    }
+
+    [TestMethod]
     public async Task StartAsyncWithCustomOptionsUsesLoggerAndPreservesLaunchDetails()
     {
         using var temp = TempDirectory.Create();
@@ -942,6 +970,15 @@ public sealed class MtpServerProcessTests
     private static void MakeExecutable(string path)
         => File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 #endif
+
+    private sealed class EmptyMessageHandler : Microsoft.Testing.Platform.ServerMode.IMessageHandler
+    {
+        public Task<Microsoft.Testing.Platform.ServerMode.RpcMessage?> ReadAsync(CancellationToken cancellationToken)
+            => Task.FromResult<Microsoft.Testing.Platform.ServerMode.RpcMessage?>(null);
+
+        public Task WriteRequestAsync(Microsoft.Testing.Platform.ServerMode.RpcMessage message, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
 
     private sealed class TempDirectory : IDisposable
     {

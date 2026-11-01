@@ -122,6 +122,169 @@ public partial class AssertTests : TestContainer
         result.Should().Be(99);
     }
 
+    public void ContainsSingle_InterpolatedSpanAndMemory_Singleton_ReturnsItemWithoutFormatting()
+    {
+        int formatCalls = 0;
+        string FormatMessage()
+        {
+            formatCalls++;
+            return "span context";
+        }
+
+        int[] array = [17];
+        Span<int> span = [23];
+        ReadOnlySpan<int> readOnlySpan = [31];
+        Memory<int> memory = new[] { 43 };
+        ReadOnlyMemory<int> readOnlyMemory = new[] { 59 };
+
+        Assert.ContainsSingle(array, $"{FormatMessage()}").Should().Be(17);
+        Assert.ContainsSingle(span, $"{FormatMessage()}").Should().Be(23);
+        Assert.ContainsSingle(readOnlySpan, $"{FormatMessage()}").Should().Be(31);
+        Assert.ContainsSingle(memory, $"{FormatMessage()}").Should().Be(43);
+        Assert.ContainsSingle(readOnlyMemory, $"{FormatMessage()}").Should().Be(59);
+        formatCalls.Should().Be(0);
+    }
+
+    public void ContainsSingle_InterpolatedSpanAndMemory_EmptyOrMultipleElements_ReportsCountAndMessage()
+    {
+        int[][] cases = [[], [17, 23]];
+        foreach (int[] values in cases)
+        {
+            int formatCalls = 0;
+            string FormatMessage()
+            {
+                formatCalls++;
+                return "span context";
+            }
+
+            Action[] assertions =
+            [
+                () =>
+                {
+                    int[] collection = values;
+                    Assert.ContainsSingle(collection, $"{FormatMessage()}");
+                },
+                () =>
+                {
+                    Span<int> collection = values;
+                    Assert.ContainsSingle(collection, $"{FormatMessage()}");
+                },
+                () =>
+                {
+                    ReadOnlySpan<int> collection = values;
+                    Assert.ContainsSingle(collection, $"{FormatMessage()}");
+                },
+                () =>
+                {
+                    Memory<int> collection = values;
+                    Assert.ContainsSingle(collection, $"{FormatMessage()}");
+                },
+                () =>
+                {
+                    ReadOnlyMemory<int> collection = values;
+                    Assert.ContainsSingle(collection, $"{FormatMessage()}");
+                },
+            ];
+            foreach (Action assertion in assertions)
+            {
+                int previousFormatCalls = formatCalls;
+                VerifyContainsSingleSpanFailure(assertion, values.Length, withPredicate: false);
+                formatCalls.Should().Be(previousFormatCalls + 1);
+            }
+        }
+    }
+
+    public void ContainsSingle_PredicateSpanAndMemory_ReturnsTheOnlyMatchingItem()
+    {
+        int[] values = [1, 42, 3];
+        Func<int, bool> predicate = static value => value == 42;
+        Span<int> span = values;
+        ReadOnlySpan<int> readOnlySpan = values;
+        Memory<int> memory = values;
+        ReadOnlyMemory<int> readOnlyMemory = values;
+
+        Assert.ContainsSingle<int>(predicate, values).Should().Be(42);
+        Assert.ContainsSingle<int, List<int>>(predicate, [1, 42, 3]).Should().Be(42);
+        Assert.ContainsSingle(predicate, span).Should().Be(42);
+        Assert.ContainsSingle(predicate, readOnlySpan).Should().Be(42);
+        Assert.ContainsSingle(predicate, memory).Should().Be(42);
+        Assert.ContainsSingle(predicate, readOnlyMemory).Should().Be(42);
+    }
+
+    public void ContainsSingle_PredicateSpanAndMemory_NoOrMultipleMatches_ReportsExactCount()
+    {
+        (int[] Values, int Matches)[] cases =
+        [
+            ([], 0),
+            ([1, 3], 0),
+            ([42, 3, 42], 2),
+        ];
+        Func<int, bool> predicate = static value => value == 42;
+        foreach ((int[] values, int matches) in cases)
+        {
+            Action[] assertions =
+            [
+                () =>
+                {
+                    int[] collection = values;
+                    Assert.ContainsSingle(predicate, collection, "predicate context");
+                },
+                () =>
+                {
+                    Span<int> collection = values;
+                    Assert.ContainsSingle(predicate, collection, "predicate context");
+                },
+                () =>
+                {
+                    ReadOnlySpan<int> collection = values;
+                    Assert.ContainsSingle(predicate, collection, "predicate context");
+                },
+                () =>
+                {
+                    Memory<int> collection = values;
+                    Assert.ContainsSingle(predicate, collection, "predicate context");
+                },
+                () =>
+                {
+                    ReadOnlyMemory<int> collection = values;
+                    Assert.ContainsSingle(predicate, collection, "predicate context");
+                },
+            ];
+            foreach (Action assertion in assertions)
+            {
+                VerifyContainsSingleSpanFailure(assertion, matches, withPredicate: true);
+            }
+        }
+    }
+
+    private static void VerifyContainsSingleSpanFailure(Action assertion, int actualCount, bool withPredicate)
+    {
+        string expected = withPredicate
+            ? $"""
+                Assertion failed. Expected collection to contain exactly one element matching the predicate.
+                predicate context
+
+                expected matches: 1
+                actual matches:   {actualCount}
+
+                Assert.ContainsSingle(predicate, collection)
+                """
+            : $"""
+                Assertion failed. Expected collection to contain exactly one element.
+                span context
+
+                expected count: 1
+                actual count:   {actualCount}
+
+                Assert.ContainsSingle(collection)
+                """;
+        AssertFailedException exception = assertion.Should().ThrowExactly<AssertFailedException>().Which;
+
+        exception.Message.Replace("\r\n", "\n").Should().Be(expected.Replace("\r\n", "\n"));
+        exception.ExpectedText.Should().Be("1");
+        exception.ActualText.Should().Be(actualCount.ToString(CultureInfo.InvariantCulture));
+    }
+
     #endregion
 }
 

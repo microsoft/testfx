@@ -153,4 +153,123 @@ public sealed class FixtureMethodRunnerTests : TestContainer
     private static void FixtureMarker()
     {
     }
+
+    public async Task NonCooperativePendingFixtureHasDeterministicZeroDeadline()
+    {
+        foreach (bool sta in RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new[] { false, true } : new[] { false })
+        {
+            using CancellationTokenSource cancellation = new();
+            var release = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var finished = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            int calls = 0;
+            TestFailedException? failure;
+            try
+            {
+                failure = await OnApartmentAsync(sta, async () => await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+                    PendingAction, cancellation, TimeoutInfo.FromTimeout(0), FixtureMethod, null, Canceled, TimedOut));
+            }
+            finally
+            {
+                release.TrySetResult(null);
+                await finished.Task;
+            }
+
+            failure!.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            failure.Message.Should().Be($"timed out {typeof(FixtureMethodRunnerTests).FullName}.{nameof(FixtureMarker)} after 0");
+            calls.Should().Be(1);
+
+            async SynchronizationContextPreservingTask PendingAction()
+            {
+                Interlocked.Increment(ref calls);
+                try
+                {
+                    await release.Task.ConfigureAwait(false);
+                }
+                finally
+                {
+                    finished.TrySetResult(null);
+                }
+            }
+        }
+    }
+
+    public async Task NonCooperativeCancellationUsesTheFixtureTokenOnBothSupportedApartmentPaths()
+    {
+        foreach (bool sta in RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new[] { false, true } : new[] { false })
+        {
+            using CancellationTokenSource cancellation = new();
+            var release = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var finished = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            TestFailedException? failure;
+            try
+            {
+                failure = await OnApartmentAsync(sta, async () => await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+                    PendingAction, cancellation, TimeoutInfo.FromTimeout(Timeout.Infinite), FixtureMethod, null, Canceled, TimedOut));
+            }
+            finally
+            {
+                release.TrySetResult(null);
+                await finished.Task;
+            }
+
+            failure!.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            failure.Message.Should().Be($"cancelled {typeof(FixtureMethodRunnerTests).FullName}.{nameof(FixtureMarker)}");
+
+            async SynchronizationContextPreservingTask PendingAction()
+            {
+                cancellation.Cancel();
+                try
+                {
+                    await release.Task.ConfigureAwait(false);
+                }
+                finally
+                {
+                    finished.TrySetResult(null);
+                }
+            }
+        }
+    }
+
+    public async Task StaFixtureSuccessAndFailurePreserveExecutionContextAndOriginalException()
+    {
+        foreach (bool sta in RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new[] { false, true } : new[] { false })
+        {
+            using CancellationTokenSource cancellation = new();
+            AsyncLocal<string> local = new() { Value = "fixture snapshot" };
+            ExecutionContext captured = ExecutionContext.Capture()!;
+            local.Value = "caller";
+            string? observed = null;
+            TestFailedException? result = await OnApartmentAsync(sta, async () => await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+                () =>
+                {
+                    observed = local.Value;
+                    return new(Task.CompletedTask);
+                }, cancellation, TimeoutInfo.FromTimeout(Timeout.Infinite), FixtureMethod, captured, Canceled, TimedOut));
+            result.Should().BeNull();
+            observed.Should().Be("fixture snapshot");
+            local.Value.Should().Be("caller");
+            var expected = new InvalidOperationException("dedicated fixture failure");
+            Func<Task> run = async () => await OnApartmentAsync(sta, async () => await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+                () => new(Task.FromException(expected)), cancellation, TimeoutInfo.FromTimeout(Timeout.Infinite),
+                FixtureMethod, null, Canceled, TimedOut));
+            (await run.Should().ThrowExactlyAsync<InvalidOperationException>()).Which.Should().BeSameAs(expected);
+        }
+    }
+
+    private static async Task<TestFailedException?> OnApartmentAsync(bool sta, Func<Task<TestFailedException?>> action)
+    {
+        if (!sta)
+        {
+            return await action();
+        }
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            throw new PlatformNotSupportedException("STA fixture execution requires Windows.");
+        }
+
+        TestFailedException? result = null;
+        await Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.StaThreadHelper.RunOnStaThreadAsync(async () => result = await action());
+        return result;
+    }
 }

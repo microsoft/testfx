@@ -1628,6 +1628,344 @@ public partial class AssertTests : TestContainer
             return _c;
         }
     }
+
+    public void That_UnaryAssignments_OnProperty_ApplyExactlyOnceAndKeepPrePostResult()
+    {
+        (ExpressionType Operation, int Result, int Stored)[] cases =
+        [
+            (ExpressionType.PreIncrementAssign, 1, 1),
+            (ExpressionType.PostIncrementAssign, 0, 1),
+            (ExpressionType.PreDecrementAssign, -1, -1),
+            (ExpressionType.PostDecrementAssign, 0, -1),
+        ];
+        foreach ((ExpressionType operation, int result, int stored) in cases)
+        {
+            foreach (bool accepted in new[] { true, false })
+            {
+                var holder = new CountingPropertyHolder();
+                Expression<Func<int>> target = () => holder.Value;
+                UnaryExpression mutation = Expression.MakeUnary(operation, target.Body, typeof(int));
+                var condition = Expression.Lambda<Func<bool>>(
+                    Expression.Equal(mutation, Expression.Constant(accepted ? result : 99)));
+                Action action = () => Assert.That(condition, conditionExpression: "unary assignment");
+                if (accepted)
+                {
+                    action.Should().NotThrow();
+                }
+                else
+                {
+                    string displayed = operation is ExpressionType.PreIncrementAssign or ExpressionType.PreDecrementAssign
+                        ? stored.ToString(CultureInfo.InvariantCulture)
+                        : "\"<Failed to evaluate>\"";
+                    string message = $"""
+                        Assert.That(unary assignment) failed.
+                        Details:
+                          holder.Value = {displayed}
+                        """;
+                    action.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                        .Should().Be(message.Replace("\r\n", "\n"));
+                }
+
+                holder.GetCalls.Should().Be(1);
+                holder.SetCalls.Should().Be(1);
+                holder.Value.Should().Be(stored);
+            }
+        }
+    }
+
+    public void That_IndexExpression_EvaluatesReceiverAndArgumentsExactlyOnce()
+    {
+        foreach (bool accepted in new[] { true, false })
+        {
+            var probe = new IndexEvaluationProbe();
+            MethodCallExpression receiver = Expression.Call(Expression.Constant(probe), nameof(IndexEvaluationProbe.GetTarget), Type.EmptyTypes);
+            MethodCallExpression index = Expression.Call(Expression.Constant(probe), nameof(IndexEvaluationProbe.GetIndex), Type.EmptyTypes);
+            IndexExpression lookup = Expression.MakeIndex(receiver, typeof(IndexEvaluationProbe).GetProperty("Item"), [index]);
+            var condition = Expression.Lambda<Func<bool>>(
+                Expression.Equal(lookup, Expression.Constant(accepted ? 42 : 99)));
+            Action action = () => Assert.That(condition, conditionExpression: "index lookup");
+            if (accepted)
+            {
+                action.Should().NotThrow();
+            }
+            else
+            {
+                action.Should().ThrowExactly<AssertFailedException>().WithMessage("Assert.That(index lookup) failed.");
+            }
+
+            probe.TargetCalls.Should().Be(1);
+            probe.IndexCalls.Should().Be(1);
+            probe.GetCalls.Should().Be(1);
+        }
+    }
+
+    public void That_ListInitializerWithCapacity_EvaluatesConstructorArgumentOnce()
+    {
+        var counter = new SideEffectCounter();
+        Action accepted = () => Assert.That(() => new List<long>(counter.Increment()) { 17 }.Count == 1);
+        accepted.Should().NotThrow();
+        counter.Count.Should().Be(1);
+
+        counter = new SideEffectCounter();
+        Action rejected = () => Assert.That(() => new List<long>(counter.Increment()) { 17 }.Count == 2, conditionExpression: "capacity initializer");
+        rejected.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assert.That(capacity initializer) failed.
+            Details:
+              counter.Increment() = 1
+              new List`1(counter.Increment()) {Void Add(Int64)(17)}.Count = 1
+            """);
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_StaticAssignmentTarget_PreservesMutationAndDiagnosticValue()
+    {
+        int original = s_expressionAssignmentValue;
+        try
+        {
+            MemberExpression target = Expression.Field(null, typeof(AssertTests), nameof(s_expressionAssignmentValue));
+            BinaryExpression assignment = Expression.Assign(target, Expression.Constant(3));
+            var accepted = Expression.Lambda<Func<bool>>(Expression.Equal(assignment, Expression.Constant(3)));
+            var rejected = Expression.Lambda<Func<bool>>(Expression.Equal(assignment, Expression.Constant(4)));
+            Action success = () => Assert.That(accepted);
+            success.Should().NotThrow();
+            s_expressionAssignmentValue.Should().Be(3);
+
+            Action failure = () => Assert.That(rejected, conditionExpression: "static assignment");
+            failure.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                """
+                Assert.That(static assignment) failed.
+                Details:
+                  AssertTests.s_expressionAssignmentValue = 3
+                """);
+            s_expressionAssignmentValue.Should().Be(3);
+        }
+        finally
+        {
+            s_expressionAssignmentValue = original;
+        }
+    }
+
+    public void That_LiftedBooleanOperators_PreserveNullableTruthTables()
+    {
+        (bool? Left, bool? Right, bool? And, bool? Or)[] cases =
+        [
+            (false, false, false, false),
+            (false, true, false, true),
+            (false, null, false, null),
+            (true, false, false, true),
+            (true, true, true, true),
+            (true, null, null, true),
+            (null, false, false, null),
+            (null, true, null, true),
+            (null, null, null, null),
+        ];
+        foreach ((bool? left, bool? right, bool? and, bool? or) in cases)
+        {
+            foreach (bool conjunction in new[] { true, false })
+            {
+                int gateCalls = 0;
+                Func<bool> gate = () =>
+                {
+                    gateCalls++;
+                    return true;
+                };
+                ConstantExpression leftExpression = Expression.Constant(left, typeof(bool?));
+                ConstantExpression rightExpression = Expression.Constant(right, typeof(bool?));
+                BinaryExpression operation = conjunction
+                    ? Expression.AndAlso(leftExpression, rightExpression)
+                    : Expression.OrElse(leftExpression, rightExpression);
+                ConstantExpression expected = Expression.Constant(conjunction ? and : or, typeof(bool?));
+                InvocationExpression gateExpression = Expression.Invoke(Expression.Constant(gate));
+                var accepted = Expression.Lambda<Func<bool>>(
+                    Expression.AndAlso(gateExpression, Expression.Equal(operation, expected)));
+                Action success = () => Assert.That(accepted);
+                success.Should().NotThrow();
+                gateCalls.Should().Be(1);
+
+                gateCalls = 0;
+                var rejected = Expression.Lambda<Func<bool>>(
+                    Expression.AndAlso(gateExpression, Expression.NotEqual(operation, expected)));
+                Action failure = () => Assert.That(rejected, conditionExpression: "nullable logic");
+                failure.Should().ThrowExactly<AssertFailedException>().WithMessage("Assert.That(nullable logic) failed.");
+                gateCalls.Should().Be(1);
+            }
+        }
+    }
+
+    public void That_Coalesce_NullLeftUsesFallbackOnceAndRetainsBothDiagnosticValues()
+    {
+        (int? Left, int Expected, int Calls)[] cases = [(null, 1, 1), (7, 7, 0)];
+        foreach ((int? left, int expected, int calls) in cases)
+        {
+            VerifyCoalescingFallback(left, expected, calls);
+        }
+    }
+
+    private static void VerifyCoalescingFallback(int? left, int expected, int calls)
+    {
+        var counter = new SideEffectCounter();
+        Action accepted = () => Assert.That(() => (left ?? counter.Increment()) == expected);
+        accepted.Should().NotThrow();
+        counter.Count.Should().Be(calls);
+
+        counter = new SideEffectCounter();
+        Action rejected = () => Assert.That(() => (left ?? counter.Increment()) == 99, conditionExpression: "coalescing fallback");
+        string leftText = left is null ? "null" : "7";
+        string message = $"""
+            Assert.That(coalescing fallback) failed.
+            Details:
+              counter.Increment() = 1
+              left = {leftText}
+            """;
+        rejected.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+            .Should().Be(message.Replace("\r\n", "\n"));
+        counter.Count.Should().Be(1);
+    }
+
+    public void That_ListInitializerDiagnostics_RenderPrimitiveTypesAndPreserveMalformedLiteralPatterns()
+    {
+        (Type Type, object Value, string Keyword, string Literal)[] cases =
+        [
+            (typeof(long), 17L, "long", "17"),
+            (typeof(short), (short)17, "short", "17"),
+            (typeof(byte), (byte)17, "byte", "17"),
+            (typeof(sbyte), (sbyte)17, "sbyte", "17"),
+            (typeof(uint), 17U, "uint", "17"),
+            (typeof(ulong), 17UL, "ulong", "17"),
+            (typeof(ushort), (ushort)17, "ushort", "17"),
+            (typeof(float), 1.5f, "float", "1.5"),
+            (typeof(double), 1.5d, "double", "1.5"),
+            (typeof(decimal), 1.5m, "decimal", "1.5"),
+            (typeof(bool), true, "bool", "True"),
+            (typeof(string), "data", "string", "\"data\""),
+            (typeof(char), 'q', "char", "q"),
+            (typeof(string), "new <>f__AnonymousType", "string", "\"new <>f__AnonymousType\""),
+            (typeof(string), "value((", "string", "\"value((\""),
+        ];
+        foreach ((Type type, object value, string keyword, string literal) in cases)
+        {
+            Type listType = typeof(List<>).MakeGenericType(type);
+            NewExpression construction = Expression.New(listType.GetConstructor(Type.EmptyTypes)!);
+            ElementInit element = Expression.ElementInit(listType.GetMethod("Add")!, Expression.Constant(value, type));
+            ListInitExpression initializer = Expression.ListInit(construction, element);
+            MemberExpression count = Expression.Property(initializer, "Count");
+            var accepted = Expression.Lambda<Func<bool>>(Expression.Equal(count, Expression.Constant(1)));
+            var rejected = Expression.Lambda<Func<bool>>(Expression.Equal(count, Expression.Constant(2)));
+            Action success = () => Assert.That(accepted);
+            success.Should().NotThrow();
+
+            Action failure = () => Assert.That(rejected, conditionExpression: "list initializer");
+            string message = $$"""
+                Assert.That(list initializer) failed.
+                Details:
+                  new List<{{keyword}}> { {{literal}} }.Count = 1
+                """;
+            failure.Should().ThrowExactly<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                .Should().Be(message.Replace("\r\n", "\n"));
+        }
+    }
+
+    public void That_EmptyConstructionAndGroupedIndex_PreserveReadableDiagnostics()
+    {
+        Action empty = () => Assert.That(() => new List<long>().Count == 0);
+        empty.Should().NotThrow();
+        Action nonempty = () => Assert.That(() => new List<long>().Count == 1, conditionExpression: "empty construction");
+        nonempty.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assert.That(empty construction) failed.
+            Details:
+              new List`1().Count = 0
+            """);
+
+        int first = 1;
+        int second = 2;
+        int third = 3;
+        int fourth = 4;
+        int[] numbers = new int[11];
+        numbers[10] = 42;
+        Action accepted = () => Assert.That(() => numbers[(first + second) + (third + fourth)] == 42);
+        accepted.Should().NotThrow();
+        Action rejected = () => Assert.That(() => numbers[(first + second) + (third + fourth)] == 0, conditionExpression: "grouped index");
+        rejected.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assert.That(grouped index) failed.
+            Details:
+              first = 1
+              fourth = 4
+              numbers[(first + second) + (third + fourth)] = 42
+              second = 2
+              third = 3
+            """);
+    }
+
+    private static int s_expressionAssignmentValue;
+
+    private sealed class IndexEvaluationProbe
+    {
+        public int TargetCalls { get; private set; }
+
+        public int IndexCalls { get; private set; }
+
+        public int GetCalls { get; private set; }
+
+        public int this[int index]
+        {
+            get
+            {
+                GetCalls++;
+                return index == 1 ? 42 : 99;
+            }
+        }
+
+        public IndexEvaluationProbe GetTarget()
+        {
+            TargetCalls++;
+            return this;
+        }
+
+        public int GetIndex()
+        {
+            IndexCalls++;
+            return 1;
+        }
+    }
+
+    public void That_StaticIndexExpression_PreservesPublicExpressionShapeAndFailureContract()
+    {
+        var name = new AssemblyName("FrameworkStaticIndexer_" + Guid.NewGuid().ToString("N"));
+#if NETFRAMEWORK
+        System.Reflection.Emit.AssemblyBuilder assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(
+            name, System.Reflection.Emit.AssemblyBuilderAccess.RunAndCollect);
+#else
+        var assembly = System.Reflection.Emit.AssemblyBuilder.DefineDynamicAssembly(
+            name, System.Reflection.Emit.AssemblyBuilderAccess.RunAndCollect);
+#endif
+        System.Reflection.Emit.ModuleBuilder module = assembly.DefineDynamicModule("StaticIndexer");
+        System.Reflection.Emit.TypeBuilder type = module.DefineType(
+            "StaticIndexedValue", TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed);
+        System.Reflection.Emit.MethodBuilder getter = type.DefineMethod(
+            "get_Item",
+            MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+            typeof(int), [typeof(int)]);
+        System.Reflection.Emit.ILGenerator il = getter.GetILGenerator();
+        il.Emit(System.Reflection.Emit.OpCodes.Ldarg_0);
+        il.Emit(System.Reflection.Emit.OpCodes.Ldc_I4_2);
+        il.Emit(System.Reflection.Emit.OpCodes.Mul);
+        il.Emit(System.Reflection.Emit.OpCodes.Ret);
+        System.Reflection.Emit.PropertyBuilder property = type.DefineProperty(
+            "Item", PropertyAttributes.None, typeof(int), [typeof(int)]);
+        property.SetGetMethod(getter);
+        Type fixture = type.CreateType()!;
+        IndexExpression index = Expression.MakeIndex(null!, fixture.GetProperty("Item"), [Expression.Constant(21)]);
+        var accepted = Expression.Lambda<Func<bool>>(Expression.Equal(index, Expression.Constant(42)));
+        var rejected = Expression.Lambda<Func<bool>>(Expression.Equal(index, Expression.Constant(99)));
+
+        Action success = () => Assert.That(accepted);
+        success.Should().NotThrow();
+        Action failure = () => Assert.That(rejected, conditionExpression: "static index lookup");
+        failure.Should().ThrowExactly<AssertFailedException>().WithMessage("Assert.That(static index lookup) failed.");
+    }
 }
 
 internal static class AssertTestsExtensions

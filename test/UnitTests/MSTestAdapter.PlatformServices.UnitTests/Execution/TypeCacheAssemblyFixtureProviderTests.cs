@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
@@ -441,5 +442,215 @@ public class TypeCacheAssemblyFixtureProviderTests : TestContainer
         public void TestMethod()
         {
         }
+    }
+
+    public void ProviderProbeAndReferenceFailuresDoNotSuppressOtherCandidates()
+    {
+        foreach (bool metadataFailure in new[] { true, false })
+        {
+            var assembly = new FaultingGraphAssembly(metadataFailure);
+            Type type = new AssemblyOwnedType(typeof(GraphDriver), assembly);
+            _testablePlatformServiceProvider.SetupMockReflectionOperations();
+            _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetType(typeof(GraphDriver).FullName!)).Returns(type);
+            _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetDefinedTypes(assembly)).Returns([type]);
+            _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(type)).Returns([new TestClassAttribute()]);
+            _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetDeclaredConstructors(type))
+                .Returns(typeof(GraphDriver).GetConstructors());
+            _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetDeclaredMethods(type))
+                .Returns(typeof(GraphDriver).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly));
+            _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+            _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
+            List<(string Format, object?[] Arguments)> warnings = [];
+            _testablePlatformServiceProvider.MockTraceLogger.Setup(value => value.Warning(It.IsAny<string>(), It.IsAny<object?[]>()))
+                .Callback<string, object?[]>((format, arguments) => warnings.Add((format, arguments)));
+            var cache = new TypeCache(_mockReflectHelper.Object);
+            TestMethod method = CreateTestMethod(nameof(GraphDriver.Test), typeof(GraphDriver).FullName!, "graph-source");
+            method.MethodInfo = typeof(GraphDriver).GetMethod(nameof(GraphDriver.Test));
+
+            TestMethodInfo resolved = cache.GetTestMethodInfo(method)!;
+
+            resolved.MethodInfo.Should().BeSameAs(typeof(GraphDriver).GetMethod(nameof(GraphDriver.Test)));
+            warnings.Should().ContainSingle();
+            warnings[0].Format.Should().Be(metadataFailure
+                ? "TypeCache: Exception occurred while probing AssemblyFixtureProviderAttribute metadata from assembly {0}. {1}"
+                : "TypeCache: Exception occurred while enumerating referenced assemblies of {0} for AssemblyFixtureProvider discovery. {1}");
+            warnings[0].Arguments[0].Should().Be("CoverageFixtureGraph");
+            warnings[0].Arguments[1].Should().BeSameAs(assembly.Failure);
+        }
+    }
+
+    private sealed class AssemblyOwnedType(Type type, Assembly assembly) : TypeDelegator(type)
+    {
+        public override Assembly Assembly => assembly;
+
+        public override IList<CustomAttributeData> GetCustomAttributesData() => UnderlyingSystemType.GetCustomAttributesData();
+    }
+
+    private sealed class FaultingGraphAssembly(bool metadataFailure, AssemblyName[]? references = null) : Assembly
+    {
+        internal Exception Failure { get; } = new TypeLoadException("provider graph metadata unavailable");
+
+        public override string FullName => "CoverageFixtureGraph";
+
+        public override AssemblyName GetName() => new("CoverageFixtureGraph");
+
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<Attribute>();
+
+        public override object[] GetCustomAttributes(bool inherit) => Array.Empty<Attribute>();
+
+        public override bool IsDefined(Type attributeType, bool inherit) => false;
+
+        public override IList<CustomAttributeData> GetCustomAttributesData()
+            => metadataFailure ? throw Failure : [];
+
+        public override AssemblyName[] GetReferencedAssemblies()
+            => references ?? (metadataFailure ? [] : throw Failure);
+    }
+
+    [TestClass]
+    public sealed class GraphDriver
+    {
+        public void Test()
+        {
+        }
+    }
+
+    public async Task GlobalFixtureDiscoverySelectsOnlyValidSignatures()
+    {
+        Type host = typeof(DummyHostTestClass);
+        Type fixture = typeof(TypeCacheGlobalContinuationFixture);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(host)).Returns(true);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(fixture)).Returns(true);
+        MethodInfo initialize = fixture.GetMethod(nameof(TypeCacheGlobalContinuationFixture.Initialize))!;
+        MethodInfo cleanup = fixture.GetMethod(nameof(TypeCacheGlobalContinuationFixture.Cleanup))!;
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<GlobalTestInitializeAttribute>(initialize)).Returns(true);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<GlobalTestCleanupAttribute>(cleanup)).Returns(true);
+        foreach (MethodInfo invalid in fixture.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .Where(method => method.Name.StartsWith("Invalid", StringComparison.Ordinal)))
+        {
+            _mockReflectHelper.Setup(value => value.IsAttributeDefined<GlobalTestInitializeAttribute>(invalid)).Returns(true);
+            _mockReflectHelper.Setup(value => value.IsAttributeDefined<GlobalTestCleanupAttribute>(invalid)).Returns(true);
+        }
+
+        TestMethodInfo methodInfo = _typeCache.GetTestMethodInfo(CreateTestMethod(nameof(DummyHostTestClass.TestMethod), host.FullName!, "A"))!;
+
+        TestAssemblyInfo info = _typeCache.AssemblyInfoCache.Single();
+        info.GlobalTestInitializations.Count.Should().Be(1);
+        info.GlobalTestCleanups.Count.Should().Be(1);
+        List<string> events = [];
+        methodInfo.TestContext = new TestContextImplementation(null, host.FullName,
+            new Dictionary<string, object?> { ["global-events"] = events }, null, null);
+        methodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        TestResult result = await methodInfo.InvokeAsync(null);
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        events.Should().Equal("initialize", "cleanup");
+    }
+
+    public async Task UninspectableTypesDoNotHideLaterGlobalFixtureMethods()
+    {
+        Type host = typeof(DummyHostTestClass);
+        Type fixture = typeof(TypeCacheGlobalContinuationFixture);
+        var cause = new TypeLoadException("unrelated class attribute unavailable");
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(host)).Throws(cause);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(fixture)).Returns(true);
+        MethodInfo initialize = fixture.GetMethod(nameof(TypeCacheGlobalContinuationFixture.Initialize))!;
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<GlobalTestInitializeAttribute>(initialize)).Returns(true);
+        _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+
+        TestMethodInfo methodInfo = _typeCache.GetTestMethodInfo(CreateTestMethod(nameof(DummyHostTestClass.TestMethod), host.FullName!, "A"))!;
+
+        _typeCache.AssemblyInfoCache.Single().GlobalTestInitializations.Count.Should().Be(1);
+        List<string> events = [];
+        methodInfo.TestContext = new TestContextImplementation(null, host.FullName,
+            new Dictionary<string, object?> { ["global-events"] = events }, null, null);
+        methodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        (await methodInfo.InvokeAsync(null)).Outcome.Should().Be(UnitTestOutcome.Passed);
+        events.Should().Equal("initialize");
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
+            "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}", host.FullName, cause), Times.Once);
+    }
+
+    public async Task GlobalInitializationCancellationStopsBeforeTheTestBody()
+    {
+        Type host = typeof(DummyHostTestClass);
+        Type fixture = typeof(TypeCacheGlobalContinuationFixture);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(host)).Returns(true);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(fixture)).Returns(true);
+        MethodInfo initialize = fixture.GetMethod(nameof(TypeCacheGlobalContinuationFixture.Initialize))!;
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<GlobalTestInitializeAttribute>(initialize)).Returns(true);
+        TestMethodInfo method = _typeCache.GetTestMethodInfo(CreateTestMethod(nameof(DummyHostTestClass.TestMethod), host.FullName!, "A"))!;
+        List<string> events = [];
+        var context = new TestContextImplementation(null, host.FullName,
+            new Dictionary<string, object?> { ["global-events"] = events }, null, null);
+        context.CancellationTokenSource.Cancel();
+        method.TestContext = context;
+        method.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.ExceptionMessage.Should().Be(string.Format(
+            CultureInfo.InvariantCulture, Resource.GlobalTestInitializeWasCancelled, fixture.FullName, nameof(TypeCacheGlobalContinuationFixture.Initialize)));
+        events.Should().BeEmpty();
+    }
+
+#if NETFRAMEWORK
+    public void MissingProviderReferenceIsWarnedWithoutLosingTheConsumerTest()
+    {
+        var missing = new AssemblyName("Coverage.Missing.Provider." + Guid.NewGuid().ToString("N"));
+        var assembly = new FaultingGraphAssembly(false, [missing]);
+        Type type = new AssemblyOwnedType(typeof(GraphDriver), assembly);
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetType(typeof(GraphDriver).FullName!)).Returns(type);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetDefinedTypes(assembly)).Returns([type]);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(type)).Returns([new TestClassAttribute()]);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetDeclaredConstructors(type)).Returns(typeof(GraphDriver).GetConstructors());
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetDeclaredMethods(type))
+            .Returns(typeof(GraphDriver).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly));
+        _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+        _mockReflectHelper.Setup(value => value.IsAttributeDefined<TestClassAttribute>(type)).Returns(true);
+        List<object?[]> diagnostics = [];
+        _testablePlatformServiceProvider.MockTraceLogger.Setup(value => value.Warning(
+            "TypeCache: Could not load referenced assembly {0} for AssemblyFixtureProvider discovery. {1}", It.IsAny<object?[]>()))
+            .Callback<string, object?[]>((_, arguments) => diagnostics.Add(arguments));
+        var cache = new TypeCache(_mockReflectHelper.Object);
+        TestMethod method = CreateTestMethod(nameof(GraphDriver.Test), typeof(GraphDriver).FullName!, "graph-source");
+        method.MethodInfo = typeof(GraphDriver).GetMethod(nameof(GraphDriver.Test));
+
+        TestMethodInfo resolved = cache.GetTestMethodInfo(method)!;
+
+        resolved.MethodInfo.Should().BeSameAs(typeof(GraphDriver).GetMethod(nameof(GraphDriver.Test)));
+        diagnostics.Should().ContainSingle();
+        diagnostics[0][0].Should().Be(missing.FullName);
+        diagnostics[0][1].Should().BeOfType<FileNotFoundException>();
+    }
+#endif
+}
+
+public sealed class TypeCacheGlobalContinuationFixture
+{
+    public static void Initialize(TestContext context) => ((List<string>)context.Properties["global-events"]!).Add("initialize");
+
+    public static Task Cleanup(TestContext context)
+    {
+        ((List<string>)context.Properties["global-events"]!).Add("cleanup");
+        return Task.CompletedTask;
+    }
+
+    public static void InvalidGeneric<T>(TestContext context)
+    {
+    }
+
+    public static void InvalidNoContext() => ((List<string>)TestContext.Current!.Properties["global-events"]!).Add("invalid-no-context");
+
+    public void InvalidInstance(TestContext context)
+    {
+    }
+
+    public static int InvalidReturn(TestContext context)
+    {
+        ((List<string>)context.Properties["global-events"]!).Add("invalid-return");
+        return 17;
     }
 }

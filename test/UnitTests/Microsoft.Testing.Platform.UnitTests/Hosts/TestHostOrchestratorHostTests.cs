@@ -5,8 +5,11 @@ using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -480,6 +483,153 @@ public sealed class TestHostOrchestratorHostTests
                     throw new InvalidOperationException("log provider exploded");
                 }
             }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, false, 12)]
+    [DataRow(true, false, 7)]
+    [DataRow(true, true, 3)]
+    public async Task RunAsync_ProtocolNegotiationPreservesRoleAndServerCancellation(bool compatible, bool control, int expectedExit)
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        RecordingLifetime lifetime = new();
+        Mock<ITestHostExecutionOrchestrator> orchestrator = new();
+        orchestrator.SetupGet(o => o.Uid).Returns("wire-orchestrator");
+        CancellationToken executionToken = default;
+        orchestrator.Setup(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns<CancellationToken>(token =>
+            {
+                executionToken = token;
+                return control ? Task.FromCanceled<int>(token) : Task.FromResult(7);
+            });
+        Mock<IPushOnlyProtocol> protocol = new();
+        protocol.SetupGet(p => p.IsServerMode).Returns(true);
+        protocol.SetupGet(p => p.IsServerControlChannelSupported).Returns(control);
+        string? role = null;
+        IReadOnlyDictionary<byte, string>? properties = null;
+        protocol.Setup(p => p.IsCompatibleProtocolAsync(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<byte, string>?>()))
+            .Callback<string, IReadOnlyDictionary<byte, string>?>((value, extra) =>
+            {
+                role = value;
+                properties = extra;
+            })
+            .ReturnsAsync(compatible);
+        protocol.Setup(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()))
+            .Returns<Func<CancellationToken, Task>>(callback => callback(new CancellationToken(canceled: true)));
+        ServiceProvider services = new();
+        services.AddServices([cancellation, new NopLoggerFactory(), protocol.Object, lifetime]);
+        TestHostOrchestratorHost host = new(new([orchestrator.Object]), services);
+
+        Assert.AreEqual(expectedExit, await host.RunAsync());
+
+        Assert.AreEqual("TestHostOrchestrator", role);
+        Assert.IsNotNull(properties);
+        Assert.AreEqual(new KeyValuePair<byte, string>(11, "wire-orchestrator"), Assert.ContainsSingle(properties));
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.BeforeRunCount);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.AfterRunCount);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.DisposeCount);
+        Assert.AreEqual(compatible ? expectedExit : null, lifetime.LastExitCode);
+        Assert.AreEqual(compatible && control, cancellation.CancellationToken.IsCancellationRequested);
+        if (compatible)
+        {
+            Assert.AreEqual(cancellation.CancellationToken, executionToken);
+        }
+
+        orchestrator.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), compatible ? Times.Once() : Times.Never());
+        protocol.Verify(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()), compatible && control ? Times.Once() : Times.Never());
+    }
+
+    [TestMethod]
+    public async Task RunAsync_MultipleOrchestratorsRejectBeforeLifetimeOrExecution()
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        RecordingLifetime lifetime = new();
+        Mock<ITestHostExecutionOrchestrator> first = new();
+        Mock<ITestHostExecutionOrchestrator> second = new();
+        ServiceProvider services = new();
+        services.AddServices([cancellation, new NopLoggerFactory(), lifetime]);
+        TestHostOrchestratorHost host = new(new([first.Object, second.Object]), services);
+
+        NotSupportedException error = await Assert.ThrowsExactlyAsync<NotSupportedException>(host.RunAsync);
+
+        Assert.AreEqual("Multiple test orchestrator not supported", error.Message);
+        Assert.AreEqual(0, lifetime.BeforeRunCount);
+        Assert.AreEqual(0, lifetime.AfterRunCount);
+        Assert.AreEqual(0, lifetime.DisposeCount);
+        first.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        second.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_DisposalFailurePreservesNormalFailureAndCanceledVerdict(bool canceled)
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        Action<FakeApplicationCancellationTokenSource>? cancel = null;
+        if (canceled)
+        {
+            cancel = source =>
+            {
+                source.Cancel();
+                throw new OperationCanceledException();
+            };
+        }
+
+        RecordingOrchestrator orchestrator = new(7, cancel) { CancellationTokenSource = cancellation };
+        InvalidOperationException expected = new("owned disposal sentinel");
+        Mock<ITestHostOrchestratorApplicationLifetime> failing = new();
+        Mock<IDisposable> disposable = failing.As<IDisposable>();
+        disposable.Setup(d => d.Dispose()).Throws(expected);
+        failing.SetupGet(l => l.Uid).Returns("first-disposer");
+        failing.Setup(l => l.BeforeRunAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        failing.Setup(l => l.AfterRunAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns<int, CancellationToken>((_, token) => canceled ? Task.FromCanceled(token) : Task.CompletedTask);
+        RecordingLifetime healthy = new();
+        List<(LogLevel Level, string Text)> logs = [];
+        Mock<ILoggerFactory> factory = new();
+        factory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new CleanupRecordingLogger(logs));
+        ServiceProvider services = new();
+        services.AddServices([cancellation, factory.Object, failing.Object, healthy]);
+        TestHostOrchestratorHost host = new(new([orchestrator]), services);
+
+        if (canceled)
+        {
+            Assert.AreEqual(3, await host.RunAsync());
+        }
+        else
+        {
+            Assert.AreSame(expected, await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync));
+        }
+
+        Assert.AreEqual(1, healthy.BeforeRunCount);
+        Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual(canceled ? 3 : 7, healthy.LastExitCode);
+        Assert.AreEqual(1, healthy.DisposeCount);
+        disposable.Verify(d => d.Dispose(), Times.Once);
+        failing.Verify(l => l.AfterRunAsync(canceled ? 3 : 7, cancellation.CancellationToken), Times.Once);
+        string warning = Assert.ContainsSingle(logs.Where(l => l.Level == LogLevel.Warning)).Text;
+        Assert.StartsWith("Orchestrator lifetime 'first-disposer' failed to dispose: ", warning);
+        Assert.Contains("owned disposal sentinel", warning);
+        string[] debug = logs.Where(l => l.Level == LogLevel.Debug).Select(l => l.Text).ToArray();
+        string[] expectedDebug = canceled
+            ? ["Orchestrator lifetime 'first-disposer' did not complete AfterRunAsync because the run was canceled."]
+            : [];
+        Assert.AreSequenceEqual(expectedDebug, debug);
+    }
+
+    private sealed class CleanupRecordingLogger(List<(LogLevel Level, string Text)> logs) : ILogger
+    {
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => logs.Add((logLevel, formatter(state, exception)));
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Log(logLevel, state, exception, formatter);
+            return Task.CompletedTask;
         }
     }
 }

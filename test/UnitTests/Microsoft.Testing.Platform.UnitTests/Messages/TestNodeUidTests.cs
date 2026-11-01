@@ -36,4 +36,26 @@ public sealed class TestNodeUidTests
         Assert.ThrowsExactly<ArgumentException>(() => { TestNodeUid testNode = new(string.Empty); });
         Assert.ThrowsExactly<ArgumentException>(() => { TestNodeUid testNode = new(" "); });
     }
+
+    [TestMethod]
+    [DataRow("module-42:test-7", true)]
+    [DataRow("module-42:test-8", false)]
+    [DataRow("MODULE-42:TEST-7", false)]
+    public void TestNodeUid_ValueEquality_HandlesTypedAndBoxedInputs(string otherValue, bool expectedEqual)
+    {
+        TestNodeUid value = new("module-42:test-7");
+        TestNodeUid other = new(otherValue);
+
+        Assert.AreEqual(expectedEqual, value.Equals(other));
+        Assert.AreEqual(expectedEqual, value.Equals((object)other));
+        Assert.AreEqual(expectedEqual, value == other);
+        Assert.AreEqual(!expectedEqual, value != other);
+        Assert.IsFalse(value.Equals(null));
+        Assert.IsFalse(value.Equals((object)otherValue));
+        Assert.AreEqual("TestNodeUid { Value = module-42:test-7 }", value.ToString());
+        if (expectedEqual)
+        {
+            Assert.AreEqual(value.GetHashCode(), other.GetHashCode());
+        }
+    }
 }

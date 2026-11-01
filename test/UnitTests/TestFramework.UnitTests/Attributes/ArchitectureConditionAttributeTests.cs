@@ -112,5 +112,45 @@ public class ArchitectureConditionAttributeTests : TestContainer
             && Enum.TryParse(name, out TestArchitectures architecture)
             ? architecture
             : throw new InvalidOperationException($"Unknown process architecture: {RuntimeInformation.ProcessArchitecture}");
+
+    public void ArchitectureMapping_AllSupportedValuesHaveDistinctDocumentedFlags()
+    {
+        Func<Architecture, TestArchitectures> map = typeof(ArchitectureConditionAttribute).GetMethod("MapArchitecture", BindingFlags.Static | BindingFlags.NonPublic)!
+            .CreateDelegate<Func<Architecture, TestArchitectures>>();
+        (Architecture Input, TestArchitectures Expected)[] cases =
+        [
+            (Architecture.X86, TestArchitectures.X86),
+            (Architecture.X64, TestArchitectures.X64),
+            (Architecture.Arm, TestArchitectures.Arm),
+            (Architecture.Arm64, TestArchitectures.Arm64),
+            (Architecture.Wasm, TestArchitectures.Wasm),
+            (Architecture.S390x, TestArchitectures.S390x),
+            (Architecture.LoongArch64, TestArchitectures.LoongArch64),
+            (Architecture.Armv6, TestArchitectures.Armv6),
+            (Architecture.Ppc64le, TestArchitectures.Ppc64le),
+#if NET9_0_OR_GREATER
+            (Architecture.RiscV64, TestArchitectures.RiscV64),
+#endif
+        ];
+        foreach ((Architecture input, TestArchitectures expected) in cases)
+        {
+            map(input).Should().Be(expected);
+        }
+
+        cases.Select(pair => map(pair.Input)).Distinct().Should().HaveCount(cases.Length);
+    }
+
+    public void ArchitectureMapping_UnknownValuesRejectTheirOriginalValue()
+    {
+        Func<Architecture, TestArchitectures> map = typeof(ArchitectureConditionAttribute).GetMethod("MapArchitecture", BindingFlags.Static | BindingFlags.NonPublic)!
+            .CreateDelegate<Func<Architecture, TestArchitectures>>();
+        foreach (Architecture architecture in new[] { (Architecture)(-1), (Architecture)int.MaxValue })
+        {
+            Action action = () => map(architecture);
+            ArgumentOutOfRangeException error = action.Should().ThrowExactly<ArgumentOutOfRangeException>().Which;
+            error.ParamName.Should().Be("architecture");
+            error.ActualValue.Should().Be(architecture);
+        }
+    }
 }
 #endif

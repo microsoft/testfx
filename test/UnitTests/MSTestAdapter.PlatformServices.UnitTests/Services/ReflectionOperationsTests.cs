@@ -750,6 +750,98 @@ public class ReflectionOperationsTests : TestContainer
     }
 
     #endregion
+
+    public void RuntimeMethodLookupHonorsVisibilityAndInvokesTheSelectedMember()
+    {
+        var fixture = new VisibilityFixture();
+        _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), VisibilityFixture.HiddenMethodName, [typeof(int)], includeNonPublic: false)
+            .Should().BeNull();
+        MethodInfo hidden = _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), VisibilityFixture.HiddenMethodName, [typeof(int)], includeNonPublic: true)!;
+        hidden.Invoke(fixture, [3]).Should().Be(11);
+        fixture.Last.Should().Be("hidden");
+        MethodInfo visible = _reflectionOperations.GetRuntimeMethod(typeof(VisibilityFixture), "Visible", [typeof(int)], includeNonPublic: false)!;
+        visible.Invoke(fixture, [3]).Should().Be(8);
+        fixture.Last.Should().Be("visible");
+    }
+
+    public void AttributeCacheRejectsInvalidProvidersAndRecoversFromHostileMetadataFailures()
+    {
+        Action missing = () => _reflectionOperations.GetCustomAttributesCached(null!);
+        missing.Should().ThrowExactly<ArgumentNullException>().WithParameterName("attributeProvider");
+        ICustomAttributeProvider unsupported = typeof(VisibilityFixture).GetMethod(nameof(VisibilityFixture.Visible))!.GetParameters()[0];
+        Action invalid = () => _reflectionOperations.GetCustomAttributesCached(unsupported);
+        invalid.Should().ThrowExactly<ArgumentException>().WithParameterName("attributeProvider");
+
+        Type provider = typeof(VisibilityFixture);
+        var cause = new HostileMetadataException();
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(provider)).Throws(cause);
+        _testablePlatformServiceProvider.MockTraceLogger.SetupGet(value => value.IsWarningEnabled).Returns(true);
+        List<(string Format, object?[] Arguments)> warnings = [];
+        _testablePlatformServiceProvider.MockTraceLogger.Setup(value => value.Warning(It.IsAny<string>(), It.IsAny<object?[]>()))
+            .Callback<string, object?[]>((format, arguments) => warnings.Add((format, arguments)));
+
+        _reflectionOperations.GetCustomAttributesCached(provider).Should().BeEmpty();
+        _reflectionOperations.GetCustomAttributesCached(provider).Should().BeEmpty();
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(value => value.GetCustomAttributes(provider), Times.Once);
+        warnings.Should().ContainSingle();
+        warnings[0].Format.Should().Be(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource.FailedToGetCustomAttribute);
+        warnings[0].Arguments.Should().Equal(
+            provider.GetType().FullName,
+            string.Format(
+                CultureInfo.CurrentCulture,
+                Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Resource.ExceptionOccuredWhileGettingTheExceptionDescription,
+                typeof(HostileMetadataException).FullName, typeof(InvalidOperationException).FullName));
+
+        _reflectionOperations.ClearCache();
+        _reflectionOperations.GetCustomAttributesCached(provider).Should().BeEmpty();
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(value => value.GetCustomAttributes(provider), Times.Exactly(2));
+        warnings.Should().HaveCount(2);
+    }
+
+    public void UncachedAccessorUsesAssemblyAndMemberContractsWithoutCaching()
+    {
+        MethodInfo member = typeof(VisibilityFixture).GetMethod(nameof(VisibilityFixture.Visible))!;
+        Assembly assembly = typeof(VisibilityFixture).Assembly;
+        object[] memberAttributes = [new DummySingleAAttribute("member")];
+        object[] assemblyAttributes = [new DummySingleAAttribute("assembly")];
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(member)).Returns(memberAttributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(value => value.GetCustomAttributes(assembly, typeof(Attribute))).Returns(assemblyAttributes);
+
+        ReflectionOperations.NotCachedReflectionAccessor.GetCustomAttributesNotCached(member).Should().BeSameAs(memberAttributes);
+        ReflectionOperations.NotCachedReflectionAccessor.GetCustomAttributesNotCached(member).Should().BeSameAs(memberAttributes);
+        ReflectionOperations.NotCachedReflectionAccessor.GetCustomAttributesNotCached(assembly).Should().BeSameAs(assemblyAttributes);
+        Action missing = () => ReflectionOperations.NotCachedReflectionAccessor.GetCustomAttributesNotCached(null!);
+        missing.Should().ThrowExactly<ArgumentNullException>().WithParameterName("attributeProvider");
+        ICustomAttributeProvider parameter = member.GetParameters()[0];
+        Action unsupported = () => ReflectionOperations.NotCachedReflectionAccessor.GetCustomAttributesNotCached(parameter);
+        unsupported.Should().ThrowExactly<ArgumentException>().WithParameterName("attributeProvider");
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(value => value.GetCustomAttributes(member), Times.Exactly(2));
+        _testablePlatformServiceProvider.MockReflectionOperations.Verify(value => value.GetCustomAttributes(assembly, typeof(Attribute)), Times.Once);
+    }
+
+    private sealed class VisibilityFixture
+    {
+        internal const string HiddenMethodName = nameof(Hidden);
+
+        internal string? Last { get; private set; }
+
+        public int Visible(int value)
+        {
+            Last = "visible";
+            return (value * 2) + 2;
+        }
+
+        private int Hidden(int value)
+        {
+            Last = "hidden";
+            return (value * 3) + 2;
+        }
+    }
+
+    private sealed class HostileMetadataException : Exception
+    {
+        public override string ToString() => throw new InvalidOperationException("metadata description unavailable");
+    }
 }
 
 #region Dummy Implementations
@@ -758,3 +850,4 @@ internal class TestableExtendedTestMethod : TestMethodAttribute;
 
 #endregion
 
+// Additional failure-path fixtures remain scoped to the test container above.

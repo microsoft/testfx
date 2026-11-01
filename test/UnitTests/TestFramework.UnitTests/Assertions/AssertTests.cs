@@ -65,4 +65,28 @@ public partial class AssertTests
         public string ToString(string? format, IFormatProvider? formatProvider)
             => "DummyIFormattable.ToString()";
     }
+
+    public void ObsoleteObjectEqualityApis_RejectCallsWithActionableDiagnostic()
+    {
+        (string Name, string Reason)[] cases =
+        [
+            ("Equals", "Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead."),
+            ("ReferenceEquals", "Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead."),
+        ];
+        object shared = new();
+        object?[][] arguments = [[null, null], [shared, shared], [shared, new object()]];
+        foreach ((string name, string reason) in cases)
+        {
+            System.Reflection.MethodInfo method = typeof(Assert).GetMethod(
+                name,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly)!;
+            foreach (object?[] operands in arguments)
+            {
+                Action action = () => method.Invoke(null, operands);
+                Exception? failure = action.Should().ThrowExactly<System.Reflection.TargetInvocationException>().Which.InnerException;
+                failure.Should().BeOfType<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                    .Should().Be($"Assertion failed.\n{reason}");
+            }
+        }
+    }
 }
