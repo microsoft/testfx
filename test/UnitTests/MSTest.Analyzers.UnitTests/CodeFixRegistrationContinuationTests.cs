@@ -8,6 +8,9 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+#if DEBUG
+using Microsoft.Testing.TestInfrastructure;
+#endif
 
 using MSTest.Analyzers.CodeFixes;
 
@@ -64,6 +67,9 @@ public sealed class CodeFixRegistrationContinuationTests
     }
 
     [TestMethod]
+#if DEBUG
+    [DoNotParallelize]
+#endif
     [DataRow("String")]
     [DataRow("Collection")]
     [DataRow("Boolean")]
@@ -81,7 +87,30 @@ public sealed class CodeFixRegistrationContinuationTests
         SyntaxNode root = (await document.GetSyntaxRootAsync())!;
         Location unrelatedLocation = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First().GetLocation();
         Diagnostic stale = CopyDiagnostic(original, location: unrelatedLocation);
+#if DEBUG
+        List<string?> assertions = [];
+        using var observer = new DiagnosticAssertionObserver(assertions.Add);
+#endif
         Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, stale, fixer));
+#if DEBUG
+        if (scenario == "Proper")
+        {
+            const string expected = """
+                Is this an interesting scenario where IInvocationOperation for Assert call isn't associated with InvocationExpressionSyntax? SyntaxNode type: 'Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax', Text: 'public class Tests
+                {
+                    public void Check(object item, bool flag, List<string> values)
+                    {
+                        Assert.IsTrue(item == null, "context");
+                    }
+                }'
+                """;
+            Assert.AreEqual(expected.Replace("\r\n", "\n"), Assert.ContainsSingle(assertions)?.Replace("\r\n", "\n"));
+        }
+        else
+        {
+            Assert.IsEmpty(assertions);
+        }
+#endif
         string source = (await document.GetTextAsync()).ToString();
         await AnalyzerContinuationTestHelpers.AssertSourceAsync(document, source, scenario == "ContainsKey" ? ["CS1503"] : []);
     }
@@ -206,6 +235,9 @@ public sealed class CodeFixRegistrationContinuationTests
     }
 
     [TestMethod]
+#if DEBUG
+    [DoNotParallelize]
+#endif
     [DataRow("CodeFixModeKey", null)]
     [DataRow("ProperAssertMethodNameKey", null)]
     [DataRow("CodeFixModeKey", "FutureRewriteMode")]
@@ -214,7 +246,24 @@ public sealed class CodeFixRegistrationContinuationTests
         using var workspace = new AdhocWorkspace();
         (Document document, Diagnostic original, CodeFixProvider fixer) = await CreateScenarioAsync(workspace, "Proper");
         Diagnostic stale = CopyDiagnostic(original, properties: original.Properties.SetItem(property, value));
+#if DEBUG
+        List<string?> assertions = [];
+        using var observer = new DiagnosticAssertionObserver(assertions.Add);
+#endif
         Assert.IsEmpty(await AnalyzerContinuationTestHelpers.GetActionsAsync(document, stale, fixer));
+#if DEBUG
+        if (value is null)
+        {
+            string expected = property == "CodeFixModeKey"
+                ? "Both 'mode' and 'IsNull' are expected to be non-null."
+                : "Both 'mode' and '' are expected to be non-null.";
+            Assert.AreEqual(expected, Assert.ContainsSingle(assertions));
+        }
+        else
+        {
+            Assert.IsEmpty(assertions);
+        }
+#endif
     }
 
     [TestMethod]

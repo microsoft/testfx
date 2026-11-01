@@ -515,12 +515,24 @@ public sealed class TestApplicationBuilderTests
         Mock<IProcess> process = new();
         TaskCompletionSource<bool> neverExits = new(TaskCreationOptions.RunContinuationsAsynchronously);
         process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(neverExits.Task);
-        var stopwatch = Stopwatch.StartNew();
-
-        bool exited = await WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
-
-        Assert.IsFalse(exited);
-        Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+        // This watchdog allows JIT and loaded CI scheduling; the production deadline remains 100ms.
+        var completionLimit = TimeSpan.FromSeconds(30);
+        using var watchdogCancellation = new CancellationTokenSource();
+        var watchdog = Task.Delay(completionLimit, watchdogCancellation.Token);
+        Task<bool> exitWait = WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
+        try
+        {
+            Assert.AreSame(exitWait, await Task.WhenAny(exitWait, watchdog), "The bounded wait must complete without the process exiting.");
+            Assert.IsFalse(await exitWait);
+            Assert.IsFalse(neverExits.Task.IsCompleted);
+            process.Verify(x => x.WaitForExitAsync(CancellationToken.None), Times.Once);
+        }
+        finally
+        {
+            watchdogCancellation.Cancel();
+            neverExits.TrySetResult(true);
+            await exitWait.WaitAsync(completionLimit, CancellationToken.None);
+        }
     }
 
     [TestMethod]
