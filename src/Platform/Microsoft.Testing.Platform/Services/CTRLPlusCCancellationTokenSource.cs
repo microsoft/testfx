@@ -51,7 +51,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     // Fire-and-forget escalation timers, retained so we can dispose them in
     // Dispose() and prevent callbacks from firing after the host has shut down.
-    private List<CancellationTokenSource>? _escalations;
+    private List<(CancellationTokenSource Timer, CancellationTokenRegistration Registration)>? _escalations;
 
     private Action? _forceExitAction;
     private int _ctrlCCount;
@@ -154,6 +154,8 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             return;
         }
 
+        Interlocked.Exchange(ref _forceExitAction, null);
+
         // Detach from Console.CancelKeyPress so we don't keep this instance alive
         // through the static event and don't invoke the handler after disposal.
         if (_console is not null && !IsCancelKeyPressNotSupported())
@@ -161,7 +163,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             _console.CancelKeyPress -= OnConsoleCancelKeyPressed;
         }
 
-        List<CancellationTokenSource>? escalations;
+        List<(CancellationTokenSource Timer, CancellationTokenRegistration Registration)>? escalations;
         lock (_escalationLock)
         {
             escalations = _escalations;
@@ -170,9 +172,10 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
         if (escalations is not null)
         {
-            foreach (CancellationTokenSource escalation in escalations)
+            foreach ((CancellationTokenSource timer, CancellationTokenRegistration registration) in escalations)
             {
-                escalation.Dispose();
+                registration.Dispose();
+                timer.Dispose();
             }
         }
 
@@ -247,6 +250,11 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     private void EnterAborting()
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         // Aborting implies Draining: ensure the legacy CancellationToken /
         // DrainingToken are always signaled when Aborting is signaled, even if
         // EnterAborting is invoked from a Running state (e.g., via Abort() or a
@@ -279,30 +287,48 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     private void ScheduleEscalation(TimeSpan delay, Action action)
     {
-        var timerCts = new CancellationTokenSource(delay);
-        timerCts.Token.Register(action);
-
-        // Retain the CTS so Dispose() can cancel pending escalations and
-        // release the underlying timer. Without this, the timer would run to
-        // completion and could invoke the callback after the source is disposed.
         lock (_escalationLock)
         {
             if (Volatile.Read(ref _disposed) != 0)
             {
-                timerCts.Dispose();
                 return;
             }
 
-            (_escalations ??= []).Add(timerCts);
+            var timerCts = new CancellationTokenSource();
+            CancellationTokenRegistration registration = timerCts.Token.Register(() =>
+            {
+                if (Volatile.Read(ref _disposed) == 0)
+                {
+                    action();
+                }
+            });
+
+            // Publish the registration before starting the timer so Dispose can unregister
+            // queued work and join an active callback without canceling (and executing) it.
+            (_escalations ??= []).Add((timerCts, registration));
+            timerCts.CancelAfter(delay);
         }
     }
 
     private void ForceTerminate()
     {
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         _logger?.LogWarning(
             $"Shutdown abort timeout exhausted ({_abortTimeout}); terminating host.");
+        if (Volatile.Read(ref _disposed) != 0)
+        {
+            return;
+        }
+
         InvokeForceExitAction();
-        _environment.FailFast("Test platform shutdown abort timeout exhausted.");
+        if (Volatile.Read(ref _disposed) == 0)
+        {
+            _environment.FailFast("Test platform shutdown abort timeout exhausted.");
+        }
     }
 
     private void InvokeForceExitAction()

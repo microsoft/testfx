@@ -412,6 +412,50 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         Assert.IsFalse(environment.FailFastCalled);
     }
 
+    [TestMethod]
+    [DataRow(false, DisplayName = "Queued abort callback after disposal")]
+    [DataRow(true, DisplayName = "Disposal during abort callback logging")]
+    public void QueuedAbortTimeout_WhenSourceIsDisposed_DoesNotTerminate(bool disposeDuringLogging)
+    {
+        var environment = new RecordingEnvironment(TestContext.CancellationToken);
+        var logger = new RecordingLogger();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, environment);
+        int forceExitActions = 0;
+        using IDisposable registration = source.RegisterForceExitAction(() => forceExitActions++);
+        if (disposeDuringLogging)
+        {
+            logger.OnWarning = source.Dispose;
+        }
+        else
+        {
+            source.Dispose();
+        }
+
+        // Invoke the timer's callback target directly so the disposal ordering is deterministic.
+        MethodInfo? callback = typeof(CTRLPlusCCancellationTokenSource).GetMethod("ForceTerminate", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(callback);
+        callback.Invoke(source, parameters: null);
+
+        Assert.AreEqual(0, forceExitActions);
+        Assert.IsFalse(environment.FailFastCalled);
+    }
+
+    [TestMethod]
+    public void Dispose_FromDrainingCallback_DoesNotEscalateAfterDisposal()
+    {
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger: null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+        CancellationToken draining = source.DrainingToken;
+        CancellationToken aborting = source.AbortingToken;
+        using CancellationTokenRegistration registration = draining.Register(source.Dispose);
+
+        source.Cancel();
+
+        Assert.IsTrue(draining.IsCancellationRequested);
+        Assert.IsFalse(aborting.IsCancellationRequested);
+    }
+
     private async Task WaitForCancellationAsync(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -537,6 +581,8 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
 
         public string? LastWarning { get; private set; }
 
+        public Action? OnWarning { get; set; }
+
         public bool IsEnabled(LogLevel logLevel) => true;
 
         public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
@@ -545,6 +591,7 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
             {
                 Interlocked.Increment(ref _warningCount);
                 LastWarning = formatter(state, exception);
+                OnWarning?.Invoke();
             }
         }
 
