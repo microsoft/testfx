@@ -10,6 +10,11 @@ internal static class HangDumpOptions
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(30);
 
+    /// <summary>
+    /// The longest period <see cref="Timer"/> accepts (<see cref="uint.MaxValue"/> - 1 milliseconds).
+    /// </summary>
+    public static readonly TimeSpan MaxTimerPeriod = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
+
     public static bool IsEnabled(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(HangDumpCommandLineProvider.HangDumpOptionName);
 
@@ -38,4 +43,21 @@ internal static class HangDumpOptions
     /// </summary>
     public static TimeSpan GetInactivityTimerDueTime(TimeSpan hangTimeout)
         => hangTimeout + GetActivitySignalInterval(hangTimeout);
+
+    /// <summary>
+    /// Splits <paramref name="dueTime"/> into the next period a <see cref="Timer"/> accepts and the time still to
+    /// wait after it, so a due time beyond <see cref="MaxTimerPeriod"/> is waited for in several periods instead of
+    /// being rejected or shortened.
+    /// </summary>
+    public static TimeSpan GetTimerPeriod(TimeSpan dueTime, out TimeSpan remainingDueTime)
+    {
+        if (dueTime > MaxTimerPeriod)
+        {
+            remainingDueTime = dueTime - MaxTimerPeriod;
+            return MaxTimerPeriod;
+        }
+
+        remainingDueTime = TimeSpan.Zero;
+        return dueTime;
+    }
 }

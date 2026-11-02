@@ -52,9 +52,21 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     private readonly object _dumpLock = new();
 #endif
 
+    // Serializes re-arming the inactivity timer (on each activity signal) with continuing a wait that is longer
+    // than one Timer period (in the timer callback).
+#if NET9_0_OR_GREATER
+    private readonly Lock _activityTimerLock = new();
+#else
+    private readonly object _activityTimerLock = new();
+#endif
+
     private TimeSpan? _activityTimerValue;
     private TimeSpan? _activityTimerDueTime;
     private Timer? _activityTimer;
+
+    // The part of the inactivity due time that is still to wait after the timer's current period. It is non-zero
+    // only when the due time exceeds the maximum period a Timer accepts. Read and written under _activityTimerLock.
+    private TimeSpan _activityTimerRemainingDueTime;
     private DateTimeOffset? _deadlineDumpAt;
     private Timer? _deadlineTimer;
     private bool _hostExited;
@@ -212,7 +224,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         }
         else if (request is ActivitySignalRequest)
         {
-            _activityTimer?.Change(_activityTimerDueTime!.Value, TimeSpan.FromMilliseconds(-1));
+            ArmActivityTimer();
 
             if (_traceEnabled)
             {
@@ -291,10 +303,11 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
                 // The inactivity timer only makes sense once the host has connected and can send activity
                 // signals; before that there is nothing to reset it. The deadline timer above is independent.
                 _activityTimer = new Timer(
-                    _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
+                    _ => OnActivityTimerElapsed(cancellationToken),
                     null,
-                    _activityTimerDueTime!.Value,
+                    Timeout.InfiniteTimeSpan,
                     TimeSpan.FromMilliseconds(-1));
+                ArmActivityTimer();
             }
             catch (Exception ex) when (Volatile.Read(ref _dumpTaken) != 0)
             {
@@ -377,6 +390,52 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         {
             await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(dumpFile), ExtensionResources.HangDumpArtifactDisplayName, ExtensionResources.HangDumpArtifactDescription)).ConfigureAwait(false);
         }
+    }
+
+    private void ArmActivityTimer()
+    {
+        lock (_activityTimerLock)
+        {
+            Timer? timer = _activityTimer;
+            if (timer is null)
+            {
+                return;
+            }
+
+            TimeSpan period = HangDumpOptions.GetTimerPeriod(_activityTimerDueTime!.Value, out _activityTimerRemainingDueTime);
+            try
+            {
+                timer.Change(period, Timeout.InfiniteTimeSpan);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Teardown won the race with this activity signal.
+            }
+        }
+    }
+
+    private void OnActivityTimerElapsed(CancellationToken cancellationToken)
+    {
+        lock (_activityTimerLock)
+        {
+            if (_activityTimerRemainingDueTime > TimeSpan.Zero)
+            {
+                // The inactivity timeout is longer than one Timer period: keep waiting instead of dumping early.
+                TimeSpan period = HangDumpOptions.GetTimerPeriod(_activityTimerRemainingDueTime, out _activityTimerRemainingDueTime);
+                try
+                {
+                    _activityTimer!.Change(period, Timeout.InfiniteTimeSpan);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Teardown won the race with this timer callback.
+                }
+
+                return;
+            }
+        }
+
+        TriggerDumpOnce(cancellationToken, triggeredByDeadline: false);
     }
 
     private void OnDeadlineTimerElapsed(CancellationToken cancellationToken)
