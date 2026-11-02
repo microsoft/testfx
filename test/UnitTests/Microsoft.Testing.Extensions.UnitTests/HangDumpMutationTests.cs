@@ -31,6 +31,10 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class HangDumpActivityIndicatorMutationTests
 {
+    private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(30);
+
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public async Task ConsumeAsync_PreCanceledToken_ThrowsBeforeInspectingTheMessage()
     {
@@ -124,24 +128,36 @@ public sealed class HangDumpActivityIndicatorMutationTests
 
 #if NETCOREAPP
     [TestMethod]
-    public async Task DisposeAsync_StopsAndAwaitsActivitySignalLoop()
+    public async Task DisposeAsync_WaitsForInFlightActivitySignalBeforeReturning()
     {
         using HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
-        (CancellationTokenSource cancellation, Task loop) = StartFakeActivitySignalLoop(indicator);
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
 
-        await indicator.DisposeAsync();
+        Task dispose = indicator.DisposeAsync().AsTask();
 
-        Assert.IsTrue(cancellation.IsCancellationRequested);
-        Assert.IsTrue(loop.IsCompleted, "Disposal must wait for the loop before disposing the pipe client it may use.");
+        await AssertDisposalWaitsForLoopAsync(loop, dispose);
         Assert.IsNull(GetPrivateField<Task?>(indicator, "_activitySignalTask"));
     }
 #endif
 
     [TestMethod]
+    public async Task Dispose_WaitsForInFlightActivitySignalBeforeReturning()
+    {
+        HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+
+        var dispose = Task.Run(indicator.Dispose, TestContext.CancellationToken);
+
+        await AssertDisposalWaitsForLoopAsync(loop, dispose);
+        Assert.IsNull(GetPrivateField<Task?>(indicator, "_activitySignalTask"));
+    }
+
+    [TestMethod]
     public async Task OnTestSessionFinishingAsync_AfterDispose_DoesNotTouchTheDisposedLoop()
     {
         HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
-        StartFakeActivitySignalLoop(indicator);
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+        loop.Release();
         indicator.Dispose();
 
         Mock<ITestSessionContext> sessionContext = new();
@@ -150,14 +166,42 @@ public sealed class HangDumpActivityIndicatorMutationTests
         await indicator.OnTestSessionFinishingAsync(sessionContext.Object);
     }
 
-    private static (CancellationTokenSource Cancellation, Task Loop) StartFakeActivitySignalLoop(HangDumpActivityIndicator indicator)
+    private static async Task AssertDisposalWaitsForLoopAsync(GatedActivitySignalLoop loop, Task dispose)
     {
+        try
+        {
+            // The loop has seen the stop request but its in-flight request (the gate) has not finished yet.
+            Assert.AreSame(loop.CancellationObserved, await Task.WhenAny(loop.CancellationObserved, Task.Delay(GateTimeout)), "Disposal must stop the loop.");
+            await Task.Delay(100);
+            Assert.IsFalse(dispose.IsCompleted, "Disposal must not return while an activity signal request may still use the pipe client.");
+        }
+        finally
+        {
+            loop.Release();
+        }
+
+        Assert.AreSame(dispose, await Task.WhenAny(dispose, Task.Delay(GateTimeout)), "Disposal must complete once the loop finishes.");
+        await dispose;
+    }
+
+    private static GatedActivitySignalLoop StartGatedActivitySignalLoop(HangDumpActivityIndicator indicator)
+    {
+        // The fake loop observes cancellation like the real one, but finishes only when the gate is released,
+        // the way an in-flight request finishes only when the controller replies.
         var cancellation = new CancellationTokenSource();
-        var loopCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        cancellation.Token.Register(() => loopCompletion.TrySetResult(true));
+        var cancellationObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        cancellation.Token.Register(() => cancellationObserved.TrySetResult(true));
         SetPrivateField(indicator, "_activitySignalCancellation", cancellation);
-        SetPrivateField<Task?>(indicator, "_activitySignalTask", loopCompletion.Task);
-        return (cancellation, loopCompletion.Task);
+        SetPrivateField<Task?>(indicator, "_activitySignalTask", gate.Task);
+        return new GatedActivitySignalLoop(cancellationObserved.Task, gate);
+    }
+
+    private sealed class GatedActivitySignalLoop(Task cancellationObserved, TaskCompletionSource<bool> gate)
+    {
+        public Task CancellationObserved { get; } = cancellationObserved;
+
+        public void Release() => gate.TrySetResult(true);
     }
 
     [TestMethod]
