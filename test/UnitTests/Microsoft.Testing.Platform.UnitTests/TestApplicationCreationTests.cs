@@ -125,9 +125,15 @@ public sealed class TestApplicationCreationTests
         Mock<IHost> host = new();
         host.Setup(h => h.RunAsync()).ReturnsAsync(42);
         Mock<IDisposable> disposal = host.As<IDisposable>();
-        TestApplication application = new(host.Object);
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        source.Cancel();
+        TestApplication application = new(host.Object, source);
 
         Assert.AreEqual(42, await application.RunAsync());
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        source.Abort();
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
         application.Dispose();
 
         host.Verify(h => h.RunAsync(), Times.Once);
@@ -140,9 +146,49 @@ public sealed class TestApplicationCreationTests
         InvalidOperationException expected = new("inner host failure");
         Mock<IHost> host = new();
         host.Setup(h => h.RunAsync()).ThrowsAsync(expected);
-        using TestApplication application = new(host.Object);
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        source.Cancel();
+        using TestApplication application = new(host.Object, source);
 
         Assert.AreSame(expected, await Assert.ThrowsExactlyAsync<InvalidOperationException>(application.RunAsync));
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        source.Abort();
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void TestApplication_DisposeBeforeRun_CompletesEscalationAndPreservesTokens(bool disposalThrows)
+    {
+        Mock<IHost> host = new();
+        Mock<IDisposable> disposal = host.As<IDisposable>();
+        var expected = new InvalidOperationException("inner host disposal failure");
+        if (disposalThrows)
+        {
+            disposal.Setup(d => d.Dispose()).Throws(expected);
+        }
+
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger: null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        source.Cancel();
+        TestApplication application = new(host.Object, source);
+
+        if (disposalThrows)
+        {
+            Assert.AreSame(expected, Assert.ThrowsExactly<InvalidOperationException>(application.Dispose));
+        }
+        else
+        {
+            application.Dispose();
+        }
+
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        source.Abort();
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+        host.Verify(h => h.RunAsync(), Times.Never);
+        disposal.Verify(d => d.Dispose(), Times.Once);
     }
 
     [TestMethod]
@@ -772,8 +818,9 @@ public sealed class TestApplicationCreationTests
         options.Configuration.ConfigurationSources.RegisterEnvironmentVariablesConfigurationSource = false;
         ApplicationLoggingState logging = new(LogLevel.Warning, CommandLineParser.Parse(args, environment));
 
-        IHost host = await builder.BuildAsync(
+        (IHost host, CTRLPlusCCancellationTokenSource cancellationTokenSource) = await builder.BuildAsync(
             logging, options, Mock.Of<IUnhandledExceptionsHandler>(), new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using CTRLPlusCCancellationTokenSource source = cancellationTokenSource;
         TestHostControlledHost controlled = Assert.IsInstanceOfType<TestHostControlledHost>(host);
         await controlled.DisposeAsync();
 

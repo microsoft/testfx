@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -38,5 +39,5 @@ internal interface ITestHostBuilder
 
     IArtifactPostProcessingManager ArtifactPostProcessing { get; }
 
-    Task<IHost> BuildAsync(ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
+    Task<(IHost Host, CTRLPlusCCancellationTokenSource CancellationTokenSource)> BuildAsync(ApplicationLoggingState loggingState, TestApplicationOptions testApplicationOptions, IUnhandledExceptionsHandler unhandledExceptionsHandler, DateTimeOffset createBuilderStart);
 }

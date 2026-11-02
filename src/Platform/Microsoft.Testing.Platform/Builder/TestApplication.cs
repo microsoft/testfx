@@ -20,6 +20,7 @@ namespace Microsoft.Testing.Platform.Builder;
 public sealed class TestApplication : ITestApplication
 {
     private readonly IHost _host;
+    private readonly CTRLPlusCCancellationTokenSource _cancellationTokenSource;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
     static TestApplication() =>
@@ -27,7 +28,11 @@ public sealed class TestApplication : ITestApplication
         // This is important for the console display system to work properly.
         _ = new SystemConsole();
 
-    internal TestApplication(IHost host) => _host = host;
+    internal TestApplication(IHost host, CTRLPlusCCancellationTokenSource cancellationTokenSource)
+    {
+        _host = host;
+        _cancellationTokenSource = cancellationTokenSource;
+    }
 
     // This cast looks like incorrect assumption.
     // This property is currently accessed in unit tests only.
@@ -273,11 +278,29 @@ public sealed class TestApplication : ITestApplication
 
     /// <inheritdoc />
     public void Dispose()
-        => (_host as IDisposable)?.Dispose();
+    {
+        try
+        {
+            (_host as IDisposable)?.Dispose();
+        }
+        finally
+        {
+            _cancellationTokenSource.CompleteShutdown();
+        }
+    }
 
     /// <inheritdoc />
     public async Task<int> RunAsync()
-        => await _host.RunAsync().ConfigureAwait(false);
+    {
+        try
+        {
+            return await _host.RunAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _cancellationTokenSource.CompleteShutdown();
+        }
+    }
 
     private static void AttachDebuggerIfNeeded(SystemEnvironment environment, SystemConsole console, SystemProcessHandler systemProcess)
     {

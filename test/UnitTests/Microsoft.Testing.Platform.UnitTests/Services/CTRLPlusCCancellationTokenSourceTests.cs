@@ -456,6 +456,56 @@ public sealed class CTRLPlusCCancellationTokenSourceTests
         Assert.IsFalse(aborting.IsCancellationRequested);
     }
 
+    [TestMethod]
+    [DataRow(false, DisplayName = "Queued abort callback after shutdown completion")]
+    [DataRow(true, DisplayName = "Shutdown completes during abort callback logging")]
+    public void QueuedAbortTimeout_WhenShutdownCompleted_DoesNotTerminate(bool completeDuringLogging)
+    {
+        var console = new TrackingConsole();
+        var environment = new RecordingEnvironment(TestContext.CancellationToken);
+        var logger = new RecordingLogger();
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console, logger, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan, environment);
+        int forceExitActions = 0;
+        using IDisposable registration = source.RegisterForceExitAction(() => forceExitActions++);
+        if (completeDuringLogging)
+        {
+            logger.OnWarning = source.CompleteShutdown;
+        }
+        else
+        {
+            source.CompleteShutdown();
+        }
+
+        MethodInfo? callback = typeof(CTRLPlusCCancellationTokenSource).GetMethod("ForceTerminate", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(callback);
+        callback.Invoke(source, parameters: null);
+        source.CompleteShutdown();
+        source.Abort();
+        console.FireCancelKeyPress();
+
+        Assert.IsFalse(source.DrainingToken.IsCancellationRequested);
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+        Assert.IsFalse(source.WasCancellationRequestedByConsole);
+        Assert.AreEqual(0, console.CancelKeyPressSubscriberCount);
+        Assert.AreEqual(0, forceExitActions);
+        Assert.IsFalse(environment.FailFastCalled);
+    }
+
+    [TestMethod]
+    public void CompleteShutdown_FromDrainingCallback_DoesNotEscalateOrDisposeTokens()
+    {
+        using var source = CTRLPlusCCancellationTokenSource.CreateWithTimeouts(
+            console: null, logger: null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+        using CancellationTokenRegistration registration = source.DrainingToken.Register(source.CompleteShutdown);
+
+        source.Cancel();
+
+        Assert.IsTrue(source.CancellationToken.IsCancellationRequested);
+        Assert.IsTrue(source.DrainingToken.IsCancellationRequested);
+        Assert.IsFalse(source.AbortingToken.IsCancellationRequested);
+    }
+
     private async Task WaitForCancellationAsync(CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)

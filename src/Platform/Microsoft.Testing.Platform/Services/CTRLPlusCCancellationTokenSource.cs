@@ -49,12 +49,13 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     // Mutable phase state updated through Interlocked APIs.
     private readonly StrongBox<int> _phase = new(PhaseRunning);
 
-    // Fire-and-forget escalation timers, retained so we can dispose them in
-    // Dispose() and prevent callbacks from firing after the host has shut down.
+    // Keep timer registrations until shutdown completes, independently of the
+    // tokens that late output can still read after the application has returned.
     private List<(CancellationTokenSource Timer, CancellationTokenRegistration Registration)>? _escalations;
 
     private Action? _forceExitAction;
     private int _ctrlCCount;
+    private int _shutdownCompleted;
     private int _disposed;
 
     public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, IEnvironment? environment = null)
@@ -112,6 +113,9 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     internal int CurrentPhase => Volatile.Read(ref _phase.Value);
 
+    private bool IsShutdownCompleted
+        => Volatile.Read(ref _shutdownCompleted) != 0 || Volatile.Read(ref _disposed) != 0;
+
     public bool WasCancellationRequestedByConsole
         => Volatile.Read(ref _ctrlCCount) != 0;
 
@@ -154,10 +158,20 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             return;
         }
 
+        CompleteShutdown();
+        _drainingCts.Dispose();
+        _abortingCts.Dispose();
+    }
+
+    internal void CompleteShutdown()
+    {
+        if (Interlocked.Exchange(ref _shutdownCompleted, 1) != 0)
+        {
+            return;
+        }
+
         Interlocked.Exchange(ref _forceExitAction, null);
 
-        // Detach from Console.CancelKeyPress so we don't keep this instance alive
-        // through the static event and don't invoke the handler after disposal.
         if (_console is not null && !IsCancelKeyPressNotSupported())
         {
             _console.CancelKeyPress -= OnConsoleCancelKeyPressed;
@@ -178,17 +192,12 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
                 timer.Dispose();
             }
         }
-
-        _drainingCts.Dispose();
-        _abortingCts.Dispose();
     }
 
     private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
     {
-        // Guard against handlers that may race with Dispose (the unsubscribe in
-        // Dispose() is best-effort: the event invocation list could already have
-        // captured this delegate before we removed it).
-        if (Volatile.Read(ref _disposed) != 0)
+        // The event invocation list may have captured this delegate before shutdown completed.
+        if (IsShutdownCompleted)
         {
             return;
         }
@@ -223,6 +232,11 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     private void EnterDraining()
     {
+        if (IsShutdownCompleted)
+        {
+            return;
+        }
+
         if (Interlocked.CompareExchange(ref _phase.Value, PhaseDraining, PhaseRunning) != PhaseRunning)
         {
             return;
@@ -250,7 +264,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     private void EnterAborting()
     {
-        if (Volatile.Read(ref _disposed) != 0)
+        if (IsShutdownCompleted)
         {
             return;
         }
@@ -289,7 +303,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     {
         lock (_escalationLock)
         {
-            if (Volatile.Read(ref _disposed) != 0)
+            if (IsShutdownCompleted)
             {
                 return;
             }
@@ -297,13 +311,13 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             var timerCts = new CancellationTokenSource();
             CancellationTokenRegistration registration = timerCts.Token.Register(() =>
             {
-                if (Volatile.Read(ref _disposed) == 0)
+                if (!IsShutdownCompleted)
                 {
                     action();
                 }
             });
 
-            // Publish the registration before starting the timer so Dispose can unregister
+            // Publish the registration before starting the timer so completion can unregister
             // queued work and join an active callback without canceling (and executing) it.
             (_escalations ??= []).Add((timerCts, registration));
             timerCts.CancelAfter(delay);
@@ -312,20 +326,20 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     private void ForceTerminate()
     {
-        if (Volatile.Read(ref _disposed) != 0)
+        if (IsShutdownCompleted)
         {
             return;
         }
 
         _logger?.LogWarning(
             $"Shutdown abort timeout exhausted ({_abortTimeout}); terminating host.");
-        if (Volatile.Read(ref _disposed) != 0)
+        if (IsShutdownCompleted)
         {
             return;
         }
 
         InvokeForceExitAction();
-        if (Volatile.Read(ref _disposed) == 0)
+        if (!IsShutdownCompleted)
         {
             _environment.FailFast("Test platform shutdown abort timeout exhausted.");
         }
