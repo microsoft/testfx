@@ -62,7 +62,7 @@ $(CommonProductDescription)]]></PackageDescription>
                               Exclude="$(TargetDir)$(AssemblyName).dll"
                               PackagePath="tools\net8.0\any" />
       <TfmSpecificPackageFile Include="$(TargetDir)**\$(AssemblyName).resources.dll"
-                              PackagePath="tools\net8.0\any\%(RecursiveDir)" />
+                              PackagePath="tools/net8.0/any/$([System.String]::Copy('%(RecursiveDir)').Replace('\', '/').TrimStart('/'))" />
       <TfmSpecificPackageFile Include="@(_BrowserPlaywrightPackageFile)"
                               PackagePath="tools/net8.0/any/.playwright/%(_BrowserPlaywrightPackageFile.PackageSubdirectory)" />
     </ItemGroup>
