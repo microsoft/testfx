@@ -57,8 +57,6 @@ public sealed class AzureDevOpsHistoryClientTests
         Assert.Contains("$top=50", secondRequestUri.Query);
     }
 
-<<<<<<< HEAD
-=======
     [TestMethod]
     [DataRow(0)]
     [DataRow(-1)]
@@ -290,7 +288,6 @@ public sealed class AzureDevOpsHistoryClientTests
         return response;
     }
 
->>>>>>> Fix Azure DevOps names for data-driven test results
     private static AzureDevOpsHistoryQuery CreateQuery()
         => new("https://dev.azure.com/example/", "testfx", "token", "123", new DateTimeOffset(2025, 05, 01, 0, 0, 0, TimeSpan.Zero), new DateTimeOffset(2025, 05, 16, 0, 0, 0, TimeSpan.Zero));
 
@@ -299,6 +296,19 @@ public sealed class AzureDevOpsHistoryClientTests
         {
             Content = new StringContent($"{{\"value\":[{string.Join(",", runUrls.Select(static runUrl => $"{{\"url\":\"{runUrl}\"}}"))}]}}"),
         };
+
+    private sealed class ScriptedHandler(params Func<HttpResponseMessage>[] responses) : HttpMessageHandler
+    {
+        private readonly Queue<Func<HttpResponseMessage>> _responses = new(responses);
+
+        public List<HttpRequestMessage> Requests { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Requests.Add(request);
+            return Task.FromResult(_responses.Dequeue()());
+        }
+    }
 
     private sealed class RecordingHttpMessageHandler(Queue<HttpResponseMessage> responses) : HttpMessageHandler
     {
@@ -320,11 +330,16 @@ public sealed class AzureDevOpsHistoryClientTests
 
     private sealed class TestTask : ITask
     {
+        public List<TimeSpan> Delays { get; } = [];
+
         public Task Delay(int millisecondDelay)
             => Task.CompletedTask;
 
         public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            Delays.Add(timeSpan);
+            return Task.CompletedTask;
+        }
 
         public Task Run(Action action)
         {
