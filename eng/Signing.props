@@ -1,5 +1,7 @@
 <Project>
   <ItemGroup Label="Third-party assemblies">
+    <FileSignInfo Include="FSharp.Analyzers.SDK.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="McMaster.NETCore.Plugins.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Mono.Cecil.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Mono.Cecil.Mdb.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Mono.Cecil.Pdb.dll" CertificateName="3PartySHA2" />
