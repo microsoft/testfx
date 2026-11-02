@@ -91,6 +91,7 @@ module internal DataRules =
         {
             Value: obj | null
             Type: ArgumentType option
+            Elements: Argument list
         }
 
     let rec private symbolType (t: FSharpType) =
@@ -113,6 +114,13 @@ module internal DataRules =
         | SymbolType left, SymbolType right -> left.Equals(right)
         | RuntimeType left, RuntimeType right -> left = right
         | ArrayType(left, leftRank), ArrayType(right, rightRank) -> leftRank = rightRank && sameType left right
+        | SymbolType symbol, RuntimeType runtime
+        | RuntimeType runtime, SymbolType symbol when runtime.IsGenericType ->
+            let arguments = runtime.GetGenericArguments()
+            symbol.HasTypeDefinition
+            && symbol.TypeDefinition.TryGetFullName() = Option.ofObj (runtime.GetGenericTypeDefinition().FullName)
+            && symbol.GenericArguments.Count = arguments.Length
+            && Seq.forall2 (fun symbol runtime -> sameType (symbolType symbol) (runtimeType runtime)) symbol.GenericArguments arguments
         | _ -> typeName left = typeName right && (typeName left).IsSome
 
     let private referenceType = function
@@ -171,9 +179,13 @@ module internal DataRules =
            | _ -> false
 
     let private compatible argument (expected: FSharpType) =
+        let expected = Symbols.normalizeType expected
+        let scalar =
+            if Symbols.typeName expected = Some "System.Nullable`1" && expected.GenericArguments.Count = 1 then expected.GenericArguments[0]
+            else expected
         argument.Value = null
         || expected.IsGenericParameter
-        || (argument.Type |> Option.exists (fun actual -> assignable true true actual (symbolType expected)))
+        || (argument.Type |> Option.exists (fun actual -> assignable true true actual (symbolType scalar)))
 
     let private rowArguments (context: RuleContext) =
         let syntaxAttributes =
@@ -259,29 +271,35 @@ module internal DataRules =
         let rec argument sourceType syntax (value: obj | null) =
             let actualType =
                 syntax |> Option.bind (expressionType false)
-                |> Option.orElse (sourceType |> Option.filter (fun t -> Symbols.typeName t <> Some "System.Object") |> Option.map symbolType)
+                |> Option.orElse (sourceType |> Option.filter (fun t -> typeName t <> Some "System.Object"))
+            let expressions = syntax |> Option.map arrayElements |> Option.defaultValue []
+            let elements =
+                match value with
+                | :? Array ->
+                    let elementType = actualType |> Option.bind (function ArrayType(element, _) -> Some element | _ -> None)
+                    values value |> List.mapi (fun index value -> argument elementType (expressions |> List.tryItem index) value)
+                | _ -> []
             let actualType =
                 match value with
                 | :? Array as array ->
-                    let expressions = syntax |> Option.map arrayElements |> Option.defaultValue []
                     match actualType with
                     | Some (ArrayType _) -> actualType
                     | _ ->
-                        let elements =
-                            values value |> List.mapi (fun index value ->
+                        let elementTypes =
+                            elements |> List.mapi (fun index element ->
                                 let expression = expressions |> List.tryItem index
                                 expression |> Option.bind (expressionType true)
-                                |> Option.orElseWith (fun () -> (argument None expression value).Type))
+                                |> Option.orElse element.Type)
                             |> List.choose id
                         let elementType =
-                            match elements with
+                            match elementTypes with
                             | first :: rest when rest |> List.forall (sameType first) -> first
                             | _ -> runtimeType (array.GetType().GetElementType() |> Option.ofObj |> Option.get)
                         Some (ArrayType(elementType, array.Rank))
                 | null -> actualType
                 | :? FSharpType -> Some (RuntimeType typeof<Type>)
                 | value -> actualType |> Option.orElseWith (fun () -> Some (runtimeType (value.GetType())))
-            { Value = value; Type = actualType }
+            { Value = value; Type = actualType; Elements = elements }
         fun (attribute: FSharpAttribute) ->
             let syntax =
                 syntaxAttributes.Value
@@ -295,32 +313,42 @@ module internal DataRules =
                 let expressions = if syntax.Length = 1 then arrayElements syntax.Head else syntax
                 values value |> List.mapi (fun index value -> argument None (expressions |> List.tryItem index) value)
             | arguments ->
-                arguments |> List.mapi (fun index (t, value) -> argument (Some t) (syntax |> List.tryItem index) value)
+                arguments |> List.mapi (fun index (t, value) -> argument (Some (symbolType t)) (syntax |> List.tryItem index) value)
 
     let private rows (context: RuleContext) (argumentsFor: FSharpAttribute -> Argument list) (methodInfo: FSharpMemberOrFunctionOrValue) =
         let allAttributes = methodInfo.Attributes |> Seq.toList
-        let data = Symbols.attributes "DataRowAttribute" allAttributes
+        let data =
+            allAttributes |> List.filter (fun attribute ->
+                not attribute.IsUnresolved && Symbols.hasTypeName (Symbols.frameworkNamespace + "DataRowAttribute") attribute.AttributeType)
         let report attribute suffix arguments =
             context.Report "MSTEST0014" "DataRowShouldBeValidTitle" ("DataRowShouldBeValidMessageFormat_" + suffix)
                 (location context methodInfo.DeclarationLocation attribute) arguments
-        let seenValues = ResizeArray<FSharpAttribute * int>()
+        let seenValues = ResizeArray<FSharpAttribute * Argument list * int>()
         let displayNames = HashSet<string>(StringComparer.Ordinal)
-        let rec equalValue (left: obj | null) (right: obj | null) =
-            match left, right with
-            | (:? double as l), (:? double as r) -> BitConverter.DoubleToInt64Bits(l) = BitConverter.DoubleToInt64Bits(r)
-            | (:? single as l), (:? single as r) -> BitConverter.SingleToInt32Bits(l) = BitConverter.SingleToInt32Bits(r)
-            | (:? Array as l), (:? Array as r) ->
-                l.GetType() = r.GetType() && l.Length = r.Length && Seq.forall2 equalValue (l |> Seq.cast<obj | null>) (r |> Seq.cast<obj | null>)
-            | _ -> Object.Equals(left, right)
-        let sameRow (left: FSharpAttribute) (right: FSharpAttribute) =
-            left.ConstructorArguments.Count = right.ConstructorArguments.Count
-            && Seq.forall2 (fun (lt: FSharpType, lv) (rt: FSharpType, rv) -> lt.Equals(rt) && equalValue lv rv) left.ConstructorArguments right.ConstructorArguments
+        let rec equalArgument left right =
+            let typesMatch =
+                match left.Type, right.Type with
+                | Some left, Some right -> sameType left right
+                | None, None -> true
+                | _ -> false
+            typesMatch
+            && (match left.Value, right.Value with
+                | (:? double as l), (:? double as r) -> BitConverter.DoubleToInt64Bits(l) = BitConverter.DoubleToInt64Bits(r)
+                | (:? single as l), (:? single as r) -> BitConverter.SingleToInt32Bits(l) = BitConverter.SingleToInt32Bits(r)
+                | (:? Array), (:? Array) -> left.Elements.Length = right.Elements.Length && List.forall2 equalArgument left.Elements right.Elements
+                | _ -> Object.Equals(left.Value, right.Value))
+        let sameRow (leftAttribute: FSharpAttribute) left (rightAttribute: FSharpAttribute) right =
+            leftAttribute.ConstructorArguments.Count = rightAttribute.ConstructorArguments.Count
+            && Seq.forall2 (fun (left: FSharpType, _) (right: FSharpType, _) -> left.Equals(right)) leftAttribute.ConstructorArguments rightAttribute.ConstructorArguments
+            && List.length left = List.length right
+            && List.forall2 equalArgument left right
         for attribute in data do
+            let arguments = argumentsFor attribute
             let index = allAttributes |> List.findIndex (fun a -> Object.ReferenceEquals(a, attribute))
-            match seenValues |> Seq.tryFind (fun (old, _) -> sameRow old attribute) with
-            | Some (_, first) ->
+            match seenValues |> Seq.tryFind (fun (oldAttribute, old, _) -> sameRow oldAttribute old attribute arguments) with
+            | Some (_, _, first) ->
                 context.Report "MSTEST0042" "DuplicateDataRowTitle" "DuplicateDataRowMessageFormat" (location context methodInfo.DeclarationLocation attribute) [| box first; box index |]
-            | None -> seenValues.Add(attribute, index)
+            | None -> seenValues.Add(attribute, arguments, index)
             if Symbols.hasTypeName (Symbols.frameworkNamespace + "DataRowAttribute") attribute.AttributeType
                && (Symbols.named "DisplayName" attribute |> Option.exists Symbols.nonemptyString)
                && (Symbols.named "ArgumentsDisplayName" attribute |> Option.exists Symbols.nonemptyString) then
@@ -331,7 +359,6 @@ module internal DataRules =
                 | Some name when not (String.IsNullOrWhiteSpace(name)) && not (displayNames.Add(name)) ->
                     context.Report "MSTEST0087" "DuplicateDataRowDisplayNameTitle" "DuplicateDataRowDisplayNameMessageFormat" (location context methodInfo.DeclarationLocation attribute) [| box name |]
                 | _ -> ()
-                let arguments = argumentsFor attribute
                 let declaredParameters = Symbols.compiledParameters methodInfo
                 let explicitNullToken =
                     arguments.Length = declaredParameters.Length
@@ -540,8 +567,13 @@ module internal DataRules =
                     context.Report "MSTEST0072" "AssemblyFixtureProviderNotSupportedWithNativeAotTitle" "AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat" attribute.Range [||]
             let firstSource =
                 context.ProjectOptions.SourceFiles
-                |> List.tryFind (fun file -> not (file.Contains(".AssemblyInfo.", StringComparison.Ordinal)) && not (file.Contains("obj" + string IO.Path.DirectorySeparatorChar, StringComparison.Ordinal)))
-            if firstSource = Some context.FileName then
+                |> List.tryFind (fun file ->
+                    let path = IO.Path.GetFullPath(file)
+                    file.EndsWith(".fs", StringComparison.OrdinalIgnoreCase)
+                    && not (path.Contains(".AssemblyInfo.", StringComparison.Ordinal))
+                    && not (path.Contains("obj" + string IO.Path.DirectorySeparatorChar, StringComparison.Ordinal)))
+            if firstSource |> Option.exists (fun file ->
+                String.Equals(IO.Path.GetFullPath(file), IO.Path.GetFullPath(context.FileName), StringComparison.OrdinalIgnoreCase)) then
                 match context.CheckFileResults with
                 | Some results when results.ProjectContext.GetReferencedAssemblies()
                                     |> Seq.exists (fun assembly -> Symbols.hasAttribute "AssemblyFixtureProviderAttribute" assembly.Contents.Attributes) ->

@@ -136,6 +136,9 @@ reference-array covariance. Declared element types also support generic inferenc
 when an array is empty or contains only nulls. A trailing `CancellationToken` is
 supplied by MSTest and need not be included in the row; explicit null arguments
 retain MSTest's normal array/token binding rules.
+Scalar checks recognize constructed generic interfaces and nullable value types.
+Constructor-based row validation and duplicate checks apply only to the exact
+`DataRowAttribute`, not custom subclasses whose constructors can supply other data.
 
 Rules use resolved MSTest types, not short attribute or method names. Signature
 files and editor snapshots without a typed tree do not produce diagnostics.
@@ -144,3 +147,7 @@ complete assembly (for example, dependency graphs, assembly-level providers, and
 the absence of a parallelization attribute).
 Unresolved referenced attributes are not dereferenced; cross-version fixture
 checks require the old framework dependency to be available to the compiler service.
+Assembly-level checks also require the host to expose referenced assembly
+attributes. Some FCS in-memory project references omit that metadata; referenced
+fixture-provider coverage is verified with compiled PE references, not those
+metadata-incomplete project snapshots.

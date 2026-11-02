@@ -37,16 +37,67 @@ module internal DependencyRules =
         Symbols.isTest m && m.IsInstanceMemberInCompiledCode && hasBody m
         && (m.Accessibility.IsPublic || (context.DiscoverInternals <> Some false && m.Accessibility.IsInternal))
 
-    let private signature (m: FSharpMemberOrFunctionOrValue) =
-        m.CompiledName, m.GenericParameters.Count, (Symbols.parameters m |> List.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty)))
+    type private SignatureType =
+        | MethodParameter of int
+        | OtherParameter of FSharpGenericParameter
+        | Definition of FSharpEntity * SignatureType list
+        | Array of int * SignatureType
+        | Tuple of bool * SignatureType list
+        | Function of SignatureType list
+        | OtherType of string
 
-    let private effectiveMembers (entity: FSharpEntity) =
+    let rec private signatureType parameters (t: FSharpType) =
+        let t = Symbols.normalizeType t
+        if t.IsGenericParameter then
+            match parameters |> List.tryFindIndex (fun (parameter: FSharpGenericParameter) -> parameter.Equals(t.GenericParameter)) with
+            | Some ordinal -> MethodParameter ordinal
+            | None -> OtherParameter t.GenericParameter
+        else
+            let arguments = t.GenericArguments |> Seq.map (signatureType parameters) |> Seq.toList
+            if t.HasTypeDefinition && t.TypeDefinition.IsArrayType then Array(t.TypeDefinition.ArrayRank, arguments.Head)
+            elif t.IsTupleType then Tuple(t.IsStructTupleType, arguments)
+            elif t.IsFunctionType then Function arguments
+            elif t.HasTypeDefinition then Definition(t.TypeDefinition, arguments)
+            else OtherType(t.Format(FSharpDisplayContext.Empty))
+
+    let private methodTypeParameters (m: FSharpMemberOrFunctionOrValue) =
+        m.GenericParameters
+        |> Seq.filter (fun parameter ->
+            m.DeclaringEntity |> Option.forall (fun owner ->
+                owner.GenericParameters |> Seq.forall (fun parent -> not (parent.Equals(parameter)))))
+        |> Seq.toList
+
+    let private signature (m: FSharpMemberOrFunctionOrValue) =
+        let parameters = methodTypeParameters m
+        m.CompiledName, parameters.Length, (Symbols.compiledParameters m |> List.map (fun p -> signatureType parameters p.Type))
+
+    let private implementedSlots (m: FSharpMemberOrFunctionOrValue) =
+        m.ImplementedAbstractSignatures
+        |> Seq.choose (fun slot ->
+            if not slot.DeclaringType.HasTypeDefinition then None
+            else
+                let parameters = slot.MethodGenericParameters |> Seq.toList
+                let arguments =
+                    slot.AbstractArguments |> Seq.collect id |> Seq.map (fun p -> p.Type) |> Seq.toList
+                    |> function
+                        | [ argument ] when Symbols.typeName argument = Some "Microsoft.FSharp.Core.Unit" -> []
+                        | arguments -> arguments
+                Some (slot.DeclaringType.TypeDefinition, (slot.Name, parameters.Length, arguments |> List.map (signatureType parameters))))
+        |> Seq.toList
+
+    let private effectiveMembers context (entity: FSharpEntity) =
         let seen = HashSet<_>()
+        let overridden = HashSet<_>()
         let rec collect (entity: FSharpEntity) =
             seq {
                 for memberInfo in entity.MembersFunctionsAndValues do
-                    if not memberInfo.IsPropertyAccessor && not memberInfo.IsConstructor
-                       && (memberInfo.Accessibility.IsPrivate || seen.Add(signature memberInfo)) then yield memberInfo
+                    if not memberInfo.IsPropertyAccessor && not memberInfo.IsConstructor then
+                        let slots = implementedSlots memberInfo
+                        if not (overridden.Contains(entity, signature memberInfo))
+                           && not (slots |> List.exists overridden.Contains)
+                           && (not (methodRunnable context memberInfo) || seen.Add(signature memberInfo)) then
+                            for slot in slots do overridden.Add(slot) |> ignore
+                            yield memberInfo
                 match entity.BaseType with
                 | Some parent when parent.HasTypeDefinition -> yield! collect parent.TypeDefinition
                 | _ -> ()
@@ -160,7 +211,7 @@ module internal DependencyRules =
             match memberCache.TryGetValue(entity) with
             | true, members -> members
             | _ ->
-                let members = effectiveMembers entity
+                let members = effectiveMembers context entity
                 memberCache[entity] <- members
                 members
         let selfReferences = HashSet<_>()

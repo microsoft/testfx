@@ -419,11 +419,12 @@ type Tests() =
     {{(editorHost ? "<OutputType>Exe</OutputType><DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>" : string.Empty)}}
   </PropertyGroup>
   <ItemGroup>
+    {{(source.Contains("#file Tests.fsi", StringComparison.Ordinal) ? "<Compile Include=\"Tests.fsi\" />" : string.Empty)}}
     <Compile Include="Tests.fs" />
     <PackageReference Include="MSTest.TestFramework" Version="{{frameworkVersion}}" />
     <PackageReference Include="{{PackageId}}" Version="{{PackageVersion}}" PrivateAssets="all" IncludeAssets="analyzers" GeneratePathProperty="true" />
     {{hostingReference}}
-    {{(source.Contains("#file Legacy", StringComparison.Ordinal) ? "<ProjectReference Include=\"Legacy/Legacy.fsproj\" />" : string.Empty)}}
+    {{(source.Contains("#file Legacy", StringComparison.Ordinal) ? $"<ProjectReference Include=\"Legacy/Legacy.{(source.Contains("#file Legacy/Legacy.csproj", StringComparison.Ordinal) ? "csproj" : "fsproj")}\" />" : string.Empty)}}
     {{(source.Contains("3.11.1", StringComparison.Ordinal) ? "<Reference Include=\"Microsoft.VisualStudio.TestPlatform.TestFramework\" HintPath=\"$(NuGetPackageRoot)\\mstest.testframework\\3.11.1\\lib\\net8.0\\Microsoft.VisualStudio.TestPlatform.TestFramework.dll\" />" : string.Empty)}}
     {{(editorHost ? $"""
     <PackageReference Include="FSharp.Core" Version="{coreVersion}" />

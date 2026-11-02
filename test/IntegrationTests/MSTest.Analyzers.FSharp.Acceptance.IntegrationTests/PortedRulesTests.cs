@@ -8,6 +8,217 @@ namespace MSTest.Analyzers.FSharp.Acceptance.IntegrationTests;
 public sealed partial class FSharpAnalyzersTests
 {
     [TestMethod]
+    [DataRow("\"abc\", 1", "chars: seq<char>, marker: int", false, DisplayName = "ScalarConversions_GenericEnumerable")]
+    [DataRow("\"abc\", 1", "chars: seq<int>, marker: int", true, DisplayName = "ScalarConversions_RejectWrongGenericArgument")]
+    [DataRow("\"abc\", 1", "chars: seq<obj>, marker: int", true, DisplayName = "ScalarConversions_NoGenericElementBoxing")]
+    [DataRow("\"abc\", 1", "value: IComparable<string>, marker: int", false, DisplayName = "ScalarConversions_GenericComparable")]
+    [DataRow("\"abc\", 1", "value: IComparable<int>, marker: int", true, DisplayName = "ScalarConversions_RejectWrongComparable")]
+    [DataRow("7, 1", "value: IComparable<int>, marker: int", false, DisplayName = "ScalarConversions_BoxToGenericInterface")]
+    [DataRow("1", "value: Nullable<int>", false, DisplayName = "ScalarConversions_NullableInteger")]
+    [DataRow("1", "value: Nullable<int64>", false, DisplayName = "ScalarConversions_NullableWidening")]
+    [DataRow("ConsoleColor.Red", "value: Nullable<ConsoleColor>", false, DisplayName = "ScalarConversions_NullableEnum")]
+    [DataRow("AttributeTargets.Class", "value: Nullable<ConsoleColor>", true, DisplayName = "ScalarConversions_RejectWrongNullableEnum")]
+    [DataRow("(null : obj)", "value: Nullable<int>", false, DisplayName = "ScalarConversions_NullNullableInteger")]
+    [DataRow("(null : obj)", "value: Nullable<ConsoleColor>", false, DisplayName = "ScalarConversions_NullNullableEnum")]
+    [DataRow("([| 1 |] : int[])", "value: Nullable<int>[]", true, DisplayName = "ScalarConversions_NoNullableArrayLift")]
+    [DataRow("\"text\"", "value: Nullable<int>", true, DisplayName = "ScalarConversions_RejectNullableString")]
+    public async Task DataRows_CompareGenericAndNullableScalarTypes(string arguments, string parameters, bool shouldReport)
+    {
+        string source = $$"""
+namespace Consumer
+open System
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    [<TestMethod; DataRow({{arguments}})>]
+    member _.Run({{parameters}}) = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0014");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0014", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    [DataRow("MSTEST0014", DisplayName = "CustomRows_NoConstructorArityInference")]
+    [DataRow("MSTEST0042", DisplayName = "CustomRows_NoConstructorDuplicateInference")]
+    public async Task CustomDataRows_DoNotInferDataFromConstructors(string rule)
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type FirstRowAttribute() =
+    inherit DataRowAttribute(42)
+type SecondRowAttribute() =
+    inherit DataRowAttribute(43)
+[<TestClass>]
+type Tests() =
+    [<TestMethod; FirstRow; SecondRow>]
+    member _.Run(value: int) = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, rule));
+    }
+
+    [TestMethod]
+    [DataRow("ConsoleColor.Black, 1", "0, 1", "value: obj, marker: int", false, DisplayName = "DuplicateRows_DistinctEnumAndInteger")]
+    [DataRow("ConsoleColor.Black, 1", "ConsoleColor.Black, 1", "value: obj, marker: int", true, DisplayName = "DuplicateRows_SameEnum")]
+    [DataRow("(([| ConsoleColor.Black :> obj |] : obj[]) :> obj)", "(([| 0 :> obj |] : obj[]) :> obj)", "value: obj", false, DisplayName = "DuplicateRows_DistinctNestedEnumAndInteger")]
+    [DataRow("(([| ConsoleColor.Black :> obj |] : obj[]) :> obj)", "(([| ConsoleColor.Black :> obj |] : obj[]) :> obj)", "value: obj", true, DisplayName = "DuplicateRows_SameNestedEnum")]
+    [DataRow("-0.0", "0.0", "value: obj", false, DisplayName = "DuplicateRows_DistinctSignedZero")]
+    [DataRow("-0.0", "-0.0", "value: obj", true, DisplayName = "DuplicateRows_SameSignedZero")]
+    public async Task DuplicateDataRows_PreserveRecursiveTypeIdentity(string first, string second, string parameters, bool shouldReport)
+    {
+        string source = $$"""
+namespace Consumer
+open System
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    [<TestMethod; DataRow({{first}}); DataRow({{second}})>]
+    member _.Run({{parameters}}) = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0042");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0042", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    [DataRow("'T", "'U", false, DisplayName = "DependencySignatures_RenamedParameter")]
+    [DataRow("'T[]", "'U[]", false, DisplayName = "DependencySignatures_RenamedArray")]
+    [DataRow("System.Collections.Generic.List<'T>", "System.Collections.Generic.List<'U>", false, DisplayName = "DependencySignatures_RenamedConstructedType")]
+    [DataRow("'T * int", "'U * int", false, DisplayName = "DependencySignatures_RenamedTuple")]
+    [DataRow("'T -> unit", "'U -> unit", false, DisplayName = "DependencySignatures_RenamedFunction")]
+    [DataRow("'T", "'U[]", true, DisplayName = "DependencySignatures_DistinctOverloadCycle")]
+    public async Task DependencyLookup_NormalizesGenericSignatures(string baseType, string derivedType, bool shouldReport)
+    {
+        string source = $$"""
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type BaseTests() =
+    [<TestMethod; DependsOn("Other")>]
+    member _.Run<'T>(value: {{baseType}}) = ()
+[<TestClass>]
+type Tests() =
+    inherit BaseTests()
+    [<TestMethod>]
+    member _.Run<'U>(value: {{derivedType}}) = ()
+    [<TestMethod; DependsOn("Run")>]
+    member _.Other() = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0078");
+        Assert.HasCount(shouldReport ? 2 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0078", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    [DataRow("member _.First() = 42", false, DisplayName = "DependencyLookup_NonTestReturnValue")]
+    [DataRow("member _.First() = ()", false, DisplayName = "DependencyLookup_NonTestSameReturn")]
+    [DataRow("member private _.First() = ()", false, DisplayName = "DependencyLookup_PrivateHelper")]
+    [DataRow("static member First() = ()", false, DisplayName = "DependencyLookup_StaticHelper")]
+    [DataRow("member _.First() = 42", true, DisplayName = "DependencyLookup_InheritedCycleThroughNonTest")]
+    public async Task DependencyLookup_NonTestsDoNotDisplaceInheritedTests(string declaration, bool cycle)
+    {
+        string source = $$"""
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type BaseTests() =
+    [<TestMethod{{(cycle ? "; DependsOn(\"Other\")" : string.Empty)}}>]
+    member _.First() = ()
+[<TestClass>]
+type Tests() =
+    inherit BaseTests()
+    {{declaration}}
+    [<TestMethod; DependsOn("First")>]
+    member _.Other() = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, cycle ? FindingsExitCode : 0, "MSTEST0078");
+        Assert.HasCount(cycle ? 2 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0078", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    public async Task DependencyLookup_OverrideDropsInheritedTestAttribute()
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type BaseTests() =
+    [<TestMethod; DependsOn("Other")>]
+    abstract First: unit -> unit
+    default _.First() = ()
+[<TestClass>]
+type Tests() =
+    inherit BaseTests()
+    override _.First() = ()
+    [<TestMethod; DependsOn("First")>]
+    member _.Other() = ()
+""";
+        JsonElement diagnostic = Assert.ContainsSingle(await AnalyzeAsync(source, FindingsExitCode, "MSTEST0078"));
+        Assert.AreEqual("MSTEST0078", diagnostic.GetProperty("ruleId").GetString());
+        Assert.Contains("not a test method", diagnostic.GetProperty("message").GetProperty("text").GetString()!);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "AotProvider_SignatureFirst")]
+    [DataRow(false, DisplayName = "AotProvider_DisabledCapability")]
+    public async Task ReferencedAotProvider_ReportsOnFirstImplementationFile(bool aot)
+    {
+        string source = $$"""
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    [<TestMethod>]
+    member _.Run() = ()
+#file Tests.fsi
+namespace Consumer
+type Tests =
+    new: unit -> Tests
+    member Run: unit -> unit
+#file Legacy/Legacy.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="{{PackageVersion}}" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
+#file Legacy/Fixtures.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+[assembly: AssemblyFixtureProvider(typeof(SharedFixtures.Fixtures))]
+namespace SharedFixtures;
+public static class Fixtures
+{
+    [AssemblyInitialize]
+    public static void Initialize(TestContext context) { }
+}
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, aot ? FindingsExitCode : 0, "MSTEST0072", new Dictionary<string, string>
+        {
+            ["PublishAot"] = aot ? "true" : "false",
+            ["RunAOTCompilation"] = "false",
+        });
+        Assert.HasCount(aot ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0072", diagnostic.GetProperty("ruleId").GetString());
+            JsonElement location = diagnostic.GetProperty("locations")[0].GetProperty("physicalLocation");
+            Assert.EndsWith("Tests.fs", location.GetProperty("artifactLocation").GetProperty("uri").GetString()!);
+            Assert.AreEqual(1, location.GetProperty("region").GetProperty("startLine").GetInt32());
+        }
+    }
+
+    [TestMethod]
     [DataRow("([||] : string[])", "int[]", true, DisplayName = "DeclaredArrays_RejectEmptyIncompatible")]
     [DataRow("([||] : string[])", "obj[]", false, DisplayName = "DeclaredArrays_EmptyReferenceCovariance")]
     [DataRow("([| \"value\"; null |] : string[])", "obj[]", false, DisplayName = "DeclaredArrays_ReferenceCovariance")]
