@@ -281,28 +281,14 @@ public static class DotnetCli
     }
 
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
-<<<<<<< HEAD
-        => await Policy
-            .Handle<InvalidOperationException>(IsRetriableBuildFailure)
+        => await Policy<DotnetMuxerResult>
+            .Handle<InvalidOperationException>(ex => IsRetriableBuildFailure(ex)
+                || (IsCommand(args, "build") && IsCopyTaskInitializationFailure(ex.Message)))
+            .OrResult(result => IsCommand(args, "build")
+                && result.ExitCode != 0
+                && (IsCopyTaskInitializationFailure(result.StandardOutput)
+                    || IsCopyTaskInitializationFailure(result.StandardError)))
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
-=======
-        => await new ResiliencePipelineBuilder<DotnetMuxerResult>()
-            .AddRetry(new RetryStrategyOptions<DotnetMuxerResult>
-            {
-                ShouldHandle = new PredicateBuilder<DotnetMuxerResult>()
-                    .Handle<InvalidOperationException>(ex => IsRetriableBuildFailure(ex)
-                        || (IsCommand(args, "build") && IsCopyTaskInitializationFailure(ex.Message)))
-                    .HandleResult(result => IsCommand(args, "build")
-                        && result.ExitCode != 0
-                        && (IsCopyTaskInitializationFailure(result.StandardOutput)
-                            || IsCopyTaskInitializationFailure(result.StandardError))),
-                MaxRetryAttempts = 3,
-                Delay = TimeSpan.FromSeconds(2),
-                BackoffType = DelayBackoffType.Constant,
-                UseJitter = false,
-            })
-            .Build()
->>>>>>> Retry transient MSBuild Copy crashes in acceptance builds
             .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
 
     // Some build failures are transient tooling/environment issues rather than real product failures, so retrying
