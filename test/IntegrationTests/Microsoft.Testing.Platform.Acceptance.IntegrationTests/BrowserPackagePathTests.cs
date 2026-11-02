@@ -9,11 +9,15 @@ public sealed class BrowserPackagePathTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [DataRow("/tr/", DisplayName = "SatellitePath_UnixLeadingSeparator")]
-    [DataRow("\\tr\\", DisplayName = "SatellitePath_WindowsLeadingSeparator")]
-    [DataRow("tr/", DisplayName = "SatellitePath_UnixRelativeDirectory")]
-    [DataRow("tr\\", DisplayName = "SatellitePath_WindowsRelativeDirectory")]
-    public async Task SatellitePackagePath_NormalizesProductionMetadata(string recursiveDirectory)
+    [DataRow("/tr/", false, DisplayName = "SatellitePath_UnixLeadingSeparator")]
+    [DataRow("\\tr\\", false, DisplayName = "SatellitePath_WindowsLeadingSeparator")]
+    [DataRow("tr/", false, DisplayName = "SatellitePath_UnixRelativeDirectory")]
+    [DataRow("tr\\", false, DisplayName = "SatellitePath_WindowsRelativeDirectory")]
+    [DataRow("/tr/", true, DisplayName = "SatellitePath_UnixLeadingSeparatorWithTelemetry")]
+    [DataRow("\\tr\\", true, DisplayName = "SatellitePath_WindowsLeadingSeparatorWithTelemetry")]
+    [DataRow("tr/", true, DisplayName = "SatellitePath_UnixRelativeDirectoryWithTelemetry")]
+    [DataRow("tr\\", true, DisplayName = "SatellitePath_WindowsRelativeDirectoryWithTelemetry")]
+    public async Task SatellitePackagePath_NormalizesProductionMetadata(string recursiveDirectory, bool verbose)
     {
         string browserProject = Path.Combine(
             RootFinder.Find(),
@@ -41,10 +45,13 @@ public sealed class BrowserPackagePathTests
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"msbuild \"{probe}\" -nologo -getProperty:SatellitePackagePath -bl:\"{Path.Combine(directory.Path, "probe.binlog")}\"",
             workingDirectory: directory.Path,
+            environmentVariables: new() { ["DOTNET_CLI_CONTEXT_VERBOSE"] = verbose ? "1" : null },
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode, result.ToString());
-        Assert.AreEqual("tools/net8.0/any/tr/", result.StandardOutput.Trim().Replace('\\', '/'));
+        Assert.AreEqual(
+            "tools/net8.0/any/tr/",
+            BrowserPackageExecutionTests.GetLastNonEmptyOutputLine(result.StandardOutput).Trim().Replace('\\', '/'));
     }
 }

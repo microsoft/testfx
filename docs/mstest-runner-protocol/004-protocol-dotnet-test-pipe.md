@@ -31,6 +31,56 @@ The existing no-control-pipe test first failed because the browser change alloca
 source without a usable channel, then passed after allocation was moved inside the selected transport
 branch. These source-local checks do not replace the required aligned browser-product run.
 
+**Composed evidence (2026-11-02).** SDK `f7edbfedcb5319fd006078d1f9516f4a27442ddf`
+and immutable TestFx package source `11b0d39f9079e5ead7b91ae5ab5161b5dcd8a147` passed the
+stock Windows x64 run with SDK `12.0.100-dev`, Edge `156.0.4314.58`, and Debug shipping packages:
+
+```powershell
+.\eng\browser-testing\RunBrowserTests.ps1 -TestFxRoot artifacts\btf-dd63a33d -BrowserExecutable 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' -Configuration Debug -ResultsDirectory artifacts\log\browser-wire-composed-11b0
+```
+
+The command runs from the SDK checkout. The restored counterpart directory's actual clean HEAD is
+`11b0d39f9079e5ead7b91ae5ab5161b5dcd8a147`; its older directory label is not a source identity.
+The parent and all seven recorded commands exit `0`; all 11 required browser-package cases execute
+and pass, with no skips. All eight staged package hashes and 756 runtime file hashes were rechecked
+after acceptance. The layout is explicitly **augmented**, not an unmodified shipping SDK: it includes
+the producer-declared Core runtimes `8.0.32`, `9.0.21`, `10.0.13`, and `11.0.0-rc.2.26504.105`
+from the restored private bootstrap. SDK, muxer, hostfxr, TFM, roll-forward, and exit assertions are
+unchanged. Caller pin updates and the immutable package-source pin have separate roles.
+
+This is Windows composed proof, not current Linux or reverse-direction CI success. Those remain
+readiness gates. The canonical satellite paths are also checked by evaluating the production
+package-path expression with relative and leading Unix/Windows metadata; these source-local checks
+do not substitute for the Linux product run.
+
+**CI checkpoint (2026-11-02).** The independently downloaded Windows and Linux TRX/evidence from
+[build 1659780](https://dev.azure.com/dnceng-public/cbb18261-c48f-4abb-8651-8cdcb5474649/_build/results?buildId=1659780)
+identify tested merge `030bcf378c5fbbbed766f101ccb305498f1d110d` and the old SDK `66309ab`.
+Both platforms execute 11 cases: eight pass, three fail, none skip. The default private-payload,
+no-build payload, and system-Node/private-driver package cases all pass; the prior three canonical
+satellite-path failures are absent. The remaining failures are a missing export directory, quota
+acceptance with the explicit unsupported-artifact-export warning, and a desktop host missing Core
+`11.0.0-rc.2.26504.105` (Linux exit `150`, Windows exit `-2147450730`). These failures are retained;
+advancing the caller pin is not itself evidence that current reverse-direction CI passes.
+
+The same build exposes a separate metadata-test defect under `DOTNET_CLI_CONTEXT_VERBOSE=1`:
+MSBuild prints `Telemetry is: Disabled` before the correct property. The test-only correction reuses
+the existing last-nonempty-line parser without changing the exact canonical-path expectation or
+disabling CI diagnostics. Four metadata forms are each evaluated with the child setting explicitly
+present and absent. With these eight rows retained, the old extraction executes four intended
+verbose-output assertion failures and four passes (exit `2`); corrected extraction passes all eight
+(exit `0`, no skips). Both states build with zero warnings/errors using
+these commands, respectively:
+
+```powershell
+.\build.cmd -c Release -msbuildEngine dotnet -bl -bln browser-path-verbose-red-20261102.binlog -projects test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj
+.\build.cmd -c Release -msbuildEngine dotnet -bl -bln browser-path-verbose-green-20261102.binlog -projects test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj
+```
+
+Both run `.\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Release\net12.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter FullyQualifiedName~BrowserPackagePathTests`,
+with separate TRX reports and result directories.
+This caller/test-harness update does not change shipping source or the immutable SDK package-source pin.
+
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
 `dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy

@@ -1085,7 +1085,7 @@ public sealed class BrowserPackageDesktopTests
             : Path.GetFullPath(path, generator.TargetAssetPath);
     }
 
-    private static string GetLastNonEmptyOutputLine(string output)
+    internal static string GetLastNonEmptyOutputLine(string output)
         => output
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .Last();
