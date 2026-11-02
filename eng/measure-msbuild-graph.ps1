@@ -7,6 +7,7 @@ Each pair uses fresh, task-owned outputs, warmed package caches, identical optio
 and alternating execution order. Timings include a cold-output restore/build,
 a no-change build, and a timestamp-only source change. This does not benchmark pack or tests.
 Only the experiment's bin/obj subdirectories are deleted; normal artifacts and caches are preserved.
+Stops at the first failed build or output difference; partial results are not a successful comparison.
 .EXAMPLE
 pwsh -File eng\measure-msbuild-graph.ps1 -Iterations 3 -MaxCpuCount 8
 #>
@@ -42,6 +43,16 @@ if ($sdkVersion -ne $globalJson.tools.dotnet) {
     throw "Expected pinned SDK $($globalJson.tools.dotnet), found $sdkVersion."
 }
 
+$packageCache = @(& $dotnet nuget locals global-packages --list --force-english-output)
+if ($LASTEXITCODE -ne 0 -or $packageCache.Count -ne 1 -or -not $packageCache[0].StartsWith('global-packages: ')) {
+    throw 'Unable to determine the effective NuGet package cache.'
+}
+# CI-mode Arcade evaluation otherwise defaults to .packages, unlike the bootstrap's global cache.
+$env:NUGET_PACKAGES = $packageCache[0].Substring('global-packages: '.Length).Trim()
+if (-not (Test-Path -LiteralPath $env:NUGET_PACKAGES -PathType Container)) {
+    throw "The bootstrap's NuGet package cache is missing: $env:NUGET_PACKAGES"
+}
+
 $experimentRoot = Join-Path $repoRoot 'artifacts\msbuild-graph-performance'
 $experimentId = [Guid]::NewGuid().ToString('N')
 $resultRoot = Join-Path $experimentRoot $experimentId
@@ -59,6 +70,7 @@ $report = [ordered]@{
     sourceRevision = (& git -C $repoRoot rev-parse HEAD)
     sourceStatus = @(& git -C $repoRoot status --short)
     sdkVersion = $sdkVersion
+    nugetPackages = $env:NUGET_PACKAGES
     msbuildVersion = (& $dotnet msbuild -version -nologo | Out-String).Trim()
     operatingSystem = [Runtime.InteropServices.RuntimeInformation]::OSDescription
     processors = [Environment]::ProcessorCount
@@ -139,6 +151,8 @@ function Invoke-MeasuredBuild([string] $Mode, [int] $Iteration, [string] $Scenar
     Save-Report
     Write-Host ("Finished {0}: {1:N3}s, exit {2}" -f $name, $run.seconds, $exitCode)
     if ($exitCode -ne 0) {
+        Select-String -LiteralPath $logFile -Pattern ': (?:error|warning) [A-Z]+\d+' |
+            Select-Object -First 5 | ForEach-Object { Write-Host $_.Line }
         Get-Content -LiteralPath $logFile -Tail 20 | Write-Host
         throw "$name failed with exit $exitCode; failed builds are not performance samples."
     }
