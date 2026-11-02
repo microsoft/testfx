@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   baseline:
-    name: Native Bazel baseline (${{ matrix.os }})
+    name: Native Bazel matrix (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
@@ -40,12 +40,21 @@ jobs:
       - name: Build, test, and validate native consumers
         shell: pwsh
         run: .\eng\bazel\validate.ps1
-      - name: Preserve baseline evidence
+      - name: Validate native packages and self-contained runtimes
+        shell: pwsh
+        run: .\eng\bazel\validate-packages.ps1
+      - name: Preserve native build evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: bazel-${{ matrix.os }}
-          path: artifacts/bazel-validation/
+          path: |
+            artifacts/bazel-validation/
+            artifacts/bazel-package-validation/**/*.log
+            artifacts/bazel-package-validation/**/*.json
+            artifacts/bazel-package-validation/**/*.binlog
+            artifacts/bazel-package-validation/**/*.trx
+            artifacts/bazel-package-validation/**/feed/*.nupkg
           if-no-files-found: warn
       - name: Stop the worktree's Bazel server
         if: always()

@@ -45,9 +45,9 @@ function Assert-Trx([string] $Path, [int] $ExpectedCount = 0) {
 
 Push-Location $root
 try {
-    $null = Invoke-BazelStep 'managed-build' @('build', '//:managed', '--jobs=8', '--noshow_progress', '--show_result=0')
-    $null = Invoke-BazelStep 'cached-build' @('build', '//:managed', '--jobs=8', '--noshow_progress', '--show_result=0')
-    $null = Invoke-BazelStep 'baseline-tests' @('test', '//:baseline_tests', '--jobs=8', '--nocache_test_results', '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'managed-build' @('build', '//:managed_all', '--jobs=8', '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'cached-build' @('build', '//:managed_all', '--jobs=8', '--noshow_progress', '--show_result=0')
+    $null = Invoke-BazelStep 'portable-tests' @('test', '//:portable_tests', '--jobs=8', '--nocache_test_results', '--noshow_progress', '--show_result=0')
 
     $testLogs = & $bazel info bazel-testlogs
     if ($LASTEXITCODE -ne 0) {
@@ -55,10 +55,13 @@ try {
     }
 
     $counts = [ordered]@{}
-    foreach ($target in @('framework_tests', 'adapter_tests', 'platform_services_tests', 'build_tools_tests', 'simple1_test')) {
+    foreach ($target in @('framework_tests', 'adapter_tests', 'platform_services_tests', 'build_tools_tests', 'simple1_test', 'protocol_contract_tests', 'source_generation_tests', 'vstest_bridge_tests')) {
         $path = Join-Path $testLogs "$target\test.outputs\tests.trx"
         $counts[$target] = Assert-Trx $path
         Copy-Item -LiteralPath $path -Destination (Join-Path $directory "$target.trx")
+    }
+    foreach ($target in @('explorer_test', 'explorer_released_test')) {
+        Copy-Item -LiteralPath (Join-Path $testLogs "$target\test.xml") -Destination (Join-Path $directory "$target.xml")
     }
 
     $discovery = Invoke-BazelStep 'discovery' @('run', '//:explorer', '--noshow_progress', '--show_result=0', '--', '--list-tests')
@@ -118,7 +121,7 @@ try {
     }
 
     $graphPath = Join-Path $directory 'actions.json'
-    & $bazel aquery 'deps(//:managed)' --output=jsonproto --noshow_progress > $graphPath 2> (Join-Path $directory 'actions.log')
+    & $bazel aquery 'deps(//:managed_all)' --output=jsonproto --noshow_progress > $graphPath 2> (Join-Path $directory 'actions.log')
     if ($LASTEXITCODE -ne 0) {
         throw 'Could not inspect the native action graph.'
     }
@@ -146,13 +149,14 @@ try {
         BaseRevision = $revision
         WorkingTree = @(git status --porcelain)
         Bazel = (Get-Content -LiteralPath .bazelversion -Raw).Trim()
-        RulesDotnet = '0.22.2'
-        Sdk = '10.0.400'
-        BaselineCounts = $counts
+        RulesDotnet = 'add5c92b30888a70aa951de1744a770b8f8ef436'
+        Sdk = '11.0.100-rc.3.26522.148'
+        TargetFrameworks = @('net8.0', 'net9.0', 'net10.0', 'net11.0')
+        TestCounts = $counts
         DeclaredCompilerActions = $compilerActions.Count
         Steps = $steps
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'validation.json') -Encoding utf8
-    Write-Host "Bazel baseline and composed-product validation passed. Evidence: $directory"
+    Write-Host "Bazel portable matrix and composed-product validation passed. Evidence: $directory"
 }
 finally {
     Pop-Location

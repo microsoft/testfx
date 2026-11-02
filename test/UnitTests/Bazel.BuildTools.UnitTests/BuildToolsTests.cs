@@ -161,6 +161,40 @@ public sealed class BuildToolsTests(TestContext context)
         CollectionAssert.AreEqual(new byte[] { 0xEF, 0xBB, 0xBF }, File.ReadAllBytes(buildInfo)[..3]);
     }
 
+    [TestMethod]
+    [DataRow("VersionPrefix", "4.6.0-bazel")]
+    [DataRow("TestingPlatformVersionPrefix", "2.6.0-bazel")]
+    public async Task PackageVersion_SelectsProductAndMarksExperimentalBuild(string property, string expected)
+    {
+        string versions = Write("Versions.props", """
+            <Project><PropertyGroup>
+              <VersionPrefix>4.6.0</VersionPrefix>
+              <TestingPlatformVersionPrefix>2.6.0</TestingPlatformVersionPrefix>
+            </PropertyGroup></Project>
+            """);
+        string versionFile = PathFor("version.txt");
+
+        (int exitCode, string output) = await RunAsync("version", versions, property, versionFile);
+
+        Assert.AreEqual(0, exitCode, output);
+        Assert.AreEqual(expected, File.ReadAllText(versionFile));
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("<VersionPrefix>1.2.3</VersionPrefix><VersionPrefix>4.5.6</VersionPrefix>")]
+    public async Task PackageVersion_RejectsMissingOrDuplicateProperty(string properties)
+    {
+        string versions = Write("Versions.props", $"<Project><PropertyGroup>{properties}</PropertyGroup></Project>");
+        string versionFile = PathFor("version.txt");
+
+        (int exitCode, string output) = await RunAsync("version", versions, "VersionPrefix", versionFile);
+
+        Assert.AreNotEqual(0, exitCode);
+        Assert.Contains("Expected exactly one VersionPrefix property", output);
+        Assert.IsFalse(File.Exists(versionFile));
+    }
+
     private static Dictionary<string, string> ReadResources(string path)
     {
         using var reader = new ResourceReader(path);

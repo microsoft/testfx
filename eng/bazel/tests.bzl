@@ -7,6 +7,59 @@ _PLATFORM = "src/Platform/Microsoft.Testing.Platform"
 
 def unit_tests():
     testfx_analyzer(name = "mstest_analyzer_plugin", assembly = ":analyzers")
+    for name, project, dependencies, linked_sources, four_workers in [
+        (
+            "vstest_bridge_tests",
+            "Microsoft.Testing.Extensions.VSTestBridge.UnitTests",
+            [":vstest_bridge", "@paket.source//moq"],
+            [],
+            False,
+        ),
+        (
+            "protocol_contract_tests",
+            "Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests",
+            [],
+            [
+                _PLATFORM + "/ServerMode/DotnetTest/IPC/ObjectFieldIds.cs",
+                _PLATFORM + "/ServerMode/DotnetTest/IPC/Constants.cs",
+                _PLATFORM + "/IPC/INamedPipeSerializer.cs",
+                _PLATFORM + "/IPC/IRequest.cs",
+                _PLATFORM + "/IPC/IResponse.cs",
+                _PLATFORM + "/IPC/NamedPipeBase.cs",
+            ] + native.glob([
+                _PLATFORM + "/IPC/Serializers/*.cs",
+                _PLATFORM + "/IPC/Models/*.cs",
+                _PLATFORM + "/ServerMode/DotnetTest/IPC/Models/*.cs",
+                _PLATFORM + "/ServerMode/DotnetTest/IPC/Serializers/*.cs",
+            ]),
+            False,
+        ),
+        (
+            "source_generation_tests",
+            "MSTest.SourceGeneration.UnitTests",
+            [":mstest_generator", "@paket.generator//microsoft.codeanalysis.csharp", "@paket.source//awesomeassertions"],
+            [],
+            True,
+        ),
+    ]:
+        directory = "test/UnitTests/" + project
+        testfx_binary(
+            name = name + "_app",
+            project = directory,
+            exclude = [directory + "/Program.cs"],
+            linked_srcs = ["//eng/bazel:TestMain.cs"] + linked_sources,
+            defines = ["TESTFX_FOUR_WORKERS" if four_workers else "TESTFX_METHOD_PARALLEL"],
+            usings = ["Microsoft.Testing.Platform.Extensions"] if name == "vstest_bridge_tests" else [],
+            generate_documentation_file = False,
+            deps = [":platform", ":adapter", ":framework", ":framework_extensions", ":trx", ":mstest_analyzer_plugin"] + dependencies,
+        )
+        testfx_test(
+            name = name,
+            binary = ":" + name + "_app",
+            args = ["--minimum-expected-tests", "1"],
+            size = "medium",
+        )
+
     testfx_binary(
         name = "build_tools_tests_app",
         project = "test/UnitTests/Bazel.BuildTools.UnitTests",
@@ -21,7 +74,7 @@ def unit_tests():
     testfx_test(
         name = "build_tools_tests",
         binary = ":build_tools_tests_app",
-        args = ["--minimum-expected-tests", "9"],
+        args = ["--minimum-expected-tests", "13"],
         size = "medium",
     )
     for name, project, assembly_name in [

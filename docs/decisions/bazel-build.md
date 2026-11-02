@@ -30,6 +30,118 @@ The initial producer/consumer contract is:
 
 ## Research and experiments
 
+### 2026-11-02: extending the migration after upstream SDK discovery
+
+The user authorized implementing as much of the remaining migration as possible.
+The starting TestFx revision is
+`22a3f9d008b53fdb97a569ee382307bf65bc5787`. The existing MSBuild shipping pipeline,
+production source, test assertions, and `global.json` remain authoritative.
+
+[rules_dotnet#593](https://github.com/bazel-contrib/rules_dotnet/pull/593),
+merged as `add5c92b30888a70aa951de1744a770b8f8ef436`, supersedes the generated SDK
+tables with release-metadata discovery and native Paket module extensions.
+An unchanged released-MSTest consumer already passed against that exact upstream
+revision on .NET 11 RC3, including its runtimeconfig and loaded assembly hash.
+That bounded result is not validation of the TestFx source graph or upstream's
+full suite; its Buildkite status was failed when inspected.
+
+The implementation sequence is to pin this immutable upstream source, reassess
+the nine old compatibility patches, restore the existing native baseline, expand
+the portable framework/test graph, and then produce locally validated native
+packages. Keeping 0.22.2 would require maintaining SDK discovery and dependency
+machinery that upstream has replaced. Updating blindly to an unpinned branch
+would make the experiment irreproducible.
+
+The compiler remains an explicit investigation: TestFx pins an engineering
+.NET 12 SDK, whereas upstream discovers published release metadata. No silent
+edit of `global.json` or claim of compiler parity is authorized by this work.
+Windows-qualified NuGet TFMs remain unsupported upstream, and a native XAML/UWP
+toolchain is a separate requirement, not something an MSBuild wrapper can satisfy.
+
+New packages must be produced solely from native Bazel outputs, staged in a
+task-owned feed, and exercised by actual consumers. MSBuild is allowed in those
+consumers because MSTest's SDK/build extensions are themselves products under
+test, not because it is allowed to build the TestFx producer graph. Release
+signing, publishing, and downstream rollout remain disabled until their own
+parity gates pass.
+
+Observed during this implementation:
+
+- The pre-upgrade seven-target baseline passed again, before changing the
+  compiler/rules. The same baseline then passed on Bazel 9.1.1 and SDK 11 RC3.
+- The old minimal-context patches caused a Bazel patcher exception. They were
+  rebased with full context against the immutable upstream tree, not applied to
+  a mutable shared checkout. Upstream now resolves duplicate analyzers itself.
+- Roslyn still crashes while running diagnostic analyzers in the extra
+  reference-only compile. The implementation compile retains its diagnostics;
+  the reference-only workaround remains. The netstandard code-fix build also
+  still needs canonical framework facades instead of legacy System.* copies.
+- Building net8/net9 exposed a separate reference-resolution defect: upstream
+  discarded newer transitive `System.Text.Encodings.Web`, `System.IO.Pipelines`,
+  and `System.Diagnostics.DiagnosticSource` references in favor of older
+  framework copies. Version-aware transitive selection fixed the actual graph
+  without changing TestFx source or weakening nullable diagnostics.
+- `managed_all` now builds the four portable framework configurations. Existing
+  protocol-contract (27), source-generation (197), and VSTestBridge (202) cases
+  were added unchanged, preserving method scheduling and the generator suite's
+  four-worker setting. The portable suite totals 3,443 cases in ten targets.
+- Native NuGet packing hit a Bazel exception for a transition on a label-keyed
+  file dictionary. Explicit package files retain their incoming configuration
+  instead. All three MTP/TRX packages include four TFMs, resources, documentation,
+  and their consumer build hooks.
+- A package-consumer attempt failed with NETSDK1005 because overriding
+  `TargetFramework` only on the build command did not change restore's project
+  framework. The binary log identified that mismatch. The isolated copied
+  consumer now declares each actual framework before its build; all four build.
+- The package-consuming explorer executes on net11 with a new cache and
+  first-party source mapping to the native feed. It verifies the loaded DLL
+  hashes and native-build metadata, emits a real TRX, and returns 0/2/9 for
+  pass/failure/empty selection. Four self-contained publishers also execute
+  outside Bazel's tree, with nonexistent `DOTNET_ROOT`, and verify their actual
+  .NET 8/9/10/11 runtime and staged CoreLib before the same exit checks.
+- The full MTP suite was rerun: 3,378 passed, the same two Windows impersonation
+  cases failed with Win32 1346, and none skipped. This is not included in the
+  verified portable suite and its assertions remain unchanged.
+- The exact engineering SDK archive on `ci.dot.net` now returns HTTP 200.
+  The .NET 12 release-metadata URL and the equivalent `builds.dotnet` archive
+  return 404. Availability of the archive does not mean the upstream metadata
+  resolver can yet select it; compiler parity remains outstanding.
+
+### Package-version test-value evidence
+
+The new package-version command intentionally writes the selected product's
+`-bazel` version, rather than an official-looking release version. The four
+`PackageVersion_*` cases select both product versions and reject absent/duplicate
+properties. An isolated counterfactual retained that command and the same tests,
+but omitted `-bazel` from its output. Its native compiler invocation succeeded.
+
+The same compiled test assembly and filter
+`--filter 'FullyQualifiedName~PackageVersion' --minimum-expected-tests 4`
+executed in all three runs:
+
+| Implementation | Exit | Executed | Passed | Failed |
+| --- | --- | --- | --- | --- |
+| Correct, before | 0 | 4 | 4 | 0 |
+| Counterfactual | 2 | 4 | 2 | 2 |
+| Correct, after | 0 | 4 | 4 | 0 |
+
+The two failures were exact equality assertions: `4.6.0-bazel` versus `4.6.0`,
+and `2.6.0-bazel` versus `2.6.0`. The invalid-input cases still passed.
+Counterfactual patch SHA-256:
+`49CE9D3486B197EF1678088EB14C6403037606C13522070D43B376FCCEBADF24`.
+Commands, compiler arguments, patch, and all three TRX files are retained under
+`artifacts/bazel-expansion/package-version-counterfactual`. Earlier setup errors
+while locating a direct test launcher are not counted as behavioral evidence.
+
+### Remaining delivery boundaries after this stage
+
+The new packages are the platform, TRX abstractions, and TRX reporter only.
+MSTest framework/adapter packaging, analyzer packaging, SDK/meta-packages,
+Windows-specific assets, netstandard/net462 parity, the other test projects and
+examples, NativeAOT/browser execution, signing, and release rollout still require
+work. Windows x64 was executed; the expanded Windows/Linux workflow is only
+configuration until its jobs run. No TestFx PR or package publication is implied.
+
 ### 2026-10-29: baseline and upstream contracts
 
 Baseline: `10847b7d879200796a35ea9888f36fdee7b9b593`, clean worktree.
@@ -231,13 +343,15 @@ shipping-package assumptions, or unsupported workloads remain migration work.
    Only demonstrated compatibility gaps in the supported graph received scoped
    patches; a complete toolchain/workload fork remains a separate decision.
 
-The Bazel experiment deliberately uses its own hermetic SDK 10.0.400 pin, not a
-globally selected SDK and not a silent replacement of `global.json`. Initially
-validate `net10.0`; only claim other TFMs after executing their build/test paths.
-Windows app models, native AOT, shipping NuGet assets, .NET 11, release signing,
-and Arcade services are parity gates, not implied by a green `bazel build`.
+The Bazel experiment deliberately uses its own hermetic SDK pin, currently
+11.0.100-rc.3.26522.148, not a globally selected SDK or a silent replacement of
+`global.json`. The portable matrix and three native packages have the bounded
+evidence above. Windows app models, native AOT, the remaining shipping NuGet
+assets, release signing, and Arcade services are separate parity gates.
 
 ## Validation and demonstration
+
+### Initial 2026-10-29 baseline
 
 Executed on Windows x64, Bazel 8.8.2, rules_dotnet 0.22.2 at
 `7e7cff30826695e814bfbe05d555db6a780a7123`, SDK 10.0.400, runtime 10.0.11.

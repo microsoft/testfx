@@ -1,6 +1,6 @@
 STORAGE: NONE
 STRATEGY: MIN
-RESTRICTION: == net10.0
+RESTRICTION: >= net8.0
 NUGET
   remote: https://api.nuget.org/v3/index.json
     Microsoft.ApplicationInsights (2.23)
@@ -661,7 +661,7 @@ GROUP source
 STORAGE: NONE
 STRATEGY: MIN
 LOWEST_MATCHING: TRUE
-RESTRICTION: == net10.0
+RESTRICTION: >= net8.0
 NUGET
   remote: https://api.nuget.org/v3/index.json
     AwesomeAssertions (9.6)
@@ -675,7 +675,10 @@ NUGET
       Microsoft.Identity.Client (>= 4.90)
       Microsoft.Identity.Client.Extensions.Msal (>= 4.90)
       System.ClientModel (>= 1.16)
+      System.Diagnostics.DiagnosticSource (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net8.0)) (&& (>= net462) (>= net8.0))
       System.Memory.Data (>= 10.0.10)
+      System.Text.Encodings.Web (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net8.0)) (&& (>= net462) (>= net8.0))
+      System.Text.Json (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net8.0)) (&& (>= net462) (>= net8.0))
     Castle.Core (5.1.1)
       System.Diagnostics.EventLog (>= 6.0)
     Microsoft.ApplicationInsights (2.23)
@@ -691,9 +694,12 @@ NUGET
       Microsoft.Extensions.Logging.Abstractions (>= 6.0.4)
     Microsoft.Extensions.AI (9.10)
       Microsoft.Extensions.AI.Abstractions (>= 9.10)
-      Microsoft.Extensions.Caching.Abstractions (>= 9.0.10)
-      Microsoft.Extensions.DependencyInjection.Abstractions (>= 9.0.10)
-      Microsoft.Extensions.Logging.Abstractions (>= 9.0.10)
+      Microsoft.Extensions.Caching.Abstractions (>= 8.0) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.Caching.Abstractions (>= 9.0.10) - restriction: >= net9.0
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 8.0.2) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 9.0.10) - restriction: >= net9.0
+      Microsoft.Extensions.Logging.Abstractions (>= 8.0.3) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.Logging.Abstractions (>= 9.0.10) - restriction: >= net9.0
     Microsoft.Extensions.AI.Abstractions (9.10)
     Microsoft.Extensions.AI.OpenAI (9.10.0-preview.1.25513.3)
       Microsoft.Extensions.AI.Abstractions (>= 9.10)
@@ -701,8 +707,12 @@ NUGET
     Microsoft.Extensions.Caching.Abstractions (9.0.10)
       Microsoft.Extensions.Primitives (>= 9.0.10)
     Microsoft.Extensions.Compliance.Abstractions (10.11)
-      Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0.13)
-      Microsoft.Extensions.ObjectPool (>= 10.0.13)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 8.0.2) - restriction: && (>= net8.0) (< net9.0)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0.13) - restriction: >= net10.0
+      Microsoft.Extensions.ObjectPool (>= 8.0.32) - restriction: && (>= net8.0) (< net9.0)
+      Microsoft.Extensions.ObjectPool (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.ObjectPool (>= 10.0.13) - restriction: >= net10.0
     Microsoft.Extensions.Configuration (10.0.13)
       Microsoft.Extensions.Configuration.Abstractions (>= 10.0.13)
       Microsoft.Extensions.Primitives (>= 10.0.13)
@@ -724,8 +734,11 @@ NUGET
     Microsoft.Extensions.Diagnostics.Abstractions (10.0.13)
       Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0.13)
       Microsoft.Extensions.Options (>= 10.0.13)
+      System.Diagnostics.DiagnosticSource (>= 10.0.13) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
     Microsoft.Extensions.Diagnostics.ExceptionSummarization (10.11)
-      Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0.13)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 8.0.2) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0.13) - restriction: >= net10.0
     Microsoft.Extensions.FileProviders.Abstractions (10.0.13)
       Microsoft.Extensions.Primitives (>= 10.0.13)
     Microsoft.Extensions.FileSystemGlobbing (9.0.4)
@@ -741,6 +754,7 @@ NUGET
       Microsoft.Extensions.Options (>= 10.0.13)
     Microsoft.Extensions.Logging.Abstractions (10.0.13)
       Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0.13)
+      System.Diagnostics.DiagnosticSource (>= 10.0.13) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
     Microsoft.Extensions.Logging.Configuration (10.0)
       Microsoft.Extensions.Configuration (>= 10.0)
       Microsoft.Extensions.Configuration.Abstractions (>= 10.0)
@@ -762,20 +776,30 @@ NUGET
       Microsoft.Extensions.Primitives (>= 10.0.13)
     Microsoft.Extensions.Primitives (10.0.13)
     Microsoft.Extensions.Resilience (10.11)
-      Microsoft.Extensions.Diagnostics (>= 10.0.13)
+      Microsoft.Extensions.Diagnostics (>= 8.0.1) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.Diagnostics (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Diagnostics (>= 10.0.13) - restriction: >= net10.0
       Microsoft.Extensions.Diagnostics.ExceptionSummarization (>= 10.11)
-      Microsoft.Extensions.Options.ConfigurationExtensions (>= 10.0.13)
+      Microsoft.Extensions.Options.ConfigurationExtensions (>= 8.0) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.Options.ConfigurationExtensions (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Options.ConfigurationExtensions (>= 10.0.13) - restriction: >= net10.0
       Microsoft.Extensions.Telemetry.Abstractions (>= 10.11)
       Polly.Extensions (>= 8.4.2)
       Polly.RateLimiting (>= 8.4.2)
     Microsoft.Extensions.Telemetry.Abstractions (10.11)
       Microsoft.Extensions.Compliance.Abstractions (>= 10.11)
-      Microsoft.Extensions.Logging.Abstractions (>= 10.0.13)
-      Microsoft.Extensions.ObjectPool (>= 10.0.13)
-      Microsoft.Extensions.Options (>= 10.0.13)
+      Microsoft.Extensions.Logging.Abstractions (>= 8.0.3) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.Logging.Abstractions (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Logging.Abstractions (>= 10.0.13) - restriction: >= net10.0
+      Microsoft.Extensions.ObjectPool (>= 8.0.32) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.ObjectPool (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.ObjectPool (>= 10.0.13) - restriction: >= net10.0
+      Microsoft.Extensions.Options (>= 8.0.2) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      Microsoft.Extensions.Options (>= 9.0.21) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Options (>= 10.0.13) - restriction: >= net10.0
     Microsoft.Identity.Client (4.90)
       Microsoft.IdentityModel.Abstractions (>= 8.14)
-      System.Diagnostics.DiagnosticSource (>= 6.0.1)
+      System.Diagnostics.DiagnosticSource (>= 6.0.1) - restriction: || (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net8.0-android) (< net8.0-ios))
     Microsoft.Identity.Client.Extensions.Msal (4.90)
       Microsoft.Identity.Client (>= 4.90)
       System.Security.Cryptography.ProtectedData (>= 4.5)
@@ -788,15 +812,25 @@ NUGET
     OpenAI (2.5)
       System.ClientModel (>= 1.6.1)
     OpenTelemetry (1.19.1)
-      Microsoft.Extensions.Configuration.EnvironmentVariables (>= 10.0)
-      Microsoft.Extensions.Diagnostics.Abstractions (>= 10.0)
-      Microsoft.Extensions.Logging.Configuration (>= 10.0)
+      Microsoft.Extensions.Configuration.EnvironmentVariables (>= 8.0) - restriction: && (>= net8.0) (< net9.0)
+      Microsoft.Extensions.Configuration.EnvironmentVariables (>= 9.0) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Configuration.EnvironmentVariables (>= 10.0) - restriction: || (>= net10.0) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< netstandard2.1))
+      Microsoft.Extensions.Diagnostics.Abstractions (>= 8.0) - restriction: && (>= net8.0) (< net9.0)
+      Microsoft.Extensions.Diagnostics.Abstractions (>= 9.0) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Diagnostics.Abstractions (>= 10.0) - restriction: || (>= net10.0) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< netstandard2.1))
+      Microsoft.Extensions.Logging.Configuration (>= 8.0) - restriction: && (>= net8.0) (< net9.0)
+      Microsoft.Extensions.Logging.Configuration (>= 9.0) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.Logging.Configuration (>= 10.0) - restriction: || (>= net10.0) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< netstandard2.1))
       OpenTelemetry.Api.ProviderBuilderExtensions (>= 1.19.1)
     OpenTelemetry.Api (1.19.1)
+      System.Diagnostics.DiagnosticSource (>= 10.0) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
     OpenTelemetry.Api.ProviderBuilderExtensions (1.19.1)
-      Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 8.0) - restriction: && (>= net8.0) (< net9.0)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 9.0) - restriction: && (< net10.0) (>= net9.0)
+      Microsoft.Extensions.DependencyInjection.Abstractions (>= 10.0) - restriction: || (>= net10.0) (&& (>= net462) (>= net8.0))
       OpenTelemetry.Api (>= 1.19.1)
     OpenTelemetry.Exporter.OpenTelemetryProtocol (1.19.1)
+      Microsoft.Extensions.Configuration.Binder (>= 8.0.2) - restriction: && (>= net8.0) (< net9.0)
       OpenTelemetry (>= 1.19.1)
     Polly.Core (8.4.2)
     Polly.Extensions (8.4.2)
@@ -810,14 +844,23 @@ NUGET
       Microsoft.Extensions.Configuration.Abstractions (>= 10.0.10)
       Microsoft.Extensions.Hosting.Abstractions (>= 10.0.10)
       Microsoft.Extensions.Logging.Abstractions (>= 10.0.10)
+      System.Diagnostics.DiagnosticSource (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net8.0) (< net9.0))
       System.Memory.Data (>= 10.0.10)
+      System.Net.ServerSentEvents (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net8.0) (< net9.0))
+      System.Text.Json (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net8.0) (< net9.0))
     System.Collections.Immutable (8.0)
     System.Configuration.ConfigurationManager (8.0)
       System.Diagnostics.EventLog (>= 8.0)
       System.Security.Cryptography.ProtectedData (>= 8.0)
     System.Diagnostics.DiagnosticSource (10.0.13)
     System.Diagnostics.EventLog (8.0)
+    System.IO.Pipelines (10.0.12) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
     System.Memory.Data (10.0.10)
+      System.Text.Json (>= 10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+    System.Net.ServerSentEvents (10.0.10) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net8.0) (< net9.0))
     System.Security.Cryptography.ProtectedData (8.0)
+    System.Text.Encodings.Web (10.0.12) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
     System.Text.Json (10.0.12)
+      System.IO.Pipelines (>= 10.0.12) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
+      System.Text.Encodings.Web (>= 10.0.12) - restriction: || (&& (< net10.0) (>= net9.0)) (&& (>= net462) (>= net8.0)) (&& (>= net8.0) (< net9.0))
     System.Threading.RateLimiting (8.0)

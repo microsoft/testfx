@@ -7,7 +7,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $version = (Get-Content -LiteralPath (Join-Path $root '.bazelversion') -Raw).Trim()
-if ($version -ne '8.8.2') {
+if ($version -ne '9.1.1') {
     throw 'Update the verified Bazel bootstrap hashes when changing .bazelversion.'
 }
 
@@ -22,9 +22,9 @@ if (($IsMacOS -and $architecture -ne 'Arm64') -or (-not $IsMacOS -and $architect
 }
 
 $hashes = @{
-    'windows-x86_64.exe' = '07e467a78e709a4c9b0dca13da15121b4fcd7c6a037dfb4b17c72e527d4d6785'
-    'linux-x86_64' = 'bf463ba0f5f782e8fe31071bd2b821c2f6a27f03e5bb62f0879e88cbf3656e04'
-    'darwin-arm64' = 'ae640432a3fdb8a08c637562895f91c7ff1f63f04b1a9d34de9e9c46162bc10b'
+    'windows-x86_64.exe' = '65f3484025c95a9f93647fd6edb84b19c15c67d5265d364f17843fd12c5d28fe'
+    'linux-x86_64' = '857bed5d2756b4d998d3caebf2d941d13d434c4eda4b1d6d7dda205736c25a93'
+    'darwin-arm64' = '2db883718453f0437a7bcb408e889dbf8539cdc4d61c8ebc3807a1a88d02ff08'
 }
 $tools = Join-Path $root 'artifacts\bazel-tools'
 $executable = Join-Path $tools "bazel-$version-$platform"

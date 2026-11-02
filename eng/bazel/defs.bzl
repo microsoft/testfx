@@ -2,6 +2,35 @@
 
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary", "csharp_library", "import_library")
 
+PORTABLE_FRAMEWORKS = ["net8.0", "net9.0", "net10.0", "net11.0"]
+
+def _matrix_transition_impl(_settings, attr):
+    return {
+        framework: {"@rules_dotnet//dotnet:target_framework": framework}
+        for framework in attr.frameworks
+    }
+
+_matrix_transition = transition(
+    implementation = _matrix_transition_impl,
+    inputs = [],
+    outputs = ["@rules_dotnet//dotnet:target_framework"],
+)
+
+def _matrix_impl(ctx):
+    return [DefaultInfo(files = depset(transitive = [
+        target[DefaultInfo].files
+        for target in ctx.split_attr.target.values()
+    ]))]
+
+testfx_matrix = rule(
+    implementation = _matrix_impl,
+    attrs = {
+        "target": attr.label(mandatory = True, cfg = _matrix_transition),
+        "frameworks": attr.string_list(default = PORTABLE_FRAMEWORKS),
+        "_allowlist_function_transition": attr.label(default = "@bazel_tools//tools/allowlists/function_transition_allowlist"),
+    },
+)
+
 def _resx_impl(ctx):
     resources = ctx.actions.declare_file(ctx.label.name + "/" + ctx.attr.type_name + ".resources")
     source = ctx.actions.declare_file(ctx.label.name + "/" + ctx.attr.type_name + ".g.cs")
@@ -138,7 +167,7 @@ def testfx_library(
         version_override = "",
         version_property = None,
         assembly_version = "",
-        target_frameworks = ["net10.0"],
+        target_frameworks = PORTABLE_FRAMEWORKS,
         analyzer_configs = [],
         binary = False,
         **kwargs):
@@ -222,11 +251,7 @@ def testfx_library(
         target_frameworks = target_frameworks,
         langversion = "preview",
         nullable = "enable",
-        # rules_dotnet 0.22.2 emits NET but omits the SDK's NETCOREAPP for net10.0.
-        defines = ["TRACE"] + select({
-            "//:netstandard2_0": [],
-            "//conditions:default": ["NETCOREAPP"],
-        }) + defines,
+        defines = ["TRACE"] + defines,
         deps = deps,
         internals_visible_to = internals_visible_to,
         analyzer_configs = ["//:.editorconfig"] + analyzer_configs,

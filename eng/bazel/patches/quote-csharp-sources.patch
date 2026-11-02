@@ -1,7 +1,0 @@
-diff --git a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
---- a/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
-+++ b/dotnet/private/rules/csharp/actions/csharp_assembly.bzl
-@@ -488,2 +488,2 @@
-     # .cs files
--    args.add_all(srcs)
-+    args.add_all(srcs, format_each = '"%s"')

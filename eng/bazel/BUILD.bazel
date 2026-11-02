@@ -4,8 +4,11 @@ package(default_visibility = ["//visibility:public"])
 
 exports_files([
     "GlobalUsings.cs",
+    "RuntimeProvenance.cs",
     "TestMain.cs",
     "analyzers.globalconfig",
+    "paket.dependencies",
+    "paket.lock",
 ])
 
 csharp_binary(

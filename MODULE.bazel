@@ -1,25 +1,19 @@
 module(name = "testfx")
 
-bazel_dep(name = "rules_dotnet", version = "0.22.2")
-single_version_override(
+bazel_dep(name = "rules_dotnet", version = "0.0.0")
+archive_override(
     module_name = "rules_dotnet",
+    integrity = "sha256-oY8nQGMi4sCTuvtO3Cr3Djw5vaxu8ggOHSJEoX3rN/s=",
     patch_strip = 1,
     patches = [
-        "//eng/bazel/patches:quote-csharp-sources.patch",
-        "//eng/bazel/patches:generated-resource-names.patch",
-        "//eng/bazel/patches:short-launcher-name.patch",
-        "//eng/bazel/patches:reference-only-analyzers.patch",
-        "//eng/bazel/patches:satellite-assemblies.patch",
-        "//eng/bazel/patches:unique-analyzers.patch",
-        "//eng/bazel/patches:framework-reference-priority.patch",
-        "//eng/bazel/patches:pdb-runfiles.patch",
-        "//eng/bazel/patches:windows-launcher.patch",
+        "//eng/bazel/patches:testfx-compatibility.patch",
     ],
-    version = "0.22.2",
+    strip_prefix = "rules_dotnet-add5c92b30888a70aa951de1744a770b8f8ef436",
+    urls = ["https://github.com/bazel-contrib/rules_dotnet/archive/add5c92b30888a70aa951de1744a770b8f8ef436.zip"],
 )
 
 dotnet = use_extension("@rules_dotnet//dotnet:extensions.bzl", "dotnet")
-dotnet.toolchain(dotnet_version = "10.0.400")
+dotnet.toolchain(dotnet_version = "11.0.100-rc.3.26522.148")
 use_repo(dotnet, "dotnet_toolchains")
 
 register_toolchains("@dotnet_toolchains//:all")
@@ -35,14 +29,9 @@ nuget_archive(
     version = "11.0.1",
 )
 
-nuget = use_extension("//eng/bazel/nuget:paket.main_extension.bzl", "main_extension")
-use_repo(nuget, "paket.main")
-
-source_nuget = use_extension("//eng/bazel/nuget:paket.source_extension.bzl", "source_extension")
-use_repo(source_nuget, "paket.source")
-
-generator_nuget = use_extension("//eng/bazel/nuget:paket.generator_extension.bzl", "generator_extension")
-use_repo(generator_nuget, "paket.generator")
-
-analyzers_nuget = use_extension("//eng/bazel/nuget:paket.analyzers_extension.bzl", "analyzers_extension")
-use_repo(analyzers_nuget, "paket.analyzers")
+paket = use_extension("@rules_dotnet//dotnet:paket.bzl", "paket")
+paket.parse(
+    dependencies = "//eng/bazel:paket.dependencies",
+    lock = "//eng/bazel:paket.lock",
+)
+use_repo(paket, "paket.analyzers", "paket.generator", "paket.main", "paket.source")

@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $bazel = Join-Path $root 'eng\bazel.ps1'
-$targets = @('//eng/bazel:paket', '@rules_dotnet//tools/paket2bazel')
+$targets = @('//eng/bazel:paket')
 
 & $bazel build @targets --noshow_progress --show_result=0
 if ($LASTEXITCODE -ne 0) {
@@ -23,15 +23,14 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Failed to locate the Bazel execution root.'
 }
 
-$paths = @(& $bazel cquery 'set(//eng/bazel:paket @rules_dotnet//tools/paket2bazel)' --output=starlark '--starlark:expr=providers(target)["DefaultInfo"].files_to_run.executable.path' --noshow_progress)
-if ($LASTEXITCODE -ne 0 -or $paths.Count -ne 2) {
-    throw 'Expected exactly two executable dependency tools.'
+$paths = @(& $bazel cquery '//eng/bazel:paket' --output=starlark '--starlark:expr=providers(target)["DefaultInfo"].files_to_run.executable.path' --noshow_progress)
+if ($LASTEXITCODE -ne 0 -or $paths.Count -ne 1) {
+    throw 'Expected exactly one executable dependency tool.'
 }
 
 $paket = @($paths | Where-Object { $_ -match '/eng/bazel/paket\.(bat|sh)$' })
-$generator = @($paths | Where-Object { $_ -match '/publish/[^/]+/paket2bazel_bin(\.exe)?$' })
-if ($paket.Count -ne 1 -or $generator.Count -ne 1) {
-    throw 'The resolved dependency tools do not match the expected executables.'
+if ($paket.Count -ne 1) {
+    throw 'The resolved Paket tool does not match the expected executable.'
 }
 
 $oldPackages = $env:NUGET_PACKAGES
@@ -45,9 +44,9 @@ try {
         }
     }
 
-    & (Join-Path $executionRoot $generator[0]) --dependencies-file (Join-Path $PSScriptRoot 'paket.dependencies') --output-folder (Join-Path $PSScriptRoot 'nuget')
+    & $bazel mod deps --lockfile_mode=update
     if ($LASTEXITCODE -ne 0) {
-        throw 'Bazel dependency generation failed.'
+        throw 'Bazel dependency metadata resolution failed.'
     }
 }
 finally {

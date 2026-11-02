@@ -10,7 +10,9 @@ using Microsoft.Testing.Extensions;
 using TestFramework.ForTestingMSTest;
 #endif
 
-#if TESTFX_METHOD_PARALLEL
+#if TESTFX_FOUR_WORKERS
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 4)]
+#elif TESTFX_METHOD_PARALLEL
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 #endif
 

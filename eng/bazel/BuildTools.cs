@@ -16,9 +16,15 @@ else if (args.Length == 11 && args[0] == "metadata")
 {
     GenerateMetadata(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);
 }
+else if (args.Length == 4 && args[0] == "version")
+{
+    string version = ReadVersion(args[1], args[2]);
+    _ = Version.Parse(version);
+    File.WriteAllText(args[3], $"{version}-bazel", Encoding.UTF8);
+}
 else
 {
-    throw new ArgumentException("Expected resx <input> <type> <resources> <source>, xlf <neutral> <catalog> <culture> <resources>, or metadata <versions> <property> <source> <template> <generated-template> <usings> <version-override> <culture> <assembly-version> <build-status>.");
+    throw new ArgumentException("Expected resx <input> <type> <resources> <source>, xlf <neutral> <catalog> <culture> <resources>, version <versions> <property> <output>, or metadata <versions> <property> <source> <template> <generated-template> <usings> <version-override> <culture> <assembly-version> <build-status>.");
 }
 
 static void GenerateResources(string input, string typeName, string resourcesOutput, string sourceOutput)
@@ -134,7 +140,7 @@ static XDocument ReadXml(string path)
 static void GenerateMetadata(string versionsFile, string versionProperty, string output, string template, string templateOutput, string usings, string versionOverride, string culture, string assemblyVersionOverride, string buildStatus)
 {
     string version = versionOverride == "-"
-        ? XDocument.Load(versionsFile).Descendants(versionProperty).Single().Value
+        ? ReadVersion(versionsFile, versionProperty)
         : versionOverride;
     Version parsed = Version.Parse(version);
     string fileVersion = $"{parsed.Major}.{parsed.Minor}.{parsed.Build}.0";
@@ -178,6 +184,17 @@ static void GenerateMetadata(string versionsFile, string versionProperty, string
 
         File.WriteAllText(templateOutput, content.Replace("${Version}", informationalVersion, StringComparison.Ordinal), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
     }
+}
+
+static string ReadVersion(string path, string property)
+{
+    XElement[] values = ReadXml(path).Descendants(property).ToArray();
+    if (values.Length != 1)
+    {
+        throw new InvalidDataException($"Expected exactly one {property} property in {path}.");
+    }
+
+    return values[0].Value;
 }
 
 static string Literal(string value) => JsonSerializer.Serialize(value);

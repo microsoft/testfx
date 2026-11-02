@@ -1,8 +1,9 @@
 load("@rules_dotnet//dotnet:defs.bzl", "csharp_binary")
 load("//eng/bazel:analyzers.bzl", "analyzer_libraries")
-load("//eng/bazel:defs.bzl", "testfx_binary", "testfx_test")
+load("//eng/bazel:defs.bzl", "testfx_binary", "testfx_matrix", "testfx_test")
 load("//eng/bazel:extensions.bzl", "extension_libraries")
 load("//eng/bazel:mstest.bzl", "mstest_libraries")
+load("//eng/bazel:packages.bzl", "native_packages")
 load("//eng/bazel:platform.bzl", "platform_libraries")
 load("//eng/bazel:server-client.bzl", "server_client_library")
 load("//eng/bazel:tests.bzl", "unit_tests")
@@ -10,11 +11,6 @@ load("//eng/bazel:tests.bzl", "unit_tests")
 package(default_visibility = ["//visibility:public"])
 
 exports_files(["LICENSE"])
-
-config_setting(
-    name = "netstandard2_0",
-    flag_values = {"@rules_dotnet//dotnet:target_framework": "netstandard2.0"},
-)
 
 platform_libraries()
 
@@ -27,6 +23,8 @@ analyzer_libraries()
 server_client_library()
 
 unit_tests()
+
+native_packages()
 
 filegroup(
     name = "managed",
@@ -67,6 +65,11 @@ filegroup(
         ":video",
         ":vstest_bridge",
     ],
+)
+
+testfx_matrix(
+    name = "managed_all",
+    target = ":managed",
 )
 
 # Short executable labels avoid Windows' doubled runfiles batch-file paths.
@@ -200,5 +203,15 @@ test_suite(
         ":framework_tests",
         ":platform_services_tests",
         ":simple1_test",
+    ],
+)
+
+test_suite(
+    name = "portable_tests",
+    tests = [
+        ":baseline_tests",
+        ":protocol_contract_tests",
+        ":source_generation_tests",
+        ":vstest_bridge_tests",
     ],
 )
