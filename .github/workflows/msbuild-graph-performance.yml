@@ -1,0 +1,56 @@
+name: MSBuild graph performance experiment
+
+on:
+  push:
+    branches:
+      - dev/amauryleve/msbuild-graph-performance
+    paths:
+      - '.github/workflows/msbuild-graph-performance.yml'
+      - 'eng/measure-msbuild-graph.ps1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: msbuild-graph-performance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    name: Compare builds (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Bootstrap and warm caches (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          ./eng/build.ps1 -restore -build -configuration Release
+          -msbuildEngine dotnet -projects ./NonWindowsTests.slnf
+          /p:NonWindowsBuild=true /p:SkipUapTargetFramework=true
+
+      - name: Bootstrap and warm caches (Linux)
+        if: runner.os == 'Linux'
+        run: ./build.sh -c Release /p:NonWindowsBuild=true
+
+      - name: Compare classic and graph builds
+        shell: pwsh
+        run: ./eng/measure-msbuild-graph.ps1 -Iterations 3
+
+      - name: Publish measurements
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: msbuild-graph-performance-${{ runner.os }}
+          path: |
+            artifacts/msbuild-graph-performance/**/results.json
+            artifacts/msbuild-graph-performance/**/*.manifest.json
+          if-no-files-found: warn
+          retention-days: 30
