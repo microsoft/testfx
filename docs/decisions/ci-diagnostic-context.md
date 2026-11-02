@@ -389,3 +389,106 @@ Task-owned `final-sdk-consumer-provenance.json`,
 counts, exits, and artifact assertions. The SDK owner received these receipts.
 This confirms the final companion head without replacing the earlier controlled
 before/after or claiming non-Windows, servicing, or CI execution.
+
+## rel/4.5 backport validation (2026-11-02)
+
+The release keeps its existing single Azure Markdown implementation. The
+backport's duplicate Aggregate, Formatting, and History partials were folded into
+that implementation rather than importing main's module-identity refactoring.
+Both reporter projects explicitly include the shared runner-policy helper.
+Missing Azure exit-code resources were restored and their XLF catalogs regenerated
+with the owning project's `UpdateXlf` target. Committed conflict markers in the
+reader, GitHub renderer/API baseline, and both acceptance entry points were
+resolved. The tests also needed the JSON-node namespace import and the existing
+GitHub exact-output expectation needed the intended runner-policy line.
+
+Validation used the release-pinned SDK `12.0.100-alpha.1.26480.103` and newly
+packed platform, Azure DevOps reporter, and GitHub Actions reporter packages
+`2.5.3-dev`. All three packages built for `netstandard2.0`, `net8.0`, and `net9.0`.
+Both acceptance entry points compiled for the repository's `net11.0` target,
+whose generated runtime configuration selects the SDK-bundled
+`12.0.0-alpha.1.26480.103` runtime.
+
+| Selection | Frameworks | Result |
+| --- | --- | --- |
+| `AzureDevOpsSummaryReporterTests`, `CiRunSummaryAggregationTests`, `CiRunSummaryPolicyTests`, `GitHubActionsSummaryReporterTests` | net8.0, net9.0, net462, net472 | 244 passed per framework |
+| `SlowestTestsConsumerTests`, `AcceptanceDiagnosticsTests` | net8.0, net9.0, net462 | 39 passed per framework |
+| `AzureDevOpsSummaryAcceptanceTests` | net11.0 host, packed net8.0 fixture | 2 passed |
+
+These are 1,095 passing tests with no skipped cases. The separate rel/4.5
+`RetryTests` cancellation race was not changed or bundled into this backport.
+
+The successful build sequence was the repository build script with
+`-restore -build -pack -msbuildEngine dotnet -projects
+src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj -bl`,
+followed by `dotnet pack -c Debug -m:4` on each reporter project and
+`dotnet build -c Debug -m:4` on the two unit-test and two acceptance projects.
+Every invocation used a distinct `-bl:artifacts\log\Debug\12149-*.binlog`.
+On this host, nested CMD tools required a CMD-local PATH adjustment; changing
+PowerShell's PATH alone was insufficient. No global PATH or shared build scripts
+were modified.
+
+The unit selections were run directly from the built DLLs (or EXEs for
+net462/net472), with these filters and `--report-trx --progress off`:
+
+```text
+FullyQualifiedName~AzureDevOpsSummaryReporterTests|FullyQualifiedName~CiRunSummaryAggregationTests|FullyQualifiedName~CiRunSummaryPolicyTests|FullyQualifiedName~GitHubActionsSummaryReporterTests
+FullyQualifiedName~SlowestTestsConsumerTests|FullyQualifiedName~AcceptanceDiagnosticsTests
+```
+
+The packaged acceptance command was:
+
+```powershell
+& .\.dotnet\dotnet.exe artifacts\bin\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Debug\net11.0\Microsoft.Testing.Platform.Acceptance.IntegrationTests.dll --filter FullyQualifiedName~AzureDevOpsSummaryAcceptanceTests --report-trx --report-trx-filename 12149-azure-packaged-acceptance.trx --results-directory artifacts\TestResults\12149 --progress off
+```
+
+It passed with a per-worktree `NUGET_PACKAGES` directory. The acceptance host
+printed the new attributed process-launch summary on successful exit.
+
+A separate package consumer registered both real reporting providers and reused
+the four-result acceptance fixture: one passed, one failed, and two skipped
+results with a grouped issue reason. An explicit `dotnet restore --packages`
+isolated its cache, followed by a rebuild. The packed net8.0 DLL, isolated-cache
+DLL, and deployed consumer DLL had identical SHA-256 values:
+
+| Package | net8.0 DLL SHA-256 |
+| --- | --- |
+| Microsoft.Testing.Platform | `9dd19f4db4dbd66c82489c8cd0ad27b1d1a4b1cbaf9ab5423505ff42f3ed03cd` |
+| Microsoft.Testing.Extensions.AzureDevOpsReport | `ea2ff00769d7dec2fc8ffa09fcda3aa7cbc0c852884b1a8901ab604b09010e4c` |
+| Microsoft.Testing.Extensions.GitHubActionsReport | `b911e7d82b6e9219dfabe6c28ea7ede5ba3b162cca68605dbb627b19409b7c34` |
+
+Both direct execution and native `dotnet test --project` preserved the four
+results, expected parent exit 2, per-module fallback, 17.50 seconds of reported
+test time, and grouped skip reason. The pinned SDK did not negotiate required
+aggregate post-processing; this is fallback evidence, not native-SDK aggregation
+evidence.
+
+The actual packed artifact worker was additionally driven over the existing
+`FakeDotnetTestSdk` pipe fixture, negotiating protocol 1.4.0 and host type
+`ArtifactPostProcessor`. This is a real shipping worker with a fixture SDK peer,
+not the shipping SDK. Its four serialized inputs represented two modules and
+both providers:
+
+| Worker scenario | Worker exit | Verified artifact behavior |
+| --- | ---: | --- |
+| Authoritative rejected policy (2) | 0 | Both summaries retain raw failures and failed policy |
+| Authoritative accepted policy (0) | 0 | Raw failures and GitHub on-failure summary remain visible |
+| Partial timeout | 0 | Both summaries retain truncation warnings and policy |
+| Legacy metadata and no SDK run summary | 0 | Unavailable elapsed time, outcomes, and skip metadata remain explicit |
+| Zero results, authoritative exit 8 | 0 | Zero counts and `ZeroTests` explanation remain visible |
+| Passing on-failure mode | 0 | Canonical artifacts remain; GitHub step summary stays absent |
+| Invalid skip count | 1 | Invalid metadata is rejected and no summary is published |
+
+For the rejected, accepted, partial, and legacy scenarios, raw counts remained
+40 total, 34 passed, 2 failed, and 4 skipped, with one global Azure top ten.
+The GitHub step summary exactly
+matched the canonical artifact inside its existing publication markers. Worker
+exit 0 indicates successful artifact processing, not acceptance of the test
+run's policy.
+
+The nine package scenarios passed. Their commands, manifests, summaries,
+package hashes, process output, `evidence.json`, and
+`packaged-reporters.junit.xml` are retained under
+`artifacts\validation-12149\20261102-102137`; the eight TRX files are under
+`artifacts\TestResults\12149`. These local results do not claim a completed
+Azure Pipelines run or non-Windows execution.

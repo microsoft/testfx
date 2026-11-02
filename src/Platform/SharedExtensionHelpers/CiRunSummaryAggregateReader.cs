@@ -228,8 +228,6 @@ internal static partial class CiRunSummaryAggregation
             && test.Outcome is null or "passed" or "failed" or "skipped"
             && test.LineNumber is null or >= 0;
 
-<<<<<<< HEAD
-=======
     private static bool AreValidSkipReasons(CiRunSummarySkipReason[]? reasons, long skippedTests)
     {
         if (reasons is null)
@@ -260,13 +258,6 @@ internal static partial class CiRunSummaryAggregation
         return true;
     }
 
-    private static bool IsValidExactPercentage(string? value, double percentage)
-        => value is null
-            || (decimal.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal exact)
-                && exact is >= 0 and <= 100
-                && (double)exact == percentage);
-
->>>>>>> Clarify CI timing, skip reasons, and acceptance process context
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {
         int result = StringComparer.Ordinal.Compare(left.AssemblyName, right.AssemblyName);

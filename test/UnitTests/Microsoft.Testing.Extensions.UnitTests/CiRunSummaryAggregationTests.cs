@@ -3,6 +3,8 @@
 
 extern alias ghactions;
 
+using System.Text.Json.Nodes;
+
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;

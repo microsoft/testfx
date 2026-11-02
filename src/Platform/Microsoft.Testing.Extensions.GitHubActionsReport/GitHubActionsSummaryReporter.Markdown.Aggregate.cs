@@ -62,17 +62,10 @@ internal sealed partial class GitHubActionsSummaryReporter
                 string calloutText = string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.ExitCodeCallout,
-<<<<<<< HEAD
-                    authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
-                    GitHubActionsExitCode.GetName(authoritativeExitCode),
-                    GitHubActionsExitCode.GetReason(authoritativeExitCode));
-                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
-=======
                     observedExitCode.ToString(CultureInfo.InvariantCulture),
                     GitHubActionsExitCode.GetName(observedExitCode),
                     GitHubActionsExitCode.GetReason(observedExitCode));
-                builder.Append("> [!WARNING]\n> ").Append(GitHubActionsFailureDetails.EscapeInlineCode(calloutText)).Append("\n\n");
->>>>>>> Show authoritative runner policy alongside raw CI test results
+                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
             }
 
             AppendFlakyTests(
