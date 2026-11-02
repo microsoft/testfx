@@ -492,12 +492,12 @@ Platné hodnoty jsou Minimal, Normal a Detailed. Výchozí hodnota je Normal. K 
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatLastCompletionSuffix">
         <source> | last completion: {0} ago</source>
-        <target state="new"> | last completion: {0} ago</target>
+        <target state="translated"> | poslední dokončení: před {0}</target>
         <note>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatNoCompletionSuffix">
         <source> | no tests completed yet</source>
-        <target state="new"> | no tests completed yet</target>
+        <target state="translated"> | zatím nebyly dokončeny žádné testy</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
