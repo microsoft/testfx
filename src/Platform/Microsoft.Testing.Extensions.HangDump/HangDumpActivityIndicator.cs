@@ -32,8 +32,12 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private readonly NamedPipeClient? _namedPipeClient;
     private readonly bool _traceLevelEnabled;
     private readonly ConcurrentDictionary<TestNodeUid, (string Name, Type Type, DateTimeOffset StartTime)> _testsCurrentExecutionState = new();
+    private readonly TimeSpan _activitySignalInterval;
 
-    private bool _exitSignalActivityIndicatorAsync;
+    private volatile bool _exitSignalActivityIndicatorAsync;
+    private int _activitySignalPending;
+    private CancellationTokenSource? _activitySignalCancellation;
+    private Task? _activitySignalTask;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
     private PipeNameDescription? _pipeNameDescription;
 
@@ -58,7 +62,22 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
             _namedPipeClient.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
+            _activitySignalInterval = GetActivitySignalInterval(HangDumpOptions.GetTimeout(_commandLineOptions));
         }
+    }
+
+    /// <summary>
+    /// Activity is coalesced and sent to the controller at most once per interval instead of once per test
+    /// result, so fast tests do not pay a cross-process round trip each. Coalescing can only delay a signal,
+    /// never drop the latest one, so a dump can fire at most one interval later than the configured timeout,
+    /// never earlier.
+    /// </summary>
+    internal static TimeSpan GetActivitySignalInterval(TimeSpan hangTimeout)
+    {
+        var maxInterval = TimeSpan.FromSeconds(1);
+        var minInterval = TimeSpan.FromMilliseconds(10);
+        var interval = TimeSpan.FromTicks(hangTimeout.Ticks / 10);
+        return interval > maxInterval ? maxInterval : interval < minInterval ? minInterval : interval;
     }
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
@@ -100,10 +119,49 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             // Wait the connection from the testhost controller
             await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
             await _logger.LogTraceAsync("Test host controller connected").ConfigureAwait(false);
+
+            _activitySignalCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            CancellationToken stopToken = _activitySignalCancellation.Token;
+            _activitySignalTask = _task.Run(() => SignalActivityLoopAsync(stopToken, cancellationToken), CancellationToken.None);
         }
         catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
         {
             // Do nothing, we're stopping
+        }
+    }
+
+    private async Task SignalActivityLoopAsync(CancellationToken stopToken, CancellationToken sessionCancellationToken)
+    {
+        try
+        {
+            while (true)
+            {
+                await _task.Delay(_activitySignalInterval, stopToken).ConfigureAwait(false);
+
+                // The stop token only interrupts the wait. A request in flight completes, so the pipe is never
+                // left with a half-read reply when the session ends.
+                await SendPendingActivitySignalAsync(sessionCancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (stopToken.IsCancellationRequested)
+        {
+            // Stopped by the end of the session or by cancellation.
+        }
+    }
+
+    private async Task SendPendingActivitySignalAsync(CancellationToken cancellationToken)
+    {
+        if (Interlocked.Exchange(ref _activitySignalPending, 0) == 0 || _exitSignalActivityIndicatorAsync)
+        {
+            return;
+        }
+
+        ApplicationStateGuard.Ensure(_namedPipeClient is not null);
+        await _namedPipeClient.RequestReplyAsync<ActivitySignalRequest, VoidResponse>(ActivitySignalRequest.Instance, cancellationToken).ConfigureAwait(false);
+
+        if (_traceLevelEnabled)
+        {
+            await _logger.LogTraceAsync("Activity signal sent.").ConfigureAwait(false);
         }
     }
 
@@ -167,31 +225,48 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
                 await _logger.LogTraceAsync($"Signal for action node {nodeChangedMessage.TestNode.DisplayName} - '{state}'. _exitSignalActivityIndicatorAsync: {_exitSignalActivityIndicatorAsync}").ConfigureAwait(false);
             }
 
-            // Signal the activity.
-            if (!_exitSignalActivityIndicatorAsync)
-            {
-                ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-                await _namedPipeClient.RequestReplyAsync<ActivitySignalRequest, VoidResponse>(ActivitySignalRequest.Instance, cancellationToken).ConfigureAwait(false);
-
-                if (_traceLevelEnabled)
-                {
-                    await _logger.LogTraceAsync($"Activity signal sent.").ConfigureAwait(false);
-                }
-            }
+            // Record the activity; the signal loop forwards it to the controller.
+            Volatile.Write(ref _activitySignalPending, 1);
         }
     }
 
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
-        => Task.CompletedTask;
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    {
+        if (_activitySignalTask is null)
+        {
+            return;
+        }
+
+        // Stop the loop before sending the last pending signal, so two requests never share the pipe.
+        ApplicationStateGuard.Ensure(_activitySignalCancellation is not null);
+#if NET
+        await _activitySignalCancellation.CancelAsync().ConfigureAwait(false);
+#else
+        _activitySignalCancellation.Cancel();
+#endif
+        await _activitySignalTask.ConfigureAwait(false);
+        await SendPendingActivitySignalAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
+    }
 
 #if NETCOREAPP
     public ValueTask DisposeAsync()
     {
-        _namedPipeClient?.Dispose();
+        Dispose();
         return ValueTask.CompletedTask;
     }
 #endif
 
     public void Dispose()
-        => _namedPipeClient?.Dispose();
+    {
+        try
+        {
+            _activitySignalCancellation?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        _activitySignalCancellation?.Dispose();
+        _namedPipeClient?.Dispose();
+    }
 }

@@ -127,9 +127,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
 
     public async Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
-        _activityTimerValue = _commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTimeoutOptionName, out string[]? timeout)
-            ? TimeSpanParser.Parse(timeout[0])
-            : TimeSpan.FromMinutes(30);
+        _activityTimerValue = HangDumpOptions.GetTimeout(_commandLineOptions);
 
         if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTypeOptionName, out string[]? dumpType))
         {

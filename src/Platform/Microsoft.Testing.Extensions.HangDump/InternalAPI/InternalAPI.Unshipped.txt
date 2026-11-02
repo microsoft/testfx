@@ -1,1 +1,3 @@
 #nullable enable
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.GetActivitySignalInterval(System.TimeSpan hangTimeout) -> System.TimeSpan
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.GetTimeout(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.TimeSpan

@@ -107,6 +107,31 @@ public sealed class HangDumpActivityIndicatorMutationTests
         Assert.HasCount(1, messages.Where(message => message.Contains("Signal for action node Test uid", StringComparison.Ordinal)));
     }
 
+    [TestMethod]
+    public async Task ConsumeAsync_CoalescesActivityInsteadOfSendingAnIpcRequestPerResult()
+    {
+        // The indicator has no pipe client here, so any per-result IPC attempt would fail the guard.
+        using HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+
+        await indicator.ConsumeAsync(null!, CreateUpdate("uid", InProgressTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        Assert.AreEqual(0, GetPrivateField<int>(indicator, "_activitySignalPending"), "An in-progress update is not activity.");
+
+        await indicator.ConsumeAsync(null!, CreateUpdate("uid", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        await indicator.ConsumeAsync(null!, CreateUpdate("other", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+
+        Assert.AreEqual(1, GetPrivateField<int>(indicator, "_activitySignalPending"));
+    }
+
+    [TestMethod]
+    [DataRow(30 * 60 * 1000, 1000, DisplayName = "Default timeout is capped at one second")]
+    [DataRow(8000, 800, DisplayName = "Short timeout uses a tenth of the timeout")]
+    [DataRow(50, 10, DisplayName = "Tiny timeout is floored")]
+    [DataRow(0, 10, DisplayName = "Zero timeout is floored")]
+    public void GetActivitySignalInterval_IsATenthOfTheTimeoutWithinBounds(int timeoutMilliseconds, int expectedMilliseconds)
+        => Assert.AreEqual(
+            TimeSpan.FromMilliseconds(expectedMilliseconds),
+            HangDumpActivityIndicator.GetActivitySignalInterval(TimeSpan.FromMilliseconds(timeoutMilliseconds)));
+
     private static HangDumpActivityIndicator CreateIndicator(ILogger logger, DateTimeOffset utcNow)
     {
         Mock<ILoggerFactory> loggerFactory = new();
