@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
@@ -94,6 +95,13 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
     /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public ILoggingManager Logging => _testHostBuilder.Logging;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public IOutputDeviceManager OutputDevice => _testHostBuilder.OutputDevice;
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 

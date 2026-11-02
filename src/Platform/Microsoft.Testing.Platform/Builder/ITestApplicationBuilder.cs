@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
@@ -58,6 +59,15 @@ public interface ITestApplicationBuilder
     /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ILoggingManager Logging { get; }
+
+    /// <summary>
+    /// Gets the output device manager that allows registering a custom output device.
+    /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    IOutputDeviceManager OutputDevice { get; }
 
     /// <summary>
     /// Registers a test framework with the application builder.

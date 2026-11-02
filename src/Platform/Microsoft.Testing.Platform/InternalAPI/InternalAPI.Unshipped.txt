@@ -1,4 +1,20 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+Microsoft.Testing.Platform.Hosts.ITestHostBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+Microsoft.Testing.Platform.Hosts.TestHostBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.CustomOutputDeviceAdapter(Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice! customOutputDevice) -> void
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.Description.get -> string!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayAfterSessionEndRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayBannerAsync(string? bannerMessage, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayBeforeSessionStartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayName.get -> string!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.HandleProcessRoleAsync(Microsoft.Testing.Platform.TestProcessRole processRole, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.Uid.get -> string!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.Version.get -> string!
+Microsoft.Testing.Platform.OutputDevice.PlatformOutputDeviceManager.SetOutputDevice(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice!>! outputDeviceFactory) -> void
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
 Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
