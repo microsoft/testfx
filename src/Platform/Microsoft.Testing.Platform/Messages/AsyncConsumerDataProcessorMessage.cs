@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Messages;
 
@@ -13,10 +14,15 @@ namespace Microsoft.Testing.Platform.Messages;
 /// </summary>
 internal readonly struct AsyncConsumerDataProcessorMessage
 {
-    private AsyncConsumerDataProcessorMessage(IDataProducer? dataProducer, IData? data, TaskCompletionSource<bool>? drainMarker)
+    private AsyncConsumerDataProcessorMessage(
+        IDataProducer? dataProducer,
+        IData? data,
+        PlatformActivityContext? executionActivityContext,
+        TaskCompletionSource<bool>? drainMarker)
     {
         DataProducer = dataProducer;
         Data = data;
+        ExecutionActivityContext = executionActivityContext;
         DrainMarker = drainMarker;
     }
 
@@ -24,11 +30,19 @@ internal readonly struct AsyncConsumerDataProcessorMessage
 
     public IData? Data { get; }
 
+    public PlatformActivityContext? ExecutionActivityContext { get; }
+
     public TaskCompletionSource<bool>? DrainMarker { get; }
 
     public static AsyncConsumerDataProcessorMessage CreateData(IDataProducer dataProducer, IData data)
-        => new(dataProducer, data, drainMarker: null);
+        => CreateData(dataProducer, data, executionActivityContext: null);
+
+    public static AsyncConsumerDataProcessorMessage CreateData(
+        IDataProducer dataProducer,
+        IData data,
+        PlatformActivityContext? executionActivityContext)
+        => new(dataProducer, data, executionActivityContext, drainMarker: null);
 
     public static AsyncConsumerDataProcessorMessage CreateDrainMarker(TaskCompletionSource<bool> drainMarker)
-        => new(dataProducer: null, data: null, drainMarker);
+        => new(dataProducer: null, data: null, executionActivityContext: null, drainMarker);
 }

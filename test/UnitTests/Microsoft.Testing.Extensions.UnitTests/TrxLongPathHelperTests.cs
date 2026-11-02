@@ -13,11 +13,14 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// Guards the long-path handling that TRX attachment copies depend on.
 /// </summary>
 /// <remarks>
-/// <see cref="Directory.SetCurrentDirectory(string)"/> is process-global, so this class must never run
-/// alongside other tests.
+/// <see cref="Directory.SetCurrentDirectory(string)"/> is process-global, so both tests declare
+/// <see cref="WellKnownResources.CurrentDirectory"/> to serialize against readers and writers that
+/// declare the same resource. Each test restores the original value in a
+/// <see langword="finally"/> block, so a class-wide <see cref="ResourceLockAttribute"/> (reacquired per
+/// test under method-level parallelization) is sufficient; no state survives across tests.
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(WellKnownResources.CurrentDirectory)]
 public class TrxLongPathHelperTests
 {
     /// <summary>
@@ -100,6 +103,30 @@ public class TrxLongPathHelperTests
         {
             Directory.SetCurrentDirectory(originalCurrentDirectory);
         }
+    }
+
+    [TestMethod]
+    public void GetPathForFileSystemAccess_WhenLegacyGetFullPathRejectsLongDrivePath_ReturnsExtendedLengthPath()
+    {
+        string path = @"C:\" + new string('d', MaxShortPathLength);
+
+        string result = TrxLongPathHelper.GetPathForFileSystemAccess(
+            path,
+            static _ => throw new PathTooLongException());
+
+        Assert.AreEqual(@"\\?\" + path, result);
+    }
+
+    [TestMethod]
+    public void GetPathForFileSystemAccess_WhenLegacyGetFullPathRejectsLongUncPath_ReturnsExtendedUncPath()
+    {
+        string path = @"\\server\share\" + new string('u', MaxShortPathLength);
+
+        string result = TrxLongPathHelper.GetPathForFileSystemAccess(
+            path,
+            static _ => throw new PathTooLongException());
+
+        Assert.AreEqual(@"\\?\UNC\server\share\" + new string('u', MaxShortPathLength), result);
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -124,5 +124,46 @@ public sealed class AssertInterpolatedStringHandlerGeneratedOverloadsTests : Tes
         string label = "obj";
         Action action = () => Assert.IsNull(notNull, $"isNull|{label}|");
         action.Should().Throw<Exception>().WithMessage("*isNull|obj|*");
+    }
+
+    public void HandlerMarker_NullableLiteralPolicyMatchesCompiledForwarderContract()
+    {
+        Type nullableHandler = typeof(Assert.AssertAreEqualInterpolatedStringHandler<int>);
+        Type nonnullableHandler = typeof(Assert.AssertIsTrueInterpolatedStringHandler);
+        var nullableMarker = (GenerateAssertInterpolatedStringAppendMethodsAttribute)Attribute.GetCustomAttribute(
+            nullableHandler, typeof(GenerateAssertInterpolatedStringAppendMethodsAttribute))!;
+        var nonnullableMarker = (GenerateAssertInterpolatedStringAppendMethodsAttribute)Attribute.GetCustomAttribute(
+            nonnullableHandler, typeof(GenerateAssertInterpolatedStringAppendMethodsAttribute))!;
+        nullableMarker.NullableLiteralParameter.Should().BeTrue();
+        nonnullableMarker.NullableLiteralParameter.Should().BeFalse();
+#if NET6_0_OR_GREATER
+        var nullability = new System.Reflection.NullabilityInfoContext();
+        nullability.Create(nullableHandler.GetMethod("AppendLiteral", [typeof(string)])!.GetParameters()[0]).ReadState
+            .Should().Be(System.Reflection.NullabilityState.Nullable);
+        nullability.Create(nonnullableHandler.GetMethod("AppendLiteral", [typeof(string)])!.GetParameters()[0]).ReadState
+            .Should().Be(System.Reflection.NullabilityState.NotNull);
+#endif
+
+        int calls = 0;
+        string Format()
+        {
+            calls++;
+            return "literal policy";
+        }
+
+        Assert.AreEqual(1, 1, $"{Format()}");
+        calls.Should().Be(0);
+        Action rejected = () => Assert.AreEqual(1, 2, $"{Format()}");
+        rejected.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Expected values to be equal.
+            literal policy
+
+            expected: 1
+            actual:   2
+
+            Assert.AreEqual(1, 2)
+            """);
+        calls.Should().Be(1);
     }
 }

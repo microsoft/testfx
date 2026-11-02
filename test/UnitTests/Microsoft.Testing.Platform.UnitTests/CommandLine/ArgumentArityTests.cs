@@ -211,4 +211,28 @@ public sealed class ArgumentArityTests
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }
+
+    [TestMethod]
+    public void Equality_UsesBothBoundsAndRejectsOtherObjectTypes()
+    {
+        ArgumentArity arity = new(2, 5);
+        object boxedEqual = new ArgumentArity(2, 5);
+        Assert.IsTrue(arity.Equals(boxedEqual));
+        Assert.IsFalse(arity.Equals(null));
+        Assert.IsFalse(arity.Equals("2..5"));
+        Assert.AreSequenceEqual(
+            [true, true, false],
+            new[] { arity != new ArgumentArity(3, 5), arity != new ArgumentArity(2, 6), arity != new ArgumentArity(2, 5) });
+
+        Dictionary<ArgumentArity, string> values = new()
+        {
+            [arity] = "bounded",
+            [new(3, 5)] = "different minimum",
+            [new(2, 6)] = "different maximum",
+        };
+        Assert.AreEqual("bounded", values[new(2, 5)]);
+        Assert.AreEqual("different minimum", values[new(3, 5)]);
+        Assert.AreEqual("different maximum", values[new(2, 6)]);
+        Assert.HasCount(3, values);
+    }
 }

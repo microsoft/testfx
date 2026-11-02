@@ -4,6 +4,12 @@
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.SetCurrent(Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo? info) -> void
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceFactory.CreateInstance(System.Type! testClassType, Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.DisposeAsync() -> System.Threading.Tasks.Task!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.Instance.get -> object!
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestClassInstanceLease.RequiresCleanup.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.set -> void
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectoryLabel -> string!
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassNameLabel -> string!

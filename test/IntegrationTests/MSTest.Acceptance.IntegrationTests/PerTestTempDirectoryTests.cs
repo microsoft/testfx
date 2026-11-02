@@ -56,6 +56,11 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
             string failingPath = Assert.ContainsSingle(records["fail"]);
             Assert.IsTrue(Directory.Exists(failingPath), $"Failing test temp directory should be retained but is missing: '{failingPath}'.");
             Assert.IsTrue(File.Exists(Path.Combine(failingPath, "artifact.txt")), "Failing test artifact should be retained for inspection.");
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                UnixFileMode ownerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+                Assert.AreEqual(ownerOnly, File.GetUnixFileMode(failingPath), "Test temp directories must be accessible only to their owner.");
+            }
         }
         finally
         {
@@ -64,21 +69,69 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
     }
 
     [TestMethod]
-    public async Task TestTempDirectory_IsCreatedLazily()
+    public async Task TestTempDirectory_IsOwnerOnlyAndUsable_WithRestrictiveUmask()
     {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         string recordDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(recordDirectory);
+        string? tempDirectory = null;
         try
         {
             var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
-
-            // Retain everything so the accessor's directory survives for inspection.
             TestHostResult testHostResult = await testHost.ExecuteAsync(
-                "--filter ClassName~Lazy",
+                "--filter ClassName~RestrictiveUmask",
                 environmentVariables: new()
                 {
                     ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
                     ["MSTEST_TEST_TEMP_DIRECTORY_RETAIN"] = "1",
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(0);
+            testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+
+            tempDirectory = Assert.ContainsSingle(ReadRecords(recordDirectory)["umask"]);
+            Assert.IsTrue(File.Exists(Path.Combine(tempDirectory, "write-check.txt")), "The test must be able to write inside its temporary directory.");
+            UnixFileMode ownerOnly = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+            Assert.AreEqual(ownerOnly, File.GetUnixFileMode(tempDirectory));
+        }
+        finally
+        {
+            TryDeleteDirectory(recordDirectory);
+            if (tempDirectory is not null)
+            {
+                TryDeleteDirectory(tempDirectory);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task TestTempDirectory_IsCreatedLazily()
+    {
+        string recordDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        string resultsDirectory = Path.Combine(recordDirectory, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+            string[] directoriesBefore = Directory.GetDirectories(testHost.DirectoryName);
+
+            // Retain everything so the accessor's directory survives for inspection.
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                $"--filter ClassName~Lazy --results-directory \"{resultsDirectory}\"",
+                environmentVariables: new()
+                {
+                    ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
+                    ["MSTEST_TEST_TEMP_DIRECTORY_RETAIN"] = "1",
+                    // Keep IPC paths short on macOS when redirecting the test's temporary directory.
+                    ["TESTINGPLATFORM_PIPE_DIRECTORY"] = Path.GetTempPath(),
+                    ["TEMP"] = resultsDirectory,
+                    ["TMP"] = resultsDirectory,
+                    ["TMPDIR"] = resultsDirectory,
                 },
                 cancellationToken: TestContext.CancellationToken);
 
@@ -90,12 +143,15 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
             string accessorPath = Assert.ContainsSingle(records["accessor"]);
             Assert.IsTrue(Directory.Exists(accessorPath), $"Accessor test temp directory should exist: '{accessorPath}'.");
 
-            // The non-accessor test never touched the property, so no directory is created for it.
-            string? resultsDirectory = Path.GetDirectoryName(accessorPath);
-            Assert.IsNotNull(resultsDirectory);
-            string[] siblings = Directory.GetDirectories(resultsDirectory);
-            Assert.IsTrue(siblings.Any(d => Path.GetFileName(d).StartsWith("AccessorTest", StringComparison.Ordinal)), "Accessor test directory should be present.");
-            Assert.IsFalse(siblings.Any(d => Path.GetFileName(d).StartsWith("NonAccessorTest", StringComparison.Ordinal)), "No directory should be created for a test that never accesses TestTempDirectory.");
+            Assert.AreEqual("NONE", Assert.ContainsSingle(records["nonaccessor"]));
+            string? actualBaseDirectory = Path.GetDirectoryName(accessorPath);
+            Assert.IsNotNull(actualBaseDirectory);
+            Assert.IsTrue(actualBaseDirectory == testHost.DirectoryName || actualBaseDirectory == resultsDirectory);
+            string[] createdDirectories = Directory.GetDirectories(actualBaseDirectory).Except(directoriesBefore, StringComparer.Ordinal).ToArray();
+            Assert.AreEqual(
+                accessorPath,
+                Assert.ContainsSingle(createdDirectories),
+                "Only the test that accesses TestTempDirectory should create a directory.");
         }
         finally
         {
@@ -240,6 +296,7 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
 #file UnitTest1.cs
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
@@ -331,6 +388,38 @@ public class AddResultFileRetention
         File.WriteAllText(attachment, "hello");
         TestContext.AddResultFile(attachment);
         Recorder.Record("addresultfile", attachment);
+    }
+}
+
+[TestClass]
+[DoNotParallelize]
+public class RestrictiveUmask
+{
+    private const uint AllPermissions = 0x1FF;
+
+    public TestContext TestContext { get; set; }
+
+    [DllImport("libc", EntryPoint = "umask")]
+    private static extern uint Umask(uint mask);
+
+    [TestMethod]
+    public void TestTempDirectoryRemainsUsable()
+    {
+        string tempDirectory;
+        uint previousUmask = Umask(AllPermissions);
+        try
+        {
+            tempDirectory = TestContext.TestTempDirectory;
+            string writeCheckPath = Path.Combine(tempDirectory, "write-check.txt");
+            File.WriteAllText(writeCheckPath, "data");
+            Assert.IsTrue(File.Exists(writeCheckPath));
+        }
+        finally
+        {
+            Umask(previousUmask);
+        }
+
+        Recorder.Record("umask", tempDirectory);
     }
 }
 

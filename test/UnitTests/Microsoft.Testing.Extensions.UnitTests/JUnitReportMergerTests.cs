@@ -63,7 +63,7 @@ public sealed class JUnitReportMergerTests
         List<XElement> suites = [.. root.Elements().Where(e => e.Name.LocalName == "testsuite")];
         Assert.HasCount(3, suites);
         List<string> ids = [.. suites.Select(s => s.Attribute("id")!.Value)];
-        Assert.AreSequenceEqual(new[] { "0", "1", "2" }, ids);
+        Assert.AreSequenceEqual(["0", "1", "2"], ids);
         List<string> names = [.. suites.Select(s => s.Attribute("name")!.Value)];
         Assert.Contains("SuiteA", names);
         Assert.Contains("SuiteC", names);
@@ -154,7 +154,7 @@ public sealed class JUnitReportMergerTests
         Assert.AreEqual("2", suite.Attribute("tests")!.Value);
         Assert.AreEqual("0", suite.Attribute("failures")!.Value);
         Assert.AreSequenceEqual(
-            new[] { "AlwaysPasses", "Flaky" },
+            ["AlwaysPasses", "Flaky"],
             suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
         Assert.IsEmpty(suite.Elements("testcase").Single(testCase => testCase.Attribute("name")!.Value == "Flaky").Elements("failure"));
     }
@@ -194,7 +194,7 @@ public sealed class JUnitReportMergerTests
         Assert.AreEqual("2", suite.Attribute("tests")!.Value);
         Assert.AreEqual("0", suite.Attribute("failures")!.Value);
         Assert.AreSequenceEqual(
-            new[] { "Parameterized [attempt 1]", "Parameterized" },
+            ["Parameterized [attempt 1]", "Parameterized"],
             suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
     }
 
@@ -233,6 +233,29 @@ public sealed class JUnitReportMergerTests
             .Attribute("value")!
             .Value);
         Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_WhenAnyInputIsIncomplete_PropagatesRecoveryProperties(bool collapseRetryAttempts)
+    {
+        XElement incompleteSuite = SuiteWithExitCode("Suite", exitCode: 137);
+        incompleteSuite.Element("properties")!.Add(
+            new XElement("property", new XAttribute("name", "run-status"), new XAttribute("value", "aborted")),
+            new XElement("property", new XAttribute("name", "incomplete"), new XAttribute("value", "true")));
+
+        XElement suite = JUnitReportMerger.Merge(
+            [BuildReport(suites: [incompleteSuite]), BuildReport(suites: [SuiteWithExitCode("Suite", exitCode: 0)])],
+            "run",
+            collapseRetryAttempts ? JUnitMergeMode.CollapseRetryAttempts : JUnitMergeMode.Concatenate)
+            .Root!
+            .Elements("testsuite")
+            .Last();
+
+        Assert.AreEqual("0", ReadSuiteProperty(suite, "exit-code"));
+        Assert.AreEqual("aborted", ReadSuiteProperty(suite, "run-status"));
+        Assert.AreEqual("true", ReadSuiteProperty(suite, "incomplete"));
     }
 
     [TestMethod]
@@ -429,6 +452,13 @@ public sealed class JUnitReportMergerTests
                     ? null
                     : new XElement("property", new XAttribute("name", "original-name"), new XAttribute("value", originalName))),
             outcomeElement);
+
+    private static string? ReadSuiteProperty(XElement suite, string name)
+        => suite.Element("properties")?
+            .Elements("property")
+            .SingleOrDefault(property => property.Attribute("name")?.Value == name)?
+            .Attribute("value")?
+            .Value;
 
     private static XDocument BuildReport(
         long tests = 1,

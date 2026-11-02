@@ -11,6 +11,81 @@ namespace MSTest.Analyzers.UnitTests;
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests
 {
     [TestMethod]
+    public async Task CodeFix_ExpressionBodiedSetterAddsGuardAndPreservesAssertion()
+    {
+        const string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                private string? text = "abc";
+
+                public int Length
+                {
+                    set => [|Assert.AreEqual(3, text?.Length)|];
+                }
+            }
+            """;
+        const string fixedCode = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                private string? text = "abc";
+
+                public int Length
+                {
+                    set
+                    {
+                        Assert.IsNotNull(text);
+                        Assert.AreEqual(3, text.Length);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test { TestCode = code, FixedCode = fixedCode }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task CodeFix_ExpressionBodiedLocalFunctionAddsGuardInsideFunction()
+    {
+        const string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                public void Check()
+                {
+                    string? text = "abc";
+                    void CheckLength() => [|Assert.AreEqual(3, text?.Length)|];
+                    CheckLength();
+                }
+            }
+            """;
+        const string fixedCode = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Fixture
+            {
+                public void Check()
+                {
+                    string? text = "abc";
+                    void CheckLength() { Assert.IsNotNull(text); Assert.AreEqual(3, text.Length); }
+
+                    CheckLength();
+                }
+            }
+            """;
+
+        await new VerifyCS.Test { TestCode = code, FixedCode = fixedCode }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenUsingConditionalsAccess_In_Assert_Equal()
     {
         string code = """

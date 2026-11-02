@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Extensions.VideoRecorder;
@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 /// <summary>
 /// The output video format produced by the recorder.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum VideoRecorderFormat
 {
@@ -26,6 +29,9 @@ public enum VideoRecorderFormat
 /// <summary>
 /// Controls when a recorded video is persisted (kept and attached to the test session).
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum VideoRecorderPersistenceMode
 {
@@ -45,6 +51,9 @@ public enum VideoRecorderPersistenceMode
 /// <summary>
 /// Controls how recordings are split across a test run.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum VideoCaptureGranularity
 {
@@ -65,6 +74,9 @@ public enum VideoCaptureGranularity
 /// <summary>
 /// What the recorder captures.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum VideoCaptureSource
 {
@@ -83,6 +95,9 @@ public enum VideoCaptureSource
 /// <summary>
 /// Options controlling how the video recorder captures and encodes video.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class VideoRecorderOptions
 {

@@ -4,57 +4,57 @@
     <body>
       <trans-unit id="ActivationArgumentsInvalidArgumentCount">
         <source>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload has an invalid argument count.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載的引數計數無效。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidArgumentLength">
         <source>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload has an invalid argument length.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載的引數長度無效。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidFileKey">
         <source>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid file payload key.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數包含無效的檔案承載金鑰。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidFileReference">
         <source>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數包含無效的檔案承載參考。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidInlinePayload">
         <source>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid inline payload.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數包含無效的內嵌承載。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsMissingPayload">
         <source>The launch activation does not contain Microsoft Testing Platform arguments.</source>
-        <target state="new">The launch activation does not contain Microsoft Testing Platform arguments.</target>
+        <target state="translated">啟動啟用不包含 Microsoft Testing Platform 引數。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadAuthenticationFailed">
         <source>The Microsoft Testing Platform activation-argument payload failed authentication.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload failed authentication.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載驗證失敗。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadReadFailed">
         <source>The Microsoft Testing Platform activation-argument payload could not be read.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload could not be read.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載無法讀取。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadTooLarge">
         <source>The Microsoft Testing Platform activation-argument payload is too large.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload is too large.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載太大。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadTruncated">
         <source>The Microsoft Testing Platform activation-argument payload is truncated.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload is truncated.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載已截斷。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsTrailingData">
         <source>The Microsoft Testing Platform activation-argument payload contains trailing data.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload contains trailing data.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載包含後置資料。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="AmbiguousAppxManifestApplication">
@@ -72,9 +72,29 @@
         <target state="translated">封裝的應用程式清單未宣告有效的 &lt;Identity Name="..." Publisher="..." /&gt; 元素。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PackagedAppControllerInvalidBootstrap">
+        <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
+        <target state="translated">封裝應用程式控制器的啟動引數無效。請還原相符的 Microsoft.Testing.Extensions.PackagedApp.MSBuild 和 Microsoft.Testing.Extensions.PackagedApp 套件。</target>
+        <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerInvalidTransport">
+        <source>The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</source>
+        <target state="translated">封裝應用程式控制器需要且只能有一個原生 SDK 命名管道傳輸。不支援重複、不完整或其他 --server 和 --dotnet-test-* 引數。</target>
+        <note>{Locked="--server"}{Locked="--dotnet-test-*"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
+        <source>Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</source>
+        <target state="translated">原生 dotnet test 無法將 AppContainer 測試主機連線到 SDK 具名管道。使用此應用程式的 InvokeTestingPlatform MSBuild 目標。未啟用任何測試主機。</target>
+        <note>{Locked="dotnet test"}{Locked="AppContainer"}{Locked="InvokeTestingPlatform"}{Locked="MSBuild"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
+        <source>Packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</source>
+        <target state="translated">封裝應用程式的說明與探索功能需要啟用封裝應用程式啟動器。請啟用封裝應用程式擴充功能，並移除 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never。未啟動任何測試主機。</target>
+        <note>{Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never"}</note>
+      </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
-        <target state="needs-review-translation">註冊已封裝、完整信任的 MSIX 桌面測試主機，並透過Application User Model ID碼 (Windows 組建)啟用該主機，此外，當透過 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always 選擇啟用時，會將非封裝 (鬆散配置) 的 Windows 測試主機部署至隔離目錄，並從該目錄啟動。預設只會針對封裝配置啟用，因此未封裝的應用程式會保留在預設啟動路徑上。不支援真正的 UWP/AppContainer 主機。請參閱 https://github.com/microsoft/testfx/issues/9933。</target>
+        <target state="translated">註冊已封裝的 MSIX 測試主機，並透過 Application User Model ID (Windows 組建) 啟動它，將 Microsoft Testing Platform 引數透過 argv 傳遞給 packagedClassicApp/win32App 主機 (包括傳統 AppContainer 主機)，或為 windowsApp/UWP 主機啟動啟用。當透過 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always 選擇加入時，它也會將非封裝 (鬆散配置) 的 Windows 測試主機部署到隔離目錄，並從該處啟動。預設只會針對封裝配置啟用，因此未封裝的應用程式會保留在預設啟動路徑上。端對端 AppContainer 執行另外也需要 controller-pipe 授權。請參閱 https://github.com/microsoft/testfx/issues/10486。</target>
         <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -96,6 +116,36 @@
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
         <target state="translated">無法註冊已封裝的 Windows 應用程式配置 '{0}'。註冊未簽署的建置輸出配置需要啟用 [開發人員模式] (或側載)。錯誤: {1}</target>
         <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationLocationMismatch">
+        <source>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</source>
+        <target state="translated">無法啟用要求的配置 '{0}'： Windows 回報註冊成功，但目前使用者的註冊套件位置為 [{1}]。請關閉封裝的任何執行中執行個體，然後重試。未啟用任何測試主機。</target>
+        <note>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationLockDirectoryUnavailable">
+        <source>Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</source>
+        <target state="translated">無法序列化封裝應用程式註冊，因為目前使用者的本機應用程式資料目錄無法使用。請先確定使用者設定檔已載入，再重試。未啟動任何測試主機。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationNotDevelopment">
+        <source>Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</source>
+        <target state="translated">無法將套件 '{0}' 從 '{1}' 切換至 '{2}'：現有套件不是開發註冊，因此無法在保留應用程式資料的情況下移除。請使用個別的套件識別進行開發。未啟動任何測試主機。</target>
+        <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationRemovalFailed">
+        <source>Failed to remove the existing packaged Windows app registration '{0}' before registering manifest '{1}'. Close any running instances of the package and retry. Error: {2}</source>
+        <target state="translated">無法在註冊資訊清單 '{1}' 之前移除現有的已封裝 Windows 應用程式註冊 '{0}'。請關閉封裝的任何執行中執行個體，然後重試。錯誤： {2}</target>
+        <note>{0} is the package full name. {1} is the requested AppxManifest.xml path. {2} is the removal error.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationRemovalIncomplete">
+        <source>Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</source>
+        <target state="translated">無法將套件 '{0}' 從 '{1}' 切換到 '{2}'： Windows 已完成移除要求，但套件仍保持登錄狀態。請關閉封裝的任何執行中執行個體，然後重試。未嘗試取代註冊或測試主機啟用。</target>
+        <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
+      </trans-unit>
+      <trans-unit id="TestCaseFilterOptionDescription">
+        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
+        <target state="translated">使用指定運算式的篩選測試。如需詳細資訊，請參閱篩選選項詳細資料區段。如需如何使用選擇性單元測試篩選的詳細資訊和範例，請參閱 https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests。</target>
+        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
       </trans-unit>
     </body>
   </file>

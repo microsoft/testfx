@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -47,6 +48,54 @@ public sealed class CommandLineTests
                     File.Delete(rspFileName);
                 }
             }
+        }
+    }
+
+    [TestMethod]
+    public void Parser_NestedResponseFiles_ProvidesExpandedArgumentsForProcessRelaunch()
+    {
+        string id = Guid.NewGuid().ToString("N");
+        string outerResponseFile = $"{id}-outer.rsp";
+        string nestedResponseFile = $"{id}-nested.rsp";
+
+        try
+        {
+            File.WriteAllText(outerResponseFile, $"--inside b{Environment.NewLine}@{nestedResponseFile}");
+            File.WriteAllText(nestedResponseFile, "--nested c");
+
+            CommandLineParseResult result = CommandLineParser.Parse(
+                ["--before", "a", $"@{outerResponseFile}", "--after", "d"],
+                new SystemEnvironment());
+
+            Assert.AreSequenceEqual(
+                ["--before", "a", "--inside", "b", "--nested", "c", "--after", "d"],
+                result.ExpandedArguments);
+            Assert.Contains($"@{outerResponseFile}", result.CommandLine);
+        }
+        finally
+        {
+            File.Delete(outerResponseFile);
+            File.Delete(nestedResponseFile);
+        }
+    }
+
+    [TestMethod]
+    public void Parser_RecursiveResponseFile_ReturnsError()
+    {
+        string responseFile = $"{Guid.NewGuid():N}.rsp";
+
+        try
+        {
+            File.WriteAllText(responseFile, $"@{responseFile}");
+
+            CommandLineParseResult result = CommandLineParser.Parse([$"@{responseFile}"], new SystemEnvironment());
+
+            Assert.IsTrue(result.HasError);
+            Assert.Contains(PlatformResources.CommandLineParserRecursiveResponseFile, result.Errors[0]);
+        }
+        finally
+        {
+            File.Delete(responseFile);
         }
     }
 

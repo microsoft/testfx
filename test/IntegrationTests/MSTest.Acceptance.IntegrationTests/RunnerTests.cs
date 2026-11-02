@@ -1,11 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Combinatorial.MSTest;
-
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 using SystemTask = System.Threading.Tasks.Task;
 
@@ -34,7 +33,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = Serialization.Read(compilationResult.BinlogPath);
+        Build binLog = BinlogReader.Read(compilationResult.BinlogPath!);
         Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
             .Count(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
@@ -123,7 +122,7 @@ return await app.RunAsync();
 
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = Serialization.Read(result.BinlogPath);
+        Build binLog = BinlogReader.Read(result.BinlogPath!);
         Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());
     }
 

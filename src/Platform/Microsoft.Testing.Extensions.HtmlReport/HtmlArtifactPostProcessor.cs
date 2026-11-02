@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
@@ -13,7 +14,8 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
     private const string MergedReportDirectoryName = "merged";
 
     private static readonly string[] SupportedArtifactKinds = [HtmlReportGenerator.HtmlArtifactKind];
-    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes =
+        [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts];
 
     public string Uid => "Microsoft.Testing.Extensions.HtmlReport.PostProcessor";
 
@@ -45,10 +47,15 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        InputArtifact[] orderedInputs =
-        [
-            .. OrderInputs(inputs),
-        ];
+        // RetryAttempts inputs are successive attempts of the same module and must stay in the execution order
+        // RetryArtifactProcessor supplies them in: OrderInputs sorts by full path for deterministic TestModules
+        // concatenation, which is not the attempt order retries need for "last attempt wins".
+        InputArtifact[] orderedInputs = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? [.. inputs]
+            :
+            [
+                .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
+            ];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
         try
@@ -60,16 +67,20 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        if (IsReparsePoint(mergedDirectory))
+        if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;
         }
 
-        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs);
+        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs, context.Mode);
         string outputPath = Path.Combine(mergedDirectory, $"merged-{mergeId}.html");
+        HtmlMergeMode mergeMode = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? HtmlMergeMode.CollapseRetryAttempts
+            : HtmlMergeMode.Concatenate;
         await HtmlReportMerger.MergeToFileAsync(
             orderedInputs,
             outputPath,
+            mergeMode,
             cancellationToken).ConfigureAwait(false);
 
         return new ProcessedArtifact(
@@ -80,18 +91,27 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
     }
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
-        => CreateMergeIdFromOrderedInputs(OrderInputs(inputs));
+        => CreateMergeIdFromOrderedInputs(
+            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
+            ArtifactPostProcessingMode.TestModules);
 
-    private static string CreateMergeIdFromOrderedInputs(IEnumerable<InputArtifact> orderedInputs)
+    private static string CreateMergeIdFromOrderedInputs(
+        IEnumerable<InputArtifact> orderedInputs,
+        ArtifactPostProcessingMode mode)
     {
         var identity = new StringBuilder();
+        if (mode == ArtifactPostProcessingMode.RetryAttempts)
+        {
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, mode.ToString());
+        }
+
         foreach (InputArtifact input in orderedInputs)
         {
-            AppendIdentityPart(identity, Path.GetFullPath(input.Path));
-            AppendIdentityPart(identity, input.ProducingTestModule);
-            AppendIdentityPart(identity, input.TargetFramework);
-            AppendIdentityPart(identity, input.Architecture);
-            AppendIdentityPart(identity, input.ExecutionId);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, Path.GetFullPath(input.Path));
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.ProducingTestModule);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.TargetFramework);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.Architecture);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.ExecutionId);
         }
 
         using var sha256 = SHA256.Create();
@@ -103,37 +123,5 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
         }
 
         return result.ToString();
-    }
-
-    private static IOrderedEnumerable<InputArtifact> OrderInputs(IEnumerable<InputArtifact> inputs)
-        => inputs.OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-            .ThenBy(input => input.ProducingTestModule, StringComparer.Ordinal)
-            .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
-            .ThenBy(input => input.Architecture, StringComparer.Ordinal)
-            .ThenBy(input => input.ExecutionId, StringComparer.Ordinal);
-
-    private static void AppendIdentityPart(StringBuilder builder, string? value)
-    {
-        if (value is null)
-        {
-            builder.Append("-1:");
-            return;
-        }
-
-        builder.Append(value.Length.ToString(CultureInfo.InvariantCulture));
-        builder.Append(':');
-        builder.Append(value);
-    }
-
-    private static bool IsReparsePoint(string path)
-    {
-        try
-        {
-            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return true;
-        }
     }
 }

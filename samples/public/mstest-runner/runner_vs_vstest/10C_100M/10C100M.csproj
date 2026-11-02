@@ -6,6 +6,7 @@
 		<Nullable>enable</Nullable>
 
 		<IsPackable>false</IsPackable>
+		<NoWarn>$(NoWarn);MSTEST0032</NoWarn>
 
 		<OutputType>Exe</OutputType>
 		<EnableMSTestRunner>true</EnableMSTestRunner>
@@ -13,7 +14,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="MSTest" Version="$(MSTestVersion)" />
-		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MTPVersion)" />
 		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
 	</ItemGroup>
 

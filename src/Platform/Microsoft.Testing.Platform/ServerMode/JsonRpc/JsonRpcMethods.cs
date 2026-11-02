@@ -12,9 +12,38 @@ internal static class JsonRpcMethods
     public const string TestingTestUpdatesTests = "testing/testUpdates/tests";
     public const string TelemetryUpdate = "telemetry/update";
     public const string ClientLog = "client/log";
+    public const string ClientShowMessage = "client/showMessage";
     public const string Exit = "exit";
     public const string CancelRequest = "$/cancelRequest";
     public const string TestingTestUpdatesAttachments = "testing/testUpdates/attachments";
+}
+
+internal static class JsonRpcProtocolVersions
+{
+    public const string V1 = "1.0.0";
+
+    public static string Current => V1;
+
+    public static IReadOnlyList<string> Supported { get; } = Array.AsReadOnly([V1]);
+
+    public static string? Negotiate(IReadOnlyCollection<string>? clientSupportedVersions)
+    {
+        if (clientSupportedVersions is null || clientSupportedVersions.Count == 0)
+        {
+            return V1;
+        }
+
+        IReadOnlyList<string> serverSupportedVersions = Supported;
+        for (int i = serverSupportedVersions.Count - 1; i >= 0; i--)
+        {
+            if (clientSupportedVersions.Contains(serverSupportedVersions[i]))
+            {
+                return serverSupportedVersions[i];
+            }
+        }
+
+        return null;
+    }
 }
 
 internal static class JsonRpcStrings
@@ -35,12 +64,15 @@ internal static class JsonRpcStrings
     public const string ServerInfo = "serverInfo";
     public const string Name = "name";
     public const string Version = "version";
+    public const string ProtocolVersions = "protocolVersions";
+    public const string ProtocolVersion = "protocolVersion";
 
     // Capabilities
     public const string Capabilities = "capabilities";
     public const string Testing = "testing";
     public const string DebuggerProvider = "debuggerProvider";
     public const string IsStateful = "isStateful";
+    public const string ShowMessage = "showMessage";
     public const string SupportsDiscovery = "supportsDiscovery";
     public const string MultiRequestSupport = "experimental_multiRequestSupport";
     public const string VSTestProviderSupport = "vstestProvider";

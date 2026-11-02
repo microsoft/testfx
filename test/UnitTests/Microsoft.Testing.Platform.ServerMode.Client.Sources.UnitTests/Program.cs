@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Net.Sockets;
 using System.Reflection;
 
 using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -12,10 +14,48 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
+if (args is ["--server", "--client-port", string port, "--no-banner"])
+{
+    // Child fixture for MtpServerProcessTests.ShutdownPreservesNaturalExitCodeAfterDisposingProcess:
+    // connect without running tests, then exit naturally with code 23 when the parent releases us.
+    if (Environment.GetEnvironmentVariable(MtpServerProcessTests.NaturalExitReleaseFileEnvironmentVariable) is { } releaseFile)
+    {
+        using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
+        while (!File.Exists(releaseFile))
+        {
+            await Task.Delay(10);
+        }
+
+        return 23;
+    }
+
+    if (Environment.GetEnvironmentVariable(MtpServerProcessTests.StandardOutputFloodEnvironmentVariable) == "1")
+    {
+        // Fill the redirected pipe before connecting, without shell overhead or a descendant that can outlive shutdown.
+        Console.WriteLine(new string('x', 1024 * 1024));
+        using var client = new TcpClient("127.0.0.1", int.Parse(port, CultureInfo.InvariantCulture));
+        await Task.Delay(Timeout.InfiniteTimeSpan);
+        return 0;
+    }
+
+    if (Environment.GetEnvironmentVariable(MtpServerProcessTests.StartupStandardErrorEnvironmentVariable) == "1")
+    {
+        // Exceed the pipe capacity with complete lines so the parent must consume stderr before this child
+        // can exit. A single muxer diagnostic can instead lose the race against the bounded stderr-drain wait.
+        for (int i = 0; i < 8192; i++)
+        {
+            Console.Error.WriteLine(MtpServerProcessTests.StartupStandardError);
+        }
+
+        return 17;
+    }
+}
+
 // Opt-out telemetry.
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 

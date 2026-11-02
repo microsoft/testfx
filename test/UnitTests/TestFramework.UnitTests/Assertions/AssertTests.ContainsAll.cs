@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
@@ -477,5 +477,46 @@ public partial class AssertTests : TestContainer
         object value = new();
 
         comparer.GetHashCode(value).Should().Be(RuntimeHelpers.GetHashCode(value));
+    }
+
+    public void DoesNotContainAll_NullMultiplicity_ConsumesOneOccurrenceAtATime()
+    {
+        IEnumerable<string?> collection = new string?[] { null, "x" };
+        Action missingNull = () => Assert.DoesNotContainAll(new string?[] { null, null }, collection);
+        missingNull.Should().NotThrow();
+
+        IEnumerable<string?> notExpected = new string?[] { null };
+        Action presentNull = () => Assert.DoesNotContainAll(notExpected, collection, "null quota");
+        presentNull.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Expected collection to not contain all specified items.
+            null quota
+
+            notExpected: [null]
+            collection:  [null, "x"]
+
+            Assert.DoesNotContainAll(notExpected, collection)
+            """);
+    }
+
+    public void DoesNotContainAll_NonGenericDefaultComparer_PreservesFailureEvidence()
+    {
+        IEnumerable collection = new ArrayList { 1, 2 };
+        IEnumerable notExpected = new ArrayList { 2, 3 };
+        Action missing = () => Assert.DoesNotContainAll(notExpected, collection);
+        missing.Should().NotThrow();
+
+        notExpected = new ArrayList { 2 };
+        Action present = () => Assert.DoesNotContainAll(notExpected, collection, "non-generic");
+        present.Should().ThrowExactly<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Expected collection to not contain all specified items.
+            non-generic
+
+            notExpected: [2]
+            collection:  [1, 2]
+
+            Assert.DoesNotContainAll(notExpected, collection)
+            """);
     }
 }

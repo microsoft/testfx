@@ -7,21 +7,27 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
-using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.Hosting;
 
 internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFrameworkInvoker
 {
     private readonly bool _isHotReloadEnabled;
+    private readonly IStopPoliciesService _stopPoliciesService;
 
     public HotReloadTestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
         : base(serviceProvider)
     {
         _isHotReloadEnabled = IsHotReloadEnabled(serviceProvider.GetEnvironment());
+        _stopPoliciesService = serviceProvider.GetRequiredService<IStopPoliciesService>();
         if (_isHotReloadEnabled)
         {
             ((SystemRuntimeFeature)serviceProvider.GetRuntimeFeature()).EnableHotReload();
+            _stopPoliciesService.RegisterDeadlineStopFallback(() =>
+            {
+                HotReloadHandler.RequestShutdown();
+                return Task.FromResult(true);
+            });
         }
     }
 
@@ -41,8 +47,14 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         // Using the output device here rather than Console WriteLine ensures that we don't break live logger output.
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
+        await _stopPoliciesService.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            HotReloadHandler.RequestShutdown();
+            return Task.CompletedTask;
+        }).ConfigureAwait(continueOnCapturedContext: default);
         TaskCompletionSource<int>? executionCompleted = null;
-        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
+        while (!_stopPoliciesService.IsDeadlineTriggered
+            && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(continueOnCapturedContext: default))
         {
             executionCompleted = new();
 
@@ -56,16 +68,9 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
                 await hotReloadOutputDevice.DisplayBeforeHotReloadSessionStartAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-            using (IPlatformActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags()))
-            {
-                using SemaphoreSlim requestSemaphore = new(1);
-                otelService?.TestFrameworkActivity = testFrameworkActivity;
-                await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
-                await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            }
+            await base.ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(continueOnCapturedContext: default);
 
-            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(false);
+            await ServiceProvider.GetBaseMessageBus().DrainDataAsync().ConfigureAwait(continueOnCapturedContext: default);
             if (hotReloadOutputDevice is not null)
             {
                 await hotReloadOutputDevice.DisplayAfterHotReloadSessionEndAsync(cancellationToken).ConfigureAwait(false);

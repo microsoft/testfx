@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 
@@ -14,8 +13,10 @@ namespace Microsoft.Testing.Extensions;
 /// the raw runsettings content is read. Shared by the VSTest bridge and the MSTest adapter's native
 /// Microsoft.Testing.Platform integration.
 /// </summary>
-[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into projects that are allowed to use MTP APIs")]
-internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSource, IConfigurationProvider
+#if MSTEST_TESTADAPTER
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into the MSTest adapter, which is allowed to use MTP APIs")]
+#endif
+internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSource, IHierarchicalConfigurationProvider
 {
     private string? _runSettingsFileContent;
 
@@ -42,7 +43,7 @@ internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSou
     /// <inheritdoc />
     public bool TryGet(string key, out string? value)
     {
-        if (string.IsNullOrEmpty(_runSettingsFileContent))
+        if (_runSettingsFileContent is not { Length: > 0 })
         {
             value = null;
             return false;
@@ -63,6 +64,20 @@ internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSou
     }
 
     /// <inheritdoc />
+    public IEnumerable<string> GetChildKeys(string? parentPath)
+        => !TryGet(PlatformConfigurationConstants.PlatformResultDirectory, out _)
+            ? []
+            : parentPath switch
+            {
+                null => ["platformOptions"],
+                "platformOptions" => ["resultDirectory"],
+                _ => [],
+            };
+
+    /// <inheritdoc />
+    public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
+
+    /// <inheritdoc />
     public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
     {
         _runSettingsFileContent = ReadRunSettings(commandLineParseResult);
@@ -74,4 +89,3 @@ internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSou
     /// </summary>
     protected abstract string? ReadRunSettings(CommandLineParseResult commandLineParseResult);
 }
-#endif

@@ -58,7 +58,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             configurationProvidersArray[i] = configurationProviders[i].ConfigurationProvider;
         }
 
-        if (syncFileLoggerProvider is not null && defaultJsonConfiguration.ConfigurationFile != null)
+        if (syncFileLoggerProvider is not null && defaultJsonConfiguration.ConfigurationFile is not null)
         {
             ILogger logger = syncFileLoggerProvider.CreateLogger(nameof(ConfigurationManager));
             if (logger.IsEnabled(LogLevel.Trace))

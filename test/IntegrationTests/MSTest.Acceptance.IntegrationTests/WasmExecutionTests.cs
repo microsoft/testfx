@@ -43,8 +43,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class WasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
-    // wasi-wasm is only supported on the current .NET TFM in this repo.
-    private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
+    private const string TargetFramework = WasmRuntime.TargetFramework;
 
     // Minimal MSTest project targeting wasi-wasm, running on Microsoft.Testing.Platform via the
     // generated entry point (no user-authored Main). Two passing and one failing test so the run
@@ -112,9 +111,19 @@ public sealed class CustomTestMethodAttribute : TestMethodAttribute
 [TestClass]
 public sealed class UnitTest1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [CustomTestMethod]
     public void PassingTest()
-        => Assert.AreEqual(4, 2 + 2);
+    {
+        string? tempDirectory = TestContext.TestTempDirectory;
+        Assert.IsNotNull(tempDirectory);
+        Assert.IsTrue(Directory.Exists(tempDirectory));
+        string writeCheckPath = Path.Combine(tempDirectory, "write-check.txt");
+        File.WriteAllText(writeCheckPath, "data");
+        Assert.AreEqual("data", File.ReadAllText(writeCheckPath));
+        Assert.AreEqual(4, 2 + 2);
+    }
 
     [TestMethod]
     public void AnotherPassingTest()

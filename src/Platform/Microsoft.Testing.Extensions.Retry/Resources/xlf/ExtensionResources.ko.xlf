@@ -24,12 +24,12 @@
       </trans-unit>
       <trans-unit id="RetryArtifactPostProcessorFailed">
         <source>Retry artifact post-processor '{0}' failed: {1}</source>
-        <target state="new">Retry artifact post-processor '{0}' failed: {1}</target>
+        <target state="translated">아티팩트 후처리기 '{0}'을(를) 다시 시도하지 못함: {1}</target>
         <note>{0} is the processor UID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="RetryArtifactsPublished">
         <source>Retry: published {0} result file(s) to '{1}'</source>
-        <target state="new">Retry: published {0} result file(s) to '{1}'</target>
+        <target state="translated">다시 시도: 결과 파일 {0}개를 '{1}'에 게시함</target>
         <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
@@ -50,7 +50,7 @@
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
         <target state="translated">재시도 간 지연을 추가합니다. 지연은 시간 값으로 표현됩니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d). 기본 단위는 밀리초입니다.</target>
-        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
+        <note>Do not localize time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
@@ -68,9 +68,9 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
-        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
-        <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
+        <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</source>
+        <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 비활성화합니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
@@ -78,9 +78,9 @@
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
-        <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
-        <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
+        <source>Disable retry mechanism if the number of failed tests is greater than the specified value.</source>
+        <target state="translated">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 비활성화합니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
         <source>Retry failed tests feature is not supported in hot reload mode</source>
@@ -93,9 +93,9 @@
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
-        <source>Retry failed tests the given number of times</source>
-        <target state="translated">지정된 횟수만큼 테스트 다시 시도 실패</target>
-        <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
+        <source>Retry failed tests the given number of times.</source>
+        <target state="translated">지정된 횟수만큼 테스트를 다시 시도하지 못했습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>

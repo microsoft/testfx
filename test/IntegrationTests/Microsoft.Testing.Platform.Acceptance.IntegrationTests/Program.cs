@@ -1,7 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Services;
 
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -14,6 +16,7 @@ Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 #if ENABLE_CODECOVERAGE
@@ -37,10 +40,11 @@ builder.AddOpenTelemetryProvider(
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
-    = new(_ => new SlowestTestsConsumer());
+    = new(serviceProvider => new SlowestTestsConsumer(serviceProvider.GetRequiredService<ICommandLineOptions>()));
 builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
 builder.TestHost.AddTestSessionLifetimeHandler(slowestTestCompositeServiceFactory);
 using ITestApplication app = await builder.BuildAsync();
 int returnValue = await app.RunAsync();
-Console.WriteLine($"Process started: {CommandLine.TotalProcessesAttempt}");
+AcceptanceDiagnostics.WriteProcessSummary(args, returnValue, CommandLine.TotalProcessesAttempt);
+
 return returnValue;

@@ -110,7 +110,7 @@ public sealed class ActiveTestTrackerTests
         clock.Advance(SlowThreshold);
 
         SlowTestDiagnostic[] diagnostics = tracker.GetDueDiagnostics();
-        Assert.AreSequenceEqual(new[] { "uid-a", "uid-b" }, diagnostics.Select(diagnostic => diagnostic.Uid.Value));
+        Assert.AreSequenceEqual(["uid-a", "uid-b"], diagnostics.Select(diagnostic => diagnostic.Uid.Value));
     }
 
     [TestMethod]

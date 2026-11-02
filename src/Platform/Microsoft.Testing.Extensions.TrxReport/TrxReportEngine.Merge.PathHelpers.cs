@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security;
+
 using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -55,20 +57,53 @@ internal sealed partial class TrxReportEngine
         => (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
 
     /// <summary>
-    /// Returns <see langword="true"/> if any existing directory component strictly below
+    /// Returns whether <paramref name="path"/> is a reparse point, or <see langword="null"/> when its
+    /// attributes cannot be read. A missing entry returns <see langword="false"/> because callers may
+    /// safely create missing output components after inspecting their existing ancestors.
+    /// </summary>
+    private static bool? GetReparsePointStatus(string path, Func<string, FileAttributes> getAttributes)
+    {
+        try
+        {
+            return (getAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException)
+        {
+            // Missing output components are safe: callers create them after validating existing ancestors.
+            return false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            // If an existing entry cannot be inspected, it cannot be proven confined.
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if any existing file-system component strictly below
     /// <paramref name="baseDirectory"/> up to and including <paramref name="candidateFullPath"/> is a
-    /// reparse point (symlink/junction). Both paths are expected to be normalized full paths with
-    /// <paramref name="candidateFullPath"/> under <paramref name="baseDirectory"/>. A symlinked ancestor
-    /// can redirect reads/writes outside a lexically-confined path, so callers reject such trees.
+    /// reparse point (symlink/junction), or cannot be inspected. Both paths are expected to be normalized
+    /// full paths with <paramref name="candidateFullPath"/> under <paramref name="baseDirectory"/>.
+    /// A symlinked ancestor can redirect reads/writes outside a lexically-confined path, so callers reject
+    /// such trees.
     /// </summary>
     private static bool HasReparsePointComponent(string candidateFullPath, string baseDirectory)
+        => HasReparsePointComponent(
+            candidateFullPath,
+            baseDirectory,
+            static path => File.GetAttributes(path));
+
+    private static bool HasReparsePointComponent(
+        string candidateFullPath,
+        string baseDirectory,
+        Func<string, FileAttributes> getAttributes)
     {
         string baseFull = Path.GetFullPath(baseDirectory);
         string current = candidateFullPath;
 
         while (!string.Equals(current, baseFull, PathComparison) && IsUnderDirectory(current, baseFull))
         {
-            if (Directory.Exists(current) && IsReparsePoint(current))
+            if (GetReparsePointStatus(current, getAttributes) is not false)
             {
                 return true;
             }

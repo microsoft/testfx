@@ -317,4 +317,28 @@ public class StringAssertTests : TestContainer
     }
 #endif
     #endregion
+
+    public void ObsoleteObjectEqualityApis_RejectCallsWithActionableDiagnostic()
+    {
+        (string Name, string Reason)[] cases =
+        [
+            ("Equals", "StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual & overloads instead."),
+            ("ReferenceEquals", "StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame & overloads instead."),
+        ];
+        object shared = new();
+        object?[][] arguments = [[null, null], [shared, shared], [shared, new object()]];
+        foreach ((string name, string reason) in cases)
+        {
+            System.Reflection.MethodInfo method = typeof(StringAssert).GetMethod(
+                name,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly)!;
+            foreach (object?[] operands in arguments)
+            {
+                Action action = () => method.Invoke(null, operands);
+                Exception? failure = action.Should().ThrowExactly<System.Reflection.TargetInvocationException>().Which.InnerException;
+                failure.Should().BeOfType<AssertFailedException>().Which.Message.Replace("\r\n", "\n")
+                    .Should().Be($"Assertion failed.\n{reason}");
+            }
+        }
+    }
 }

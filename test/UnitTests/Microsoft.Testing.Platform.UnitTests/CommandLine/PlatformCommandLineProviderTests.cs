@@ -12,6 +12,69 @@ namespace Microsoft.Testing.Platform.UnitTests.CommandLine;
 public sealed class PlatformCommandLineProviderTests
 {
     [TestMethod]
+    [DataRow("0", true)]
+    [DataRow("80", true)]
+    [DataRow("79.995", true)]
+    [DataRow("100", true)]
+    [DataRow("-1", false)]
+    [DataRow("100.01", false)]
+    [DataRow("80,5", false)]
+    [DataRow("NaN", false)]
+    [DataRow("Infinity", false)]
+    [DataRow("1e2", false)]
+    [DataRow("", false)]
+    public async Task CoverageThreshold_ValidatesPercentageForBothMetrics(string argument, bool isValid)
+    {
+        PlatformCommandLineProvider provider = new();
+        foreach (string optionName in new[] { PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.CoverageThresholdBranchOptionKey })
+        {
+            CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+            Assert.AreEqual(isValid, result.IsValid);
+            if (!isValid)
+            {
+                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCoverageThresholdInvalid, optionName), result.ErrorMessage);
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey)]
+    public async Task CoverageThreshold_RequiresExactlyOneArgument(string optionName)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(option => option.Name == optionName);
+
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, [])).IsValid);
+        Assert.IsFalse((await provider.ValidateOptionArgumentsAsync(option, ["80", "90"])).IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, PlatformCommandLineProvider.DiscoverTestsOptionKey)]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdLineOptionKey, "retry-failed-tests")]
+    [DataRow(PlatformCommandLineProvider.CoverageThresholdBranchOptionKey, "retry-failed-tests")]
+    public async Task CoverageThreshold_RejectsDiscoveryAndProcessRetries(string thresholdOption, string incompatibleOption)
+    {
+        TestCommandLineOptions options = new(new()
+        {
+            [thresholdOption] = ["80"],
+            [incompatibleOption] = [],
+        });
+
+        ValidationResult result = await new PlatformCommandLineProvider().ValidateCommandLineOptionsAsync(options);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            incompatibleOption == PlatformCommandLineProvider.DiscoverTestsOptionKey
+                ? PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests
+                : PlatformResources.PlatformCommandLineCoverageThresholdIncompatibleRetries,
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("Trace")]
     [DataRow("Debug")]
     [DataRow("Information")]
@@ -655,5 +718,106 @@ public sealed class PlatformCommandLineProviderTests
             // Restore original culture
             CultureInfo.CurrentCulture = originalCulture;
         }
+    }
+
+    [TestMethod]
+    [DataRow("pipe", true)]
+    [DataRow("PiPe", true)]
+    [DataRow("http", true)]
+    [DataRow("HTTP", true)]
+    [DataRow("udp", false)]
+    public async Task TransportValidation_KnownModesAndUnknownModeUseExactContract(string argument, bool valid)
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-transport");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-transport' received unexpected value 'udp'. Supported values are: 'pipe', 'http'.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("https", true)]
+    [DataRow("http-loopback", true)]
+    [DataRow("http-localhost", true)]
+    [DataRow("http-nonlocal", false)]
+    [DataRow("relative", false)]
+    [DataRow("ftp", false)]
+    [DataRow("userinfo", false)]
+    [DataRow("query", false)]
+    [DataRow("fragment", false)]
+    [DataRow("missing-host", false)]
+    public async Task HttpEndpointValidation_IndependentUriPartitionsPreserveDiagnostics(string kind, bool valid)
+    {
+        string value = kind switch
+        {
+            "https" => "https://127.0.0.1/resource",
+            "http-loopback" => "http://127.0.0.1/resource",
+            "http-localhost" => "http://localhost/resource",
+            "http-nonlocal" => "http://192.0.2.1/resource",
+            "relative" => "relative/resource",
+            "ftp" => "ftp://localhost/resource",
+            "userinfo" => "https://user:fixture@localhost/resource",
+            "query" => "https://localhost/resource?query=value",
+            "fragment" => "https://localhost/resource#fragment",
+            "missing-host" => "https://",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-http-endpoint");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("ordinary", true)]
+    [DataRow("punctuation", true)]
+    [DataRow("empty", false)]
+    [DataRow("whitespace", false)]
+    [DataRow("embedded-space", false)]
+    [DataRow("nul", false)]
+    [DataRow("crlf", false)]
+    public async Task HttpTokenValidation_ControlWhitespaceAndCurrentPunctuationBehavior(string kind, bool valid)
+    {
+        string value = kind switch
+        {
+            "ordinary" => "ABcd12-._~+/=",
+            "punctuation" => ";",
+            "empty" => string.Empty,
+            "whitespace" => " \t",
+            "embedded-space" => "before after",
+            "nul" => "before\0after",
+            "crlf" => "before\r\nafter",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+        };
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "dotnet-test-http-token");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.AreEqual(valid, result.IsValid);
+        Assert.AreEqual(
+            valid ? null : "'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.",
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ZeroTestPolicy_UnexpectedLiteralProducesExactSupportedValues()
+    {
+        PlatformCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == "zero-tests-policy");
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["sometimes"]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("Invalid value 'sometimes' for '--zero-tests-policy'. Valid values are 'strict', 'allow-skipped'.", result.ErrorMessage);
     }
 }

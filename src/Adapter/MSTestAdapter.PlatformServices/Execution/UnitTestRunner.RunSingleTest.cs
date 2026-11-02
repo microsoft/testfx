@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -234,7 +234,11 @@ internal sealed partial class UnitTestRunner
                         testExecImpl.MergeProperties(testMethodInfo.Parent.PostClassInitProperties);
 
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;
-                        var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContextForTestExecution);
+                        var testMethodRunner = new TestMethodRunner(
+                            testMethodInfo,
+                            testMethod,
+                            testContextForTestExecution,
+                            unitTestElement.ExecutionActivityLease);
                         result = await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false);
                         if (retryAttribute is not null && !RetryBaseAttribute.IsAcceptableResultForRetry(result))
                         {
@@ -348,7 +352,7 @@ internal sealed partial class UnitTestRunner
     /// consumers that collapse per test node uid keep observing the test's real outcome.
     /// </para>
     /// </remarks>
-    private static TestResult[] CombineRetryAttempts(TestResult[] firstAttempt, RetryResult retryResult)
+    internal static TestResult[] CombineRetryAttempts(TestResult[] firstAttempt, RetryResult retryResult)
     {
         IReadOnlyList<TestResult[]> retryAttempts = retryResult.AllResults;
         if (retryAttempts.Count == 0)

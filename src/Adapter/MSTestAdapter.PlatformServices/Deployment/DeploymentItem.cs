@@ -74,7 +74,7 @@ internal sealed class DeploymentItem
     internal DeploymentItem(string sourcePath, string relativeOutputDirectory, DeploymentItemOriginType originType)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(sourcePath), "sourcePath");
-        DebugEx.Assert(relativeOutputDirectory != null, "relativeOutputDirectory");
+        DebugEx.Assert(relativeOutputDirectory is not null, "relativeOutputDirectory");
 
         SourcePath = sourcePath.TrimEnd('/', '\\');
         RelativeOutputDirectory = relativeOutputDirectory;
@@ -116,8 +116,8 @@ internal sealed class DeploymentItem
             return false;
         }
 
-        DebugEx.Assert(SourcePath != null, "SourcePath");
-        DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        DebugEx.Assert(SourcePath is not null, "SourcePath");
+        DebugEx.Assert(RelativeOutputDirectory is not null, "RelativeOutputDirectory");
         return SourcePath.Equals(otherItem.SourcePath, StringComparison.OrdinalIgnoreCase) &&
                RelativeOutputDirectory.Equals(otherItem.RelativeOutputDirectory, StringComparison.OrdinalIgnoreCase);
     }
@@ -128,8 +128,8 @@ internal sealed class DeploymentItem
     /// <returns> The hash code value. </returns>
     public override int GetHashCode()
     {
-        DebugEx.Assert(SourcePath != null, "SourcePath");
-        DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        DebugEx.Assert(SourcePath is not null, "SourcePath");
+        DebugEx.Assert(RelativeOutputDirectory is not null, "RelativeOutputDirectory");
         return SourcePath.GetHashCode() + RelativeOutputDirectory.GetHashCode();
     }
 
@@ -139,8 +139,8 @@ internal sealed class DeploymentItem
     /// <returns> The <see cref="string"/> value. </returns>
     public override string ToString()
     {
-        DebugEx.Assert(SourcePath != null, "SourcePath");
-        DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        DebugEx.Assert(SourcePath is not null, "SourcePath");
+        DebugEx.Assert(RelativeOutputDirectory is not null, "RelativeOutputDirectory");
 
         return
             StringEx.IsNullOrEmpty(RelativeOutputDirectory) ?

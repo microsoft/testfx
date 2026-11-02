@@ -21,6 +21,7 @@ internal sealed class RunContextAdapter : ContextAdapterBase, IRunContext
     public RunContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, bool useFullyQualifiedNameAsUid)
         : base(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid)
     {
+        // Stryker disable once Statement: This debug-only contract check has no release behavior.
         RoslynDebug.Assert(runSettings.SettingsXml is not null);
 
         // Parse and take the results directory from the runsettings.

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
@@ -20,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// via the richer
 /// <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]}, IReadOnlyDictionary{Type, Attribute[]}, object[])"/>
 /// family of overloads. Missing entries—including unresolved members and incompletely materialized
-/// attribute sets—fall back to runtime reflection. Reflection-free mode emits constructor
+/// attribute sets—fall back to runtime reflection. For complete async methods, registration keeps
+/// generated declared attributes authoritative and performs a targeted runtime merge of
+/// compiler-special <see cref="AsyncStateMachineAttribute"/> and
+/// <see cref="DebuggerStepThroughAttribute"/> metadata. Reflection-free mode emits constructor
 /// invocation and applicable property-setter delegates, but general constructor/property
 /// enumeration and lookup remain reflective; navigation data remains unpopulated.
 /// MethodInfo keys (and PropertyInfo keys for emitted setters) are resolved with bounded reflection
@@ -69,9 +72,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// </list>
 /// <para>
 /// <b>Trim/AOT safety.</b> Reflection-free mode directly references modeled attributes and
-/// invocation targets; rooting mode uses <c>[DynamicDependency(All, typeof(T))]</c> for each
-/// <c>[TestClass]</c> and accessible base type. Reflection fallback remains for unsupported,
-/// unresolved, cross-assembly, and general enumeration operations.
+/// invocation targets; both modes use member-scoped <c>[DynamicDependency]</c> roots for each
+/// <c>[TestClass]</c> and accessible base type. Nested types are deliberately excluded from those
+/// roots. Reflection fallback remains for unsupported, unresolved, cross-assembly, and general
+/// enumeration operations.
 /// </para>
 /// <para>
 /// <b>Adding a new fallback?</b> Mark the method with a <c>// Category A/B/C</c> comment and
@@ -230,6 +234,13 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         return data.TypeConstructorsInvoker.TryGetValue(type, out SourceGeneratedReflectionDataProvider.ConstructorInvoker[]? invokers) && invokers.Length > 0
             ? args => CreateInstance(type, args ?? [])!
             : null;
+    }
+
+    public bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        areAllTestMethodsSupported = data.DescriptorCompleteTypes.TryGetValue(type, out bool isComplete) && isComplete;
+        return data.DescriptorTestMethods.TryGetValue(type, out methods);
     }
 
     public Func<object?, object?[]?, object?>? GetTestMethodInvoker(MethodInfo method)

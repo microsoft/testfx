@@ -5,8 +5,10 @@
 //       As such, we have two separate implementations for the serialization code.
 #if !NETCOREAPP
 using Jsonite;
+
 #endif
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -37,10 +39,25 @@ internal static partial class SerializerUtilities
         });
 
         // Serialize event types.
-        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev => new Dictionary<string, object?>
+        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
         {
-            [JsonRpcStrings.RunId] = ev.RunId,
-            [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
+            List<object>? changes = null;
+            if (ev.Changes is not null)
+            {
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+                changes = new(ev.Changes.Length);
+#pragma warning restore IDE0028
+                for (int i = 0; i < ev.Changes.Length; i++)
+                {
+                    changes.Add(Serialize(ev.Changes[i]));
+                }
+            }
+
+            return new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.RunId] = ev.RunId,
+                [JsonRpcStrings.Changes] = changes,
+            };
         });
 
         Serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
@@ -83,7 +100,6 @@ internal static partial class SerializerUtilities
 #else
                         (traits ??= []).Add(new JsonObject { { metadataProperty.Key, metadataProperty.Value } });
 #endif
-                        continue;
                     }
 
                     if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -173,11 +189,14 @@ internal static partial class SerializerUtilities
                             case FailedTestNodeStateProperty failedTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "failed";
-                                    properties["error.message"] = failedTestNodeStateProperty.Explanation ?? failedTestNodeStateProperty.Exception?.Message;
                                     Exception? exception = failedTestNodeStateProperty.Exception;
-                                    if (exception is not null)
+                                    (string? errorMessage, string? errorStackTrace) = FormatException(
+                                        failedTestNodeStateProperty.Explanation,
+                                        exception);
+                                    properties["error.message"] = errorMessage;
+                                    if (errorStackTrace is not null)
                                     {
-                                        properties["error.stacktrace"] = exception.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = errorStackTrace;
                                     }
 
                                     // AssertionFailureProperty is the supported channel; Exception.Data is the
@@ -200,10 +219,13 @@ internal static partial class SerializerUtilities
                             case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "timed-out";
-                                    properties["error.message"] = timeoutTestNodeStateProperty.Explanation ?? timeoutTestNodeStateProperty.Exception?.Message;
-                                    if (timeoutTestNodeStateProperty.Exception is not null)
+                                    (string? errorMessage, string? errorStackTrace) = FormatException(
+                                        timeoutTestNodeStateProperty.Explanation,
+                                        timeoutTestNodeStateProperty.Exception);
+                                    properties["error.message"] = errorMessage;
+                                    if (errorStackTrace is not null)
                                     {
-                                        properties["error.stacktrace"] = timeoutTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = errorStackTrace;
                                     }
 
                                     break;
@@ -212,10 +234,13 @@ internal static partial class SerializerUtilities
                             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "error";
-                                    properties["error.message"] = errorTestNodeStateProperty.Explanation ?? errorTestNodeStateProperty.Exception?.Message;
-                                    if (errorTestNodeStateProperty.Exception is not null)
+                                    (string? errorMessage, string? errorStackTrace) = FormatException(
+                                        errorTestNodeStateProperty.Explanation,
+                                        errorTestNodeStateProperty.Exception);
+                                    properties["error.message"] = errorMessage;
+                                    if (errorStackTrace is not null)
                                     {
-                                        properties["error.stacktrace"] = errorTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = errorStackTrace;
                                     }
 
                                     break;
@@ -226,10 +251,13 @@ internal static partial class SerializerUtilities
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                                 {
                                     properties["execution-state"] = "canceled";
-                                    properties["error.message"] = canceledTestNodeStateProperty.Explanation ?? canceledTestNodeStateProperty.Exception?.Message;
-                                    if (canceledTestNodeStateProperty.Exception is not null)
+                                    (string? errorMessage, string? errorStackTrace) = FormatException(
+                                        canceledTestNodeStateProperty.Explanation,
+                                        canceledTestNodeStateProperty.Exception);
+                                    properties["error.message"] = errorMessage;
+                                    if (errorStackTrace is not null)
                                     {
-                                        properties["error.stacktrace"] = canceledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
+                                        properties["error.stacktrace"] = errorStackTrace;
                                     }
 
                                     break;
@@ -238,8 +266,6 @@ internal static partial class SerializerUtilities
                             default:
                                 throw new NotSupportedException($"Unsupported TestNodeStateProperty '{testNodeStateProperty.GetType()}'");
                         }
-
-                        continue;
                     }
 
                     if (property is TimingProperty timingProperty)
@@ -285,5 +311,52 @@ internal static partial class SerializerUtilities
 
                 return properties;
             });
+    }
+
+    internal static (string? Message, string? StackTrace) FormatException(string? explanation, Exception? exception)
+    {
+        if (exception is null)
+        {
+            return (explanation, null);
+        }
+
+        FlatException[] exceptions = ExceptionFlattener.Flatten(null, exception);
+        if (exceptions.Length == 1)
+        {
+            return (explanation ?? exception.Message, exception.StackTrace ?? string.Empty);
+        }
+
+        StringBuilder message = new(explanation ?? exception.Message);
+        StringBuilder stackTrace = new(exception.StackTrace ?? string.Empty);
+        for (int i = 1; i < exceptions.Length; i++)
+        {
+            FlatException innerException = exceptions[i];
+            if (message.Length > 0)
+            {
+                message.AppendLine();
+            }
+
+            message
+                .Append(" ---> ")
+                .Append(innerException.ErrorType)
+                .Append(": ")
+                .Append(innerException.ErrorMessage);
+
+            if (!RoslynString.IsNullOrEmpty(innerException.StackTrace))
+            {
+                if (stackTrace.Length > 0)
+                {
+                    stackTrace.AppendLine();
+                }
+
+                stackTrace
+                    .Append("--- Inner exception stack trace (")
+                    .Append(innerException.ErrorType)
+                    .AppendLine(") ---")
+                    .Append(innerException.StackTrace);
+            }
+        }
+
+        return (message.ToString(), stackTrace.ToString());
     }
 }

@@ -78,8 +78,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class BrowserWasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
-    // browser-wasm is only supported on the current .NET TFM in this repo (see samples/BrowserPlayground).
-    private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
+    private const string TargetFramework = WasmRuntime.TargetFramework;
 
     // Minimal MSTest project targeting browser-wasm, running on Microsoft.Testing.Platform via the
     // generated entry point. The bundled main.js is the WasmMainJSPath boot module (needed for a
@@ -140,9 +139,19 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public sealed class UnitTest1
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void PassingTest()
-        => Assert.AreEqual(4, 2 + 2);
+    {
+        string? tempDirectory = TestContext.TestTempDirectory;
+        Assert.IsNotNull(tempDirectory);
+        Assert.IsTrue(Directory.Exists(tempDirectory));
+        string writeCheckPath = Path.Combine(tempDirectory, "write-check.txt");
+        File.WriteAllText(writeCheckPath, "data");
+        Assert.AreEqual("data", File.ReadAllText(writeCheckPath));
+        Assert.AreEqual(4, 2 + 2);
+    }
 
     [TestMethod]
     public void AnotherPassingTest()
@@ -628,6 +637,7 @@ const summary = {
     createRunRequests: 0,
     createRunStates: [],
     publishedTestOutcomes: [],
+    publishedTestStates: [],
     attachments: [],
     patchedStates: [],
     authorizedRequests: 0,
@@ -669,6 +679,7 @@ const server = http.createServer(async (request, response) => {
             count: results.length,
             value: results.map((result, index) => {
                 summary.publishedTestOutcomes.push(result.testCaseTitle + '=' + result.outcome);
+                summary.publishedTestStates.push(result.testCaseTitle + '=' + (result.state ?? '<missing>'));
                 return { id: 5000 + index, automatedTestName: result.automatedTestName };
             }),
         });
@@ -882,12 +893,14 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
 
         // Only a missing 'wasm-tools' workload is an acceptable skip; any other build failure (compiler
         // error, a broken generated MTP entry point) is a real regression and must fail the test.
+        // The browser-WASM SDK's JsonToItemsTaskFactory cannot run in the out-of-process TaskHost used by -mt.
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -f {TargetFramework} -r {WasmRuntime.BrowserRid} -c Release",
             // Trimming/wasm builds can emit non-actionable warnings; we only assert on the build
             // succeeding and the entry point being generated, not on a warning-clean build.
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         if (buildResult.ExitCode != 0)
@@ -1229,12 +1242,18 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             root.GetProperty("patchedStates").EnumerateArray().Select(static element => element.GetString()).ToArray(),
             combined);
 
-        // Both tests are published with their real outcomes, and the run ends with the
-        // "at least one test failed" exit code (so the publisher did not swallow the failure).
+        // Both tests are published with their real outcomes and terminal states, and the run ends with
+        // the "at least one test failed" exit code (so the publisher did not swallow the failure).
         Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, root.GetProperty("exitCode").GetInt32(), combined);
         string[] publishedTestOutcomes = [.. root.GetProperty("publishedTestOutcomes").EnumerateArray().Select(static element => element.GetString()!)];
         Assert.ContainsSingle(publishedTestOutcomes.Where(static outcome => outcome == "PassingTest=Passed"), combined);
         Assert.ContainsSingle(publishedTestOutcomes.Where(static outcome => outcome == "FailingTestWithAttachment=Failed"), combined);
+
+        // Regression for https://github.com/microsoft/testfx/issues/11122: a terminal outcome does not
+        // transition the Azure DevOps result out of Pending unless the result-level state is also sent.
+        string[] publishedTestStates = [.. root.GetProperty("publishedTestStates").EnumerateArray().Select(static element => element.GetString()!)];
+        Assert.ContainsSingle(publishedTestStates.Where(static state => state == "PassingTest=Completed"), combined);
+        Assert.ContainsSingle(publishedTestStates.Where(static state => state == "FailingTestWithAttachment=Completed"), combined);
 
         // The file-backed attachment proves TryBuildAttachmentRequest reads from the wasm virtual
         // filesystem and base64-encodes the real bytes; the inline console attachments come from the

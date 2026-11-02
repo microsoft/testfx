@@ -154,6 +154,77 @@ public sealed class TestNodeStateChangeAggregatorTests
         Assert.AreSame(terminal, secondAggregatedChange.Changes[0]);
     }
 
+    [TestMethod]
+    public void BuildAggregatedChange_DoesNotMutateBufferedChanges()
+    {
+        ServerTestHost.TestNodeStateChangeAggregator aggregator = new(Guid.NewGuid());
+        TestNodeUpdateMessage before = CreateUpdate("before");
+        TestNodeUpdateMessage inProgress = CreateUpdate("test", InProgressTestNodeStateProperty.CachedInstance);
+        TestNodeUpdateMessage terminal = CreateUpdate("test", PassedTestNodeStateProperty.CachedInstance);
+        aggregator.OnStateChange(before);
+        aggregator.OnStateChange(inProgress);
+        aggregator.OnStateChange(terminal);
+
+        TestNodeStateChangedEventArgs firstAggregatedChange = aggregator.BuildAggregatedChange();
+        terminal.TestNode.Properties._testNodeStateProperty = DiscoveredTestNodeStateProperty.CachedInstance;
+        TestNodeStateChangedEventArgs secondAggregatedChange = aggregator.BuildAggregatedChange();
+
+        Assert.IsNotNull(firstAggregatedChange.Changes);
+        Assert.IsNotNull(secondAggregatedChange.Changes);
+        Assert.HasCount(2, firstAggregatedChange.Changes);
+        Assert.HasCount(3, secondAggregatedChange.Changes);
+        Assert.AreSame(before, firstAggregatedChange.Changes[0]);
+        Assert.AreSame(terminal, firstAggregatedChange.Changes[1]);
+        Assert.AreSame(before, secondAggregatedChange.Changes[0]);
+        Assert.AreSame(inProgress, secondAggregatedChange.Changes[1]);
+        Assert.AreSame(terminal, secondAggregatedChange.Changes[2]);
+    }
+
+    [TestMethod]
+    public void BuildAggregatedChange_CaseDistinctUidsAndMultipleTerminalResultsRemainIndependentAndOrdered()
+    {
+        ServerTestHost.TestNodeStateChangeAggregator aggregator = new(Guid.NewGuid());
+        TestNodeUpdateMessage lower = CreateUpdate("test", InProgressTestNodeStateProperty.CachedInstance);
+        TestNodeUpdateMessage upperProgress = CreateUpdate("TEST", InProgressTestNodeStateProperty.CachedInstance);
+        TestNodeUpdateMessage failure = CreateUpdate("TEST", new FailedTestNodeStateProperty("first outcome"));
+        TestNodeUpdateMessage passed = CreateUpdate("TEST", PassedTestNodeStateProperty.CachedInstance);
+        aggregator.OnStateChange(lower);
+        aggregator.OnStateChange(upperProgress);
+        aggregator.OnStateChange(failure);
+        aggregator.OnStateChange(passed);
+
+        TestNodeStateChangedEventArgs snapshot = aggregator.BuildAggregatedChange();
+
+        Assert.AreSequenceEqual(new[] { lower, failure, passed }, snapshot.Changes);
+        Assert.AreSame(InProgressTestNodeStateProperty.CachedInstance, lower.TestNode.Properties.Single<TestNodeStateProperty>());
+        Assert.AreEqual("first outcome", failure.TestNode.Properties.Single<FailedTestNodeStateProperty>().Explanation);
+        Assert.AreSame(PassedTestNodeStateProperty.CachedInstance, passed.TestNode.Properties.Single<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void BuildAggregatedChange_SnapshotsDoNotDrainOrChangePreviouslyReturnedArrays()
+    {
+        Guid expectedRunId = new("11111111-2222-3333-4444-555555555555");
+        ServerTestHost.TestNodeStateChangeAggregator aggregator = new(expectedRunId);
+        Assert.IsFalse(aggregator.HasChanges);
+        TestNodeStateChangedEventArgs empty = aggregator.BuildAggregatedChange();
+        Assert.IsNotNull(empty.Changes);
+        Assert.IsEmpty(empty.Changes);
+        TestNodeUpdateMessage first = CreateUpdate("first", DiscoveredTestNodeStateProperty.CachedInstance);
+        aggregator.OnStateChange(first);
+        TestNodeStateChangedEventArgs earlier = aggregator.BuildAggregatedChange();
+        TestNodeUpdateMessage second = CreateUpdate("second", PassedTestNodeStateProperty.CachedInstance);
+        aggregator.OnStateChange(second);
+
+        TestNodeStateChangedEventArgs current = aggregator.BuildAggregatedChange();
+
+        Assert.IsTrue(aggregator.HasChanges);
+        Assert.AreEqual(expectedRunId, current.RunId);
+        Assert.AreSequenceEqual(new[] { first }, earlier.Changes);
+        Assert.AreSequenceEqual(new[] { first, second }, current.Changes);
+        Assert.AreSequenceEqual(new[] { first, second }, aggregator.BuildAggregatedChange().Changes);
+    }
+
     public static IEnumerable<object[]> TerminalStates()
     {
         yield return [PassedTestNodeStateProperty.CachedInstance];

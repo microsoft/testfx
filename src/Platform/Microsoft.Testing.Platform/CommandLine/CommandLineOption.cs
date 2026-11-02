@@ -82,7 +82,7 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
 
     /// <inheritdoc/>
     public bool Equals(CommandLineOption? other)
-        => other != null &&
+        => other is not null &&
             Name == other.Name &&
             Description == other.Description &&
             Arity == other.Arity &&

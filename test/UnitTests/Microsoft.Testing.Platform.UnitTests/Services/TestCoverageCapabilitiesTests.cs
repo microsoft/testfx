@@ -35,7 +35,7 @@ public sealed class TestCoverageCapabilitiesTests
         serviceProvider.AddService(capabilities);
         serviceProvider.AddService(producerAfterCapabilities);
 
-        Assert.AreSequenceEqual(new[] { "before", "after" }, capabilities.EnabledProducerUids);
+        Assert.AreSequenceEqual(["before", "after"], capabilities.EnabledProducerUids);
         Assert.AreSame(capabilities, serviceProvider.GetRequiredService<ITestCoverageCapabilities>());
     }
 
@@ -64,8 +64,8 @@ public sealed class TestCoverageCapabilitiesTests
         perRequestServiceProvider.AddService(new MockDataProducer("request", typeof(TestCoverageMessage)));
 
         Assert.AreNotSame(applicationCapabilities, perRequestCapabilities);
-        Assert.AreSequenceEqual(new[] { "application" }, applicationCapabilities.EnabledProducerUids);
-        Assert.AreSequenceEqual(new[] { "application", "request" }, perRequestCapabilities.EnabledProducerUids);
+        Assert.AreSequenceEqual(["application"], applicationCapabilities.EnabledProducerUids);
+        Assert.AreSequenceEqual(["application", "request"], perRequestCapabilities.EnabledProducerUids);
     }
 
     private sealed class MockDataProducer(string uid, params Type[] dataTypesProduced) : IDataProducer

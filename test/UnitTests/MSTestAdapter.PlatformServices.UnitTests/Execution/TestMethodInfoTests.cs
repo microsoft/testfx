@@ -154,8 +154,11 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestConstructorMethodBody = () => { };
         DummyTestClass.TestContextSetterBody = value => { };
         DummyTestClass.TestInitializeMethodBody = value => { };
+        DummyTestClass.TestInitializeMethodBodyAsync = _ => Task.CompletedTask;
         DummyTestClass.TestMethodBody = instance => { };
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.CompletedTask;
         DummyTestClass.TestCleanupMethodBody = value => { };
+        DummyTestClass.TestCleanupMethodBodyAsync = _ => Task.CompletedTask;
         DummyTestClass.GlobalTestInitializeMethodBodyAsync = _ => Task.CompletedTask;
         DummyTestClass.GlobalTestCleanupMethodBodyAsync = _ => Task.CompletedTask;
     }
@@ -178,6 +181,405 @@ public class TestMethodInfoTests : TestContainer
         ((int?)_testMethodInfo.Arguments[0]).Should().Be(10);
         ((int?)_testMethodInfo.Arguments[1]).Should().Be(20);
         ((int?)_testMethodInfo.Arguments[2]).Should().Be(30);
+    }
+
+    public async Task InvokeAsyncInjectsCurrentCancellationTokenForSupportedReturnTypes()
+    {
+        string[] methodNames =
+        [
+            nameof(CancellationTokenInvocationFixture.TokenOnly),
+            nameof(CancellationTokenInvocationFixture.TaskTokenOnly),
+            nameof(CancellationTokenInvocationFixture.ValueTaskTokenOnly),
+        ];
+        foreach (string methodName in methodNames)
+        {
+            foreach (object?[]? arguments in new object?[]?[] { null, [] })
+            {
+                CancellationToken expectedToken = _testContextImplementation.CancellationToken;
+                int bodyCalls = 0;
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    Body = token =>
+                    {
+                        bodyCalls++;
+                        token.Should().Be(expectedToken);
+                        token.IsCancellationRequested.Should().BeFalse();
+                        using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+
+                        _testContextImplementation.CancellationTokenSource.Cancel();
+
+                        cancellations.Should().Be(1);
+                        token.IsCancellationRequested.Should().BeTrue();
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync(arguments);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                bodyCalls.Should().Be(1);
+                cancellations.Should().Be(1);
+                method.Arguments.Should().BeNull();
+                _testContextImplementation.TestData.Should().BeNull();
+            }
+        }
+    }
+
+    public async Task InvokeAsyncBindsCancellationTokenAfterInitializeAndInsideTimeoutScope()
+    {
+        foreach (bool cooperativeTimeout in new[] { false, true })
+        {
+            foreach (bool retainedExecutionContext in new[] { false, true })
+            {
+                CancellationToken originalToken = _testContextImplementation.CancellationToken;
+                using CancellationTokenSource initializedSource = new();
+                int bodyCalls = 0;
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    InitializeBody = () => _testContextImplementation.CancellationTokenSource = initializedSource,
+                    Body = token =>
+                    {
+                        bodyCalls++;
+                        token.Should().Be(initializedSource.Token).And.NotBe(originalToken);
+                        token.Should().Be(_testContextImplementation.CancellationToken);
+                        using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+
+                        initializedSource.Cancel();
+
+                        cancellations.Should().Be(1);
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.TokenOnly));
+                method.Parent.TestInitializeMethod = typeof(CancellationTokenInvocationFixture).GetMethod(nameof(CancellationTokenInvocationFixture.Initialize))!;
+                if (cooperativeTimeout)
+                {
+                    method.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(60_000) { CooperativeCancellation = true });
+                }
+
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+                if (retainedExecutionContext)
+                {
+                    typeof(TestMethodInfo).GetField("_executionContext", BindingFlags.Instance | BindingFlags.NonPublic)!
+                        .SetValue(method, ExecutionContext.Capture()!);
+                }
+
+                TestResult result = await method.InvokeAsync(null);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                bodyCalls.Should().Be(1, "cooperative timeout: {0}, retained context: {1}", cooperativeTimeout, retainedExecutionContext);
+                cancellations.Should().Be(1);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncRefreshesInjectedCancellationTokenForRepeatedRows()
+    {
+        List<CancellationToken> observedTokens = [];
+        int cancellations = 0;
+        Action<CancellationToken> body = token =>
+        {
+            token.Should().Be(_testContextImplementation.CancellationToken);
+            token.IsCancellationRequested.Should().BeFalse();
+            observedTokens.Add(token);
+            using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+            _testContextImplementation.CancellationTokenSource.Cancel();
+        };
+        CancellationTokenInvocationFixture first = new() { Body = body };
+        CancellationTokenInvocationFixture second = new() { Body = body };
+        TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.DataAndToken));
+        object?[] userData = [41];
+        method.SetArguments(userData);
+        _testContextImplementation.SetTestData(userData);
+        using IDisposable factoryScope = UseCancellationTokenInstances(first, second);
+
+        TestResult firstResult = await method.InvokeAsync(null);
+        TestResult secondResult = await method.InvokeAsync(null);
+
+        firstResult.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", firstResult.TestFailureException);
+        secondResult.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", secondResult.TestFailureException);
+        first.ReceivedData.Should().Equal(41);
+        second.ReceivedData.Should().Equal(41);
+        observedTokens.Should().HaveCount(2);
+        observedTokens[1].Should().NotBe(observedTokens[0]);
+        cancellations.Should().Be(2);
+        userData.Should().Equal(41);
+        method.Arguments.Should().Equal(41);
+        _testContextImplementation.TestData.Should().Equal(41);
+    }
+
+    public async Task InvokeAsyncPreservesExplicitCancellationTokenArguments()
+    {
+        (string Method, object Data, object?[] ExpectedData)[] cases =
+        [
+            (nameof(CancellationTokenInvocationFixture.DataAndToken), 43, [43]),
+            (nameof(CancellationTokenInvocationFixture.SingleArrayAndToken), new object?[] { 17, "array" }, [17, "array"]),
+            (nameof(CancellationTokenInvocationFixture.OptionalSingleArrayAndToken), new object?[] { 17, "array" }, [17, "array"]),
+        ];
+        foreach ((string methodName, object data, object?[] expectedData) in cases)
+        {
+            using CancellationTokenSource suppliedSource = new();
+            foreach (object? suppliedValue in new object?[] { suppliedSource.Token, CancellationToken.None, null })
+            {
+                CancellationToken expectedToken = suppliedValue is CancellationToken token ? token : CancellationToken.None;
+                int bodyCalls = 0;
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    Body = actualToken =>
+                    {
+                        bodyCalls++;
+                        actualToken.Should().Be(expectedToken).And.NotBe(_testContextImplementation.CancellationToken);
+                        using CancellationTokenRegistration registration = actualToken.Register(() => cancellations++);
+
+                        suppliedSource.Cancel();
+
+                        cancellations.Should().Be(expectedToken.CanBeCanceled ? 1 : 0);
+                        _testContextImplementation.CancellationToken.IsCancellationRequested.Should().BeFalse();
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync([data, suppliedValue]);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                instance.ReceivedData.Should().Equal(expectedData);
+                bodyCalls.Should().Be(1);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncResolvesOptionalDataButInjectsOmittedOptionalCancellationToken()
+    {
+        (object?[] Data, object?[] Expected)[] cases =
+        [
+            ([], [7, "fallback"]),
+            ([11], [11, "fallback"]),
+            ([13, "provided"], [13, "provided"]),
+        ];
+        foreach ((object?[] data, object?[] expected) in cases)
+        {
+            foreach (bool storedArguments in new[] { false, true })
+            {
+                int cancellations = 0;
+                CancellationTokenInvocationFixture instance = new()
+                {
+                    Body = token =>
+                    {
+                        token.Should().Be(_testContextImplementation.CancellationToken).And.NotBe(CancellationToken.None);
+                        using CancellationTokenRegistration registration = token.Register(() => cancellations++);
+                        _testContextImplementation.CancellationTokenSource.Cancel();
+                    },
+                };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.OptionalDataAndToken));
+                if (storedArguments)
+                {
+                    method.SetArguments(data);
+                }
+
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync(storedArguments ? null : data);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                instance.ReceivedData.Should().Equal(expected);
+                cancellations.Should().Be(1);
+                data.Should().NotContain(item => item is CancellationToken);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncPreservesSingleObjectArrayDataBeforeInjectingCancellationToken()
+    {
+        CancellationToken? receivedToken = null;
+        CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+        TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.SingleArrayAndToken));
+        object?[] userData = [17, "array"];
+        method.SetArguments(userData);
+        _testContextImplementation.SetTestData(userData);
+        using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+        TestResult result = await method.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        instance.ReceivedData.Should().Equal(17, "array");
+        receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+        userData.Should().Equal(17, "array");
+        method.Arguments.Should().Equal(17, "array");
+        _testContextImplementation.TestData.Should().Equal(17, "array");
+    }
+
+    public async Task InvokeAsyncPacksSingletonObjectArrayBeforeInjectingCancellationToken()
+    {
+        foreach (string methodName in new[] { nameof(CancellationTokenInvocationFixture.SingleArrayAndToken), nameof(CancellationTokenInvocationFixture.OptionalSingleArrayAndToken) })
+        {
+            foreach (bool storedArguments in new[] { false, true })
+            {
+                CancellationToken? receivedToken = null;
+                CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+                TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                object?[] userData = [7];
+                if (storedArguments)
+                {
+                    method.SetArguments(userData);
+                }
+
+                _testContextImplementation.SetTestData(userData);
+                using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                TestResult result = await method.InvokeAsync(storedArguments ? null : userData);
+
+                result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                instance.ReceivedData.Should().Equal(7);
+                receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+                userData.Should().Equal(7);
+                _testContextImplementation.TestData.Should().BeSameAs(userData);
+            }
+        }
+    }
+
+    public async Task InvokeAsyncPreservesWrappedObjectArrayBeforeInjectingCancellationToken()
+    {
+        string[] methodNames =
+        [
+            nameof(CancellationTokenInvocationFixture.SingleArrayAndToken),
+            nameof(CancellationTokenInvocationFixture.OptionalSingleArrayAndToken),
+        ];
+        foreach (string methodName in methodNames)
+        {
+            foreach (object?[] values in new object?[][] { [17, "array"], [], [new object[] { 19, "nested" }] })
+            {
+                foreach (bool storedArguments in new[] { false, true })
+                {
+                    CancellationToken? receivedToken = null;
+                    CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+                    TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+                    object?[] userData = [values];
+                    if (storedArguments)
+                    {
+                        method.SetArguments(userData);
+                    }
+
+                    _testContextImplementation.SetTestData(userData);
+                    using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+                    TestResult result = await method.InvokeAsync(storedArguments ? null : userData);
+
+                    result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+                    instance.ReceivedData.Should().BeSameAs(values);
+                    instance.ReceivedData.Should().Equal(values);
+                    receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+                    userData.Should().ContainSingle().Which.Should().BeSameAs(values);
+                    _testContextImplementation.TestData.Should().BeSameAs(userData);
+                    if (storedArguments)
+                    {
+                        method.Arguments.Should().BeSameAs(userData);
+                    }
+                }
+            }
+        }
+    }
+
+    public async Task InvokeAsyncInfersGenericDataBeforeInjectingCancellationToken()
+    {
+        foreach ((object value, Type expectedType) in new (object, Type)[] { (19, typeof(int)), ("generic", typeof(string)) })
+        {
+            CancellationToken? receivedToken = null;
+            CancellationTokenInvocationFixture instance = new() { Body = token => receivedToken = token };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.GenericDataAndToken));
+            method.SetArguments([value]);
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+            instance.ReceivedData.Should().Equal(value);
+            instance.GenericType.Should().Be(expectedType);
+            receivedToken.Should().Be(_testContextImplementation.CancellationToken);
+        }
+    }
+
+    public async Task InvokeAsyncPreservesParamsCancellationTokenArrays()
+    {
+        using CancellationTokenSource suppliedSource = new();
+        object?[][] rows = [[], [CancellationToken.None], [suppliedSource.Token, new CancellationToken(canceled: true)]];
+        foreach (object?[] data in rows)
+        {
+            int bodyCalls = 0;
+            CancellationTokenInvocationFixture instance = new() { Body = _ => bodyCalls++ };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.ParamsTokens));
+            method.SetArguments(data);
+            _testContextImplementation.SetTestData(data);
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+            bodyCalls.Should().Be(1);
+            instance.ReceivedData.Should().ContainSingle().Which.Should().BeOfType<CancellationToken[]>()
+                .Which.Should().Equal(data.Cast<CancellationToken>());
+            method.Arguments.Should().ContainSingle().Which.Should().BeOfType<CancellationToken[]>()
+                .Which.Should().Equal(data.Cast<CancellationToken>());
+            _testContextImplementation.TestData.Should().Equal(data);
+            _testContextImplementation.CancellationToken.IsCancellationRequested.Should().BeFalse();
+        }
+    }
+
+    public async Task InvokeAsyncDoesNotInjectUnsupportedShapesOrRepairInvalidData()
+    {
+        (string Method, object?[]? Data)[] cases =
+        [
+            (nameof(CancellationTokenInvocationFixture.NullableToken), null),
+            (nameof(CancellationTokenInvocationFixture.TokenSource), null),
+            (nameof(CancellationTokenInvocationFixture.ByRefToken), null),
+            (nameof(CancellationTokenInvocationFixture.NonTrailingToken), [23]),
+            (nameof(CancellationTokenInvocationFixture.TwoDataAndToken), [23]),
+            (nameof(CancellationTokenInvocationFixture.DataAndToken), ["wrong"]),
+            (nameof(CancellationTokenInvocationFixture.DataAndToken), [23, CancellationToken.None, "extra"]),
+        ];
+        foreach ((string methodName, object?[]? data) in cases)
+        {
+            int bodyCalls = 0;
+            CancellationTokenInvocationFixture instance = new() { Body = _ => bodyCalls++ };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(methodName);
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(data);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Error, "invalid case {0}: {1}", methodName, result.TestFailureException);
+            result.TestFailureException.Should().BeOfType<TestFailedException>().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+            bodyCalls.Should().Be(0, "invalid case {0} must not reach user code", methodName);
+        }
+    }
+
+    public async Task InvokeAsyncDoesNotInjectCancellationTokenIntoLifecycleMethods()
+    {
+        foreach (bool initialize in new[] { false, true })
+        {
+            int bodyCalls = 0;
+            CancellationTokenInvocationFixture instance = new() { Body = _ => bodyCalls++ };
+            TestMethodInfo method = CreateCancellationTokenTestMethod(nameof(CancellationTokenInvocationFixture.TokenOnly));
+            MethodInfo tokenMethod = typeof(CancellationTokenInvocationFixture).GetMethod(nameof(CancellationTokenInvocationFixture.TokenOnly))!;
+            if (initialize)
+            {
+                method.Parent.TestInitializeMethod = tokenMethod;
+            }
+            else
+            {
+                method.Parent.TestCleanupMethod = tokenMethod;
+            }
+
+            using IDisposable factoryScope = UseCancellationTokenInstances(instance);
+
+            TestResult result = await method.InvokeAsync(null);
+
+            result.Outcome.Should().Be(UnitTestOutcome.Error);
+            result.TestFailureException.Should().BeOfType<TestFailedException>().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+            bodyCalls.Should().Be(initialize ? 0 : 1, "the lifecycle method must not receive an injected token");
+        }
     }
 
     public void TestMethodInfoCtorShouldSetRetryAttributeToNullWhenNoRetryAttributeExists()
@@ -515,6 +917,151 @@ public class TestMethodInfoTests : TestContainer
         ctorCallCount.Should().Be(2);
     }
 
+    public async Task TestMethodInfoInvokeWithoutCleanupPreservesTestContextCancellationTokenSource()
+    {
+        CancellationTokenSource originalCancellationTokenSource = _testContextImplementation.CancellationTokenSource;
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testContextImplementation.CancellationTokenSource.Should().BeSameAs(originalCancellationTokenSource);
+    }
+
+    public async Task NonCooperativeTimeoutWithoutCleanupRefreshesCancellationForNextInvocation()
+    {
+        CancellationTokenSource originalCancellationTokenSource = _testContextImplementation.CancellationTokenSource;
+        using ManualResetEventSlim firstInvocationStarted = new();
+        using ManualResetEventSlim releaseFirstInvocation = new();
+        int invocationCount = 0;
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            if (Interlocked.Increment(ref invocationCount) == 1)
+            {
+                firstInvocationStarted.Set();
+                releaseFirstInvocation.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+            }
+        };
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+        firstInvocationStarted.IsSet.Should().BeTrue();
+        TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+
+        firstResult.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        secondResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+        _testContextImplementation.CancellationTokenSource.Should().NotBeSameAs(originalCancellationTokenSource);
+        _testContextImplementation.CancellationTokenSource.IsCancellationRequested.Should().BeFalse();
+        releaseFirstInvocation.Set();
+    }
+
+    public async Task NonCooperativeTimeoutAndNextInvocationDisposeTheirOwnLeasesExactlyOnce()
+    {
+        var firstInstance = new DummyTestClass();
+        var secondInstance = new DummyTestClass();
+        var firstLease = new CountingTestClassInstanceLease(firstInstance);
+        var secondLease = new CountingTestClassInstanceLease(secondInstance);
+        var factory = new QueueTestClassInstanceFactory(firstLease, secondLease);
+        using ManualResetEventSlim firstInvocationStarted = new();
+        using ManualResetEventSlim releaseFirstInvocation = new();
+        DummyTestClass.TestMethodBody = instance =>
+        {
+            if (ReferenceEquals(instance, firstInstance))
+            {
+                firstInvocationStarted.Set();
+                releaseFirstInvocation.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+            }
+        };
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+            firstInvocationStarted.IsSet.Should().BeTrue();
+            firstResult.Outcome.Should().Be(UnitTestOutcome.Timeout);
+
+            TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+            secondResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+        }
+
+        releaseFirstInvocation.Set();
+        await WaitForCompletionAsync(Task.WhenAll(firstLease.DisposalCompleted, secondLease.DisposalCompleted));
+        firstLease.DisposeCount.Should().Be(1);
+        secondLease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task NonCooperativeTimeoutDefersCleanupWhileTestContextSetterIsRunning()
+    {
+        var lease = new CountingTestClassInstanceLease(new DummyTestClass());
+        using ManualResetEventSlim testContextSetterStarted = new();
+        using ManualResetEventSlim releaseTestContextSetter = new();
+        int cleanupCount = 0;
+        DummyTestClass.TestContextSetterBody = _ =>
+        {
+            testContextSetterStarted.Set();
+            releaseTestContextSetter.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
+        };
+        DummyTestClass.TestCleanupMethodBody = _ => cleanupCount++;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+
+        using (TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(lease)))
+        {
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+            testContextSetterStarted.IsSet.Should().BeTrue();
+            result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+            lease.DisposeCount.Should().Be(0);
+            releaseTestContextSetter.Set();
+            await WaitForCompletionAsync(lease.DisposalCompleted);
+        }
+
+        cleanupCount.Should().Be(1);
+        lease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task TestMethodInfoInvokeShouldNotDisposePreviousLeaseWhenNextActivationFails()
+    {
+        var lease = new CountingTestClassInstanceLease(new DummyTestClass());
+        var factory = new SequencedTestClassInstanceFactory(
+            lease,
+            new InvalidOperationException("second activation failed"));
+
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            TestResult firstResult = await _testMethodInfo.InvokeAsync(null);
+            TestResult secondResult = await _testMethodInfo.InvokeAsync(null);
+
+            firstResult.Outcome.Should().Be(UnitTestOutcome.Passed);
+            secondResult.Outcome.Should().Be(UnitTestOutcome.Failed);
+        }
+
+        lease.DisposeCount.Should().Be(1);
+    }
+
+    public async Task TestMethodInfoInvokeShouldPreserveTestContextFailureWhenLeaseDisposalFails()
+    {
+        DummyTestClass.TestContextSetterBody = _ => throw new InvalidOperationException("test context failure");
+        var lease = new CountingTestClassInstanceLease(
+            new DummyTestClass(),
+            new InvalidOperationException("lease disposal failure"));
+        var factory = new SequencedTestClassInstanceFactory(
+            lease,
+            new InvalidOperationException("unexpected second activation"));
+
+        TestResult result;
+        using (TestClassInstanceFactoryProvider.Push(factory))
+        {
+            result = await _testMethodInfo.InvokeAsync(null);
+        }
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        AggregateException aggregateException = result.TestFailureException.Should().BeOfType<AggregateException>().Subject;
+        aggregateException.InnerExceptions.Should().HaveCount(2);
+        aggregateException.InnerExceptions[0].ToString().Should().Contain("test context failure");
+        aggregateException.InnerExceptions[1].Message.Should().Be("lease disposal failure");
+        lease.DisposeCount.Should().Be(1);
+    }
+
     public async Task TestMethodInfoInvokeShouldMarkOutcomeFailedIfTestClassConstructorThrows()
     {
         DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
@@ -818,6 +1365,274 @@ public class TestMethodInfoTests : TestContainer
         // Assert: the SynchronizationContext should be preserved at the start of TestCleanup
         result.Outcome.Should().Be(UnitTestOutcome.Passed);
         capturedContextInTestCleanup.Should().BeSameAs(syncContext);
+    }
+
+    public async Task NonCooperativeTimeoutPreservesSynchronizationContextAcrossAsyncLifecycle()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var stages = new List<string>();
+        async Task RecordStageAsync(string stage)
+        {
+            SynchronizationContext.Current.Should().BeSameAs(syncContext);
+            TaskScheduler.Current.Should().BeSameAs(TaskScheduler.Default);
+            stages.Add(stage + " before await");
+            await Task.Yield();
+            SynchronizationContext.Current.Should().BeSameAs(syncContext);
+            TaskScheduler.Current.Should().BeSameAs(TaskScheduler.Default);
+            stages.Add(stage + " after await");
+        }
+
+        DummyTestClass.TestInitializeMethodBodyAsync = _ => RecordStageAsync("initialize");
+        DummyTestClass.DummyAsyncTestMethodBody = () => RecordStageAsync("test");
+        DummyTestClass.TestCleanupMethodBodyAsync = _ => RecordStageAsync("cleanup");
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethodAsync))!;
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+        var testMethodInfo = new TestMethodInfo(
+            typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(30_000),
+        };
+
+        TestResult result = await RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed, "{0}", result.TestFailureException);
+        stages.Should().Equal(
+            "initialize before await", "initialize after await",
+            "test before await", "test after await",
+            "cleanup before await", "cleanup after await");
+    }
+
+    public async Task NonCooperativeTimeoutPreservesTestFailureAndSynchronizationContextForCleanup()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var failure = new InvalidOperationException("UI test failure");
+        SynchronizationContext? cleanupContext = null;
+        DummyTestClass.TestMethodBody = _ => throw failure;
+        DummyTestClass.TestCleanupMethodBodyAsync = async _ =>
+        {
+            await Task.Yield();
+            cleanupContext = SynchronizationContext.Current;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+
+        TestResult result = await RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        result.TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException.Should().BeSameAs(failure);
+        cleanupContext.Should().BeSameAs(syncContext);
+    }
+
+    public async Task NonCooperativeTimeoutOnSynchronizationContextWhenAlreadyCanceledDoesNotInvokeTest()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        bool invoked = false;
+        DummyTestClass.TestMethodBody = _ => invoked = true;
+        _testContextImplementation.CancellationTokenSource.Cancel();
+
+        TestResult result = await RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.TestFailureException!.Message.Should().Be(
+            string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, _testMethodInfo.TestMethodName));
+        invoked.Should().BeFalse();
+    }
+
+    public async Task NonCooperativeTimeoutPreservesDefaultSchedulerForTimeoutCleanup()
+    {
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskScheduler? cleanupScheduler = null;
+        SynchronizationContext? cleanupContext = null;
+        Task<SynchronizationContext?>? nestedWork = null;
+        DummyTestClass.DummyAsyncTestMethodBody = () => release.Task;
+        DummyTestClass.TestCleanupMethodBodyAsync = _ =>
+        {
+            cleanupScheduler = TaskScheduler.Current;
+            cleanupContext = SynchronizationContext.Current;
+            nestedWork = Task.Factory.StartNew<SynchronizationContext?>(() => SynchronizationContext.Current);
+            release.TrySetResult(true);
+            return Task.CompletedTask;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethodAsync))!;
+        var testMethodInfo = new TestMethodInfo(
+            typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!,
+            _testClassInfo)
+        {
+            TimeoutInfo = TimeoutInfo.FromTimeout(1_000),
+        };
+        Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(testMethodInfo, syncContext);
+
+        try
+        {
+            (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+        }
+        finally
+        {
+            release.TrySetResult(true);
+            await WaitForCompletionAsync(invocation);
+            await WaitForCompletionAsync(Task.WhenAll(syncContext.DispatchedTasks));
+        }
+
+        cleanupContext.Should().BeSameAs(syncContext);
+        cleanupScheduler.Should().BeSameAs(TaskScheduler.Default);
+        nestedWork.Should().NotBeNull();
+        (await nestedWork!).Should().BeNull("nested work must use the thread pool, not the dispatcher");
+    }
+
+    public Task NonCooperativeTimeoutWithoutCleanupDoesNotWaitForBlockedSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: false, requiresDisposal: false, blockInCleanup: false);
+
+    public Task NonCooperativeTimeoutWithCleanupDoesNotWaitForBlockedSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: true, requiresDisposal: false, blockInCleanup: false);
+
+    public Task NonCooperativeTimeoutWithDisposalDoesNotWaitForBlockedSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: false, requiresDisposal: true, blockInCleanup: false);
+
+    public Task NonCooperativeTimeoutDoesNotWaitForAlreadyRunningCleanupOnSynchronizationContext()
+        => VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(hasCleanup: true, requiresDisposal: true, blockInCleanup: true);
+
+    public Task NonCooperativeTimeoutDefersCleanupWhileUiConstructorIsRunning()
+        => VerifyNonCooperativeTimeoutDefersCleanupWhileUiSetupIsRunningAsync(blockConstructor: true);
+
+    public Task NonCooperativeTimeoutDefersCleanupWhileUiTestContextSetterIsRunning()
+        => VerifyNonCooperativeTimeoutDefersCleanupWhileUiSetupIsRunningAsync(blockConstructor: false);
+
+    private async Task VerifyNonCooperativeTimeoutDoesNotWaitForBlockedSynchronizationContextAsync(
+        bool hasCleanup,
+        bool requiresDisposal,
+        bool blockInCleanup)
+    {
+        CountingTestClassInstanceLease? lease = requiresDisposal ? new(new DummyTestClass()) : null;
+        using IDisposable? factoryScope = lease is null
+            ? null
+            : TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(lease));
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        using var release = new ManualResetEventSlim();
+        var started = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var workerWaitExpired = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SynchronizationContext? cleanupContext = null;
+        int cleanupCount = 0;
+        // This guard is longer than the test timeout and only prevents a regression from hanging the suite.
+        var blockedWorkerLimit = TimeSpan.FromSeconds(10);
+        void BlockDispatcher()
+        {
+            started.TrySetResult(true);
+            if (!release.Wait(blockedWorkerLimit))
+            {
+                workerWaitExpired.TrySetResult(true);
+                release.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue();
+            }
+        }
+
+        DummyTestClass.TestMethodBody = _ =>
+        {
+            if (!blockInCleanup)
+            {
+                BlockDispatcher();
+            }
+        };
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            cleanupContext = SynchronizationContext.Current;
+            Interlocked.Increment(ref cleanupCount);
+            if (blockInCleanup)
+            {
+                BlockDispatcher();
+            }
+        };
+        if (hasCleanup)
+        {
+            _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        }
+
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+        Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+        try
+        {
+            await WaitForCompletionAsync(started.Task);
+            Task completed = await Task.WhenAny(invocation, workerWaitExpired.Task);
+            completed.Should().BeSameAs(invocation, "timeout bookkeeping must not wait for the blocked dispatcher");
+            (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+            Volatile.Read(ref cleanupCount).Should().Be(blockInCleanup ? 1 : 0);
+            lease?.DisposeCount.Should().Be(0);
+            if (blockInCleanup)
+            {
+                syncContext.DispatchedTasks.Should().HaveCount(1, "already-owned cleanup must not be dispatched again");
+            }
+        }
+        finally
+        {
+            release.Set();
+            await WaitForCompletionAsync(invocation);
+            await WaitForCompletionAsync(Task.WhenAll(syncContext.DispatchedTasks));
+        }
+
+        cleanupCount.Should().Be(hasCleanup ? 1 : 0);
+        if (hasCleanup)
+        {
+            cleanupContext.Should().BeSameAs(syncContext);
+        }
+
+        if (lease is not null)
+        {
+            lease.DisposeCount.Should().Be(1);
+            lease.DisposalContext.Should().BeSameAs(syncContext);
+        }
+    }
+
+    private async Task VerifyNonCooperativeTimeoutDefersCleanupWhileUiSetupIsRunningAsync(bool blockConstructor)
+    {
+        using var release = new ManualResetEventSlim();
+        var setupStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        CountingTestClassInstanceLease? lease = null;
+        using IDisposable factoryScope = TestClassInstanceFactoryProvider.Push(
+            new CallbackTestClassInstanceFactory(() => lease = new CountingTestClassInstanceLease(new DummyTestClass())));
+        using var syncContext = new SingleThreadedSynchronizationContextForTesting();
+        SynchronizationContext? cleanupContext = null;
+        int cleanupCount = 0;
+        void BlockSetup()
+        {
+            setupStarted.TrySetResult(true);
+            release.Wait(TimeSpan.FromSeconds(30)).Should().BeTrue();
+        }
+
+        if (blockConstructor)
+        {
+            DummyTestClass.TestConstructorMethodBody = BlockSetup;
+        }
+        else
+        {
+            DummyTestClass.TestContextSetterBody = _ => BlockSetup();
+        }
+
+        DummyTestClass.TestCleanupMethodBody = _ =>
+        {
+            cleanupContext = SynchronizationContext.Current;
+            cleanupCount++;
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(1_000);
+        Task<TestResult> invocation = RunInvokeAsyncOnContextAsync(_testMethodInfo, syncContext);
+        try
+        {
+            await WaitForCompletionAsync(setupStarted.Task);
+            (await invocation).Outcome.Should().Be(UnitTestOutcome.Timeout);
+            cleanupCount.Should().Be(0);
+            lease?.DisposeCount.Should().Be(0);
+        }
+        finally
+        {
+            release.Set();
+            await WaitForCompletionAsync(invocation);
+            await WaitForCompletionAsync(Task.WhenAll(syncContext.DispatchedTasks));
+        }
+
+        cleanupCount.Should().Be(1);
+        cleanupContext.Should().BeSameAs(syncContext);
+        lease.Should().NotBeNull();
+        lease!.DisposeCount.Should().Be(1);
+        lease.DisposalContext.Should().BeSameAs(syncContext);
     }
 
     public async Task TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
@@ -1518,7 +2333,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestMethodBody = o => throw new AssertInconclusiveException();
         DummyTestClass.TestCleanupMethodBody = c =>
         {
-            if (DummyTestClass.GetTestContext() != null)
+            if (DummyTestClass.GetTestContext() is not null)
             {
                 testOutcome = DummyTestClass.GetTestContext().CurrentTestOutcome;
             }
@@ -1538,6 +2353,99 @@ public class TestMethodInfoTests : TestContainer
     #endregion
 
     #region TestMethod invoke setup order
+
+    public async Task RetainedFixtureContextFlowsThroughActivationInvocationAndCleanupWithoutLeakingToCaller()
+    {
+        Action previousConstructor = DummyTestClass.TestConstructorMethodBody;
+        Action<object> previousSetter = DummyTestClass.TestContextSetterBody;
+        Action<DummyTestClass> previousInitialize = DummyTestClass.TestInitializeMethodBody;
+        Action<DummyTestClass> previousBody = DummyTestClass.TestMethodBody;
+        Action<DummyTestClass> previousCleanup = DummyTestClass.TestCleanupMethodBody;
+        Func<Task>? previousAsyncBody = DummyTestClass.DummyAsyncTestMethodBody;
+        try
+        {
+            _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestInitializeMethod))!;
+            _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyTestCleanupMethod))!;
+            foreach ((bool asyncMethod, bool failure) in new[] { (false, false), (true, false), (false, true), (true, true) })
+            {
+                AsyncLocal<string?> ambient = new() { Value = "fixture" };
+                using ExecutionContext captured = ExecutionContext.Capture()!;
+                ambient.Value = "caller";
+                List<string> transitions = [];
+                IOException cause = new("user body failed");
+                DummyTestClass.TestConstructorMethodBody = () =>
+                {
+                    transitions.Add("constructor:" + ambient.Value);
+                    ambient.Value = "constructed";
+                };
+                DummyTestClass.TestContextSetterBody = _ =>
+                {
+                    transitions.Add("context:" + ambient.Value);
+                    ambient.Value = "context-set";
+                };
+                DummyTestClass.TestInitializeMethodBody = _ =>
+                {
+                    transitions.Add("initialize:" + ambient.Value);
+                    ambient.Value = "initialized";
+                };
+                DummyTestClass.TestCleanupMethodBody = _ =>
+                {
+                    transitions.Add("cleanup:" + ambient.Value);
+                    ambient.Value = "cleaned";
+                };
+                DummyTestClass.TestMethodBody = _ =>
+                {
+                    transitions.Add("sync:" + ambient.Value);
+                    ambient.Value = "body";
+                    if (failure)
+                    {
+                        throw cause;
+                    }
+                };
+                DummyTestClass.DummyAsyncTestMethodBody = () =>
+                {
+                    transitions.Add("async:" + ambient.Value);
+                    ambient.Value = "body";
+                    return failure ? Task.FromException(cause) : Task.CompletedTask;
+                };
+                MethodInfo method = asyncMethod
+                    ? typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.DummyAsyncTestMethod))!
+                    : _methodInfo;
+                TestMethodInfo invocation = new(method, _testClassInfo)
+                {
+                    TimeoutInfo = TimeoutInfo.FromTimeout(0),
+                    Executor = _testMethodAttribute,
+                    TestContext = _testContextImplementation,
+                };
+                typeof(TestMethodInfo).GetField("_executionContext", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(invocation, captured);
+
+                TestResult result = await invocation.InvokeAsync(null);
+
+                transitions.Should().Equal(
+                    "constructor:fixture", "context:constructed", "initialize:context-set",
+                    (asyncMethod ? "async:" : "sync:") + "initialized", "cleanup:body");
+                ambient.Value.Should().Be("caller");
+                result.Outcome.Should().Be(failure ? UnitTestOutcome.Failed : UnitTestOutcome.Passed);
+                if (failure)
+                {
+                    result.TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException.Should().BeSameAs(cause);
+                }
+                else
+                {
+                    result.TestFailureException.Should().BeNull();
+                }
+            }
+        }
+        finally
+        {
+            DummyTestClass.TestConstructorMethodBody = previousConstructor;
+            DummyTestClass.TestContextSetterBody = previousSetter;
+            DummyTestClass.TestInitializeMethodBody = previousInitialize;
+            DummyTestClass.TestMethodBody = previousBody;
+            DummyTestClass.TestCleanupMethodBody = previousCleanup;
+            DummyTestClass.DummyAsyncTestMethodBody = previousAsyncBody!;
+        }
+    }
 
     public async Task TestMethodInfoInvokeShouldInitializeClassInstanceTestInitializeAndTestCleanupInOrder()
     {
@@ -1942,6 +2850,22 @@ public class TestMethodInfoTests : TestContainer
 
     #region helper methods
 
+    private TestMethodInfo CreateCancellationTokenTestMethod(string methodName)
+    {
+        Type type = typeof(CancellationTokenInvocationFixture);
+        TestClassInfo parent = new(type, type.GetConstructor([])!, true, _classAttribute, _testAssemblyInfo);
+        return new TestMethodInfo(type.GetMethod(methodName)!, parent)
+        {
+            TestContext = _testContextImplementation,
+            TimeoutInfo = TimeoutInfo.FromTimeout(0),
+            Executor = _testMethodAttribute,
+        };
+    }
+
+    private static IDisposable UseCancellationTokenInstances(params CancellationTokenInvocationFixture[] instances)
+        => TestClassInstanceFactoryProvider.Push(new QueueTestClassInstanceFactory(
+            [.. instances.Select(instance => new CountingTestClassInstanceLease(instance))]));
+
     private static async Task RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Func<Task> action)
     {
         try
@@ -2006,14 +2930,180 @@ public class TestMethodInfoTests : TestContainer
         return await tcs.Task;
     }
 
+    private static async Task WaitForCompletionAsync(Task task)
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        Task completed = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cts.Token));
+        completed.Should().BeSameAs(task, "Timed out waiting for background invocation cleanup.");
+        await task;
+    }
+
     #endregion
 
     #region Test data
 
+    public sealed class CancellationTokenInvocationFixture
+    {
+        public TestContext TestContext { get; set; } = null!;
+
+        public Action<CancellationToken> Body { get; set; } = _ => { };
+
+        public Action InitializeBody { get; set; } = () => { };
+
+        public object?[]? ReceivedData { get; private set; }
+
+        public Type? GenericType { get; private set; }
+
+        public void Initialize() => InitializeBody();
+
+        [TestMethod]
+        public void TokenOnly(CancellationToken token) => Body(token);
+
+        [TestMethod]
+        public async Task TaskTokenOnly(CancellationToken token)
+        {
+            await Task.CompletedTask.ConfigureAwait(false);
+            Body(token);
+        }
+
+        [TestMethod]
+        public ValueTask ValueTaskTokenOnly(CancellationToken token)
+        {
+            Body(token);
+            return default;
+        }
+
+        [TestMethod]
+        public void DataAndToken(int value, CancellationToken token)
+        {
+            ReceivedData = [value];
+            Body(token);
+        }
+
+        [TestMethod]
+        public void OptionalDataAndToken(int value = 7, string label = "fallback", CancellationToken token = default)
+        {
+            ReceivedData = [value, label];
+            Body(token);
+        }
+
+        [TestMethod]
+        public void SingleArrayAndToken(object?[] data, CancellationToken token)
+        {
+            ReceivedData = data;
+            Body(token);
+        }
+
+        [TestMethod]
+        public void OptionalSingleArrayAndToken(object?[] data, CancellationToken token = default)
+        {
+            ReceivedData = data;
+            Body(token);
+        }
+
+        [TestMethod]
+        public void GenericDataAndToken<T>(T value, CancellationToken token)
+        {
+            ReceivedData = [value];
+            GenericType = typeof(T);
+            Body(token);
+        }
+
+        [TestMethod]
+        public void ParamsTokens(params CancellationToken[] tokens)
+        {
+            ReceivedData = [tokens];
+            Body(CancellationToken.None);
+        }
+
+        [TestMethod]
+        public void NullableToken(CancellationToken? token) => Body(token ?? default);
+
+        [TestMethod]
+        public void TokenSource(CancellationTokenSource source) => Body(source.Token);
+
+        [TestMethod]
+        public void ByRefToken(ref CancellationToken token) => Body(token);
+
+        [TestMethod]
+        public void NonTrailingToken(CancellationToken token, int value) => Body(token);
+
+        [TestMethod]
+        public void TwoDataAndToken(int first, int second, CancellationToken token) => Body(token);
+    }
+
+    private sealed class CallbackTestClassInstanceFactory(Func<ITestClassInstanceLease> createInstance) : ITestClassInstanceFactory
+    {
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return createInstance();
+        }
+    }
+
+    private sealed class SequencedTestClassInstanceFactory(
+        ITestClassInstanceLease firstLease,
+        Exception secondException) : ITestClassInstanceFactory
+    {
+        private int _activationCount;
+
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return Interlocked.Increment(ref _activationCount) == 1
+                ? firstLease
+                : throw secondException;
+        }
+    }
+
+    private sealed class QueueTestClassInstanceFactory(params ITestClassInstanceLease[] leases) : ITestClassInstanceFactory
+    {
+        private readonly ConcurrentQueue<ITestClassInstanceLease> _leases = new(leases);
+
+        public ITestClassInstanceLease CreateInstance(Type testClassType, TestContext testContext)
+        {
+            _ = testClassType;
+            _ = testContext;
+            return _leases.TryDequeue(out ITestClassInstanceLease? lease)
+                ? lease
+                : throw new InvalidOperationException("No activation lease is available.");
+        }
+    }
+
+    private sealed class CountingTestClassInstanceLease(object instance, Exception? disposeException = null) : ITestClassInstanceLease
+    {
+        private readonly TaskCompletionSource<object?> _disposalCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public object Instance { get; } = instance;
+
+        public bool RequiresCleanup => true;
+
+        public int DisposeCount { get; private set; }
+
+        public SynchronizationContext? DisposalContext { get; private set; }
+
+        public Task DisposalCompleted => _disposalCompleted.Task;
+
+        public Task DisposeAsync()
+        {
+            DisposalContext = SynchronizationContext.Current;
+            DisposeCount++;
+            _disposalCompleted.TrySetResult(null);
+            return disposeException is null
+                ? Task.CompletedTask
+                : Task.FromException(disposeException);
+        }
+    }
+
     private sealed class SingleThreadedSynchronizationContextForTesting : SynchronizationContext, IDisposable
     {
         private readonly BlockingCollection<(SendOrPostCallback Callback, object? State)> _queue = [];
+        private readonly ConcurrentQueue<Task> _dispatchedTasks = new();
         private readonly Thread _thread;
+
+        public Task[] DispatchedTasks => _dispatchedTasks.ToArray();
 
         public SingleThreadedSynchronizationContextForTesting()
         {
@@ -2033,6 +3123,11 @@ public class TestMethodInfoTests : TestContainer
 
         public override void Post(SendOrPostCallback d, object? state)
         {
+            if (state is Task<Task> task)
+            {
+                _dispatchedTasks.Enqueue(task.Unwrap());
+            }
+
             try
             {
                 _queue.TryAdd((d, state));
@@ -2312,5 +3407,152 @@ public class TestMethodInfoTests : TestContainer
     }
 #endif
 
+    public async Task DirectInvokerPreservesFrameworkFailuresAndReportsMalformedReflectionFailures()
+    {
+        var original = new TestFailedException(UnitTestOutcome.Inconclusive, "registered invoker failure");
+        using (var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw original))
+        {
+            _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+            TestResult result = await _testMethodInfo.InvokeAsync(null);
+            result.Outcome.Should().Be(UnitTestOutcome.Inconclusive);
+            result.TestFailureException.Should().BeSameAs(original);
+        }
+
+#if DEBUG
+        await DebugAssertionChildProbe.VerifyAsync(
+            DebugAssertionChildProbe.MalformedReflectionMode,
+            "Inner exception of TargetInvocationException is null.");
+#else
+        await VerifyMalformedReflectionResultAsync(reportReady: false);
+#endif
+    }
+
+    private async Task VerifyMalformedReflectionResultAsync(bool reportReady)
+    {
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw new TargetInvocationException(null));
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+        if (reportReady)
+        {
+            Console.WriteLine(DebugAssertionChildProbe.ReadyMarker);
+        }
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+        result.Outcome.Should().Be(UnitTestOutcome.Error);
+        result.ExceptionMessage.Should().Be(string.Format(
+            CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, typeof(DummyTestClass).FullName, nameof(DummyTestClass.DummyTestMethod)));
+    }
+
+    internal static async Task RunMalformedReflectionProbeAsync()
+    {
+        using var fixture = new TestMethodInfoTests();
+        await fixture.VerifyMalformedReflectionResultAsync(reportReady: true);
+    }
+
+    public async Task WrongThreadFailureAddsTheActionableUiDiagnostic()
+    {
+        var original = new System.Runtime.InteropServices.COMException("wrong apartment", -2147417842);
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => throw original);
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(0);
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Failed);
+        result.TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException.Should().BeSameAs(original);
+        result.ExceptionMessage.Should().Contain("wrong apartment")
+            .And.EndWith(string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, string.Empty));
+    }
+
+    public async Task CooperativeTimeoutPreservesSuccessAndCancellationWithoutElapsedTime()
+    {
+        int calls = 0;
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) =>
+        {
+            _testContextImplementation.CancellationToken.ThrowIfCancellationRequested();
+            calls++;
+            return Task.CompletedTask;
+        });
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(int.MaxValue) { CooperativeCancellation = true });
+        TestResult passed = await _testMethodInfo.InvokeAsync(null);
+        _testContextImplementation.CancellationTokenSource.Cancel();
+
+        TestResult canceled = await _testMethodInfo.InvokeAsync(null);
+
+        passed.Outcome.Should().Be(UnitTestOutcome.Passed);
+        canceled.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        canceled.ExceptionMessage.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, nameof(DummyTestClass.DummyTestMethod)));
+        calls.Should().Be(1);
+    }
+
+    public async Task CompletedThreadOperationPreservesTheOriginalInfrastructureFailure()
+    {
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => Task.CompletedTask);
+        var original = new InvalidOperationException("outcome observer failed");
+        var context = new Mock<ITestContext>();
+        context.SetupGet(value => value.Context).Returns(_testContextImplementation);
+        context.Setup(value => value.SetOutcome(It.IsAny<UnitTestOutcome>())).Throws(original);
+        _testMethodInfo.TestContext = context.Object;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeout(17);
+        provider.Services.MockThreadOperations
+            .Setup(value => value.Execute(It.IsAny<Action>(), 17, It.IsAny<CancellationToken>()))
+            .Returns<Action, int, CancellationToken>((action, _, _) =>
+            {
+                action();
+                return true;
+            });
+        SynchronizationContext? previous = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(null);
+        try
+        {
+            Func<Task> invoke = () => _testMethodInfo.InvokeAsync(null);
+
+            (await invoke.Should().ThrowExactlyAsync<InvalidOperationException>()).Which.Should().BeSameAs(original);
+            provider.Services.MockThreadOperations.Verify(value => value.Execute(It.IsAny<Action>(), 17, It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
+    }
+
+    private sealed class DirectInvokerProvider : IDisposable
+    {
+        private readonly IPlatformServiceProvider _previous;
+
+        internal DirectInvokerProvider(MethodInfo method, Func<object?, object?[]?, object?> invoke)
+        {
+            _previous = PlatformServiceProvider.Instance;
+            Services = new TestablePlatformServiceProvider();
+            Services.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(
+                new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+                {
+                    TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>> { [method] = invoke },
+                }));
+            PlatformServiceProvider.Instance = Services;
+        }
+
+        internal TestablePlatformServiceProvider Services { get; }
+
+        public void Dispose() => PlatformServiceProvider.Instance = _previous;
+    }
+
+    public async Task CooperativeInfrastructureCancellationUsesTheFailureFactory()
+    {
+        using var provider = new DirectInvokerProvider(_methodInfo, (_, _) => Task.CompletedTask);
+        var context = new Mock<ITestContext>();
+        context.SetupGet(value => value.Context).Returns(_testContextImplementation);
+        context.Setup(value => value.SetOutcome(It.IsAny<UnitTestOutcome>())).Callback(() =>
+        {
+            _testContextImplementation.CancellationTokenSource.Cancel();
+            throw new OperationCanceledException(_testContextImplementation.CancellationToken);
+        });
+        _testMethodInfo.TestContext = context.Object;
+        _testMethodInfo.TimeoutInfo = TimeoutInfo.FromTimeoutAttribute(new TimeoutAttribute(int.MaxValue) { CooperativeCancellation = true });
+
+        TestResult result = await _testMethodInfo.InvokeAsync(null);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Timeout);
+        result.ExceptionMessage.Should().Be(string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, nameof(DummyTestClass.DummyTestMethod)));
+        context.Verify(value => value.SetOutcome(It.IsAny<UnitTestOutcome>()), Times.Once);
+    }
 }
 #endregion

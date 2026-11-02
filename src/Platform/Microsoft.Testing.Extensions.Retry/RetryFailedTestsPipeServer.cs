@@ -12,20 +12,24 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class RetryFailedTestsPipeServer : IDisposable
 {
     private readonly NamedPipeServer _singleConnectionNamedPipeServer;
-    private readonly PipeNameDescription _pipeNameDescription;
     private readonly string[] _failedTests;
 
     public RetryFailedTestsPipeServer(IServiceProvider serviceProvider, string[] failedTests, ILogger logger)
     {
-        _pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-        logger.LogTrace($"Retry server pipe name: '{_pipeNameDescription.Name}'");
-        _singleConnectionNamedPipeServer = new NamedPipeServer(_pipeNameDescription, CallbackAsync,
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        logger.LogTrace($"Retry server pipe name: '{pipeNameDescription.Name}'");
+        _singleConnectionNamedPipeServer = new NamedPipeServer(
+            pipeNameDescription,
+            CallbackAsync,
             serviceProvider.GetEnvironment(),
             serviceProvider.GetLoggerFactory().CreateLogger<RetryFailedTestsPipeServer>(),
             serviceProvider.GetTask(),
+            maxNumberOfServerInstances: 1,
+            serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities(),
             serviceProvider.GetTestApplicationCancellationTokenSource().CancellationToken);
 
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
@@ -37,7 +41,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         _failedTests = failedTests;
     }
 
-    public string PipeName => _pipeNameDescription.Name;
+    public string PipeName => _singleConnectionNamedPipeServer.PipeName.Name;
 
     /// <summary>
     /// Gets the distinct uids of the tests that failed in this attempt, mapped to their display name.

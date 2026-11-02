@@ -25,7 +25,7 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
 
     public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
-    // CTRF has no marker that lets this merger label an incomplete input set as a partial run.
+    // Lineage metadata does not supply the authoritative expected-input set needed to describe a partial run.
     public bool SupportsTruncatedRuns => false;
 
     public IReadOnlyList<string> SupportedKinds => SupportedArtifactKinds;
@@ -50,9 +50,7 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             ? [.. inputs]
             :
             [
-                .. inputs
-                    .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                    .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+                .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
             ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         string[] identityInputs =
@@ -62,8 +60,16 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
         ];
         Guid artifactId = CtrfReportMerger.CreateDeterministicId(identityInputs);
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
-        Directory.CreateDirectory(mergedDirectory);
-        if (IsReparsePoint(mergedDirectory))
+        try
+        {
+            Directory.CreateDirectory(mergedDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
+        if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;
         }
@@ -79,17 +85,5 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             CtrfReportGenerator.CtrfArtifactKind,
             ExtensionResources.CtrfMergedArtifactDisplayName,
             string.Format(CultureInfo.CurrentCulture, ExtensionResources.CtrfMergedArtifactDescription, inputs.Count));
-    }
-
-    private static bool IsReparsePoint(string path)
-    {
-        try
-        {
-            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return true;
-        }
     }
 }

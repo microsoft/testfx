@@ -30,6 +30,80 @@ public sealed class DotnetTestProtocolSerializerTests
         return serializer.Deserialize(stream);
     }
 
+    private sealed class LegacyCommandLineOptionMessagesSerializer : NamedPipeSerializer<CommandLineOptionMessages>, INamedPipeSerializer
+    {
+        public override int Id => CommandLineOptionMessagesFieldsId.MessagesSerializerId;
+
+        protected override CommandLineOptionMessages DeserializeCore(Stream stream)
+        {
+            string? modulePath = null;
+            CommandLineOptionMessage[] messages = [];
+
+            ReadFields(stream, (fieldId, fieldSize) =>
+            {
+                switch (fieldId)
+                {
+                    case CommandLineOptionMessagesFieldsId.ModulePath:
+                        modulePath = ReadStringValue(stream, fieldSize);
+                        return true;
+
+                    case CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList:
+                        messages = ReadMessages(stream);
+                        return true;
+
+                    default:
+                        return false;
+                }
+            });
+
+            return new(modulePath, messages);
+        }
+
+        protected override void SerializeCore(CommandLineOptionMessages objectToSerialize, Stream stream)
+            => throw new NotSupportedException();
+
+        private static CommandLineOptionMessage[] ReadMessages(Stream stream)
+        {
+            int length = ReadInt(stream);
+            var messages = new CommandLineOptionMessage[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                string? name = null, description = null;
+                bool? isHidden = null, isBuiltIn = null;
+
+                ReadFields(stream, (fieldId, fieldSize) =>
+                {
+                    switch (fieldId)
+                    {
+                        case CommandLineOptionMessageFieldsId.Name:
+                            name = ReadStringValue(stream, fieldSize);
+                            return true;
+
+                        case CommandLineOptionMessageFieldsId.Description:
+                            description = ReadStringValue(stream, fieldSize);
+                            return true;
+
+                        case CommandLineOptionMessageFieldsId.IsHidden:
+                            isHidden = ReadBool(stream);
+                            return true;
+
+                        case CommandLineOptionMessageFieldsId.IsBuiltIn:
+                            isBuiltIn = ReadBool(stream);
+                            return true;
+
+                        default:
+                            return false;
+                    }
+                });
+
+                messages[i] = new CommandLineOptionMessage(name, description, isHidden, isBuiltIn);
+            }
+
+            return messages;
+        }
+    }
+
     // Exposes the protected registry lookup so the test can assert every id 0-12 is registered.
     // Exposes the protected registry lookups so the test can assert both the id-based mapping (every id 0-12 is
     // registered) and the type-based mapping (GetSerializer(Type), used by the runtime serialize path).
@@ -128,6 +202,30 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual("errorMessage", actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
         Assert.AreEqual("expectedValue", actual.FailedTestMessages[0].Expected);
         Assert.AreEqual("actualValue", actual.FailedTestMessages[0].Actual);
+
+        // RetryAttemptNumber/IsSuperseded were not supplied above (they default to null); confirm they round-trip
+        // as absent rather than as some default sentinel value.
+        Assert.IsNull(actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.IsNull(actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsNull(actual.FailedTestMessages[0].IsSuperseded);
+    }
+
+    [TestMethod]
+    public void TestResultMessages_RoundTripsWithRetryAttemptMetadata()
+    {
+        // A superseded (non-final) retry attempt that failed, followed by the final attempt that passed - the
+        // typical shape produced by MSTest's [Retry] attribute for a flaky test that eventually succeeds.
+        var supersededFail = new FailedTestResultMessage("uid", "displayName", TestStates.Failed, 100, "reason", null, "standardOutput", "errorOutput", "sessionUid", null, null, RetryAttemptNumber: 1, IsSuperseded: true);
+        var finalSuccess = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 120, "reason", "standardOutput", "errorOutput", "sessionUid", RetryAttemptNumber: 2, IsSuperseded: false);
+        var message = new TestResultMessages("executionId", "instanceId", [finalSuccess], [supersededFail]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.AreEqual(2, actual.SuccessfulTestMessages[0].RetryAttemptNumber);
+        Assert.IsFalse(actual.SuccessfulTestMessages[0].IsSuperseded);
+        Assert.AreEqual(1, actual.FailedTestMessages[0].RetryAttemptNumber);
+        Assert.IsTrue(actual.FailedTestMessages[0].IsSuperseded);
     }
 
     [TestMethod]
@@ -143,6 +241,22 @@ public sealed class DotnetTestProtocolSerializerTests
 
         static ushort GetConstantValue(string fieldName)
             => (ushort)typeof(FailedTestResultMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
+    public void TestResultMessageFieldIds_RetryAttempt_AreStable()
+    {
+        // Externally shared wire ids for the retry-attempt metadata added on top of Expected/Actual; renumbering
+        // any of these would silently break cross-process decoding without failing the round-trip tests (which
+        // use the same constant on both writer and reader). Pin the literals here, read via reflection (a runtime
+        // read, not a compile-time constant) so that renumbering is actually caught rather than folded away.
+        Assert.AreEqual((ushort)9, GetConstantValue(typeof(SuccessfulTestResultMessageFieldsId), nameof(SuccessfulTestResultMessageFieldsId.RetryAttemptNumber)));
+        Assert.AreEqual((ushort)10, GetConstantValue(typeof(SuccessfulTestResultMessageFieldsId), nameof(SuccessfulTestResultMessageFieldsId.IsSuperseded)));
+        Assert.AreEqual((ushort)12, GetConstantValue(typeof(FailedTestResultMessageFieldsId), nameof(FailedTestResultMessageFieldsId.RetryAttemptNumber)));
+        Assert.AreEqual((ushort)13, GetConstantValue(typeof(FailedTestResultMessageFieldsId), nameof(FailedTestResultMessageFieldsId.IsSuperseded)));
+
+        static ushort GetConstantValue(Type declaringType, string fieldName)
+            => (ushort)declaringType.GetField(fieldName)!.GetRawConstantValue()!;
     }
 
     [TestMethod]
@@ -221,7 +335,7 @@ public sealed class DotnetTestProtocolSerializerTests
         var message = new CommandLineOptionMessages(
             "path/to/module.dll",
             [
-                new CommandLineOptionMessage("--filter", "Filter tests", false, true),
+                new CommandLineOptionMessage("--filter", "Filter tests", false, true, "FilterProvider", 1, int.MaxValue),
                 new CommandLineOptionMessage("--hidden", null, true, false),
             ]);
 
@@ -233,8 +347,45 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual("Filter tests", actual.CommandLineOptionMessageList[0].Description);
         Assert.IsFalse(actual.CommandLineOptionMessageList[0].IsHidden);
         Assert.IsTrue(actual.CommandLineOptionMessageList[0].IsBuiltIn);
+        Assert.AreEqual("FilterProvider", actual.CommandLineOptionMessageList[0].ProviderUid);
+        Assert.AreEqual(1, actual.CommandLineOptionMessageList[0].MinimumArity);
+        Assert.AreEqual(int.MaxValue, actual.CommandLineOptionMessageList[0].MaximumArity);
         Assert.IsNull(actual.CommandLineOptionMessageList[1].Description);
         Assert.IsTrue(actual.CommandLineOptionMessageList[1].IsHidden);
+    }
+
+    [TestMethod]
+    public void CommandLineOptionMessageFieldIds_ProviderAndArity_AreStable()
+    {
+        Assert.AreEqual((ushort)6, GetConstantValue(nameof(CommandLineOptionMessageFieldsId.ProviderUid)));
+        Assert.AreEqual((ushort)7, GetConstantValue(nameof(CommandLineOptionMessageFieldsId.MinimumArity)));
+        Assert.AreEqual((ushort)8, GetConstantValue(nameof(CommandLineOptionMessageFieldsId.MaximumArity)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(CommandLineOptionMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
+    public void CommandLineOptionMessages_LegacyReaderSkipsProviderAndArityMetadata()
+    {
+        var message = new CommandLineOptionMessages(
+            "path/to/module.dll",
+            [new CommandLineOptionMessage("--filter", "Filter tests", false, true, "FilterProvider", 1, int.MaxValue)]);
+        using var stream = new MemoryStream();
+        new CommandLineOptionMessagesSerializer().Serialize(message, stream);
+        stream.Position = 0;
+
+        CommandLineOptionMessages actual = new LegacyCommandLineOptionMessagesSerializer().Deserialize(stream);
+
+        Assert.AreEqual(message.ModulePath, actual.ModulePath);
+        Assert.HasCount(1, actual.CommandLineOptionMessageList!);
+        Assert.AreEqual("--filter", actual.CommandLineOptionMessageList![0].Name);
+        Assert.AreEqual("Filter tests", actual.CommandLineOptionMessageList[0].Description);
+        Assert.IsFalse(actual.CommandLineOptionMessageList[0].IsHidden);
+        Assert.IsTrue(actual.CommandLineOptionMessageList[0].IsBuiltIn);
+        Assert.IsNull(actual.CommandLineOptionMessageList[0].ProviderUid);
+        Assert.IsNull(actual.CommandLineOptionMessageList[0].MinimumArity);
+        Assert.IsNull(actual.CommandLineOptionMessageList[0].MaximumArity);
     }
 
     [TestMethod]

@@ -38,7 +38,8 @@ internal static partial class CommandLineOptionsValidator
         IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
         IEnumerable<ICommandLineOptionsProvider> extensionCommandLineOptionsProviders,
         ICommandLineOptions commandLineOptions,
-        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions = null)
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions = null,
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptionDefaults = null)
     {
         if (commandLineParseResult.HasError)
         {
@@ -75,12 +76,12 @@ internal static partial class CommandLineOptionsValidator
             return result3;
         }
 
-        if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
+        if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
         {
             return AddCommandLine(commandLineParseResult, result4);
         }
 
-        if (ValidateNoBootstrapOnlyOptionsInJson(jsonCommandLineOptions) is { IsValid: false } resultBootstrap)
+        if (ValidateNoBootstrapOnlyOptionsInJson(jsonCommandLineOptions, jsonCommandLineOptionDefaults) is { IsValid: false } resultBootstrap)
         {
             return AddCommandLine(commandLineParseResult, resultBootstrap);
         }
@@ -90,16 +91,21 @@ internal static partial class CommandLineOptionsValidator
         // (testconfig.json is case-insensitive everywhere else). Use OrdinalIgnoreCase so a JSON
         // entry such as "Timeout": "30s" resolves to the same provider/option metadata as
         // "--timeout 30s" on the command line.
-        var providerAndOptionByOptionName = extensionOptionsByProvider.Concat(systemOptionsByProvider)
-            .SelectMany(tuple => tuple.Value.Select(option => (provider: tuple.Key, option)))
-            .ToDictionary(tuple => tuple.option.Name, StringComparer.OrdinalIgnoreCase);
+        var providerAndOptionByOptionName = new Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)>(StringComparer.OrdinalIgnoreCase);
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider.Concat(systemOptionsByProvider))
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                providerAndOptionByOptionName.Add(option.Name, (provider.Key, option));
+            }
+        }
 
-        if (ValidateOptionsArgumentArity(commandLineParseResult, jsonCommandLineOptions, providerAndOptionByOptionName) is { IsValid: false } result5)
+        if (ValidateOptionsArgumentArity(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, providerAndOptionByOptionName) is { IsValid: false } result5)
         {
             return AddCommandLine(commandLineParseResult, result5);
         }
 
-        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, jsonCommandLineOptions, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
+        if (await ValidateOptionsArgumentsAsync(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, providerAndOptionByOptionName).ConfigureAwait(false) is { IsValid: false } result6)
         {
             return AddCommandLine(commandLineParseResult, result6);
         }
@@ -107,6 +113,11 @@ internal static partial class CommandLineOptionsValidator
         // Last validation step
         return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
     }
+
+    private static string FormatJsonValidationError(string sectionName, string error)
+        => sectionName == PlatformConfigurationConstants.CommandLineOptionsSectionName
+            ? string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, error)
+            : string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionDefaultsValidationErrorPrefix, error);
 
     internal static ValidationResult ValidateToolProviders(
         IEnumerable<IToolCommandLineOptionsProvider> toolProviders,

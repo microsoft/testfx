@@ -42,7 +42,14 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
             DateTimeOffset latestSeen = DateTimeOffset.MinValue;
             try
             {
-                foreach (string line in File.ReadLines(sequenceFilePath))
+                using var stream = new FileStream(sequenceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
+                using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+                string? line;
+#if NET
+                while ((line = await reader.ReadLineAsync(CancellationToken.None).ConfigureAwait(false)) is not null)
+#else
+                while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) is not null)
+#endif
                 {
                     if (line.Length == 0 || line[0] == '#')
                     {

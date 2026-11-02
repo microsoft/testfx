@@ -82,7 +82,74 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
     {
         ApplicationStateGuard.Ensure(TestFramework is not null);
         BuildContext context = await SetupCommonServicesAsync(loggingState, testApplicationOptions, unhandledExceptionsHandler, createBuilderStart).ConfigureAwait(false);
-        return await BuildHostAsync(context).ConfigureAwait(false);
+        IHost host = await BuildHostAsync(context).ConfigureAwait(false);
+
+        // The timeout belongs exclusively to the test host. In a restarted run the controller keeps its
+        // application token alive while the child schedules the timeout, so controller extensions can finalize
+        // after the child reports an aborted run without two processes racing the same deadline.
+        if (context.EarlyHost is null
+            && context.PoliciesService.ProcessRole is TestProcessRole.TestHost
+            && context.CommandLineHandler.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
+            && context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
+        {
+            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
+            context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
+        }
+
+        return testApplicationOptions.CancellationToken.CanBeCanceled
+            ? new ExternallyCancellableHost(
+                host,
+                context.TestApplicationCancellationTokenSource,
+                testApplicationOptions.CancellationToken)
+            : host;
+    }
+
+    private sealed class ExternallyCancellableHost : IHost, IDisposable
+    {
+        private readonly IHost _innerHost;
+        private readonly CancellationTokenRegistration _cancellationRegistration;
+        private int _registrationDisposed;
+
+        public ExternallyCancellableHost(
+            IHost innerHost,
+            ITestApplicationCancellationTokenSource cancellationTokenSource,
+            CancellationToken cancellationToken)
+        {
+            _innerHost = innerHost;
+            _cancellationRegistration = cancellationToken.Register(
+                static state => ((ITestApplicationCancellationTokenSource)state!).Cancel(),
+                cancellationTokenSource);
+        }
+
+        public async Task<int> RunAsync()
+        {
+            try
+            {
+                return await _innerHost.RunAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                DisposeCancellationRegistration();
+            }
+        }
+
+        public void Dispose()
+        {
+            DisposeCancellationRegistration();
+            (_innerHost as IDisposable)?.Dispose();
+        }
+
+        private void DisposeCancellationRegistration()
+        {
+            if (Interlocked.Exchange(ref _registrationDisposed, 1) == 0)
+            {
+                _cancellationRegistration.Dispose();
+            }
+        }
     }
 
     private sealed class BuildContext(

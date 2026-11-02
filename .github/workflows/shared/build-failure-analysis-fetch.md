@@ -46,6 +46,9 @@ jobs:
       pr-number: ${{ steps.fetch.outputs.pr-number }}
       pr-head-sha: ${{ steps.fetch.outputs.pr-head-sha }}
       pr-merge-sha: ${{ steps.fetch.outputs.pr-merge-sha }}
+      pr-checkout-ref: ${{ steps.fetch.outputs.pr-checkout-ref }}
+      base-ref: ${{ steps.fetch.outputs.base-ref }}
+      push-blocked: ${{ steps.fetch.outputs.push-blocked }}
       ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
       ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
       missing-legs: ${{ steps.fetch.outputs.missing-legs }}
@@ -171,7 +174,57 @@ jobs:
           # agent pipeline stays inert.
           set +e
           set +o pipefail
+
+          # A set but unwritable path would pass a non-empty check and then
+          # fail on every append, leaving the step with no outputs at all
+          # instead of the intended controlled no-op. Probe with a zero-byte
+          # append, which verifies writability without adding content.
+          if [ -z "${GITHUB_OUTPUT}" ] || ! printf '' >> "${GITHUB_OUTPUT}" 2>/dev/null; then
+            echo "::error::GITHUB_OUTPUT is unset or not writable; refusing to run without a way to emit step outputs." >&2
+            exit 1
+          fi
+
           emit_none() { echo "binlog-found=false" >> "$GITHUB_OUTPUT"; exit 0; }
+
+          # Fetch an Azure DevOps API document into ADO_DOC. A network failure
+          # or a non-JSON body is a data-resolution failure, not evidence that
+          # there is nothing to analyse, so it is reported as such instead of
+          # falling through to an empty `.records`/`.value` and a misleading
+          # "no failed jobs" warning. These are small JSON documents, so they
+          # are also given a time budget: without one a stalled endpoint hangs
+          # the step until the whole job times out.
+          # Returns non-zero rather than calling emit_none directly, because a
+          # call inside a command substitution would only exit the subshell.
+          ado_get() {
+            local what="$1" url="$2" rc tmp
+            # `mktemp` rather than a fixed /tmp name: a predictable path is one
+            # pre-created symlink -- or one collision with another job sharing the
+            # runner -- away from being someone else's file.
+            tmp=$(mktemp) || {
+              echo "::warning::Could not create a temporary file for the ${what}; treating as a data-resolution failure."
+              return 1
+            }
+            # Write to a file rather than capturing stdout: `curl --retry` can only
+            # rewind seekable output, and command-substitution stdout is a pipe. A
+            # retry after a partial or error body would append to it, so a *successful*
+            # retry would yield two concatenated documents, `jq` would reject them, and
+            # the run would be reported as a data-resolution failure. With `-o` curl
+            # truncates the file before each attempt, so only the last response
+            # survives.
+            timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o "${tmp}" "${url}"
+            rc=$?
+            ADO_DOC=$(cat "${tmp}" 2>/dev/null)
+            rm -f "${tmp}"
+            if [ "${rc}" -ne 0 ] || [ -z "${ADO_DOC}" ]; then
+              echo "::warning::Could not fetch the ${what} from Azure DevOps (curl exit ${rc}); treating as a data-resolution failure."
+              return 1
+            fi
+            if ! printf '%s' "${ADO_DOC}" | jq -e . >/dev/null 2>&1; then
+              echo "::warning::Azure DevOps returned a non-JSON ${what}; treating as a data-resolution failure."
+              return 1
+            fi
+            return 0
+          }
 
           # --- 1. Resolve the Azure DevOps build and the PR it belongs to ---
           # This is the ONLY part of the job that differs between the two
@@ -212,7 +265,8 @@ jobs:
             # The build metadata is the authoritative source for the PR number
             # (via sourceBranch) as well as for the definition / result /
             # revision validated in step 3.
-            build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+            ado_get "details of build ${BUILD_ID}" "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1" || emit_none
+            build_json="${ADO_DOC}"
             # A PR build's sourceBranch is exactly `refs/pull/<n>/merge`, so it
             # identifies the PR unambiguously — unlike the commit->PRs API,
             # which can return several PRs in an unspecified order.
@@ -245,8 +299,9 @@ jobs:
             # Newest build for the PR's merge ref REGARDLESS of status
             # (queue-time descending), so a build queued after an older failure
             # is seen rather than the stale one being analysed silently.
-            builds_json=$(curl -sSL --retry 3 \
-              "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&queryOrder=queueTimeDescending&\$top=1&api-version=7.1")
+            ado_get "build list for PR #${PR_NUMBER}" \
+              "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&queryOrder=queueTimeDescending&\$top=1&api-version=7.1" || emit_none
+            builds_json="${ADO_DOC}"
             BUILD_ID=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].id // empty')
             BUILD_STATUS=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].status // empty')
             echo "Newest microsoft.testfx build for PR #${PR_NUMBER}: id='${BUILD_ID}' status='${BUILD_STATUS}'"
@@ -260,7 +315,8 @@ jobs:
               echo "::warning::PR #${PR_NUMBER}'s newest microsoft.testfx build (${BUILD_ID}) is still '${BUILD_STATUS}'; wait for it to finish before analysing."
               emit_none
             fi
-            build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+            ado_get "details of build ${BUILD_ID}" "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1" || emit_none
+            build_json="${ADO_DOC}"
           fi
           RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
           DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
@@ -268,11 +324,103 @@ jobs:
 
           # --- 2. Scope check: only analyse PRs targeting main / rel/* ---
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          PR_STATE=$(printf '%s' "${PR_JSON}" | jq -r '.state // empty')
+          if [ "${PR_STATE}" != "open" ]; then
+            if [ -z "${PR_STATE}" ]; then
+              echo "::warning::Could not resolve the state of PR #${PR_NUMBER}; skipping rather than analyzing or writing to an uncertain target."
+            else
+              echo "::warning::PR #${PR_NUMBER} is '${PR_STATE}', not open; skipping the obsolete build failure."
+            fi
+            emit_none
+          fi
           BASE_REF=$(printf '%s' "${PR_JSON}" | jq -r '.base.ref // empty')
           case "${BASE_REF}" in
             main|rel/*) echo "PR #${PR_NUMBER} base '${BASE_REF}' is in scope." ;;
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
+
+          # --- 2b. Resolve the ref the agent job should check out ---
+          # The agent edits the PR's tree in place when it can push a fix, so it
+          # needs the PR revision — not `check_run`'s ref, which is the default
+          # branch. Two cases:
+          #   * same-repo PR (dependency flow, maintainer branches): check out
+          #     the head BRANCH BY NAME. gh-aw derives the push target from
+          #     `git rev-parse --abbrev-ref HEAD`, so a detached checkout would
+          #     report `HEAD` and break bundle generation.
+          #   * fork PR: that branch does not exist here, so use the read-only
+          #     `refs/pull/<n>/head`. Detached is fine — gh-aw refuses pushes to
+          #     fork branches anyway, so those runs stay comment-only.
+          HEAD_REPO=$(printf '%s' "${PR_JSON}" | jq -r '.head.repo.full_name // empty')
+          HEAD_REF=$(printf '%s' "${PR_JSON}" | jq -r '.head.ref // empty')
+          if [ -n "${HEAD_REF}" ] && [ "${HEAD_REPO}" = "${GH_AW_REPO}" ]; then
+            CHECKOUT_REF="${HEAD_REF}"
+          else
+            CHECKOUT_REF="refs/pull/${PR_NUMBER}/head"
+          fi
+          echo "Agent checkout ref: '${CHECKOUT_REF}' (head repo '${HEAD_REPO}')"
+
+          # --- 2c. Trusted loop guard for the push escape hatch ---
+          # Only the automatic workflow enables `push-to-pull-request-branch`.
+          # The analyst is told not to push a second fix (Step 6b), but an
+          # instruction is not enforcement, and neither is anything installed
+          # inside the agent's sandbox. So the decision is made here, in trusted
+          # workflow code, and the automatic workflow applies it in its job-level
+          # `if:`: when this output is `true` the activation and agent jobs never
+          # run, and `safe_outputs` is skipped with them, so no push is even
+          # reachable. The command workflow ignores this output — it is
+          # comment-only and has nothing to guard.
+          #
+          # The condition is "the branch tip is itself an automated fix": the
+          # previous attempt is the newest thing on the branch and the build
+          # still fails, so it did not converge and a human has to take over.
+          # Scoping it to the tip rather than to the whole history means the
+          # workflow resumes the moment anyone pushes anything else, instead of
+          # abandoning the pull request forever after one attempt.
+          #
+          # The `[build-failure-analysis]` marker is not written by the model:
+          # the workflow sets `commit-title-suffix`, so gh-aw's push handler
+          # appends it to the commit title while applying the patch. A guard
+          # that depended on the agent remembering to write its own marker
+          # would not be a guard.
+          #
+          # Fails closed: an unreadable commit blocks the escape hatch.
+          PUSH_BLOCKED=true
+          PR_TIP_SHA=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
+          if [ "${HEAD_REPO}" != "${GH_AW_REPO}" ]; then
+            # gh-aw refuses pushes to fork branches, so the loop guard is moot
+            # here and must not suppress the (comment-only) analysis.
+            PUSH_BLOCKED=false
+          elif [ -n "${CHECK_PR_NUMBER}" ] && [ "${CHECK_PR_NUMBER}" != "${PR_NUMBER}" ]; then
+            # The push target is bound to `check_run.pull_requests[0].number`
+            # (see the `safe-outputs` block in the automatic workflow), while
+            # everything else keys off PR_NUMBER, which prefers the Azure
+            # Pipelines build's own source branch. Those agree in practice, but
+            # if they ever disagree the guard below would be checking one pull
+            # request while a push landed on another, so the loop would no
+            # longer be bounded. Refuse the run instead.
+            echo "::warning::The check payload names PR #${CHECK_PR_NUMBER} but the Azure Pipelines build belongs to PR #${PR_NUMBER}; skipping this run because the push target and the loop guard would disagree."
+          elif [ -z "${PR_TIP_SHA}" ]; then
+            echo "::warning::Could not resolve the head commit of PR #${PR_NUMBER}; skipping this run rather than risking a repeated automated fix."
+          elif TIP_SUBJECT=$(gh api "repos/${GH_AW_REPO}/commits/${PR_TIP_SHA}" --jq '.commit.message | split("\n")[0]'); then
+            # Deliberately a substring match, not an end-of-subject anchor.
+            # gh-aw appends the suffix by rewriting the first `Subject:` line
+            # of a `git format-patch` mbox, and git folds subjects longer than
+            # ~72 characters onto continuation lines, so `git am` reassembles
+            # the title with the marker in the *middle*, e.g.
+            #   Fix CS1503 after [build-failure-analysis] Microsoft.DotNet...
+            # Anchoring to the end would silently miss exactly those commits
+            # and let the push loop run unbounded — the one direction this
+            # guard must never fail in. The leading space is required, which
+            # is what the handler always inserts, so a subject that merely
+            # opens with the marker is not mistaken for an automated fix.
+            if printf '%s' "${TIP_SUBJECT}" | grep -qF ' [build-failure-analysis]'; then
+              echo "::warning::PR #${PR_NUMBER}'s tip commit is an automated [build-failure-analysis] fix and the build still fails, so the automated fix is not converging; skipping the automatic run and leaving the pull request to a human. Any further commit on the branch re-enables the analysis."
+            else
+              PUSH_BLOCKED=false
+            fi
+          else
+            echo "::warning::Could not read commit ${PR_TIP_SHA} of PR #${PR_NUMBER}; skipping this run rather than risking a repeated automated fix."
+          fi
 
           # --- 3. Validate the build, whichever way it was resolved ---
           # It must be the microsoft.testfx definition (209), have failed, and
@@ -321,8 +469,13 @@ jobs:
           # available. A post-download re-read below independently catches a
           # head that moves while the artifacts are being fetched.
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          CURRENT_STATE=$(printf '%s' "${PR_JSON}" | jq -r '.state // empty')
           CURRENT_HEAD=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
           CURRENT_MERGE=$(printf '%s' "${PR_JSON}" | jq -r '.merge_commit_sha // empty')
+          if [ "${CURRENT_STATE}" != "open" ]; then
+            echo "::warning::PR #${PR_NUMBER} closed while its failed build was being resolved; skipping the obsolete analysis."
+            emit_none
+          fi
           # Fail CLOSED: if either the build's analyzed revision or the current
           # PR head can't be resolved, skip — we must not analyze a possibly
           # stale binlog against the current diff (inline comments have no
@@ -347,7 +500,8 @@ jobs:
           echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
 
           # --- 4. Download every Logs_Build_* artifact and extract binlogs ---
-          artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")
+          ado_get "artifact list of build ${BUILD_ID}" "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1" || emit_none
+          artifacts_json="${ADO_DOC}"
           mapfile -t names < <(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
           [ "${#names[@]}" -eq 0 ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
@@ -361,20 +515,26 @@ jobs:
           # "no build failure" from the legs that happened to upload.
           #
           # Ask the timeline whether each leg's log *publish* succeeded rather
-          # than guessing its artifact name from its display name. The artifact
-          # is named from `$(Agent.Os)`, which is not what the job is called:
-          # `MacOS Debug` publishes `Logs_Build_Darwin_Debug`, and
-          # `WindowsSamples Debug` is named from `$(Agent.JobName)` instead. Name
-          # matching reported those healthy legs as missing on real builds —
-          # every macOS failure, and every `msbuild_cache_seed` job. Arcade's
+          # than guessing its artifact name from its display name. Artifact
+          # naming is configurable per job group and does not necessarily match
+          # the timeline display name. Name matching reported healthy legs as
+          # missing on real builds — including every macOS failure. Arcade's
           # `Publish logs` task record answers the question directly, so no
           # spelling has to be inferred. A failed job carrying no such task
-          # (the `Detect changed paths` classifier, the cache-seed stage) does
+          # (the `Detect changed paths` classifier) does
           # not publish logs at all and is not treated as a missing leg.
           #
           # `canceled` and `abandoned` legs count alongside `failed`: they also
           # finish without logs, and are a real gap in the artifact set.
-          timeline_json=$(curl -sSL --retry 3 --max-time 60 "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true)
+          # Write to a file, not a command substitution: `curl --retry` can only rewind
+          # seekable output, so a retry would append to whatever a failed attempt had
+          # already emitted and a *successful* retry would yield two concatenated
+          # documents. That parses as neither, so a recoverable blip would look like an
+          # unreadable timeline and needlessly disable the analysis below.
+          TL_TMP=$(mktemp) || TL_TMP=""
+          timeout 60 curl -sSL --fail --retry 3 --connect-timeout 10 --max-time 20 --retry-max-time 40 -o "${TL_TMP}" "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true
+          timeline_json=$(cat "${TL_TMP}" 2>/dev/null)
+          rm -f "${TL_TMP}"
           MISSING_LEGS=""
           # An unreadable timeline must not look like a complete build. A failed
           # request, a non-JSON error page and an ADO error document all left
@@ -384,7 +544,7 @@ jobs:
           # was never established. Probe for the `records` array first and
           # report an explicit unknown when it isn't there.
           timeline_ok=0
-          if printf '%s' "${timeline_json}" | jq -e 'type == "object" and has("records")' >/dev/null 2>&1; then
+          if printf '%s' "${timeline_json}" | jq -e 'type == "object" and (.records | type == "array")' >/dev/null 2>&1; then
             timeline_ok=1
           fi
           if [ "${timeline_ok}" -eq 1 ]; then
@@ -422,13 +582,39 @@ jobs:
           # extraction time, AND enforce cumulative budgets across all legs so
           # many individually-small artifacts can't collectively exhaust the
           # runner's disk or its network time.
-          MAX_ZIP_BYTES=524288000       # 500 MB compressed per artifact
+          # `MAX_ZIP_BYTES` is a *download* guard, not a size expectation:
+          # real log artifacts here are already ~500 MB compressed, and a leg
+          # that grows past a cap is silently dropped from the analysis rather
+          # than reported, so a too-tight value quietly hides the very failure
+          # the workflow exists to explain. (On dotnet/roslyn a 500 MB cap
+          # excluded a 636 MB analyzer-logs artifact and the run produced
+          # nothing.) The cumulative caps below are what actually bound the
+          # runner's disk and network, so this one is set well clear of the
+          # legitimate range.
+          MAX_ZIP_BYTES=2147483648      # 2 GB compressed per artifact
           MAX_UNZIP_BYTES=2147483648    # 2 GB uncompressed per artifact
           MAX_TOTAL_BYTES=4294967296    # 4 GB uncompressed across all artifacts
           MAX_TOTAL_ZIP_BYTES=3221225472 # 3 GB compressed downloaded in total
+          MAX_ZIP_ENTRIES=65536
+          MAX_ZIP_METADATA_BYTES=16777216 # 16 MB central directory
+          # `--max-time` is per attempt, so `--retry N` multiplies it: the whole
+          # download phase, not one transfer, is what has to fit inside this job's
+          # `timeout-minutes`. Give the loop a wall-clock deadline and derive every
+          # transfer's budget from what is left of it, so no combination of slow
+          # artifacts and retries can take the job down before the controlled no-op.
+          FETCH_BUDGET=420           # 7 minutes for all artifact transfers
+          MAX_ATTEMPT_SECONDS=120       # per attempt; the full set really takes ~30s
+          FETCH_DEADLINE=$(( $(date +%s) + FETCH_BUDGET ))
           MAX_ARTIFACTS=40              # cap only; the real count is path-dependent
           TOTAL_BYTES=0
           TOTAL_ZIP_BYTES=0
+          # One private scratch file for every download. A fixed /tmp name is a
+          # pre-created symlink, or a second job on the same runner, away from being
+          # someone else's file.
+          ZIP_TMP=$(mktemp) || { echo "::warning::Could not create a temporary file for downloads."; emit_none; }
+          # A private extraction directory, for the same reason as ZIP_TMP: a fixed
+          # path is another job's directory on a runner we do not have to ourselves.
+          AX_DIR=$(mktemp -d) || { echo "::warning::Could not create a temporary directory for extraction."; emit_none; }
           # Bound the work before starting: a pipeline change (or repeated leg
           # retries) could grow the matched set well past today's count. Refuse
           # rather than process a prefix of the list, because a partial view is
@@ -438,6 +624,10 @@ jobs:
             emit_none
           fi
           mkdir -p /tmp/binlogs
+          # Only binlogs extracted by this run may be analyzed. Anything left in
+          # the directory by an earlier run on the same runner would otherwise be
+          # uploaded and attributed to this build.
+          rm -f /tmp/binlogs/*.binlog
           count=0
           staged_legs=0
           ai=0
@@ -449,42 +639,234 @@ jobs:
             safe_name=$(printf '%s' "${name}" | tr -c 'A-Za-z0-9._-' '_')
             ai=$((ai + 1))
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
-            [ -z "${url}" ] && { echo "::warning::No download URL for ${name}."; continue; }
-            rm -rf /tmp/ax /tmp/a.zip
-            mkdir -p /tmp/ax
+            [ -z "${url}" ] && { echo "::warning::No download URL for ${safe_name}."; continue; }
+            find "${AX_DIR:?}" -mindepth 1 -delete
+            : > "${ZIP_TMP}"
             # Hard-cap the bytes written to disk regardless of Content-Length:
-            # stream through `head -c` (cap + 1) and bound total time. This
+            # `ulimit -f` bounds what this subshell may write, and the size check
+            # below is authoritative. Total time is bounded too. This
             # closes the gap where `curl --max-filesize` alone would let a
             # length-less response write unbounded data before any post-check.
-            curl -sSL --retry 3 --max-time 300 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip || true
-            ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
-            # Bound cumulative *compressed* bytes too: the per-artifact and
-            # cumulative-uncompressed caps still allow many mid-sized archives
-            # to be pulled over the network before any of them is inspected.
             #
-            # Charge the budget here, before the skips below, because the bytes
-            # are already on the wire by this point — `curl` above streams into
-            # `head -c` and only then is the size known. Charging after the
-            # per-artifact skip would let every oversized artifact cost a full
-            # MAX_ZIP_BYTES of network without ever being counted, so a build of
-            # MAX_ARTIFACTS oversized legs would download far past this budget
-            # while appearing to stay inside it.
+            # Bound this transfer by whatever is left of the cumulative budget
+            # as well as by the per-artifact cap. Checking the cumulative total
+            # only *after* the transfer would let a download start just under
+            # the limit and still pull a further MAX_ZIP_BYTES, making the real
+            # ceiling `MAX_TOTAL_ZIP_BYTES + MAX_ZIP_BYTES`.
+            ZIP_CAP="${MAX_ZIP_BYTES}"
+            ZIP_ALLOWANCE=$((MAX_TOTAL_ZIP_BYTES - TOTAL_ZIP_BYTES))
+            [ "${ZIP_ALLOWANCE}" -lt "${ZIP_CAP}" ] && ZIP_CAP="${ZIP_ALLOWANCE}"
+            if [ "${ZIP_CAP}" -le 0 ]; then
+              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} is exhausted before ${safe_name}; stopping downloads."; break
+            fi
+            # Bound this transfer by the time left as well, and never start one with
+            # no time to finish in.
+            TIME_LEFT=$(( FETCH_DEADLINE - $(date +%s) ))
+            if [ "${TIME_LEFT}" -le 0 ]; then
+              echo "::warning::Download time budget ${FETCH_BUDGET}s exhausted before ${safe_name}; stopping downloads."; break
+            fi
+            ATTEMPT_SECONDS="${MAX_ATTEMPT_SECONDS}"
+            [ "${TIME_LEFT}" -lt "${ATTEMPT_SECONDS}" ] && ATTEMPT_SECONDS="${TIME_LEFT}"
+            # `--retry-max-time` only gates whether curl may *start* another retry, so a
+            # retry begun just inside it can still run a further `--max-time`. `timeout`
+            # around the whole invocation is what makes the deadline real rather than a
+            # scheduling hint; a killed transfer is treated like any other failed one and
+            # the leg is reported as missing, which fails closed.
+            # Download to a file, never a pipe: curl can only rewind seekable output, so
+            # through a pipe a retried body is *appended* and a 503 error page followed
+            # by a successful retry yields a corrupt `<error page><zip>` that can still
+            # pass the size guards, only to make `unzip` return warning status 1 later
+            # and drop the leg. `--fail` additionally keeps HTTP error bodies out of the
+            # file. `ulimit -f` is the disk backstop for responses that declare no
+            # Content-Length; the size check below is authoritative. The block count is
+            # rounded UP so any positive ZIP_CAP still buys at least one block. SIGXFSZ
+            # is ignored so hitting the cap is an ordinary write error.
+            (
+              # Fail the leg rather than the backstop: if the shell will not apply
+              # the limit, downloading anyway would leave a response with no usable
+              # Content-Length free to fill the disk before the size check below runs.
+              # bash counts `ulimit -f` in 1024-byte units, except in POSIX mode where
+              # it counts 512-byte blocks. Pin the mode so this arithmetic means one
+              # thing regardless of how the runner's shell was invoked.
+              set +o posix
+              ulimit -f $(( (ZIP_CAP + 1023) / 1024 )) || exit 1
+              trap '' XFSZ
+              timeout "${TIME_LEFT}" curl -sSL --fail --retry 3 --retry-delay 2 \
+                --connect-timeout 15 --max-time "${ATTEMPT_SECONDS}" \
+                --retry-max-time "${TIME_LEFT}" -o "${ZIP_TMP}" "${url}"
+            ) 2>/dev/null
+            curl_rc=$?
+            ZIP_BYTES=$(stat -c%s "${ZIP_TMP}" 2>/dev/null || echo 0)
+            # Charge the budget with the bytes retained on disk, including those of an
+            # artifact about to be skipped. This is a disk and extraction budget, not a
+            # meter of network egress: `-o` truncates before each retry, so failed
+            # attempts are not counted here. What bounds those is FETCH_DEADLINE via
+            # the `timeout` wrapper, plus `ulimit -f`, which caps every individual
+            # attempt at ZIP_CAP.
             TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
-            if [ "${TOTAL_ZIP_BYTES}" -gt "${MAX_TOTAL_ZIP_BYTES}" ]; then
-              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} reached at ${name}; stopping."; break
+            # A timed-out, killed or size-limited transfer can still leave a file that
+            # happens to parse as a ZIP; without this the leg would be accepted from a
+            # truncated download. Skipping fails closed via the completeness check.
+            if [ "${curl_rc}" -ne 0 ]; then
+              echo "::warning::Skipping ${safe_name}: download failed or was truncated (curl exit ${curl_rc})."; continue
             fi
             if [ "${ZIP_BYTES}" -eq 0 ]; then
-              echo "::warning::Skipping ${name}: empty or failed download."; continue
+              echo "::warning::Skipping ${safe_name}: empty or failed download."; continue
             fi
-            if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
+            if [ "${ZIP_BYTES}" -gt "${ZIP_CAP}" ]; then
+              echo "::warning::Skipping ${safe_name}: download exceeded the ${ZIP_CAP}-byte cap."; continue
             fi
-            UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
-            # Fail safe: if the uncompressed size isn't a plain integer (corrupt
-            # zip / unexpected `unzip -l` output), we can't verify it — skip the
-            # artifact rather than let a non-numeric value bypass the `-gt` guard.
-            if ! printf '%s' "${UNCOMP}" | grep -qE '^[0-9]+$'; then
-              echo "::warning::Skipping ${name}: could not determine uncompressed size (unparseable unzip output)."; continue
+            # --- Validate ZIP entry metadata before extraction ---
+            # Read only the bounded ZIP trailer first. ZipFile eagerly materializes
+            # the central directory, so its entry-count check would otherwise run
+            # only after an attacker-controlled allocation. The preflight also
+            # replaces the earlier unbounded `unzip -l` size probe.
+            UNCOMP=$(timeout 60 python3 - "${ZIP_TMP}" "${MAX_ZIP_ENTRIES}" "${MAX_ZIP_METADATA_BYTES}" 2>/dev/null <<'PY'
+          import os
+          import stat
+          import struct
+          import sys
+          import zipfile
+
+          archive_path = sys.argv[1]
+          max_entries = int(sys.argv[2])
+          max_metadata_bytes = int(sys.argv[3])
+          eocd_struct = struct.Struct("<4s4H2LH")
+          zip64_locator_struct = struct.Struct("<4sLQL")
+          zip64_eocd_struct = struct.Struct("<4sQ2H2L4Q")
+
+          def invalid_archive():
+              raise SystemExit(6)
+
+          try:
+              file_size = os.path.getsize(archive_path)
+              if file_size < eocd_struct.size:
+                  invalid_archive()
+              tail_size = min(file_size, eocd_struct.size + 65535)
+              with open(archive_path, "rb") as archive_file:
+                  archive_file.seek(file_size - tail_size)
+                  tail = archive_file.read(tail_size)
+                  search_end = len(tail)
+                  while True:
+                      eocd_index = tail.rfind(b"PK\x05\x06", 0, search_end)
+                      if eocd_index < 0:
+                          invalid_archive()
+                      if eocd_index + eocd_struct.size <= len(tail):
+                          eocd = eocd_struct.unpack_from(tail, eocd_index)
+                          if eocd_index + eocd_struct.size + eocd[-1] == len(tail):
+                              break
+                      search_end = eocd_index
+
+                  eocd_offset = file_size - tail_size + eocd_index
+                  (
+                      _,
+                      disk_number,
+                      central_directory_disk,
+                      entries_on_disk,
+                      entry_count,
+                      central_directory_size,
+                      central_directory_offset,
+                      _,
+                  ) = eocd
+                  trailer_offset = eocd_offset
+                  locator_offset = eocd_offset - zip64_locator_struct.size
+                  locator_data = b""
+                  if locator_offset >= 0:
+                      archive_file.seek(locator_offset)
+                      locator_data = archive_file.read(zip64_locator_struct.size)
+                  has_zip64_locator = (
+                      len(locator_data) == zip64_locator_struct.size
+                      and locator_data[:4] == b"PK\x06\x07"
+                  )
+
+                  if has_zip64_locator:
+                      locator_signature, zip64_disk, zip64_offset, total_disks = (
+                          zip64_locator_struct.unpack(locator_data)
+                      )
+                      if locator_signature != b"PK\x06\x07" or zip64_disk != 0 or total_disks != 1:
+                          invalid_archive()
+
+                      archive_file.seek(zip64_offset)
+                      zip64_data = archive_file.read(zip64_eocd_struct.size)
+                      if len(zip64_data) != zip64_eocd_struct.size:
+                          invalid_archive()
+                      (
+                          zip64_signature,
+                          zip64_record_size,
+                          _,
+                          _,
+                          disk_number,
+                          central_directory_disk,
+                          entries_on_disk,
+                          entry_count,
+                          central_directory_size,
+                          central_directory_offset,
+                      ) = zip64_eocd_struct.unpack(zip64_data)
+                      if (
+                          zip64_signature != b"PK\x06\x06"
+                          or zip64_record_size < 44
+                          or zip64_offset + 12 + zip64_record_size != locator_offset
+                          or disk_number != 0
+                          or central_directory_disk != 0
+                          or entries_on_disk != entry_count
+                      ):
+                          invalid_archive()
+                      trailer_offset = zip64_offset
+                  elif (
+                      disk_number != 0
+                      or central_directory_disk != 0
+                      or entries_on_disk != entry_count
+                  ):
+                      invalid_archive()
+
+                  if entry_count > max_entries:
+                      raise SystemExit(4)
+                  if central_directory_size > max_metadata_bytes:
+                      raise SystemExit(5)
+                  if (
+                      central_directory_offset > trailer_offset
+                      or central_directory_size > trailer_offset - central_directory_offset
+                      or (entry_count and central_directory_size < entry_count * 46)
+                  ):
+                      invalid_archive()
+
+              with zipfile.ZipFile(archive_path) as archive:
+                  entries = archive.infolist()
+                  if len(entries) != entry_count or archive.start_dir != central_directory_offset:
+                      invalid_archive()
+                  uncompressed_size = 0
+                  for entry in entries:
+                      name = entry.filename.replace("\\", "/")
+                      parts = name.split("/")
+                      if (
+                          not name
+                          or "\0" in name
+                          or name.startswith("/")
+                          or ".." in parts
+                          or (len(parts[0]) >= 2 and parts[0][0].isalpha() and parts[0][1] == ":")
+                      ):
+                          raise SystemExit(2)
+                      file_type = stat.S_IFMT((entry.external_attr >> 16) & 0xFFFF)
+                      if file_type not in (0, stat.S_IFREG, stat.S_IFDIR):
+                          raise SystemExit(3)
+                      uncompressed_size += entry.file_size
+          except (OSError, OverflowError, struct.error, ValueError, zipfile.BadZipFile):
+              invalid_archive()
+
+          print(uncompressed_size)
+          PY
+            )
+            zscan_rc=$?
+            if [ "${zscan_rc}" -ne 0 ]; then
+              case "${zscan_rc}" in
+                2) echo "::warning::Skipping ${safe_name}: archive has a suspicious entry path." ;;
+                3) echo "::warning::Skipping ${safe_name}: archive has a symlink, device, or other unsupported entry type." ;;
+                4) echo "::warning::Skipping ${safe_name}: archive exceeds the ${MAX_ZIP_ENTRIES}-entry limit." ;;
+                5) echo "::warning::Skipping ${safe_name}: archive central directory exceeds the ${MAX_ZIP_METADATA_BYTES}-byte limit." ;;
+                6) echo "::warning::Skipping ${safe_name}: archive structure is invalid or inconsistent." ;;
+                *) echo "::warning::Skipping ${safe_name}: archive validation failed or timed out." ;;
+              esac
+              continue
             fi
             # ZIP64 uncompressed sizes can reach ~20 digits — beyond Bash's
             # signed 64-bit range, where `-gt` (and the cumulative `$((...))`
@@ -492,43 +874,78 @@ jobs:
             # archive slip past the guard. Any value with more digits than the
             # limit is unambiguously larger, so reject on decimal length first;
             # after this, UNCOMP fits safely in the integer range used below.
+            if ! printf '%s' "${UNCOMP}" | grep -qE '^[0-9]+$'; then
+              echo "::warning::Skipping ${safe_name}: could not determine uncompressed size."; continue
+            fi
             if [ "${#UNCOMP}" -gt "${#MAX_UNZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: uncompressed size has ${#UNCOMP} digits, exceeding the ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
+              echo "::warning::Skipping ${safe_name}: uncompressed size has ${#UNCOMP} digits, exceeding the ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi
             if [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
+              echo "::warning::Skipping ${safe_name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi
             if [ $((TOTAL_BYTES + UNCOMP)) -gt "${MAX_TOTAL_BYTES}" ]; then
-              echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${name}; stopping extraction."; break
+              echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${safe_name}; stopping extraction."; break
             fi
-            # Refuse the archive if any entry path is absolute or has a `..`
-            # component (defense-in-depth over unzip's own traversal guard),
-            # then extract `*.binlog` entries *preserving* their in-archive
-            # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
-            # share a basename in different folders don't overwrite each other.
-            if unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'; then
-              echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
-            fi
-            # `unzip` exit 11 means "no files matched" — the artifact carries no
-            # binlog at all. That is not an extraction failure: the leg did
-            # publish its logs, they simply contain no binlog, and the
-            # fail-closed check below already accounts for a leg that staged
-            # nothing. Reporting it as "extraction failed or timed out" sends
-            # the reader chasing a corrupt-archive theory that isn't there. Any
-            # other non-zero exit (corrupt archive, timeout) is a real failure.
+            # --- Extract validated binlogs ---
+            # Preserve in-archive paths under a fresh directory so duplicate
+            # basenames in separate folders do not overwrite each other.
+            # Use the same ZipFile parser that was validated above. Info-ZIP also
+            # interprets mode-bearing extra fields, so handing the archive to
+            # `unzip` here would let the validator see a regular entry that the
+            # extractor materializes as a symlink or special file.
             #
-            # Both cases `continue`, so nothing was written to /tmp/ax and the
+            # A zero count means the artifact carries no binlog at all. That is
+            # not an extraction failure: the leg did publish its logs, they
+            # simply contain no binlog, and the fail-closed check below already
+            # accounts for a leg that staged nothing.
+            #
+            # Both skip cases `continue`, so nothing was written to "${AX_DIR}" and the
             # uncompressed budget below is left untouched. Charging it for an
             # archive that extracted nothing would let one large binlog-free
             # artifact push a genuinely useful later leg past MAX_TOTAL_BYTES.
-            uz=0
-            timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || uz=$?
-            if [ "${uz}" -eq 11 ]; then
-              echo "::warning::${name}: published logs contain no binlog; nothing to analyse from this leg."; continue
+            # Extraction shares the deadline with the transfers. Otherwise a run that
+            # spent most of its budget downloading could still queue one bounded
+            # extraction per artifact and walk the job past `timeout-minutes` without
+            # ever reaching the controlled no-op below.
+            TIME_LEFT=$(( FETCH_DEADLINE - $(date +%s) ))
+            if [ "${TIME_LEFT}" -le 0 ]; then
+              echo "::warning::Fetch budget exhausted before extracting ${safe_name}; stopping."; break
             fi
-            if [ "${uz}" -ne 0 ]; then
-              echo "::warning::Skipping ${name}: extraction failed or timed out (unzip exit ${uz})."; continue
+            [ "${TIME_LEFT}" -gt 120 ] && TIME_LEFT=120
+            EXTRACTED=$(timeout "${TIME_LEFT}" python3 - "${ZIP_TMP}" "${AX_DIR}" 2>/dev/null <<'PY'
+          import os
+          import shutil
+          import sys
+          import zipfile
+
+          archive_path = sys.argv[1]
+          destination_root = os.path.realpath(sys.argv[2])
+          extracted = 0
+          with zipfile.ZipFile(archive_path) as archive:
+              for entry in archive.infolist():
+                  name = entry.filename.replace("\\", "/")
+                  if entry.is_dir() or not name.endswith(".binlog"):
+                      continue
+                  destination = os.path.realpath(
+                      os.path.join(destination_root, *name.split("/"))
+                  )
+                  if os.path.commonpath((destination_root, destination)) != destination_root:
+                      raise RuntimeError("archive entry escaped extraction root")
+                  os.makedirs(os.path.dirname(destination), exist_ok=True)
+                  with archive.open(entry) as source, open(destination, "wb") as target:
+                      shutil.copyfileobj(source, target, length=1024 * 1024)
+                  extracted += 1
+          print(extracted)
+          PY
+            )
+            extract_rc=$?
+            if [ "${extract_rc}" -ne 0 ] || ! printf '%s' "${EXTRACTED}" | grep -qE '^[0-9]+$'; then
+              echo "::warning::Skipping ${safe_name}: extraction failed or timed out."; continue
             fi
+            if [ "${EXTRACTED}" -eq 0 ]; then
+              echo "::warning::${safe_name}: published logs contain no binlog; nothing to analyse from this leg."; continue
+            fi
+            # --- Stage extracted binlogs ---
             # Consume the cumulative budget only once the archive actually
             # extracted — not on a suspicious-path or extraction-failure skip
             # above — so a skipped leg can't wrongly exhaust the budget and
@@ -553,10 +970,11 @@ jobs:
               else
                 echo "::warning::Failed to stage ${bl}; skipping."
               fi
-            done < <(find /tmp/ax -type f -name '*.binlog')
+            done < <(find "${AX_DIR}" -type f -name '*.binlog')
             # This leg produced at least one usable binlog.
             [ "${leg_staged}" -eq 1 ] && staged_legs=$((staged_legs + 1))
           done
+          rm -rf "${AX_DIR:?}" "${ZIP_TMP}"
           echo "Extracted ${count} binlog(s) from ${staged_legs}/${#names[@]} legs into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
           [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
@@ -577,8 +995,13 @@ jobs:
           # the analyzed binlog stale relative to the current diff (inline
           # comments carry no commit_id and target the current diff).
           LATEST_PR=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          LATEST_STATE=$(printf '%s' "${LATEST_PR}" | jq -r '.state // empty')
           LATEST_HEAD=$(printf '%s' "${LATEST_PR}" | jq -r '.head.sha // empty')
           LATEST_MERGE=$(printf '%s' "${LATEST_PR}" | jq -r '.merge_commit_sha // empty')
+          if [ "${LATEST_STATE}" != "open" ]; then
+            echo "::warning::PR #${PR_NUMBER} closed during artifact download; skipping the obsolete analysis."
+            emit_none
+          fi
           if [ -z "${LATEST_HEAD}" ] || [ "${LATEST_HEAD}" != "${HEAD_SHA}" ]; then
             echo "::warning::PR #${PR_NUMBER} head changed during artifact download ('${HEAD_SHA}' -> '${LATEST_HEAD}') or could not be re-resolved; skipping to avoid posting stale-build suggestions against the new diff."
             emit_none
@@ -601,13 +1024,16 @@ jobs:
             echo "pr-number=${PR_NUMBER}"
             echo "pr-head-sha=${HEAD_SHA}"
             echo "pr-merge-sha=${BUILD_MERGE_SHA}"
+            echo "pr-checkout-ref=${CHECKOUT_REF}"
+            echo "base-ref=${BASE_REF}"
+            echo "push-blocked=${PUSH_BLOCKED}"
             echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload analysis artifact
         if: steps.fetch.outputs.binlog-found == 'true'
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: build-failure-analysis-data
           path: /tmp/binlogs

@@ -10,7 +10,7 @@ internal sealed class MSBuildCommandLineProvider : CommandLineOptionsProviderBas
 {
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
-        new(MSBuildConstants.MSBuildNodeOptionKey, "Used to pass the MSBuild node handle", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
+        new(MSBuildConstants.MSBuildNodeOptionKey, Resources.ExtensionResources.MSBuildNodeOptionDescription, ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
     ];
 
     public MSBuildCommandLineProvider()

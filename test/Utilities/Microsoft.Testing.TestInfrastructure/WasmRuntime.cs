@@ -24,6 +24,11 @@ namespace Microsoft.Testing.TestInfrastructure;
 public static class WasmRuntime
 {
     /// <summary>
+    /// The target framework supported by the repository's pinned WebAssembly workloads.
+    /// </summary>
+    public const string TargetFramework = "net10.0";
+
+    /// <summary>
     /// The wasm runtime identifier that the mono wasi runtime pack targets.
     /// </summary>
     public const string WasiRid = "wasi-wasm";
@@ -132,11 +137,11 @@ public static class WasmRuntime
     /// to the bundle so the platform can read/write its files.
     /// </summary>
     public static async Task<(int ExitCode, string Output, string Error, string Combined)> RunUnderWasmtimeAsync(
-        string wasmtime, string appBundle, string appName, CancellationToken cancellationToken)
+        string wasmtime, string appBundle, string appName, CancellationToken cancellationToken, string? arguments = null)
     {
         var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{wasmtime}\" run -S http --dir . -- dotnet.wasm {appName}",
+            $"\"{wasmtime}\" run -S http --dir . -- dotnet.wasm {appName}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}")}",
             workingDirectory: appBundle,
             cancellationToken: cancellationToken);
 
@@ -248,7 +253,7 @@ public static class WasmRuntime
     public static async Task<(int ExitCode, string Output, string Error, string Combined)> RunUnderNodeAsync(
         string node, string appBundle, string nodeRunnerSource, CancellationToken cancellationToken, string? arguments = null)
     {
-        File.WriteAllText(Path.Combine(appBundle, "runtests.mjs"), nodeRunnerSource);
+        await File.WriteAllTextAsync(Path.Combine(appBundle, "runtests.mjs"), nodeRunnerSource, cancellationToken);
 
         string commandArguments = string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}";
         var commandLine = new CommandLine();

@@ -14,8 +14,15 @@ internal sealed class AggregatedConfiguration(
     ITestApplicationModuleInfo testApplicationModuleInfo,
     IFileSystem fileSystem,
     IEnvironment environment,
-    CommandLineParseResult commandLineParseResult) : IConfiguration
+    CommandLineParseResult commandLineParseResult) : IConfigurationRoot
 {
+    private static readonly string[] ComputedConfigurationKeys =
+    [
+        PlatformConfigurationConstants.PlatformCurrentWorkingDirectory,
+        PlatformConfigurationConstants.PlatformResultDirectory,
+        PlatformConfigurationConstants.PlatformTestHostWorkingDirectory,
+    ];
+
     public const string DefaultTestResultFolderName = "TestResults";
     private readonly IConfigurationProvider[] _configurationProviders = configurationProviders;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -44,6 +51,80 @@ internal sealed class AggregatedConfiguration(
             // Fallback to calculating from configuration providers.
             return CalculateFromConfigurationProviders(key);
         }
+    }
+
+    public IConfigurationSection GetSection(string key)
+    {
+        _ = key ?? throw new ArgumentNullException(nameof(key));
+        return new ConfigurationSection(this, key);
+    }
+
+    public IEnumerable<IConfigurationSection> GetChildren() => GetChildren(parentPath: null);
+
+    internal IEnumerable<IConfigurationSection> GetChildren(string? parentPath)
+    {
+        List<string> childKeys = [];
+        HashSet<string> seenChildKeys = [with(StringComparer.OrdinalIgnoreCase)];
+
+        AddChildKeys(ConfigurationProviderHelpers.GetChildKeys(ComputedConfigurationKeys, parentPath));
+
+        foreach (IHierarchicalConfigurationProvider hierarchicalProvider in _configurationProviders.OfType<IHierarchicalConfigurationProvider>())
+        {
+            AddChildKeys(hierarchicalProvider.GetChildKeys(parentPath));
+        }
+
+        childKeys.Sort(ConfigurationKeyComparer.Instance);
+
+        var children = new IConfigurationSection[childKeys.Count];
+        for (int i = 0; i < childKeys.Count; i++)
+        {
+            string path = parentPath is null
+                ? childKeys[i]
+                : parentPath + PlatformConfigurationConstants.KeyDelimiter + childKeys[i];
+            children[i] = new ConfigurationSection(this, path);
+        }
+
+        return children;
+
+        void AddChildKeys(IEnumerable<string> keys)
+        {
+            foreach (string childKey in keys)
+            {
+                if (seenChildKeys.Add(childKey))
+                {
+                    childKeys.Add(childKey);
+                }
+            }
+        }
+    }
+
+    internal bool TryGetSectionValue(string key, out string? value)
+    {
+        string? computedKey = ComputedConfigurationKeys.FirstOrDefault(
+            computedKey => string.Equals(computedKey, key, StringComparison.OrdinalIgnoreCase));
+        if (computedKey is not null)
+        {
+            value = this[computedKey];
+            return true;
+        }
+
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            if (provider is IHierarchicalConfigurationProvider hierarchicalProvider)
+            {
+                if (hierarchicalProvider.TryGetScalar(key, out value))
+                {
+                    return true;
+                }
+            }
+            else if (provider.TryGet(key, out value))
+            {
+                return true;
+            }
+        }
+
+        value = null;
+        return false;
     }
 
     private string? CalculateFromConfigurationProviders(string key)
@@ -143,6 +224,44 @@ internal sealed class AggregatedConfiguration(
     }
 
     /// <summary>
+    /// Resolves a passive command-line option default without changing the option's active state.
+    /// </summary>
+    internal bool TryGetCommandLineOptionDefaultFromProviders(string optionName, out string[] arguments)
+    {
+        string baseKey = PlatformConfigurationConstants.CommandLineOptionDefaultsSectionName
+            + PlatformConfigurationConstants.KeyDelimiter
+            + optionName.Trim(CommandLineParseResult.OptionPrefix);
+
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            List<string>? collected = null;
+            int index = 0;
+            while (provider.TryGet(baseKey + PlatformConfigurationConstants.KeyDelimiter + index.ToString(CultureInfo.InvariantCulture), out string? indexed)
+                && indexed is not null)
+            {
+                collected ??= [];
+                collected.Add(indexed);
+                index++;
+            }
+
+            if (collected is { Count: > 0 })
+            {
+                arguments = [.. collected];
+                return true;
+            }
+
+            if (provider.TryGet(baseKey, out string? scalar) && scalar is not null)
+            {
+                arguments = [scalar];
+                return true;
+            }
+        }
+
+        arguments = [];
+        return false;
+    }
+
+    /// <summary>
     /// Returns the immediate (one-level) string entries declared under <paramref name="sectionName"/>
     /// in the loaded testconfig.json file. Returns an empty list if no JSON configuration source is
     /// active or the section is absent.
@@ -172,6 +291,18 @@ internal sealed class AggregatedConfiguration(
     }
 
     /// <summary>
+    /// Returns the typed passive command-line option defaults declared in the loaded testconfig.json file.
+    /// </summary>
+    internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateJsonCommandLineOptionDefaults()
+    {
+        JsonConfigurationSource.JsonConfigurationProvider? jsonProvider = _configurationProviders
+            .OfType<JsonConfigurationSource.JsonConfigurationProvider>()
+            .FirstOrDefault();
+
+        return jsonProvider?.EnumerateCommandLineOptionDefaults() ?? [];
+    }
+
+    /// <summary>
     /// Normalizes JSON-sourced scalar command-line option entries to the indexed shape for any
     /// option in <paramref name="optionByName"/> with <see cref="ArgumentArity.Min"/> &gt;= 1,
     /// so that subsequent <see cref="TryGetCommandLineOptionFromProviders"/> and validator passes
@@ -195,7 +326,18 @@ internal sealed class AggregatedConfiguration(
 
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(IFileLoggerProvider? fileLoggerProvider)
     {
-        _resultsDirectory = _fileSystem.CreateDirectory(this[PlatformConfigurationConstants.PlatformResultDirectory]!);
+        string resultsDirectory = this[PlatformConfigurationConstants.PlatformResultDirectory]!;
+        if (_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey))
+        {
+            // The controller owns the user-selected results directory. A sandboxed or remote test host
+            // may not be able to access that path, and controller-side report/lifetime extensions publish
+            // the final artifacts there. Anchor relative paths before tests can change the working
+            // directory, without touching the filesystem from the child process.
+            _resultsDirectory = Path.GetFullPath(resultsDirectory);
+            return;
+        }
+
+        _resultsDirectory = _fileSystem.CreateDirectory(resultsDirectory);
 
         // In case of the result directory is overridden by the config file we move logs to it.
         // This can happen in case of VSTest mode where the result directory is set to a different location.
@@ -287,5 +429,45 @@ internal sealed class AggregatedConfiguration(
 
         // then fallback to the actual working directory.
         return _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+    }
+
+    private sealed class ConfigurationKeyComparer : IComparer<string>
+    {
+        public static readonly ConfigurationKeyComparer Instance = new();
+
+        public int Compare(string? x, string? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return 0;
+            }
+
+            if (x is null)
+            {
+                return -1;
+            }
+
+            if (y is null)
+            {
+                return 1;
+            }
+
+            bool xIsInteger = int.TryParse(x, NumberStyles.None, CultureInfo.InvariantCulture, out int xInteger);
+            bool yIsInteger = int.TryParse(y, NumberStyles.None, CultureInfo.InvariantCulture, out int yInteger);
+
+            if (xIsInteger && yIsInteger)
+            {
+                int integerComparison = xInteger.CompareTo(yInteger);
+                return integerComparison != 0
+                    ? integerComparison
+                    : StringComparer.OrdinalIgnoreCase.Compare(x, y);
+            }
+
+            return xIsInteger
+                ? -1
+                : yIsInteger
+                    ? 1
+                    : StringComparer.OrdinalIgnoreCase.Compare(x, y);
+        }
     }
 }

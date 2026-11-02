@@ -98,15 +98,15 @@
   </ItemGroup>
 
   <!-- Consumer build customization packed at build/ (applies to the direct consumer that compiles the
-       injected source): defines the compilation constants and C# language floor. -->
+       injected source): defines the compilation constants. -->
   <ItemGroup>
-    <None Include="build\Microsoft.Testing.Platform.ServerMode.Client.Sources.props" Pack="true" PackagePath="build\" />
     <None Include="build\Microsoft.Testing.Platform.ServerMode.Client.Sources.targets" Pack="true" PackagePath="build\" />
   </ItemGroup>
 
   <!-- Protocol + JSON-RPC serialization (all TFMs). Curated subset of ServerMode\JsonRpc\. -->
   <ItemGroup>
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\RpcMessages.cs" Link="Linked\ServerMode\JsonRpc\RpcMessages.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\RpcIdParser.cs" Link="Linked\ServerMode\JsonRpc\RpcIdParser.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\JsonRpcMethods.cs" Link="Linked\ServerMode\JsonRpc\JsonRpcMethods.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\ErrorCodes.cs" Link="Linked\ServerMode\JsonRpc\ErrorCodes.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\SerializerUtilities.cs" Link="Linked\ServerMode\JsonRpc\SerializerUtilities.cs" />
@@ -118,6 +118,7 @@
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\IObjectSerializer.cs" Link="Linked\ServerMode\JsonRpc\IObjectSerializer.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\IObjectDeserializer.cs" Link="Linked\ServerMode\JsonRpc\IObjectDeserializer.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\MessageFormatException.cs" Link="Linked\ServerMode\JsonRpc\MessageFormatException.cs" />
+    <Compile Include="$(MTPDir)OutputDevice\Terminal\ExceptionFlattener.cs" Link="Linked\OutputDevice\Terminal\ExceptionFlattener.cs" />
     <!-- Transport: the LSP-style framing engine, reused verbatim by the client. -->
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\IMessageHandler.cs" Link="Linked\ServerMode\JsonRpc\IMessageHandler.cs" />
     <Compile Include="$(MTPDir)ServerMode\JsonRpc\TcpMessageHandler.cs" Link="Linked\ServerMode\JsonRpc\TcpMessageHandler.cs" />
@@ -162,6 +163,7 @@
     <Compile Remove="$(MTPDir)Messages\BaseMessageBus.cs" />
     <Compile Remove="$(MTPDir)Messages\BlockingConsumerDataProcessor.cs" />
     <Compile Remove="$(MTPDir)Messages\IAsyncConsumerDataProcessor.cs" />
+    <Compile Remove="$(MTPDir)Messages\IAsyncConsumerDataProcessorWithActivityContext.cs" />
     <Compile Remove="$(MTPDir)Messages\IDataProducer.cs" />
     <Compile Remove="$(MTPDir)Messages\IMessageBus.cs" />
     <Compile Remove="$(MTPDir)Messages\MessageBusProxy.cs" />

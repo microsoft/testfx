@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -37,6 +37,20 @@ public sealed class TestRunSummaryHelperTests
     [TestMethod]
     public void IsRunFailed_WhenZeroTests_WithAllowSkippedPolicy_ReturnsTrue()
         => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 0, failedTests: 0, skippedTests: 0, wasCancelled: false, minimumExpectedTests: 0, ZeroTestsPolicy.AllowSkipped));
+
+    [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(0, true)]
+    [DataRow(5, true)]
+    public void IsRunFailed_WhenZeroTestsAreAllowed_ReturnsFalse(int skippedTests, bool strict)
+        => Assert.IsFalse(TestRunSummaryHelper.IsRunFailed(
+            totalTests: skippedTests,
+            failedTests: 0,
+            skippedTests,
+            wasCancelled: false,
+            minimumExpectedTests: 0,
+            strict ? ZeroTestsPolicy.Strict : ZeroTestsPolicy.AllowSkipped,
+            allowZeroTests: true));
 
     [TestMethod]
     public void IsRunFailed_WhenCancelled_ReturnsTrue()

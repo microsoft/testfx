@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer, IDisposable
+internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, IOutputDeviceDataProducer, ITestExecutionActivityContextConsumer, IDisposable
 {
     private readonly IOutputDevice _outputService;
     private readonly ICommandLineOptions _commandLineOptions;
@@ -80,6 +80,16 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        => ConsumeAsync(value, executionActivityContext: null);
+
+    Task ITestExecutionActivityContextConsumer.ConsumeAsync(
+        IDataProducer dataProducer,
+        IData data,
+        PlatformActivityContext? executionActivityContext,
+        CancellationToken cancellationToken)
+        => ConsumeAsync(data, executionActivityContext);
+
+    private Task ConsumeAsync(IData value, PlatformActivityContext? executionActivityContext)
     {
         var message = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? executionState = message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
@@ -95,12 +105,14 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             return Task.CompletedTask;
         }
 
-        // A test framework that retries a test in-process (MSTest's [Retry], ...) reports every attempt under the
-        // same test node uid. Only the final attempt is the test's outcome, so superseded attempts must not be
-        // counted here: otherwise a test that failed once and then passed would still leave _failedTestsCount > 0
-        // and make the process exit with ExitCode.AtLeastOneTestFailed.
-        if (message.TestNode.IsSupersededRetryAttempt())
+        // A test framework that retries a test in-process (MSTest's [Retry], ...) can report every attempt under
+        // the same test node uid. In-progress updates still need to start their attempt span, and superseded
+        // terminal updates need to complete it, but only the final attempt contributes to aggregate metrics and
+        // the process outcome.
+        if (message.TestNode.IsSupersededRetryAttempt()
+            && executionState is not InProgressTestNodeStateProperty)
         {
+            _openTelemetryResultHandler?.NotifySupersededRetryAttempt(message.TestNode, executionState);
             return Task.CompletedTask;
         }
 
@@ -153,7 +165,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
                 break;
 
             case InProgressTestNodeStateProperty:
-                _openTelemetryResultHandler?.NotifyInProgress(message.TestNode, message.ParentTestNodeUid);
+                _openTelemetryResultHandler?.NotifyInProgress(
+                    message.TestNode,
+                    message.ParentTestNodeUid,
+                    executionActivityContext);
                 break;
 
             default:
@@ -174,6 +189,13 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _testAdapterTestSessionFailure ? ExitCode.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
+
+        // A deadline-driven graceful stop (see AbortAtDeadlineExtension) truncates the run before the CI
+        // hard-cancel. Such a run may otherwise look successful (it did not fail or abort), but it did not
+        // execute every test, so it must not report success. Real failures/abort above keep precedence; a
+        // clean-but-truncated run becomes non-zero here and takes precedence over the zero-tests/coverage
+        // verdicts below (a truncated run legitimately may not have run the expected number of tests).
+        exitCode = exitCode == ExitCode.Success && _policiesService.IsDeadlineTriggered ? ExitCode.TestExecutionStoppedAtDeadline : exitCode;
 
         // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
         // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields

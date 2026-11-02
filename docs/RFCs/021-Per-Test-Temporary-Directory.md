@@ -1,5 +1,14 @@
 # RFC 021 - Per-test temporary directory (`TestContext.TestTempDirectory`)
 
+> **Current implementation note (2026-10-09):** Lazy creation, per-test/row ownership,
+> fixture exclusion, fallback and pass/fail/attachment retention have implementation/test evidence.
+> Unix creation now explicitly sets owner-only `0700` permissions, including a restrictive-umask path,
+> and cleanup prevents first-time directory creation after disposal starts.
+> Diagnostic retention adds rules beyond ordinary result attachments.
+> See [MSTEST-016](../specifications/mstest.md#mstest-016--per-test-scratch-directories-are-lazy-and-outcome-aware)
+> and [MSTEST-020](../specifications/mstest.md#mstest-020--assertion-diagnostic-snapshots-are-opt-in-and-bounded).
+> “Shipped constants” below is proposal-era wording, not a release-status finding from this source-only audit.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation (included in this change set, behind the proposed API)
@@ -283,10 +292,10 @@ contain characters illegal in paths and can be very long. Scheme:
    are cryptographically negligible — a full 128-bit GUID makes two contexts choosing the same
    suffix effectively impossible even at very large scales (millions of contexts).
 5. **Create with collision retry**: attempt `Directory.CreateDirectory` for the candidate; if the
-   directory already exists, regenerate the suffix and retry a bounded number of times. `Directory.Exists`
-   + `CreateDirectory` is not an atomic exclusive create, so the retry is only a belt-and-braces
-   guard — the actual uniqueness guarantee comes from the 128-bit suffix, whose birthday-collision
-   probability is negligible, not from the pre-check.
+   directory already exists, regenerate the suffix and retry a bounded number of times.
+   `Directory.Exists` + `CreateDirectory` is not an atomic exclusive create, so the retry is only a
+   belt-and-braces guard — the actual uniqueness guarantee comes from the 128-bit suffix, whose
+   birthday-collision probability is negligible, not from the pre-check.
 
 If the test name is empty, whitespace-only, made up entirely of invalid characters, or the adaptive
 budget has collapsed to zero, the sanitized prefix is empty and the directory name is **just the

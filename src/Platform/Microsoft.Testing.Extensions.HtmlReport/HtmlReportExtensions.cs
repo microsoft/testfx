@@ -10,6 +10,9 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Provides extension methods for adding HTML report generation to a test application.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class HtmlReportExtensions
 {
@@ -24,11 +27,15 @@ public static class HtmlReportExtensions
             throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
         }
 
-        ReportProviderRegistration.AddReportProvider(
+        ReportProviderRegistration.AddReportProvider<HtmlReportGenerator, HtmlReport.CapturedTestResult>(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
+            HtmlReportGeneratorCommandLine.HtmlReportOptionName,
+            HtmlReportGenerator.JournalEnvironmentVariableName,
             () => new HtmlReportGeneratorCommandLine(),
-            serviceProvider => new HtmlReportGenerator(serviceProvider));
+            serviceProvider => new HtmlReportGenerator(serviceProvider),
+            (serviceProvider, metadata) => new HtmlReportGenerator(serviceProvider, metadata),
+            HtmlReportGenerator.DeserializeJournalRecord);
 
         artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new HtmlArtifactPostProcessor());
     }

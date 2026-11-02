@@ -1,5 +1,12 @@
 # 004 - `dotnet test` Binary Protocol
 
+> **Current implementation note (2026-10-09):** [Host handshake/capability parsing](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+> pipe/HTTP transport and local fake-SDK fixtures support the host-side protocol topics.
+> See [MTP-011](../specifications/mtp.md#mtp-011--native-binary-channel-versus-legacy-msbuild) and
+> [MTP-016](../specifications/mtp.md#mtp-016--no-handshake-and-undeclared-capability-fallback).
+> The external SDK comparisons, gateway/browser deployment requirements, vendored-file alignment
+> and full wire-field catalog below were not independently validated in this scoped audit.
+
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
 `dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy
@@ -534,17 +541,25 @@ Mapping from MTP node state → which list is used:
 | Cancelled | 6 | Failed list |
 
 `SuccessfulTestResultMessage` fields: `Uid`(1), `DisplayName`(2), `State`(3, byte), `Duration`(4, long
-ticks), `Reason`(5), `StandardOutput`(6), `ErrorOutput`(7), `SessionUid`(8).
+ticks), `Reason`(5), `StandardOutput`(6), `ErrorOutput`(7), `SessionUid`(8), `RetryAttemptNumber`(9,
+int), `IsSuperseded`(10, bool).
 
 `FailedTestResultMessage` fields: `Uid`(1), `DisplayName`(2), `State`(3), `Duration`(4), `Reason`(5),
 `ExceptionMessageList`(6), `StandardOutput`(7), `ErrorOutput`(8), `SessionUid`(9), `Expected`(10),
-`Actual`(11).
+`Actual`(11), `RetryAttemptNumber`(12, int), `IsSuperseded`(13, bool).
 
 - `ExceptionMessage` fields: `ErrorMessage`(1), `ErrorType`(2), `StackTrace`(3). Exceptions are
   flattened (aggregate/inner exceptions expanded) before sending.
 - `Expected`/`Actual` (added after `SessionUid`, older readers skip them) carry structured
   assertion-diff values captured by assertion libraries from `Exception.Data["assert.expected"]` /
   `["assert.actual"]`. Only failed tests populate them; error/timeout/cancelled send null.
+- `RetryAttemptNumber`/`IsSuperseded` (added after `SessionUid` on successful messages and after
+  `Expected`/`Actual` on failed messages; older readers skip them) carry the in-process retry metadata
+  surfaced by `RetryAttemptProperty` (for example MSTest's `[Retry]`
+  attribute): the 1-based attempt number within the current test host run, and whether a later attempt
+  for the same test node follows this one. They accompany any outcome state (passed, failed, etc.) and
+  are null when the test was not retried. Consumers that want a single row per test should ignore
+  updates whose `IsSuperseded` is `true`; consumers that want the whole retry history keep them all.
 
 ### 9.4 `TestInProgressMessages` (ID 10)
 
@@ -574,9 +589,14 @@ provenance is unavailable, including messages from older hosts. Test-scoped arti
 ### 9.6 `CommandLineOptionMessages` (ID 3)
 
 Sent only on the **help** path (`--help`). Carries `ModulePath`(1) and a list of
-`CommandLineOptionMessage`(`Name`(1), `Description`(2), `IsHidden`(3, bool), `IsBuiltIn`(4, bool)),
-sorted by name. Tool-provided options (`IToolCommandLineOptionsProvider`) are excluded. This lets the
-SDK render `dotnet test --help` from the test host's actual option set.
+`CommandLineOptionMessage`(`Name`(1), `Description`(2), `IsHidden`(3, bool), `IsBuiltIn`(4, bool),
+reserved field ID 5, `ProviderUid`(6), `MinimumArity`(7, int), `MaximumArity`(8, int)), sorted by name.
+Tool-provided options (`IToolCommandLineOptionsProvider`) are excluded. This lets the SDK render
+`dotnet test --help` from the test host's actual option set.
+
+Fields 6-8 are optional additive metadata. Older readers skip these unknown fields and continue to
+read fields 1-4. Newer readers treat an absent provider UID or arity as undeclared, preserving
+compatibility with older hosts.
 
 ### 9.7 `AzureDevOpsLogMessage` (ID 11, ≥ 1.2.0)
 
@@ -588,13 +608,17 @@ write to its reporter (and thus the pipeline log).
 
 ### 9.8 `DisplayMessage` (ID 12, ≥ 1.3.0)
 
-`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A generic host diagnostic forwarded so
-warning/error messages produced **outside** test results (hang/crash dump diagnostics, retry summaries,
-generic extension/framework warnings and errors) are not swallowed. `Level` is `DisplayMessageLevels`:
+`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A host message forwarded so durable session
+messages, marked GitHub Actions workflow commands, and warning/error messages produced **outside** test
+results (hang/crash dump diagnostics, retry summaries, generic extension/framework warnings and errors)
+are not swallowed. `Level` is `DisplayMessageLevels`:
 `0` Information, `1` Warning, `2` Error. The SDK maps them to `WriteMessage` / `WriteWarningMessage` /
-`WriteErrorMessage`. Regular (informational) host output is still discarded by the forwarding device;
-only warning/error levels are relayed. Unlike the Azure DevOps path, this is **not** gated on an ADO
-agent.
+`WriteErrorMessage`. GitHub Actions commands use Information regardless of the command's own severity:
+`::error`, `::warning`, `::notice`, `::group::`, and `::endgroup::` must reach the runner unchanged, without
+warning/error decoration. The GitHub Actions extension gates their production on `GITHUB_ACTIONS=true`
+and `--report-gh`; regular (informational) host output remains discarded. Unlike the Azure DevOps path,
+the display-message transport is **not** gated on an ADO agent. An SDK that negotiates a version below
+1.3.0 receives none of these messages; job-summary file writing is independent of this transport.
 
 ---
 

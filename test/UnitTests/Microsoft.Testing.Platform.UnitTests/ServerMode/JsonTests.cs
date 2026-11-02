@@ -223,7 +223,27 @@ public sealed class JsonTests
     }
 
     [TestMethod]
-    public void Deserialize_InitializeRequest_WithoutIsStateful_StjPath_DefaultsToStateless()
+    public void Deserialize_InitializeRequest_WithIsStatefulFalse_StjPath_SurfacesStatelessClient()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": false } }
+            }
+            """;
+
+        // Act
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
+
+        // Assert
+        Assert.IsFalse(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithoutIsStateful_StjPath_LeavesCapabilityUndeclared()
     {
         // Arrange
         Json json = new();
@@ -239,7 +259,49 @@ public sealed class JsonTests
         InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
 
         // Assert
-        Assert.IsFalse(args.Capabilities.IsStateful);
+        Assert.IsNull(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithInvalidIsStateful_StjPath_Throws()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": "false" } }
+            }
+            """;
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory()));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithNullIsStateful_StjPath_Throws()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": null } }
+            }
+            """;
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory()));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
     }
 
     [TestMethod]
@@ -266,7 +328,30 @@ public sealed class JsonTests
     }
 
     [TestMethod]
-    public void Deserialize_ClientCapabilities_WithoutIsStateful_JsonitePath_DefaultsToStateless()
+    public void Deserialize_ClientCapabilities_WithIsStatefulFalse_JsonitePath_SurfacesStatelessClient()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = false,
+                },
+            },
+        };
+
+        // Act
+        ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
+
+        // Assert
+        Assert.IsFalse(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithoutIsStateful_JsonitePath_LeavesCapabilityUndeclared()
     {
         // Arrange
         Dictionary<string, object?> properties = new()
@@ -284,7 +369,55 @@ public sealed class JsonTests
         ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
 
         // Assert
-        Assert.IsFalse(capabilities.IsStateful);
+        Assert.IsNull(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithInvalidIsStateful_JsonitePath_Throws()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = "false",
+                },
+            },
+        };
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<ClientCapabilities>(properties));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithNullIsStateful_JsonitePath_Throws()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = null,
+                },
+            },
+        };
+
+        // Act
+        MessageFormatException exception = Assert.ThrowsExactly<MessageFormatException>(
+            () => SerializerUtilities.Deserialize<ClientCapabilities>(properties));
+
+        // Assert
+        Assert.Contains(JsonRpcStrings.IsStateful, exception.Message);
     }
 
     [TestMethod]
@@ -348,4 +481,105 @@ public sealed class JsonTests
 
         public List<Person>? Children { get; set; }
     }
+
+    [TestMethod]
+    public void Deserialize_TypedAndBaseCollectionStrategiesPreserveLiteralElements()
+    {
+        Json json = new(deserializers: new()
+        {
+            [typeof(List<int>)] = new TypedNumbersDeserializer(),
+            [typeof(Person[])] = new BasePeopleDeserializer(),
+            [typeof(Version)] = new UnsupportedDeserializer(),
+        });
+
+        Assert.AreSequenceEqual(new[] { 3, 5, -8 }, json.Deserialize<List<int>>(Encoding.UTF8.GetBytes("[3,5,-8]")));
+        Person[] people = json.Deserialize<Person[]>(Encoding.UTF8.GetBytes("""[{"name":"Ada"},{"name":"Grace"}]"""));
+        Assert.AreSequenceEqual(new[] { "Ada", "Grace" }, people.Select(p => p.Name));
+        InvalidOperationException error = Assert.ThrowsExactly<InvalidOperationException>(
+            () => json.Deserialize<Version>(Encoding.UTF8.GetBytes("true")));
+        Assert.AreEqual("Cannot find deserializer for System.Version.", error.Message);
+    }
+
+    [TestMethod]
+    public void Deserialize_BaseElementStrategyPreservesPayload()
+    {
+        Json json = new(deserializers: new()
+        {
+            [typeof(Person)] = new JsonElementDeserializer<object>((engine, element) => new Person
+            {
+                Name = engine.Bind<string>(element, "name"),
+            }),
+        });
+
+        Person person = json.Deserialize<Person>(Encoding.UTF8.GetBytes("""{"name":"base element"}"""));
+        Assert.AreEqual("base element", person.Name);
+        Assert.IsNull(person.Children);
+    }
+
+    [TestMethod]
+    public async Task Serialize_EmptyObjectsNullSlotsAndFailureReleasePreserveNextDocument()
+    {
+        Json json = new(serializers: new()
+        {
+            [typeof(Person)] = new JsonObjectSerializer<Person>(_ => null),
+        });
+
+        Assert.AreEqual("{}", await json.SerializeAsync(new Person { Name = "not a wire property" }));
+        Assert.AreEqual("[null,{},9]", await json.SerializeAsync(new object?[] { null, new Person(), 9 }));
+        InvalidOperationException error = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => json.SerializeAsync(new Version(1, 2)));
+        Assert.AreEqual("Flattener missing System.Version.", error.Message);
+        Assert.AreEqual("[4]", await json.SerializeAsync(new[] { 4 }), "A failed pooled serialization must not retain an earlier document's suffix.");
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeSkippedExplanationAndIndexedAttachmentsPreserveWireValues()
+    {
+        string firstPath = Path.Combine(Path.GetTempPath(), "serializer-first.log");
+        string secondPath = Path.Combine(Path.GetTempPath(), "serializer-second.log");
+        TestNode node = new()
+        {
+            Uid = new("skipped-with-artifacts"),
+            DisplayName = "wire display",
+            Properties = new(
+                new SkippedTestNodeStateProperty("unsupported fixture"),
+                new FileArtifactProperty(new(firstPath), "first artifact", "first description"),
+                new FileArtifactProperty(new(secondPath), "second artifact", "second description")),
+        };
+
+        using var document = JsonDocument.Parse(await _json.SerializeAsync(node));
+        JsonElement root = document.RootElement;
+        Assert.AreEqual("skipped-with-artifacts", root.GetProperty("uid").GetString());
+        Assert.AreEqual("wire display", root.GetProperty("display-name").GetString());
+        Assert.AreEqual("action", root.GetProperty("node-type").GetString());
+        Assert.AreEqual("skipped", root.GetProperty("execution-state").GetString());
+        Assert.AreEqual("unsupported fixture", root.GetProperty("error.message").GetString());
+        Dictionary<string, (string? Path, string? Description)> attachments = [];
+        for (int index = 0; index < 2; index++)
+        {
+            string prefix = "attachments." + index.ToString(CultureInfo.InvariantCulture);
+            attachments.Add(
+                root.GetProperty(prefix + ".display-name").GetString()!,
+                (root.GetProperty(prefix + ".uri").GetString(), root.GetProperty(prefix + ".description").GetString()));
+        }
+
+        Assert.HasCount(2, attachments);
+        Assert.AreEqual((firstPath, "first description"), attachments["first artifact"]);
+        Assert.AreEqual((secondPath, "second description"), attachments["second artifact"]);
+        Assert.IsFalse(root.TryGetProperty("attachments.2.uri", out _));
+    }
+
+    private sealed class TypedNumbersDeserializer : JsonCollectionDeserializer<List<int>>
+    {
+        internal override List<int> CreateObject(Json json, JsonElement element)
+            => [.. element.EnumerateArray().Select(value => json.Bind<int>(value))];
+    }
+
+    private sealed class BasePeopleDeserializer : JsonCollectionDeserializer<object>
+    {
+        internal override object CreateObject(Json json, JsonElement element)
+            => element.EnumerateArray().Select(value => new Person { Name = json.Bind<string>(value, "name") }).ToArray();
+    }
+
+    private sealed class UnsupportedDeserializer : JsonDeserializer;
 }

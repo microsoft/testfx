@@ -26,6 +26,14 @@ internal sealed partial class TestContextImplementation
     /// </summary>
     private const int TestTempDirectoryNameMinLength = 8;
 
+    private const uint TestTempDirectoryUnixCreateMode = 0x1C0;
+
+    [DllImport("libc", EntryPoint = "mkdir", SetLastError = true)]
+    private static extern int MkDir([In] byte[] path, uint mode);
+
+    [DllImport("libc", EntryPoint = "chmod", SetLastError = true)]
+    private static extern int ChMod([In] byte[] path, uint mode);
+
     /// <summary>
     /// Guards lazy creation of <see cref="_testTempDirectory"/>.
     /// </summary>
@@ -169,9 +177,9 @@ internal sealed partial class TestContextImplementation
         }
 
         // Could not create anywhere with a readable name; make one last attempt under the system
-        // temp directory with a plain Guid name and let any exception surface as a genuine error.
+        // temp directory and let any exception surface as a genuine error.
         string fallback = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(fallback);
+        CreateDirectoryWithRestrictedPermissions(fallback);
         return fallback;
     }
 
@@ -183,6 +191,16 @@ internal sealed partial class TestContextImplementation
     private bool TryCreateTestTempDirectoryUnder(string baseDirectory, int nameBudget, out string createdPath)
     {
         string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource(), nameBudget);
+
+        try
+        {
+            Directory.CreateDirectory(baseDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            createdPath = string.Empty;
+            return false;
+        }
 
         // The suffix is a full 128-bit GUID, so two contexts choosing the same directory name is
         // cryptographically negligible. Exists + CreateDirectory is not an atomic exclusive create,
@@ -200,7 +218,7 @@ internal sealed partial class TestContextImplementation
 
             try
             {
-                Directory.CreateDirectory(candidate);
+                CreateDirectoryWithRestrictedPermissions(candidate);
                 createdPath = candidate;
                 return true;
             }
@@ -217,6 +235,51 @@ internal sealed partial class TestContextImplementation
 
         createdPath = string.Empty;
         return false;
+    }
+
+    private static void CreateDirectoryWithRestrictedPermissions(string path)
+    {
+#if NETCOREAPP
+        if (OperatingSystem.IsBrowser() || OperatingSystem.IsWasi())
+        {
+            Directory.CreateDirectory(path);
+            return;
+        }
+#endif
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            byte[] nullTerminatedUtf8Path = System.Text.Encoding.UTF8.GetBytes(path + "\0");
+            int result = MkDir(nullTerminatedUtf8Path, TestTempDirectoryUnixCreateMode);
+            if (result != 0)
+            {
+                int error = Marshal.GetLastWin32Error();
+                throw new IOException($"Could not create test temporary directory '{path}'.", new System.ComponentModel.Win32Exception(error));
+            }
+
+            result = ChMod(nullTerminatedUtf8Path, TestTempDirectoryUnixCreateMode);
+            if (result != 0)
+            {
+                int error = Marshal.GetLastWin32Error();
+                var permissionException = new System.ComponentModel.Win32Exception(error);
+                try
+                {
+                    Directory.Delete(path);
+                }
+                catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+                {
+                    throw new IOException(
+                        $"Could not set permissions on or remove test temporary directory '{path}'.",
+                        new AggregateException(permissionException, cleanupException));
+                }
+
+                throw new IOException($"Could not set permissions on test temporary directory '{path}'.", permissionException);
+            }
+
+            return;
+        }
+
+        Directory.CreateDirectory(path);
     }
 }
 

@@ -78,6 +78,10 @@ internal partial class TestExecutionManager
 
         using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, deploymentContext.RunSettingsXml);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
+        if (usesAppDomains && TestClassInstanceFactoryProvider.Current is not null)
+        {
+            throw new InvalidOperationException(Resource.HostedTestClassInjectionRequiresNoAppDomain);
+        }
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
@@ -120,7 +124,7 @@ internal partial class TestExecutionManager
             }
         }
 
-        TestAssemblySettings sourceSettings = (sourceSettingsProvider != null)
+        TestAssemblySettings sourceSettings = (sourceSettingsProvider is not null)
             ? sourceSettingsProvider.GetSettings(source)
             : new TestAssemblySettings();
 

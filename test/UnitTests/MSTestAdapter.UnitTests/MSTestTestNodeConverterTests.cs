@@ -4,12 +4,17 @@
 using AwesomeAssertions;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -146,6 +151,213 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true)
             .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>().Should().BeTrue();
+    }
+
+    public void ToDiscoveredTestNode_AddsTrxWorkItems_OnlyWhenTrxEnabled()
+    {
+        UnitTestElement element = CreateElement();
+        element.WorkItemIds = ["123", "456"];
+
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false)
+            .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>().Should().BeFalse();
+
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty property = MSTestTestNodeConverter
+            .ToDiscoveredTestNode(element, isTrxEnabled: true)
+            .Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+        property.WorkItemIds.Should().Equal("123", "456");
+        property.WorkItemIds.Should().NotBeSameAs(element.WorkItemIds);
+    }
+
+    public void RepeatedConversions_ReuseImmutableBaseProperties_WithoutSharingNodesOrPropertyBags()
+    {
+        UnitTestElement element = CreateElement();
+        element.DeclaringFilePath = "C:\\src\\MyClass.cs";
+        element.DeclaringLineNumber = 42;
+        element.TestCategory = ["CategoryA"];
+        element.Traits = [new TestTrait("Owner", "Alice")];
+
+        TestNode discovered = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+        TestNode inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false);
+        TestNode result = MSTestTestNodeConverter.ToResultTestNode(
+            element,
+            new FrameworkTestResult { Outcome = UnitTestOutcome.Passed },
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            isTrxEnabled: false,
+            new MSTestSettings());
+
+        discovered.Should().NotBeSameAs(inProgress);
+        inProgress.Should().NotBeSameAs(result);
+        discovered.Properties.Should().NotBeSameAs(inProgress.Properties);
+        inProgress.Properties.Should().NotBeSameAs(result.Properties);
+
+        inProgress.Uid.Should().BeSameAs(discovered.Uid);
+        result.Uid.Should().BeSameAs(discovered.Uid);
+        inProgress.Properties.Single<TestFileLocationProperty>().Should().BeSameAs(discovered.Properties.Single<TestFileLocationProperty>());
+        result.Properties.Single<TestFileLocationProperty>().Should().BeSameAs(discovered.Properties.Single<TestFileLocationProperty>());
+        TestMetadataProperty[] discoveredMetadata = discovered.Properties.OfType<TestMetadataProperty>();
+        TestMetadataProperty[] inProgressMetadata = inProgress.Properties.OfType<TestMetadataProperty>();
+        TestMetadataProperty[] resultMetadata = result.Properties.OfType<TestMetadataProperty>();
+        inProgressMetadata.Should().BeEquivalentTo(discoveredMetadata);
+        resultMetadata.Should().BeEquivalentTo(discoveredMetadata);
+        foreach (TestMetadataProperty metadata in discoveredMetadata)
+        {
+            inProgressMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
+            resultMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
+        }
+
+        inProgress.Properties.Single<TestMethodIdentifierProperty>().Should().BeSameAs(discovered.Properties.Single<TestMethodIdentifierProperty>());
+        result.Properties.Single<TestMethodIdentifierProperty>().Should().BeSameAs(discovered.Properties.Single<TestMethodIdentifierProperty>());
+
+        discovered.Properties.Add(new TestMetadataProperty("MessageOnly", "discovered"));
+        inProgress.Properties.Any<TestMetadataProperty>().Should().BeTrue();
+        inProgress.Properties.OfType<TestMetadataProperty>().Should().NotContain(p => p.Key == "MessageOnly");
+    }
+
+    public void TrxCategories_AreCopiedPerNode_AndCannotCrossMutate()
+    {
+        UnitTestElement element = CreateElement();
+        element.TestCategory = ["CategoryA", "CategoryB"];
+        element.Traits = [new TestTrait("Owner", "Alice")];
+
+        TestNode first = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        TestNode second = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true);
+
+        Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty firstCategories =
+            first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>();
+        Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty secondCategories =
+            second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>();
+
+        firstCategories.Should().NotBeSameAs(secondCategories);
+        firstCategories.Categories.Should().NotBeSameAs(secondCategories.Categories);
+        firstCategories.Categories[0] = "Mutated";
+        secondCategories.Categories.Should().Equal("CategoryA", "CategoryB");
+
+        TestMetadataProperty[] firstMetadata = first.Properties.OfType<TestMetadataProperty>();
+        TestMetadataProperty[] secondMetadata = second.Properties.OfType<TestMetadataProperty>();
+        secondMetadata.Should().BeEquivalentTo(firstMetadata);
+        foreach (TestMetadataProperty metadata in firstMetadata)
+        {
+            secondMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
+        }
+    }
+
+    public void TrxWorkItems_AreCopiedPerNode_AndCannotCrossMutate()
+    {
+        UnitTestElement element = CreateElement();
+        element.WorkItemIds = ["123", "456"];
+
+        TestNode first = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        TestNode second = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true);
+
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty firstWorkItems =
+            first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+        Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty secondWorkItems =
+            second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxWorkItemsProperty>();
+
+        firstWorkItems.Should().NotBeSameAs(secondWorkItems);
+        firstWorkItems.WorkItemIds.Should().NotBeSameAs(secondWorkItems.WorkItemIds);
+        firstWorkItems.WorkItemIds[0] = "Mutated";
+        secondWorkItems.WorkItemIds.Should().Equal("123", "456");
+    }
+
+    public void ResultDisplayNameOverride_RemainsPerResult_WhileTrxDefinitionUsesTestDefinitionName()
+    {
+        UnitTestElement element = CreateElement();
+        element.TestMethod.DisplayName = "Test definition";
+
+        TestNode first = MSTestTestNodeConverter.ToResultTestNode(
+            element,
+            new FrameworkTestResult { Outcome = UnitTestOutcome.Passed, DisplayName = "Data row 1" },
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            isTrxEnabled: true,
+            new MSTestSettings());
+        TestNode second = MSTestTestNodeConverter.ToResultTestNode(
+            element,
+            new FrameworkTestResult { Outcome = UnitTestOutcome.Passed, DisplayName = "Data row 2" },
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            isTrxEnabled: true,
+            new MSTestSettings());
+
+        first.DisplayName.Should().Be("Data row 1");
+        second.DisplayName.Should().Be("Data row 2");
+        first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName>().TestDefinitionName.Should().Be("Test definition");
+        second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName>().TestDefinitionName.Should().Be("Test definition");
+    }
+
+    public void CloneSpecializedAsDataRow_DoesNotReuseParentCachedIdentityOrMetadata()
+    {
+        UnitTestElement element = CreateElement();
+        element.TestCategory = ["Parent"];
+        Guid parentId = element.GetTestId();
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+
+        UnitTestElement dataRow = element.Clone();
+        dataRow.TestMethod.DisplayName = "Data row";
+        dataRow.TestMethod.DataType = DynamicDataType.ITestDataSource;
+        dataRow.TestMethod.TestCaseIndex = 1;
+        dataRow.TestCategory = ["Row"];
+
+        TestNode dataRowNode = MSTestTestNodeConverter.ToDiscoveredTestNode(dataRow, isTrxEnabled: false);
+
+        dataRowNode.Uid.Value.Should().NotBe(parentId.ToString());
+        dataRowNode.DisplayName.Should().Be("Data row");
+        dataRowNode.Properties.OfType<TestMetadataProperty>().Should().ContainSingle(p => p.Key == "Row");
+        dataRowNode.Properties.OfType<TestMetadataProperty>().Should().NotContain(p => p.Key == "Parent");
+    }
+
+    public void SourceUpdatedClone_DoesNotReuseOriginalCachedBaseData()
+    {
+        UnitTestElement element = CreateElement();
+        TestNode original = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+
+        UnitTestElement relocated = element.CloneWithSource("OtherAssembly.dll");
+        relocated.DeclaringFilePath = "C:\\deployed\\MyClass.cs";
+        TestNode updated = MSTestTestNodeConverter.ToDiscoveredTestNode(relocated, isTrxEnabled: false);
+
+        updated.Uid.Value.Should().NotBe(original.Uid.Value);
+        updated.Properties.Single<TestFileLocationProperty>().FilePath.Should().Be("C:\\deployed\\MyClass.cs");
+    }
+
+    public void ConcurrentConversions_AreSafeAndPreserveIndependentMutableProperties()
+    {
+        UnitTestElement element = CreateElement(managedMethodName: "MyMethod(System.String)");
+        element.TestCategory = ["CategoryA"];
+        var nodes = new TestNode[128];
+
+        Parallel.For(0, nodes.Length, i => nodes[i] = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true));
+
+        nodes.Select(node => node.Uid.Value).Should().OnlyContain(uid => uid == nodes[0].Uid.Value);
+        nodes.Select(node => node.Properties).Distinct().Should().HaveCount(nodes.Length);
+
+        string[][] parameterTypes = [.. nodes.Select(node => node.Properties.Single<TestMethodIdentifierProperty>().ParameterTypeFullNames)];
+        parameterTypes.Distinct().Should().HaveCount(nodes.Length);
+
+        string[][] categories = [.. nodes.Select(node => node.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>().Categories)];
+        categories.Distinct().Should().HaveCount(nodes.Length);
+    }
+
+    public void BaseDataCache_DoesNotKeepElementAlive()
+    {
+        WeakReference elementReference = CreateWeakReferenceToConvertedElement();
+
+        for (int i = 0; elementReference.IsAlive && i < 10; i++)
+        {
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+        }
+
+        elementReference.IsAlive.Should().BeFalse();
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference CreateWeakReferenceToConvertedElement()
+    {
+        UnitTestElement element = CreateElement();
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        return new WeakReference(element);
     }
 
     // --- Result node: outcomes --------------------------------------------------------------------------------
@@ -330,11 +542,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty>().Should().BeFalse();
     }
 
-    // --- TestMethodIdentifier caching -------------------------------------------------------------------------
+    // --- Base-property caching ---------------------------------------------------------------------------------
     public void ToResultTestNode_ReusesCachedManagedNameParse_FromInProgressNode()
     {
-        // The managed-name parse is cached per TestMethod, so the in-progress node and every result node must
-        // still agree on every field of the identifier.
+        // The managed-name parse is retained by the element's base descriptor, so the in-progress node and every
+        // result node must still agree on every field of the identifier.
         UnitTestElement element = CreateElement();
 
         TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
@@ -355,7 +567,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     public void ToResultTestNode_ReusesTestMethodIdentifierInstance_ForParameterlessTestMethod()
     {
         // A parameterless identifier is fully immutable (readonly strings plus an empty parameter array, which
-        // cannot be mutated), so the cached parse hands back the very same property instance instead of
+        // cannot be mutated), so the cached descriptor hands back the very same property instance instead of
         // allocating a new one for every node built from the same test method.
         UnitTestElement element = CreateElement();
 
@@ -465,16 +677,15 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         clone.CachedTestNodeUid.Should().BeNull();
     }
 
-    public void Clone_PreservesCachedTestId()
+    public void Clone_InvalidatesCachedTestId_SoTheCloneCanBeSpecializedAsADataRow()
     {
         UnitTestElement element = CreateElement();
         Guid original = element.GetTestId();
 
         UnitTestElement clone = element.Clone();
 
-        // Clone() does not touch any hash input, so the cached id must be preserved.
-        clone.CachedTestNodeUid.Should().Be(original);
-        clone.GetTestId().Should().Be(original);
+        clone.CachedTestNodeUid.Should().BeNull();
+        element.CachedTestNodeUid.Should().Be(original);
     }
 
     // --- Seams ------------------------------------------------------------------------------------------------
@@ -515,6 +726,38 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         message.TestNode.Properties.Any<TestNodeStateProperty>().Should().BeFalse();
     }
 
+    public async Task MtpTestResultRecorder_RecordEmptyResult_CompletesPublicExecution()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            CreateExecuteRequestContext(messageBus, broker),
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings());
+        UnitTestElement element = CreateElement();
+
+        await recorder.RecordStartAsync(element);
+        await recorder.RecordEmptyResultAsync(element);
+
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        messages.Should().HaveCount(2);
+        TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty completionProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        completionProperty.Reservation.Should().BeSameAs(startProperty.Reservation);
+        completionProperty.IsFinalResult.Should().BeTrue();
+        messages[1].TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
+        element.ExecutionActivityLease.Should().BeNull();
+    }
+
     public async Task MtpTestResultRecorder_RecordResult_PublishesResultNodeAndReturnsFailedFlag()
     {
         var messageBus = new CapturingMessageBus();
@@ -538,17 +781,154 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         isFailed.Should().BeFalse();
     }
 
+    public async Task MtpTestResultRecorder_CarriesOneOpaqueOccurrenceAcrossMultipleResults()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            CreateExecuteRequestContext(messageBus, broker),
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings());
+        UnitTestElement element = CreateElement();
+        FrameworkTestResult[] results =
+        [
+            new() { Outcome = UnitTestOutcome.Passed },
+            new() { Outcome = UnitTestOutcome.Passed },
+        ];
+
+        await recorder.RecordStartAsync(element);
+        ((Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder)recorder)
+            .PrepareResults(element, results);
+        await recorder.RecordResultAsync(element, results[0], DateTimeOffset.Now, DateTimeOffset.Now);
+        messageBus.Published.Should().ContainSingle();
+        await recorder.RecordResultAsync(element, results[1], DateTimeOffset.Now, DateTimeOffset.Now);
+
+        TestNodeUpdateMessage[] messages = messageBus.Published.Cast<TestNodeUpdateMessage>().ToArray();
+        TestExecutionActivityProperty startProperty = messages[0].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty firstResultProperty = messages[1].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        TestExecutionActivityProperty finalResultProperty = messages[2].TestNode.Properties.Single<TestExecutionActivityProperty>();
+        startProperty.Reservation.Should().BeSameAs(firstResultProperty.Reservation);
+        startProperty.Reservation.Should().BeSameAs(finalResultProperty.Reservation);
+        startProperty.IsFinalResult.Should().BeFalse();
+        firstResultProperty.IsFinalResult.Should().BeFalse();
+        finalResultProperty.IsFinalResult.Should().BeTrue();
+        element.ExecutionActivityLease.Should().BeNull();
+    }
+
+    public async Task MtpTestResultRecorder_RecordStart_ActivatesAfterPublishingInProgressNode()
+    {
+        var publishStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var allowPublishToComplete = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool publishCompleted = false;
+        var messageBus = new CapturingMessageBus(async () =>
+        {
+            publishStarted.SetResult(true);
+            await allowPublishToComplete.Task;
+            publishCompleted = true;
+        });
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        service.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Returns(() =>
+            {
+                publishCompleted.Should().BeTrue();
+                return activity.Object;
+            });
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var recorder = new MtpTestResultRecorder(
+            CreateExecuteRequestContext(messageBus, broker),
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings());
+
+        Task recordStartTask = recorder.RecordStartAsync(CreateElement());
+        await publishStarted.Task;
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+
+        allowPublishToComplete.SetResult(true);
+        await recordStartTask;
+
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
+    }
+
+    public async Task MtpTestResultRecorder_RecordStart_DoesNotReserveWhenExecutionLeaseIsUnsupported()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> service = new();
+        using var broker = new TestExecutionActivityBroker(service.Object, PlatformOpenTelemetryOptions.Default);
+        var messageBus = new CapturingMessageBus();
+        var recorder = new MtpTestResultRecorder(
+            CreateExecuteRequestContext(messageBus, broker),
+            new StubDataProducer(),
+            new SessionUid("s"),
+            isTrxEnabled: false,
+            new MSTestSettings());
+        UnitTestElement element = CreateElement();
+        element.SupportsExecutionActivityLease = false;
+
+        await recorder.RecordStartAsync(element);
+
+        TestNodeUpdateMessage message = messageBus.Published.Cast<TestNodeUpdateMessage>().Single();
+        message.TestNode.Properties.Any<TestExecutionActivityProperty>().Should().BeFalse();
+        element.ExecutionActivityLease.Should().BeNull();
+        service.Verify(
+            s => s.StartTestExecutionActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+    }
+
     private static TestNode ResultNode(UnitTestOutcome outcome)
         => MSTestTestNodeConverter.ToResultTestNode(CreateElement(), new FrameworkTestResult { Outcome = outcome }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
 
-    private sealed class CapturingMessageBus : IMessageBus
+    private static ExecuteRequestContext CreateExecuteRequestContext(
+        IMessageBus messageBus,
+        TestExecutionActivityBroker broker)
+        => new(
+            Mock.Of<IRequest>(),
+            messageBus,
+            Mock.Of<IExecuteRequestCompletionNotifier>(),
+            CancellationToken.None,
+            broker);
+
+    private sealed class CapturingMessageBus(Func<Task>? onPublish = null) : IMessageBus
     {
         public List<IData> Published { get; } = [];
 
-        public Task PublishAsync(IDataProducer dataProducer, IData data)
+        public async Task PublishAsync(IDataProducer dataProducer, IData data)
         {
             Published.Add(data);
-            return Task.CompletedTask;
+            if (onPublish is not null)
+            {
+                await onPublish();
+            }
         }
     }
 

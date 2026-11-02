@@ -12,9 +12,12 @@ internal sealed partial class OpenTelemetryResultHandler
     private const string ExceptionMessageTag = "exception.message";
     private const string ExceptionStackTraceTag = "exception.stacktrace";
 
-    private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty)
+    private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty, bool recordMetrics = true)
     {
-        _totalCompletedTests?.Add(1);
+        if (recordMetrics)
+        {
+            _totalCompletedTests?.Add(1);
+        }
 
         (string result, Exception? exception, TimeSpan? timeoutTime) = stateProperty switch
         {
@@ -35,32 +38,107 @@ internal sealed partial class OpenTelemetryResultHandler
             new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, GetSuiteName(testNode)),
         ];
 
-        _testCaseResultCount.Add(1, measurementTags);
+        if (recordMetrics)
+        {
+            _testCaseResultCount.Add(1, measurementTags);
+        }
 
-        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity) || activity is null)
+        if (GetTestExecutionActivityProperty(testNode) is { } canonicalActivity)
+        {
+            CompleteCanonicalActivity(canonicalActivity);
+            SetResultDetails(testNode, measurementTags, activity: null, recordMetrics);
+            if (!canonicalActivity.Reservation.ProcessResult(
+                result,
+                contributesToAggregate: recordMetrics,
+                canonicalActivity.IsFinalResult,
+                (activity, aggregateResult, executionEnd, executionDuration) =>
+                    ApplyResultDetails(
+                        testNode,
+                        stateProperty,
+                        result,
+                        exception,
+                        timeoutTime,
+                        measurementTags,
+                        activity,
+                        recordMetrics: false,
+                        aggregateResult,
+                        executionEnd,
+                        executionDuration)))
+            {
+                return;
+            }
+
+            return;
+        }
+
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity, allowUnnumberedFallback: recordMetrics) || activity is null)
         {
             // Either the framework never reported the test as in-progress, or nothing is listening so no span was
             // created. Either way we still want the duration recorded, otherwise a framework that only publishes
             // final results produces no latency data.
-            SetResultDetails(testNode, measurementTags, activity: null);
+            SetResultDetails(testNode, measurementTags, activity: null, recordMetrics: recordMetrics);
             return;
         }
 
+        try
+        {
+            ApplyResultDetails(
+                testNode,
+                stateProperty,
+                result,
+                exception,
+                timeoutTime,
+                measurementTags,
+                activity,
+                recordMetrics,
+                result,
+                resultTimestamp: null,
+                occurrenceDuration: null);
+        }
+        finally
+        {
+            // The span was already dequeued, so it must be closed even if collecting the details throws on a
+            // malformed property bag; otherwise it would stay open until the handler is disposed.
+            activity.Dispose();
+        }
+    }
+
+    private void ApplyResultDetails(
+        TestNode testNode,
+        TestNodeStateProperty stateProperty,
+        string result,
+        Exception? exception,
+        TimeSpan? timeoutTime,
+        KeyValuePair<string, object?>[] measurementTags,
+        IPlatformActivity? activity,
+        bool recordMetrics,
+        string? finalResult,
+        DateTimeOffset? resultTimestamp,
+        TimeSpan? occurrenceDuration)
+    {
         string? truncatedExplanation = _options.Truncate(stateProperty.Explanation);
-        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, result);
-        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, truncatedExplanation);
+        if (finalResult is not null)
+        {
+            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, finalResult);
+        }
+
+        activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, truncatedExplanation);
 
         if (_options.EmitLegacyAttributes)
         {
             // The legacy attribute keeps its original "passed"/"failed" spellings; the semantic-convention
             // attribute uses the upstream "pass"/"fail" enum.
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(result));
+            if (finalResult is not null)
+            {
+                activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(finalResult));
+            }
+
             // Truncated as well: emitting the legacy twin untruncated would defeat the size limit, since legacy
             // attributes are on by default.
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation, truncatedExplanation);
+            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation, truncatedExplanation);
         }
 
-        if (exception is not null)
+        if (activity is not null && exception is not null)
         {
             // The OpenTelemetry convention is an "exception" event carrying the type/message/stack trace, plus
             // error.type and a status of Error on the span so it shows up as failed in every backend.
@@ -77,8 +155,8 @@ internal sealed partial class OpenTelemetryResultHandler
                     new(ExceptionTypeTag, exceptionTypeName),
                     new(ExceptionMessageTag, truncatedMessage),
                     new(ExceptionStackTraceTag, truncatedExceptionStackTrace),
-                ]);
-            activity.SetStatus(PlatformActivityStatusCode.Error, truncatedMessage);
+                ],
+                resultTimestamp ?? default);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exceptionTypeName);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, truncatedStackTrace);
 
@@ -88,11 +166,17 @@ internal sealed partial class OpenTelemetryResultHandler
                 activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage, truncatedMessage);
                 activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace, truncatedStackTrace);
             }
+
+            if (finalResult is not null)
+            {
+                activity.SetStatus(PlatformActivityStatusCode.Error, truncatedMessage);
+            }
         }
-        else
+
+        if (activity is not null && exception is null && finalResult is not null)
         {
             activity.SetStatus(
-                result switch
+                finalResult switch
                 {
                     TestingPlatformSemanticConventions.TestResultStatus.Pass => PlatformActivityStatusCode.Ok,
                     TestingPlatformSemanticConventions.TestResultStatus.Skipped or TestingPlatformSemanticConventions.TestResultStatus.Unknown => PlatformActivityStatusCode.Unset,
@@ -103,29 +187,33 @@ internal sealed partial class OpenTelemetryResultHandler
 
         if (timeoutTime is not null)
         {
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseTimeoutMilliseconds, timeoutTime.Value.TotalMilliseconds);
+            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseTimeoutMilliseconds, timeoutTime.Value.TotalMilliseconds);
             if (_options.EmitLegacyAttributes)
             {
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout, timeoutTime.Value.TotalMilliseconds);
+                activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout, timeoutTime.Value.TotalMilliseconds);
             }
         }
 
-        try
+        SetResultDetails(testNode, measurementTags, activity, recordMetrics);
+        if (activity is not null && occurrenceDuration is not null)
         {
-            SetResultDetails(testNode, measurementTags, activity);
-        }
-        finally
-        {
-            // The span was already dequeued, so it must be closed even if collecting the details throws on a
-            // malformed property bag; otherwise it would stay open until the handler is disposed.
-            activity.Dispose();
+            double totalMilliseconds = occurrenceDuration.Value.TotalMilliseconds;
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds, totalMilliseconds);
+            if (_options.EmitLegacyAttributes)
+            {
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestDuration, totalMilliseconds);
+            }
         }
     }
 
     /// <summary>
     /// Collects the timing, output and artifact details of a completed test in a single pass over the property bag.
     /// </summary>
-    private void SetResultDetails(TestNode testNode, KeyValuePair<string, object?>[] measurementTags, IPlatformActivity? activity)
+    private void SetResultDetails(
+        TestNode testNode,
+        KeyValuePair<string, object?>[] measurementTags,
+        IPlatformActivity? activity,
+        bool recordMetrics)
     {
         // Single pass over the property bag: replaces five separate walks
         // (SingleOrDefault<TimingProperty>, OfType<TestMetadataProperty>, SingleOrDefault<StandardOutputProperty>,
@@ -182,8 +270,12 @@ internal sealed partial class OpenTelemetryResultHandler
         if (timingProperty is not null)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
-            _testCaseDuration.Record(timingProperty.GlobalTiming.Duration.TotalSeconds, measurementTags);
-            _totalDuration?.Record(totalMilliseconds);
+            if (recordMetrics)
+            {
+                _testCaseDuration.Record(timingProperty.GlobalTiming.Duration.TotalSeconds, measurementTags);
+                _totalDuration?.Record(totalMilliseconds);
+            }
+
             activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds, totalMilliseconds);
             if (_options.EmitLegacyAttributes)
             {

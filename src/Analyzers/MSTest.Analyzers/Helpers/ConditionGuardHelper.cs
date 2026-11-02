@@ -9,7 +9,8 @@ namespace MSTest.Analyzers.Helpers;
 
 /// <summary>
 /// Shared logic for the analyzers that suggest replacing an imperative "skip this test" guard at the top of a
-/// test method with a declarative <c>ConditionBaseAttribute</c>-derived attribute (MSTEST0079, MSTEST0080).
+/// test method with a declarative <c>ConditionBaseAttribute</c>-derived attribute (MSTEST0079, MSTEST0080,
+/// MSTEST0083).
 /// The shape they all recognize is an <c>if</c> statement that is the very first statement of the test method
 /// body, has no meaningful <c>else</c> branch, and whose body starts with either a <c>return</c> or an
 /// <c>Assert.Inconclusive</c> call.

@@ -1,19 +1,21 @@
 ---
-name: "Test Reviewer on PR (on open / sync)"
+name: "Test Quality Review on PR (on open / sync)"
 description: >-
-  Automatically reviews new and modified test methods when a non-draft PR
-  is opened, reopened, marked ready-for-review, or pushed to — but only when
-  the change touches files under `test/`. Reviews correctness, effectiveness,
-  reliability, maintainability, and repository conventions; posts a compact
-  scorecard plus complete, apply-ready inline suggestions.
+  Reports revision-bound test-value evidence when a non-draft PR is opened,
+  reopened, marked ready-for-review, or pushed to, including source-only changes.
+  Grades changed tests, audits cross-test parallel-safety, and publishes one
+  consolidated advisory COMMENT review with inline suggestions for verified
+  findings. Static predictions are distinguished from executed proof.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial
 #   review on the PR's first appearance as a non-draft.
-# - pull_request `synchronize` — re-review when new commits are pushed
-#   so the comment stays current. Combined with `paths` so we only fire
-#   when test files change, and with `concurrency.cancel-in-progress`
-#   so superseded runs are cancelled.
+# - pull_request `synchronize` — re-review when new commits are pushed so the
+#   result stays current. `concurrency.cancel-in-progress` cancels superseded
+#   runs; the review records the exact head SHA.
+#
+# Do not filter to test paths: source-only changes need evidence too, and
+# non-behavioral PRs receive an explicit not-applicable assessment.
 #
 # The companion `/review-tests` slash command lives in `test-reviewer.agent.md`.
 # They must remain separate workflows because mixing `slash_command` with
@@ -23,8 +25,6 @@ description: >-
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
-    paths:
-      - "test/**"
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by
 # dotnet-bot) — only run for human-authored PRs in a reviewable state.
@@ -43,13 +43,15 @@ permissions:
 imports:
   - shared/test-reviewer-shared.md
 
-# This workflow fires automatically on every PR open / reopen / ready-for-review
-# and on every push (`synchronize`) that touches `test/**`. On a busy weekend the
-# per-workflow 24h AI-credit usage aggregated across all those runs crossed the
-# enterprise default of 5K, tripping the daily guardrail and failing every
-# subsequent activation (see issues #9086 and #9053). Raise the daily budget so a
-# busy day of PR pushes does not skip reviews.
-max-daily-ai-credits: 20K
+# The combined review includes a bounded parallel-safety specialist task in
+# addition to per-test grading, so retain the same per-run headroom as the broad
+# expert review. Source-only changes do not launch the parallel-safety specialist.
+max-ai-credits: 2000
+
+# This replaces two automatic workflows that each carried a 20K daily allowance.
+# Preserve their aggregate admission capacity so consolidation does not halve
+# throughput on busy PR days (see issues #9086 and #9053).
+max-daily-ai-credits: 40K
 
 safe-outputs:
   report-failure-as-issue: false
@@ -59,10 +61,10 @@ safe-outputs:
     report-as-issue: false
 
 concurrency:
-  group: test-reviewer-${{ github.event.pull_request.number }}
+  group: test-quality-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-timeout-minutes: 20
+timeout-minutes: 40
 ---
 
 <!-- Body provided by shared/test-reviewer-shared.md -->

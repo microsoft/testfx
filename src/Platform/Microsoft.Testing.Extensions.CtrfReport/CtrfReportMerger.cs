@@ -15,7 +15,7 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// <list type="bullet">
 ///   <item><description><c>results.tests[]</c> arrays are concatenated, except that elements which are not Test objects are dropped so one input's malformed row cannot invalidate the merged document; <see cref="CtrfMergeMode.CollapseRetryAttempts"/> additionally folds successive attempts of the same test into one row.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
-///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs AND the merge mode, so identical inputs reproduce the same id (RFC 018 idempotency) while the two modes — which produce materially different documents — get distinct ids.</description></item>
+///   <item><description><c>reportFormat</c> is taken from the first report. A 0.2.0 input promotes compatible earlier inputs to <c>specVersion</c> 0.2.0; unreviewed version mixtures are rejected. Otherwise the first report's version is retained. <c>reportId</c> is derived deterministically from the inputs, merge mode and schema promotion, so identical inputs reproduce the same id (RFC 018 idempotency) while materially different documents get distinct ids.</description></item>
 ///   <item><description><c>runId</c> is carried over when every input agrees on one, because the merged document describes the same logical run as its inputs while remaining a distinct artifact with its own <c>reportId</c> (see ctrf-io/ctrf#58).</description></item>
 ///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
 ///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
@@ -72,11 +72,13 @@ internal static partial class CtrfReportMerger
 
         JsonObject? first = null;
         var mergedTests = new JsonArray();
+        var retryReports = new List<IReadOnlyList<JsonObject>>();
 
         // Accumulate the raw JSON of every ACCEPTED CTRF input so the deterministic reportId is derived only
         // from the payloads that actually contributed to the merge. Hashing the unfiltered inputs would let a
         // rejected non-CTRF input (which is skipped below) change the merged report's identity.
         var acceptedReports = new List<string>(inputReports.Count);
+        var specVersions = new HashSet<string?>(StringComparer.Ordinal);
 
         long? earliestStart = null;
         long? latestStop = null;
@@ -93,11 +95,13 @@ internal static partial class CtrfReportMerger
         // The merged document belongs to the same logical run as its inputs only when they all belong to the
         // same one, so a run id is carried over only when every input reported the very same value.
         var distinctRunIds = new HashSet<string>(StringComparer.Ordinal);
+        var lineageInputs = new JsonArray();
 
         // Collect each input's environment so shared fields can be retained and module- or agent-specific
         // ones (values that differ across inputs) dropped, rather than attributing the first report's
         // environment to every merged test.
         var environments = new List<JsonObject>();
+        bool isIncomplete = false;
 
         foreach (string reportJson in inputReports)
         {
@@ -134,15 +138,28 @@ internal static partial class CtrfReportMerger
             first ??= root;
             reportCount++;
             acceptedReports.Add(reportJson);
+            specVersions.Add(ReadString(root, "specVersion"));
 
+            JsonNode lineageInput = new JsonObject();
+            if (ReadString(root, "reportId") is { Length: > 0 } inputReportId)
+            {
+                lineageInput["reportId"] = inputReportId;
+            }
+
+            lineageInputs.Add(lineageInput);
             distinctRunIds.Add(ReadString(root, "runId") is { Length: > 0 } runIdText ? runIdText : string.Empty);
 
             if (root["results"]?["environment"] is JsonObject environment)
             {
                 environments.Add(environment);
+                isIncomplete |= environment["extra"] is JsonObject extra
+                    && extra["incomplete"] is JsonValue incompleteValue
+                    && incompleteValue.TryGetValue(out bool incomplete)
+                    && incomplete;
             }
 
             JsonNode? results = root["results"];
+            var reportTests = new List<JsonObject>();
             if (results?["tests"] is JsonArray testArray)
             {
                 foreach (JsonNode? test in testArray)
@@ -157,7 +174,12 @@ internal static partial class CtrfReportMerger
                         continue;
                     }
 
-                    mergedTests.Add(testObject.DeepClone());
+                    var clonedTest = (JsonObject)testObject.DeepClone();
+                    mergedTests.Add((JsonNode)clonedTest);
+                    if (mode == CtrfMergeMode.CollapseRetryAttempts)
+                    {
+                        reportTests.Add(clonedTest);
+                    }
 
                     // Fall back to per-test timing so a summary-less input (which the merger explicitly
                     // supports) still contributes to the merged min/max instead of being dropped or
@@ -172,6 +194,11 @@ internal static partial class CtrfReportMerger
                         latestStop = Max(latestStop, testStop);
                     }
                 }
+            }
+
+            if (mode == CtrfMergeMode.CollapseRetryAttempts)
+            {
+                retryReports.Add(reportTests);
             }
 
             if (results?["tool"] is JsonNode toolNode)
@@ -209,6 +236,16 @@ internal static partial class CtrfReportMerger
             throw new ArgumentException("None of the provided inputs were valid CTRF reports.", nameof(inputReports));
         }
 
+        // 0.2.0 only adds optional Test.attemptId to the schema used by our earlier reports.
+        // Do not infer compatibility across other pre-1.0 releases or undeclared versions.
+        bool useVersion02 = specVersions.Contains("0.2.0");
+        if (useVersion02 && specVersions.Any(version => version is not ("0.0.0" or "0.0.4" or "0.1.0" or "0.2.0")))
+        {
+            throw new ArgumentException(
+                "CTRF 0.2.0 reports can only be merged with specification versions 0.0.0, 0.0.4, 0.1.0 or 0.2.0.",
+                invalidInputParameterName);
+        }
+
         long startMs = earliestStart ?? 0;
         long stopMs = latestStop ?? startMs;
 
@@ -216,7 +253,7 @@ internal static partial class CtrfReportMerger
         // appear in several of them. Collapse those repeats into one row before counting, otherwise the same
         // test would be reported (and counted) several times.
         JsonArray tests = mode == CtrfMergeMode.CollapseRetryAttempts
-            ? CollapseRetryAttempts(mergedTests)
+            ? CollapseRetryAttempts(retryReports)
             : mergedTests;
 
         // Counters are derived from the merged tests[] rather than trusting each input's summary, so
@@ -278,7 +315,17 @@ internal static partial class CtrfReportMerger
         // environment at all counts as disagreement (its fields are absent), so a common field requires
         // every accepted report to provide it. Module-specific 'extra' values (the producing test
         // application and its exit code) are always dropped.
-        if (BuildCommonEnvironment(environments, reportCount) is JsonObject commonEnvironment)
+        JsonObject? commonEnvironment = BuildCommonEnvironment(environments, reportCount);
+        if (isIncomplete)
+        {
+            commonEnvironment ??= [];
+            JsonObject extra = commonEnvironment["extra"] as JsonObject ?? [];
+            extra["incomplete"] = true;
+            extra["runStatus"] = "aborted";
+            commonEnvironment["extra"] = extra;
+        }
+
+        if (commonEnvironment is not null)
         {
             resultsObject["environment"] = commonEnvironment;
         }
@@ -288,8 +335,11 @@ internal static partial class CtrfReportMerger
         var merged = new JsonObject
         {
             ["reportFormat"] = first["reportFormat"]?.DeepClone() ?? "CTRF",
-            ["specVersion"] = first["specVersion"]?.DeepClone() ?? "0.0.0",
-            ["reportId"] = CreateDeterministicReportId(acceptedReports, mode),
+            ["specVersion"] = useVersion02 ? "0.2.0" : first["specVersion"]?.DeepClone() ?? "0.0.0",
+            ["reportId"] = CreateDeterministicReportId(
+                acceptedReports,
+                mode,
+                isSpecVersionPromoted: useVersion02 && ReadString(first, "specVersion") != "0.2.0"),
         };
 
         // A merged document is a new artifact (hence its own reportId) but it still describes the same logical
@@ -307,6 +357,19 @@ internal static partial class CtrfReportMerger
         // rather than carrying the first input's 'generatedBy' (which could report a different producer
         // or version when merging reports from different tool versions).
         merged["generatedBy"] = GeneratedByName;
+        // Immediate input lineage does not establish that all executions of the logical run were supplied.
+        // Even strict mode only checks the supplied documents, not the orchestrator's expected input set.
+        merged["extra"] = new JsonObject
+        {
+            ["microsoft.testingplatform"] = new JsonObject
+            {
+                ["documentRole"] = "merged",
+                ["mergeMode"] = mode == CtrfMergeMode.CollapseRetryAttempts ? "collapseRetryAttempts" : "concatenate",
+                ["inputCount"] = reportCount,
+                ["inputs"] = lineageInputs,
+                ["inputCompleteness"] = "unknown",
+            },
+        };
         merged["results"] = resultsObject;
 
         return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });

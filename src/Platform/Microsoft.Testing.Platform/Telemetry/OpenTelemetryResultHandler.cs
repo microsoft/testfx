@@ -28,13 +28,14 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
 
     private readonly Stopwatch _runStopwatch = Stopwatch.StartNew();
 
-    // Note: we use a queue per Uid because frameworks are allowed (but discouraged) to produce
-    // multiple test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or
-    // MSTest's "folded" parameterized tests). When that happens we still want to track every
-    // in-flight activity and pair them with results in FIFO order, instead of throwing.
+    // Note: we use a queue per Uid/attempt because frameworks are allowed (but discouraged) to produce multiple
+    // test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or MSTest's "folded" parameterized
+    // tests). Frameworks that identify attempts on both their in-progress and result updates can complete those
+    // attempts out of order; frameworks without per-start attempt identity retain the established FIFO fallback.
     // The queued activity is nullable on purpose: when no tracer is listening StartActivity returns null, and we
     // still need the entry so the in-flight bookkeeping (and therefore test.case.active) stays balanced.
-    private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity?>> _testActivities = [];
+    private readonly Dictionary<TestActivityKey, Queue<IPlatformActivity?>> _testActivities = [];
+    private readonly HashSet<TestExecutionActivityReservation> _canonicalActivities = [];
 
     // The notifications are normally serialised by the message bus's single-reader consumer loop. They are not on
     // the cancellation path: a cancelled run skips the drain/disable step, so a consumer can still be publishing
@@ -115,6 +116,11 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
             }
 
             _testActivities.Clear();
+            if (_canonicalActivities.Count > 0)
+            {
+                _activeTestCases.Add(-_canonicalActivities.Count);
+                _canonicalActivities.Clear();
+            }
         }
 
         foreach (IPlatformActivity? activity in orphaned)
@@ -122,4 +128,6 @@ internal sealed partial class OpenTelemetryResultHandler : IDisposable
             activity?.Dispose();
         }
     }
+
+    private readonly record struct TestActivityKey(TestNodeUid Uid, int? AttemptNumber);
 }

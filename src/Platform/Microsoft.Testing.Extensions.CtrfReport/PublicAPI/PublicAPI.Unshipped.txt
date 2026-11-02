@@ -1,1 +1,5 @@
 #nullable enable
+*REMOVED*[TPEXP]Microsoft.Testing.Extensions.CtrfReportExtensions
+*REMOVED*[TPEXP]static Microsoft.Testing.Extensions.CtrfReportExtensions.AddCtrfReportProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void
+Microsoft.Testing.Extensions.CtrfReportExtensions
+static Microsoft.Testing.Extensions.CtrfReportExtensions.AddCtrfReportProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

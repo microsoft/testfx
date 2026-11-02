@@ -2,7 +2,8 @@ name: Mutation testing
 
 on:
   schedule:
-    - cron: '0 5 * * 1'
+    # Run the complete enabled module set once a week from one source revision.
+    - cron: '0 5 * * 0'
   workflow_dispatch:
 
 permissions:
@@ -13,32 +14,195 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  stryker:
-    name: Run Stryker.NET
+  plan:
+    name: Plan mutation modules
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Build repository
-        run: ./build.sh --binaryLog
+      - name: Validate mutation testing configuration
+        run: python .github/scripts/test_mutation_testing.py
 
-      - name: Restore local tools
-        run: ./.dotnet/dotnet tool restore
+      - name: Create module matrix
+        id: matrix
+        run: |
+          matrix=$(python .github/scripts/mutation_testing.py matrix \
+            --manifest eng/mutation-testing/modules.json \
+            --repository-root "$GITHUB_WORKSPACE")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  stryker:
+    name: Mutate ${{ matrix.displayName }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMinutes }}
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      MutationTesting: true
+      MutationTestingTargetFramework: ${{ matrix.targetFramework }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Create isolated mutation solution
+        run: |
+          python .github/scripts/mutation_testing.py create-solution \
+            --manifest eng/mutation-testing/modules.json \
+            --module "${{ matrix.id }}" \
+            --output MutationTesting.generated.slnx
+
+      - name: Build mutation shard
+        id: build
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          output="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}"
+          mkdir -p "$output"
+          ./build.sh --binaryLog --projects "$GITHUB_WORKSPACE/MutationTesting.generated.slnx" \
+            2>&1 | tee "$output/build-console.log"
+
+      - name: Install Stryker.NET
+        id: install
+        if: ${{ steps.build.outcome == 'success' }}
+        run: |
+          stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+          test -n "$stryker_version"
+          ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
 
       - name: Run mutation tests
-        working-directory: test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests
-        env:
-          MutationTesting: true
+        id: mutate
+        if: ${{ success() && steps.build.outcome == 'success' }}
         run: |
-          "$GITHUB_WORKSPACE/.dotnet/dotnet" stryker --output "$GITHUB_WORKSPACE/artifacts/mutation-testing" --skip-version-check
+          set -u
+          export DOTNET_ROOT="$GITHUB_WORKSPACE/.dotnet"
+          export PATH="$DOTNET_ROOT:$PATH"
+          output="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}"
+          mkdir -p "$output"
+          start_time=$(date +%s)
 
-      - name: Upload mutation report
+          set +e
+          set -o pipefail
+          "$GITHUB_WORKSPACE/artifacts/tools/stryker/dotnet-stryker" \
+            --config-file "$GITHUB_WORKSPACE/stryker-config.json" \
+            --solution "$GITHUB_WORKSPACE/MutationTesting.generated.slnx" \
+            --project "$(basename "${{ matrix.project }}")" \
+            --target-framework "$MutationTestingTargetFramework" \
+            --output "$output" \
+            --skip-version-check \
+            2>&1 | tee "$output/stryker-console.log"
+          stryker_exit_code=${PIPESTATUS[0]}
+          set +o pipefail
+          set -e
+
+          duration_seconds=$(( $(date +%s) - start_time ))
+          python .github/scripts/mutation_testing.py record-module \
+            --manifest eng/mutation-testing/modules.json \
+            --module "${{ matrix.id }}" \
+            --artifact-dir "$output" \
+            --source-commit "$GITHUB_SHA" \
+            --exit-code "$stryker_exit_code" \
+            --duration-seconds "$duration_seconds"
+
+      - name: Summarize mutation testing results
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          MUTATE_OUTCOME: ${{ steps.mutate.outcome }}
+        run: |
+          set -euo pipefail
+          output="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}"
+          if [ ! -f "$output/module-result.json" ]; then
+            python .github/scripts/mutation_testing.py record-module \
+              --manifest eng/mutation-testing/modules.json \
+              --module "${{ matrix.id }}" \
+              --artifact-dir "$output" \
+              --source-commit "$GITHUB_SHA" \
+              --exit-code 1 \
+              --duration-seconds 0 \
+              --failure-reason "Mutation execution did not complete (build: $BUILD_OUTCOME; tool: $INSTALL_OUTCOME; mutation: $MUTATE_OUTCOME)."
+          fi
+          summary="$GITHUB_WORKSPACE/artifacts/mutation-testing/${{ matrix.id }}/module-summary.md"
+          cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload module report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: mutation-testing-report
-          path: artifacts/mutation-testing/
+          name: mutation-testing-module-${{ matrix.id }}
+          path: artifacts/mutation-testing/${{ matrix.id }}/
           if-no-files-found: error
           retention-days: 30
+
+      - name: Fail unsuccessful mutation module
+        if: ${{ always() }}
+        run: |
+          python .github/scripts/mutation_testing.py check-module \
+            --result "artifacts/mutation-testing/${{ matrix.id }}/module-result.json"
+
+  aggregate:
+    name: Aggregate mutation report
+    if: ${{ always() && needs.plan.result == 'success' }}
+    needs:
+      - plan
+      - stryker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download module reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mutation-testing-module-*
+          path: artifacts/mutation-testing-modules
+
+      - name: Aggregate module reports
+        if: ${{ always() }}
+        run: |
+          set +e
+          python .github/scripts/mutation_testing.py aggregate \
+            --manifest eng/mutation-testing/modules.json \
+            --artifacts-dir artifacts/mutation-testing-modules \
+            --output-dir artifacts/mutation-testing-full \
+            --source-commit "$GITHUB_SHA"
+          aggregate_exit_code=$?
+          echo "AGGREGATE_EXIT_CODE=$aggregate_exit_code" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Publish aggregate summary
+        if: ${{ always() }}
+        run: cat artifacts/mutation-testing-full/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full mutation report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-testing-full-report
+          path: artifacts/mutation-testing-full/
+          if-no-files-found: error
+          retention-days: 90
+
+      # Preserve the artifact contract consumed by mutation-test-improver while it
+      # remains focused on the original ServerMode client module.
+      - name: Upload Mutation Test Improver report
+        if: ${{ always() && hashFiles('artifacts/mutation-testing-full/modules/server-mode-client/reports/mutation-report.json') != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mutation-testing-report
+          path: artifacts/mutation-testing-full/modules/server-mode-client/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail partial aggregate
+        if: ${{ always() }}
+        run: exit "$AGGREGATE_EXIT_CODE"

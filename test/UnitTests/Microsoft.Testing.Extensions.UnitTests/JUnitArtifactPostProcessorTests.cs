@@ -24,9 +24,9 @@ public sealed class JUnitArtifactPostProcessorTests
     {
         JUnitArtifactPostProcessor processor = new();
 
-        Assert.AreSequenceEqual(new[] { JUnitReportGenerator.JUnitArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual([JUnitReportGenerator.JUnitArtifactKind], processor.SupportedKinds);
         Assert.AreSequenceEqual(
-            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts],
             processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
@@ -118,7 +118,7 @@ public sealed class JUnitArtifactPostProcessorTests
             Assert.AreEqual("merged", Path.GetFileName(Path.GetDirectoryName(output.Path)));
             Assert.AreEqual("5", XDocument.Load(output.Path).Root!.Attribute("tests")!.Value);
             Assert.AreSequenceEqual(
-                new[] { "first.xml", "second.xml" },
+                ["first.xml", "second.xml"],
                 Directory.GetFiles(directory, "*.xml").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
         }
         finally

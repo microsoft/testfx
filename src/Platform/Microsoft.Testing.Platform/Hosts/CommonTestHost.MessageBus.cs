@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -12,18 +14,57 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal abstract partial class CommonHost
 {
     protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
-        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
+        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client,
+        bool isDiscoveryRequest)
     {
         // Reset the shared, application-scoped coverage accumulator at the start of every request here, in the
         // common host/request lifecycle, so it happens for all output modes (terminal, pipe, server, custom)
         // rather than only when the terminal device renders. Without this a prior session's coverage rows and
         // thresholds would be reprinted and its threshold-failure verdict could poison a later session.
-        serviceProvider.GetRequiredService<TestCoverageResult>().Reset();
+        TestCoverageResult coverageResult = serviceProvider.GetRequiredService<TestCoverageResult>();
+        coverageResult.Reset();
+        ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
+        bool controllerOwnsCoverage = CoverageThresholdPolicy.IsDeferredToController(commandLineOptions, serviceProvider.GetEnvironment());
+        if (!isDiscoveryRequest && !controllerOwnsCoverage)
+        {
+            coverageResult.ConfigureThresholds(commandLineOptions, testSessionInfo.SessionUid);
+        }
+        else if (controllerOwnsCoverage)
+        {
+            coverageResult.DeferToController();
+        }
 
-        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
+        bool executionCompletedNotified = false;
+
+        async Task NotifyTestExecutionCompletedAsync()
+        {
+            if (executionCompletedNotified)
+            {
+                return;
+            }
+
+            AbortAtDeadlineExtension? abortAtDeadlineExtension = serviceProvider.GetService<AbortAtDeadlineExtension>();
+            abortAtDeadlineExtension?.NotifyTestExecutionCompleted();
+            if (!isDiscoveryRequest)
+            {
+                serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+            }
+
+            executionCompletedNotified = true;
+            if (abortAtDeadlineExtension is not null)
+            {
+                // A successful stop can make the invoker return before the deadline handler records
+                // its verdict, while an asynchronously rejected stop must release its claim. Resolve
+                // either outcome before reporters and exit-code consumers inspect the run.
+                await abortAtDeadlineExtension.WaitForDeadlineHandlingAsync().ConfigureAwait(false);
+            }
+        }
+
         try
         {
+            await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
+
             try
             {
                 IPlatformOpenTelemetryService? otelService = serviceProvider.GetPlatformOTelService();
@@ -34,7 +75,21 @@ internal abstract partial class CommonHost
 
                 using (otelService?.StartActivity("TestFrameworkInvoker"))
                 {
-                    await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        // Test execution is over -- normally, or because it failed or was canceled. Disarm the
+                        // deadline here, before end-of-session draining and reporting begin, so a deadline
+                        // reached while the reporters finalize an already-executed run cannot mark it as
+                        // truncated. The extension cannot do this from ITestSessionLifetimeHandler: it is an
+                        // IDataConsumer, and consumer handlers run last in NotifyTestSessionEndAsync, after the
+                        // drains and after the reporters. Absent for discovery requests, where the extension is
+                        // not registered.
+                        await NotifyTestExecutionCompletedAsync().ConfigureAwait(false);
+                    }
                 }
 
                 using (otelService?.StartActivity("OnTestSessionEnding"))
@@ -49,10 +104,22 @@ internal abstract partial class CommonHost
 
             // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
             // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                foreach (string error in coverageResult.GetThresholdErrors())
+                {
+                    await outputDevice.DisplayAsync(coverageResult, new ErrorMessageOutputDeviceData(error), CancellationToken.None).ConfigureAwait(false);
+                }
+            }
+
             await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         }
         finally
         {
+            // Session startup can fail before the invoker is entered. Complete the run registration on that
+            // path too, otherwise one failed server request leaves the application-scoped active count stuck.
+            await NotifyTestExecutionCompletedAsync().ConfigureAwait(false);
+
             // The message bus shutdown handshake must complete before the services - and with them every
             // IDataConsumer - get disposed, otherwise a consumer can still be inside ConsumeAsync while it is
             // being disposed. NotifyTestSessionEndAsync does it on the happy path, but it is skipped whenever the

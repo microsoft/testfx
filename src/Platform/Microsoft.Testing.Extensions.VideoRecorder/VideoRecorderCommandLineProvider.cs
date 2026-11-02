@@ -37,16 +37,6 @@ internal sealed class VideoRecorderCommandLineProvider : CommandLineOptionsProvi
     private static readonly string[] GranularityValues = [GranularityTest, GranularitySession];
     private static readonly string[] ChaptersValues = [ChaptersOn, ChaptersOff];
 
-    private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
-    [
-        new CommandLineOption(EnableOptionName, VideoRecorderResources.OptionDescriptionCaptureVideo, ArgumentArity.ZeroOrOne, isHidden: false),
-        new CommandLineOption(SourceOptionName, VideoRecorderResources.OptionDescriptionSource, ArgumentArity.ExactlyOne, isHidden: false),
-        new CommandLineOption(GranularityOptionName, VideoRecorderResources.OptionDescriptionGranularity, ArgumentArity.ExactlyOne, isHidden: false),
-        new CommandLineOption(ArgsOptionName, VideoRecorderResources.OptionDescriptionArgs, ArgumentArity.ExactlyOne, isHidden: false),
-        new CommandLineOption(MaxDurationOptionName, VideoRecorderResources.OptionDescriptionMaxDuration, ArgumentArity.ExactlyOne, isHidden: false),
-        new CommandLineOption(ChaptersOptionName, VideoRecorderResources.OptionDescriptionChapters, ArgumentArity.ExactlyOne, isHidden: false),
-    ];
-
     public VideoRecorderCommandLineProvider()
         : base(
             // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
@@ -54,7 +44,7 @@ internal sealed class VideoRecorderCommandLineProvider : CommandLineOptionsProvi
             ExtensionVersion.DefaultSemVer,
             VideoRecorderResources.ExtensionDisplayName,
             VideoRecorderResources.CommandLineProviderDescription,
-            CachedCommandLineOptions)
+            CreateCommandLineOptions())
     {
     }
 
@@ -89,4 +79,15 @@ internal sealed class VideoRecorderCommandLineProvider : CommandLineOptionsProvi
                 value,
                 optionName,
                 string.Join(", ", allowed.Select(v => $"'{v}'"))));
+
+    private static IReadOnlyCollection<CommandLineOption> CreateCommandLineOptions()
+        =>
+        [
+            new CommandLineOption(EnableOptionName, VideoRecorderResources.OptionDescriptionCaptureVideo, ArgumentArity.ZeroOrOne, isHidden: false),
+            new CommandLineOption(SourceOptionName, VideoRecorderResources.OptionDescriptionSource, ArgumentArity.ExactlyOne, isHidden: false),
+            new CommandLineOption(GranularityOptionName, VideoRecorderResources.OptionDescriptionGranularity, ArgumentArity.ExactlyOne, isHidden: false),
+            new CommandLineOption(ArgsOptionName, VideoRecorderResources.OptionDescriptionArgs, ArgumentArity.ExactlyOne, isHidden: false),
+            new CommandLineOption(MaxDurationOptionName, VideoRecorderResources.OptionDescriptionMaxDuration, ArgumentArity.ExactlyOne, isHidden: false),
+            new CommandLineOption(ChaptersOptionName, VideoRecorderResources.OptionDescriptionChapters, ArgumentArity.ExactlyOne, isHidden: false),
+        ];
 }

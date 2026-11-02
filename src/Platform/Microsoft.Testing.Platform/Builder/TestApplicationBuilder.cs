@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.DynamicExtensions;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -25,7 +26,7 @@ namespace Microsoft.Testing.Platform.Builder;
 /// <summary>
 /// A builder for test applications and services.
 /// </summary>
-internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder, IDynamicExtensionRegistrationGuard
+internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder, IAsyncCleanableExtension, IDynamicExtensionRegistrationGuard
 {
     private readonly DateTimeOffset _createBuilderStart;
     private readonly ApplicationLoggingState _loggingState;
@@ -43,8 +44,19 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
         string[] args)
+        : this(loggingState, createBuilderStart, testApplicationOptions, unhandledExceptionsHandler, args, args)
     {
-        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler(), args));
+    }
+
+    internal TestApplicationBuilder(
+        ApplicationLoggingState loggingState,
+        DateTimeOffset createBuilderStart,
+        TestApplicationOptions testApplicationOptions,
+        IUnhandledExceptionsHandler unhandledExceptionsHandler,
+        string[] args,
+        string[] expandedArgs)
+    {
+        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler(), args, expandedArgs));
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
         _testApplicationOptions = testApplicationOptions;
@@ -57,6 +69,10 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
 
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ITestHostOrchestratorManager ITestApplicationBuilder.TestHostOrchestrator => _testHostBuilder.TestHostOrchestrator;
 
@@ -65,17 +81,33 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IConfigurationManager Configuration => _testHostBuilder.Configuration;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public ILoggingManager Logging => _testHostBuilder.Logging;
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IArtifactPostProcessingManager ArtifactPostProcessing => _testHostBuilder.ArtifactPostProcessing;
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     public IToolsManager Tools => _testHostBuilder.Tools;
 
@@ -137,6 +169,14 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
         _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
 
         return new TestApplication(_host);
+    }
+
+    async Task IAsyncCleanableExtension.CleanupAsync()
+    {
+        if (_host is null && _loggingState.FileLoggerProvider is { } fileLoggerProvider)
+        {
+            await DisposeHelper.DisposeAsync(fileLoggerProvider).ConfigureAwait(false);
+        }
     }
 
     // The scope covers the synchronous execution of the hook, which is the whole window in which a hook is

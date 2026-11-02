@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Services;
 /// <summary>
 /// Provides information about the platform.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IPlatformInformation
 {
@@ -58,7 +61,8 @@ internal sealed class PlatformInformation : IPlatformInformation
             .FirstOrDefault(x => x.Key == BuildTimeAttributeName);
 
         if (!RoslynString.IsNullOrEmpty(buildTime?.Value)
-            && DateTimeOffset.TryParse(buildTime.Value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset date))
+            && (DateTimeOffset.TryParseExact(buildTime.Value, "yyyy/MM/dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset date)
+                || DateTimeOffset.TryParse(buildTime.Value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out date)))
         {
             BuildDate = date;
         }

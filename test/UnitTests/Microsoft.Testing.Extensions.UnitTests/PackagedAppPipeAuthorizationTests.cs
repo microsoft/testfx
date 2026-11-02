@@ -18,6 +18,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class PackagedAppPipeAuthorizationTests
 {
     private const string MicrosoftStorePublisher = "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US";
+    private const string TargetExecutableEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_TARGET";
 
     /// <summary>The AppContainer SID of <c>Contoso.MyTestApp_8wekyb3d8bbwe</c>.</summary>
     private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
@@ -95,6 +96,29 @@ public sealed class PackagedAppPipeAuthorizationTests
             mode: null,
             expected: [ContosoPackageSid],
             testHostFileName: "UwpTests.exe");
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept.")]
+    public Task WithConfiguredTargetExecutable_AuthorizesTargetInsteadOfContextFile()
+        => RunInTemporaryLayoutAsync(
+            BuildManifestXml(runFullTrust: false, entryPoint: null),
+            async appDirectory =>
+            {
+                string targetExecutable = Path.Combine(appDirectory, "MyTestApp.exe");
+                var launcher = new PackagedAppTestHostLauncher(
+                    Path.GetTempPath(),
+                    name => name == TargetExecutableEnvironmentVariable
+                        ? targetExecutable
+                        : null);
+
+#pragma warning disable TPEXP // ITestHostControllerConnectionAuthorizer is experimental.
+                IReadOnlyList<string> actual = await launcher.GetAuthorizedSecurityIdentitiesAsync(
+                    Path.Combine(Path.GetTempPath(), "decoy.exe"),
+                    CancellationToken.None);
+#pragma warning restore TPEXP
+
+                Assert.AreSequenceEqual([ContosoPackageSid], actual);
+            });
 
     // A loose (non-packaged) layout has no package identity at all; it is launched as an ordinary process.
     [TestMethod]

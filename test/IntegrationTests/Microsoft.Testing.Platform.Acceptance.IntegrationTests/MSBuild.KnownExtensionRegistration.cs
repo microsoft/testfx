@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Combinatorial.MSTest;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 using SL = Microsoft.Build.Logging.StructuredLogger;
 
@@ -21,6 +21,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
             SourceCode
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingExtensionsAzureFoundryVersion$", MicrosoftTestingExtensionsAzureFoundryVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
@@ -30,6 +31,8 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, rid: RID, verb: verb, buildConfiguration: compilationMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help", cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContains("--coverage-threshold-line");
+        testHostResult.AssertOutputContains("--coverage-threshold-branch");
         testHostResult.AssertOutputContains("--crashdump");
         testHostResult.AssertOutputContains("--hangdump");
         testHostResult.AssertOutputContains("--publish-azdo-run-name");
@@ -42,12 +45,13 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         testHostResult.AssertOutputContains("--retry-failed-tests");
         testHostResult.AssertOutputContains("--capture-video");
 
-        SL.Build binLog = SL.Serialization.Read(binlogFile);
+        SL.Build binLog = BinlogReader.Read(binlogFile);
         SL.Target generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateSelfRegisteredExtensions");
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
         SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
 
         Assert.Contains("Microsoft.Testing.Extensions.AzureDevOpsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.AzureFoundry.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CtrfReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
@@ -80,7 +84,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         result.AssertOutputContains("Duplicate 'TestingPlatformBuilderHook' item with Include 'CONFLICT-HOOK-ID' has conflicting metadata.");
 
         // Ensure no self-registered extensions source file was generated when validation failed.
-        SL.Build binLog = SL.Serialization.Read(result.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(result.BinlogPath!);
         SL.Target? generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().SingleOrDefault(t => t.Name == "_GenerateSelfRegisteredExtensions");
         Assert.IsNotNull(generateSelfRegisteredExtensions);
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
@@ -113,6 +117,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureFoundry" Version="$MicrosoftTestingExtensionsAzureFoundryVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />

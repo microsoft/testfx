@@ -7,15 +7,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
-using Microsoft.Testing.Platform.Resources;
-
 namespace Microsoft.Testing.Platform.IPC;
 
 [Embedded]
 #if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+[UnsupportedOSPlatform("wasi")]
 #endif
-internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
+#endif
+internal sealed partial class NamedPipeServer : NamedPipeConnectionBase, IServer
 {
     private const PipeOptions AsyncCurrentUserPipeOptions = PipeOptions.Asynchronous
 #if NET
@@ -36,6 +37,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     private readonly ILogger _logger;
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lifecycleSync = new();
+#else
+    private readonly object _lifecycleSync = new();
+#endif
     private Task? _loopTask;
     private bool _disposed;
 
@@ -133,7 +139,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             throw new ArgumentNullException(nameof(pipeNameDescription));
         }
 
-        PipeName = authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported
+        PipeName = RequiresExplicitSecurity(authorizedSecurityIdentities)
             ? new PipeNameDescription(NamedPipeServerSecurity.GetPipeNameForSandboxedApplication(pipeNameDescription.Name))
             : pipeNameDescription;
         _namedPipeServerStream = CreateServerStream(PipeName.Name, maxNumberOfServerInstances, authorizedSecurityIdentities);
@@ -144,72 +150,63 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         _cancellationToken = cancellationToken;
     }
 
-    /// <summary>
-    /// Creates the underlying server stream, using the hardened Windows path only when a caller actually
-    /// asked for extra authorization. Every other run — including every run on a non-Windows
-    /// operating system — keeps the untouched <c>PipeOptions.CurrentUserOnly</c> pipe.
-    /// </summary>
-    private static NamedPipeServerStream CreateServerStream(string name, int maxNumberOfServerInstances, IReadOnlyList<string>? authorizedSecurityIdentities)
-    {
-        if (authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported)
-        {
-            // Snapshot before validating. The sequence comes from an extension, so re-enumerating it is not
-            // guaranteed to yield the same values; validating one enumeration and composing the descriptor
-            // from another would let a value that was never checked reach the SDDL. Everything downstream
-            // works off this copy, and NamedPipeServerSecurity.BuildSecurityDescriptor re-validates at the
-            // point of concatenation as well.
-            string[] securityIdentities = [.. authorizedSecurityIdentities];
-
-            foreach (string securityIdentity in securityIdentities)
-            {
-                if (!NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity))
-                {
-                    throw new ArgumentException(
-                        $"'{securityIdentity ?? "<null>"}' does not identify a single sandboxed application and cannot be authorized on the test host controller pipe.",
-                        nameof(authorizedSecurityIdentities));
-                }
-            }
-
-            return NamedPipeServerSecurity.CreateServerStream(name, maxNumberOfServerInstances, securityIdentities);
-        }
-
-        return new NamedPipeServerStream(name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);
-    }
-
     public PipeNameDescription PipeName { get; }
+
+#if IS_MTP_UNIT_TESTS
+    internal NamedPipeServerStream GetServerStream() => _namedPipeServerStream;
+#endif
 
     public bool WasConnected { get; private set; }
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
-        // NOTE: _cancellationToken field is usually the "test session" cancellation token.
-        // And cancellationToken parameter may have hang mitigating timeout.
-        // The parameter should only be used for the call of WaitForConnectionAsync and Task.Run call.
-        // NOTE: The cancellation token passed to Task.Run will only have effect before the task is started by runtime.
-        // Once it starts, it won't be considered.
-        // Then, for the internal loop, we should use _cancellationToken, because we don't know for how long the loop will run.
-        // So what we pass to InternalLoopAsync shouldn't have any timeout (it's usually linked to Ctrl+C).
+        // NOTE: _cancellationToken field is usually the "test session" cancellation token, while the parameter
+        // may include a connection timeout. Once the connection is accepted, always schedule the loop: using the
+        // parameter for Task.Run creates a race where cancellation between acceptance and scheduling leaves a
+        // canceled loop task, and disposal then mistakes that for a loop failure. InternalLoopAsync observes the
+        // server lifetime token for its whole lifetime.
+        // Stryker disable once Boolean: continuation scheduling does not change the connection handshake.
         await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}").ConfigureAwait(false);
+        // Stryker disable once Boolean: continuation scheduling does not change connection acceptance.
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-        WasConnected = true;
-        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
-        _loopTask = _task.Run(
-            async () =>
+        lock (_lifecycleSync)
         {
-            try
+            if (_disposed)
             {
-                await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
+                return;
             }
-            catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
-            {
-                // We are being canceled, so we don't need to wait anymore
-            }
-            catch (Exception ex)
-            {
-                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
-                _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
-            }
-        }, cancellationToken);
+
+            _loopTask = _task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        // Stryker disable once Boolean: continuation scheduling does not change loop completion.
+                        await InternalLoopAsync(_cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException ex) when (ex.CancellationToken == _cancellationToken)
+                    {
+                        // We are being canceled, so we don't need to wait anymore
+                    }
+                    catch (Exception ex) when (
+                        _cancellationToken.IsCancellationRequested
+                        && ex is OperationCanceledException or IOException or ObjectDisposedException)
+                    {
+                        // .NET Framework does not reliably interrupt a pending pipe read when only the cancellation
+                        // token is canceled. Disposal closes the stream to release that read; the resulting transport
+                        // exception is expected shutdown rather than a server failure.
+                    }
+                    catch (Exception ex)
+                    {
+                        await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex).ConfigureAwait(false);
+                        _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
+                    }
+                }, CancellationToken.None);
+            WasConnected = true;
+        }
+
+        // Stryker disable once Boolean: continuation scheduling does not change the connection diagnostic.
+        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}").ConfigureAwait(false);
     }
 
     /// <summary>
@@ -223,33 +220,36 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         while (true)
         {
             // Read the next request; null means the client disconnected
+            // Stryker disable once Boolean: continuation scheduling does not change the received request.
             object? requestObject = await ReadNextMessageAsync(_namedPipeServerStream, cancellationToken).ConfigureAwait(false);
             if (requestObject is null)
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the disconnect diagnostic.
                 await _logger.LogDebugAsync($"Client disconnected from pipe '{PipeName.Name}', exiting read loop").ConfigureAwait(false);
                 return;
             }
 
             // Dispatch the request and obtain the response
+            // Stryker disable once Boolean: continuation scheduling does not change the callback response.
             IResponse response = await _callback((IRequest)requestObject).ConfigureAwait(false);
 
             // Serialize and send the response
             INamedPipeSerializer responseNamedPipeSerializer = GetSerializer(response.GetType());
-            bool clientDisconnected = false;
+            bool transportClosed = false;
             try
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the response bytes.
                 await WriteMessageAsync(_namedPipeServerStream, responseNamedPipeSerializer, response, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException or ObjectDisposedException)
             {
-                // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
-                // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
-                // the host.
-                await TryLogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex}").ConfigureAwait(false);
-                clientDisconnected = true;
+                // The pipe closed while we were writing the reply. Treat transport closure as graceful
+                // (symmetric with the read-side EOF handling above) so the server loop exits without crashing.
+                await TryLogDebugAsync($"Pipe '{PipeName.Name}' closed while writing reply; exiting server loop.").ConfigureAwait(false);
+                transportClosed = true;
             }
 
-            if (clientDisconnected)
+            if (transportClosed)
             {
                 return;
             }
@@ -258,212 +258,20 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     private async Task TryLogDebugAsync(string message)
     {
-        var loggingTask = Task.Run(async () =>
-        {
-            try
+        Task loggingTask = _task.Run(
+            async () =>
             {
-                await _logger.LogDebugAsync(message).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                // A graceful disconnect must remain graceful even when a logging provider fails.
-            }
-        });
+                try
+                {
+                    await _logger.LogDebugAsync(message).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // A graceful disconnect must remain graceful even when a logging provider fails.
+                }
+            },
+            CancellationToken.None);
 
         await Task.WhenAny(loggingTask, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false);
     }
-
-    /// <summary>
-    /// Computes the OS-level named pipe name for a friendly <paramref name="name"/>.
-    /// </summary>
-    /// <remarks>
-    /// Invariant (important for cross-version / cross-repo compatibility): the process that <b>creates</b> the
-    /// pipe resolves the directory locally and hands the <b>fully-resolved</b> path to the peer (via an
-    /// environment variable, a command-line argument, or the dotnet-test handshake). Peers use that path verbatim
-    /// and never recompute it. Do NOT turn the directory into a convention that both sides derive independently
-    /// from a shared friendly name/env var - doing so would couple the SDK and test-host versions. Because only
-    /// the creator's resolution is ever used, a difference in TESTINGPLATFORM_PIPE_DIRECTORY / TMPDIR between the
-    /// two processes is harmless.
-    /// </remarks>
-    public static PipeNameDescription GetPipeName(string name)
-    {
-        if (!IsUnix)
-        {
-            return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}");
-        }
-
-        // On Unix the named pipe is backed by a Unix domain socket file on disk. Historically this file
-        // was always created under '/tmp' (similar to
-        // https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42).
-        // That is a problem in sandboxed environments that block '/tmp' (see
-        // https://github.com/microsoft/testfx/issues/9821), so we allow the directory to be relocated.
-        // Resolution precedence:
-        //   1. TESTINGPLATFORM_PIPE_DIRECTORY   - explicit opt-in override, a guaranteed escape hatch.
-        //   2. Path.GetTempPath()               - honors TMPDIR on Unix; usually a per-user, allowed dir.
-        //   3. '/tmp'                           - preserves the previous default when neither is set.
-        (string directory, bool isExplicitOverride) = ResolvePipeDirectory();
-
-        // Normalize to an absolute path regardless of which precedence branch supplied the directory. An
-        // explicit override or a relative TMPDIR can be relative, and on Unix NamedPipeServerStream only treats
-        // rooted names as socket paths (it rejects separators in non-rooted names). The invariant also requires
-        // handing peers a fully-resolved path. This additionally collapses any '..' segments. '/tmp' and an
-        // already-absolute temp path are unchanged.
-        directory = Path.GetFullPath(directory);
-
-        // Only actively validate the explicit override: it is user-supplied and the most likely to be wrong
-        // (typo, missing directory, wrong permissions), so we create it if needed and fail fast with an
-        // actionable message. Path.GetTempPath()/'/tmp' are OS-managed and effectively always writable, so we
-        // skip the probe there to avoid extra I/O and a behavior change on every pipe creation.
-        if (isExplicitOverride)
-        {
-            EnsureDirectoryIsWritable(directory);
-        }
-
-        string path = Path.Combine(directory, name);
-        EnsurePathLengthWithinLimit(path);
-
-        return new PipeNameDescription(path);
-    }
-
-    private static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory()
-        => ResolvePipeDirectory(
-            // Read the environment variable directly rather than through IEnvironment: GetPipeName is a static
-            // method invoked before any NamedPipeServer instance (and its IEnvironment) exists, and this file is
-            // shared-compiled into extension projects that do not link the SystemEnvironment wrapper. The banned
-            // API is suppressed locally, mirroring how SystemEnvironment itself wraps Environment.
-#pragma warning disable RS0030 // Do not use banned APIs
-            Environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
-#pragma warning restore RS0030 // Do not use banned APIs
-            Path.GetTempPath());
-
-    // Pure resolution logic split out so it can be unit-tested on any OS (the Unix branch of GetPipeName
-    // never runs on Windows) without mutating process-wide environment variables.
-    internal static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory(string? overrideDirectory, string? tempPath)
-    {
-        if (!RoslynString.IsNullOrWhiteSpace(overrideDirectory))
-        {
-            return (overrideDirectory, true);
-        }
-
-        // Path.GetTempPath() honors TMPDIR on Unix and already falls back to '/tmp' itself when TMPDIR is unset,
-        // and it always returns a non-empty string in practice. The explicit '/tmp' below is therefore a
-        // defensive net that is only reachable when a caller passes null/empty tempPath (i.e. the test overload).
-        return RoslynString.IsNullOrWhiteSpace(tempPath)
-            ? ("/tmp", false)
-            : (tempPath, false);
-    }
-
-    // Internal for unit testing: normalize/create the explicit override directory and verify it is writable,
-    // failing fast with an actionable, localized message instead of a cryptic socket bind error later.
-    internal static void EnsureDirectoryIsWritable(string directory)
-    {
-        try
-        {
-            Directory.CreateDirectory(directory);
-
-            // Probe write access with a short-lived file so a misconfigured directory fails fast with an
-            // actionable message instead of surfacing a cryptic socket bind failure later on.
-            string probePath = Path.Combine(directory, $"testingplatform.probe.{Guid.NewGuid():N}");
-            using (File.Create(probePath))
-            {
-            }
-
-            File.Delete(probePath);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or NotSupportedException or ArgumentException)
-        {
-            throw new InvalidOperationException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.NamedPipeDirectoryNotWritableErrorMessage,
-                    directory,
-                    ex.Message,
-                    EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
-                ex);
-        }
-    }
-
-    // Internal for unit testing: enforce the Unix domain socket sun_path budget so a too-long directory
-    // (e.g. a deep TMPDIR on macOS) fails with an actionable message instead of a cryptic bind error.
-    internal static void EnsurePathLengthWithinLimit(string path)
-    {
-        int byteLength = System.Text.Encoding.UTF8.GetByteCount(path);
-        if (byteLength > MaxUnixDomainSocketPathLengthInBytes)
-        {
-            throw new InvalidOperationException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.NamedPipePathTooLongErrorMessage,
-                    path,
-                    byteLength,
-                    MaxUnixDomainSocketPathLengthInBytes,
-                    EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY));
-        }
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (WasConnected)
-        {
-            // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
-            // This is unexpected and we throw an exception.
-            ApplicationStateGuard.Ensure(_loopTask is not null);
-
-            // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-            if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                _logger.LogError($"NamedPipeServer.Dispose: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.");
-                throw new InvalidOperationException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-                    nameof(InternalLoopAsync)));
-            }
-        }
-
-        _namedPipeServerStream.Dispose();
-        DisposeBuffers();
-
-        _disposed = true;
-    }
-
-#if NET
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (WasConnected)
-        {
-            // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
-            // This is unexpected and we throw an exception.
-            ApplicationStateGuard.Ensure(_loopTask is not null);
-
-            try
-            {
-                // To close gracefully we need to ensure that the client closed the stream in the InternalLoopAsync method (there is comment `// The client has disconnected`).
-                await _loopTask.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, _cancellationToken).ConfigureAwait(false);
-            }
-            catch (TimeoutException)
-            {
-                await _logger.LogErrorAsync($"NamedPipeServer.DisposeAsync: '{nameof(InternalLoopAsync)}' for pipe '{PipeName.Name}' did not complete within {TimeoutHelper.DefaultHangTimeSpanTimeout}. WasConnected={WasConnected}, LoopTaskStatus={_loopTask.Status}.").ConfigureAwait(false);
-                throw new InvalidOperationException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
-                    nameof(InternalLoopAsync)));
-            }
-        }
-
-        _namedPipeServerStream.Dispose();
-        DisposeBuffers();
-
-        _disposed = true;
-    }
-#endif
 }

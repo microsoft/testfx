@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
@@ -49,7 +49,7 @@ internal sealed class GitHubActionsSlowTestReporter : SlowTestReporterBase
     protected override Task EmitSlowTestAsync(string testName, string displayLabel, TimeSpan elapsed, CancellationToken cancellationToken)
     {
         string line = BuildNoticeLine(displayLabel, elapsed);
-        return OutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken);
+        return OutputDevice.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData(line), cancellationToken);
     }
 
     internal static /* for testing */ string BuildNoticeLine(string testLabel, TimeSpan elapsed)

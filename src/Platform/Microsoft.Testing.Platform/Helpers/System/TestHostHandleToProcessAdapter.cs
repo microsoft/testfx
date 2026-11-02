@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -16,6 +16,9 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 {
     private readonly ITestHostHandle _handle;
     private readonly CancellationTokenSource _disposedCts = new();
+    private int _deferDisposalUntilExit;
+    private int _disposeRequested;
+    private int _handleDisposed;
 
     public TestHostHandleToProcessAdapter(ITestHostHandle handle)
     {
@@ -39,6 +42,12 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public bool HasExited => _handle.HasExited;
 
+    internal bool IsExitCodeAuthoritative
+        => _handle is not ITestHostHandleExitCodePolicy exitCodePolicy || exitCodePolicy.IsExitCodeAuthoritative;
+
+    internal int? TrustedProcessId
+        => _handle is ILocalTestHostHandle localTestHostHandle ? localTestHostHandle.ProcessId : null;
+
     public IMainModule? MainModule => null;
 
     public DateTime StartTime => default;
@@ -51,11 +60,50 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public void Kill() => _handle.Terminate();
 
+    public void DeferDisposalUntilExit()
+        => Volatile.Write(ref _deferDisposalUntilExit, 1);
+
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _disposeRequested, 1) != 0)
+        {
+            return;
+        }
+
+        if (Volatile.Read(ref _deferDisposalUntilExit) != 0 && !_handle.HasExited)
+        {
+            _ = DisposeWhenExitedAsync();
+            return;
+        }
+
+        DisposeHandle();
+    }
+
+    private void DisposeHandle()
+    {
+        if (Interlocked.Exchange(ref _handleDisposed, 1) != 0)
+        {
+            return;
+        }
+
         _disposedCts.Cancel();
         _disposedCts.Dispose();
         _handle.Dispose();
+    }
+
+    private async Task DisposeWhenExitedAsync()
+    {
+        try
+        {
+            await _handle.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
+            DisposeHandle();
+        }
+        catch (Exception ex)
+        {
+            // Deferred disposal is best-effort and cannot report failures to a caller. Preserve failures for
+            // diagnostics without surfacing an unobserved exception from this fire-and-forget path.
+            Debug.WriteLine($"Ignoring failure while awaiting test host exit or disposing its handle: {ex}");
+        }
     }
 
     private async Task RaiseExitedWhenDoneAsync()

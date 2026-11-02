@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -46,6 +46,76 @@ internal static class TestResultRecorderExtensions
             _testExecutionRecorder = testExecutionRecorder;
             _computerName = computerName;
             _settings = settings;
+        }
+
+        public void PrepareResults(UnitTestElement testElement, FrameworkTestResult[] results)
+        {
+            StringComparer pathComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+            var supersededFiles = new Dictionary<(string DisplayName, int Ordinal), HashSet<string>>();
+            var finalResults = new List<((string DisplayName, int Ordinal) Key, FrameworkTestResult Result)>();
+            var ordinals = new Dictionary<string, int>(StringComparer.Ordinal);
+            int currentAttempt = -1;
+
+            foreach (FrameworkTestResult result in results)
+            {
+                if (currentAttempt != result.RetryAttemptNumber)
+                {
+                    currentAttempt = result.RetryAttemptNumber;
+                    ordinals.Clear();
+                }
+
+                string displayName = GetResultDisplayName(testElement, result);
+                ordinals.TryGetValue(displayName, out int ordinal);
+                ordinals[displayName] = ordinal + 1;
+                (string DisplayName, int Ordinal) key = (displayName, ordinal);
+
+                if (result.IsSupersededRetryAttempt)
+                {
+                    if (result.ResultFiles is { Count: > 0 })
+                    {
+                        if (!supersededFiles.TryGetValue(key, out HashSet<string>? files))
+                        {
+#pragma warning disable IDE0028 // Collection initialization cannot preserve the platform-specific comparer.
+                            files = new HashSet<string>(pathComparer);
+#pragma warning restore IDE0028
+                            supersededFiles.Add(key, files);
+                        }
+
+                        files.UnionWith(result.ResultFiles);
+                    }
+                }
+                else
+                {
+                    finalResults.Add((key, result));
+                }
+            }
+
+            if (supersededFiles.Count == 0 || finalResults.Count == 0)
+            {
+                return;
+            }
+
+            foreach (((string DisplayName, int Ordinal) key, FrameworkTestResult result) in finalResults)
+            {
+                HashSet<string>? files = supersededFiles.TryGetValue(key, out HashSet<string>? matchedFiles)
+                    && supersededFiles.Remove(key)
+                        ? matchedFiles
+                        : null;
+                if (files is not null)
+                {
+                    MergeResultFiles(result, files, pathComparer);
+                }
+            }
+
+            if (supersededFiles.Count > 0)
+            {
+                MergeResultFiles(
+                    finalResults[finalResults.Count - 1].Result,
+                    supersededFiles.Values.SelectMany(static files => files),
+                    pathComparer);
+            }
         }
 
         public Task RecordStartAsync(UnitTestElement testElement)
@@ -99,6 +169,21 @@ internal static class TestResultRecorderExtensions
             // still counts as completed). This mirrors the original inline flow where the failure was
             // observed as part of reporting the result.
             return Task.FromResult(isFailed);
+        }
+
+        private static string GetResultDisplayName(UnitTestElement testElement, FrameworkTestResult result)
+            => result.DisplayName
+                ?? testElement.TestMethod.DisplayName
+                ?? testElement.TestMethod.Name;
+
+        private static void MergeResultFiles(
+            FrameworkTestResult result,
+            IEnumerable<string> additionalFiles,
+            StringComparer pathComparer)
+        {
+            var mergedFiles = new HashSet<string>(result.ResultFiles ?? [], pathComparer);
+            mergedFiles.UnionWith(additionalFiles);
+            result.ResultFiles = [.. mergedFiles];
         }
     }
 }

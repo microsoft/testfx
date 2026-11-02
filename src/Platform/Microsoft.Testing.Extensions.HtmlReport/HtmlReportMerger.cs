@@ -9,18 +9,43 @@ using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
-internal static class HtmlReportMerger
+/// <summary>
+/// Controls how <see cref="HtmlReportMerger"/> combines the "tests[]" arrays of its inputs.
+/// </summary>
+internal enum HtmlMergeMode
+{
+    /// <summary>
+    /// Concatenates the inputs, which is correct when they describe disjoint sets of tests (the shard or
+    /// per-module case). This is the default: MTP test UIDs are only unique WITHIN an assembly, so collapsing
+    /// by identity across modules would fuse same-named tests from different assemblies.
+    /// </summary>
+    Concatenate,
+
+    /// <summary>
+    /// Folds rows describing the same logical test into one, which is correct when the inputs are successive
+    /// attempts of the same test module (--retry-failed-tests): the LAST occurrence in the supplied execution
+    /// order wins and earlier occurrences become its "retryAttempts[]". Inputs MUST be supplied in attempt order
+    /// (as RetryArtifactProcessor already does) rather than re-sorted by embedded timestamp, and MUST come from
+    /// the same module for identities to be comparable.
+    /// </summary>
+    CollapseRetryAttempts,
+}
+
+internal static partial class HtmlReportMerger
 {
     private const string GeneratorName = "Microsoft.Testing.Extensions.HtmlReport";
 
     internal static string Merge(IReadOnlyList<string> inputReports)
+        => Merge(inputReports, HtmlMergeMode.Concatenate);
+
+    internal static string Merge(IReadOnlyList<string> inputReports, HtmlMergeMode mode)
     {
         IReadOnlyList<string> reports = inputReports ?? throw new ArgumentNullException(nameof(inputReports));
 
-        return Merge([.. reports.Select(report => new HtmlReportMergeInput(report, null, null, null, null))]);
+        return Merge([.. reports.Select(report => new HtmlReportMergeInput(report, null, null, null, null))], mode);
     }
 
-    private static string Merge(IReadOnlyList<HtmlReportMergeInput> inputs)
+    private static string Merge(IReadOnlyList<HtmlReportMergeInput> inputs, HtmlMergeMode mode)
     {
         if (inputs is null)
         {
@@ -74,60 +99,43 @@ internal static class HtmlReportMerger
         }
 
         IReadOnlyList<JsonObject> reports = [.. parsedReports.Select(report => report.Report)];
-        MergedTest[] orderedTests =
-        [
-            .. tests
-                .OrderBy(test => test.SourceReportStartTime)
-                .ThenBy(test => test.OriginalReportIndex)
-                .ThenBy(test => test.OriginalTestIndex),
-        ];
-        var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (string identity in orderedTests.Select(CreateTestIdentity))
-        {
-            countByIdentity[identity] = countByIdentity.TryGetValue(identity, out int existing) ? existing + 1 : 1;
-        }
 
-        var emittedByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
-        var mergedTests = new JsonArray();
-        int passed = 0;
-        int failed = 0;
-        int skipped = 0;
-        int timedOut = 0;
-        int errored = 0;
-        double totalDurationMs = 0;
+        // TestModules concatenation sorts by embedded start time for deterministic chronological display across
+        // independently-timestamped shards. RetryAttempts collapsing must NOT do this: RetryArtifactProcessor
+        // already supplies inputs in true execution/attempt order, and an attempt's own embedded start/end time is
+        // not a reliable substitute for that order (clock skew, retried attempts sharing a machine, ...).
+        MergedTest[] orderedTests = mode == HtmlMergeMode.CollapseRetryAttempts
+            ? [.. tests]
+            :
+            [
+                .. tests
+                    .OrderBy(test => test.SourceReportStartTime)
+                    .ThenBy(test => test.OriginalReportIndex)
+                    .ThenBy(test => test.OriginalTestIndex),
+            ];
 
-        for (int i = 0; i < orderedTests.Length; i++)
-        {
-            MergedTest mergedTest = orderedTests[i];
-            JsonObject test = mergedTest.Test;
-            string identity = CreateTestIdentity(mergedTest);
-            string outcome = ReadRequiredString(test, "outcome");
-            double durationMs = ReadRequiredDouble(test, "durationMs");
-
-            test["rowKey"] = i;
-            _ = test.Remove("attemptIndex");
-            _ = test.Remove("attemptOf");
-            AddOptionalString(test, "testApplication", mergedTest.ProducingTestModule);
-            AddOptionalString(test, "targetFramework", mergedTest.TargetFramework);
-            AddOptionalString(test, "architecture", mergedTest.Architecture);
-            AddOptionalString(test, "executionId", mergedTest.ExecutionId);
-            test["sourceReportStartTime"] = mergedTest.SourceReportStartTime.ToString("O", CultureInfo.InvariantCulture);
-
-            int attemptOf = countByIdentity[identity];
-            if (attemptOf > 1)
-            {
-                int attemptIndex = emittedByIdentity.TryGetValue(identity, out int emitted) ? emitted + 1 : 1;
-                emittedByIdentity[identity] = attemptIndex;
-                test["attemptIndex"] = attemptIndex;
-                test["attemptOf"] = attemptOf;
-            }
-
-            CountOutcome(outcome, ref passed, ref failed, ref skipped, ref timedOut, ref errored);
-            totalDurationMs += durationMs;
-            mergedTests.Add((JsonNode)test);
-        }
+        (JsonArray mergedTests, int passed, int failed, int skipped, int timedOut, int errored, int? flaky) =
+            mode == HtmlMergeMode.CollapseRetryAttempts
+                ? CollapseRetryAttempts(orderedTests)
+                : ConcatenateTests(orderedTests);
+        double totalDurationMs = (latestEndTime!.Value - earliestStartTime!.Value).TotalMilliseconds;
 
         bool hasCommonFramework = TryGetCommonFramework(reports, out string framework, out string frameworkUid, out string frameworkVersion);
+        var summary = new JsonObject
+        {
+            ["total"] = mergedTests.Count,
+            ["passed"] = passed,
+            ["failed"] = failed,
+            ["skipped"] = skipped,
+            ["timedOut"] = timedOut,
+            ["errored"] = errored,
+            ["totalDurationMs"] = totalDurationMs,
+        };
+        if (flaky is int flakyCount)
+        {
+            summary["flaky"] = flakyCount;
+        }
+
         var merged = new JsonObject
         {
             ["schemaVersion"] = "1",
@@ -142,21 +150,21 @@ internal static class HtmlReportMerger
             ["startTime"] = earliestStartTime!.Value.ToString("O", CultureInfo.InvariantCulture),
             ["endTime"] = latestEndTime!.Value.ToString("O", CultureInfo.InvariantCulture),
             ["tests"] = mergedTests,
-            ["summary"] = new JsonObject
-            {
-                ["total"] = orderedTests.Length,
-                ["passed"] = passed,
-                ["failed"] = failed,
-                ["skipped"] = skipped,
-                ["timedOut"] = timedOut,
-                ["errored"] = errored,
-                ["totalDurationMs"] = totalDurationMs,
-            },
+            ["summary"] = summary,
         };
 
-        if (TryGetCommonInt(reports, "exitCode", out int exitCode))
+        bool hasExitCode = mode == HtmlMergeMode.CollapseRetryAttempts
+            ? TryGetInt(reports[^1], "exitCode", out int exitCode)
+            : TryGetCommonInt(reports, "exitCode", out exitCode);
+        if (hasExitCode)
         {
             merged["exitCode"] = exitCode;
+        }
+
+        if (reports.Any(IsIncomplete))
+        {
+            merged["incomplete"] = true;
+            merged["runStatus"] = "aborted";
         }
 
         return HtmlReportEngine.RenderReport(merged.ToJsonString(new JsonSerializerOptions { WriteIndented = false }));
@@ -165,6 +173,7 @@ internal static class HtmlReportMerger
     internal static async Task MergeToFileAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputPath,
+        HtmlMergeMode mode,
         CancellationToken cancellationToken)
     {
         if (inputs is null)
@@ -202,7 +211,7 @@ internal static class HtmlReportMerger
                 input.ExecutionId));
         }
 
-        byte[] mergedBytes = Encoding.UTF8.GetBytes(Merge(reports));
+        byte[] mergedBytes = Encoding.UTF8.GetBytes(Merge(reports, mode));
         string? outputDirectory = Path.GetDirectoryName(outputPath);
         if (outputDirectory is { Length: > 0 })
         {
@@ -219,167 +228,4 @@ internal static class HtmlReportMerger
 #endif
         }).ConfigureAwait(false);
     }
-
-    private static JsonObject ParseReport(string html)
-    {
-        JsonObject report;
-        try
-        {
-            report = JsonNode.Parse(HtmlReportEngine.ExtractReportJson(html)) as JsonObject
-                ?? throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html));
-        }
-        catch (JsonException ex)
-        {
-            throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html), ex);
-        }
-
-        bool isValidReport =
-            string.Equals(ReadOptionalString(report, "schemaVersion"), "1", StringComparison.Ordinal)
-            && string.Equals(ReadOptionalString(report, "generator"), GeneratorName, StringComparison.Ordinal)
-            && report["tests"] is JsonArray tests
-            && tests.All(test => test is JsonObject);
-
-        return isValidReport
-            ? report
-            : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html));
-    }
-
-    private static string ReadRequiredString(JsonObject owner, string propertyName)
-        => ReadOptionalString(owner, propertyName)
-            ?? throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(owner));
-
-    private static string? ReadOptionalString(JsonObject owner, string propertyName)
-        => owner[propertyName] is JsonValue value && value.TryGetValue(out string? text) ? text : null;
-
-    private static double ReadRequiredDouble(JsonObject owner, string propertyName)
-        => owner[propertyName] is JsonValue value && value.TryGetValue(out double number)
-            ? number
-            : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(owner));
-
-    private static DateTimeOffset ReadRequiredTimestamp(JsonObject owner, string propertyName)
-        => TryReadTimestamp(owner, propertyName, out DateTimeOffset timestamp)
-                ? timestamp
-                : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(owner));
-
-    private static bool TryReadTimestamp(JsonObject owner, string propertyName, out DateTimeOffset timestamp)
-        => DateTimeOffset.TryParse(
-            ReadOptionalString(owner, propertyName),
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind,
-            out timestamp);
-
-    private static string CreateTestIdentity(MergedTest test)
-        => string.Join(
-            "\0",
-            ReadRequiredString(test.Test, "uid"),
-            test.ProducingTestModule ?? string.Empty,
-            test.TargetFramework ?? string.Empty,
-            test.Architecture ?? string.Empty);
-
-    private static void AddOptionalString(JsonObject owner, string propertyName, string? value)
-    {
-        if (value is not null)
-        {
-            owner[propertyName] = value;
-        }
-    }
-
-    private static string? GetCommonString(IReadOnlyList<JsonObject> reports, string propertyName)
-    {
-        string? common = ReadOptionalString(reports[0], propertyName);
-        for (int i = 1; i < reports.Count; i++)
-        {
-            if (!string.Equals(common, ReadOptionalString(reports[i], propertyName), StringComparison.Ordinal))
-            {
-                return null;
-            }
-        }
-
-        return common;
-    }
-
-    private static bool TryGetCommonFramework(
-        IReadOnlyList<JsonObject> reports,
-        out string framework,
-        out string frameworkUid,
-        out string frameworkVersion)
-    {
-        framework = GetCommonString(reports, "framework") ?? string.Empty;
-        frameworkUid = GetCommonString(reports, "frameworkUid") ?? string.Empty;
-        frameworkVersion = GetCommonString(reports, "frameworkVersion") ?? string.Empty;
-        if (framework.Length == 0 || frameworkUid.Length == 0 || frameworkVersion.Length == 0)
-        {
-            return false;
-        }
-
-        foreach (JsonObject report in reports)
-        {
-            if (!string.Equals(ReadOptionalString(report, "framework"), framework, StringComparison.Ordinal)
-                || !string.Equals(ReadOptionalString(report, "frameworkUid"), frameworkUid, StringComparison.Ordinal)
-                || !string.Equals(ReadOptionalString(report, "frameworkVersion"), frameworkVersion, StringComparison.Ordinal))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static bool TryGetCommonInt(IReadOnlyList<JsonObject> reports, string propertyName, out int common)
-    {
-        if (reports[0][propertyName] is not JsonValue first || !first.TryGetValue(out common))
-        {
-            common = default;
-            return false;
-        }
-
-        for (int i = 1; i < reports.Count; i++)
-        {
-            if (reports[i][propertyName] is not JsonValue value
-                || !value.TryGetValue(out int candidate)
-                || candidate != common)
-            {
-                common = default;
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static void CountOutcome(string outcome, ref int passed, ref int failed, ref int skipped, ref int timedOut, ref int errored)
-    {
-        switch (outcome)
-        {
-            case "passed": passed++; break;
-            case "failed": failed++; break;
-            case "skipped": skipped++; break;
-            case "timedOut": timedOut++; break;
-            case "errored": errored++; break;
-            default: throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(outcome));
-        }
-    }
-
-    private sealed record HtmlReportMergeInput(
-        string Html,
-        string? ProducingTestModule,
-        string? TargetFramework,
-        string? Architecture,
-        string? ExecutionId);
-
-    private sealed record ParsedHtmlReport(
-        HtmlReportMergeInput Input,
-        JsonObject Report,
-        DateTimeOffset StartTime,
-        int OriginalIndex);
-
-    private sealed record MergedTest(
-        JsonObject Test,
-        string? ProducingTestModule,
-        string? TargetFramework,
-        string? Architecture,
-        string? ExecutionId,
-        DateTimeOffset SourceReportStartTime,
-        int OriginalReportIndex,
-        int OriginalTestIndex);
 }

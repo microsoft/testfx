@@ -111,7 +111,7 @@ public class TestClass1 : BaseClass
         // outside of the appdomain to the rest of the engine.
         //\
         // We set this friendly appdomain name in src\Adapter\MSTestAdapter.PlatformServices\Services\TestSourceHost.cs:163
-        StringAssert.StartsWith(AppDomain.CurrentDomain.FriendlyName, "TestSourceHost: Enumerating source");
+        Assert.StartsWith("TestSourceHost: Enumerating source", AppDomain.CurrentDomain.FriendlyName);
 #endif
     }
 }

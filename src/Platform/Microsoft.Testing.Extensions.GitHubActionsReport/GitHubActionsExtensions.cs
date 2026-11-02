@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport;
+using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -15,12 +18,29 @@ namespace Microsoft.Testing.Extensions;
 /// </summary>
 public static class GitHubActionsExtensions
 {
+    // Must match Microsoft.Testing.Extensions.Retry's hidden child-host option. Referencing the retry assembly
+    // directly would create a package dependency solely for this internal orchestration handshake.
+    private const string RetryPipeOptionName = "internal-retry-pipename";
+
     /// <summary>
     /// Adds support to the test application builder.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddGitHubActionsProvider(this ITestApplicationBuilder builder)
     {
+        Lazy<GitHubActionsHistoryService>? historyService = null;
+        object historyServiceLock = new();
+        Func<IServiceProvider, GitHubActionsHistoryService> getHistoryService = serviceProvider =>
+        {
+            lock (historyServiceLock)
+            {
+                historyService ??= new Lazy<GitHubActionsHistoryService>(
+                    () => CreateHistoryService(serviceProvider),
+                    LazyThreadSafetyMode.ExecutionAndPublication);
+                return historyService.Value;
+            }
+        };
+
         var compositeSummaryReporter = new CompositeExtensionFactory<GitHubActionsSummaryReporter>(serviceProvider =>
             new GitHubActionsSummaryReporter(
                 serviceProvider.GetCommandLineOptions(),
@@ -31,11 +51,10 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
+                serviceProvider.GetRequiredService<ITestCoverageResult>(),
                 serviceProvider.GetLoggerFactory(),
-                () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
-                {
-                    IsRequiredArtifactPostProcessingSupported: true,
-                }));
+                () => ShouldDeferToArtifactPostProcessing(serviceProvider),
+                getHistoryService(serviceProvider)));
 
         var compositeSlowTestReporter = new CompositeExtensionFactory<GitHubActionsSlowTestReporter>(serviceProvider =>
             new GitHubActionsSlowTestReporter(
@@ -61,8 +80,11 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetFileSystem(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                getHistoryService(serviceProvider)));
 
+        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
+            getHistoryService(serviceProvider));
         builder.TestHost.AddDataConsumer(compositeAnnotationReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeAnnotationReporter);
 
@@ -77,13 +99,50 @@ public static class GitHubActionsExtensions
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
 
+        CiCoverageSummaryControllerHandlerRegistration.Register(
+            builder.TestHostControllers,
+            GitHubActionsSummaryArtifactPostProcessor.Provider,
+            GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind,
+            serviceProvider => serviceProvider.GetLoggerFactory().CreateLogger<GitHubActionsSummaryArtifactPostProcessor>(),
+            serviceProvider => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<GitHubActionsSummaryArtifactPostProcessor>().Single(),
+            ShouldDeferToArtifactPostProcessing,
+            (path, exception) => string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, exception.Message));
+
         if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
             artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
                 new GitHubActionsSummaryArtifactPostProcessor(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
-                    serviceProvider.GetFileSystem()));
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetLoggerFactory(),
+                    () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
+                    {
+                        IsRequiredArtifactPostProcessingSupported: true,
+                    },
+                    CreateHistoryService(serviceProvider)));
         }
+    }
+
+    private static GitHubActionsHistoryService CreateHistoryService(IServiceProvider serviceProvider)
+        => new(
+           serviceProvider.GetCommandLineOptions(),
+           serviceProvider.GetEnvironment(),
+           serviceProvider.GetClock(),
+           serviceProvider.GetLoggerFactory(),
+           new GitHubActionsHistoryScope(
+               serviceProvider.GetTestApplicationModuleInfo().TryGetAssemblyName() ?? "unknown assembly name",
+               TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform(),
+               RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
+               serviceProvider.GetEnvironment().GetEnvironmentVariable("RUNNER_OS") ?? string.Empty));
+
+    private static bool ShouldDeferToArtifactPostProcessing(IServiceProvider serviceProvider)
+    {
+        bool dotnetTestRequiresPostProcessing =
+            serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection connection
+            && connection.IsRequiredArtifactPostProcessingSupported;
+        return dotnetTestRequiresPostProcessing
+            || serviceProvider.GetCommandLineOptions().IsOptionSet(RetryPipeOptionName)
+            || CoverageThresholdPolicy.IsDeferredToController(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment());
     }
 }

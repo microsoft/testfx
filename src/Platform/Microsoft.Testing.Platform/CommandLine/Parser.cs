@@ -56,7 +56,9 @@ internal static class CommandLineParser
                     : redactedResponseFileArgument;
                 if (ResponseFileHelper.TryReadResponseFile(responseFilePath, diagnosticPath, errors, out string[]? newArguments))
                 {
-                    args.InsertRange(i + 1, newArguments);
+                    args.RemoveAt(i);
+                    args.InsertRange(i, newArguments);
+                    i--;
                     continue;
                 }
             }
@@ -113,7 +115,7 @@ internal static class CommandLineParser
             options.Add(new(currentOption, [.. currentOptionArguments]));
         }
 
-        return new CommandLineParseResult(toolName, options, errors, originalArgs);
+        return new CommandLineParseResult(toolName, options, errors, originalArgs, args);
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {

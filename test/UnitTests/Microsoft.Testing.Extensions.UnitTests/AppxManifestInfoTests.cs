@@ -4,7 +4,10 @@
 // The PackagedApp extension only targets .NET (net8.0/net9.0), so these tests are compiled only there.
 #if !NETFRAMEWORK
 
+using System.Text.Json;
+
 using Microsoft.Testing.Extensions.PackagedApp;
+using Microsoft.Testing.Extensions.PackagedApp.Resources;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -50,6 +53,43 @@ public sealed class AppxManifestInfoTests
         AppxApplicationInfo application = Assert.ContainsSingle(info.Applications);
         Assert.AreEqual("App", application.Id);
         Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", application.AppUserModelId);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_MatchesSharedWindowsAppModelConformanceVectors()
+    {
+        string vectorsPath = Path.Combine(AppContext.BaseDirectory, "AppxManifestConformanceVectors.json");
+        Assert.IsTrue(File.Exists(vectorsPath), $"Shared Windows app-model vectors were not copied to '{vectorsPath}'.");
+
+        ManifestConformanceVectors? vectors = JsonSerializer.Deserialize<ManifestConformanceVectors>(
+            File.ReadAllText(vectorsPath),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.IsNotNull(vectors, $"Could not deserialize shared Windows app-model vectors from '{vectorsPath}'.");
+        Assert.AreEqual(1, vectors.SchemaVersion, $"Unsupported Windows app-model vector schema in '{vectorsPath}'.");
+        Assert.IsNotEmpty(vectors.Vectors, $"No Windows app-model vectors were found in '{vectorsPath}'.");
+
+        foreach (ManifestConformanceVector vector in vectors.Vectors)
+        {
+            string manifestXml = string.Join(Environment.NewLine, vector.ManifestLines);
+            AppxManifestInfo info = ReadManifest(manifestXml);
+
+            Assert.AreEqual(vector.Expected.PackageName, info.PackageName, vector.Name);
+            Assert.AreEqual(vector.Expected.Publisher, info.Publisher, vector.Name);
+            Assert.AreEqual(vector.Expected.PublisherId, AppxManifestInfo.ComputePublisherId(info.Publisher), vector.Name);
+            Assert.AreEqual(vector.Expected.PackageFamilyName, info.PackageFamilyName, vector.Name);
+            Assert.HasCount(vector.Expected.Applications.Length, info.Applications, vector.Name);
+
+            for (int index = 0; index < vector.Expected.Applications.Length; index++)
+            {
+                ExpectedApplication expected = vector.Expected.Applications[index];
+                AppxApplicationInfo actual = info.Applications[index];
+                Assert.AreEqual(expected.Id, actual.Id, vector.Name);
+                Assert.AreEqual(expected.Executable, actual.Executable, vector.Name);
+                Assert.AreEqual(expected.AppUserModelId, actual.AppUserModelId, vector.Name);
+                Assert.AreEqual(expected.UsesLaunchActivationArguments, actual.UsesLaunchActivationArguments, vector.Name);
+                Assert.AreEqual(expected.RunsInAppContainer, actual.RunsInAppContainer, vector.Name);
+            }
+        }
     }
 
     [TestMethod]
@@ -139,7 +179,33 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+        AppxApplicationInfo application = Assert.ContainsSingle(ReadManifest(ManifestXml).Applications);
+        Assert.IsTrue(application.UsesLaunchActivationArguments);
+        Assert.IsTrue(application.RunsInAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_AppContainerTrustLevel_OverridesRunFullTrustFallback()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:TrustLevel="appContainer" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        AppxApplicationInfo application = Assert.ContainsSingle(ReadManifest(ManifestXml).Applications);
+        Assert.IsTrue(application.UsesLaunchActivationArguments);
+        Assert.IsTrue(application.RunsInAppContainer);
     }
 
     [TestMethod]
@@ -254,6 +320,91 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ReadFromManifest_ExplicitWin32RuntimeBehavior_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:RuntimeBehavior="win32App" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxApplicationInfo application = Assert.ContainsSingle(ReadManifest(ManifestXml).Applications);
+        Assert.IsFalse(application.UsesLaunchActivationArguments);
+        Assert.IsFalse(application.RunsInAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_UnrelatedCapability_DoesNotGrantFullTrust()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" />
+              </Applications>
+              <Capabilities>
+                <Capability Name="internetClient" />
+              </Capabilities>
+            </Package>
+            """;
+
+        AppxApplicationInfo application = Assert.ContainsSingle(ReadManifest(ManifestXml).Applications);
+        Assert.IsTrue(application.UsesLaunchActivationArguments);
+        Assert.IsTrue(application.RunsInAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_UnrelatedExtension_DoesNotCountAsFullTrustCompanion()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+                xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe">
+                  <Extensions>
+                    <uap:Extension Category="windows.appService" EntryPoint="Contoso.Service" />
+                  </Extensions>
+                </Application>
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        AppxApplicationInfo application = Assert.ContainsSingle(ReadManifest(ManifestXml).Applications);
+        Assert.IsFalse(application.UsesLaunchActivationArguments);
+        Assert.IsFalse(application.RunsInAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_EmptyApplicationId_IgnoresApplication()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="" Executable="MyTestApp.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsEmpty(ReadManifest(ManifestXml).Applications);
+    }
+
+    [TestMethod]
     public void ReadFromManifest_ExplicitMediumIntegrityTrustLevel_IsNotAppContainer()
     {
         const string ManifestXml = """
@@ -320,6 +471,29 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ResolveApplication_WithSingleExactFullPath_ReturnsApplication()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="Host.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), nameof(AppxManifestInfoTests), Guid.NewGuid().ToString("N"));
+
+        AppxApplicationInfo? application =
+            info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe"));
+
+        Assert.IsNotNull(application);
+        Assert.AreEqual("App", application.Id);
+    }
+
+    [TestMethod]
     public void ResolveApplication_WithMultipleApplications_SelectsTheOneMatchingTheExecutable()
     {
         const string ManifestXml = """
@@ -356,7 +530,10 @@ public sealed class AppxManifestInfoTests
         AppxManifestInfo info = ReadManifest(ManifestXml);
 
         // An ambiguous request must be rejected instead of silently defaulting to the first application.
-        Assert.ThrowsExactly<InvalidOperationException>(() => info.ResolveApplication("Unknown.exe"));
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => info.ResolveApplication("Unknown.exe"));
+        Assert.Contains(
+            $"{info.PackageFamilyName}!First, {info.PackageFamilyName}!Second",
+            exception.Message);
     }
 
     [TestMethod]
@@ -371,7 +548,8 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.ThrowsExactly<InvalidOperationException>(() => ReadManifest(ManifestXml));
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => ReadManifest(ManifestXml));
+        Assert.AreEqual(ExtensionResources.InvalidAppxManifestMissingIdentity, exception.Message);
     }
 
     [TestMethod]
@@ -500,6 +678,9 @@ public sealed class AppxManifestInfoTests
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe")));
 
+        Assert.Contains(
+            $"{info.PackageFamilyName}!First, {info.PackageFamilyName}!Second",
+            exception.Message);
         Assert.Contains($"{info.PackageFamilyName}!First", exception.Message);
         Assert.Contains($"{info.PackageFamilyName}!Second", exception.Message);
     }
@@ -530,6 +711,29 @@ public sealed class AppxManifestInfoTests
         // this failure actionable, so it is asserted rather than just the exception type.
         Assert.Contains("Host.exe", exception.Message);
         Assert.Contains("Other.exe", exception.Message);
+    }
+
+    [TestMethod]
+    public void ResolveApplication_WithSeveralDifferentExecutables_ReportsCommaSeparatedDeclarations()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="First.exe" />
+                <Application Id="Second" Executable="Second.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), nameof(AppxManifestInfoTests), Guid.NewGuid().ToString("N"));
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Other.exe")));
+
+        Assert.Contains("First.exe, Second.exe", exception.Message);
     }
 
     // A manifest that declares no executable at all cannot be validated, so the lenient behavior stays:
@@ -681,6 +885,30 @@ public sealed class AppxManifestInfoTests
         Assert.AreEqual("Second", info.ResolveApplication("Second.exe")?.Id);
     }
 
+    [DataRow("")]
+    [DataRow("..")]
+    [DataRow(@"..\Host.exe")]
+    [DataRow("../Host.exe")]
+    [DataRow(@"\Host.exe")]
+    [DataRow("/Host.exe")]
+    [DataRow("C:Host.exe")]
+    [TestMethod]
+    public void ResolveApplication_WithInvalidPackageRelativeExecutable_RejectsIt(string packageRelativeExecutable)
+    {
+        string manifestXml = BuildManifestXmlWithExecutable(packageRelativeExecutable);
+        AppxManifestInfo info = ReadManifest(manifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), nameof(AppxManifestInfoTests), Guid.NewGuid().ToString("N"));
+        string targetPath = packageRelativeExecutable switch
+        {
+            ".." => Path.GetFullPath(Path.Combine(manifestDirectory, "..")),
+            @"..\Host.exe" or "../Host.exe" => Path.GetFullPath(Path.Combine(manifestDirectory, "..", "Host.exe")),
+            _ => Path.Combine(manifestDirectory, "Host.exe"),
+        };
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => info.ResolveApplication(manifestDirectory, targetPath));
+    }
+
     private static AppxManifestInfo ReadManifest(string name, string publisher, string? applicationId)
         => ReadManifest(BuildManifestXml(name, publisher, applicationId));
 
@@ -689,6 +917,27 @@ public sealed class AppxManifestInfoTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(manifestXml));
         return AppxManifestInfo.ReadFromManifest(stream);
     }
+
+    private sealed record ManifestConformanceVectors(int SchemaVersion, ManifestConformanceVector[] Vectors);
+
+    private sealed record ManifestConformanceVector(
+        string Name,
+        string[] ManifestLines,
+        ExpectedManifest Expected);
+
+    private sealed record ExpectedManifest(
+        string PackageName,
+        string Publisher,
+        string PublisherId,
+        string PackageFamilyName,
+        ExpectedApplication[] Applications);
+
+    private sealed record ExpectedApplication(
+        string Id,
+        string? Executable,
+        string AppUserModelId,
+        bool UsesLaunchActivationArguments,
+        bool RunsInAppContainer);
 
     private static string BuildManifestXml(string name, string publisher, string? applicationId)
     {
@@ -708,6 +957,17 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
     }
+
+    private static string BuildManifestXmlWithExecutable(string executable)
+        => $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="{executable}" />
+              </Applications>
+            </Package>
+            """;
 }
 
 #endif

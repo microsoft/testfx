@@ -7,6 +7,8 @@ internal interface IFileSystem
 {
     bool Exist(string path);
 
+    string ReadAllText(string path);
+
     void CopyFile(string source, string destination);
 
     void WriteAllText(string path, string? contents);

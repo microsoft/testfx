@@ -109,6 +109,11 @@ internal static class HandshakeMessagePropertyNames
     // Sent only by the SDK in its handshake response. A true value means the SDK honors
     // RequiredPostProcessorKinds and supplies an authoritative runSummary in the post-processing manifest.
     internal const byte RequiredPostProcessingSupported = 19;
+
+    // Both peers send "1" to opt into CoverageSummaryMessages and FileArtifactMessage.CoverageSummary.
+    // Missing or unknown versions mean unsupported, not zero coverage. This capability is independent
+    // of the base protocol version and does not enable the server-control channel.
+    internal const byte CoverageSummaryVersion = 20;
 }
 
 [Embedded]
@@ -118,6 +123,10 @@ internal static class ServerControlKinds
     // Values must stay stable (they flow over IPC to dotnet test). Reserve additional values for future
     // signals (drain, pause, ...).
     internal const byte CancelSession = 1;
+
+    // Closes a parked control request without canceling the test session. The test-host controller uses this
+    // when its child has already completed normally and the auxiliary control channel can shut down.
+    internal const byte CloseChannel = 2;
 }
 
 [Embedded]
@@ -159,6 +168,8 @@ internal static class HandshakeMessageExecutionModes
 [Embedded]
 internal static class ProtocolConstants
 {
+    internal const string CoverageSummaryVersion = "1";
+
     // The change between 1.0.0 and 1.1.0 is that TerminalOutputDevice is no longer plugged in.
     // That's not really a protocol change, but we use the version to signal to the SDK that it
     // can safely keep the test host's standard output/error visible (TerminalTestReporter and
@@ -181,14 +192,17 @@ internal static class ProtocolConstants
     // WriteWarningMessage, or WriteErrorMessage according to level. Unlike the AzureDevOps path, this is not gated
     // on an Azure DevOps agent. The host gates forwarding on the negotiated version, so an older SDK (<= 1.2.0)
     // never receives the message.
+    // GitHub Actions workflow commands also use informational DisplayMessage so the SDK writes their marked
+    // text verbatim, without applying warning/error formatting to the command.
     //
     // NOTE: Under the pipe protocol the host installs a forwarding output device
     // (DotnetTestPassthroughOutputDevice) regardless of the negotiated protocol version (the SDK's
     // TerminalTestReporter owns user-facing output). It still discards regular (informational) output but,
     // depending on the negotiated version, relays: Azure DevOps logging commands as AzureDevOpsLogMessage (1.2.0+,
     // only on an Azure DevOps agent), and durable session plus warning/error host messages as DisplayMessage
-    // (1.3.0+, always). See OutputDeviceManager.BuildAsync. With an old SDK that only supports 1.0.0, both sides
-    // will produce no live output (the SDK suppresses its TerminalTestReporter to avoid colliding with the host
+    // (1.3.0+, always), plus marked GitHub Actions workflow commands (1.3.0+). See OutputDeviceManager.BuildAsync.
+    // With an old SDK that only supports 1.0.0, both sides will produce no live output (the SDK suppresses its
+    // TerminalTestReporter to avoid colliding with the host
     // output it expected before this change). Users must update to an SDK that negotiates 1.1.0 to see live output
     // via the SDK's TerminalTestReporter.
     // 1.4.0 adds the reverse "server control" channel used for server-initiated session cancellation. When the

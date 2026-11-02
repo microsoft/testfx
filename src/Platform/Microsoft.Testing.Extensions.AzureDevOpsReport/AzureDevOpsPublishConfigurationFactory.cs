@@ -59,7 +59,7 @@ internal static class AzureDevOpsPublishConfigurationFactory
 
         string currentTestApplicationPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         string assemblyName = testApplicationModuleInfo.TryGetAssemblyName() ?? Path.GetFileNameWithoutExtension(currentTestApplicationPath);
-        string automatedTestStorage = Path.GetFileNameWithoutExtension(currentTestApplicationPath);
+        string automatedTestStorage = Path.GetFileName(currentTestApplicationPath).ToLowerInvariant();
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
         string agentName = environment.GetEnvironmentVariable("AGENT_NAME") ?? environment.MachineName;
         string? stageName = environment.GetEnvironmentVariable("SYSTEM_STAGENAME");

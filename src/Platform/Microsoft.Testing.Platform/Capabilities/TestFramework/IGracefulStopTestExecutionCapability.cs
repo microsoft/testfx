@@ -9,6 +9,9 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// </summary>
 /// <remarks>
 /// Test frameworks can choose to run any needed cleanup when cancellation is requested.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IGracefulStopTestExecutionCapability : ITestFrameworkCapability
@@ -17,5 +20,30 @@ public interface IGracefulStopTestExecutionCapability : ITestFrameworkCapability
     /// Stops the test execution gracefully.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     Task StopTestExecutionAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// A graceful-stop capability that reports whether a stop request was accepted.
+/// </summary>
+/// <remarks>
+/// Test frameworks should implement this capability when a successful stop request can be a no-op because
+/// execution has already completed.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
+/// </remarks>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface IGracefulStopTestExecutionResultCapability : IGracefulStopTestExecutionCapability
+{
+    /// <summary>
+    /// Attempts to stop the test execution gracefully.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>
+    /// A task whose result is <see langword="true"/> when a new stop request was accepted; otherwise,
+    /// <see langword="false"/> when execution had already completed or a stop had already been requested.
+    /// </returns>
+    Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken);
 }

@@ -9,7 +9,7 @@ internal sealed class SystemMainModule(ProcessModule? processModule) : IMainModu
     private readonly ProcessModule? _processModule = processModule;
 
     public string? FileName
-        => OperatingSystem.IsBrowser()
+        => OperatingSystem.IsBrowser() || OperatingSystem.IsWasi()
             ? null
             : _processModule?.FileName;
 }
@@ -23,4 +23,3 @@ internal sealed class SystemMainModule : IMainModule
     public string FileName => _processModule.FileName;
 }
 #endif
-

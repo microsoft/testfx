@@ -33,10 +33,10 @@ Below is the equivalent project configuration when not using MSTest.Sdk
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MTPVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MTPVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
   </ItemGroup>

@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestClassConstructorShouldBeValidAnalyzer,
@@ -436,5 +438,237 @@ public sealed class TestClassConstructorShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenHostTestClassInjectionIsEnabled_ServiceConstructorHasNoDiagnostic()
+    {
+        string code = """
+            #pragma warning disable MSTESTEXP
+
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class ApplicationService
+            {
+            }
+
+            [TestClass]
+            public sealed class MyTestClass(ApplicationService service)
+            {
+                private readonly ApplicationService _service = service;
+
+                [TestMethod]
+                public void TestMethod() => Assert.IsNotNull(_service);
+            }
+
+            public static class HostSetup
+            {
+                public static void Configure(IServiceCollection services)
+                    => services.AddMSTestTestClassInjection();
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = code };
+        AddHostInjectionReferences(test);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenHostTestClassInjectionIsEnabled_NonPublicConstructorHasDiagnostic()
+    {
+        string code = """
+            #pragma warning disable MSTESTEXP
+
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public sealed class {|#0:MyTestClass|}
+            {
+                private MyTestClass()
+                {
+                }
+            }
+
+            public static class HostSetup
+            {
+                public static void Configure(IServiceCollection services)
+                    => services.AddMSTestTestClassInjection();
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = code };
+        AddHostInjectionReferences(test);
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.TestClassConstructorShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenLookalikeHostInjectionMethodIsUsed_ServiceConstructorHasDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class ApplicationService
+            {
+            }
+
+            [TestClass]
+            public sealed class {|#0:MyTestClass|}(ApplicationService service)
+            {
+            }
+
+            namespace Microsoft.Extensions.DependencyInjection
+            {
+                public static class MSTestHostingServiceCollectionExtensions
+                {
+                    public static object AddMSTestTestClassInjection(this object services) => services;
+                }
+            }
+
+            public static class HostSetup
+            {
+                public static void Configure()
+                    => Microsoft.Extensions.DependencyInjection.MSTestHostingServiceCollectionExtensions.AddMSTestTestClassInjection(new object());
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.TestClassConstructorShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenHostInjectionHasMultiplePreferredConstructors_Diagnostic()
+    {
+        string code = """
+            #pragma warning disable MSTESTEXP
+
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class FirstService
+            {
+            }
+
+            public sealed class SecondService
+            {
+            }
+
+            [TestClass]
+            public sealed class {|#0:MyTestClass|}
+            {
+                [ActivatorUtilitiesConstructor]
+                public MyTestClass(FirstService service)
+                {
+                }
+
+                [ActivatorUtilitiesConstructor]
+                public MyTestClass(SecondService service)
+                {
+                }
+            }
+
+            public static class HostSetup
+            {
+                public static void Configure(IServiceCollection services)
+                    => services.AddMSTestTestClassInjection();
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = code };
+        AddHostInjectionReferences(test);
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.MultiplePreferredConstructorsRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenHostInjectionUsesDerivedTestContext_Diagnostic()
+    {
+        string code = """
+            #pragma warning disable MSTESTEXP
+
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class DerivedTestContext : TestContext
+            {
+            }
+
+            [TestClass]
+            public sealed class {|#0:MyTestClass|}
+            {
+                public MyTestClass(DerivedTestContext testContext)
+                {
+                }
+            }
+
+            public static class HostSetup
+            {
+                public static void Configure(IServiceCollection services)
+                    => services.AddMSTestTestClassInjection();
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = code };
+        AddHostInjectionReferences(test);
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.DerivedTestContextRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass", "DerivedTestContext"));
+
+        await test.RunAsync();
+    }
+
+    [DataRow("PublishAot")]
+    [DataRow("RunAOTCompilation")]
+    [DataRow("EnableMSTestSourceGeneration")]
+    [DataRow("browser-wasm")]
+    [TestMethod]
+    public async Task WhenHostInjectionBuildModeIsUnsupported_Diagnostic(string buildMode)
+    {
+        string code = """
+            #pragma warning disable MSTESTEXP
+
+            using Microsoft.Extensions.DependencyInjection;
+
+            [assembly: System.Reflection.AssemblyMetadata("MSTestHostTestClassInjectionUnsupportedMode", "$BUILD_MODE$")]
+
+            public static class HostSetup
+            {
+                public static void Configure(IServiceCollection services)
+                    => {|#0:services.AddMSTestTestClassInjection()|};
+            }
+            """.Replace("$BUILD_MODE$", buildMode);
+
+        var test = new VerifyCS.Test { TestCode = code };
+        AddHostInjectionReferences(test);
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.MSTestHostTestClassInjectionNotSupportedRule)
+                .WithLocation(0)
+                .WithArguments(buildMode));
+
+        await test.RunAsync();
+    }
+
+    private static void AddHostInjectionReferences(VerifyCS.Test test)
+    {
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(
+            typeof(Microsoft.Extensions.DependencyInjection.MSTestHostingServiceCollectionExtensions).Assembly.Location));
+        test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(
+            typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location));
     }
 }

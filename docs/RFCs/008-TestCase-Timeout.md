@@ -1,5 +1,12 @@
 # RFC 008 - Test case timeout via runsettings
 
+> **Current implementation note (2026-10-09):** Timeout omission retains the internal
+> no-timeout default, but an explicit `0` or negative configured timeout is rejected with
+> a warning and ignored. Use the case-sensitive `RunSettings` root; `MSTestV2` remains an
+> alias for `MSTest`. Attribute precedence remains. See [MSTEST-014](../specifications/mstest.md#mstest-014--timeout-omission-differs-from-an-explicit-zero)
+> and the [schema guide](../testconfig.schema.md#timeout-keys-must-be-strictly-positive).
+> This is source inspection/test mapping, not timeout conformance across every host/TFM.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation
@@ -16,11 +23,11 @@ Make test case timeout configurable via TestTimeout tag which is part of the ada
 Here is a sample runsettings:
 
 ```xml
-<Runsettings> 
+<RunSettings>
   <MSTestV2> 
     <TestTimeout>5000</TestTimeout>   
   </MSTestV2> 
-</Runsettings> 
+</RunSettings>
 ```
 
 ### Honoring the settings

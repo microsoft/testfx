@@ -35,6 +35,7 @@ internal static class FakeDotnetTestSdk
         bool isIde = false,
         bool advertiseServerControlPipe = false,
         string? toolName = null,
+        string? coverageSummaryVersion = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(testHost);
@@ -108,7 +109,7 @@ internal static class FakeDotnetTestSdk
                 receivedHandshake = DotnetTestPipeProtocol.DecodeHandshakeBody(frame.Body);
                 string selected = SelectHighestMutuallySupportedVersion(receivedHandshake, supportedProtocolVersions);
                 negotiatedVersion = selected;
-                sentHandshakeReply = BuildSdkHandshakeReply(selected, isIde, controlOsPipeName);
+                sentHandshakeReply = BuildSdkHandshakeReply(selected, isIde, controlOsPipeName, coverageSummaryVersion);
                 byte[] replyBody = DotnetTestPipeProtocol.EncodeHandshakeBody(sentHandshakeReply);
                 await DotnetTestPipeProtocol.WriteFrameAsync(stream, DotnetTestPipeProtocol.SerializerIds.HandshakeMessage, replyBody, cancellationToken).ConfigureAwait(false);
             }
@@ -215,7 +216,8 @@ internal static class FakeDotnetTestSdk
         return best ?? string.Empty;
     }
 
-    private static Dictionary<byte, string> BuildSdkHandshakeReply(string selectedVersion, bool isIde, string? serverControlPipeName = null)
+    private static Dictionary<byte, string> BuildSdkHandshakeReply(
+        string selectedVersion, bool isIde, string? serverControlPipeName = null, string? coverageSummaryVersion = null)
     {
         Dictionary<byte, string> properties = new(capacity: 6)
         {
@@ -234,6 +236,11 @@ internal static class FakeDotnetTestSdk
         if (!string.IsNullOrEmpty(serverControlPipeName))
         {
             properties.Add(DotnetTestPipeProtocol.HandshakeProperties.ServerControlPipeName, serverControlPipeName);
+        }
+
+        if (coverageSummaryVersion is not null)
+        {
+            properties.Add(DotnetTestPipeProtocol.HandshakeProperties.CoverageSummaryVersion, coverageSummaryVersion);
         }
 
         return properties;

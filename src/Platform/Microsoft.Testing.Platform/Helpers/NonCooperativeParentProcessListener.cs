@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 namespace Microsoft.Testing.Platform.Helpers;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class NonCooperativeParentProcessListener : IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
@@ -31,7 +32,7 @@ internal sealed class NonCooperativeParentProcessListener : IDisposable
             _parentProcess.EnableRaisingEvents = true;
             _parentProcess.Exited += ParentProcess_Exited;
         }
-        catch (ArgumentException)
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
             // If we fail the process is already gone, so we can just exit.
             // The first check is already done inside the command line parser.

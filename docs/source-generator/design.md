@@ -1,9 +1,23 @@
 # MSTest source generator — design
 
+> **Current implementation note (2026-10-09):** This design is complemented by
+> [MSTEST-022](../specifications/mstest.md#mstest-022--generated-metadata-has-explicit-fallback-boundaries).
+> Native MTP now has a bounded generated-descriptor discovery path; incomplete descriptor registrations
+> retain per-method runtime enumeration. Several unsupported reflection-free shapes emit `AOTSG0001`–`AOTSG0005`
+> warnings rather than always being silent. Generated dynamic-data accessors also cover resolvable supported
+> properties, parameterless methods, fields and display-name callbacks.
+> `TrimmerRootAssembly` preserves members but does not add omitted classes to a nonempty generated type registry:
+> the fallback recommendation below is not a universal discovery remedy.
+> See [TypeEnumerator](../../src/Adapter/MSTestAdapter.PlatformServices/Discovery/TypeEnumerator.cs),
+> [runtime operations](../../src/Adapter/MSTestAdapter.PlatformServices/SourceGeneration/SourceGeneratedReflectionOperations.cs)
+> and [generator tests](../../test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTestReflectionMetadataGeneratorTests.cs).
+> This audit maps source/tests, not executed AOT/trim conformance or every provider-field claim.
+
 This document describes the design, scope and current limitations of the MSTest source
 generator that ships in the `MSTest.SourceGeneration` package. It is intentionally
 opinionated: where there is a deliberate gap, the gap and its rationale are documented so
-that adding new code paths does not silently change the contract.
+that adding new code paths does not silently change the contract. See the
+[AOT source-generator diagnostics](diagnostics.md) guide for details about the `AOTSG0001`–`AOTSG0005` warnings.
 
 ## Goals
 
@@ -29,9 +43,10 @@ The selected mode determines the rest:
   assembly, and method attribute arrays; constructor and method invocation delegates; and
   applicable property setter delegates. It also emits direct references that root the
   modeled members.
-- **`Rooting` (compatibility mode)** emits `DynamicDependency(All, typeof(T))` for each
-  test class and accessible non-generic base type, plus the type/method registry. Its rich
-  attribute and delegate dictionaries are empty.
+- **`Rooting` (compatibility mode)** emits member-scoped `DynamicDependency` roots for
+  constructors, methods, fields, and properties on each test class and accessible
+  closed base type, plus the type/method registry. Nested types are deliberately not
+  rooted. Its rich attribute and delegate dictionaries are empty.
 
 Both modes still resolve the `MethodInfo` keys used by the adapter at module
 initialization. Reflection-free mode also resolves `PropertyInfo` keys for emitted setters.
@@ -69,19 +84,24 @@ general `PropertyInfo` enumeration or name lookup reflection-free.
 
 ## Discovery limitations
 
-The following user-code shapes are silently skipped by the generator. They keep working
-when source-gen is not active (because reflection sees them), but are invisible to the
-source-gen registry. Where applicable, an analyzer warns about the limitation:
+The following user-code shapes are skipped by the generator. They keep working when
+source-gen is not active (because reflection sees them), but are invisible to the
+source-gen registry. In `ReflectionFree` mode, an `AOTSG` warning describes the
+applicable limitation. Diagnostic help links point to the ID-specific headings
+in [this repository's diagnostics guide](diagnostics.md), keeping the guidance
+versioned with the generator instead of linking to nonexistent `AOTSG` pages in
+the `MSTEST` analyzer documentation. A shared descriptor factory supplies the
+same URL scheme for every `AOTSG` rule.
 
 | Shape | Skipped because | Workaround | Warning |
 |---|---|---|---|
 | Inherited `[TestClass]` (attribute applied only to the base) | `SyntaxValueProvider.ForAttributeWithMetadataName` does not follow inheritance | Apply `[TestClass]` directly to the derived class | MSTEST0069 |
-| Open generic test class (`class Foo<T>`) | `typeof(Foo<T>)` is invalid at module-initializer scope | Make the class non-generic, or instantiate a concrete derived class | — |
-| Generic test method (`void Test<T>(T value)`) | `typeof(T)` is invalid at module-initializer scope | Use a non-generic test method that constructs the type itself | — |
-| Test method with `ref` / `out` / `in` / `ref readonly` parameter | `typeof(T)` for by-ref parameters round-trips as `T&` and the resolver's `typeof(T) == ParameterType` check would fail | Use a wrapper type or a non-by-ref signature | — |
-| `file`-local test class | The generated module initializer lives in a different file | Move the class out of file scope | — |
-| Private / protected nested test class | The generated `internal` module initializer cannot reference it (CS0122) | Make the type `internal` or more visible | — |
-| Static test class | Source-gen models instance-based test execution | Make the class non-static | — |
+| Open generic test class (`class Foo<T>`) or enclosing type | The generated registry requires a closed type at module-initializer scope | Apply `[TestClass]` directly to a non-generic concrete subclass outside any open generic enclosing type, or make the class non-generic | [AOTSG0002](diagnostics.md#aotsg0002) |
+| Generic method on a test class (`void Test<T>(T value)`) | `typeof(T)` is invalid at module-initializer scope | Use a non-generic method that constructs the type itself | [AOTSG0004](diagnostics.md#aotsg0004) |
+| Method or constructor with `ref` / `out` / `in` / `ref readonly` parameter | `typeof(T)` for by-ref parameters round-trips as `T&` and the resolver's `typeof(T) == ParameterType` check would fail | Use a wrapper type or a non-by-ref signature | [AOTSG0005](diagnostics.md#aotsg0005) |
+| `file`-local test class or enclosing type | The generated module initializer lives in a different file | Remove the `file` modifier from the test class and any file-local enclosing type | [AOTSG0003](diagnostics.md#aotsg0003) |
+| Test class or enclosing type is `private`, `protected`, or `private protected` | The generated `internal` module initializer cannot reference it (CS0122) | Make the test class and every enclosing type accessible from the same assembly (`public`, `internal`, or `protected internal` for nested types) | [AOTSG0003](diagnostics.md#aotsg0003) |
+| Static test class | Source-gen models instance-based test execution | Make the class non-static | [AOTSG0001](diagnostics.md#aotsg0001) |
 | Abstract test class | Not directly runnable; but its members are still rooted via `[DynamicDependency]` because of the per-base chain emission | Annotate a concrete derived class with `[TestClass]` | — |
 
 ### Future direction: inherited `[TestClass]`
@@ -103,6 +123,13 @@ in the source to keep the design choice visible.
 Reflection-free mode serves registered type and method attribute entries from generated
 arrays and invokes registered constructors through generated delegates. Rooting mode,
 skipped/unresolved members, and incompletely materialized attributes still fall back.
+
+Attribute materialization supports `typeof` arguments for accessible array types,
+including jagged and multidimensional arrays. An inaccessible element type still
+requires reflection fallback, including when it is nested in a generic argument or
+a containing generic type. Accessible array types do not force other attributes
+on the same method (such as its remaining `DataRow` applications) to fall back.
+Unbound generic `typeof` arguments remain supported.
 
 - `GetCustomAttributes(MemberInfo)` for missing `Type` and `MethodInfo` entries
 - `GetCustomAttributes(Assembly, Type)` when no generated assembly attributes are available
@@ -176,9 +203,10 @@ their members. The choices are:
 #### Option 1 — The current source generator
 
 Reflection-free mode emits direct attribute construction and invocation references, which
-root the modeled members, while rooting mode emits
-`[DynamicDependency(All, typeof(MyTests))]` per `[TestClass]` and accessible base type.
-Both preserve test-related types while leaving unrelated code eligible for trimming.
+root the modeled members. Both modes emit member-scoped `[DynamicDependency]` attributes
+for constructors, methods, fields, and properties on each `[TestClass]` and accessible
+base type. Nested types are excluded so unrelated nested fakes and helpers remain eligible
+for trimming and cannot surface trim/AOT warnings through their inherited members.
 Unsupported shapes and missing provider entries can still require reflection-compatible
 preservation (see Category A above).
 
@@ -208,8 +236,8 @@ source generator**. The differences are concrete:
 - `TrimmerRootAssembly Include="$(AssemblyName)"` only preserves *your* assembly. Base
   classes that live in a shared library (a `TestCommon.dll` carrying
   `[AssemblyInitialize]`-bearing fixtures, etc.) are still trimmable. The source
-  generator emits `[DynamicDependency(All, typeof(BaseInOtherAssembly))]` which the
-  trimmer honors across assemblies.
+  generator emits member-scoped `[DynamicDependency]` roots for
+  `BaseInOtherAssembly`, which the trimmer honors across assemblies.
 - `TrimmerRootAssembly` keeps the entire test assembly — helpers, mocks, fixtures, dead
   code. Source generation roots only the test classes and their base chain; everything
   else remains trimmable. Smaller published binary.
@@ -228,8 +256,8 @@ below), but they are not interchangeable.
 
 #### Option 3 — Hand-written `[DynamicDependency]`
 
-The user puts `[DynamicDependency(All, typeof(MyTests))]` on a stub method per test
-class. **Pros:** preserves exactly what's needed. **Cons:** tedious, easy to forget; the
+The user puts member-scoped `[DynamicDependency]` attributes for `MyTests` on a stub
+method per test class. **Pros:** preserves exactly what's needed. **Cons:** tedious, easy to forget; the
 analyzer warning surface to catch missing roots would essentially have to reinvent the
 source generator. Not recommended in practice.
 
@@ -382,7 +410,7 @@ entries.
   necessary and must stay truthful for the explicitly documented fallback paths.
 - **Direct references provide rooting in reflection-free mode.** A static delegate
   `static (instance, args) => ((MyTests)instance).MyTest((int)args[0])` roots its target.
-  Rooting mode continues to emit the explicit `[DynamicDependency]` base chain.
+  Both modes also emit the explicit, member-scoped `[DynamicDependency]` base chain.
 - **Compile-time validation of attribute shapes becomes possible.** Reading
   `[DataRow]` / `[DataSource]` / `[ExpectedException]` etc. at compile time to bake them
   also lets the generator surface analyzer diagnostics for:

@@ -23,6 +23,9 @@ public abstract class TestContext
     /// <remarks>
     /// This property returns the context for the currently executing test. When accessed outside of a test execution,
     /// it returns <see langword="null"/>.
+    /// <para>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </para>
     /// </remarks>
     [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
     public static TestContext? Current

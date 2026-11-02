@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -22,7 +24,50 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class CommonHostTests
 {
     [TestMethod]
-    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_UsesCancellationTokenNoneForDisplayAfterSessionEndRun()
+    public async Task RequestGracefulSessionStopAsync_UsesActiveRequestCapabilitiesBeforeApplicationCapability()
+    {
+        Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> requestCapability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
+        TestableCommonHost host = new(serviceProvider);
+
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(requestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        requestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        host.UnregisterActiveGracefulStopCapabilityForTesting(requestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task RegisterActiveGracefulStopCapabilityAsync_AfterStoppedRequestUnregisters_StopsNextRequest()
+    {
+        Mock<IGracefulStopTestExecutionCapability> applicationCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> completedRequestCapability = new();
+        Mock<IGracefulStopTestExecutionCapability> nextRequestCapability = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestFrameworkCapabilities(applicationCapability.Object));
+        TestableCommonHost host = new(serviceProvider);
+
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(completedRequestCapability.Object);
+        await host.RequestGracefulSessionStopForTestingAsync();
+        host.UnregisterActiveGracefulStopCapabilityForTesting(completedRequestCapability.Object);
+        await host.RegisterActiveGracefulStopCapabilityForTestingAsync(nextRequestCapability.Object);
+
+        completedRequestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        nextRequestCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        applicationCapability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false, 1)]
+    [DataRow(true, 0)]
+    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_DisarmsStopPolicyOnlyForRun(bool isDiscoveryRequest, int expectedDisarmCount)
     {
         CancellationToken cancellationToken = new(canceled: true);
 
@@ -50,9 +95,14 @@ public sealed class CommonHostTests
             .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException(cancellationToken));
 
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -66,13 +116,53 @@ public sealed class CommonHostTests
             serviceProvider,
             baseMessageBusMock.Object,
             testFrameworkMock.Object,
-            client);
+            client,
+            isDiscoveryRequest);
 
         Assert.IsNotNull(displayAfterToken);
         Assert.IsFalse(displayAfterToken!.Value.CanBeCanceled);
 
         outputDeviceMock.Verify(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>()), Times.Once);
         testSessionLifetimeHandlerMock.Verify(x => x.OnTestSessionFinishingAsync(It.IsAny<ITestSessionContext>()), Times.Once);
+
+        // Disarming happens in a finally around the invoker, so it must also happen when the invoker threw
+        // because the session was canceled. Otherwise a deadline reached while the reporters finalize an
+        // already-canceled run would still mark it as truncated.
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Exactly(expectedDisarmCount));
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_WhenSessionStartupFails_DisarmsStopPolicy()
+    {
+        Mock<IPlatformOutputDevice> outputDeviceMock = new();
+        outputDeviceMock
+            .Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("session startup failure"));
+
+        Mock<ITestSessionContext> sessionContextMock = new();
+        sessionContextMock.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        serviceProvider.AddService(policiesServiceMock.Object);
+
+        Mock<BaseMessageBus> baseMessageBusMock = new();
+        baseMessageBusMock.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await TestableCommonHost.ExecuteRequestForTestingAsync(
+                new ProxyOutputDevice(outputDeviceMock.Object, null),
+                sessionContextMock.Object,
+                serviceProvider,
+                baseMessageBusMock.Object,
+                new Mock<ITestFramework>().Object,
+                new ClientInfo("client", "1.0.0")));
+
+        Assert.AreEqual("session startup failure", ex.Message);
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
     }
 
     [TestMethod]
@@ -91,6 +181,21 @@ public sealed class CommonHostTests
         Assert.AreEqual(1, testApplicationLifetime.BeforeRunCount);
         Assert.AreEqual(1, testApplicationLifetime.AfterRunCount);
         Assert.AreEqual(1, testApplicationLifetime.CleanupCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_WhenInternalRunSkipsService_DoesNotDisposeItDuringProcessShutdown()
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestApplicationCancellationTokenSource());
+        Mock<IDisposable> serviceToSkip = new();
+        serviceProvider.AddService(serviceToSkip.Object);
+        TestableCommonHost host = new(serviceProvider, serviceToSkip: serviceToSkip.Object);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(0, exitCode);
+        serviceToSkip.Verify(x => x.Dispose(), Times.Never);
     }
 
     [TestMethod]
@@ -116,6 +221,9 @@ public sealed class CommonHostTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        serviceProvider.AddService(new Mock<IStopPoliciesService>().Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -154,9 +262,14 @@ public sealed class CommonHostTests
             .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("test framework failure"));
 
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<ICommandLineOptions>().Object);
+        serviceProvider.AddService(new Mock<IEnvironment>().Object);
+        serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -174,6 +287,10 @@ public sealed class CommonHostTests
         // The safety net is best effort: it must never replace the exception that is already propagating.
         Assert.AreEqual("test framework failure", ex.Message);
         baseMessageBusMock.Verify(x => x.DisableAsync(), Times.Once);
+
+        // Disarming sits in a finally around the invoker, so a failing test framework must not leave the
+        // deadline armed while the session tears down.
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
     }
 
     [TestMethod]
@@ -214,6 +331,20 @@ public sealed class CommonHostTests
         // Disabling awaits the consumer loops, so it has to happen before the bus and its consumers are
         // disposed. Otherwise a consumer can be disposed while its ConsumeAsync is still executing.
         Assert.AreSequenceEqual(["disable", "busDispose", "consumerDispose"], calls);
+    }
+
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenMessageBusIsAlreadyAbandoned_DoesNotDisableItAgain()
+    {
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.Setup(x => x.DisableAsync()).ThrowsAsync(new InvalidOperationException("disable retried"));
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(messageBus.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider, [messageBus.Object]);
+
+        messageBus.Verify(x => x.DisableAsync(), Times.Never);
     }
 
     [TestMethod]
@@ -379,7 +510,10 @@ public sealed class CommonHostTests
         disposableRunningConsumer.Verify(x => x.Dispose(), Times.Never);
     }
 
-    private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)
+    private sealed class TestableCommonHost(
+        ServiceProvider serviceProvider,
+        bool runTestApplicationLifeCycleCallbacks = false,
+        object? serviceToSkip = null) : CommonHost(serviceProvider)
     {
         protected override string HostType => "TestHost";
 
@@ -388,17 +522,37 @@ public sealed class CommonHostTests
         public static Task DisposeServiceProviderForTestingAsync(ServiceProvider serviceProvider)
             => DisposeServiceProviderAsync(serviceProvider);
 
+        public static Task DisposeServiceProviderForTestingAsync(ServiceProvider serviceProvider, List<object> alreadyDisposed)
+            => DisposeServiceProviderAsync(serviceProvider, alreadyDisposed: alreadyDisposed);
+
         public static Task ExecuteRequestForTestingAsync(
             ProxyOutputDevice outputDevice,
             ITestSessionContext testSessionInfo,
             ServiceProvider serviceProvider,
             BaseMessageBus baseMessageBus,
             ITestFramework testFramework,
-            ClientInfo client)
-            => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client);
+            ClientInfo client,
+            bool isDiscoveryRequest = false)
+            => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client, isDiscoveryRequest);
 
-        protected override Task<int> InternalRunAsync(CancellationToken cancellationToken)
-            => Task.FromResult(0);
+        public Task RegisterActiveGracefulStopCapabilityForTestingAsync(IGracefulStopTestExecutionCapability capability)
+            => RegisterActiveGracefulStopCapabilityAsync(capability);
+
+        public Task RequestGracefulSessionStopForTestingAsync()
+            => RequestGracefulSessionStopAsync(CancellationToken.None);
+
+        public void UnregisterActiveGracefulStopCapabilityForTesting(IGracefulStopTestExecutionCapability capability)
+            => UnregisterActiveGracefulStopCapability(capability);
+
+        protected override Task<int> InternalRunAsync(CancellationToken cancellationToken, List<object> alreadyDisposed)
+        {
+            if (serviceToSkip is not null)
+            {
+                alreadyDisposed.Add(serviceToSkip);
+            }
+
+            return Task.FromResult(0);
+        }
     }
 
     private sealed class TestApplicationCancellationTokenSource : ITestApplicationCancellationTokenSource
@@ -445,5 +599,95 @@ public sealed class CommonHostTests
             CleanupCount++;
             return Task.CompletedTask;
         }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_ProtocolCompatibilityControlsLifecycleAndAlwaysClosesProtocol(bool compatible)
+    {
+        ServiceProvider services = new();
+        services.AddService(new TestApplicationCancellationTokenSource());
+        AsyncCleanableTestHostApplicationLifetime lifetime = new();
+        services.AddService(lifetime);
+        Mock<Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol> protocol = new();
+        protocol.SetupGet(p => p.IsServerMode).Returns(true);
+        protocol.SetupGet(p => p.IsServerControlChannelSupported).Returns(true);
+        protocol.Setup(p => p.IsCompatibleProtocolAsync("TestHost", It.IsAny<IReadOnlyDictionary<byte, string>?>())).ReturnsAsync(compatible);
+        protocol.Setup(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>())).Returns(Task.CompletedTask);
+        protocol.Setup(p => p.OnExitAsync()).Returns(Task.CompletedTask);
+        services.AddService(protocol.Object);
+        TestableCommonHost host = new(services, runTestApplicationLifeCycleCallbacks: true);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(compatible ? 0 : (int)ExitCode.IncompatibleProtocolVersion, exitCode);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.BeforeRunCount);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.AfterRunCount);
+        Assert.AreEqual(1, lifetime.CleanupCount);
+        protocol.Verify(p => p.IsCompatibleProtocolAsync("TestHost", It.IsAny<IReadOnlyDictionary<byte, string>?>()), Times.Once);
+        protocol.Verify(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()), compatible ? Times.Once() : Times.Never());
+        protocol.Verify(p => p.OnExitAsync(), Times.Once);
+        protocol.Verify(p => p.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_ThrowingShutdownLoggerCannotReplaceFrameworkFailure()
+    {
+        InvalidOperationException primary = new("framework failure");
+        Mock<ITestFrameworkInvoker> invoker = new();
+        invoker.Setup(i => i.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), CancellationToken.None)).ThrowsAsync(primary);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Throws(new ObjectDisposedException("logger"));
+        Mock<BaseMessageBus> bus = new();
+        bus.Setup(b => b.DisableAsync()).ThrowsAsync(new IOException("shutdown failed"));
+        Mock<IPlatformOutputDevice> output = new();
+        ServiceProvider services = new();
+        services.AddServices(
+        [
+            invoker.Object, loggerFactory.Object, new TestCoverageResult(),
+            new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object,
+        ]);
+        Mock<ITestSessionContext> session = new();
+        session.SetupGet(s => s.SessionUid).Returns(new SessionUid("session"));
+
+        InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+            TestableCommonHost.ExecuteRequestForTestingAsync(
+                new ProxyOutputDevice(output.Object, null), session.Object, services, bus.Object,
+                new Mock<ITestFramework>().Object, new ClientInfo("client", "1.0")));
+
+        Assert.AreSame(primary, failure);
+        bus.Verify(b => b.DisableAsync(), Times.Once);
+        loggerFactory.Verify(f => f.CreateLogger(nameof(CommonHost)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task FrameworkProxy_ExposesIdentityButCannotDriveFrameworkLifecycle()
+    {
+        Mock<ITestFramework> framework = new(MockBehavior.Strict);
+        framework.SetupGet(f => f.Uid).Returns("framework-uid");
+        framework.SetupGet(f => f.Version).Returns("7.8.9");
+        framework.SetupGet(f => f.DisplayName).Returns("Isolated framework");
+        framework.SetupGet(f => f.Description).Returns("Read-only framework information");
+        TestFrameworkProxy proxy = new(framework.Object);
+
+        Assert.AreEqual("framework-uid", proxy.Uid);
+        Assert.AreEqual("7.8.9", proxy.Version);
+        Assert.AreEqual("Isolated framework", proxy.DisplayName);
+        Assert.AreEqual("Read-only framework information", proxy.Description);
+        Assert.IsTrue(await proxy.IsEnabledAsync());
+        Assert.AreEqual(
+            "Method 'CreateTestSessionAsync' should not have been called on this proxy object",
+            Assert.ThrowsExactly<InvalidOperationException>(() => proxy.CreateTestSessionAsync(null!)).Message);
+        Assert.AreEqual(
+            "Method 'ExecuteRequestAsync' should not have been called on this proxy object",
+            Assert.ThrowsExactly<InvalidOperationException>(() => proxy.ExecuteRequestAsync(null!)).Message);
+        Assert.AreEqual(
+            "Method 'CloseTestSessionAsync' should not have been called on this proxy object",
+            Assert.ThrowsExactly<InvalidOperationException>(() => proxy.CloseTestSessionAsync(null!)).Message);
+        framework.Verify(f => f.IsEnabledAsync(), Times.Never);
+        framework.Verify(f => f.CreateTestSessionAsync(It.IsAny<CreateTestSessionContext>()), Times.Never);
+        framework.Verify(f => f.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()), Times.Never);
+        framework.Verify(f => f.CloseTestSessionAsync(It.IsAny<CloseTestSessionContext>()), Times.Never);
     }
 }

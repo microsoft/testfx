@@ -30,7 +30,7 @@ internal sealed class BoundedCacheWithFactory<TKey, TValue>
             {
                 WeakReference<Entry?> weakReferencedEntry = _weakReferencedEntries[i];
                 if (!weakReferencedEntry.TryGetTarget(out Entry? cachedEntry) ||
-                    cachedEntry == null)
+                    cachedEntry is null)
                 {
                     if (indexToSetTarget == -1)
                     {

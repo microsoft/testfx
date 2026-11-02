@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -12,8 +12,53 @@ namespace UnitTestFramework.Tests;
 /// <summary>
 /// Tests for class ExecutableConditionAttribute.
 /// </summary>
+/// <remarks>
+/// This suite runs on the internal <see cref="TestContainer"/> engine (used to unit-test MSTest itself), which has no
+/// parallel scheduler, so nothing here races today. Two methods mutate the process-wide <c>PATH</c> environment
+/// variable (<see cref="IsConditionMet_WhenExecutableOnPath_ReturnsTrue"/>, <see cref="IsConditionMet_IsCachedPerExecutable"/>),
+/// each restoring the original value in a <see langword="finally"/> block. The tests that evaluate
+/// <see cref="ExecutableConditionAttribute.IsConditionMet"/> with a bare executable name depend on <c>PATH</c>, either
+/// through <c>ExecutableExistsOnPath</c> or process executable resolution; the full-path test bypasses it. The class-level
+/// <see cref="ResourceLockAttribute"/> on <see cref="WellKnownResources.EnvironmentVariables"/> below documents that
+/// contended resource so a later MSTest opt-in for this project starts from a correct declaration instead of an
+/// undeclared race.
+/// </remarks>
+[ResourceLock(WellKnownResources.EnvironmentVariables)]
 public class ExecutableConditionAttributeTests : TestContainer
 {
+    public void ConstructorNullInputPartitionsPreserveExactParameterNames()
+    {
+        Action missingExecutable = () => _ = new ExecutableConditionAttribute(ConditionMode.Exclude, null!, []);
+        Action missingArguments = () => _ = new ExecutableConditionAttribute(ConditionMode.Include, "tool", null!);
+        missingExecutable.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be("executable");
+        missingArguments.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be("arguments");
+    }
+
+#if NETFRAMEWORK
+    public void FrameworkArgumentQuotingPreservesWhitespaceQuotesAndBackslashRuns()
+    {
+        MethodInfo method = typeof(ExecutableConditionAttribute).GetMethod("PasteArguments", BindingFlags.NonPublic | BindingFlags.Static)!;
+        foreach ((string[] arguments, string expected) in new (string[], string)[]
+        {
+            ([], string.Empty),
+            ([string.Empty], "\"\""),
+            (["word", @"p\q"], @"word p\q"),
+            (["with space"], "\"with space\""),
+            (["\""], "\"\\\"\""),
+            (["a\\\"b"], "\"a\\\\\\\"b\""),
+            (["a\\\\\"b"], "\"a\\\\\\\\\\\"b\""),
+            (["tail \\"], "\"tail \\\\\""),
+            (["tail \\\\"], "\"tail \\\\\\\\\""),
+            (["with \\\\ space"], "\"with \\\\ space\""),
+            (["\t", "\n", "\v", "\r"], "\"\t\" \"\n\" \"\v\" \r"),
+        })
+        {
+            string actual = (string)method.Invoke(null, [arguments])!;
+            actual.Should().Be(expected);
+        }
+    }
+#endif
+
     public void Constructor_SetsCorrectMode()
     {
         var includeAttribute = new ExecutableConditionAttribute(ConditionMode.Include, "docker");

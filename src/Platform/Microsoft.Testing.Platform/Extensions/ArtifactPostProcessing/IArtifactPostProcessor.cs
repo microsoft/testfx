@@ -1,11 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Services;
+
 namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
 /// <summary>
 /// Processes artifacts of one or more well-known kinds after test execution completes.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IArtifactPostProcessor : IExtension
 {
@@ -66,6 +71,9 @@ public interface IArtifactPostProcessor : IExtension
 /// <remarks>
 /// Orchestrators that support this capability advertise that support in the handshake response before a test
 /// session starts. Producers must preserve their standalone behavior when the capability is unavailable.
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostProcessor;
@@ -73,6 +81,9 @@ public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostPro
 /// <summary>
 /// Describes the test run that produced artifacts supplied to an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class ArtifactPostProcessingContext
 {
@@ -150,6 +161,9 @@ public sealed class ArtifactPostProcessingContext
 /// <summary>
 /// Describes authoritative run-level values supplied by the outer test orchestrator.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class ArtifactPostProcessingRunSummary
 {
@@ -243,6 +257,9 @@ public sealed class ArtifactPostProcessingRunSummary
 /// <summary>
 /// Specifies how the supplied artifacts relate to one another.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum ArtifactPostProcessingMode
 {
@@ -261,6 +278,9 @@ public enum ArtifactPostProcessingMode
 /// <summary>
 /// Specifies why a test run was truncated before every scheduled test module completed.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum ArtifactPostProcessingTruncationReason
 {
@@ -283,6 +303,9 @@ public enum ArtifactPostProcessingTruncationReason
 /// <summary>
 /// Describes an artifact supplied to an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class InputArtifact
 {
@@ -339,6 +362,9 @@ public sealed class InputArtifact
 /// <summary>
 /// Describes an artifact produced by an <see cref="IArtifactPostProcessor"/>.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class ProcessedArtifact
 {
@@ -346,6 +372,25 @@ public sealed class ProcessedArtifact
     /// Initializes a new instance of the <see cref="ProcessedArtifact"/> class.
     /// </summary>
     public ProcessedArtifact(string path, string kind, string displayName, string? description)
+        : this(path, kind, displayName, description, coverageSummary: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProcessedArtifact"/> class with coverage
+    /// measurements computed from the complete processed artifact.
+    /// </summary>
+    /// <param name="path">The processed artifact path.</param>
+    /// <param name="kind">The producer-asserted artifact kind.</param>
+    /// <param name="displayName">The artifact display name.</param>
+    /// <param name="description">The artifact description.</param>
+    /// <param name="coverageSummary">The coverage measurements for the complete artifact, or <see langword="null"/> when unavailable.</param>
+    public ProcessedArtifact(
+        string path,
+        string kind,
+        string displayName,
+        string? description,
+        IReadOnlyList<CoverageMetricResult>? coverageSummary)
     {
         Path = path ?? throw new ArgumentNullException(nameof(path));
         Kind = kind is null
@@ -355,6 +400,7 @@ public sealed class ProcessedArtifact
                 : kind;
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
         Description = description;
+        CoverageSummary = coverageSummary is null ? null : Array.AsReadOnly(coverageSummary.ToArray());
     }
 
     /// <summary>
@@ -376,4 +422,12 @@ public sealed class ProcessedArtifact
     /// Gets the artifact description.
     /// </summary>
     public string? Description { get; }
+
+    /// <summary>
+    /// Gets the snapshotted coverage measurements for the complete processed artifact, or
+    /// <see langword="null"/> when unavailable. Counts must come from the actual processed data,
+    /// not sums or averages of the input artifacts' summaries. A zero coverable count explicitly
+    /// represents no coverable data. Duplicate producer/metric keys are last-write-wins updates.
+    /// </summary>
+    public IReadOnlyList<CoverageMetricResult>? CoverageSummary { get; }
 }

@@ -72,16 +72,16 @@ internal sealed class GitHubActionsReporter :
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync()
+    public async Task<bool> IsEnabledAsync()
     {
         bool isEnabled = GitHubActionsFeature.IsEnabled(_commandLine, _environment, GitHubActionsCommandLineOptions.GitHubActionsGroups);
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{nameof(GitHubActionsReport)} groups is {(isEnabled ? "enabled" : "disabled")}.");
+            await _logger.LogTraceAsync($"{nameof(GitHubActionsReport)} groups is {(isEnabled ? "enabled" : "disabled")}.").ConfigureAwait(false);
         }
 
-        return Task.FromResult(isEnabled);
+        return isEnabled;
     }
 
     // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session end
@@ -98,7 +98,7 @@ internal sealed class GitHubActionsReporter :
 
             string name = _testApplicationModuleInfo.TryGetAssemblyName() ?? _testApplicationModuleInfo.GetDisplayName();
             string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.GroupTitle, name, _targetFrameworkMoniker);
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"::group::{GitHubActionsEscaper.EscapeData(title)}"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData($"::group::{GitHubActionsEscaper.EscapeData(title)}"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = true;
         }
         catch (OperationCanceledException)
@@ -123,7 +123,7 @@ internal sealed class GitHubActionsReporter :
                 return;
             }
 
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData("::endgroup::"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData("::endgroup::"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = false;
         }
         catch (OperationCanceledException)

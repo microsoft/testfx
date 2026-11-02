@@ -57,7 +57,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
             return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
 
-        DebugEx.Assert(assembly != null, "assembly");
+        DebugEx.Assert(assembly is not null, "assembly");
 
         List<string> result = [];
         HashSet<string> visitedAssemblies =
@@ -125,7 +125,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
             }
 
             Type declaringType = data.NamedArguments[0].MemberInfo.DeclaringType;
-            if (declaringType == null)
+            if (declaringType is null)
             {
                 continue;
             }
@@ -154,7 +154,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="warnings"> The warnings. </param>
     private void ProcessChildren(Assembly assembly, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
     {
-        DebugEx.Assert(assembly != null, "assembly");
+        DebugEx.Assert(assembly is not null, "assembly");
 
         foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
         {

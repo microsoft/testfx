@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security.Cryptography;
+
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// The out-of-band hand-off that lets a packaged (MSIX) test host receive the controller-to-host
-/// connect-back environment variables that a plain <c>Process.Start</c> would have inherited.
+/// The out-of-band hand-off that lets a packaged (MSIX) test host receive the controller and retry
+/// environment variables that a plain <c>Process.Start</c> would have inherited.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,9 +23,9 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// <see cref="TestingPlatformBuilderHook"/>.
 /// </para>
 /// <para>
-/// The file is named with the test host controller PID (the value the platform passes on the command
-/// line as <c>--internal-testhostcontroller-pid</c>) so that concurrent runs of the same package do
-/// not collide, and it is deleted by the host as soon as it has been consumed.
+/// The file is named with a stable handshake ID so concurrent runs of the same package do not collide.
+/// Controller-host runs use the controller PID; retry runs use a hash of their unique pipe name. The
+/// host deletes the file as soon as it has been consumed.
 /// </para>
 /// </remarks>
 internal static class PackagedAppConnectBackHandshake
@@ -32,7 +34,8 @@ internal static class PackagedAppConnectBackHandshake
     // (naming the file) and the activated host (locating it) agree on this value. Kept as a literal
     // because PlatformCommandLineProvider.TestHostControllerPIDOptionKey is internal to the platform
     // assembly; the two ship and version together in this repo.
-    private const string TestHostControllerPidOptionKey = "internal-testhostcontroller-pid";
+    private const string TestHostControllerPidOption = "--internal-testhostcontroller-pid";
+    private const string RetryPipeNameOption = "--internal-retry-pipename";
 
     // Marker prefixes distinguishing a null value from a (possibly empty) string value on each line,
     // so an empty string round-trips as an empty string rather than as null.
@@ -55,21 +58,20 @@ internal static class PackagedAppConnectBackHandshake
             "LocalState");
 
     /// <summary>
-    /// Returns the file name (without directory) of the handshake file for a given test host controller
-    /// PID. The directory differs between the two sides (see <see cref="GetHandshakeFilePath"/> and the
-    /// activated host, which resolves its own package LocalState), but the file name is shared.
+    /// Returns the file name (without directory) for a handshake ID. The directory differs between the
+    /// two sides (see <see cref="GetHandshakeFilePath"/> and the activated host, which resolves its own
+    /// package LocalState), but the file name is shared.
     /// </summary>
-    public static string GetHandshakeFileName(string testHostControllerPid)
-        => $"mtp-testhostcontroller-{testHostControllerPid}.handshake";
+    public static string GetHandshakeFileName(string handshakeId)
+        => $"mtp-testhostcontroller-{handshakeId}.handshake";
 
     /// <summary>
-    /// Returns the full path of the handshake file for a given package family name and test host
-    /// controller PID.
+    /// Returns the full path of the handshake file for a package family name and handshake ID.
     /// </summary>
-    public static string GetHandshakeFilePath(string packageFamilyName, string testHostControllerPid)
+    public static string GetHandshakeFilePath(string packageFamilyName, string handshakeId)
         => Path.Combine(
             GetHandshakeDirectory(packageFamilyName),
-            GetHandshakeFileName(testHostControllerPid));
+            GetHandshakeFileName(handshakeId));
 
     /// <summary>
     /// Extracts the value of the <c>--internal-testhostcontroller-pid</c> option from a command line,
@@ -77,16 +79,26 @@ internal static class PackagedAppConnectBackHandshake
     /// test host waiting on a controller connect-back).
     /// </summary>
     public static string? TryGetTestHostControllerPid(IReadOnlyList<string> arguments)
+        => CommandLineOptionParser.TryGetOptionValue(arguments, TestHostControllerPidOption);
+
+    /// <summary>
+    /// Returns the stable identifier used to exchange environment variables for an activated host.
+    /// Controller-host runs use the controller PID; retry-orchestrated runs use a hash of their unique pipe name.
+    /// </summary>
+    public static string? TryGetHandshakeId(IReadOnlyList<string> arguments)
     {
-        for (int i = 0; i < arguments.Count - 1; i++)
+        if (TryGetTestHostControllerPid(arguments) is { } testHostControllerPid)
         {
-            if (string.Equals(arguments[i], $"--{TestHostControllerPidOptionKey}", StringComparison.Ordinal))
-            {
-                return arguments[i + 1];
-            }
+            return testHostControllerPid;
         }
 
-        return null;
+        if (CommandLineOptionParser.TryGetOptionValue(arguments, RetryPipeNameOption) is not { } retryPipeName)
+        {
+            return null;
+        }
+
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(retryPipeName));
+        return $"retry-{Convert.ToHexString(hash)}";
     }
 
     /// <summary>
@@ -104,14 +116,15 @@ internal static class PackagedAppConnectBackHandshake
             builder.Append(entry.Key).Append('=');
             if (entry.Value is null)
             {
-                builder.Append(NullValueMarker);
+                builder.Append(NullValueMarker).Append('\n');
             }
             else
             {
-                builder.Append(StringValueMarker).Append(Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Value)));
+                builder
+                    .Append(StringValueMarker)
+                    .Append(Convert.ToBase64String(Encoding.UTF8.GetBytes(entry.Value)))
+                    .Append('\n');
             }
-
-            builder.Append('\n');
         }
 
         File.WriteAllText(filePath, builder.ToString(), Encoding.UTF8);

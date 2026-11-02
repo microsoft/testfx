@@ -1,0 +1,510 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.Hosting;
+using Microsoft.Testing.Extensions.Hosting.Resources;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
+
+using Moq;
+
+namespace Microsoft.Testing.Extensions.UnitTests;
+
+[TestClass]
+[ResourceLock(HotReloadStateResource)]
+public sealed class HotReloadTests
+{
+    private const string DotnetWatchEnvironmentVariable = "DOTNET_WATCH";
+    private const string HotReloadEnabledEnvironmentVariable = "TESTINGPLATFORM_HOTRELOAD_ENABLED";
+    private const string HotReloadStateResource = nameof(HotReloadStateResource);
+
+    private static readonly FieldInfo ShutdownProcessField = typeof(HotReloadHandler)
+        .GetField("s_shutdownProcess", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static readonly SemaphoreSlim HotReloadSemaphore = (SemaphoreSlim)typeof(HotReloadHandler)
+        .GetField("SemaphoreSlim", BindingFlags.NonPublic | BindingFlags.Static)!
+        .GetValue(null)!;
+
+    public HotReloadTests() => ResetHotReloadState();
+
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestCleanup]
+    public void Cleanup() => ResetHotReloadState();
+
+    [TestMethod]
+    [DataRow("1", null)]
+    [DataRow(null, "1")]
+    public async Task Constructor_ActivationEnvironmentVariableIsOne_EnablesHotReloadAndRegistersShutdownFallback(
+        string? dotnetWatch,
+        string? hotReloadEnabled)
+    {
+        Mock<IEnvironment> environment = CreateEnvironment(dotnetWatch, hotReloadEnabled);
+        var runtimeFeature = new SystemRuntimeFeature();
+        var stopPolicies = new Mock<IStopPoliciesService>();
+        Func<Task<bool>>? shutdownFallback = null;
+        stopPolicies
+            .Setup(service => service.RegisterDeadlineStopFallback(It.IsAny<Func<Task<bool>>>()))
+            .Callback<Func<Task<bool>>>(callback => shutdownFallback = callback);
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object, runtimeFeature, stopPolicies.Object);
+
+        _ = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
+
+        Assert.IsTrue(runtimeFeature.IsHotReloadEnabled);
+        Assert.IsNotNull(shutdownFallback);
+        Assert.IsTrue(await shutdownFallback());
+        Assert.IsTrue(IsShutdownRequested());
+    }
+
+    [TestMethod]
+    [DataRow(null, null)]
+    [DataRow("0", "0")]
+    [DataRow("true", null)]
+    [DataRow(null, "true")]
+    public void Constructor_ActivationEnvironmentVariablesAreNotOne_DoesNotEnableHotReload(
+        string? dotnetWatch,
+        string? hotReloadEnabled)
+    {
+        Mock<IEnvironment> environment = CreateEnvironment(dotnetWatch, hotReloadEnabled);
+        var runtimeFeature = new SystemRuntimeFeature();
+        var stopPolicies = new Mock<IStopPoliciesService>();
+        ServiceProvider serviceProvider = CreateServiceProvider(environment.Object, runtimeFeature, stopPolicies.Object);
+
+        _ = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
+
+        Assert.IsFalse(runtimeFeature.IsHotReloadEnabled);
+        stopPolicies.Verify(
+            service => service.RegisterDeadlineStopFallback(It.IsAny<Func<Task<bool>>>()),
+            Times.Never);
+    }
+
+    [TestMethod]
+    public void HotReloadHandler_Constructor_CurrentDesktopPlatform_SubscribesToCancelKeyPress()
+    {
+        var console = new Mock<IConsole>();
+
+        _ = new HotReloadHandler(
+            console.Object,
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IOutputDeviceDataProducer>());
+
+        console.VerifyAdd(
+            instance => instance.CancelKeyPress += It.IsAny<ConsoleCancelEventHandler>(),
+            Times.Once);
+        console.VerifyRemove(
+            instance => instance.CancelKeyPress -= It.IsAny<ConsoleCancelEventHandler>(),
+            Times.Never);
+    }
+
+#if NET6_0_OR_GREATER
+    [TestMethod]
+    public async Task ExecuteRequestAsync_HotReload_WaitsForRequestCompletionBeforeEndingCycle()
+    {
+        var stopPolicies = new Mock<IStopPoliciesService>();
+        bool deadlineTriggered = false;
+        Func<Task>? deadlineCallback = null;
+        stopPolicies.SetupGet(service => service.IsDeadlineTriggered).Returns(() => deadlineTriggered);
+        stopPolicies.Setup(service => service.RegisterOnDeadlineCallbackAsync(It.IsAny<Func<Task>>()))
+            .Callback<Func<Task>>(callback => deadlineCallback = callback)
+            .Returns(Task.CompletedTask);
+        ServiceProvider serviceProvider = CreateServiceProvider(
+            CreateEnvironment("1", null).Object,
+            new SystemRuntimeFeature(),
+            stopPolicies.Object);
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        serviceProvider.AddService(console.Object);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice.Setup(device => device.DisplayAsync(
+            It.IsAny<IOutputDeviceDataProducer>(),
+            It.IsAny<IOutputDeviceData>(),
+            It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        serviceProvider.AddService(outputDevice.Object);
+        serviceProvider.AddService(Mock.Of<IPlatformOutputDevice>());
+        var messageBus = new Mock<BaseMessageBus>();
+        messageBus.Setup(bus => bus.DrainDataAsync()).Returns(Task.CompletedTask);
+        serviceProvider.AddService(messageBus.Object);
+        var coverageResult = new TestCoverageResult();
+        await coverageResult.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new TestCoverageMessage(
+                new SessionUid("coverage-session"),
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                coveredCount: 1,
+                coverableCount: 1,
+                producerId: "producer"),
+            CancellationToken.None);
+        Assert.IsNotEmpty(coverageResult.Scopes);
+        serviceProvider.AddService(coverageResult);
+        var framework = new Mock<ITestFramework>();
+        var requestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool coverageWasReset = false;
+        framework.Setup(instance => instance.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
+            .Callback<ExecuteRequestContext>(context =>
+            {
+                coverageWasReset = coverageResult.Scopes.Count == 0;
+                requestStarted.SetResult(context);
+            })
+            .Returns(Task.CompletedTask);
+        var invoker = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
+        var request = new RunTestExecutionRequest(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("session")));
+
+        Task execution = invoker.ExecuteRequestAsync(framework.Object, request, messageBus.Object, TestContext.CancellationToken);
+        ExecuteRequestContext context = await requestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+        bool completedBeforeNotification = execution.IsCompleted;
+        deadlineTriggered = true;
+        context.Complete();
+        await execution.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+        Assert.IsFalse(completedBeforeNotification);
+        Assert.IsTrue(coverageWasReset);
+        Assert.IsNotNull(deadlineCallback);
+        messageBus.Verify(bus => bus.DrainDataAsync(), Times.Once);
+        await deadlineCallback!();
+        Assert.IsTrue(IsShutdownRequested());
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_HotReload_UpdateApplicationStartsNextCycle()
+    {
+        var stopPolicies = new Mock<IStopPoliciesService>();
+        bool deadlineTriggered = false;
+        stopPolicies.SetupGet(service => service.IsDeadlineTriggered).Returns(() => deadlineTriggered);
+        stopPolicies.Setup(service => service.RegisterOnDeadlineCallbackAsync(It.IsAny<Func<Task>>()))
+            .Returns(Task.CompletedTask);
+        ServiceProvider serviceProvider = CreateServiceProvider(
+            CreateEnvironment("1", null).Object,
+            new SystemRuntimeFeature(),
+            stopPolicies.Object);
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        serviceProvider.AddService(console.Object);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice.Setup(device => device.DisplayAsync(
+            It.IsAny<IOutputDeviceDataProducer>(),
+            It.IsAny<IOutputDeviceData>(),
+            It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        serviceProvider.AddService(outputDevice.Object);
+        serviceProvider.AddService(Mock.Of<IPlatformOutputDevice>());
+        var messageBus = new Mock<BaseMessageBus>();
+        messageBus.Setup(bus => bus.DrainDataAsync()).Returns(Task.CompletedTask);
+        serviceProvider.AddService(messageBus.Object);
+        serviceProvider.AddService(new TestCoverageResult());
+        var framework = new Mock<ITestFramework>();
+        var firstRequestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondRequestStarted = new TaskCompletionSource<ExecuteRequestContext>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int requestCount = 0;
+        framework.Setup(instance => instance.ExecuteRequestAsync(It.IsAny<ExecuteRequestContext>()))
+            .Callback<ExecuteRequestContext>(context =>
+            {
+                if (Interlocked.Increment(ref requestCount) == 1)
+                {
+                    firstRequestStarted.SetResult(context);
+                }
+                else
+                {
+                    secondRequestStarted.SetResult(context);
+                }
+            })
+            .Returns(Task.CompletedTask);
+        var invoker = new HotReloadTestHostTestFrameworkInvoker(serviceProvider);
+        var request = new RunTestExecutionRequest(new Microsoft.Testing.Platform.TestHost.TestSessionContext(new SessionUid("session")));
+
+        Task execution = invoker.ExecuteRequestAsync(framework.Object, request, messageBus.Object, TestContext.CancellationToken);
+        ExecuteRequestContext firstContext = await firstRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+        firstContext.Complete();
+        HotReloadHandler.UpdateApplication(null);
+        ExecuteRequestContext secondContext = await secondRequestStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+        deadlineTriggered = true;
+        secondContext.Complete();
+        await execution.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+        Assert.AreEqual(2, requestCount);
+    }
+#endif
+
+    [TestMethod]
+    public void PlatformGuards_CurrentDesktopPlatform_IsSupported()
+    {
+        Assert.IsFalse(InvokeGuard("IsCancelKeyPressNotSupported"));
+#if NET6_0_OR_GREATER
+        Assert.IsFalse(InvokeGuard("IsClearNotSupported"));
+#endif
+    }
+
+    [TestMethod]
+    [DataRow(false, false, false, false, false, false)]
+    [DataRow(true, false, false, false, false, true)]
+    [DataRow(false, true, false, false, false, true)]
+    [DataRow(false, false, true, false, false, true)]
+    [DataRow(false, false, false, true, false, true)]
+    [DataRow(false, false, false, false, true, true)]
+    public void IsCancelKeyPressNotSupportedOnOperatingSystem_PlatformFlags_ReturnExpected(
+        bool isAndroid,
+        bool isIOS,
+        bool isTvOS,
+        bool isWasi,
+        bool isBrowser,
+        bool expected)
+        => Assert.AreEqual(
+            expected,
+            InvokeGuard(
+                "IsCancelKeyPressNotSupportedOnOperatingSystem",
+                isAndroid,
+                isIOS,
+                isTvOS,
+                isWasi,
+                isBrowser));
+
+#if NET6_0_OR_GREATER
+    [TestMethod]
+    [DataRow(false, false, false, false)]
+    [DataRow(true, false, false, true)]
+    [DataRow(false, true, false, true)]
+    [DataRow(false, false, true, true)]
+    public void IsClearNotSupportedOnOperatingSystem_PlatformFlags_ReturnExpected(
+        bool isAndroid,
+        bool isIOS,
+        bool isTvOS,
+        bool expected)
+        => Assert.AreEqual(
+            expected,
+            InvokeGuard("IsClearNotSupportedOnOperatingSystem", isAndroid, isIOS, isTvOS));
+
+    [TestMethod]
+    public async Task ShouldRunAsync_IncompleteExecution_WaitsThenDisplaysCompletionClearsConsoleAndDisplaysStart()
+    {
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(false);
+        var outputDevice = new Mock<IOutputDevice>();
+        IOutputDeviceDataProducer producer = Mock.Of<IOutputDeviceDataProducer>();
+        var executionCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        List<string> events = [];
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                producer,
+                It.IsAny<IOutputDeviceData>(),
+                CancellationToken.None))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>(
+                (_, data, _) => events.Add(Assert.IsInstanceOfType<TextOutputDeviceData>(data).Text))
+            .Returns(Task.CompletedTask);
+        console.Setup(instance => instance.Clear()).Callback(() => events.Add("clear"));
+        var handler = new HotReloadHandler(console.Object, outputDevice.Object, producer);
+
+        Task<bool> shouldRunTask = handler.ShouldRunAsync(executionCompletion.Task, CancellationToken.None);
+        Assert.IsFalse(shouldRunTask.IsCompleted);
+        Assert.IsEmpty(events);
+
+        executionCompletion.SetResult();
+        bool shouldRun = await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken);
+
+        Assert.IsTrue(shouldRun);
+        Assert.AreSequenceEqual(
+            [
+                ExtensionResources.HotReloadSessionCompleted,
+                "clear",
+                ExtensionResources.HotReloadSessionStarted,
+            ],
+            events);
+    }
+
+    [TestMethod]
+    public async Task ShouldRunAsync_OutputIsRedirected_DoesNotClearConsole()
+    {
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        var outputDevice = new Mock<IOutputDevice>();
+        List<string> displayedMessages = [];
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                CancellationToken.None))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>(
+                (_, data, _) => displayedMessages.Add(Assert.IsInstanceOfType<TextOutputDeviceData>(data).Text))
+            .Returns(Task.CompletedTask);
+        var handler = new HotReloadHandler(console.Object, outputDevice.Object, Mock.Of<IOutputDeviceDataProducer>());
+
+        bool shouldRun = await handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None);
+
+        Assert.IsTrue(shouldRun);
+        Assert.AreSequenceEqual([ExtensionResources.HotReloadSessionStarted], displayedMessages);
+        console.Verify(instance => instance.Clear(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task UpdateApplication_WaiterIsBlocked_ReleasesWaiterForNextRun()
+    {
+        DrainInitialSignal();
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        var handler = new HotReloadHandler(console.Object, outputDevice.Object, Mock.Of<IOutputDeviceDataProducer>());
+        Task<bool> shouldRunTask = handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None);
+
+        Assert.IsFalse(shouldRunTask.IsCompleted);
+        HotReloadHandler.UpdateApplication(null);
+
+        Assert.IsTrue(await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    public async Task RequestShutdown_WaiterIsBlocked_ReleasesWaiterAndStopsNextRun()
+    {
+        DrainInitialSignal();
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        var handler = new HotReloadHandler(console.Object, outputDevice.Object, Mock.Of<IOutputDeviceDataProducer>());
+        Task<bool> shouldRunTask = handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None);
+
+        Assert.IsFalse(shouldRunTask.IsCompleted);
+        HotReloadHandler.RequestShutdown();
+
+        Assert.IsFalse(await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.IsFalse(await handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None));
+    }
+
+    [TestMethod]
+    public void UpdateApplication_NoWaiter_IsIdempotent()
+    {
+        HotReloadHandler.UpdateApplication(null);
+        HotReloadHandler.UpdateApplication(null);
+
+        Assert.AreEqual(1, HotReloadSemaphore.CurrentCount);
+    }
+
+    [TestMethod]
+    public void RequestShutdown_NoWaiter_IsIdempotent()
+    {
+        HotReloadHandler.RequestShutdown();
+        HotReloadHandler.RequestShutdown();
+
+        Assert.IsTrue(IsShutdownRequested());
+        Assert.AreEqual(1, HotReloadSemaphore.CurrentCount);
+    }
+
+    [TestMethod]
+    public async Task ShouldRunAsync_WaiterIsBlockedAndCancellationIsRequested_StopsNextRun()
+    {
+        DrainInitialSignal();
+        var console = new Mock<IConsole>();
+        console.SetupGet(instance => instance.IsOutputRedirected).Returns(true);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var handler = new HotReloadHandler(console.Object, outputDevice.Object, Mock.Of<IOutputDeviceDataProducer>());
+        using var cancellationTokenSource = new CancellationTokenSource();
+
+        Task<bool> shouldRunTask = handler.ShouldRunAsync(waitExecutionCompletion: null, cancellationTokenSource.Token);
+        Assert.IsFalse(shouldRunTask.IsCompleted);
+
+        await cancellationTokenSource.CancelAsync();
+
+        Assert.IsFalse(await shouldRunTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.IsTrue(IsShutdownRequested());
+        Assert.IsFalse(await handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None));
+    }
+#else
+    [TestMethod]
+    public async Task ShouldRunAsync_UnsupportedFramework_ThrowsNotSupportedException()
+    {
+        var handler = new HotReloadHandler(
+            Mock.Of<IConsole>(),
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<IOutputDeviceDataProducer>());
+
+        NotSupportedException exception = await Assert.ThrowsExactlyAsync<NotSupportedException>(
+            () => handler.ShouldRunAsync(waitExecutionCompletion: null, CancellationToken.None));
+
+        Assert.AreEqual(ExtensionResources.HotReloadHandlerUnsupportedFrameworkErrorMessage, exception.Message);
+    }
+#endif
+
+    private static Mock<IEnvironment> CreateEnvironment(string? dotnetWatch, string? hotReloadEnabled)
+    {
+        var environment = new Mock<IEnvironment>();
+        environment
+            .Setup(instance => instance.GetEnvironmentVariable(It.IsAny<string>()))
+            .Returns((string name) => name switch
+            {
+                DotnetWatchEnvironmentVariable => dotnetWatch,
+                HotReloadEnabledEnvironmentVariable => hotReloadEnabled,
+                _ => null,
+            });
+        return environment;
+    }
+
+    private static ServiceProvider CreateServiceProvider(
+        IEnvironment environment,
+        SystemRuntimeFeature runtimeFeature,
+        IStopPoliciesService stopPolicies)
+    {
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(environment);
+        serviceProvider.AddService(runtimeFeature);
+        serviceProvider.AddService(stopPolicies);
+        return serviceProvider;
+    }
+
+    private static bool InvokeGuard(string methodName, params object[] arguments)
+    {
+        var parameterTypes = new Type[arguments.Length];
+        for (int i = 0; i < arguments.Length; i++)
+        {
+            parameterTypes[i] = arguments[i].GetType();
+        }
+
+        return (bool)typeof(HotReloadHandler)
+            .GetMethod(
+                methodName,
+                BindingFlags.NonPublic | BindingFlags.Static,
+                binder: null,
+                parameterTypes,
+                modifiers: null)!
+            .Invoke(null, arguments)!;
+    }
+
+    private static bool IsShutdownRequested()
+        => (bool)ShutdownProcessField.GetValue(null)!;
+
+#if NET6_0_OR_GREATER
+    private static void DrainInitialSignal()
+        => Assert.IsTrue(HotReloadSemaphore.Wait(0), "The HotReload signal should initially be available.");
+#endif
+
+    private static void ResetHotReloadState()
+    {
+        ShutdownProcessField.SetValue(null, false);
+        while (HotReloadSemaphore.Wait(0))
+        {
+            // Drain any signal left by an interrupted test before restoring the initial state.
+        }
+
+        HotReloadSemaphore.Release();
+    }
+}

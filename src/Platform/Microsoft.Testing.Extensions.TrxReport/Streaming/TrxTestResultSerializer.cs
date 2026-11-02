@@ -81,6 +81,16 @@ internal static class TrxTestResultSerializer
                 }
             }
 
+            int workItemCount = result.WorkItemIds?.Count ?? 0;
+            payload.Write(workItemCount);
+            if (result.WorkItemIds is not null)
+            {
+                foreach (string workItemId in result.WorkItemIds)
+                {
+                    payload.Write(workItemId);
+                }
+            }
+
             int metadataCount = result.Metadata?.Count ?? 0;
             payload.Write(metadataCount);
             if (result.Metadata is not null)
@@ -207,6 +217,17 @@ internal static class TrxTestResultSerializer
             }
         }
 
+        int workItemCount = r.ReadInt32();
+        List<string>? workItemIds = null;
+        if (workItemCount > 0)
+        {
+            workItemIds = [];
+            for (int i = 0; i < workItemCount; i++)
+            {
+                workItemIds.Add(r.ReadString());
+            }
+        }
+
         int metadataCount = r.ReadInt32();
         List<TrxTestMetadata>? metadata = null;
         if (metadataCount > 0)
@@ -248,6 +269,7 @@ internal static class TrxTestResultSerializer
             ExceptionStackTrace = exceptionStackTrace,
             Messages = messages,
             Categories = categories,
+            WorkItemIds = workItemIds,
             Metadata = metadata,
             FileArtifacts = artifacts,
         };

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -19,11 +19,14 @@ internal static class TestResultCapture
         }
 
         CapturedTestResultCoreData core = coreData.GetValueOrDefault();
+        RetryAttemptProperty? retryAttempt = node.Properties.SingleOrDefault<RetryAttemptProperty>();
         var result = new CapturedTestResult
         {
             // HTML does not special-case cancellation — it falls through to the shared
             // helper which maps it to "failed", unlike JUnit which maps it to "cancelled".
             Outcome = TestResultCaptureHelper.ClassifyOutcome(core.State),
+            RetryAttemptNumber = retryAttempt?.AttemptNumber,
+            IsSupersededRetryAttempt = retryAttempt?.IsSuperseded,
         };
         result.PopulateBaseFields(node, core);
         return result;

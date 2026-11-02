@@ -4,8 +4,8 @@
 namespace Microsoft.Testing.Platform.Configurations;
 
 /// <summary>
-/// A single command-line option entry materialized from the <c>commandLineOptions</c> section of a
-/// loaded testconfig.json file by <see cref="JsonConfigurationSource.JsonConfigurationProvider.EnumerateCommandLineOptions"/>.
+/// A single command-line option entry materialized from a command-line option section of a loaded
+/// testconfig.json file.
 /// </summary>
 internal sealed class JsonCommandLineOptionEntry
 {

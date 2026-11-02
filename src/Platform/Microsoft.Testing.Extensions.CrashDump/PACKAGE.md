@@ -20,6 +20,8 @@ This package extends Microsoft.Testing.Platform with:
 - **Cross-platform**: crash dumps are supported on Windows, Linux, and macOS (dumps collected on macOS can only be analyzed on macOS). Crash reports are currently only supported on Linux and macOS.
 - **Runtime behavior**: supported for .NET 6+; on .NET Framework this extension is ignored
 
+## Usage
+
 Enable crash dump collection via the `--crashdump` command line option.
 Add `--crash-report` (Linux/macOS only; requires .NET 7+ when used alone or .NET 6+ with `--crashdump`) to generate a JSON crash report; combine `--crashdump --crash-report` to produce both a dump and a report.
 

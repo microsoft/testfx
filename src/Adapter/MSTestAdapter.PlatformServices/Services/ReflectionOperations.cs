@@ -98,6 +98,13 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
 
     public Func<object?[]?, object>? GetConstructorInvoker(Type type) => null;
 
+    public bool TryGetTestMethodDescriptors(Type type, [NotNullWhen(true)] out MethodInfo[]? methods, out bool areAllTestMethodsSupported)
+    {
+        methods = null;
+        areAllTestMethodsSupported = false;
+        return false;
+    }
+
     public Action<object?, object?>? GetPropertySetter(PropertyInfo property) => null;
 
     /// <summary>

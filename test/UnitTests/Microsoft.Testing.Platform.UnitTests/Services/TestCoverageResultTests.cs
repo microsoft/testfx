@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -311,5 +311,34 @@ public sealed class TestCoverageResultTests
             Log(logLevel, state, exception, formatter);
             return Task.CompletedTask;
         }
+    }
+
+    [TestMethod]
+    public async Task ControllerSummaryFragments_RequireDeferralAndOrdinalKindAndRemainSnapshotIsolated()
+    {
+        TestCoverageResult result = new();
+        SessionUid session = new("controller-session");
+        SessionFileArtifact first = new(session, new FileInfo("first.summary"), "first", null, "coverage-summary-fragment");
+        SessionFileArtifact second = new(session, new FileInfo("second.summary"), "second", null, "custom-summary-fragment");
+        await ConsumeAsync(result, first);
+        Assert.IsEmpty(result.ControllerSummaryArtifacts);
+        result.DeferToController();
+
+        await ConsumeAsync(result, first);
+        await ConsumeAsync(result, new SessionFileArtifact(session, new FileInfo("ignored.summary"), "wrong case", null, "coverage-SUMMARY-FRAGMENT"));
+        await ConsumeAsync(result, new SessionFileArtifact(session, new FileInfo("ignored.summary"), "missing kind"));
+        await ConsumeAsync(result, second);
+
+        SessionFileArtifact[] snapshot = result.ControllerSummaryArtifacts;
+        Assert.AreSequenceEqual(new[] { first, second }, snapshot);
+        snapshot[0] = second;
+        Assert.AreSequenceEqual(new[] { first, second }, result.ControllerSummaryArtifacts);
+        Assert.AreSequenceEqual(
+            new[] { typeof(TestCoverageMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageReportMessage), typeof(SessionFileArtifact) },
+            result.DataTypesConsumed);
+        result.Reset();
+        Assert.IsEmpty(result.ControllerSummaryArtifacts);
+        await ConsumeAsync(result, first);
+        Assert.IsEmpty(result.ControllerSummaryArtifacts);
     }
 }

@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Platform.IPC;
 [Embedded]
 #if !MTP_MSBUILD_TASKS
 [UnsupportedOSPlatform("browser")]
+#if !NETFRAMEWORK
+[UnsupportedOSPlatform("wasi")]
+#endif
 #endif
 internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
 {
@@ -58,23 +61,31 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             throw new ArgumentNullException(nameof(name));
         }
 
-        _namedPipeClientStream = new(".", name, PipeDirection.InOut, AsyncCurrentUserPipeOptions);
+        PipeOptions options = GetPipeOptions(name);
+        _namedPipeClientStream = new(".", name, PipeDirection.InOut, options);
         PipeName = name;
         _environment = environment;
         _exitProcessOnConnectionLoss = exitProcessOnConnectionLoss;
     }
+
+    private static PipeOptions GetPipeOptions(string name)
+        => name.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, StringComparison.Ordinal)
+            ? PipeOptions.Asynchronous
+            : AsyncCurrentUserPipeOptions;
 
     public string PipeName { get; }
 
     public bool IsConnected => _namedPipeClientStream.IsConnected;
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
+        // Stryker disable once Boolean: continuation scheduling does not change connection completion.
         => await _namedPipeClientStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
     public async Task<TResponse> RequestReplyAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
        where TRequest : IRequest
        where TResponse : IResponse
     {
+        // Stryker disable once Boolean: continuation scheduling does not change semaphore acquisition.
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -83,6 +94,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             // Serialize and send the request
             try
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the request bytes.
                 await WriteMessageAsync(_namedPipeClientStream, requestNamedPipeSerializer, request, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is IOException or ObjectDisposedException)
@@ -101,6 +113,7 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
             }
 
             // Read the response
+            // Stryker disable once Boolean: continuation scheduling does not change the response.
             object? response = await ReadNextMessageAsync(_namedPipeClientStream, cancellationToken).ConfigureAwait(false);
             if (response is null)
             {
@@ -123,7 +136,12 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
                 // that may be flowing through stdout.
                 try
                 {
-                    await Console.Error.WriteLineAsync($"[NamedPipeClient] Pipe '{PipeName}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.").ConfigureAwait(false);
+                    string message = $"[NamedPipeClient] Pipe '{PipeName}' was closed by the server before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.";
+#if NETCOREAPP
+                    await Console.Error.WriteLineAsync(message.AsMemory(), CancellationToken.None).ConfigureAwait(false);
+#else
+                    await Console.Error.WriteLineAsync(message).ConfigureAwait(false);
+#endif
                 }
                 catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException or NotSupportedException or ArgumentException or OperationCanceledException)
                 {
@@ -148,8 +166,10 @@ internal sealed class NamedPipeClient : NamedPipeConnectionBase, IClient
 
     public void Dispose()
     {
+        // Stryker disable once Block: every owned resource below has idempotent disposal.
         if (_disposed)
         {
+            // Stryker disable once Statement: every owned resource below also has idempotent disposal.
             return;
         }
 

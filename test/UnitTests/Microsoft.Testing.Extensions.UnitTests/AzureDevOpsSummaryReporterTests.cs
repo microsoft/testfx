@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -24,7 +24,7 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class AzureDevOpsSummaryReporterTests
 {
-    private static readonly string ResultsDirectory = Path.Combine(Path.GetTempPath(), "azdo-summary-reporter-tests");
+    private readonly string _resultsDirectory = Path.Combine(Path.GetTempPath(), $"azdo-summary-reporter-{Guid.NewGuid():N}");
 
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
@@ -34,13 +34,16 @@ public sealed class AzureDevOpsSummaryReporterTests
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<ILoggerFactory> _loggerFactoryMock = new();
     private readonly Mock<ITestApplicationProcessExitCode> _testApplicationProcessExitCodeMock = new();
+    private readonly Mock<ITestCoverageResult> _testCoverageResultMock = new();
     private readonly List<IOutputDeviceData> _outputData = [];
 
     public AzureDevOpsSummaryReporterTests()
     {
-        _ = _configurationMock.SetupGet(c => c[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(ResultsDirectory);
+        _ = _configurationMock.SetupGet(c => c[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(_resultsDirectory);
         _ = _testApplicationModuleInfoMock.Setup(info => info.TryGetAssemblyName()).Returns("MyAssembly");
         _ = _loggerFactoryMock.Setup(loggerFactory => loggerFactory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        _ = _testCoverageResultMock.SetupGet(result => result.Scopes).Returns([]);
+        _ = _testCoverageResultMock.SetupGet(result => result.Thresholds).Returns([]);
         _ = _outputDeviceMock
             .Setup(outputDevice => outputDevice.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
             .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) => _outputData.Add(data))
@@ -84,15 +87,43 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("MyAssembly", md);
-        Assert.Contains("net8.0", md);
-        Assert.Contains("Total", md);
-        Assert.Contains("Passed", md);
-        Assert.Contains("Failed", md);
-        Assert.Contains("Skipped", md);
-        Assert.Contains("MyCo.Suite.ClassA", md);
-        Assert.Contains("Slowpoke", md);
-        Assert.Contains("MyCo.Suite.ClassA.Test2", md);
+        Assert.AreEqual(
+            $"""
+            ## ❌ MyAssembly (net8.0)
+
+            **5 tests** · ✅ **2 passed** · ❌ **2 failed** · ⏭ **1 skipped** · ⏱ Test time: **12.35s**
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 1 | Reason not provided | {GetOperatingSystem()} | MyAssembly (net8.0, unknown) |
+
+            ### Top failing classes
+
+            | Class | Failures |
+            | --- | ---: |
+            | MyCo.Suite.ClassA | 2 |
+
+            ### Additional failing tests
+
+            - `MyCo.Suite.ClassA.Test2`
+            - `MyCo.Suite.ClassA.Test3`
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### ⏱ Slowest tests
+
+            - **12.00s** — `Slowpoke` — passed
+            - **200ms** — `Test2` — failed
+            - **100ms** — `Test1` — passed
+            - **50ms** — `Test3` — failed
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
@@ -107,8 +138,23 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("| Total duration | 25:07:08 |", md);
-        Assert.DoesNotContain("| Total duration | 01:07:08 |", md);
+        Assert.AreEqual(
+            """
+            ## ✅ MyAssembly (net8.0)
+
+            **1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped** · ⏱ Test time: **25:07:08**
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### ⏱ Slowest tests
+
+            - **25:07:08** — `LongTest` — passed
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
@@ -121,24 +167,73 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("| Total duration | 05:30 |", md);
+        Assert.AreEqual(
+            """
+            ## ✅ MyAssembly (net8.0)
+
+            **1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped** · ⏱ Test time: **05:30**
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### ⏱ Slowest tests
+
+            - **05:30** — `MidTest` — passed
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
-    public void BuildMarkdown_EscapesPipesAndNewlinesInCells()
+    public void BuildMarkdown_UsesCodeSpansAndFlattensNewlinesInTestNames()
     {
         var records = new List<TestRecord>
         {
             new("Has|Pipe", "MyCo.X.HasPipe", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
             new("Has\nNewline", "MyCo.X.HasNewline", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+            new("A&B <T>", "MyCo.X.SpecialCharacters", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new("Has`Tick", "MyCo.X.Backtick", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new("`Edge`", "MyCo.X.EdgeBackticks", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
+            new(" spaced ", "MyCo.X.Spaced", TerminalKind.Passed, TimeSpan.FromMilliseconds(1)),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
 
-        Assert.Contains("Has\\|Pipe", md);
-        Assert.Contains("Has<br>Newline", md);
-        Assert.DoesNotContain("Has|Pipe", md);
-        Assert.DoesNotContain("Has\nNewline", md);
+        Assert.AreEqual(
+            """
+            ## ❌ MyAssembly (net8.0)
+
+            **6 tests** · ✅ **4 passed** · ❌ **2 failed** · ⏭ **0 skipped** · ⏱ Test time: **6ms**
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            ### Top failing classes
+
+            | Class | Failures |
+            | --- | ---: |
+            | MyCo.X | 2 |
+
+            ### Additional failing tests
+
+            - `MyCo.X.HasNewline`
+            - `MyCo.X.HasPipe`
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### ⏱ Slowest tests
+
+            - **1ms** — ``Has`Tick`` — passed
+            - **1ms** — `` `Edge` `` — passed
+            - **1ms** — `Has Newline` — failed
+            - **1ms** — `Has|Pipe` — failed
+            - **1ms** — `  spaced  ` — passed
+            - **1ms** — `A&B <T>` — passed
+
+
+            """.Replace("\r\n", "\n"),
+            md);
     }
 
     [TestMethod]
@@ -153,6 +248,35 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session",
             AttemptNumber = 1,
+            Coverage = new CiCoverageSummaryData
+            {
+                Metrics =
+                [
+                    new CiCoverageMetric
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        CoveredCount = 82,
+                        CoverableCount = 100,
+                    },
+                ],
+                Thresholds =
+                [
+                    new CiCoverageThreshold
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        ActualPercentage = 82,
+                        RequiredPercentage = 85,
+                        HasCoverableData = true,
+                        Passed = false,
+                    },
+                ],
+                ReportingModuleCount = 1,
+                TotalModuleCount = 1,
+            },
         };
         var aggregate = new CiRunSummaryAggregate(
             [module],
@@ -168,8 +292,11 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
 
-        Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
-        Assert.DoesNotContain("<summary><h1>", markdown);
+        Assert.Contains("| ✅ | &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64) |", markdown);
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.DoesNotContain("<summary>", markdown);
+        Assert.Contains("| Overall | Line | 82 | 100 | 82.0% |", markdown);
+        Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 85.0% | ❌ Failed |", markdown);
     }
 
     [TestMethod]
@@ -184,6 +311,23 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session-1",
             AttemptNumber = 1,
+            Dependencies =
+            [
+                new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = "Tests.Dependent",
+                    Prerequisite = "Tests.First",
+                },
+            ],
+            SlowestTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow1",
+                    FullyQualifiedName = "Tests.Slow1",
+                    DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                },
+            ],
         };
         var second = new CiRunSummaryModule
         {
@@ -194,6 +338,23 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session-2",
             AttemptNumber = 2,
+            Dependencies =
+            [
+                new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = "Tests.Dependent",
+                    Prerequisite = "Tests.Second",
+                },
+            ],
+            SlowestTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Slow2",
+                    FullyQualifiedName = "Tests.Slow2",
+                    DurationTicks = TimeSpan.FromSeconds(1).Ticks,
+                },
+            ],
         };
         var aggregate = new CiRunSummaryAggregate(
             [first, second],
@@ -211,6 +372,486 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         Assert.Contains("attempt 1, session session-1", markdown);
         Assert.Contains("attempt 2, session session-2", markdown);
+        Assert.Contains("Tests (net9.0, x64, attempt 1, session session-1): Tests.Dependent", markdown);
+        Assert.Contains("Tests (net9.0, x64, attempt 2, session session-2): Tests.Dependent", markdown);
+        Assert.Contains("- **2.00s** — `Slow1` — outcome unavailable — Tests (net9.0, x64) — attempt 1, session session-1", markdown);
+        Assert.Contains("- **1.00s** — `Slow2` — outcome unavailable — Tests (net9.0, x64) — attempt 2, session session-2", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ListsFailedModulesBeforeSuccessfulModules()
+    {
+        var passedModule = new CiRunSummaryModule
+        {
+            AssemblyName = "A.Passed",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = 0,
+            TotalTests = 1,
+            PassedTests = 1,
+        };
+        var failedModule = new CiRunSummaryModule
+        {
+            AssemblyName = "Z.Failed",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = 2,
+            TotalTests = 1,
+            FailedTests = 1,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [passedModule, failedModule],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        int failedModuleIndex = markdown.IndexOf("Z.Failed", StringComparison.Ordinal);
+        int passedModuleIndex = markdown.IndexOf("A.Passed", StringComparison.Ordinal);
+        Assert.AreNotEqual(-1, failedModuleIndex);
+        Assert.AreNotEqual(-1, passedModuleIndex);
+        Assert.IsLessThan(passedModuleIndex, failedModuleIndex);
+        Assert.DoesNotContain("| Exit code |", markdown);
+        Assert.Contains("exit code **2**", markdown);
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(true, true)]
+    public void BuildAggregateMarkdown_UsesWarningStatus_WhenSuccessIsNotAuthoritative(
+        bool isPartial,
+        bool hasAuthoritativeRunSummary)
+    {
+        var aggregate = new CiRunSummaryAggregate(
+            [
+                new CiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    ExitCode = 0,
+                    TotalTests = 1,
+                    PassedTests = 1,
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary,
+            isPartial);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ⚠️ Overall test results", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_UsesFailureStatus_WhenFailedTestsHaveSuccessfulExitCode()
+    {
+        var aggregate = new CiRunSummaryAggregate(
+            [
+                new CiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    ExitCode = 0,
+                    TotalTests = 1,
+                    FailedTests = 1,
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 0,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ❌ Overall test results", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ExplainsModuleAndRunExitCodes()
+    {
+        const int zeroTestsExitCode = 8;
+        const string zeroTestsReason = "No tests were found to run. This often means a test filter matched nothing.";
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Empty",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExitCode = zeroTestsExitCode,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: zeroTestsExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains($"exit code **8** (ZeroTests — {zeroTestsReason})", markdown);
+        Assert.Contains($"> Module exit code: `8` (ZeroTests — {zeroTestsReason})", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_RendersFailureFlakinessDurationAndDependencyInsights()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            TotalTests = 3,
+            PassedTests = 2,
+            FailedTests = 1,
+            TestDurationTicks = TimeSpan.FromSeconds(3).Ticks,
+            Failures =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Fails",
+                    FullyQualifiedName = "Tests.Suite.Fails",
+                    DurationTicks = TimeSpan.FromSeconds(1).Ticks,
+                    ErrorMessage = "Expected <safe>, got |unsafe|",
+                    ErrorType = "System.InvalidOperationException",
+                    StackTrace = "at Tests.Suite.Fails()",
+                },
+            ],
+            FlakyTests =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Recovered",
+                    FullyQualifiedName = "Tests.Suite.Recovered",
+                },
+            ],
+            HistoryTests =
+            [
+                new CiRunSummaryHistoryTest
+                {
+                    TestId = "history",
+                    DisplayName = "Unstable",
+                    FullyQualifiedName = "Tests.Suite.Unstable",
+                    Outcome = "passed",
+                    DurationTicks = TimeSpan.FromSeconds(1).Ticks,
+                    HistoricalPassCount = 7,
+                    HistoricalFailCount = 3,
+                    HistoryWindowInDays = 14,
+                    DurationSampleCount = 10,
+                    P95DurationMilliseconds = 500,
+                    P99DurationMilliseconds = 750,
+                },
+            ],
+            Dependencies =
+            [
+                new CiRunSummaryDependency
+                {
+                    DependentFullyQualifiedName = "Tests.Suite.Dependent",
+                    Prerequisite = "Tests.Suite.Setup",
+                    ProceedOnFailure = true,
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 3,
+            passedTests: 2,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(3),
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("⚠ **1 flaky**", markdown);
+        Assert.Contains("### Flakiness history", markdown);
+        Assert.Contains("30.0% (14d)", markdown);
+        Assert.Contains("### Duration history", markdown);
+        Assert.Contains("2.00×", markdown);
+        Assert.Contains("### Test dependencies", markdown);
+        Assert.Contains("Tests.Suite.Setup", markdown);
+        Assert.Contains("| Continue |", markdown);
+        Assert.Contains("#### Failure details", markdown);
+        Assert.Contains("System.InvalidOperationException", markdown);
+        Assert.Contains("Expected &lt;safe&gt;, got \\|unsafe\\|", markdown);
+        Assert.DoesNotContain("at Tests.Suite.Fails()", markdown);
+        Assert.DoesNotContain("Stack trace", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_CapsExpandedFailureDetailsAcrossModules()
+    {
+        static CiRunSummaryModule CreateModule(string assemblyName, string prefix)
+            => new()
+            {
+                AssemblyName = assemblyName,
+                ModulePath = assemblyName + ".dll",
+                TargetFramework = "net9.0",
+                Architecture = "x64",
+                ExecutionId = "execution",
+                SessionUid = assemblyName,
+                AttemptNumber = 1,
+                TotalTests = 15,
+                FailedTests = 15,
+                Failures =
+                [
+                    .. Enumerable.Range(0, 15).Select(index => new CiRunSummaryTest
+                    {
+                        DisplayName = $"{prefix}{index}",
+                        FullyQualifiedName = $"{prefix}.Test{index}",
+                        ErrorMessage = $"message-{prefix}-{index}",
+                        StackTrace = $"sensitive-stack-{prefix}-{index}",
+                    }),
+                ],
+            };
+
+        CiRunSummaryModule first = CreateModule("First", "A");
+        CiRunSummaryModule second = CreateModule("Second", "B");
+        var aggregate = new CiRunSummaryAggregate(
+            [first, second],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 30,
+            passedTests: 0,
+            failedTests: 30,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("message-A-14", markdown);
+        Assert.Contains("message-B-4", markdown);
+        Assert.DoesNotContain("message-B-5", markdown);
+        Assert.Contains("`B.Test5`", markdown);
+        Assert.DoesNotContain("sensitive-stack", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_NameOnlyLegacyFailuresDoNotConsumeDetailBudget()
+    {
+        var legacyModule = new CiRunSummaryModule
+        {
+            AssemblyName = "Legacy",
+            ModulePath = "Legacy.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "legacy",
+            AttemptNumber = 1,
+            TotalTests = 20,
+            FailedTests = 20,
+            Failures =
+            [
+                .. Enumerable.Range(0, 20).Select(index => new CiRunSummaryTest
+                {
+                    DisplayName = $"Legacy{index}",
+                    FullyQualifiedName = $"Legacy.Test{index}",
+                }),
+            ],
+        };
+        var currentModule = new CiRunSummaryModule
+        {
+            AssemblyName = "Current",
+            ModulePath = "Current.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "current",
+            AttemptNumber = 1,
+            TotalTests = 1,
+            FailedTests = 1,
+            Failures =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Current",
+                    FullyQualifiedName = "Current.Test",
+                    ErrorMessage = "current diagnostic",
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [legacyModule, currentModule],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 21,
+            passedTests: 0,
+            failedTests: 21,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("current diagnostic", markdown);
+        Assert.Contains("`Legacy.Test0`", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_SafelyFormatsOutOfRangeHistoryDurations()
+    {
+        double hugeButFinite = TimeSpan.MaxValue.TotalMilliseconds * 2;
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            HistoryTests =
+            [
+                new CiRunSummaryHistoryTest
+                {
+                    TestId = "huge",
+                    DisplayName = "Huge",
+                    FullyQualifiedName = "Tests.Huge",
+                    Outcome = "passed",
+                    DurationSampleCount = 10,
+                    P95DurationMilliseconds = hugeButFinite,
+                    P99DurationMilliseconds = hugeButFinite,
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains(hugeButFinite.ToString("G3", CultureInfo.InvariantCulture) + "ms", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_HistoricalResultTotalDoesNotOverflow()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            HistoryTests =
+            [
+                new CiRunSummaryHistoryTest
+                {
+                    TestId = "history",
+                    DisplayName = "History",
+                    FullyQualifiedName = "Tests.History",
+                    Outcome = "passed",
+                    HistoricalPassCount = int.MaxValue,
+                    HistoricalFailCount = int.MaxValue,
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 0,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("4294967294", markdown);
+        Assert.Contains("50.0%", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ReplacesBackticksInsideInlineCode()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            TotalTests = 2,
+            FailedTests = 2,
+            Failures =
+            [
+                new CiRunSummaryTest
+                {
+                    DisplayName = "Detailed",
+                    FullyQualifiedName = "Tests.Detailed",
+                    ErrorType = "Tests.GenericException`1",
+                },
+                new CiRunSummaryTest
+                {
+                    DisplayName = "NameOnly",
+                    FullyQualifiedName = "Tests.Generic`1.Method",
+                },
+            ],
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 0,
+            failedTests: 2,
+            skippedTests: 0,
+            duration: TimeSpan.Zero,
+            exitCode: 2,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("``Tests.GenericException`1``", markdown);
+        Assert.Contains("``Tests.Generic`1.Method``", markdown);
     }
 
     [TestMethod]
@@ -235,7 +876,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
-        Assert.StartsWith("##vso[task.uploadsummary]", lines[0]);
+        Assert.StartsWith("##vso[task.addattachment type=Distributedtask.Core.Summary;name=Test results - MyAssembly (", lines[0]);
+        Assert.Contains("attempt 1, session session", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
         // The assembly name must be part of the default file name so concurrent test assemblies
         // sharing the same TFM and TestResults directory don't race to write the same file.
@@ -243,10 +885,593 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.EndsWith(".md", lines[0]);
     }
 
+    [TestMethod]
+    public async Task SessionFinishing_RendersHistoryDependenciesAndFailureDetailsAsync()
+    {
+        const string CanonicalTestName = "Native.Namespace.NativeType.NativeMethod";
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions(), new StubHistoryService(CanonicalTestName));
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        using var memoryStream = new MemoryStream();
+        IFileStream fakeStream = new FakeFileStream(memoryStream);
+        _ = _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _ = _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read)).Returns(fakeStream);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        var properties = new PropertyBag(
+            new FailedTestNodeStateProperty(new InvalidOperationException("boom"), "Expected <safe>, got |unsafe|"),
+            new TimingProperty(new TimingInfo(now, now.AddSeconds(1), TimeSpan.FromSeconds(1))),
+            new TestMethodIdentifierProperty("tests.dll", "Native.Namespace", "NativeType", "NativeMethod", 0, [], "System.Void"),
+            new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "VSTest.Fallback"),
+            new SerializableKeyValuePairStringProperty("mstest.TestCase.Dependency", "SMyCo.Suite.Setup\nInitialize"));
+        var update = new TestNodeUpdateMessage(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = "dependent",
+                DisplayName = "Dependent",
+                Properties = properties,
+            });
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(CreateProducer(), update, CancellationToken.None).ConfigureAwait(false);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+        Assert.Contains("Flakiness history", written);
+        Assert.Contains("20.0% (14d)", written);
+        Assert.Contains("Duration history", written);
+        Assert.Contains("2.00×", written);
+        Assert.Contains("Test dependencies", written);
+        Assert.Contains($"| {CanonicalTestName} | MyCo.Suite.Setup.Initialize | Skip |", written);
+        Assert.Contains("Failure details", written);
+        Assert.Contains("Expected &lt;safe&gt;, got \\|unsafe\\|", written);
+        Assert.Contains("System.InvalidOperationException", written);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_ReportsRecoveredRetryAsFlakyAsync()
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        using var memoryStream = new MemoryStream();
+        IFileStream fakeStream = new FakeFileStream(memoryStream);
+        _ = _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _ = _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read)).Returns(fakeStream);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateRetryUpdate(new FailedTestNodeStateProperty("first"), attemptNumber: 1, isSuperseded: true),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateRetryUpdate(PassedTestNodeStateProperty.CachedInstance, attemptNumber: 2, isSuperseded: false),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+        Assert.Contains("⚠ **1 flaky**", written);
+        Assert.Contains("Flaky tests", written);
+        Assert.Contains("MyCo.Suite.Retry", written);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_PreservesFoldedRowsAndDoesNotReportMixedOutcomesAsFlakyAsync()
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        using var memoryStream = new MemoryStream();
+        IFileStream fakeStream = new FakeFileStream(memoryStream);
+        _ = _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _ = _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read)).Returns(fakeStream);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate("shared", "Row A", new FailedTestNodeStateProperty("retry"), new RetryAttemptProperty(1, isSuperseded: true)),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate("shared", "Row A", PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false)),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate("shared", "Row B", SkippedTestNodeStateProperty.CachedInstance, retryAttempt: null),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+        Assert.Contains("**2 tests** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **1 skipped**", written);
+        Assert.DoesNotContain("Flaky tests", written);
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_UsesExceptionMessageWhenExplanationIsBlankAsync()
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+
+        using var memoryStream = new MemoryStream();
+        IFileStream fakeStream = new FakeFileStream(memoryStream);
+        _ = _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _ = _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read)).Returns(fakeStream);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(
+            CreateProducer(),
+            CreateUpdate(
+                "failed",
+                "Failed",
+                new FailedTestNodeStateProperty(new InvalidOperationException("exception fallback"), "   "),
+                retryAttempt: null),
+            CancellationToken.None).ConfigureAwait(false);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
+
+        string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
+        Assert.Contains("exception fallback", written);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_RendersOneGlobalTopTenWithOutcomesAndElapsedTime()
+    {
+        TestRecord[] alphaRecords = [.. Enumerable.Range(1, 6).Select(index =>
+            new TestRecord($"Alpha{index}", $"Alpha.Test{index}", TerminalKind.Passed, TimeSpan.FromSeconds(index)))];
+        TestRecord[] betaRecords =
+        [
+            new("BetaTie", "Beta.Suite.Tie", TerminalKind.Passed, TimeSpan.FromSeconds(6)),
+            new("Fifth", "Beta.Suite.Fifth", TerminalKind.Passed, TimeSpan.FromSeconds(10)),
+            new("Fourth", "Beta.Suite.Fourth", TerminalKind.Passed, TimeSpan.FromSeconds(11)),
+            new("Third", "Beta.Suite.Third", TerminalKind.Passed, TimeSpan.FromSeconds(12)),
+            new("TimedSkip", "Beta.Suite.TimedSkip", TerminalKind.Skipped, TimeSpan.FromSeconds(13),
+                isFlaky: false, failure: null, skipReason: "Tracked issue"),
+            new("Second", "Beta.Suite.Second", TerminalKind.Passed, TimeSpan.FromSeconds(14)),
+            new("Longest", "Beta.Suite.Longest", TerminalKind.Failed, TimeSpan.FromSeconds(15)),
+        ];
+        CiRunSummaryModule alpha = CiRunSummaryAggregation.CreateModule(
+            alphaRecords, "Alpha", "Alpha.dll", "net9.0", "arm64", "execution", "alpha", 1, 0);
+        CiRunSummaryModule beta = CiRunSummaryAggregation.CreateModule(
+            betaRecords, "Beta", "Beta.dll", "net8.0", "x64", "execution", "beta", 1, 2);
+        beta.OperatingSystem = "Linux";
+        var aggregate = new CiRunSummaryAggregate(
+            [alpha, beta],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 13, passedTests: 11, failedTests: 1, skippedTests: 1,
+            duration: TimeSpan.FromSeconds(20), exitCode: 2,
+            hasAuthoritativeRunSummary: true, isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.AreEqual(
+            """
+            ## ❌ Overall test results
+
+            **13 tests** · ✅ **11 passed** · ❌ **1 failed** · ⏭ **1 skipped** · ⏱ Elapsed: **20.00s**
+
+            **Runner policy:** ❌ failed · exit code **2** (AtLeastOneTestFailed — At least one test failed.)
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 1 | Tracked issue | Linux | Beta (net8.0, x64) |
+
+            ### Test modules
+
+            | Result | Test module | Total | Passed | Failed | Skipped | Flaky | Test time |
+            | :---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+            | ❌ | Beta (net8.0, x64) | 7 | 5 | 1 | 1 | 0 | 01:21 |
+            | ✅ | Alpha (net9.0, arm64) | 6 | 6 | 0 | 0 | 0 | 21.00s |
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            ### ❌ Failures
+
+            #### Beta (net8.0, x64)
+
+            > Module exit code: `2` (AtLeastOneTestFailed — At least one test failed.)
+
+            #### Top failing classes
+
+            | Class | Failures |
+            | --- | ---: |
+            | Beta.Suite | 1 |
+
+            #### Additional failing tests
+
+            - `Beta.Suite.Longest`
+
+            ### ⏱ Slowest tests
+
+            - **15.00s** — `Longest` — failed — Beta (net8.0, x64)
+            - **14.00s** — `Second` — passed — Beta (net8.0, x64)
+            - **13.00s** — `TimedSkip` — skipped — Beta (net8.0, x64)
+            - **12.00s** — `Third` — passed — Beta (net8.0, x64)
+            - **11.00s** — `Fourth` — passed — Beta (net8.0, x64)
+            - **10.00s** — `Fifth` — passed — Beta (net8.0, x64)
+            - **6.00s** — `Alpha6` — passed — Alpha (net9.0, arm64)
+            - **6.00s** — `BetaTie` — passed — Beta (net8.0, x64)
+            - **5.00s** — `Alpha5` — passed — Alpha (net9.0, arm64)
+            - **4.00s** — `Alpha4` — passed — Alpha (net9.0, arm64)
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "ObservedSummaryHasNoInventedElapsedTime")]
+    [DataRow(true, DisplayName = "PartialSummaryHasNoInventedElapsedTime")]
+    public void BuildAggregateMarkdown_WithoutSdkSummary_PreservesUnavailableElapsedAndPartialVerdict(bool isPartial)
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            TargetFramework = "net8.0",
+            Architecture = "x64",
+            TotalTests = 1,
+            PassedTests = 1,
+            TestDurationTicks = TimeSpan.FromSeconds(5).Ticks,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module], new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1, passedTests: 1, failedTests: 0, skippedTests: 0,
+            duration: null, exitCode: null, hasAuthoritativeRunSummary: false, isPartial);
+        string explanation = isPartial
+            ? "> **Partial summary:** the test run was truncated."
+            : "> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.";
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.AreEqual(
+            $"""
+            ## ⚠️ Overall test results
+
+            **1 test** · ✅ **1 passed** · ❌ **0 failed** · ⏭ **0 skipped** · ⏱ Elapsed: **Unavailable**
+
+            {explanation}
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### Test modules
+
+            | Result | Test module | Total | Passed | Failed | Skipped | Flaky | Test time |
+            | :---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+            | ✅ | Tests (net8.0, x64) | 1 | 1 | 0 | 0 | 0 | 5.00s |
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
+    }
+
+    [TestMethod]
+    [DataRow(0, false, false, DisplayName = "NoObservedTestsNeedNoHistoryNotice")]
+    [DataRow(1, false, true, DisplayName = "ObservedTestsWithoutHistory")]
+    [DataRow(1, true, true, DisplayName = "ZeroSamplesAreNotHistory")]
+    public void BuildAggregateMarkdown_HistoryNoticeUsesObservedTestsAndPositiveSamples(
+        int observedTests, bool includeZeroSampleHistory, bool expectNotice)
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            TargetFramework = "net8.0",
+            Architecture = "x64",
+            TotalTests = observedTests,
+            PassedTests = observedTests,
+            HistoryTests = includeZeroSampleHistory
+                ?
+                [
+                    new CiRunSummaryHistoryTest
+                    {
+                        TestId = "test", DisplayName = "Test", FullyQualifiedName = "Tests.Test",
+                        Outcome = "passed", DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                        P95DurationMilliseconds = 500, P99DurationMilliseconds = 750, DurationSampleCount = 0,
+                    },
+                ]
+                : [],
+        };
+        // Deliberately different SDK totals ensure the notice is based on observed modules.
+        var aggregate = new CiRunSummaryAggregate(
+            [module], new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: observedTests == 0 ? 10 : 0, passedTests: observedTests == 0 ? 10 : 0,
+            failedTests: 0, skippedTests: 0, duration: null, exitCode: null,
+            hasAuthoritativeRunSummary: true, isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        const string Notice = "> Duration history unavailable for the observed tests; current timings are not a historical baseline.";
+        Assert.AreEqual(expectNotice, markdown.Contains(Notice, StringComparison.Ordinal));
+        Assert.DoesNotContain("### Duration history", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_PositiveDurationHistorySuppressesUnavailableNotice()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            TargetFramework = "net8.0",
+            Architecture = "x64",
+            TotalTests = 1,
+            PassedTests = 1,
+            HistoryTests =
+            [
+                new CiRunSummaryHistoryTest
+                {
+                    TestId = "test", DisplayName = "Test", FullyQualifiedName = "Tests.Test",
+                    Outcome = "passed", DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                    P95DurationMilliseconds = 500, P99DurationMilliseconds = 750, DurationSampleCount = 1,
+                },
+            ],
+        };
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(CreateObservedAggregate(module));
+
+        Assert.DoesNotContain("Duration history unavailable", markdown);
+        Assert.AreEqual(
+            """
+            ### Duration history
+
+            | Test | Current | Historical p95 | Historical p99 | Samples | vs p95 |
+            | --- | ---: | ---: | ---: | ---: | ---: |
+            | Tests.Test | 2.00s | 500ms | 750ms | 1 | 4.00× |
+
+
+            """.Replace("\r\n", "\n"),
+            GetSection(markdown, "### Duration history"));
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_RendersTimedSkippedOutcome()
+    {
+        TestRecord[] records =
+        [
+            new("TimedSkip", "Tests.TimedSkip", TerminalKind.Skipped, TimeSpan.FromSeconds(1),
+                isFlaky: false, failure: null, skipReason: "Known issue"),
+        ];
+
+        string markdown = AzureDevOpsSummaryReporter.BuildMarkdown(records, "Tests", "net8.0");
+
+        Assert.AreEqual(
+            $"""
+            ## ✅ Tests (net8.0)
+
+            **1 test** · ✅ **0 passed** · ❌ **0 failed** · ⏭ **1 skipped** · ⏱ Test time: **1.00s**
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 1 | Known issue | {GetOperatingSystem()} | Tests (net8.0, unknown) |
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+            ### ⏱ Slowest tests
+
+            - **1.00s** — `TimedSkip` — skipped
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_SkipReasonsEscapeCellsAndPreserveLegacyMetadata()
+    {
+        var current = new CiRunSummaryModule
+        {
+            AssemblyName = "A|<&>",
+            TargetFramework = "net8.0",
+            Architecture = "x64",
+            OperatingSystem = "Linux|<runner>",
+            TotalTests = 2,
+            SkippedTests = 2,
+            SkipReasons =
+            [
+                new CiRunSummarySkipReason
+                {
+                    Reason = "https://example.test/issues/42 | `reason` <pending>&\nnext",
+                    Count = 2,
+                },
+            ],
+        };
+        var legacy = new CiRunSummaryModule
+        {
+            AssemblyName = "Legacy",
+            TargetFramework = "net8.0",
+            Architecture = "arm64",
+            TotalTests = 3,
+            SkippedTests = 3,
+        };
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(CreateObservedAggregate(current, legacy));
+
+        Assert.AreEqual(
+            """
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 3 | Skip reason unavailable (older fragment) | Unavailable | Legacy (net8.0, arm64) |
+            | 2 | https://example.test/issues/42 \| \`reason\` &lt;pending&gt;&amp;<br>next | Linux\|&lt;runner&gt; | A\|&lt;&amp;&gt; (net8.0, x64) |
+
+
+            """.Replace("\r\n", "\n"),
+            GetSection(markdown, "### Skipped tests by reason"));
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_SkipReasonsCapsRowsAndAccountsForObservedOmissions()
+    {
+        var alpha = new CiRunSummaryModule
+        {
+            AssemblyName = "Alpha",
+            TargetFramework = "net8.0",
+            Architecture = "x64",
+            OperatingSystem = "Windows",
+            TotalTests = 25,
+            SkippedTests = 25,
+            SkipReasons = [.. Enumerable.Range(0, 10).Reverse().Select(index =>
+                new CiRunSummarySkipReason { Reason = index == 9 ? "alpha" : $"Reason{index}", Count = 2 })],
+        };
+        var beta = new CiRunSummaryModule
+        {
+            AssemblyName = "Beta",
+            TargetFramework = "net9.0",
+            Architecture = "arm64",
+            OperatingSystem = "macOS",
+            TotalTests = 5,
+            SkippedTests = 5,
+            SkipReasons =
+            [
+                new CiRunSummarySkipReason { Reason = "Small A", Count = 1 },
+                new CiRunSummarySkipReason { Reason = "Primary", Count = 3 },
+                new CiRunSummarySkipReason { Reason = "Small B", Count = 1 },
+            ],
+        };
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(CreateObservedAggregate(alpha, beta));
+
+        Assert.AreEqual(
+            """
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 3 | Primary | macOS | Beta (net9.0, arm64) |
+            | 2 | Reason0 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason1 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason2 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason3 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason4 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason5 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason6 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason7 | Windows | Alpha (net8.0, x64) |
+            | 2 | Reason8 | Windows | Alpha (net8.0, x64) |
+
+            > 9 additional skipped tests are not shown.
+
+
+            """.Replace("\r\n", "\n"),
+            GetSection(markdown, "### Skipped tests by reason"));
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_SkipReasonTiesUseModuleFrameworkAndAttemptIdentity()
+    {
+        static CiRunSummaryModule Module(string name, string tfm, int attempt) => new()
+        {
+            AssemblyName = name,
+            TargetFramework = tfm,
+            Architecture = "x64",
+            SessionUid = $"session-{attempt}",
+            AttemptNumber = attempt,
+            OperatingSystem = "Windows",
+            TotalTests = 1,
+            SkippedTests = 1,
+            SkipReasons = [new CiRunSummarySkipReason { Reason = "Same reason", Count = 1 }],
+        };
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(CreateObservedAggregate(
+            Module("B", "net8.0", 1), Module("A", "net9.0", 1),
+            Module("A", "net8.0", 2), Module("A", "net8.0", 1)));
+
+        Assert.AreEqual(
+            """
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 1 | Same reason | Windows | A (net8.0, x64) — attempt 1, session session-1 |
+            | 1 | Same reason | Windows | A (net8.0, x64) — attempt 2, session session-2 |
+            | 1 | Same reason | Windows | A (net9.0, x64) |
+            | 1 | Same reason | Windows | B (net8.0, x64) |
+
+
+            """.Replace("\r\n", "\n"),
+            GetSection(markdown, "### Skipped tests by reason"));
+    }
+
+    [TestMethod]
+    public async Task SessionFinishing_GroupsSkipExplanationsWithoutListingSkippedNamesAsync()
+    {
+        AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());
+        _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+        using var stream = new MemoryStream();
+        _fileSystemMock.Setup(fs => fs.ExistDirectory(It.IsAny<string>())).Returns(true);
+        _fileSystemMock.Setup(fs => fs.NewFileStream(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.Read))
+            .Returns(new FakeFileStream(stream));
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContext());
+        await reporter.ConsumeAsync(CreateProducer(), Create("SecretSkippedNameA", new SkippedTestNodeStateProperty(" Known\nissue ")), CancellationToken.None);
+        await reporter.ConsumeAsync(CreateProducer(), Create("SecretSkippedNameB", new SkippedTestNodeStateProperty("Known issue")), CancellationToken.None);
+        await reporter.ConsumeAsync(CreateProducer(), Create("SecretSkippedNameC", SkippedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
+
+        string markdown = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        var framework = new System.Runtime.Versioning.FrameworkName(
+            typeof(AzureDevOpsSummaryReporterTests).Assembly.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()!.FrameworkName);
+        string targetFramework = framework.Identifier == ".NETFramework"
+            ? $"net{framework.Version}".Replace(".", string.Empty)
+            : $"net{framework.Version.Major}.{framework.Version.Minor}";
+        Assert.AreEqual(
+            $"""
+            ## ✅ MyAssembly ({targetFramework})
+
+            **3 tests** · ✅ **0 passed** · ❌ **0 failed** · ⏭ **3 skipped** · ⏱ Test time: **0ms**
+
+            > Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.
+
+            ### Skipped tests by reason
+
+            | Skipped | Reason | Platform | Test module |
+            | ---: | --- | --- | --- |
+            | 2 | Known issue | {GetOperatingSystem()} | MyAssembly ({targetFramework}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}) |
+            | 1 | Reason not provided | {GetOperatingSystem()} | MyAssembly ({targetFramework}, {RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()}) |
+
+            > Duration history unavailable for the observed tests; current timings are not a historical baseline.
+
+
+            """.Replace("\r\n", "\n"),
+            markdown);
+    }
+
+    private static CiRunSummaryAggregate CreateObservedAggregate(params CiRunSummaryModule[] modules)
+        => new(
+            modules, new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            modules.Sum(module => module.TotalTests), modules.Sum(module => module.PassedTests),
+            modules.Sum(module => module.FailedTests), modules.Sum(module => module.SkippedTests),
+            duration: null, exitCode: null, hasAuthoritativeRunSummary: false, isPartial: false);
+
+    private static string GetSection(string markdown, string heading)
+    {
+        int start = markdown.IndexOf(heading + "\n", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, start, $"Missing section '{heading}'.");
+        int end = markdown.IndexOf("### ", start + heading.Length, StringComparison.Ordinal);
+        return end < 0 ? markdown.Substring(start) : markdown.Substring(start, end - start);
+    }
+
+    private static string GetOperatingSystem()
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "Windows"
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? "Linux"
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macOS" : "Unknown";
+
     private static Dictionary<string, string[]> EnabledOptions()
         => new() { [AzureDevOpsCommandLineOptions.AzureDevOpsSummary] = [] };
 
-    private AzureDevOpsSummaryReporter CreateReporter(Dictionary<string, string[]> options)
+    private AzureDevOpsSummaryReporter CreateReporter(
+        Dictionary<string, string[]> options,
+        IAzureDevOpsHistoryService? historyService = null)
         => new(
             new TestCommandLineOptions(options),
             _configurationMock.Object,
@@ -256,8 +1481,10 @@ public sealed class AzureDevOpsSummaryReporterTests
             _outputDeviceMock.Object,
             _testApplicationModuleInfoMock.Object,
             _testApplicationProcessExitCodeMock.Object,
+            _testCoverageResultMock.Object,
             _loggerFactoryMock.Object,
-            static () => false);
+            static () => false,
+            historyService);
 
     private static TestNodeUpdateMessage CreatePassed(string uid)
         => Create(uid, new PassedTestNodeStateProperty());
@@ -274,6 +1501,46 @@ public sealed class AzureDevOpsSummaryReporterTests
                 DisplayName = uid,
                 Properties = new PropertyBag(state),
             });
+
+    private static TestNodeUpdateMessage CreateRetryUpdate(
+        TestNodeStateProperty state,
+        int attemptNumber,
+        bool isSuperseded)
+        => new(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = "retry",
+                DisplayName = "Retry",
+                Properties = new PropertyBag(
+                    state,
+                    new RetryAttemptProperty(attemptNumber, isSuperseded),
+                    new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "MyCo.Suite.Retry")),
+            });
+
+    private static TestNodeUpdateMessage CreateUpdate(
+        string uid,
+        string displayName,
+        TestNodeStateProperty state,
+        RetryAttemptProperty? retryAttempt)
+    {
+        var properties = new PropertyBag(
+            state,
+            new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "MyCo.Suite.Folded"));
+        if (retryAttempt is not null)
+        {
+            properties.Add(retryAttempt);
+        }
+
+        return new TestNodeUpdateMessage(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = uid,
+                DisplayName = displayName,
+                Properties = properties,
+            });
+    }
 
     private static IDataProducer CreateProducer() => new TestProducer();
 
@@ -296,6 +1563,25 @@ public sealed class AzureDevOpsSummaryReporterTests
         public string Description => "TestProducer";
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    private sealed class StubHistoryService(string expectedTestName) : IAzureDevOpsHistoryService
+    {
+        public int HistoryWindowInDays => 14;
+
+        public bool TryGetStats(string testName, out FlakyStats stats)
+        {
+            stats = new FlakyStats(passCount: 8, failCount: 2);
+            return testName == expectedTestName;
+        }
+
+        public bool IsLikelyFlaky(string testName, double threshold) => true;
+
+        public bool TryGetDurationStats(string testName, out DurationHistoryStats stats)
+        {
+            stats = new DurationHistoryStats(p95Milliseconds: 500, p99Milliseconds: 750, sampleCount: 10);
+            return testName == expectedTestName;
+        }
     }
 
     private sealed class TestSessionContext : ITestSessionContext

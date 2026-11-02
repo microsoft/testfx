@@ -1,5 +1,11 @@
 # RFC 002 - testconfig.json environmentVariables section
 
+> **Current implementation note (2026-10-09):** The built-in provider and child-process behavior
+> are implemented; see [MTP-006](../specifications/mtp.md#mtp-006--configured-child-environment).
+> The precedence explanation below is corrected to follow [controller environment preparation](../../src/Platform/Microsoft.Testing.Platform/Hosts/TestHostControllersTestHost.ProcessConfiguration.cs):
+> inherited values do not outrank configured provider values, and overriding a locked value fails.
+> External SDK `launchSettings.json` behavior and every parser/runtime edge case remain unverified.
+
 - [x] Approved in principle
 - [ ] Under discussion
 - [x] Implementation
@@ -143,14 +149,16 @@ Consequences:
 - A user-supplied `ITestHostEnvironmentVariableProvider` registered via `builder.TestHost.AddEnvironmentVariableProvider(...)` runs **after** the built-in and can override testconfig.json values.
 - The VSTest-bridge `RunSettingsEnvironmentVariableProvider` (which currently sets `isLocked: true`) wins over testconfig.json when both sources are present.
 
-End-to-end precedence (highest wins):
+The local controller applies inherited/system environment first, then its configured providers
+in registration order. The built-in **`testconfig.json` `environmentVariables`** provider is first
+among configured providers and sets unlocked values. Later providers can replace those values;
+once a provider locks a value, a later conflicting write fails rather than taking precedence.
+The VSTest-bridge runsettings provider locks its entries, so its position is part of this ordering,
+not a separate unconditional “highest wins” tier.
 
-1. CLI options that explicitly set the test host environment (none today, but reserved).
-2. The system environment inherited by the test host parent process (the controller inherits it; values declared here override the inherited value for the child only).
-3. User-registered `ITestHostEnvironmentVariableProvider` extensions (last-registered wins).
-4. VSTest-bridge runsettings `<EnvironmentVariables>` (locked).
-5. **`testconfig.json` `environmentVariables`** (this RFC).
-6. `launchSettings.json` `environmentVariables` (in scope for the .NET 10 `dotnet test` integration, but **not implemented by this RFC**).
+No current CLI option directly sets this section. `launchSettings.json` handling belongs to the
+external SDK and is **not implemented by this RFC**; this document does not establish its
+precedence against the controller's environment providers.
 
 ## Edge cases and limitations
 

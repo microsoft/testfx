@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
-    <VersionPrefix>$(MicrosoftTestingExtensionsCtrfReportVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
@@ -59,10 +56,18 @@ $(CommonProductDescription)]]></PackageDescription>
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.cs" Link="Helpers\ReportGeneratorBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.Journal.cs" Link="Helpers\ReportGeneratorBase.Journal.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProviderRegistration.cs" Link="Helpers\ReportProviderRegistration.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\BoundedUtf8LineReader.cs" Link="Helpers\BoundedUtf8LineReader.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportJournalConfiguration.cs" Link="Helpers\ReportJournalConfiguration.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportJournalRecord.cs" Link="Helpers\ReportJournalRecord.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProcessLifetimeHandler.cs" Link="Helpers\ReportProcessLifetimeHandler.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RetryArtifactManifest.cs" Link="Helpers\RetryArtifactManifest.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProcessLifetimeHandler.Journal.cs" Link="Helpers\ReportProcessLifetimeHandler.Journal.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\MergeOutputFileHelper.cs" Link="Helpers\MergeOutputFileHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ArtifactPostProcessingHelper.cs" Link="Helpers\ArtifactPostProcessingHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CapturedTestResultBase.cs" Link="Helpers\CapturedTestResultBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestResultCaptureHelper.cs" Link="Helpers\TestResultCaptureHelper.cs" />

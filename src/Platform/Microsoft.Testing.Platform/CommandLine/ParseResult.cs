@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// <summary>
 /// Represents the result of parsing a command line.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
 {
@@ -31,11 +34,22 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     }
 
     internal CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors, IReadOnlyList<string> arguments)
+        : this(toolName, options, errors, arguments, arguments)
+    {
+    }
+
+    internal CommandLineParseResult(
+        string? toolName,
+        IReadOnlyList<CommandLineParseOption> options,
+        IReadOnlyList<string> errors,
+        IReadOnlyList<string> arguments,
+        IReadOnlyList<string> expandedArguments)
     {
         ToolName = toolName;
         Options = options;
         Errors = errors;
         CommandLine = CommandLineArgumentsRedactor.Redact([.. arguments]);
+        ExpandedArguments = [.. expandedArguments];
     }
 
     /// <summary>
@@ -54,6 +68,8 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     public IReadOnlyList<string> Errors { get; }
 
     internal string CommandLine { get; }
+
+    internal IReadOnlyList<string> ExpandedArguments { get; }
 
     /// <summary>
     /// Gets a value indicating whether the parsing has errors.

@@ -16,20 +16,13 @@ internal static partial class StackTraceHelper
 #else
     private static Regex? s_regex;
 
-    [MemberNotNull(nameof(s_regex))]
     public static Regex GetFrameRegex()
-    {
-        if (s_regex is not null)
-        {
-            return s_regex;
-        }
-
-        // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
-        // thread suspends, so the regex gets blamed incorrectly.
-        s_regex = new Regex(
-            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: true),
-            RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-        return s_regex;
-    }
+        => LazyInitializer.EnsureInitialized(
+            ref s_regex,
+            // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
+            // thread suspends, so the regex gets blamed incorrectly.
+            static () => new Regex(
+                StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: true),
+                RegexOptions.Compiled | RegexOptions.ExplicitCapture))!;
 #endif
 }

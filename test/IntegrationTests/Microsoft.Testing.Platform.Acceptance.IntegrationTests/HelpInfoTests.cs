@@ -27,13 +27,17 @@ Options:
         When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
+    --coverage-threshold-branch
+        Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
+    --coverage-threshold-line
+        Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.
     --debug
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -68,8 +72,8 @@ Options:
     --no-progress
         [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
-        Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
@@ -91,6 +95,10 @@ Options:
     --show-stdout
         Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+    --show-test-results
+        Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+        Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
@@ -137,6 +145,7 @@ Options:
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
+Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.
 Command line: --no-ansi --progress off -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
@@ -167,7 +176,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: .+
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --\?
         Arity: 0
@@ -185,6 +194,14 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Specifies a testconfig\.json file\.
+      --coverage-threshold-branch
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall branch coverage percentage, from 0 to 100\. Requires non-empty coverage data from a compatible collector\.
+      --coverage-threshold-line
+        Arity: 1
+        Hidden: False
+        Description: Specifies the minimum overall line coverage percentage, from 0 to 100\. Requires non-empty coverage data from a compatible collector\.
       --debug
         Arity: 0
         Hidden: False
@@ -193,11 +210,11 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
-        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag
+        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag\.
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
-        Description: Prefix for the log file name that will replace '\[log\]_\.'
+        Description: Replace '\[log\]_\.' with the specified log file name prefix\.
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
@@ -256,6 +273,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Display \.NET test application information\.
+      --internal-appmodel-activation-payload
+        Arity: 1
+        Hidden: True
+        Description: Specifies the app-model activation payload\.
       --internal-testhostcontroller-pid
         Arity: 0\.\.1
         Hidden: True
@@ -263,7 +284,7 @@ Built-in command line providers:
       --internal-testingplatform-skipbuildercheck
         Arity: 0
         Hidden: True
-        Description: For testing purposes
+        Description: For testing purposes\.
       --list-tests
         Arity: 0..1
         Hidden: False
@@ -320,8 +341,8 @@ Built-in command line providers:
       --output
         Arity: 1
         Hidden: False
-        Description: Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Description: Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
       --progress
         Arity: 1
         Hidden: False
@@ -349,6 +370,12 @@ Built-in command line providers:
         Hidden: False
         Description: Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' \(or 'Failed' when an LLM/AI agent environment is detected\).
+      --show-test-results
+        Arity: 1..N
+        Hidden: False
+        Description: Selects which test outcomes render a per-test result block \(with its informative details, stack trace, and captured output\) in the terminal.
+        Valid values are 'passed', 'failed' \(also covers errored, timed out, and canceled tests\), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
 Registered command line providers:
   There are no registered command line providers.
 Registered tools:

@@ -6,7 +6,11 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -14,6 +18,74 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class ServiceProviderTests
 {
     private readonly ServiceProvider _serviceProvider = new();
+
+    [TestMethod]
+    public void GetRequiredPlatformService_ReturnsServiceFromAnyServiceProvider()
+    {
+        object expected = new();
+        IServiceProvider provider = new SingleServiceProvider(expected);
+
+        object actual = provider.GetRequiredPlatformService<object>();
+
+        Assert.AreSame(expected, actual);
+    }
+
+    [TestMethod]
+    public void GetRequiredPlatformService_MissingServiceThrows()
+    {
+        IServiceProvider provider = new SingleServiceProvider(null);
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => provider.GetRequiredPlatformService<object>());
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(object)),
+            exception.Message);
+    }
+
+    [TestMethod]
+    public void GetRequiredServiceInternal_MissingServicePreservesDiagnostic()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => _serviceProvider.GetRequiredServiceInternal<object>());
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(object)),
+            exception.Message);
+    }
+
+    [TestMethod]
+    public void GetRequiredServiceInternal_ReturnsFirstMatchingService()
+    {
+        TestSessionLifetimeHandler first = new();
+        TestSessionLifetimeHandler second = new();
+        _serviceProvider.AddService(first);
+        _serviceProvider.AddService(second);
+
+        Assert.AreSame(first, _serviceProvider.GetRequiredServiceInternal<ITestSessionLifetimeHandler>());
+        Assert.IsNull(_serviceProvider.GetPlatformService<ITestSessionLifetimeHandler>());
+    }
+
+    [TestMethod]
+    public void GetPlatformService_ReturnsServiceOrNullFromAnyServiceProvider()
+    {
+        object expected = new();
+        IServiceProvider provider = new SingleServiceProvider(expected);
+
+        Assert.AreSame(expected, provider.GetPlatformService<object>());
+        Assert.IsNull(new SingleServiceProvider(null).GetPlatformService<object>());
+    }
+
+    [TestMethod]
+    public void GetDiagnosticLoggingInformation_ReturnsServiceOrNull()
+    {
+#pragma warning disable TPEXP // IDiagnosticLoggingInformation is experimental.
+        var information = new Mock<IDiagnosticLoggingInformation>();
+        _serviceProvider.AddService(information.Object);
+
+        Assert.AreSame(information.Object, _serviceProvider.GetDiagnosticLoggingInformation());
+        Assert.IsNull(new ServiceProvider().GetDiagnosticLoggingInformation());
+#pragma warning restore TPEXP
+    }
 
     [TestMethod]
     public void GetService_InternalExtension_ShouldNotReturn()
@@ -185,6 +257,16 @@ public sealed class ServiceProviderTests
         Assert.AreSame(second, _serviceProvider.Services.Last());
     }
 
+    private sealed class SingleServiceProvider(object? service) : IServiceProvider
+    {
+        private readonly object? _service = service;
+
+        public object? GetService(Type serviceType)
+            => _service is not null && serviceType.IsInstanceOfType(_service)
+                ? _service
+                : null;
+    }
+
     [TestMethod]
     public void ReplaceService_NullService_ThrowsArgumentNullException()
         => Assert.ThrowsExactly<ArgumentNullException>(() => _serviceProvider.ReplaceService<TestSessionLifetimeHandler>(null!));
@@ -349,5 +431,103 @@ public sealed class ServiceProviderTests
         public Task BeforeRunAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
+    }
+
+    [TestMethod]
+    public void RequiredServices_ResolveRegisteredConfigurationAndArtifactNamingAndRejectMissing()
+    {
+        Mock<Microsoft.Testing.Platform.Configurations.IConfigurationRoot> configuration = new();
+        Mock<IArtifactNamingService> naming = new();
+        _serviceProvider.AddService(configuration.Object);
+        _serviceProvider.AddService(naming.Object);
+
+        Assert.AreSame(configuration.Object, _serviceProvider.GetConfigurationRoot());
+        Assert.AreSame(naming.Object, _serviceProvider.GetArtifactNamingService());
+        InvalidOperationException missingConfiguration = Assert.ThrowsExactly<InvalidOperationException>(() => new ServiceProvider().GetConfigurationRoot());
+        InvalidOperationException missingNaming = Assert.ThrowsExactly<InvalidOperationException>(() => new ServiceProvider().GetArtifactNamingService());
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(Microsoft.Testing.Platform.Configurations.IConfigurationRoot)),
+            missingConfiguration.Message);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.GetResourceString("ServiceProviderCannotFindServiceErrorMessage"), typeof(IArtifactNamingService)),
+            missingNaming.Message);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(2)]
+    public async Task Authorization_AbsentOrEmptyAuthorizerClearsStaleIdentities(int kind)
+    {
+        _serviceProvider.TestHostControllerAuthorizedSecurityIdentities = ["stale"];
+        Mock<ITestHostLauncher> launcher = new();
+        if (kind > 0)
+        {
+            launcher.As<ITestHostControllerConnectionAuthorizer>()
+                .Setup(a => a.GetAuthorizedSecurityIdentitiesAsync("host.exe", CancellationToken.None))
+                .ReturnsAsync(kind == 1 ? null! : Array.Empty<string>());
+        }
+
+        Mock<ILogger> logger = new(MockBehavior.Strict);
+        IReadOnlyList<string>? identities = await _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+            launcher.Object, "host.exe", logger.Object, CancellationToken.None);
+
+        Assert.IsNull(identities);
+        Assert.IsNull(_serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities());
+        logger.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Authorization_InvalidIdentityIsRejectedOnWindowsAndIgnoredElsewhere(bool valid)
+    {
+        const string PackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
+        string identity = valid ? PackageSid : "not-a-sid";
+        List<string> requested = [identity];
+        using CancellationTokenSource cancellation = new();
+        Mock<ITestHostLauncher> launcher = new();
+        launcher.SetupGet(l => l.Uid).Returns("launcher");
+        launcher.SetupGet(l => l.DisplayName).Returns("Launcher display");
+        Mock<ITestHostControllerConnectionAuthorizer> authorizer = launcher.As<ITestHostControllerConnectionAuthorizer>();
+        authorizer.Setup(a => a.GetAuthorizedSecurityIdentitiesAsync("host.exe", cancellation.Token)).ReturnsAsync(requested);
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !valid)
+        {
+            InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+                _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(launcher.Object, "host.exe", logger.Object, cancellation.Token));
+            Assert.AreEqual(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.GetResourceString("TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage"),
+                    "Launcher display", "launcher", "not-a-sid", "S-1-15-2-1"),
+                failure.Message);
+            Assert.IsNull(_serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities());
+        }
+        else
+        {
+            IReadOnlyList<string>? identities = await _serviceProvider.ResolveTestHostControllerAuthorizedSecurityIdentitiesAsync(
+                launcher.Object, "host.exe", logger.Object, cancellation.Token);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.AreSequenceEqual([PackageSid], identities!);
+                requested[0] = "changed after validation";
+                Assert.AreSequenceEqual([PackageSid], _serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities()!);
+                logger.Verify(
+                    l => l.LogAsync(LogLevel.Debug, "'launcher' requested the following validated security identity/identities for controller-side connections: " + PackageSid, null, LoggingExtensions.Formatter),
+                    Times.Once);
+            }
+            else
+            {
+                Assert.IsNull(identities);
+                Assert.IsNull(_serviceProvider.GetTestHostControllerAuthorizedSecurityIdentities());
+                logger.Verify(
+                    l => l.LogAsync(LogLevel.Debug, "'launcher' requested 1 connection authorization(s), ignored on this operating system.", null, LoggingExtensions.Formatter),
+                    Times.Once);
+            }
+        }
+
+        authorizer.Verify(a => a.GetAuthorizedSecurityIdentitiesAsync("host.exe", cancellation.Token), Times.Once);
     }
 }

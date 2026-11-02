@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.IPC.Models;
@@ -21,34 +21,18 @@ internal sealed class ServerControlMessageSerializer : NamedPipeSerializer<Serve
     {
         byte kind = 0;
 
-        ushort fieldCount = ReadUShort(stream);
-
-        for (int i = 0; i < fieldCount; i++)
+        ReadFields(stream, (fieldId, _) =>
         {
-            ushort fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
             switch (fieldId)
             {
                 case ServerControlMessageFieldsId.Kind:
                     kind = ReadByte(stream);
-
-                    // Kind is a single byte today, but honor the declared field size so that a future
-                    // protocol revision that widens it (or a frame that reports a different size) does not
-                    // leave extra bytes unread and misalign the remaining fields.
-                    if (fieldSize > 1)
-                    {
-                        SetPosition(stream, stream.Position + (fieldSize - 1));
-                    }
-
-                    break;
+                    return true;
 
                 default:
-                    // If we don't recognize the field id, skip the payload corresponding to that field.
-                    SetPosition(stream, stream.Position + fieldSize);
-                    break;
+                    return false;
             }
-        }
+        });
 
         return new(kind);
     }

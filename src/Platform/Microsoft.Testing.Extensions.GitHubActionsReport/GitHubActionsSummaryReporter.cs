@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -23,7 +22,7 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 /// summary page. See
 /// <see href="https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary"/>.
 /// </summary>
-internal sealed class GitHubActionsSummaryReporter :
+internal sealed partial class GitHubActionsSummaryReporter :
     IDataConsumer,
     IDataProducer,
     ITestSessionLifetimeHandler,
@@ -48,9 +47,15 @@ internal sealed class GitHubActionsSummaryReporter :
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ITestCoverageResult _testCoverageResult;
     private readonly ILogger _logger;
+    private readonly IGitHubActionsHistoryService _historyService;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _isSummaryEnabled;
+    private readonly bool _writeOnFailureOnly;
+    private readonly GitHubActionsStepSummarySections _sections;
+    private readonly bool _includeFailureDetails;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -58,8 +63,28 @@ internal sealed class GitHubActionsSummaryReporter :
 #else
     private readonly object _stateLock = new();
 #endif
-#pragma warning disable IDE0028 // Collection initialization can be simplified - target-typed `new` cannot pass the comparer in the same syntactic form expected.
-    private readonly Dictionary<string, TestRecord> _records = new Dictionary<string, TestRecord>(StringComparer.Ordinal);
+    private readonly List<(string Uid, string Key, TestRecord Record)> _records = [];
+#pragma warning disable IDE0028 // Collection expressions cannot pass the required comparer.
+    private readonly Dictionary<string, int> _finalRowCountsByUid = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<int>> _flakyRecordIndicesByUid = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _inProcessFailedTests = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _notRecoveredTests = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The raw inputs for each failed test's diagnostics, held until session end.
+    /// </summary>
+    /// <remarks>
+    /// Only what rendering actually needs is kept: the explanation, the exception (already allocated by the test
+    /// framework), and the declared source location read out of the node's property bag. The <see cref="TestNode"/>
+    /// itself is deliberately not retained — its property bag can carry unbounded captured standard output and
+    /// error, so holding one per failure would retain a run's entire output to render at most
+    /// <see cref="MaxFailures"/> of them.
+    /// <para>
+    /// The map is also bounded to <see cref="MaxFailures"/> entries, ordered the same way the snapshot is, so a
+    /// run with thousands of failures retains only the diagnostics that will actually be rendered.
+    /// </para>
+    /// </remarks>
+    private readonly Dictionary<string, PendingFailure> _pendingFailures = new Dictionary<string, PendingFailure>(StringComparer.Ordinal);
 #pragma warning restore IDE0028
 
     public GitHubActionsSummaryReporter(
@@ -71,8 +96,10 @@ internal sealed class GitHubActionsSummaryReporter :
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
-        Func<bool> shouldDeferToArtifactPostProcessing)
+        Func<bool> shouldDeferToArtifactPostProcessing,
+        IGitHubActionsHistoryService? historyService = null)
     {
         _configuration = configuration;
         _environment = environment;
@@ -81,9 +108,15 @@ internal sealed class GitHubActionsSummaryReporter :
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _testCoverageResult = testCoverageResult;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
+        _historyService = historyService ?? DisabledGitHubActionsHistoryService.Instance;
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
-        _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _isSummaryEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _isEnabled = _isSummaryEnabled || _historyService.IsEnabled;
+        _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
+        _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
+        _includeFailureDetails = GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
@@ -106,6 +139,11 @@ internal sealed class GitHubActionsSummaryReporter :
         lock (_stateLock)
         {
             _records.Clear();
+            _finalRowCountsByUid.Clear();
+            _flakyRecordIndicesByUid.Clear();
+            _inProcessFailedTests.Clear();
+            _notRecoveredTests.Clear();
+            _pendingFailures.Clear();
         }
 
         return Task.CompletedTask;
@@ -131,9 +169,9 @@ internal sealed class GitHubActionsSummaryReporter :
 
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
+            RetryAttemptProperty? retryAttempt = update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>();
 
-            // Resolve the stable, fully-qualified name the same way the annotation and slow-test reporters do
-            // (preferring TestMethodIdentifierProperty) so a given test renders identically across all three surfaces.
+            // Keep the stable identity for history and aggregation; add distinguishing display names only when rendering.
             string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);
 
             TimingProperty? timing = null;
@@ -149,9 +187,76 @@ internal sealed class GitHubActionsSummaryReporter :
 
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
+            // Capture only what is cheap to hold and small: the explanation, the exception reference, and the
+            // declared source location read out of the property bag now — the node itself is not retained, since
+            // its bag can carry a run's entire captured output. Formatting Exception.StackTrace, walking it for a
+            // location and clipping the result is the expensive part, and at most MaxFailures of these are ever
+            // rendered, so that work is deferred to session end and done only for the failures selected.
+            (string? Explanation, Exception? Exception)? pendingFailure = kind == TerminalKind.Failed && _includeFailureDetails
+                ? TryGetFailureInfo(state)
+                : null;
+
             lock (_stateLock)
             {
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
+                if (retryAttempt is { IsSuperseded: true })
+                {
+                    if (kind == TerminalKind.Failed)
+                    {
+                        _inProcessFailedTests.Add(uid);
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                if (kind is TerminalKind.Failed or TerminalKind.Skipped)
+                {
+                    // Keep this sticky for the session: folded data-driven rows can share a uid and arrive in
+                    // either order, so a later passing row must not turn a mixed-outcome uid into a recovery.
+                    _notRecoveredTests.Add(uid);
+                    ClearFlakyRecords(uid);
+                }
+
+                bool isFlaky = kind == TerminalKind.Passed
+                    && !_notRecoveredTests.Contains(uid)
+                    && (_inProcessFailedTests.Contains(uid) || GetAttemptNumber() > 1);
+                int finalRowCount = _finalRowCountsByUid.TryGetValue(uid, out int existingFinalRowCount)
+                    ? existingFinalRowCount + 1
+                    : 1;
+                _finalRowCountsByUid[uid] = finalRowCount;
+                string recordKey = $"{uid}\0{finalRowCount.ToString(CultureInfo.InvariantCulture)}";
+                _records.Add((uid, recordKey, new TestRecord(displayName, fullyQualifiedName, kind, duration, isFlaky)));
+                if (isFlaky)
+                {
+                    if (!_flakyRecordIndicesByUid.TryGetValue(uid, out List<int>? indices))
+                    {
+                        indices = [];
+                        _flakyRecordIndicesByUid.Add(uid, indices);
+                    }
+
+                    indices.Add(_records.Count - 1);
+                }
+
+                if (finalRowCount > 1)
+                {
+                    // Multiple final rows share one UID, so the protocol cannot identify which row recovered.
+                    // Keep every row and its outcome, but fail closed instead of attributing flakiness to all of them.
+                    ClearFlakyRecords(uid);
+                }
+
+                PendingFailure? failure = null;
+                if (pendingFailure is { } info)
+                {
+                    TestFileLocationProperty? declared = update.TestNode.Properties.FirstOrDefault<TestFileLocationProperty>();
+                    failure = new PendingFailure(
+                        fullyQualifiedName,
+                        displayName,
+                        info.Explanation,
+                        info.Exception,
+                        declared?.FilePath,
+                        declared?.LineSpan.Start.Line ?? 0);
+                }
+
+                ApplyPendingFailure(_pendingFailures, recordKey, failure, MaxFailures);
             }
         }
         catch (OperationCanceledException)
@@ -166,101 +271,6 @@ internal sealed class GitHubActionsSummaryReporter :
         return Task.CompletedTask;
     }
 
-    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
-    {
-        try
-        {
-            testSessionContext.CancellationToken.ThrowIfCancellationRequested();
-
-            if (!_isEnabled)
-            {
-                return;
-            }
-
-            string? path = _environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
-            if (RoslynString.IsNullOrWhiteSpace(path))
-            {
-                // Outside a GitHub Actions step (or when summaries are unsupported) there is nowhere to
-                // write. Stay quiet apart from a low-noise trace so local/dev runs don't get a warning.
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace($"'{StepSummaryEnvironmentVariable}' is not set; skipping job summary.");
-                }
-
-                return;
-            }
-
-            List<TestRecord> snapshot;
-            lock (_stateLock)
-            {
-                snapshot = [.. _records.Values];
-            }
-
-            string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
-            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-            if (_shouldDeferToArtifactPostProcessing()
-                && _configuration.GetTestResultDirectory() is { } resultsDirectory
-                && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
-            {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
-                string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
-                    resultsDirectory,
-                    GitHubActionsSummaryArtifactPostProcessor.Provider,
-                    GitHubActionsSummaryArtifactPostProcessor.ProviderSlug,
-                    module).ConfigureAwait(false);
-                await _messageBus.PublishAsync(
-                    this,
-                    new SessionFileArtifact(
-                        testSessionContext.SessionUid,
-                        new FileInfo(fragmentPath),
-                        GitHubActionsResources.DisplayName,
-                        GitHubActionsResources.Description,
-                        GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind)).ConfigureAwait(false);
-                return;
-            }
-
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
-
-            try
-            {
-                await AppendStepSummaryWithRetryAsync(_fileSystem, path!, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                string warning = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, ex.Message);
-                if (_logger.IsEnabled(LogLevel.Warning))
-                {
-                    _logger.LogWarning(warning);
-                }
-
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
-        }
-    }
-
-    private CiRunSummaryModule CreateModule(
-        IReadOnlyList<TestRecord> records,
-        string assemblyName,
-        ITestSessionContext testSessionContext)
-        => CiRunSummaryAggregation.CreateModule(
-            records,
-            assemblyName,
-            _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
-            _targetFrameworkMoniker.Value,
-            RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
-            _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
-            testSessionContext.SessionUid.Value,
-            GetAttemptNumber(),
-            _testApplicationProcessExitCode.GetProcessExitCode());
-
     private int GetAttemptNumber()
         => int.TryParse(
             _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER),
@@ -270,392 +280,4 @@ internal sealed class GitHubActionsSummaryReporter :
             && attemptNumber > 0
                 ? attemptNumber
                 : 1;
-
-    /// <summary>
-    /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file in a way that is safe
-    /// when multiple test-host processes (one per assembly / target framework in a <c>dotnet test</c> run) write
-    /// concurrently.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="FileMode.Append"/> only seeks to the end of the file once, at open time, and performs no
-    /// atomic OS-level append. Opening with <see cref="FileShare.ReadWrite"/> would therefore let two processes
-    /// position at the same offset and interleave or overwrite each other's section. We instead open with
-    /// <see cref="FileShare.Read"/> — which denies other writers — so at most one process appends at a time, and
-    /// retry on the resulting sharing violation (an <see cref="IOException"/>) until the holder releases the file.
-    /// Each write is a single small section, so contention clears almost immediately; the bounded attempt count
-    /// still lets a genuinely unlockable file surface as the caller's best-effort warning rather than looping
-    /// forever.
-    /// <para>
-    /// Retries are scoped to <em>acquiring</em> the exclusive append handle only. Once the handle is acquired the
-    /// process appends alone, so contention can no longer occur; a failure that happens <em>during</em> the write
-    /// (e.g. disk full) may already have appended a partial section, and retrying would re-append the full section
-    /// on top of it and corrupt the summary. Such a mid-write failure is therefore propagated straight to the
-    /// caller's best-effort warning path instead of being retried.
-    /// </para>
-    /// </remarks>
-    internal static /* for testing */ async Task AppendStepSummaryWithRetryAsync(
-        IFileSystem fileSystem,
-        string path,
-        string content,
-        int maxAttempts,
-        TimeSpan retryDelay,
-        CancellationToken cancellationToken)
-    {
-        for (int attempt = 1; ; attempt++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            IFileStream stream;
-            try
-            {
-                stream = fileSystem.NewFileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
-            }
-            catch (IOException) when (attempt < maxAttempts)
-            {
-                // Another test-host process currently holds the summary file open for writing. Back off briefly
-                // and retry so this assembly's section is appended intact once the holder releases the file.
-                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
-                continue;
-            }
-
-            // The exclusive append handle is acquired: from here on we append alone, so any failure is a genuine
-            // write error (not contention) and must not be retried — a partial append followed by a full re-append
-            // would corrupt the summary. Let it propagate to the caller's best-effort warning path.
-            using (stream)
-            using (var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false)))
-            {
-                await writer.WriteAsync(content).ConfigureAwait(false);
-            }
-
-            return;
-        }
-    }
-
-    internal static async Task UpsertStepSummaryWithRetryAsync(
-        IFileSystem fileSystem,
-        string path,
-        string aggregationId,
-        string content,
-        int maxAttempts,
-        TimeSpan retryDelay,
-        CancellationToken cancellationToken)
-    {
-        string startMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
-        string endMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
-        string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
-        // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
-        // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
-        string lockPath = path + ".microsoft-testing-platform.lock";
-
-        for (int attempt = 1; ; attempt++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            IFileStream lockStream;
-            try
-            {
-                lockStream = fileSystem.NewFileStream(
-                    lockPath,
-                    FileMode.OpenOrCreate,
-                    FileAccess.ReadWrite,
-                    FileShare.None);
-            }
-            catch (IOException) when (attempt < maxAttempts)
-            {
-                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
-                continue;
-            }
-
-            string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-            try
-            {
-                using (lockStream)
-                {
-                    string existing;
-                    using (IFileStream summaryStream = fileSystem.NewFileStream(
-                        path,
-                        FileMode.OpenOrCreate,
-                        FileAccess.Read,
-                        FileShare.ReadWrite | FileShare.Delete))
-                    using (var reader = new StreamReader(summaryStream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
-                    {
-#if NET8_0_OR_GREATER
-                        existing = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-#else
-#pragma warning disable CA2016 // The target framework has no cancellation-aware StreamReader overload.
-                        existing = await reader.ReadToEndAsync().ConfigureAwait(false);
-#pragma warning restore CA2016
-#endif
-                    }
-
-                    int start = existing.IndexOf(startMarker, StringComparison.Ordinal);
-                    if (start >= 0)
-                    {
-                        int end = existing.IndexOf(endMarker, start, StringComparison.Ordinal);
-                        if (end < 0)
-                        {
-                            throw new FormatException("The existing GitHub step summary contains an incomplete Microsoft Testing Platform summary section.");
-                        }
-
-                        existing = existing.Remove(start, end + endMarker.Length - start).Insert(start, section.TrimEnd());
-                    }
-                    else
-                    {
-                        existing = existing.Length == 0
-                            ? section
-                            : existing.TrimEnd() + "\n\n" + section;
-                    }
-
-                    using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
-                    using (var writer = new StreamWriter(tempStream.Stream, new UTF8Encoding(false)))
-                    {
-                        await writer.WriteAsync(existing).ConfigureAwait(false);
-#if NET8_0_OR_GREATER
-                        await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-#else
-#pragma warning disable CA2016 // The target framework has no cancellation-aware StreamWriter overload.
-                        await writer.FlushAsync().ConfigureAwait(false);
-#pragma warning restore CA2016
-#endif
-                    }
-
-                    cancellationToken.ThrowIfCancellationRequested();
-                    fileSystem.ReplaceFile(tempPath, path);
-                }
-            }
-            finally
-            {
-                try
-                {
-                    fileSystem.DeleteFile(tempPath);
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    // Best-effort cleanup must not hide a successful write or its primary failure.
-                }
-            }
-
-            return;
-        }
-    }
-
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode)
-    {
-        int total = records.Count;
-        int passed = 0;
-        int failed = 0;
-        int skipped = 0;
-        TimeSpan totalDuration = TimeSpan.Zero;
-        var failures = new List<TestRecord>();
-
-        foreach (TestRecord record in records)
-        {
-            totalDuration += record.Duration;
-            switch (record.Kind)
-            {
-                case TerminalKind.Passed:
-                    passed++;
-                    break;
-                case TerminalKind.Failed:
-                    failed++;
-                    if (failures.Count < MaxFailures)
-                    {
-                        failures.Add(record);
-                    }
-
-                    break;
-                case TerminalKind.Skipped:
-                    skipped++;
-                    break;
-            }
-        }
-
-        // Reflect the process verdict, not just the failed-test count: a run can end in failure with zero failed
-        // tests (e.g. zero tests discovered or a --minimum-expected-tests violation), which must not show ✅.
-        bool runFailed = failed > 0 || GitHubActionsExitCode.IndicatesFailure(exitCode);
-        string statusIcon = runFailed ? "❌" : "✅";
-
-        var builder = new StringBuilder();
-        builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(total.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(passed.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
-
-        // Surface a non-test-result failure that this reporter can observe once the session has finished
-        // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
-        // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
-        // table and the failures section, so no callout is added for them.
-        if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
-        {
-            string calloutText = string.Format(
-                CultureInfo.InvariantCulture,
-                GitHubActionsResources.ExitCodeCallout,
-                exitCode.ToString(CultureInfo.InvariantCulture),
-                GitHubActionsExitCode.GetName(exitCode),
-                GitHubActionsExitCode.GetReason(exitCode));
-            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
-        }
-
-        if (failures.Count > 0)
-        {
-            builder.Append("### ❌ Failures (").Append(failed.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
-            foreach (TestRecord failure in failures)
-            {
-                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
-            }
-
-            builder.Append('\n');
-        }
-
-        IEnumerable<TestRecord> slowest = records
-            .Where(static r => r.Duration > TimeSpan.Zero)
-            .OrderByDescending(static r => r.Duration)
-            .Take(MaxSlowestTests);
-
-        bool slowestEmitted = false;
-        foreach (TestRecord record in slowest)
-        {
-            if (!slowestEmitted)
-            {
-                builder.Append("### ⏱ Slowest tests\n\n");
-                slowestEmitted = true;
-            }
-
-            builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
-        }
-
-        if (slowestEmitted)
-        {
-            builder.Append('\n');
-        }
-
-        return builder.ToString();
-    }
-
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
-    {
-        bool failed = aggregate.ExitCode is int exitCode
-            ? GitHubActionsExitCode.IndicatesFailure(exitCode)
-            : aggregate.FailedTests > 0;
-        string statusIcon = failed
-            ? "❌"
-            : aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
-                ? "⚠️"
-                : "✅";
-        string duration = aggregate.Duration is { } value ? FormatDuration(value) : "Unavailable";
-
-        var builder = new StringBuilder();
-        builder.Append("## ").Append(statusIcon).Append(" Overall Test Run Summary\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(duration).Append(" |\n\n");
-
-        if (aggregate.IsPartial)
-        {
-            builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
-        }
-        else if (!aggregate.HasAuthoritativeRunSummary)
-        {
-            builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
-        }
-
-        if (aggregate.ExitCode is int authoritativeExitCode
-            && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
-        {
-            string calloutText = string.Format(
-                CultureInfo.InvariantCulture,
-                GitHubActionsResources.ExitCodeCallout,
-                authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
-                GitHubActionsExitCode.GetName(authoritativeExitCode),
-                GitHubActionsExitCode.GetReason(authoritativeExitCode));
-            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
-        }
-
-        foreach (CiRunSummaryModule module in aggregate.Modules)
-        {
-            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
-            builder.Append("<details>\n<summary>")
-                .Append(HtmlEncode(module.AssemblyName))
-                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
-                .Append(HtmlEncode(module.Architecture));
-            if (needsDiscriminator)
-            {
-                builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
-                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
-            }
-
-            builder.Append(")</summary>\n\n");
-            AppendModuleMarkdown(builder, module, headingLevel: 3);
-            builder.Append("</details>\n\n");
-        }
-
-        return builder.ToString();
-    }
-
-    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel)
-    {
-        string heading = new('#', headingLevel);
-        bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
-        builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
-            .Append(EscapeInlineCode(module.AssemblyName)).Append("\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
-
-        if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
-        {
-            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
-                .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
-        }
-
-        if (module.Failures.Length > 0)
-        {
-            builder.Append(heading).Append("# ❌ Failures (").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
-            foreach (CiRunSummaryTest failure in module.Failures)
-            {
-                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
-            }
-
-            builder.Append('\n');
-        }
-
-        if (module.SlowestTests.Length > 0)
-        {
-            builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
-            foreach (CiRunSummaryTest test in module.SlowestTests)
-            {
-                builder.Append("- `").Append(EscapeInlineCode(test.FullyQualifiedName)).Append("` — ")
-                    .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
-            }
-
-            builder.Append('\n');
-        }
-    }
-
-    private static string FormatDuration(TimeSpan duration)
-        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
-
-    private static string EscapeInlineCode(string value)
-        => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
-
-    private static string HtmlEncode(string value)
-        => System.Net.WebUtility.HtmlEncode(value);
-
-    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
-        => modules.Count(candidate =>
-            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
-            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
-            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }

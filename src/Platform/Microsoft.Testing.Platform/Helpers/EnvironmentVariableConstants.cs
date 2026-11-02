@@ -24,9 +24,14 @@ internal static class EnvironmentVariableConstants
 
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME);
+    public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME);
+    public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY);
+
+    // Overrides, in seconds, the total post-exit budget for controller callbacks, output, and disposal.
+    public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS);
 
     public const string TESTINGPLATFORM_DIAGNOSTIC = nameof(TESTINGPLATFORM_DIAGNOSTIC);
     public const string TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = nameof(TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
@@ -80,14 +85,22 @@ internal static class EnvironmentVariableConstants
 
     // Correlates the processes that make up one logical test run, so report formats that can describe a run
     // spanning several documents (CTRF 'runId') can tie those documents back together. The retry orchestrator
-    // sets it before launching its attempts, and any process tree started from there inherits it.
+    // sets it for standalone runs before launching its attempts, and child processes inherit it.
     //
     // NOTE: a multi-project 'dotnet test' does NOT set this. Each module is a separate root test application
     // with its own execution id (see docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md), so its
-    // modules are distinct execution trees. Correlating them — or correlating shards running on different
-    // machines — requires setting this variable explicitly before launching them.
+    // modules are distinct execution trees contributing to ONE logical run. Correlating them — or correlating
+    // shards running on different machines — requires setting this variable once per coordinated invocation.
     public const string TESTINGPLATFORM_LOGICAL_RUN_ID = nameof(TESTINGPLATFORM_LOGICAL_RUN_ID);
 
     // Trx
     public const string TESTINGPLATFORM_TRX_TESTRUN_ID = nameof(TESTINGPLATFORM_TRX_TESTRUN_ID);
+
+    // Deadline-aware cancellation. TESTINGPLATFORM_DEADLINE is an absolute wall-clock instant
+    // (ISO 8601 round-trip, parsed to UTC) that the CI runner will hard-cancel the process at.
+    // The margins are the lead time before the deadline at which the platform reacts: graceful
+    // stop (stop scheduling new tests, let reporters finalize) and hang dump (out-of-proc dump).
+    public const string TESTINGPLATFORM_DEADLINE = nameof(TESTINGPLATFORM_DEADLINE);
+    public const string TESTINGPLATFORM_DEADLINE_STOP_MARGIN = nameof(TESTINGPLATFORM_DEADLINE_STOP_MARGIN);
+    public const string TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = nameof(TESTINGPLATFORM_DEADLINE_DUMP_MARGIN);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -107,7 +107,7 @@ internal partial class TestExecutionManager
         try
         {
             Dictionary<string, object>? testRunParameters = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-            if (testRunParameters != null)
+            if (testRunParameters is not null)
             {
                 // Clear sessionParameters to prevent key collisions of test run parameters in case
                 // "Keep Test Execution Engine Alive" is selected in VS.

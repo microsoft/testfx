@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
@@ -24,6 +26,7 @@ internal sealed partial class TestHostControllersTestHost
         string processIdString,
         string processCorrelationId,
         NamedPipeServer testHostControllerIpc,
+        TestHostControllerCancellationServer testHostControllerCancellationServer,
         IEnvironment environment,
         ProxyOutputDevice outputDevice,
         CancellationToken cancellationToken)
@@ -62,9 +65,25 @@ internal sealed partial class TestHostControllersTestHost
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPid}", processIdString },
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPid}", "1" },
                 { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPid}", testHostControllerIpc.PipeName.Name },
+                { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CONTROLPIPENAME}_{currentPid}", testHostControllerCancellationServer.PipeName },
             },
             UseShellExecute = false,
+            // Ordinary processes inherit the controller's working directory, not the artifact directory.
+            WorkingDirectory = _testHostsInformation.TestHostLauncher is null
+                ? string.Empty
+                : ServiceProvider.GetConfiguration().GetCurrentWorkingDirectory(),
         };
+
+        // Out-of-process coverage becomes available only after the child has exited. Its controller
+        // owns the gate, so the child must not fail for the measurements it cannot receive.
+        bool ownsCoverage = _testHostsInformation.LifetimeHandlers.OfType<IDataProducer>()
+            .Concat(_testHostsInformation.DataConsumer.OfType<IDataProducer>())
+            .Any(producer => producer.DataTypesProduced.Any(type => type == typeof(TestCoverageMessage)
+                || type == typeof(TestCoverageThresholdMessage) || type == typeof(TestCoverageReportMessage)));
+        if (ownsCoverage)
+        {
+            ServiceProvider.GetRequiredService<TestCoverageResult>().ConfigureThresholds(ServiceProvider.GetCommandLineOptions(), sessionUid: null);
+        }
 
         List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
         if (ServiceProvider.GetService<TestCoverageCapabilities>() is { } coverageCapabilities)
@@ -114,26 +133,26 @@ internal sealed partial class TestHostControllersTestHost
             ServiceProvider.GetTask(),
             ServiceProvider.GetLoggerFactory(),
             ServiceProvider.GetEnvironment(),
-            ServiceProvider.GetService<IShutdownProgressReporter>());
+            ServiceProvider.GetService<IShutdownProgressReporter>(),
+            ServiceProvider.GetPlatformOTelService());
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
+
+        SystemEnvironmentVariableProvider systemEnvironmentVariableProvider = new(environment);
+        EnvironmentVariables environmentVariables = new(_loggerFactory)
+        {
+            CurrentProvider = systemEnvironmentVariableProvider,
+        };
+        await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
+        await ApplyControllerExtensionPreLaunchAsync(
+            _testHostsInformation.LifetimeHandlers,
+            _testHostsInformation.EnvironmentVariableProviders,
+            environmentVariables,
+            cancellationToken).ConfigureAwait(false);
 
         // Apply the ITestHostEnvironmentVariableProvider
         if (_testHostsInformation.EnvironmentVariableProviders.Length > 0)
         {
-            SystemEnvironmentVariableProvider systemEnvironmentVariableProvider = new(environment);
-            EnvironmentVariables environmentVariables = new(_loggerFactory)
-            {
-                CurrentProvider = systemEnvironmentVariableProvider,
-            };
-            await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
-
-            foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
-            {
-                environmentVariables.CurrentProvider = environmentVariableProvider;
-                await environmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
-            }
-
             environmentVariables.CurrentProvider = null;
 
             List<(IExtension, string)> failedValidations = [];
@@ -169,6 +188,33 @@ internal sealed partial class TestHostControllersTestHost
             }
         }
 
+        TestHostCooperativeShutdownTimeout = GetTestHostCooperativeShutdownTimeout(environmentVariables);
+
+        if (ownsCoverage)
+        {
+            processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY}_{currentPid}"] = "1";
+        }
+
         return (processStartInfo, partialCommandLine);
+    }
+
+    internal static async Task ApplyControllerExtensionPreLaunchAsync(
+        IReadOnlyList<ITestHostProcessLifetimeHandler> lifetimeHandlers,
+        IReadOnlyList<ITestHostEnvironmentVariableProvider> environmentVariableProviders,
+        EnvironmentVariables environmentVariables,
+        CancellationToken cancellationToken)
+    {
+        // Servers can qualify their endpoint while starting, so handlers must run before providers publish
+        // those endpoints to the child process.
+        foreach (ITestHostProcessLifetimeHandler lifetimeHandler in lifetimeHandlers)
+        {
+            await lifetimeHandler.BeforeTestHostProcessStartAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in environmentVariableProviders)
+        {
+            environmentVariables.CurrentProvider = environmentVariableProvider;
+            await environmentVariableProvider.UpdateAsync(environmentVariables).ConfigureAwait(false);
+        }
     }
 }

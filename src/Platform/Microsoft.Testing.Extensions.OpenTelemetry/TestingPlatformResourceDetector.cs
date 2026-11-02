@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
 /// <summary>
-/// Builds the OpenTelemetry <c>Resource</c> attributes that describe *where* a test run happened.
+/// Builds the OpenTelemetry <c>Resource</c> attributes that describe a test run and where it happened.
 /// </summary>
 /// <remarks>
 /// Traces and metrics coming out of a test run are only actionable when you can tell one run apart from another:
@@ -15,14 +15,21 @@ internal static class TestingPlatformResourceDetector
 {
     internal const string UnknownServiceName = "unknown_test_service";
 
+    private static readonly char[] UrlAuthorityTerminators = ['/', '?', '#'];
+
     public static IEnumerable<KeyValuePair<string, object>> GetResourceAttributes()
     {
-        foreach (KeyValuePair<string, object> attribute in GetProcessAttributes())
+        foreach (KeyValuePair<string, object> attribute in GetHostOsAndProcessAttributes())
         {
             yield return attribute;
         }
 
-        foreach (KeyValuePair<string, object> attribute in GetCiAttributes())
+        foreach (KeyValuePair<string, object> attribute in GetTestResourceAttributes())
+        {
+            yield return attribute;
+        }
+
+        foreach (KeyValuePair<string, object> attribute in GetCiResourceAttributes())
         {
             yield return attribute;
         }
@@ -37,10 +44,17 @@ internal static class TestingPlatformResourceDetector
     }
 
     public static string? GetServiceVersion()
-        => Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
+    {
+        var entryAssembly = Assembly.GetEntryAssembly();
+        return SelectServiceVersion(
+            entryAssembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
+            entryAssembly?.GetName().Version?.ToString());
+    }
 
-    private static IEnumerable<KeyValuePair<string, object>> GetProcessAttributes()
+    private static string? SelectServiceVersion(string? informationalVersion, string? assemblyVersion)
+        => informationalVersion ?? assemblyVersion;
+
+    private static IEnumerable<KeyValuePair<string, object>> GetHostOsAndProcessAttributes()
     {
         yield return new("host.name", Environment.MachineName);
         yield return new("host.arch", GetHostArchitecture());
@@ -56,28 +70,37 @@ internal static class TestingPlatformResourceDetector
         yield return new("process.pid", GetCurrentProcessId());
         yield return new("process.runtime.name", ".NET");
         yield return new("process.runtime.description", RuntimeInformation.FrameworkDescription);
+    }
 
+    public static IEnumerable<KeyValuePair<string, object>> GetTestResourceAttributes()
+    {
         if (Assembly.GetEntryAssembly()?.GetName().Name is { } entryAssemblyName)
         {
             yield return new("test.assembly.name", entryAssemblyName);
         }
     }
 
+#if NET
+    private static int GetCurrentProcessId() => Environment.ProcessId;
+#else
     private static int GetCurrentProcessId()
     {
-#if NET
-        return Environment.ProcessId;
-#else
         using var process = System.Diagnostics.Process.GetCurrentProcess();
         return process.Id;
-#endif
     }
+#endif
 
     private static string? GetOsType()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "darwin"
-            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
-            : null;
+        => (
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) switch
+        {
+            (true, _, _) => "windows",
+            (_, true, _) => "darwin",
+            (_, _, true) => "linux",
+            _ => null,
+        };
 
     /// <summary>
     /// Maps <see cref="Architecture"/> onto the values allowed by the OpenTelemetry <c>host.arch</c> enum, which
@@ -102,7 +125,7 @@ internal static class TestingPlatformResourceDetector
     /// is <b>not</b>: as of semantic conventions 1.43.0 there is no attribute identifying the CI system, so this is
     /// a platform extension sitting in the namespace where an upstream definition would land.
     /// </remarks>
-    private static IEnumerable<KeyValuePair<string, object>> GetCiAttributes()
+    public static IEnumerable<KeyValuePair<string, object>> GetCiResourceAttributes()
     {
         if (IsTrue(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
         {
@@ -117,11 +140,8 @@ internal static class TestingPlatformResourceDetector
             {
                 yield return attribute;
             }
-
-            yield break;
         }
-
-        if (IsTrue(Environment.GetEnvironmentVariable("TF_BUILD")))
+        else if (IsTrue(Environment.GetEnvironmentVariable("TF_BUILD")))
         {
             yield return new("cicd.provider.name", "azure_pipelines");
             foreach (KeyValuePair<string, object> attribute in Map(
@@ -134,11 +154,8 @@ internal static class TestingPlatformResourceDetector
             {
                 yield return attribute;
             }
-
-            yield break;
         }
-
-        if (IsTrue(Environment.GetEnvironmentVariable("GITLAB_CI")))
+        else if (IsTrue(Environment.GetEnvironmentVariable("GITLAB_CI")))
         {
             yield return new("cicd.provider.name", "gitlab");
             foreach (KeyValuePair<string, object> attribute in Map(
@@ -151,11 +168,8 @@ internal static class TestingPlatformResourceDetector
             {
                 yield return attribute;
             }
-
-            yield break;
         }
-
-        if (!OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("JENKINS_URL")))
+        else if (!OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("JENKINS_URL")))
         {
             yield return new("cicd.provider.name", "jenkins");
             foreach (KeyValuePair<string, object> attribute in Map(
@@ -196,31 +210,13 @@ internal static class TestingPlatformResourceDetector
         }
 
         int authorityStartIndex = schemeSeparatorIndex + 3;
-        int authorityEndIndex = value.Length;
-        int pathIndex = value.IndexOf('/', authorityStartIndex);
-        if (pathIndex >= 0)
+        int authorityEndIndex = value.IndexOfAny(UrlAuthorityTerminators, authorityStartIndex) switch
         {
-            authorityEndIndex = pathIndex;
-        }
-
-        int queryIndex = value.IndexOf('?', authorityStartIndex);
-        if (queryIndex >= 0 && queryIndex < authorityEndIndex)
-        {
-            authorityEndIndex = queryIndex;
-        }
-
-        int fragmentIndex = value.IndexOf('#', authorityStartIndex);
-        if (fragmentIndex >= 0 && fragmentIndex < authorityEndIndex)
-        {
-            authorityEndIndex = fragmentIndex;
-        }
+            -1 => value.Length,
+            int terminatorIndex => terminatorIndex,
+        };
 
         int authorityLength = authorityEndIndex - authorityStartIndex;
-        if (authorityLength <= 0)
-        {
-            return value;
-        }
-
         int userInfoEndIndex = value.LastIndexOf('@', authorityEndIndex - 1, authorityLength);
         return userInfoEndIndex < authorityStartIndex
             ? value

@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Extensions;
 /// Extension methods on <see cref="ITestApplicationBuilder"/> for forwarding the
 /// Microsoft Testing Platform diagnostic logs to <c>Microsoft.Extensions.Logging</c> providers.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class MicrosoftExtensionsLoggingBuilderExtensions
 {
@@ -38,6 +41,17 @@ public static class MicrosoftExtensionsLoggingBuilderExtensions
     /// Microsoft Testing Platform's <see cref="Microsoft.Testing.Platform.Logging.ILogger"/> has no notion
     /// of <see cref="Microsoft.Extensions.Logging.EventId"/>; messages forwarded through this bridge are
     /// logged with <c>EventId.None</c>.
+    /// </para>
+    /// <para>
+    /// Microsoft Testing Platform does not create or translate
+    /// <see cref="Microsoft.Extensions.Logging.ILogger.BeginScope{TState}(TState)"/> scopes. Any ambient
+    /// scopes observed by a configured provider are owned entirely by the caller's logging pipeline.
+    /// The original state and formatter are forwarded unchanged, so structured state already present
+    /// in a platform log entry remains available to providers.
+    /// </para>
+    /// <para>
+    /// The bridge is process-local. A logger factory instance cannot be propagated to a separately
+    /// launched test host or controller process; each process that needs the bridge must register it.
     /// </para>
     /// <para>
     /// This extension is additive: it does not replace the platform's built-in <c>--diagnostic</c>
@@ -87,6 +101,10 @@ public static class MicrosoftExtensionsLoggingBuilderExtensions
     /// <para>
     /// When the platform's effective level is <see cref="Microsoft.Testing.Platform.Logging.LogLevel.None"/>,
     /// the bridge becomes a no-op and no calls are made on <paramref name="loggerFactory"/>.
+    /// </para>
+    /// <para>
+    /// The bridge is process-local. The supplied factory remains in the process where this method is
+    /// called and is not propagated to separately launched test host or controller processes.
     /// </para>
     /// </remarks>
     /// <param name="builder">The test application builder.</param>

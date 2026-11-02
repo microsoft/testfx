@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+
 namespace Microsoft.Testing.Platform.Configurations;
 
 internal static class PlatformConfigurationConstants
@@ -24,4 +26,11 @@ internal static class PlatformConfigurationConstants
     /// argument for multi-value options).
     /// </summary>
     public const string CommandLineOptionsSectionName = "commandLineOptions";
+
+    /// <summary>
+    /// Root section name for passive command-line option argument defaults. Values in this section
+    /// are consulted only by <see cref="CommandLineOptionsExtensions.TryGetOptionArgumentListOrDefault"/>
+    /// and never make an option active.
+    /// </summary>
+    public const string CommandLineOptionDefaultsSectionName = "commandLineOptionDefaults";
 }

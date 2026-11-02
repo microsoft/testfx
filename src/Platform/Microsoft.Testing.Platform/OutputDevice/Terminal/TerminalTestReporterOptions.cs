@@ -9,9 +9,11 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
-    /// Gets a value indicating whether we should show passed tests.
+    /// Gets the set of test outcomes whose per-test terminal block (result line, informative details, stack
+    /// trace, expected/actual, and captured stdout/stderr) is rendered. Resolved once, at construction time, from
+    /// <c>--show-test-results</c> (when passed) or from <c>--output</c> otherwise.
     /// </summary>
-    public Func<bool> ShowPassedTests { get; init; } = () => true;
+    public TestResultVisibility ShowTestResults { get; init; } = TestResultVisibility.All;
 
     /// <summary>
     /// Gets minimum amount of tests to run.
@@ -24,8 +26,18 @@ internal sealed class TerminalTestReporterOptions
     public CommandLine.ZeroTestsPolicy ZeroTestsPolicy { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
-    /// When ANSI is not allowed we never have progress.
+    /// Gets a value indicating whether an otherwise-successful zero-test run is expected.
+    /// </summary>
+    public bool AllowZeroTests { get; init; }
+
+    /// <summary>
+    /// Gets a callback indicating whether the framework session failed independently of individual test results.
+    /// </summary>
+    public Func<bool> HasTestSessionFailure { get; init; } = static () => false;
+
+    /// <summary>
+    /// Gets a value indicating whether we should write progress periodically to screen. Cursor-capable terminals
+    /// update in place; non-cursor terminals emit bounded progress lines after visible-output silence.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean
     /// and then cache that value.
     /// </summary>
@@ -65,10 +77,10 @@ internal sealed class TerminalTestReporterOptions
     public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
 
     /// <summary>
-    /// Gets the silence threshold for the non-cursor heartbeat renderer (E1). When no test completes for this
-    /// duration, a single heartbeat line is emitted. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
+    /// Gets the visible-output silence threshold for the non-cursor heartbeat renderer (E1). Hidden test
+    /// completions do not reset this interval. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
     /// </summary>
-    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>
     /// Gets the per-test threshold for the non-cursor heartbeat renderer (E2). When a single test exceeds this
@@ -120,6 +132,41 @@ internal enum OutputShowMode
     /// Never show the output.
     /// </summary>
     None,
+}
+
+/// <summary>
+/// Which test outcomes get a rendered per-test terminal block. Resolved once from <c>--show-test-results</c> or
+/// <c>--output</c> into <see cref="TerminalTestReporterOptions.ShowTestResults"/>.
+/// </summary>
+[Embedded]
+[Flags]
+internal enum TestResultVisibility
+{
+    /// <summary>
+    /// No test outcome is rendered.
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// Tests that passed.
+    /// </summary>
+    Passed = 1,
+
+    /// <summary>
+    /// Tests that did not pass: <see cref="TestOutcome.Fail"/>, <see cref="TestOutcome.Error"/>,
+    /// <see cref="TestOutcome.Timeout"/>, and <see cref="TestOutcome.Canceled"/>.
+    /// </summary>
+    Failed = 1 << 1,
+
+    /// <summary>
+    /// Tests that were skipped.
+    /// </summary>
+    Skipped = 1 << 2,
+
+    /// <summary>
+    /// Every test outcome.
+    /// </summary>
+    All = Passed | Failed | Skipped,
 }
 
 [Embedded]

@@ -3,7 +3,8 @@ name: "Re-review After Autofix"
 description: >-
   Re-runs the expert code review after new commits are pushed to a
   Copilot-created PR. This closes the autofix loop: after the address-review
-  workflow pushes fixes, this workflow verifies them with the expert-reviewer.
+  workflow pushes fixes, this workflow verifies them with one consolidated
+  expert review.
 
 on:
   pull_request:

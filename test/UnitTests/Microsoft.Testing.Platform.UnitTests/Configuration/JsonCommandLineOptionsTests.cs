@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -177,6 +177,117 @@ public sealed class JsonCommandLineOptionsTests
         Assert.AreSequenceEqual(["a", "b"], filterUid.Arguments.ToArray());
     }
 
+    [TestMethod]
+    public async Task EnumerateCommandLineOptionDefaults_ScalarsAndArrays_AreArguments()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            """
+            {
+              "commandLineOptionDefaults": {
+                "timeout": "30s",
+                "boolean-value": false,
+                "filter-uid": ["a", "b"]
+              }
+            }
+            """);
+
+        IReadOnlyList<JsonCommandLineOptionEntry> entries = configuration.EnumerateJsonCommandLineOptionDefaults();
+
+        Assert.HasCount(3, entries);
+        Assert.AreSequenceEqual(["30s"], entries.Single(x => x.OptionName == "timeout").Arguments.ToArray());
+        Assert.AreSequenceEqual(["False"], entries.Single(x => x.OptionName == "boolean-value").Arguments.ToArray());
+        Assert.AreSequenceEqual(["a", "b"], entries.Single(x => x.OptionName == "filter-uid").Arguments.ToArray());
+        Assert.IsTrue(configuration.TryGetCommandLineOptionDefaultFromProviders("boolean-value", out string[] booleanArguments));
+        Assert.AreSequenceEqual(["False"], booleanArguments);
+        Assert.IsFalse(configuration.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out _));
+        Assert.IsFalse(isSet);
+    }
+
+    [TestMethod]
+    [DataRow("null")]
+    [DataRow("[]")]
+    public async Task EnumerateCommandLineOptionDefaults_MissingValue_IsRejected(string value)
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            "{\"commandLineOptionDefaults\": {\"timeout\": " + value + "}}");
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            configuration.EnumerateJsonCommandLineOptionDefaults);
+
+        Assert.Contains("timeout", exception.Message);
+        Assert.Contains("non-null scalar value or a non-empty array", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task EnumerateCommandLineOptionDefaults_ArrayWithNullElement_IsRejected()
+    {
+        // A JSON null array element must be rejected even though both JSON parsers (System.Text.Json and,
+        // on net462/netstandard2.0, Jsonite) flatten it into a non-null placeholder string ("" or "null"
+        // respectively) that looks like a real scalar. The parser separately preserves the element's raw
+        // JSON token so this case can be detected consistently across both parsers.
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            "{\"commandLineOptionDefaults\": {\"filter-uid\": [null]}}");
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            configuration.EnumerateJsonCommandLineOptionDefaults);
+
+        Assert.Contains("filter-uid", exception.Message);
+        Assert.Contains("non-null scalar value or a non-empty array", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task EnumerateCommandLineOptionDefaults_MixedArrayWithNullElement_IsRejected()
+    {
+        // A null element must be rejected even when mixed with otherwise-valid scalar entries in the same
+        // array, and regardless of its position.
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            "{\"commandLineOptionDefaults\": {\"filter-uid\": [\"a\", null, \"b\"]}}");
+
+        FormatException exception = Assert.ThrowsExactly<FormatException>(
+            configuration.EnumerateJsonCommandLineOptionDefaults);
+
+        Assert.Contains("filter-uid", exception.Message);
+        Assert.Contains("non-null scalar value or a non-empty array", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task EnumerateCommandLineOptions_ArrayWithNullElement_PreservesEstablishedBehavior()
+    {
+        // Unlike commandLineOptionDefaults, commandLineOptions does not require every array element to be
+        // non-null; this locks in the pre-existing (per-JSON-parser) flattening of a null element so this
+        // fix does not change it. System.Text.Json flattens a null array element to an empty string, while
+        // the Jsonite parser (net462/netstandard2.0) flattens it to the literal "null" string.
+        IReadOnlyList<JsonCommandLineOptionEntry> entries = await EnumerateAsync(
+            "{\"commandLineOptions\": {\"filter-uid\": [\"a\", null, \"b\"]}}");
+
+        JsonCommandLineOptionEntry entry = Assert.ContainsSingle(entries);
+        Assert.AreEqual("filter-uid", entry.OptionName);
+#if NETFRAMEWORK
+        Assert.AreSequenceEqual(["a", "null", "b"], entry.Arguments.ToArray());
+#else
+        Assert.AreSequenceEqual(["a", string.Empty, "b"], entry.Arguments.ToArray());
+#endif
+    }
+
+    [TestMethod]
+    public async Task ExplicitJsonDisable_SuppressesConfiguredDefault()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedAsync(
+            """
+            {
+              "commandLineOptions": {
+                "optional-value": false
+              },
+              "commandLineOptionDefaults": {
+                "optional-value": "fallback"
+              }
+            }
+            """);
+
+        Assert.IsFalse(configuration.TryGetCommandLineOptionArgumentsOrDefault("optional-value", out string[]? arguments));
+        Assert.IsNull(arguments);
+    }
+
     // ---------------------------------------------------------------------
     // CommandLineOptionsValidator JSON-aware passes
     // ---------------------------------------------------------------------
@@ -288,6 +399,62 @@ public sealed class JsonCommandLineOptionsTests
         Assert.IsFalse(result.IsValid);
         Assert.Contains("bad value", result.ErrorMessage);
         Assert.Contains("testconfig.json", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonDefaultPerArgValidatorFailure_FailsWithDefaultsPrefix()
+    {
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false),
+            validateOptionArgumentsAsync: (option, args) =>
+                Task.FromResult(args[0] == "bad" ? ValidationResult.Invalid("bad value") : ValidationResult.Valid()));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptionDefaults: [new JsonCommandLineOptionEntry("timeout", ["bad"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("bad value", result.ErrorMessage);
+        Assert.Contains("commandLineOptionDefaults", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonDefaultForZeroArityOption_Fails()
+    {
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption("no-banner", "desc", ArgumentArity.Zero, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptionDefaults: [new JsonCommandLineOptionEntry("no-banner", ["true"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("commandLineOptionDefaults", result.ErrorMessage);
+        Assert.Contains("no-banner", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_UnknownJsonDefault_Fails()
+    {
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptionDefaults: [new JsonCommandLineOptionEntry("timoeut", ["30s"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("commandLineOptionDefaults", result.ErrorMessage);
+        Assert.Contains("timoeut", result.ErrorMessage);
     }
 
     [TestMethod]
@@ -407,6 +574,28 @@ public sealed class JsonCommandLineOptionsTests
         Assert.IsFalse(result.IsValid);
         Assert.Contains("Config-File", result.ErrorMessage);
         Assert.Contains("testconfig.json", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonDefaultBootstrapOnlyOption_Fails()
+    {
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption(PlatformCommandLineProvider.ConfigFileOptionKey, "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptionDefaults:
+            [
+                new JsonCommandLineOptionEntry(PlatformCommandLineProvider.ConfigFileOptionKey, ["other.json"], isDisabled: false),
+            ]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(PlatformCommandLineProvider.ConfigFileOptionKey, result.ErrorMessage);
+        Assert.Contains("commandLineOptionDefaults", result.ErrorMessage);
+        Assert.Contains("bootstrap", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [TestMethod]

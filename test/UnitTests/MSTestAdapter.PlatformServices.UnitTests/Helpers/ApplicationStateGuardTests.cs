@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -25,5 +25,14 @@ public class ApplicationStateGuardTests : TestContainer
         // mismatch across assemblies. Assert on the full type name instead.
         exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
         exception.Message.Should().Contain("thought to be unreachable");
+    }
+
+    public void CallerLocationGuardReportsExactLocationAndAcceptsValidState()
+    {
+        ApplicationStateGuard.Ensure(true, path: "fixture.cs", line: 42);
+        Action action = () => ApplicationStateGuard.Ensure(false, path: "fixture.cs", line: 42);
+
+        action.Should().ThrowExactly<InvalidOperationException>()
+            .WithMessage("Unexpected state in file 'fixture.cs' at line '42'");
     }
 }

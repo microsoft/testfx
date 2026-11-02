@@ -58,6 +58,7 @@ internal partial class TestExecutionManager
                 TestFailureException = new InvalidOperationException(brokenTest.CycleMessage),
             };
 
+            brokenTest.Element.SupportsExecutionActivityLease = !usesAppDomains;
             await _testResultRecorder.RecordStartAsync(brokenTest.Element).ConfigureAwait(false);
 
             // Selected but never run, so the class-cleanup countdown still owes this test its decrement.

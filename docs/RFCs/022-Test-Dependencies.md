@@ -1,5 +1,14 @@
 ﻿# RFC 022 - Test Dependencies
 
+> **Current implementation note (2026-10-09):** The attribute/configuration graph,
+> skip propagation, cycle failure and projection demotion topics have implementation/test evidence.
+> The scheduler is now split into `TestExecutionManager.DependencyGraphExecution.cs` and
+> `TestExecutionManager.ParallelExecution.cs`, not the `Parallelization.cs` path in the implementation table.
+> Name ordering, when enabled without randomization, sorts the graph input and is a tie-breaker;
+> dependencies still constrain that order. Cross-assembly and row-to-row dependencies remain future work.
+> See [MSTEST-012](../specifications/mstest.md#mstest-012--dependencies-constrain-selected-tests-within-a-source).
+> This audit does not establish proposal approval, shipment or every analyzer/configuration diagnostic.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation

@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+        <target state="translated">啟用或停用 Azure DevOps 失敗註解 ('on' 或 'off')。預設為 'on'。需要 '--report-azdo'。</target>
+        <note>{Locked="'on'"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
@@ -42,15 +42,40 @@
         <target state="translated">'--report-azdo-groups' 需要啟用 '--report-azdo'</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
+        <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
+        <target state="translated">Azure DevOps 即時發佈無法讀取附件 '{0}'： {1}</target>
+        <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
+        <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
+        <target state="translated">Azure DevOps 即時發佈無法上傳附件 '{0}'，因為其 {1} 位元組的大小超過 {2} 位元組的限制。</target>
+        <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
         <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Azure DevOps 即時發佈無法上傳 {0} 個附件; 這些附件將不會出現在 Azure DevOps 測試執行中。</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAuthenticationFailure">
+        <source>Azure DevOps REST API authentication failed or was redirected to sign-in (status: {0}), which indicates that SYSTEM_ACCESSTOKEN is invalid or unavailable. For fork pull request validation builds, do not expose secrets to untrusted fork code; publish results from a separate trusted pipeline context or disable Azure DevOps live publishing.</source>
+        <target state="translated">Azure DevOps REST API 驗證失敗或已重新導向至登入畫面 (狀態: {0})，這表示 SYSTEM_ACCESSTOKEN 無效或無法使用。對於派生提取要求驗證組建，請不要將密碼資訊公開給不受信任的派生程式碼；請改從另一個受信任的管線內容發佈結果，或停用 Azure DevOps 即時發佈。</target>
+        <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps 即時發佈無法完成測試執行。</target>
         <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
+        <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
+        <target state="translated">Azure DevOps 即時發佈在 {1} 等待協調鎖定 '{0}' 後逾時。</target>
+        <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
         <source>Azure DevOps live publishing failed to create the test run.</source>
@@ -64,7 +89,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
         <source>Azure DevOps live publishing failed to read coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to read coordination file</target>
+        <target state="translated">Azure DevOps 即時發佈無法讀取協調檔案</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
@@ -90,7 +115,7 @@
       <trans-unit id="AzureDevOpsLivePublishingMissingConfiguration">
         <source>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</source>
         <target state="translated">'--publish-azdo-test-results' 已設定，但 Azure DevOps 即時發佈已停用，因為下列環境變數遺失或無效: {0}。</target>
-        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</note>
+        <note>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingMissingRunIdFile">
         <source>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</source>
@@ -119,7 +144,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
         <source>Azure DevOps live publishing failed to update the result map handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <target state="translated">Azure DevOps 即時發佈無法更新結果對應遞交。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
@@ -161,6 +186,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">逾時: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingUnexpectedContentType">
+        <source>Azure DevOps REST API returned an unexpected successful response with status code {0} and content type '{1}'.</source>
+        <target state="translated">Azure DevOps REST API 傳回未預期的成功回應，狀態碼為 {0}，內容類型為 '{1}'。</target>
+        <note>{0} is the HTTP status code. {1} is the response content type. {Locked="REST API"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>
@@ -217,6 +247,86 @@
         <target state="translated">Azure DevOps 報告產生器</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">至少有一個測試失敗。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">一或多個程式碼涵蓋率閾值未達標。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">相依處理序意外結束。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">測試執行失敗。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">已協商不相容的通訊協定版本。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">命令列引數無效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">測試平台設定無效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">執行的測試少於 --minimum-expected-tests 所需的數目。</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">測試執行成功。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">測試配接器報告測試工作階段失敗。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">因 CI 設定的截止時間即將到來，因此測試執行已提早停止。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">測試執行在達到 --maximum-failed-tests 所設定的限制之後停止。</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">測試主機處理序非正常結束。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">測試工作階段已中止。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">測試執行報告非成功的結束代碼。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">找不到要執行的測試。這通常表示測試篩選條件不相符。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">
         <source>[flaky: failed {0}/{1} in last {2}d]</source>
         <target state="translated">[flaky: failed {0}/{1} in last {2}d]</target>
@@ -225,7 +335,7 @@
       <trans-unit id="FlakyHistoryLoadFailedWarning">
         <source>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</source>
         <target state="translated">無法載入 Azure DevOps 不穩定歷程記錄。將在不加入歷程記錄註解的情況下繼續。{0}</target>
-        <note>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</note>
+        <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="FlakyHistoryLoadTimedOutInfo">
         <source>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</source>
@@ -235,7 +345,7 @@
       <trans-unit id="FlakyHistoryMissingEnvironmentWarning">
         <source>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</source>
         <target state="translated">已要求 Azure DevOps 不穩定歷程記錄，但必要的 Azure DevOps 環境變數遺失。將在不加入歷程記錄註解的情況下繼續。</target>
-        <note>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
+        <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</source>
@@ -259,7 +369,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">啟用或停用每個組件的 Azure DevOps 記錄群組 ('on' 或 'off')。預設為 'on'。需要 '--report-azdo'。</target>
+        <target state="translated">啟用或停用每個組件的 Azure DevOps 記錄群組 ('on' 或 'off')。預設為 'off'。需要 '--report-azdo'。</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -340,7 +450,7 @@
       <trans-unit id="QuarantineFileLoadFailedWarning">
         <source>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</source>
         <target state="translated">無法載入 Azure DevOps 隔離檔案 '{0}'。將在不考慮隔離狀態的情況下繼續。{1}</target>
-        <note>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</note>
+        <note>{0} is the quarantine file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="QuarantineFileMissingWarning">
         <source>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</source>
@@ -413,9 +523,9 @@
         <note>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
-        <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="translated">在測試執行結束時撰寫 Markdown 工作摘要，並透過 '##vso[task.uploadsummary]' 上傳。選用檔案路徑引數會覆寫預設位置 ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md')。需要 '--report-azdo'。</target>
-        <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
+        <source>Write a Markdown job summary at the end of the test run and upload it to the Azure DevOps Extensions tab. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
+        <target state="translated">在測試執行結束時撰寫 Markdown 工作摘要，並將其上傳至 Azure DevOps 的 [延伸模組] 索引標籤。選用檔案路徑引數會覆寫預設位置 ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md')。需要 '--report-azdo'。</target>
+        <note>{Locked="Markdown"}{Locked="Azure DevOps"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
         <source>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</source>

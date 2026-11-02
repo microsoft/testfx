@@ -49,9 +49,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
         InputArtifact[] orderedInputs =
         [
-            .. inputs
-                .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+            .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
         ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
@@ -71,8 +69,16 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
         // outside the supplied output directory (Directory.CreateDirectory succeeds on an existing link).
         // Materialize the directory here and refuse to merge through a reparse point instead. Returning
         // null leaves the per-module reports untouched, matching the never-fail-the-run invariant.
-        Directory.CreateDirectory(mergedDirectory);
-        if (IsReparsePoint(mergedDirectory))
+        try
+        {
+            Directory.CreateDirectory(mergedDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
+        if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;
         }
@@ -90,23 +96,5 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
             TrxReportEngine.TrxArtifactKind,
             ExtensionResources.TrxMergedArtifactDisplayName,
             string.Format(CultureInfo.CurrentCulture, ExtensionResources.TrxMergedArtifactDescription, inputs.Count));
-    }
-
-    /// <summary>
-    /// Returns <see langword="true"/> when <paramref name="path"/> is a symlink/junction, or when its
-    /// attributes cannot be read. An unreadable directory is treated as unsafe because we cannot prove it
-    /// is not a redirect, and the merged report is optional output that must never write outside the
-    /// orchestrator-supplied directory.
-    /// </summary>
-    private static bool IsReparsePoint(string path)
-    {
-        try
-        {
-            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return true;
-        }
     }
 }

@@ -146,6 +146,31 @@ public class TestExecutionManagerTests : TestContainer
         _frameworkHandle.ResultsList.Should().BeEmpty();
     }
 
+    public async Task SendTestResults_WhenCancellationOccursAfterFirstResult_DoesNotReportRemainingResults()
+    {
+        TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
+        UnitTestElement testElement = ToUnitTestElement(testCase);
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults =
+        [
+            new() { Outcome = UnitTestOutcome.Passed },
+            new() { Outcome = UnitTestOutcome.Passed },
+        ];
+        var recorder = new CancellingTestResultRecorder(_cancellationToken);
+        typeof(TestExecutionManager)
+            .GetField("_testRunCancellationToken", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(_testExecutionManager, _cancellationToken);
+
+        Func<Task> action = () => _testExecutionManager.SendTestResultsAsync(
+            testElement,
+            unitTestResults,
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            recorder);
+
+        await action.Should().ThrowAsync<OperationCanceledException>();
+        recorder.RecordedResultsCount.Should().Be(1);
+    }
+
     public async Task RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest");
@@ -1628,5 +1653,31 @@ internal class TestableTestExecutionManager : TestExecutionManager
     }
 
     internal override UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new TestableUnitTestDiscoverer(testSourceHandler);
+}
+
+internal sealed class CancellingTestResultRecorder(TestRunCancellationToken cancellationToken) : ITestResultRecorder
+{
+    public int RecordedResultsCount { get; private set; }
+
+    public void PrepareResults(UnitTestElement testElement, Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] results)
+    {
+    }
+
+    public Task RecordStartAsync(UnitTestElement testElement)
+        => Task.CompletedTask;
+
+    public Task RecordEmptyResultAsync(UnitTestElement testElement)
+        => Task.CompletedTask;
+
+    public Task<bool> RecordResultAsync(
+        UnitTestElement testElement,
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult unitTestResult,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime)
+    {
+        RecordedResultsCount++;
+        cancellationToken.Cancel();
+        return Task.FromResult(false);
+    }
 }
 #endregion

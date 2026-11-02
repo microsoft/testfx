@@ -1,5 +1,14 @@
 # RFC 020 - Resource Lock Attribute
 
+> **Current implementation note (2026-10-09):** The keyed read/write, chunk-union,
+> sorted-acquisition and sequential-tail boundaries described here have implementation/test evidence.
+> The scheduler is now `TestExecutionManager.ParallelExecution.cs`, not `Parallelization.cs`.
+> Configured/attribute workers `0` normalize to processor count; absence of parallelization is different.
+> Cross-process coordination, dynamic lock providers and lock-aware dispatch remain outside the current implementation.
+> See [MSTEST-010](../specifications/mstest.md#mstest-010--in-assembly-parallelism-is-chunk-based)
+> and [MSTEST-011](../specifications/mstest.md#mstest-011--resource-locks-apply-to-scheduling-chunks).
+> This audit does not ratify proposals, verify all fairness/cancellation paths or prove migration recommendations safe.
+
 - [ ] Approved in principle
 - [x] Under discussion
 - [x] Implementation
@@ -256,7 +265,7 @@ it. With `Workers = 4`, four dequeued chunks contending on one exclusive key lea
 parked and the rest of the queue stalled — even though those queued chunks declare no locks and
 could otherwise run. So `[ResourceLock]` guarantees *correct mutual exclusion*, not that unrelated
 tests always keep running; heavy contention still reduces effective parallelism. Keep locked tests a
-small fraction of the suite (see the speedup math under [Granularity guidance](#granularity-guidance)).
+small fraction of the suite (see the speedup math under [Granularity guidance](#guidance-granularity)).
 Lock-aware dispatch — skipping over a chunk whose locks are unavailable and taking the next one — is
 [Future work](#future-work); it is deliberately not attempted in v1 because a naive version can
 livelock without a bounded retry policy.

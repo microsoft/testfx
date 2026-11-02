@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -70,7 +70,7 @@ internal sealed partial class TestClassInfo
         }
 
         // If classInitialization was successful, then don't do anything
-        if (ClassInitializationException == null)
+        if (ClassInitializationException is null)
         {
             return;
         }

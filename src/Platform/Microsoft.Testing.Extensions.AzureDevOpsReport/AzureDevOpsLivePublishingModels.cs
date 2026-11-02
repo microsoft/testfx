@@ -10,6 +10,8 @@ internal static class AzureDevOpsLivePublishingConstants
     public const string AbortedTestOutcome = "Aborted";
     public const string AbortedTestRunState = "Aborted";
     public const string CompletedTestRunState = "Completed";
+    public const string CanonicalTestNameMetadataFamily = "MTP.CanonicalTestName/";
+    public const string CanonicalTestNameMetadataPrefix = CanonicalTestNameMetadataFamily + "1:";
     public const string FailedTestOutcome = "Failed";
     public const string InProgressTestRunState = "InProgress";
     public const int MaxRunNameLength = 256;
@@ -35,7 +37,8 @@ internal static class AzureDevOpsLivePublishingConstants
     public const int MaxSubResultsPerResult = 1000;
 
     /// <summary>Maximum size (in bytes) of a single attachment uploaded to Azure DevOps. Files larger than this are skipped.</summary>
-    public const long MaxAttachmentSizeBytes = 16L * 1024 * 1024;
+    /// <remarks>75 MiB of raw content becomes 100 MiB of base64, matching the Azure Pipelines agent's attachment guards.</remarks>
+    public const long MaxAttachmentSizeBytes = 75L * 1024 * 1024;
 
     /// <summary>Maximum size (in bytes) of an inline (string-based) attachment such as stdout/stderr. Content beyond this is truncated.</summary>
     public const int MaxInlineAttachmentBytes = 256 * 1024;
@@ -95,15 +98,31 @@ internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
 {
     /// <summary>
+    /// Gets the terminal state of the test result.
+    /// </summary>
+    /// <remarks>
+    /// Azure DevOps does not infer this from <see cref="Outcome"/>. Omitting it leaves the result in
+    /// <c>Pending</c> even after the containing run is completed.
+    /// </remarks>
+    [JsonPropertyName("state")]
+    public string State { get; } = AzureDevOpsLivePublishingConstants.CompletedTestRunState;
+
+    /// <summary>
     /// Gets the id Azure DevOps assigned to this result, set only when updating an already published result.
     /// </summary>
     /// <remarks>
     /// Declared as properties rather than positional parameters so that adding them does not change the
-    /// record's constructor and deconstructor signatures. All three are absent from a freshly created
-    /// result and are only populated when a retry attempt turns an existing result into a rerun.
+    /// record's constructor and deconstructor signatures. <see cref="Id"/> is populated only when updating
+    /// an existing result. <see cref="ResultGroupType"/> and <see cref="SubResults"/> are populated when
+    /// appending attempts to that result, including the follow-up update that gives a newly created result's
+    /// first attachment a sub-result to target.
     /// </remarks>
     [JsonPropertyName("id")]
     public int? Id { get; init; }
+
+    [JsonPropertyName("comment")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Comment { get; init; }
 
     /// <summary>
     /// Gets the hierarchy type of the result; <see cref="AzureDevOpsLivePublishingConstants.RerunResultGroupType"/>
@@ -112,9 +131,31 @@ internal sealed record AzureDevOpsTestCaseResult(
     [JsonPropertyName("resultGroupType")]
     public string? ResultGroupType { get; init; }
 
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this result.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
+
     /// <summary>Gets the individual attempts of this test, oldest first.</summary>
     [JsonPropertyName("subResults")]
     public IReadOnlyList<AzureDevOpsTestSubResult>? SubResults { get; init; }
+}
+
+internal sealed class AzureDevOpsCustomTestField
+{
+    public AzureDevOpsCustomTestField(string fieldName, object value)
+    {
+        FieldName = fieldName;
+        Value = value;
+    }
+
+    [JsonPropertyName("fieldName")]
+    public string FieldName { get; }
+
+    [JsonPropertyName("value")]
+    public object Value { get; }
 }
 
 /// <summary>
@@ -134,12 +175,44 @@ internal sealed record AzureDevOpsTestSubResult(
     [property: JsonPropertyName("errorMessage")] string? ErrorMessage,
     [property: JsonPropertyName("stackTrace")] string? StackTrace,
     [property: JsonPropertyName("startedDate")] DateTimeOffset? StartedDate,
-    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate);
+    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
+{
+    /// <summary>
+    /// Gets Azure DevOps-specific metadata for this attempt. Retry entries include the zero-based
+    /// <c>AttemptId</c> field.
+    /// </summary>
+    [JsonPropertyName("customFields")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AzureDevOpsCustomTestField>? CustomFields { get; init; }
+}
 
 /// <summary>A test case result bundled with optional attachments to upload after the result is published.</summary>
 internal sealed record AzureDevOpsTestCaseResultWithAttachments(
     AzureDevOpsTestCaseResult Result,
-    IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments);
+    IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)
+{
+    /// <summary>
+    /// Gets earlier executions that an in-process retry performed before <see cref="Result"/> became the
+    /// test's final outcome.
+    /// </summary>
+    public IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> PreviousAttempts { get; init; } = [];
+}
+
+internal sealed class AzureDevOpsPublishedTestResult
+{
+    public AzureDevOpsPublishedTestResult(int id, IReadOnlyDictionary<int, int> subResultIdsBySequenceId)
+    {
+        Id = id;
+        SubResultIdsBySequenceId = subResultIdsBySequenceId;
+    }
+
+    public int Id { get; }
+
+    public IReadOnlyDictionary<int, int> SubResultIdsBySequenceId { get; }
+
+    public bool TryGetSubResultId(int sequenceId, out int subResultId)
+        => SubResultIdsBySequenceId.TryGetValue(sequenceId, out subResultId);
+}
 
 /// <summary>
 /// Describes an attachment to upload to Azure DevOps (either to a test result or to the test run).
@@ -172,18 +245,6 @@ internal sealed class AzureDevOpsTestResultAttachment
 
     public static AzureDevOpsTestResultAttachment FromString(string content, string fileName, string attachmentType, string? comment = null)
         => new(fileName, attachmentType, comment, filePath: null, inlineContent: content);
-
-    /// <summary>
-    /// Returns a copy of this attachment published under a different file name.
-    /// </summary>
-    /// <remarks>
-    /// Every attempt of a rerun uploads its attachments against the same parent result, where Azure DevOps
-    /// accumulates rather than replaces them. Two attempts would therefore both contribute a
-    /// <c>stdout.log</c>, leaving no way to tell which attempt produced which. Renaming per attempt keeps
-    /// them distinguishable without needing a sub-result id we cannot reliably obtain.
-    /// </remarks>
-    public AzureDevOpsTestResultAttachment WithFileName(string fileName)
-        => new(fileName, AttachmentType, Comment, FilePath, InlineContent);
 }
 
 internal sealed record AzureDevOpsTestResultsPublisherOptions(

@@ -21,9 +21,9 @@ public sealed class CtrfArtifactPostProcessorTests
     {
         CtrfArtifactPostProcessor processor = new();
 
-        Assert.AreSequenceEqual(new[] { CtrfReportGenerator.CtrfArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual([CtrfReportGenerator.CtrfArtifactKind], processor.SupportedKinds);
         Assert.AreSequenceEqual(
-            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts],
             processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
@@ -91,6 +91,18 @@ public sealed class CtrfArtifactPostProcessorTests
             Assert.AreEqual("CTRF", (string?)merged["reportFormat"]);
             Assert.AreEqual(2, merged["results"]!["tests"]!.AsArray().Count);
             Assert.IsTrue(Guid.TryParse((string?)merged["reportId"], out _));
+            JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+            Assert.AreEqual("merged", (string?)metadata["documentRole"]);
+            Assert.AreEqual("concatenate", (string?)metadata["mergeMode"]);
+            Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
+            Assert.AreEqual(2, metadata["inputCount"]!.GetValue<int>());
+            string[] expectedInputIds =
+            [
+                .. new[] { firstPath, secondPath }.Select(path => (string)JsonNode.Parse(File.ReadAllText(path))!["reportId"]!),
+            ];
+            Assert.AreSequenceEqual(
+                expectedInputIds,
+                metadata["inputs"]!.AsArray().Select(input => (string)input!["reportId"]!).ToArray());
         }
         finally
         {
@@ -223,6 +235,34 @@ public sealed class CtrfArtifactPostProcessorTests
         }
     }
 
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedPathIsAFile_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        File.WriteAllText(Path.Combine(resultsDirectory, "merged"), string.Empty);
+        try
+        {
+            string firstPath = WriteReport(resultsDirectory, "first.ctrf.json", "first");
+            string secondPath = WriteReport(resultsDirectory, "second.ctrf.json", "second");
+
+            ProcessedArtifact? output = await new CtrfArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath, "execution-1"), CreateInput(secondPath, "execution-2")],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsTrue(File.Exists(firstPath));
+            Assert.IsTrue(File.Exists(secondPath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
 #if NETCOREAPP
     [TestMethod]
     public async Task ProcessAsync_WhenMergedDirectoryIsAReparsePoint_DoesNotMerge()
@@ -256,6 +296,45 @@ public sealed class CtrfArtifactPostProcessorTests
 
             Assert.IsNull(output);
             Assert.IsEmpty(Directory.GetFileSystemEntries(outsideDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsADanglingReparsePoint_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        string missingDirectory = Path.Combine(root, "missing");
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), missingDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = WriteReport(resultsDirectory, "first.ctrf.json", "first");
+            string secondPath = WriteReport(resultsDirectory, "second.ctrf.json", "second");
+
+            ProcessedArtifact? output = await new CtrfArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath, "execution-1"), CreateInput(secondPath, "execution-2")],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsTrue(File.Exists(firstPath));
+            Assert.IsTrue(File.Exists(secondPath));
+            Assert.IsFalse(Directory.Exists(missingDirectory));
         }
         finally
         {

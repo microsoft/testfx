@@ -43,13 +43,13 @@ internal static class StackTraceHelper
 
     private static bool TryGetStackFrameLocation(string stackFrame, out int line, [NotNullWhen(true)] out string? file, out string? place)
     {
-        InitializeRegex();
+        Regex regex = GetOrCreateRegex();
 
         // stack frame looks like this '   at Program.<Main>$(String[] args) in S:\t\ConsoleApp81\ConsoleApp81\Program.cs:line 9'
         Match match;
         try
         {
-            match = s_regex.Match(stackFrame);
+            match = regex.Match(stackFrame);
         }
         catch (RegexMatchTimeoutException)
         {
@@ -67,9 +67,7 @@ internal static class StackTraceHelper
         if (hasLocation)
         {
             // get the exact info from stack frame.
-            Group code = match.Groups["code"];
-            Group codeWithoutLocation = match.Groups["code1"];
-            place = code.Success ? code.Value : codeWithoutLocation.Value;
+            place = match.Groups["code"].Value;
 
             file = match.Groups["file"].Value;
             _ = int.TryParse(match.Groups["line"].Value, out line);
@@ -78,18 +76,12 @@ internal static class StackTraceHelper
         return hasLocation;
     }
 
-    [MemberNotNull(nameof(s_regex))]
-    private static void InitializeRegex()
-    {
-        if (s_regex is not null)
-        {
-            return;
-        }
-
-        // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
-        s_regex = new Regex(
-            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
-            RegexOptions.Compiled,
-            StackTraceRegexHelper.MatchTimeout);
-    }
+    private static Regex GetOrCreateRegex()
+        => LazyInitializer.EnsureInitialized(
+            ref s_regex,
+            // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
+            static () => new Regex(
+                StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
+                RegexOptions.Compiled,
+                StackTraceRegexHelper.MatchTimeout))!;
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,6 +32,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <para>
 /// Product-specific state (for example whether the Docker daemon is configured for Linux containers) is intentionally
 /// out of scope; layer such checks on top of this attribute or author your own <see cref="ConditionBaseAttribute"/>.
+/// </para>
+/// <para>
+/// Executable availability depends on the runtime environment, including its <c>PATH</c>, so a missing or misspelled
+/// executable cannot be validated statically and is evaluated immediately before the test executes.
 /// </para>
 /// <para>
 /// Each distinct executable-and-arguments combination forms its own condition group (see <see cref="GroupName"/>).

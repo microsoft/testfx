@@ -11,7 +11,7 @@ namespace MSTest.Analyzers.Helpers;
 
 /// <summary>
 /// Shared logic for the code fixes that replace an imperative "skip this test" guard at the top of a test method
-/// with a declarative condition attribute (MSTEST0079, MSTEST0080).
+/// with a declarative condition attribute (MSTEST0079, MSTEST0080, MSTEST0083).
 /// </summary>
 internal static class SkipGuardCodeFixHelper
 {
@@ -26,6 +26,9 @@ internal static class SkipGuardCodeFixHelper
     /// <param name="attributeTypeName">The metadata name of the attribute to add, relative to the MSTest namespace.</param>
     /// <param name="arguments">The attribute arguments, as source text relative to the MSTest namespace.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="qualifyArguments">
+    /// Whether each argument is relative to the MSTest namespace. Set to <see langword="false"/> for literals.
+    /// </param>
     /// <returns>The updated document.</returns>
     public static async Task<Document> ReplaceGuardWithAttributeAsync(
         Document document,
@@ -33,7 +36,8 @@ internal static class SkipGuardCodeFixHelper
         IfStatementSyntax ifStatement,
         string attributeTypeName,
         string[] arguments,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool qualifyArguments = true)
     {
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
@@ -43,11 +47,11 @@ internal static class SkipGuardCodeFixHelper
             return document;
         }
 
-        editor.ReplaceNode(methodDeclaration, modifiedMethod.AddAttributeLists(CreateAttributeList(attributeTypeName, arguments)));
+        editor.ReplaceNode(methodDeclaration, modifiedMethod.AddAttributeLists(CreateAttributeList(attributeTypeName, arguments, qualifyArguments)));
         return editor.GetChangedDocument();
     }
 
-    private static AttributeListSyntax CreateAttributeList(string attributeTypeName, string[] arguments)
+    private static AttributeListSyntax CreateAttributeList(string attributeTypeName, string[] arguments, bool qualifyArguments)
     {
         // Generate root-qualified names and let the simplifier shorten them. The test method may be decorated with a
         // fully qualified '[Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]' without importing the namespace,
@@ -62,7 +66,8 @@ internal static class SkipGuardCodeFixHelper
                 SyntaxFactory.AttributeArgumentList(
                     SyntaxFactory.SeparatedList(
                         arguments.Select(argument => SyntaxFactory.AttributeArgument(
-                            SyntaxFactory.ParseExpression($"{MSTestNamespace}.{argument}").WithAdditionalAnnotations(Simplifier.Annotation))))));
+                            SyntaxFactory.ParseExpression(qualifyArguments ? $"{MSTestNamespace}.{argument}" : argument)
+                                .WithAdditionalAnnotations(Simplifier.Annotation))))));
         }
 
         return SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute));

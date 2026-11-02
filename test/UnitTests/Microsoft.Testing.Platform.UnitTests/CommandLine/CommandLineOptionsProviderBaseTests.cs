@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -157,5 +157,27 @@ public sealed class CommandLineOptionsProviderBaseTests
         public string Description => "extension-description";
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    [TestMethod]
+    [DataRow("FiRsT", true, null)]
+    [DataRow("SECOND", true, null)]
+    [DataRow(" first ", false, "Rejected ' first '; choose 'first', 'second'.")]
+    [DataRow("", false, "Rejected ''; choose 'first', 'second'.")]
+    [DataRow("third", false, "Rejected 'third'; choose 'first', 'second'.")]
+    public async Task ValidateAllowedValues_MatchesOrdinalCaseWithoutTrimmingAndFormatsRejectedValue(
+        string value, bool expectedValid, string? expectedError)
+    {
+        ValidationResult result = await AllowedValuesProvider.ValidateAsync(value);
+
+        Assert.AreEqual(expectedValid, result.IsValid);
+        Assert.AreEqual(expectedError, result.ErrorMessage);
+    }
+
+    private sealed class AllowedValuesProvider()
+        : CommandLineOptionsProviderBase("allowed-values", "1.0", "Allowed values", "Validates two modes", [])
+    {
+        public static Task<ValidationResult> ValidateAsync(string value)
+            => ValidateAllowedValuesAsync(value, ["first", "second"], "Rejected '{0}'; choose {1}.");
     }
 }

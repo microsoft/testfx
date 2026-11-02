@@ -20,7 +20,7 @@ internal static class ExceptionExtensions
     {
         var builder = new StringBuilder(exception.Message);
         Exception? inner = exception.InnerException;
-        while (inner != null)
+        while (inner is not null)
         {
             builder.AppendLine();
             builder.Append(inner.Message);
@@ -59,7 +59,7 @@ internal static class ExceptionExtensions
     /// <returns>Exception message.</returns>
     internal static string TryGetMessage(this Exception? exception)
     {
-        if (exception == null)
+        if (exception is null)
         {
             return string.Format(CultureInfo.CurrentCulture, Resource.UTF_FailedToGetExceptionMessage, "null");
         }

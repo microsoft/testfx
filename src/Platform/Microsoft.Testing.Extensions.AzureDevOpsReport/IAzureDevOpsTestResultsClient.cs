@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -17,6 +17,11 @@ internal interface IAzureDevOpsTestResultsClient
     Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Publishes a batch and returns the parent and server-assigned sub-result IDs.
+    /// </summary>
+    Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> PublishTestResultsWithSubResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Updates results that were already published to the run, identified by
     /// <see cref="AzureDevOpsTestCaseResult.Id"/>. Used to turn a previously published result into a rerun
     /// carrying every attempt as a sub-result, instead of appending a second result for the same test.
@@ -26,9 +31,19 @@ internal interface IAzureDevOpsTestResultsClient
     Task UpdateTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Uploads an attachment to a specific test case result within a test run.
+    /// Updates a batch and returns the parent and server-assigned sub-result IDs.
     /// </summary>
-    Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken);
+    Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> UpdateTestResultsWithSubResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Updates only canonical metadata by result ID, preserving outcomes, diagnostics and retry sub-results.
+    /// </summary>
+    Task UpdateTestResultMetadataAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyDictionary<int, string> metadata, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Uploads an attachment to a specific test case result or sub-result within a test run.
+    /// </summary>
+    Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken);
 
     /// <summary>
     /// Uploads an attachment to the test run itself (e.g. code coverage files).

@@ -1,57 +1,101 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
+using System.Collections.Concurrent;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
 public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.TestAssetFixture>
 {
     private const string AssetName = "ExecutionTests";
+    private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan ProcessExitTimeout = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(30);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task ExitOnProcessExit_Succeed(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        using TempDirectory state = new();
 
-        // Create the mutex name used to wait for the PID file created by the test host.
-        string waitPid = Guid.NewGuid().ToString("N");
-        _ = testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string?> { ["WaitPid"] = waitPid }, cancellationToken: TestContext.CancellationToken);
-
-        Process? process;
-        var startTime = Stopwatch.StartNew();
-        while (true)
+        // Named mutexes are not compatible across the runner's and test host's runtime versions on Unix.
+        string readyFile = Path.Combine(state.Path, "ready");
+        Dictionary<string, string?> environmentVariables = [];
+        foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
         {
-            await Task.Delay(500, TestContext.CancellationToken);
-
-            // Look for the pid file created by the test host.
-            string[] pidFile = [.. Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID")];
-            if (pidFile.Length > 0)
+            string key = variable.Key.ToString()!;
+            if (!WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                string pid = File.ReadAllText(pidFile[0]);
-                if (int.TryParse(pid, out int pidValue))
-                {
-                    // Create the process object from the test host one.
-                    process = Process.GetProcessById(pidValue);
-                    break;
-                }
-            }
-
-            if (startTime.Elapsed.TotalSeconds > 60)
-            {
-                throw new Exception("Process PID not found in 60 seconds");
+                environmentVariables[key] = variable.Value?.ToString();
             }
         }
 
-        // Create the mutex and unblock the test host.
-        using Mutex waitPidMutex = new(true, waitPid);
-        startTime = Stopwatch.StartNew();
-        while (!process.HasExited)
-        {
-            await Task.Delay(1000, TestContext.CancellationToken);
-            if (startTime.Elapsed.TotalSeconds > 60)
+        environmentVariables["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet");
+        environmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
+        environmentVariables["TESTINGPLATFORM_AZDO_OUTPUT"] = "off";
+        environmentVariables["ExitOnProcessExitReadyFile"] = readyFile;
+        ConcurrentQueue<string> output = new();
+
+        IProcessHandle parent = ProcessFactory.Start(
+            new ProcessConfiguration(testHost.FullName)
             {
-                throw new Exception("Process did not exit in 60 seconds");
+                Arguments = "--parent-process",
+                EnvironmentVariables = environmentVariables,
+                OnStandardOutput = (_, line) => output.Enqueue(line),
+                OnErrorOutput = (_, line) => output.Enqueue(line),
+            },
+            cleanDefaultEnvironmentVariableIfCustomAreProvided: true);
+
+        // Keep the original exit waits uncanceled so failure cleanup can join both processes.
+        Task<int> parentExit = parent.WaitForExitAsync(CancellationToken.None);
+        IProcessHandle? child = null;
+        Task<int>? childExit = null;
+        try
+        {
+            child = ProcessFactory.Start(
+                new ProcessConfiguration(testHost.FullName)
+                {
+                    Arguments = $"--exit-on-process-exit {parent.Id} --progress off --no-ansi",
+                    EnvironmentVariables = environmentVariables,
+                    OnStandardOutput = (_, line) => output.Enqueue(line),
+                    OnErrorOutput = (_, line) => output.Enqueue(line),
+                },
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: true);
+            childExit = child.WaitForExitAsync(CancellationToken.None);
+            using var startup = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+            startup.CancelAfter(StartupTimeout);
+            while (!File.Exists(readyFile))
+            {
+                if (childExit.IsCompleted)
+                {
+                    Assert.Fail($"Test host exited before becoming ready with code {await childExit}.{Environment.NewLine}{string.Join(Environment.NewLine, output)}");
+                }
+
+                Assert.IsFalse(parentExit.IsCompleted, "The parent must remain alive until the test host is ready.");
+                await Task.Delay(100, startup.Token);
+            }
+
+            await parent.WriteInputAsync("exit");
+            Assert.AreEqual(0, await parentExit.WaitAsync(ProcessExitTimeout, TestContext.CancellationToken));
+            Assert.AreEqual((int)ExitCode.DependentProcessExited, await childExit.WaitAsync(ProcessExitTimeout, TestContext.CancellationToken),
+                string.Join(Environment.NewLine, output));
+        }
+        finally
+        {
+            parent.Kill();
+            child?.Kill();
+            try
+            {
+                Task<int>[] exits = childExit is null ? [parentExit] : [parentExit, childExit];
+                await Task.WhenAll(exits).WaitAsync(CleanupTimeout, CancellationToken.None);
+            }
+            finally
+            {
+                child?.Dispose();
+                parent.Dispose();
             }
         }
     }
@@ -75,45 +119,22 @@ public class ExitOnProcessExitTests : AcceptanceTestBase<ExitOnProcessExitTests.
 </Project>
 
 #file Program.cs
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
-if (!args.Contains("--exit-on-process-exit"))
+if (args.Contains("--parent-process"))
 {
-    int currentPid = Process.GetCurrentProcess().Id;
-    var currentEntryPoint = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)!, Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly()!.Location)
-        + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty));
-
-    string mutexName = Guid.NewGuid().ToString("N");
-    Environment.SetEnvironmentVariable("WaitTestHost", mutexName);
-    ProcessStartInfo processStartInfo = new();
-    processStartInfo.FileName = currentEntryPoint;
-    processStartInfo.Arguments = $"--exit-on-process-exit {currentPid} --progress off --no-ansi";
-    processStartInfo.UseShellExecute = false;
-    var process = Process.Start(processStartInfo);
-    while (!Mutex.TryOpenExisting(mutexName, out Mutex? _))
-    {
-        Thread.Sleep(500);
-    }
-
-    Environment.Exit(0);
-
+    Console.ReadLine();
     return 0;
 }
-else
-{
-    ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-    builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
-    using ITestApplication app = await builder.BuildAsync();
-    return await app.RunAsync();
-}
 
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new DummyTestFramework());
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
 
 public class DummyTestFramework : ITestFramework, IDataProducer
 {
@@ -137,23 +158,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        File.WriteAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location!)!, "PID"), Process.GetCurrentProcess().Id.ToString());
-        while (!Mutex.TryOpenExisting(Environment.GetEnvironmentVariable("WaitPid")!, out Mutex? _))
-        {
-            Thread.Sleep(500);
-        }
-
-        using Mutex mutex1 = new(true, Environment.GetEnvironmentVariable("WaitTestHost"));
-
-        Thread.Sleep(60_000);
-
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
-        {
-            Uid = "Test1",
-            DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
-        }));
-
+        File.WriteAllText(Environment.GetEnvironmentVariable("ExitOnProcessExitReadyFile")!, "ready");
+        await Task.Delay(Timeout.Infinite, context.CancellationToken);
         context.Complete();
     }
 }

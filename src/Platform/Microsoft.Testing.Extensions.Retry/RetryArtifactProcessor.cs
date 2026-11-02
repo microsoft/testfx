@@ -32,7 +32,7 @@ internal static class RetryArtifactProcessor
         {
             ArtifactRequest artifact = artifacts[i];
             string artifactPath = Path.GetFullPath(artifact.Path);
-            if (IsUnderDirectory(artifactPath, attemptDirectory))
+            if (PathContainment.IsUnderDirectory(artifactPath, attemptDirectory))
             {
                 captured.Add(new RetryAttemptArtifact(artifactPath, artifact.Kind, attempt, destinationPath: null));
                 continue;
@@ -64,29 +64,60 @@ internal static class RetryArtifactProcessor
         int attemptCount,
         string outputDirectory,
         CancellationToken cancellationToken)
+        // Stryker disable once Boolean: continuation scheduling does not change artifact processing results.
+        => await ProcessAsync(
+            serviceProvider,
+            producer,
+            outputDevice,
+            logger,
+            artifacts,
+            attemptCount,
+            runSummary: null,
+            outputDirectory,
+            cancellationToken).ConfigureAwait(false);
+
+    public static async Task<IReadOnlyDictionary<string, string>> ProcessAsync(
+        IServiceProvider serviceProvider,
+        IOutputDeviceDataProducer producer,
+        IOutputDevice outputDevice,
+        ILogger logger,
+        IReadOnlyList<RetryAttemptArtifact> artifacts,
+        int attemptCount,
+        ArtifactPostProcessingRunSummary? runSummary,
+        string outputDirectory,
+        CancellationToken cancellationToken)
     {
         IArtifactPostProcessor[] processors =
         [
             .. serviceProvider.GetServicesInternal<IArtifactPostProcessor>()
                 .Where(processor => processor.SupportedModes.Contains(ArtifactPostProcessingMode.RetryAttempts)),
         ];
-        if (processors.Length == 0 || attemptCount < 2)
+        // Stryker disable once all: the loop below also returns the same empty replacement map when no processors exist.
+        if (processors.Length == 0)
         {
             return new Dictionary<string, string>();
         }
 
         List<RetryAttemptArtifact> unmatchedArtifacts = [.. artifacts];
-        var replacements = new Dictionary<string, string>(GetPathComparer());
+        var replacements = new Dictionary<string, string>(
+            GetPathComparer(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)));
         var context = new ArtifactPostProcessingContext(
             ArtifactPostProcessingTruncationReason.None,
-            ArtifactPostProcessingMode.RetryAttempts);
+            ArtifactPostProcessingMode.RetryAttempts,
+            runSummary);
 
         foreach (IArtifactPostProcessor processor in processors)
         {
+            if (attemptCount < 2 && processor is not IArtifactPostProcessorRequiresPostProcessing)
+            {
+                continue;
+            }
+
             RetryAttemptArtifact[] matchingArtifacts =
             [
                 .. unmatchedArtifacts.Where(artifact => Matches(processor, artifact)),
             ];
+            // Stryker disable once all: the completeness check below rejects this same empty artifact set.
             if (matchingArtifacts.Length == 0)
             {
                 continue;
@@ -110,6 +141,7 @@ internal static class RetryArtifactProcessor
             [
                 .. artifactsByAttempt.Select(group =>
                 {
+                    // Stryker disable once all: the preceding count check proves every group contains exactly one artifact.
                     RetryAttemptArtifact artifact = group.Single();
                     return new InputArtifact(
                         artifact.Path,
@@ -123,6 +155,7 @@ internal static class RetryArtifactProcessor
 
             try
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the processor output.
                 ProcessedArtifact? output = await processor.ProcessAsync(
                     inputs,
                     outputDirectory,
@@ -135,6 +168,7 @@ internal static class RetryArtifactProcessor
 
                 ProcessedArtifact validatedOutput =
                     ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(output, outputDirectory, inputs);
+                // Stryker disable once all: the completeness check proves exactly one artifact belongs to the final attempt.
                 replacements[matchingArtifacts.Single(artifact => artifact.Attempt == attemptCount).Path] =
                     validatedOutput.Path;
             }
@@ -144,7 +178,9 @@ internal static class RetryArtifactProcessor
             }
             catch (Exception ex)
             {
-                logger.LogWarning($"Retry artifact post-processor '{processor.Uid}' failed: {ex}");
+                // Stryker disable once Boolean: continuation scheduling does not change the warning diagnostic.
+                await logger.LogWarningAsync($"Retry artifact post-processor '{processor.Uid}' failed: {ex}").ConfigureAwait(false);
+                // Stryker disable once Boolean: continuation scheduling does not change the displayed warning.
                 await outputDevice.DisplayAsync(
                     producer,
                     new WarningMessageOutputDeviceData(string.Format(
@@ -192,21 +228,10 @@ internal static class RetryArtifactProcessor
                 Path.GetExtension(artifact.Path),
                 StringComparer.OrdinalIgnoreCase);
 
-    private static StringComparer GetPathComparer()
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+    private static StringComparer GetPathComparer(bool isWindows)
+        => isWindows
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
-
-    private static bool IsUnderDirectory(string path, string directory)
-    {
-        string directoryPrefix = Path.GetFullPath(directory)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            + Path.DirectorySeparatorChar;
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-        return path.StartsWith(directoryPrefix, comparison);
-    }
 }
 
 internal sealed class RetryAttemptArtifact(string path, string? kind, int attempt, string? destinationPath)

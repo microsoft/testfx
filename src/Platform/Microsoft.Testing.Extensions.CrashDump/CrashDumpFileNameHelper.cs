@@ -11,10 +11,12 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
         {
             // Path.GetDirectoryName returns "" for a bare filename on modern .NET and throws for an
             // empty string on .NET Framework. Both cases mean the current working directory.
+#if !NETCOREAPP
             if (dumpFileNamePattern is null or "")
             {
                 return ".";
             }
+#endif
 
             string? rawDirectory = Path.GetDirectoryName(dumpFileNamePattern);
             return rawDirectory is null or "" ? "." : rawDirectory;
@@ -23,7 +25,7 @@ internal sealed partial class CrashDumpProcessLifetimeHandler
         public static string GetDumpSearchPattern(string dumpFileNamePattern)
         {
             string dumpExtension = Path.GetExtension(Path.GetFileName(dumpFileNamePattern));
-            return dumpExtension.Length == 0 ? "*" : $"*{dumpExtension}";
+            return $"*{dumpExtension}";
         }
 
         public static Regex BuildDumpFileNameRegex(string fileName)

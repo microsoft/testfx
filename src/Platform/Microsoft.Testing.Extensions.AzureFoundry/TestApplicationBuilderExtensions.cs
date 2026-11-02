@@ -11,6 +11,9 @@ namespace Microsoft.Testing.Extensions.AzureFoundry;
 /// <summary>
 /// Extension methods for configuring Azure Foundry services.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class TestApplicationBuilderExtensions
 {

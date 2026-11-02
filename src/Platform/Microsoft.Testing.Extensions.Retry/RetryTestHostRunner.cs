@@ -1,8 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -15,8 +17,11 @@ namespace Microsoft.Testing.Extensions.Policy;
 /// waits for the retry pipe connection (with hang timeout), and returns the attempt's exit code.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal static class RetryTestHostRunner
 {
+    private static readonly TimeSpan TestHostTerminationTimeout = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// Result of running one attempt. When <see cref="ExitedBeforeConnect"/> is <see langword="true"/>, the child
     /// process died before it could connect to the retry pipe, and the orchestrator should stop with a generic failure.
@@ -26,6 +31,10 @@ internal static class RetryTestHostRunner
         public required int ExitCode { get; init; }
 
         public required bool ExitedBeforeConnect { get; init; }
+
+#pragma warning disable RS0051 // Retry-attempt transport detail, not package API.
+        public required string RecoveredArtifactManifestPath { get; init; }
+#pragma warning restore RS0051
     }
 
     public static async Task<AttemptResult> RunAttemptAsync(
@@ -62,15 +71,29 @@ internal static class RetryTestHostRunner
         {
             UseShellExecute = false,
         };
+        string recoveredArtifactManifestPath = Path.Combine(
+            Path.GetTempPath(),
+            $"testfx-retry-recovered-artifacts-{Guid.NewGuid():N}.txt");
+        processStartInfo.EnvironmentVariables["TESTINGPLATFORM_RETRY_RECOVERED_ARTIFACT_MANIFEST"] =
+            recoveredArtifactManifestPath;
+        using var manifestOwnership = new RecoveredArtifactManifestOwnership(
+            serviceProvider.GetFileSystem(),
+            recoveredArtifactManifestPath,
+            logger);
 
         // Tell the launched test host which retry attempt it is, so it can report an explicit AttemptNumber in
         // its dotnet test handshake instead of the consumer having to infer it from a change in InstanceId.
         processStartInfo.EnvironmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER] =
             attemptCount.ToString(CultureInfo.InvariantCulture);
 
+        // Stryker disable once Boolean: continuation scheduling does not change the launch diagnostic.
         await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
-        using IProcess testHostProcess = serviceProvider.GetProcessHandler().Start(processStartInfo)
-            ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
+        ITestHostLauncher? testHostLauncher = serviceProvider.GetServiceInternal<ITestHostLauncher>();
+        // Stryker disable once Boolean: continuation scheduling does not change the launched process.
+        using IProcess testHostProcess = testHostLauncher is null
+            ? serviceProvider.GetProcessHandler().Start(processStartInfo)
+                ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName))
+            : await LaunchUsingCustomLauncherAsync(testHostLauncher, processStartInfo, finalArguments, logger, cancellationToken).ConfigureAwait(false);
 
         using var processExitedCancellationToken = new CancellationTokenSource();
         EventHandler exitedHandler = (sender, e) =>
@@ -93,38 +116,200 @@ internal static class RetryTestHostRunner
         };
 
         testHostProcess.Exited += exitedHandler;
+        if (testHostProcess.HasExited)
+        {
+#if NET8_0_OR_GREATER
+            // Stryker disable once Boolean: continuation scheduling does not change cancellation completion.
+            await processExitedCancellationToken.CancelAsync().ConfigureAwait(false);
+#else
+            processExitedCancellationToken.Cancel();
+#endif
+        }
+
         try
         {
             using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
             using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-            using var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token);
 
+            // Stryker disable once Boolean: continuation scheduling does not change the connection diagnostic.
             await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
-            try
+            Task waitForConnectionTask = retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken.Token);
+            var processExitedTask = Task.Delay(Timeout.InfiniteTimeSpan, processExitedCancellationToken.Token);
+            // Stryker disable once Boolean: continuation scheduling does not change which task completes first.
+            Task completedTask = await Task.WhenAny(waitForConnectionTask, processExitedTask).ConfigureAwait(false);
+
+            // A launcher can return an already-exited handle after the child successfully connected. Prefer
+            // that completed connection over the exit notification so the attempt results are still consumed.
+            // Stryker disable once Boolean: continuation scheduling does not change the grace-period result.
+            completedTask = await WaitForConnectionGracePeriodAsync(
+                completedTask,
+                waitForConnectionTask,
+                linkedToken.Token).ConfigureAwait(false);
+
+            if (HasConnectionCompleted(completedTask, waitForConnectionTask))
             {
 #if NETCOREAPP
-                await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).ConfigureAwait(false);
+                // Stryker disable once Boolean: continuation scheduling does not change connection completion.
+                await waitForConnectionTask.ConfigureAwait(false);
 #else
-                // We don't know why but if the cancellation is called quickly in `testHostProcess.Exited`: `processExitedCancellationToken.Cancel();` for netfx we stuck sometime here, like if
-                // the token we pass to the named pipe is not "correctly" verified inside the pipe implementation self.
-                // We fallback with our custom agnostic cancellation mechanism in that case.
-                // We see it happen only in .NET FX and not in .NET Core so for now we don't do it for core.
-                await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token).ConfigureAwait(false);
+                await waitForConnectionTask.WithCancellationAsync(linkedToken.Token).ConfigureAwait(false);
 #endif
             }
-            catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
+            else
             {
+                // Stryker disable once Boolean: continuation scheduling does not change the displayed failure.
                 await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
-                return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = true };
+                manifestOwnership.Transfer();
+                return new AttemptResult
+                {
+                    ExitCode = testHostProcess.ExitCode,
+                    ExitedBeforeConnect = true,
+                    RecoveredArtifactManifestPath = recoveredArtifactManifestPath,
+                };
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // Stryker disable once Boolean: continuation scheduling does not change termination completion.
+            await TerminateAndWaitForExitAsync(testHostProcess, logger).ConfigureAwait(false);
+            throw;
         }
         finally
         {
             testHostProcess.Exited -= exitedHandler;
         }
 
+        // Stryker disable once Boolean: continuation scheduling does not change the observed exit.
         await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
-        return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = false };
+        int exitCode = testHostProcess.ExitCode;
+        if (testHostProcess is TestHostHandleToProcessAdapter { IsExitCodeAuthoritative: false })
+        {
+            exitCode = retryFailedTestsPipeServer.CountsReported
+                ? retryFailedTestsPipeServer.FailedTestResults > 0
+                    ? (int)ExitCode.AtLeastOneTestFailed
+                    : (int)ExitCode.Success
+                : (int)ExitCode.GenericFailure;
+        }
+
+        manifestOwnership.Transfer();
+        return new AttemptResult
+        {
+            ExitCode = exitCode,
+            ExitedBeforeConnect = false,
+            RecoveredArtifactManifestPath = recoveredArtifactManifestPath,
+        };
+    }
+
+    private static bool ShouldWaitForConnectionGracePeriod(Task completedTask, Task waitForConnectionTask)
+        => completedTask != waitForConnectionTask && !waitForConnectionTask.IsCompleted;
+
+    private static bool HasConnectionCompleted(Task completedTask, Task waitForConnectionTask)
+        => completedTask == waitForConnectionTask || waitForConnectionTask.IsCompleted;
+
+    private static async Task<Task> WaitForConnectionGracePeriodAsync(
+        Task completedTask,
+        Task waitForConnectionTask,
+        CancellationToken cancellationToken)
+    {
+        if (!ShouldWaitForConnectionGracePeriod(completedTask, waitForConnectionTask))
+        {
+            return completedTask;
+        }
+
+        // ConnectAsync on the client can complete just before the server-side completion is scheduled.
+        // Give that already-established connection a brief chance to win over the exit notification.
+        // Stryker disable once Boolean: continuation scheduling does not change the grace-period result.
+        Task connectionOrGracePeriod = await Task.WhenAny(
+            waitForConnectionTask,
+            Task.Delay(TimeSpan.FromSeconds(1), cancellationToken)).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        return connectionOrGracePeriod;
+    }
+
+    private sealed class RecoveredArtifactManifestOwnership(
+        IFileSystem fileSystem,
+        string path,
+        ILogger logger) : IDisposable
+    {
+        private bool _transferred;
+
+        public void Transfer() => _transferred = true;
+
+        public void Dispose()
+        {
+            if (_transferred)
+            {
+                return;
+            }
+
+            try
+            {
+                if (fileSystem.ExistFile(path))
+                {
+                    fileSystem.DeleteFile(path);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning($"Failed to delete recovered retry artifact manifest '{path}' after retry launch failed: {ex}");
+            }
+        }
+    }
+
+    private static async Task TerminateAndWaitForExitAsync(IProcess testHostProcess, ILogger logger)
+    {
+        try
+        {
+            testHostProcess.Kill();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogDebugAsync($"Ignoring failure while terminating the retry test host: {ex}").ConfigureAwait(false);
+        }
+
+        using var timeout = new CancellationTokenSource(TestHostTerminationTimeout);
+        try
+        {
+            // Stryker disable once Boolean: continuation scheduling does not change termination completion.
+            await testHostProcess.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            if (testHostProcess is TestHostHandleToProcessAdapter adapter)
+            {
+                adapter.DeferDisposalUntilExit();
+            }
+
+            await logger.LogWarningAsync(
+                $"Retry test host did not exit within {TestHostTerminationTimeout} after termination was requested; continuing cancellation.").ConfigureAwait(false);
+        }
+    }
+
+    private static async Task<IProcess> LaunchUsingCustomLauncherAsync(
+        ITestHostLauncher testHostLauncher,
+        ProcessStartInfo processStartInfo,
+        IReadOnlyList<string> arguments,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+#pragma warning disable IDE0028 // Collection initialization can be simplified — populated from a runtime loop.
+        Dictionary<string, string?> environmentVariables = new(StringComparer.Ordinal);
+#pragma warning restore IDE0028
+        foreach (string key in processStartInfo.EnvironmentVariables.Keys)
+        {
+            environmentVariables[key] = processStartInfo.EnvironmentVariables[key];
+        }
+
+        string? workingDirectory = RoslynString.IsNullOrEmpty(processStartInfo.WorkingDirectory) ? null : processStartInfo.WorkingDirectory;
+        TestHostLaunchContext context = new(processStartInfo.FileName, arguments, environmentVariables, workingDirectory);
+
+        // Stryker disable once Boolean: continuation scheduling does not change the delegation diagnostic.
+        await logger.LogDebugAsync($"Delegating retry test host launch to '{testHostLauncher.DisplayName}' (UID: {testHostLauncher.Uid})").ConfigureAwait(false);
+        // Stryker disable once Boolean: continuation scheduling does not change the returned test-host handle.
+        ITestHostHandle handle = await testHostLauncher.LaunchTestHostAsync(context, cancellationToken).ConfigureAwait(false);
+        // Stryker disable once Boolean: continuation scheduling does not change the launch diagnostic.
+        await logger.LogDebugAsync($"Retry test host launched by '{testHostLauncher.Uid}' (Identifier: '{handle.Identifier ?? "<none>"}')").ConfigureAwait(false);
+        return new TestHostHandleToProcessAdapter(handle);
     }
 }

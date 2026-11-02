@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -16,11 +16,14 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
-internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
+#pragma warning disable RS0051 // Reporter lifecycle internals are shared-source implementation detail, not package API.
+
+internal abstract partial class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     IDataConsumer,
     ITestSessionLifetimeHandler,
     IDataProducer,
-    IOutputDeviceDataProducer
+    IOutputDeviceDataProducer,
+    IDisposable
     where TGenerator : ReportGeneratorBase<TGenerator, TCapturedTestResult>
     where TCapturedTestResult : class
 {
@@ -31,11 +34,19 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger<TGenerator> _logger;
+    private readonly ITask _task;
     private readonly bool _isEnabled;
+    private readonly int? _recoveredProcessId;
+    private readonly bool _isRecoveredReportIncomplete;
 
     private DateTimeOffset? _testStartTime;
 
     protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName)
+        : this(serviceProvider, optionName, journalEnvironmentVariableName: string.Empty)
+    {
+    }
+
+    protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName, string journalEnvironmentVariableName)
         : this(
             (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
             serviceProvider.GetCommandLineOptions(),
@@ -48,7 +59,36 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             serviceProvider.GetTestFramework(),
             serviceProvider.GetTestApplicationProcessExitCode(),
             serviceProvider.GetLoggerFactory().CreateLogger<TGenerator>(),
-            optionName)
+            serviceProvider.GetTask(),
+            optionName,
+            journalEnvironmentVariableName.Length > 0
+                && serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)
+                ? serviceProvider.GetEnvironment().GetEnvironmentVariable(journalEnvironmentVariableName)
+                : null,
+            recoveredMetadata: null)
+    {
+    }
+
+    protected ReportGeneratorBase(
+        IServiceProvider serviceProvider,
+        string optionName,
+        RecoveredReportMetadata recoveredMetadata)
+        : this(
+            (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetRequiredService<IFileSystem>(),
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetMessageBus(),
+            serviceProvider.GetSystemClock(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetOutputDevice(),
+            new RecoveredTestFramework(recoveredMetadata),
+            serviceProvider.GetTestApplicationProcessExitCode(),
+            serviceProvider.GetLoggerFactory().CreateLogger<TGenerator>(),
+            serviceProvider.GetTask(),
+            optionName,
+            journalPath: null,
+            recoveredMetadata)
     {
     }
 
@@ -65,6 +105,39 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ILogger<TGenerator> logger,
         string optionName)
+        : this(
+            configuration,
+            commandLineOptions,
+            fileSystem,
+            testApplicationModuleInfo,
+            messageBus,
+            clock,
+            environment,
+            outputDevice,
+            testFramework,
+            testApplicationProcessExitCode,
+            logger,
+            new SystemTask(),
+            optionName)
+    {
+    }
+
+    protected ReportGeneratorBase(
+        IConfiguration configuration,
+        ICommandLineOptions commandLineOptions,
+        IFileSystem fileSystem,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IMessageBus messageBus,
+        IClock clock,
+        IEnvironment environment,
+        IOutputDevice outputDevice,
+        ITestFramework testFramework,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ILogger<TGenerator> logger,
+        ITask task,
+        string optionName,
+        string? journalPath = null,
+        RecoveredReportMetadata? recoveredMetadata = null)
     {
         Configuration = configuration;
         CommandLineOptions = commandLineOptions;
@@ -77,7 +150,11 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         TestFramework = testFramework;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = logger;
+        _task = task;
         _isEnabled = commandLineOptions.IsOptionSet(optionName);
+        _journalPath = journalPath;
+        _recoveredProcessId = recoveredMetadata?.ProcessId;
+        _isRecoveredReportIncomplete = recoveredMetadata?.IsIncomplete == true;
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -127,7 +204,9 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
             TestFramework,
             testStartTime,
             exitCode,
-            cancellationToken);
+            cancellationToken,
+            _recoveredProcessId,
+            _isRecoveredReportIncomplete);
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
@@ -147,7 +226,33 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         testSessionContext.CancellationToken.ThrowIfCancellationRequested();
-        _testStartTime = Clock.UtcNow;
+        DateTimeOffset testStartTime = Clock.UtcNow;
+        _testStartTime = testStartTime;
+        if (_journalPath is not null)
+        {
+            if (ReportControllerMode.IsSupported)
+            {
+                StartJournalWriter();
+            }
+            else
+            {
+                TryWriteJournalBatch(
+                [
+                    ReportJournalRecord<TCapturedTestResult>.CreateHeader(
+                        testStartTime,
+                        Environment.ProcessId,
+                        TestFramework),
+                ]);
+            }
+
+            EnqueueJournalRecord(
+                ReportJournalRecord<TCapturedTestResult>.CreateHeader(
+                    testStartTime,
+                    Environment.ProcessId,
+                    TestFramework),
+                inlineAlreadyWritten: !ReportControllerMode.IsSupported);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -158,31 +263,46 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
         DateTimeOffset testStartTime = _testStartTime ?? throw ApplicationStateGuard.Unreachable();
 
-        await _logger.LogTraceAsync(GetGenerationLogMessage(_tests.Count)).ConfigureAwait(false);
-
-        int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-        (string reportFileName, string? warning) = await GenerateReportAsync([.. _tests], testStartTime, exitCode, cancellationToken).ConfigureAwait(false);
-
-        if (warning is not null)
+        try
         {
-            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
-        }
+            await _logger.LogTraceAsync(GetGenerationLogMessage(_tests.Count)).ConfigureAwait(false);
 
-        await _messageBus.PublishAsync(
-            this,
-            new SessionFileArtifact(
-                testSessionContext.SessionUid,
-                new FileInfo(reportFileName),
-                ArtifactDisplayName,
-                ArtifactDescription,
-                ArtifactKind)).ConfigureAwait(false);
+            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+            (string reportFileName, string? warning) = await GenerateReportAsync([.. _tests], testStartTime, exitCode, cancellationToken).ConfigureAwait(false);
+
+            if (warning is not null)
+            {
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
+            }
+
+            await _messageBus.PublishAsync(
+                this,
+                new SessionFileArtifact(
+                    testSessionContext.SessionUid,
+                    new FileInfo(reportFileName),
+                    ArtifactDisplayName,
+                    ArtifactDescription,
+                    ArtifactKind)).ConfigureAwait(false);
+
+            await CompleteJournalAsync(
+                writeCompletionRecord: true,
+                new FileInfo(reportFileName).FullName,
+                cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await CompleteJournalAsync(
+                writeCompletionRecord: false,
+                reportFileName: null,
+                CancellationToken.None).ConfigureAwait(false);
+        }
     }
 
-    // Capture every update unconditionally — no UID-based deduplication.
-    // CTRF relies on this to detect flaky tests (earlier attempts become retryAttempts[];
-    // see CtrfReportEngine.CollapseAttempts). HTML/JUnit rely on it to surface all results
-    // for tests that emit multiple updates per UID (parameterized rows, in-process retries,
-    // framework quirks). Engine-side logic handles any deduplication.
+    // Capture every update unconditionally — no UID-based deduplication. HTML, JUnit,
+    // and CTRF preserve all results for tests that emit multiple updates per UID
+    // (parameterized rows, in-process retries, framework quirks). CTRF groups only
+    // in-process updates explicitly tagged with RetryAttemptProperty; out-of-process
+    // retry inference occurs only during an explicit CollapseRetryAttempts merge.
     protected virtual void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
         TCapturedTestResult? captured = TryCapture(update);
@@ -190,7 +310,28 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         {
             _tests.Add(captured);
         }
+
+        if (_journalPath is not null && !_journalFailed)
+        {
+            ReportJournalParentEntry? parent = CaptureParentEntry(update);
+            if (captured is not null || parent is not null)
+            {
+                EnqueueJournalRecord(ReportJournalRecord<TCapturedTestResult>.CreateTest(captured, parent));
+            }
+        }
     }
+
+    protected virtual ReportJournalParentEntry? CaptureParentEntry(TestNodeUpdateMessage update) => null;
+
+    protected virtual void RestoreParentEntry(ReportJournalParentEntry parent)
+    {
+    }
+
+    internal string RecoveredArtifactDisplayName => ArtifactDisplayName;
+
+    internal string RecoveredArtifactDescription => ArtifactDescription;
+
+    internal string? RecoveredArtifactKind => ArtifactKind;
 
     protected abstract string ArtifactDisplayName { get; }
 
@@ -206,6 +347,8 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     protected abstract string GetGenerationLogMessage(int testResultCount);
 
+    protected abstract string SerializeJournalRecord(ReportJournalRecord<TCapturedTestResult> record);
+
     protected abstract TCapturedTestResult? TryCapture(TestNodeUpdateMessage update);
 
     protected abstract Task<(string FileName, string? Warning)> GenerateReportAsync(
@@ -214,3 +357,5 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         int exitCode,
         CancellationToken cancellationToken);
 }
+
+#pragma warning restore RS0051

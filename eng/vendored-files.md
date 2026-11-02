@@ -59,7 +59,7 @@ For every `(entry, source)` pair the workflow:
 3. Otherwise fetches the baseline content (via the blobs API, robust to
    force-pushes) and the current content (via `raw.githubusercontent.com`),
    computes a unified diff, and opens/updates a tracking issue labelled
-   `area-vendored-sync` containing:
+   `area/vendored-sync` containing:
    - links to the upstream file history, baseline blob, current blob, and the
      whole-repo compare URL,
    - the upstream-only diff (truncated at 300 lines),
@@ -76,7 +76,9 @@ reconciliation PR is merged.
 ## Adding a new vendored file
 
 1. Add a comment in the local file pointing at the upstream URL (existing files
-   use `// Copied from <url>` or `// Adapted from <url>`).
+   use `// Copied from <url>` or `// Adapted from <url>`). For verbatim skill
+   Markdown, keep the imported file unmodified and put provenance in the local
+   adapter/documentation and manifest instead.
 2. Add an entry to `eng/vendored-files.json` with a stable kebab-case `id`,
    the local path, and at least one source. Fill in:
    - `baseline_ref_sha`: the upstream branch SHA you copied from
@@ -85,6 +87,24 @@ reconciliation PR is merged.
      (`gh api "repos/{repo}/contents/{path}?ref={ref}" --jq .sha`).
 3. Run `python .github/scripts/check_vendored_files.py validate` locally to
    confirm the structure is correct.
+
+## Vendored test-value evidence skill
+
+The canonical `.agents/skills/test-value-evidence/SKILL.md` is a verbatim import
+from `dotnet/skills`. Its manifest entry pins an immutable producer revision and
+Git blob; update `ref`, `baseline_ref_sha`, and `baseline_blob_sha` together when
+selecting another upstream revision. Copy the committed upstream bytes, not an
+independently maintained TestFx fork.
+
+The selected producer commit must be remotely fetchable from `dotnet/skills`
+before merging the consumer change. Matching a local blob proves byte identity,
+not remote availability.
+
+The [TestFx adapter](../.github/skills/testfx-test-value-evidence/SKILL.md) owns
+repository-specific toolchain, assertions, concurrency, and packed-consumer
+requirements. This import is deliberately independent of the existing
+`gh-copilot-curate` plugin snapshots, so adding it does not overwrite unrelated
+curated skills or their local adaptations.
 
 ## Reconciling drift
 

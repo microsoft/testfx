@@ -171,7 +171,7 @@ internal
     void AddSearchDirectoriesFromRunSetting(List<RecursiveDirectoryPath> recursiveDirectoryPath)
     {
         // Enqueue elements from the list in Queue
-        if (recursiveDirectoryPath == null)
+        if (recursiveDirectoryPath is null)
         {
             return;
         }

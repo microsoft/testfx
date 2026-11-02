@@ -38,68 +38,52 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override TestInProgressMessages DeserializeCore(Stream stream)
     {
-        string? executionId = null;
-        string? instanceId = null;
-        TestInProgressMessage[]? inProgressMessages = [];
-
-        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
-        ushort fieldCount = ReadUShort(stream);
-        for (int f = 0; f < fieldCount; f++)
-        {
-            ushort fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
-            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+        TestInProgressMessagesFields fields = ReadFields(
+            stream,
+            new TestInProgressMessagesFields { InProgressMessages = [] },
+            static (stream, fieldId, fieldSize, fields) =>
             {
-                continue;
-            }
+                if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref fields.ExecutionId, ref fields.InstanceId))
+                {
+                    return fields;
+                }
 
-            if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
-            {
-                inProgressMessages = ReadInProgressMessagesPayload(stream);
-            }
-            else
-            {
-                SetPosition(stream, stream.Position + fieldSize);
-            }
-        }
+                if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
+                {
+                    fields.InProgressMessages = ReadFieldPayload(stream, fieldSize, ReadInProgressMessagesPayload);
+                    return fields;
+                }
 
-        return new(executionId, instanceId, inProgressMessages);
+                return null;
+            });
+
+        return new(fields.ExecutionId, fields.InstanceId, fields.InProgressMessages);
     }
 
     private static TestInProgressMessage[] ReadInProgressMessagesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var inProgressMessages = new TestInProgressMessage[length];
         for (int i = 0; i < length; i++)
         {
-            string? uid = null;
-            string? displayName = null;
-
-            // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
-            ushort fieldCount = ReadUShort(stream);
-            for (int f = 0; f < fieldCount; f++)
+            TestInProgressFields fields = ReadFields(stream, default(TestInProgressFields), static (stream, fieldId, fieldSize, fields) =>
             {
-                ushort fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case TestInProgressMessageFieldsId.Uid:
-                        uid = ReadStringValue(stream, fieldSize);
-                        break;
+                        fields.Uid = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     case TestInProgressMessageFieldsId.DisplayName:
-                        displayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        fields.DisplayName = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return null;
                 }
-            }
+            });
 
-            inProgressMessages[i] = new TestInProgressMessage(uid, displayName);
+            inProgressMessages[i] = new TestInProgressMessage(fields.Uid, fields.DisplayName);
         }
 
         return inProgressMessages;
@@ -128,4 +112,20 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
     private static ushort GetFieldCount(TestInProgressMessage inProgressMessage) =>
         (ushort)((inProgressMessage.Uid is null ? 0 : 1) +
         (inProgressMessage.DisplayName is null ? 0 : 1));
+
+    private struct TestInProgressFields
+    {
+        public string? Uid { get; set; }
+
+        public string? DisplayName { get; set; }
+    }
+
+    private struct TestInProgressMessagesFields
+    {
+        public string? ExecutionId;
+
+        public string? InstanceId;
+
+        public TestInProgressMessage[] InProgressMessages { get; set; }
+    }
 }

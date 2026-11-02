@@ -19,7 +19,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 {
     private readonly IMessageHandler _handler;
     private readonly IMtpClientLogger _logger;
-    private readonly ConcurrentDictionary<int, PendingRequest> _pendingRequests = new();
+    private readonly ConcurrentDictionary<(int Id, bool IsString), PendingRequest> _pendingRequests = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly CancellationTokenSource _readLoopCancellation = new();
     private readonly object _startLock = new();
@@ -49,6 +49,9 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         _handler = handler ?? throw new ArgumentNullException(nameof(handler));
         _logger = logger ?? NullMtpClientLogger.Instance;
     }
+
+    internal bool IsOnReadLoopFlow
+        => _onReadLoopFlow.Value;
 
     /// <summary>
     /// Raised for every server-to-client notification. The handler receives the method name and the raw
@@ -113,15 +116,16 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
 
         int id = Interlocked.Increment(ref _nextRequestId);
+        (int Id, bool IsString) requestKey = GetRequestKey(id, stringId: null);
         var pending = new PendingRequest(method);
-        _pendingRequests[id] = pending;
+        _pendingRequests[requestKey] = pending;
 
         // Re-check after registering: the read loop may have latched a terminal reason and run
         // FailAllPending between the check above and this insert, missing this entry. Observing the reason
         // here guarantees the request is completed rather than left waiting.
         if (Volatile.Read(ref _closedReason) is { } closedAfter)
         {
-            _pendingRequests.TryRemove(id, out _);
+            _pendingRequests.TryRemove(requestKey, out _);
             throw closedAfter;
         }
 
@@ -135,7 +139,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         finally
         {
-            _pendingRequests.TryRemove(id, out _);
+            _pendingRequests.TryRemove(requestKey, out _);
         }
     }
 
@@ -202,7 +206,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         switch (message)
         {
             case ResponseMessage response:
-                if (_pendingRequests.TryGetValue(response.Id, out PendingRequest? successful))
+                if (_pendingRequests.TryGetValue(GetRequestKey(response.Id, response.StringId), out PendingRequest? successful))
                 {
                     successful.Completion.TrySetResult(response);
                 }
@@ -210,7 +214,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
                 break;
 
             case ErrorMessage error:
-                if (_pendingRequests.TryGetValue(error.Id, out PendingRequest? failed))
+                if (_pendingRequests.TryGetValue(GetRequestKey(error.Id, error.StringId), out PendingRequest? failed))
                 {
                     failed.Completion.TrySetException(new MtpServerErrorException(error.ErrorCode, error.Message));
                 }
@@ -258,7 +262,9 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         // Always answer so the server is never left waiting.
         try
         {
-            await WriteMessageAsync(new ResponseMessage(request.Id, result), cancellationToken).ConfigureAwait(false);
+            await WriteMessageAsync(
+                new ResponseMessage(request.Id, result) { StringId = request.StringId },
+                cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -268,7 +274,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
     private void CancelPendingRequest(int id, CancellationToken cancellationToken)
     {
-        if (!_pendingRequests.TryGetValue(id, out PendingRequest? pending))
+        if (!_pendingRequests.TryGetValue(GetRequestKey(id, stringId: null), out PendingRequest? pending))
         {
             return;
         }
@@ -305,7 +311,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
     private void FailAllPending(Exception exception)
     {
-        foreach (KeyValuePair<int, PendingRequest> entry in _pendingRequests)
+        foreach (KeyValuePair<(int Id, bool IsString), PendingRequest> entry in _pendingRequests)
         {
             if (_pendingRequests.TryRemove(entry.Key, out PendingRequest? pending))
             {
@@ -314,7 +320,13 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
     }
 
+    private static (int Id, bool IsString) GetRequestKey(int id, string? stringId)
+        => (id, stringId is not null);
+
     public void Dispose()
+        => Dispose(waitForReadLoop: true);
+
+    internal void Dispose(bool waitForReadLoop)
     {
         Task? readLoop;
         lock (_startLock)
@@ -349,7 +361,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         // surface spurious ObjectDisposedExceptions (one thrown out of the write lock's finally block).
         // Guard against waiting on ourselves in case Dispose runs from a notification / server-request
         // handler executing on the read-loop flow (see _onReadLoopFlow).
-        if (readLoop is not null && !_onReadLoopFlow.Value)
+        if (waitForReadLoop && readLoop is not null && !_onReadLoopFlow.Value)
         {
             try
             {

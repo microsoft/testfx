@@ -21,15 +21,21 @@ Microsoft.Testing.Extensions.Telemetry.ITelemetryClientFactory.Create(string? cu
 Microsoft.Testing.Platform.Helpers.CIEnvironmentDetector
 Microsoft.Testing.Platform.Helpers.CIEnvironmentDetector.CIEnvironmentDetector(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
 Microsoft.Testing.Platform.Helpers.CIEnvironmentDetector.IsCIEnvironment() -> bool
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.Complete() -> void
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.SingleConsumerUnboundedChannel() -> void
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.TryRead(out T item) -> bool
+Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToReadAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.Write(T item) -> void
+Microsoft.Testing.Platform.RoslynDebug
 Microsoft.Testing.Platform.RoslynString
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
+static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b, string! message) -> void
+static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b) -> void
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool

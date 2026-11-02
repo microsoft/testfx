@@ -38,7 +38,6 @@ internal sealed partial class Json
             if (property is TestMetadataProperty metadataProperty)
             {
                 (traits ??= []).Add(new KeyValuePair<string, string>(metadataProperty.Key, metadataProperty.Value));
-                continue;
             }
 
             if (property is SerializableKeyValuePairStringProperty keyValuePairProperty)
@@ -52,7 +51,6 @@ internal sealed partial class Json
                 properties.Add(("location.file", fileLocationProperty.FilePath));
                 properties.Add(("location.line-start", fileLocationProperty.LineSpan.Start.Line));
                 properties.Add(("location.line-end", fileLocationProperty.LineSpan.End.Line));
-                continue;
             }
 
             if (property is TestMethodIdentifierProperty testMethodIdentifierProperty)
@@ -129,10 +127,13 @@ internal sealed partial class Json
                         {
                             properties.Add(("execution-state", "failed"));
                             Exception? exception = failedTestNodeStateProperty.Exception;
-                            properties.Add(("error.message", failedTestNodeStateProperty.Explanation ?? exception?.Message));
-                            if (exception is not null)
+                            (string? errorMessage, string? errorStackTrace) = SerializerUtilities.FormatException(
+                                failedTestNodeStateProperty.Explanation,
+                                exception);
+                            properties.Add(("error.message", errorMessage));
+                            if (errorStackTrace is not null)
                             {
-                                properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
+                                properties.Add(("error.stacktrace", errorStackTrace));
                             }
 
                             // AssertionFailureProperty is the supported channel; Exception.Data is the legacy
@@ -155,11 +156,13 @@ internal sealed partial class Json
                     case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                         {
                             properties.Add(("execution-state", "timed-out"));
-                            Exception? exception = timeoutTestNodeStateProperty.Exception;
-                            properties.Add(("error.message", timeoutTestNodeStateProperty.Explanation ?? exception?.Message));
-                            if (exception is not null)
+                            (string? errorMessage, string? errorStackTrace) = SerializerUtilities.FormatException(
+                                timeoutTestNodeStateProperty.Explanation,
+                                timeoutTestNodeStateProperty.Exception);
+                            properties.Add(("error.message", errorMessage));
+                            if (errorStackTrace is not null)
                             {
-                                properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
+                                properties.Add(("error.stacktrace", errorStackTrace));
                             }
 
                             break;
@@ -168,11 +171,13 @@ internal sealed partial class Json
                     case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                         {
                             properties.Add(("execution-state", "error"));
-                            Exception? exception = errorTestNodeStateProperty.Exception;
-                            properties.Add(("error.message", errorTestNodeStateProperty.Explanation ?? exception?.Message));
-                            if (exception is not null)
+                            (string? errorMessage, string? errorStackTrace) = SerializerUtilities.FormatException(
+                                errorTestNodeStateProperty.Explanation,
+                                errorTestNodeStateProperty.Exception);
+                            properties.Add(("error.message", errorMessage));
+                            if (errorStackTrace is not null)
                             {
-                                properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
+                                properties.Add(("error.stacktrace", errorStackTrace));
                             }
 
                             break;
@@ -183,11 +188,13 @@ internal sealed partial class Json
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         {
                             properties.Add(("execution-state", "canceled"));
-                            Exception? exception = canceledTestNodeStateProperty.Exception;
-                            properties.Add(("error.message", canceledTestNodeStateProperty.Explanation ?? exception?.Message));
-                            if (exception is not null)
+                            (string? errorMessage, string? errorStackTrace) = SerializerUtilities.FormatException(
+                                canceledTestNodeStateProperty.Explanation,
+                                canceledTestNodeStateProperty.Exception);
+                            properties.Add(("error.message", errorMessage));
+                            if (errorStackTrace is not null)
                             {
-                                properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
+                                properties.Add(("error.stacktrace", errorStackTrace));
                             }
 
                             break;
@@ -196,8 +203,6 @@ internal sealed partial class Json
                     default:
                         throw new NotSupportedException($"Unsupported TestNodeStateProperty '{testNodeStateProperty.GetType()}'");
                 }
-
-                continue;
             }
 
             if (property is TimingProperty timingProperty)
@@ -214,7 +219,6 @@ internal sealed partial class Json
             {
                 properties.Add(("retry.attempt", retryAttemptProperty.AttemptNumber));
                 properties.Add(("retry.is-superseded", retryAttemptProperty.IsSuperseded));
-                continue;
             }
 
             if (property is FileArtifactProperty artifact)

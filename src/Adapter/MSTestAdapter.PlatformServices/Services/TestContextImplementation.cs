@@ -81,7 +81,7 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         Func<TestOutputCaptureMode> outputCaptureModeProvider)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
-        DebugEx.Assert(properties != null, "properties is not null");
+        DebugEx.Assert(properties is not null, "properties is not null");
 
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is null && testMethod is null)
@@ -226,6 +226,8 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         clone.Context.TestRunCount = Context.TestRunCount;
 
 #if !WINDOWS_UWP && !WIN_UI
+        clone._assertionFailureCaptureBudget = _assertionFailureCaptureBudget;
+
         // A folded data-driven iteration IS an executing test (it is passed testMethod: null only
         // because the identifying labels are already in the property bag), so it must support the
         // per-test temporary directory just like the unfolded path where each row gets its own

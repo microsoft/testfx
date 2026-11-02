@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -26,7 +27,7 @@ internal sealed class UnitTestElement
             throw new ArgumentNullException(nameof(testMethod));
         }
 
-        DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
+        DebugEx.Assert(testMethod.FullClassName is not null, "Full className cannot be empty");
         TestMethod = testMethod;
     }
 
@@ -102,6 +103,25 @@ internal sealed class UnitTestElement
     internal IReadOnlyDictionary<string, object?>? ExecutionContextProperties { get; set; }
 
     /// <summary>
+    /// Gets or sets the optional host-provided lease that makes the canonical test activity ambient while user
+    /// code executes. The lease is process-local and is intentionally not serialized across AppDomain boundaries.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal ITestExecutionActivityLease? ExecutionActivityLease { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the current execution path can carry the process-local activity
+    /// lease into the test runner. This is disabled when .NET Framework AppDomain isolation serializes the test
+    /// element across the boundary.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal bool SupportsExecutionActivityLease { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the host's test case for this test, used to report its lifecycle and results back to the
     /// host with full fidelity (preserving any host-injected data — such as test-case-management or
     /// data-collector properties — that the neutral model does not otherwise carry) and to describe it to the
@@ -131,10 +151,22 @@ internal sealed class UnitTestElement
 #endif
     internal Guid? CachedTestNodeUid { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether native MTP discovery materialized this element from
+    /// a complete source-generated descriptor instead of the legacy runtime-method scan.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal bool IsFromGeneratedDescriptor { get; set; }
+
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.Clone();
+        // Discovery specializes clones into individual data rows after cloning. Clear the cached id so changes to
+        // DataType/TestCaseIndex cannot reuse the parent test's identity when the parent was converted first.
+        clone.CachedTestNodeUid = null;
         return clone;
     }
 

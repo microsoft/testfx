@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
@@ -77,12 +77,19 @@ internal sealed partial class VideoRecorderSessionHandler
         lock (_stateGate)
         {
             _inFlight.Remove(testUid);
+            _testRecords.Add(new TestRecord(update.TestNode.DisplayName, start, end, isFailure, OutcomeText(state)));
             if (isFailure)
             {
                 _anyTestFailed = true;
+                DateTimeOffset? recordingStart = _recorder.RecordingStartUtc;
+                if (recordingStart is not null)
+                {
+                    _failedWindows = new FailedWindow(
+                        (start - recordingStart.Value).TotalSeconds,
+                        (end - recordingStart.Value).TotalSeconds,
+                        _failedWindows);
+                }
             }
-
-            _testRecords.Add(new TestRecord(update.TestNode.DisplayName, start, end, isFailure, OutcomeText(state)));
         }
 
         TryPruneOldSegments();

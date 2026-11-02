@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
 
@@ -34,6 +35,150 @@ public sealed class AsynchronousMessageBusTests
         await proxy.PublishAsync(new DummyProducer("DummyProducer", typeof(InvalidTypePublished.ValidDataToProduce)), new InvalidTypePublished.ValidDataToProduce());
         consumer.Published.WaitOne();
         await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
+    }
+
+    [TestMethod]
+    public async Task PublishAsync_InProgressTest_CapturesExecutionActivityContextBeforeDispatch()
+    {
+        var executionContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: "vendor=value");
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.Setup(s => s.CaptureCurrentActivityContext()).Returns(executionContext);
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        await asynchronousMessageBus.PublishAsync(
+            new DummyProducer("producer", typeof(TestNodeUpdateMessage)),
+            message);
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(1, consumer.ExecutionActivityContexts);
+        Assert.AreSame(executionContext, consumer.ExecutionActivityContexts[0]);
+        openTelemetryService.Verify(s => s.CaptureCurrentActivityContext(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task PublishAsync_WhenMessageInstanceIsReused_PreservesMissingContextPerPublication()
+    {
+        var secondContext = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.SetupSequence(s => s.CaptureCurrentActivityContext())
+            .Returns((PlatformActivityContext?)null)
+            .Returns(secondContext);
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        var producer = new DummyProducer("producer", typeof(TestNodeUpdateMessage));
+
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(2, consumer.ExecutionActivityContexts);
+        Assert.IsNull(consumer.ExecutionActivityContexts[0]);
+        Assert.AreSame(secondContext, consumer.ExecutionActivityContexts[1]);
+    }
+
+    [TestMethod]
+    [UnsupportedOSPlatform("browser")]
+    public async Task PublishAsync_WhenCapturesCompleteOutOfOrder_BindsContextToPublication()
+    {
+        var firstContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            isRecorded: true,
+            traceState: null);
+        var secondContext = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        using ManualResetEventSlim firstCaptureStarted = new();
+        using ManualResetEventSlim releaseFirstCapture = new();
+        int captureCount = 0;
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.Setup(s => s.CaptureCurrentActivityContext())
+            .Returns(() =>
+            {
+                if (Interlocked.Increment(ref captureCount) != 1)
+                {
+                    return secondContext;
+                }
+
+                firstCaptureStarted.Set();
+                releaseFirstCapture.Wait(TestContext.CancellationToken);
+                return firstContext;
+            });
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        var producer = new DummyProducer("producer", typeof(TestNodeUpdateMessage));
+
+        var firstPublish = Task.Run(
+            async () => await asynchronousMessageBus.PublishAsync(producer, message),
+            TestContext.CancellationToken);
+        firstCaptureStarted.Wait(TestContext.CancellationToken);
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        releaseFirstCapture.Set();
+        await firstPublish;
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(2, consumer.ExecutionActivityContexts);
+        Assert.AreSame(secondContext, consumer.ExecutionActivityContexts[0]);
+        Assert.AreSame(firstContext, consumer.ExecutionActivityContexts[1]);
     }
 
     // This test relies on the background consumer tasks (started via ITask.Run) ping-ponging
@@ -633,6 +778,21 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    public void GetControllerFinalization_WhenBothOverridesAreSet_ShouldUseDedicatedValue()
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1.5");
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS))
+            .Returns("2.5");
+
+        Assert.AreEqual(TimeSpan.FromSeconds(1.5), ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+        Assert.AreEqual(TimeSpan.FromSeconds(2.5), ShutdownTimeouts.GetControllerFinalization(environmentMock.Object));
+    }
+
+    [TestMethod]
     public async Task DisableAsync_WhenConsumerThrowsTimeoutException_ShouldNotSwallowIt()
     {
         using MessageBusProxy proxy = new();
@@ -701,6 +861,7 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    [DoNotParallelize]
     public async Task DisableAsync_WithManyCanceledConsumersIgnoringTheToken_ShouldNotMultiplyTheBudget()
     {
         using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
@@ -887,6 +1048,36 @@ public sealed class AsynchronousMessageBusTests
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
+    }
+
+    private sealed class TestNodeConsumer : IDataConsumer, ITestExecutionActivityContextConsumer
+    {
+        public List<PlatformActivityContext?> ExecutionActivityContexts { get; } = [];
+
+        public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
+
+        public string Uid => nameof(TestNodeConsumer);
+
+        public string Version => PlatformVersion.Version;
+
+        public string DisplayName => nameof(TestNodeConsumer);
+
+        public string Description => nameof(TestNodeConsumer);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => throw new InvalidOperationException("The activity-context-aware consumer path was not used.");
+
+        Task ITestExecutionActivityContextConsumer.ConsumeAsync(
+            IDataProducer dataProducer,
+            IData data,
+            PlatformActivityContext? executionActivityContext,
+            CancellationToken cancellationToken)
+        {
+            ExecutionActivityContexts.Add(executionActivityContext);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class DummyConsumer : IDataConsumer
@@ -1364,5 +1555,93 @@ public sealed class AsynchronousMessageBusTests
 
             public string? Description => nameof(DataTypeB);
         }
+    }
+
+    [TestMethod]
+    public async Task Processor_DirectDefaultConstructorCountsAndDrainsExactPayloads()
+    {
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        consumer.Setup(c => c.ConsumeAsync(producer, data, CancellationToken.None)).Returns(Task.CompletedTask);
+        using AsyncConsumerDataProcessor processor = new(consumer.Object, new SystemTask(), CancellationToken.None);
+
+        await processor.PublishAsync(producer, data);
+        await processor.PublishAsync(new DummyProducer("consumer"), new GatedData());
+        await processor.DrainDataAsync();
+
+        Assert.AreEqual(2L, processor.ReceivedCount);
+        consumer.Verify(c => c.ConsumeAsync(producer, data, CancellationToken.None), Times.Once);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.IsTrue(processor.IsConsumerRunning);
+        await processor.CompleteAddingAsync();
+        Assert.IsFalse(processor.IsConsumerRunning);
+        await processor.DrainDataAsync();
+        Assert.AreEqual(2L, processor.ReceivedCount);
+    }
+
+    [TestMethod]
+    public async Task Processor_ClosedAndCanceledPublishingPreservesCountAndCancellationContract()
+    {
+        CancellationToken token = new(canceled: true);
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        using AsyncConsumerDataProcessor processor = new(consumer.Object, new SystemTask(), token);
+
+        OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => processor.PublishAsync(new DummyProducer("producer"), new GatedData()));
+
+        Assert.AreEqual(token, exception.CancellationToken);
+#if NETCOREAPP
+        Assert.AreEqual(1L, processor.ReceivedCount, "Modern channels increment before honoring cancellation.");
+#else
+        Assert.AreEqual(0L, processor.ReceivedCount, "The netstandard channel honors cancellation before incrementing.");
+#endif
+        await processor.CompleteAddingAsync();
+        await processor.DrainDataAsync();
+        Assert.IsFalse(processor.IsConsumerRunning);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BlockingProcessor_DirectPublishingCountsSelfSkippedDataAndDoesNotLeaveWorkRunning()
+    {
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        consumer.Setup(c => c.ConsumeAsync(producer, data, CancellationToken.None)).Returns(Task.CompletedTask);
+        using BlockingConsumerDataProcessor processor = new(consumer.Object, CancellationToken.None);
+
+        await processor.PublishAsync(producer, data);
+        await processor.PublishAsync(new DummyProducer("consumer"), new GatedData());
+        await processor.DrainDataAsync();
+        await processor.CompleteAddingAsync();
+
+        Assert.AreEqual(2L, processor.ReceivedCount);
+        Assert.IsFalse(processor.IsConsumerRunning);
+        consumer.Verify(c => c.ConsumeAsync(producer, data, CancellationToken.None), Times.Once);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Proxy_InitAndDefaultRunningConsumersDelegateToConcreteBus()
+    {
+        using MessageBusProxy proxy = new();
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(proxy.InitAsync);
+        Mock<BaseMessageBus> bus = new() { CallBase = true };
+        bus.Setup(b => b.InitAsync()).Returns(Task.CompletedTask);
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        bus.Setup(b => b.PublishAsync(producer, data)).Returns(Task.CompletedTask);
+        proxy.SetBuiltMessageBus(bus.Object);
+
+        await proxy.InitAsync();
+        await proxy.PublishAsync(producer, data);
+
+        Assert.IsEmpty(proxy.ConsumersStillRunning);
+        bus.Verify(b => b.InitAsync(), Times.Once);
+        bus.Verify(b => b.PublishAsync(producer, data), Times.Once);
     }
 }

@@ -28,13 +28,42 @@ internal sealed partial class OpenTelemetryResultHandler
         HandleTestResult(testNode, stateProperty);
     }
 
+    internal void NotifySupersededRetryAttempt(TestNode testNode, TestNodeStateProperty stateProperty)
+        => HandleTestResult(testNode, stateProperty, recordMetrics: false);
+
     internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid)
+        => NotifyInProgress(testNode, parentUid, executionActivityContext: null);
+
+    internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid, PlatformActivityContext? executionActivityContext)
     {
         _totalStartedTests?.Add(1);
-        IPlatformActivity? activity = _otelService.StartActivity(
-            GetActivityName(testNode),
-            parentId: _otelService.TestFrameworkActivity?.Id,
-            tags: GetTestInitialInfo(testNode, parentUid));
+        string activityName = GetActivityName(testNode);
+        string? parentId = _otelService.TestFrameworkActivity?.Id;
+        TestExecutionActivityProperty? canonicalActivity = GetTestExecutionActivityProperty(testNode);
+        if (canonicalActivity is not null)
+        {
+            lock (_syncRoot)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                if (_canonicalActivities.Add(canonicalActivity.Reservation))
+                {
+                    _activeTestCases.Add(1);
+                }
+            }
+
+            return;
+        }
+
+        IEnumerable<KeyValuePair<string, object?>> tags = GetTestInitialInfo(testNode, parentUid, _options);
+        IPlatformActivity? activity =
+            executionActivityContext is not null
+            && _otelService is IPlatformOpenTelemetryServiceWithActivityLinks linkService
+                ? linkService.StartActivityWithLink(activityName, tags, parentId, executionActivityContext)
+                : _otelService.StartActivity(activityName, tags, parentId);
 
         lock (_syncRoot)
         {
@@ -46,10 +75,11 @@ internal sealed partial class OpenTelemetryResultHandler
             }
 
             _activeTestCases.Add(1);
-            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities))
+            TestActivityKey key = GetActivityKey(testNode);
+            if (!_testActivities.TryGetValue(key, out Queue<IPlatformActivity?>? activities))
             {
                 activities = new Queue<IPlatformActivity?>();
-                _testActivities.Add(testNode.Uid, activities);
+                _testActivities.Add(key, activities);
             }
 
             activities.Enqueue(activity);
@@ -59,6 +89,13 @@ internal sealed partial class OpenTelemetryResultHandler
     internal void NotifyExecutionCompleted(TestNode testNode)
     {
         _totalCompletedTests?.Add(1);
+        if (GetTestExecutionActivityProperty(testNode) is { } canonicalActivity)
+        {
+            CompleteCanonicalActivity(canonicalActivity);
+            canonicalActivity.Reservation.CompleteWithoutResult();
+            return;
+        }
+
         if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity))
         {
             return;
@@ -109,24 +146,72 @@ internal sealed partial class OpenTelemetryResultHandler
     /// <summary>
     /// Removes the oldest in-flight entry for the node and keeps <c>test.case.active</c> balanced.
     /// </summary>
-    private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity)
+    private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity, bool allowUnnumberedFallback = true)
     {
         lock (_syncRoot)
         {
             activity = null;
-            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities) || activities.Count == 0)
+            TestActivityKey key = GetActivityKey(testNode);
+            if (!TryDequeueInFlight(key, out activity)
+                && (!allowUnnumberedFallback
+                    || key.AttemptNumber is null
+                    || !TryDequeueInFlight(new TestActivityKey(testNode.Uid, AttemptNumber: null), out activity)))
             {
                 return false;
-            }
-
-            activity = activities.Dequeue();
-            if (activities.Count == 0)
-            {
-                _testActivities.Remove(testNode.Uid);
             }
 
             _activeTestCases.Add(-1);
             return true;
         }
+    }
+
+    private bool TryDequeueInFlight(TestActivityKey key, out IPlatformActivity? activity)
+    {
+        activity = null;
+        if (!_testActivities.TryGetValue(key, out Queue<IPlatformActivity?>? activities) || activities.Count == 0)
+        {
+            return false;
+        }
+
+        activity = activities.Dequeue();
+        if (activities.Count == 0)
+        {
+            _testActivities.Remove(key);
+        }
+
+        return true;
+    }
+
+    private static TestActivityKey GetActivityKey(TestNode testNode)
+        => new(testNode.Uid, testNode.Properties.SingleOrDefault<RetryAttemptProperty>()?.AttemptNumber);
+
+    private void CompleteCanonicalActivity(TestExecutionActivityProperty property)
+    {
+        if (!property.IsFinalResult)
+        {
+            return;
+        }
+
+        lock (_syncRoot)
+        {
+            if (_canonicalActivities.Remove(property.Reservation))
+            {
+                _activeTestCases.Add(-1);
+            }
+        }
+    }
+
+    private static TestExecutionActivityProperty? GetTestExecutionActivityProperty(TestNode testNode)
+    {
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            if (enumerator.Current is TestExecutionActivityProperty property)
+            {
+                return property;
+            }
+        }
+
+        return null;
     }
 }
