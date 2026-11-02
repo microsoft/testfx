@@ -131,9 +131,16 @@ member _.Example() : Task =
     } :> Task
 ```
 
+Data-row validation preserves declared array types, including empty arrays and
+reference-array covariance. Declared element types also support generic inference
+when an array is empty or contains only nulls. A trailing `CancellationToken` is
+supplied by MSTest and need not be included in the row; explicit null arguments
+retain MSTest's normal array/token binding rules.
+
 Rules use resolved MSTest types, not short attribute or method names. Signature
 files and editor snapshots without a typed tree do not produce diagnostics.
 An editor snapshot without project-level information defers checks that need the
-complete assembly (for example, dependency graphs and assembly-level providers).
+complete assembly (for example, dependency graphs, assembly-level providers, and
+the absence of a parallelization attribute).
 Unresolved referenced attributes are not dereferenced; cross-version fixture
 checks require the old framework dependency to be available to the compiler service.

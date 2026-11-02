@@ -283,9 +283,11 @@ type Tests() =
     }
 
     [TestMethod]
-    public async Task EditorEntryPoint_HandlesCheckedPartialAndMissingTypedTrees()
+    [DataRow("Parallelize", DisplayName = "EditorEntryPoint_Parallelize")]
+    [DataRow("DoNotParallelize", DisplayName = "EditorEntryPoint_DoNotParallelize")]
+    public async Task EditorEntryPoint_HandlesCheckedPartialAndMissingTypedTrees(string parallelization)
     {
-        const string program = """"
+        string program = $$""""
 namespace EditorHost
 open System
 open System.IO
@@ -304,6 +306,8 @@ module Program =
             let sample = """
 namespace Consumer
 open Microsoft.VisualStudio.TestTools.UnitTesting
+[<assembly: {{parallelization}}>]
+do ()
 [<TestClass>]
 type Tests() =
     [<TestMethod; Ignore>]
@@ -321,6 +325,7 @@ type Tests() =
                 checker.GetProjectOptionsFromCommandLineArgs(
                     samplePath + ".fsproj",
                     [| "--target:library"; "--targetprofile:netcore"; "--noframework"; yield! references; samplePath |])
+                |> fun options -> { options with SourceFiles = [| samplePath |]; OtherOptions = options.OtherOptions |> Array.filter ((<>) samplePath) }
             let! project = checker.ParseAndCheckProject(options)
             let errors = project.Diagnostics |> Array.filter (fun diagnostic -> diagnostic.Severity = FSharpDiagnosticSeverity.Error)
             if not (Array.isEmpty errors) then
@@ -362,6 +367,7 @@ type Tests() =
         |> Async.RunSynchronously
 """";
         using TestAsset asset = await GenerateConsumerAsync(program, editorHost: true);
+        await WriteRuleConfigurationAsync(asset.TargetAssetPath, ["MSTEST0001", "MSTEST0003", "MSTEST0017", "MSTEST0066"]);
         await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\"", cancellationToken: testContext.CancellationToken);
         await AssertPackedProvenanceAsync(asset.TargetAssetPath);
         using DotnetMuxer host = new();

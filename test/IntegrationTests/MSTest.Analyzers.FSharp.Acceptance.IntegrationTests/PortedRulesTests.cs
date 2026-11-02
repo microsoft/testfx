@@ -8,6 +8,111 @@ namespace MSTest.Analyzers.FSharp.Acceptance.IntegrationTests;
 public sealed partial class FSharpAnalyzersTests
 {
     [TestMethod]
+    [DataRow("([||] : string[])", "int[]", true, DisplayName = "DeclaredArrays_RejectEmptyIncompatible")]
+    [DataRow("([||] : string[])", "obj[]", false, DisplayName = "DeclaredArrays_EmptyReferenceCovariance")]
+    [DataRow("([| \"value\"; null |] : string[])", "obj[]", false, DisplayName = "DeclaredArrays_ReferenceCovariance")]
+    [DataRow("([| 1 |] : int[])", "obj[]", true, DisplayName = "DeclaredArrays_RejectValueArrayBoxing")]
+    [DataRow("(([| 1 |] : obj[]) :> obj)", "int[]", true, DisplayName = "DeclaredArrays_RejectContentBasedTyping")]
+    [DataRow("([||] : ConsoleColor[])", "int[]", true, DisplayName = "DeclaredArrays_RejectEmptyEnumAsInteger")]
+    [DataRow("([||] : ConsoleColor[])", "ConsoleColor[]", false, DisplayName = "DeclaredArrays_EmptyEnumIdentity")]
+    [DataRow("([| 1 |] : int[])", "int64[]", true, DisplayName = "DeclaredArrays_RejectElementWidening")]
+    [DataRow("([||] : int[])", "'T[]", false, DisplayName = "DeclaredArrays_InferEmptyGeneric")]
+    [DataRow("([| null; null |] : string[])", "'T[]", false, DisplayName = "DeclaredArrays_InferAllNullGeneric")]
+    [DataRow("([||] : int[])", "'T", false, DisplayName = "DeclaredArrays_InferArrayAsGenericValue")]
+    [DataRow("([||] : string[])", "System.Collections.Generic.IEnumerable<obj>", false, DisplayName = "DeclaredArrays_GenericInterfaceCovariance")]
+    public async Task DataRows_UseDeclaredArrayTypes(string argument, string parameterType, bool shouldReport)
+    {
+        string generic = parameterType.Contains("'T", StringComparison.Ordinal) ? "<'T>" : string.Empty;
+        string source = $$"""
+namespace Consumer
+open System
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    [<TestMethod; DataRow({{argument}})>]
+    member _.Run{{generic}}(value: {{parameterType}}) = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0014");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0014", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    [DataRow("DataRow()", "token: CancellationToken", false, DisplayName = "InjectedToken_TokenOnly")]
+    [DataRow("DataRow(null : obj)", "token: CancellationToken", false, DisplayName = "InjectedToken_ExplicitNullTokenOnly")]
+    [DataRow("DataRow(7)", "value: int, token: CancellationToken", false, DisplayName = "InjectedToken_DataAndToken")]
+    [DataRow("DataRow(7, null)", "value: int, token: CancellationToken", false, DisplayName = "InjectedToken_ExplicitNullWithData")]
+    [DataRow("DataRow([| 1; 2 |] : int[])", "values: int[], token: CancellationToken", false, DisplayName = "InjectedToken_TypedArray")]
+    [DataRow("DataRow(1, 2)", "values: int[], token: CancellationToken", true, DisplayName = "InjectedToken_RejectTypedArrayExpansion")]
+    [DataRow("DataRow(7)", "values: int[], token: CancellationToken", true, DisplayName = "InjectedToken_RejectScalarForTypedArray")]
+    [DataRow("DataRow()", "values: int[], token: CancellationToken", true, DisplayName = "InjectedToken_RejectMissingTypedArray")]
+    [DataRow("DataRow(1, 2)", "values: obj[], token: CancellationToken", false, DisplayName = "InjectedToken_ObjectArrayExpansion")]
+    [DataRow("DataRow(1, null)", "values: obj[], token: CancellationToken", false, DisplayName = "InjectedToken_NullObjectArrayElement")]
+    [DataRow("TokenRow([| \"value\" |], null)", "values: obj[], token: CancellationToken", false, DisplayName = "InjectedToken_ExplicitNullAfterArray")]
+    [DataRow("DataRow(null, null)", "values: obj[], token: CancellationToken", false, DisplayName = "InjectedToken_ExplicitNullArrayAndToken")]
+    [DataRow("DataRow(7)", "value: 'T, token: CancellationToken", false, DisplayName = "InjectedToken_GenericData")]
+    [DataRow("DataRow([||] : int[])", "values: 'T[], token: CancellationToken", false, DisplayName = "InjectedToken_GenericEmptyArray")]
+    [DataRow("DataRow(7)", "value: int, token: byref<CancellationToken>", true, DisplayName = "InjectedToken_ByRefIsNotInjected")]
+    public async Task DataRows_NormalizeInjectedCancellationToken(string attribute, string parameters, bool shouldReport)
+    {
+        string generic = parameters.Contains("'T", StringComparison.Ordinal) ? "<'T>" : string.Empty;
+        string source = $$"""
+namespace Consumer
+open System.Threading
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type TokenRowAttribute(values: string[], token: obj) =
+    inherit DataRowAttribute([| values :> obj; token |])
+[<TestClass>]
+type Tests() =
+    [<TestMethod; {{attribute}}>]
+    member _.Run{{generic}}({{parameters}}) = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0014");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0014", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    [DataRow("DataRow", true, "full", "args", true, DisplayName = "ConflictingNames_ExactAttribute")]
+    [DataRow("DataRowAttribute", false, "full", "args", true, DisplayName = "ConflictingNames_ExactInitializer")]
+    [DataRow("CustomRow", true, "full", "args", false, DisplayName = "ConflictingNames_CustomAttribute")]
+    [DataRow("CustomRow", false, "full", "args", false, DisplayName = "ConflictingNames_CustomInitializer")]
+    [DataRow("DataRow", true, " ", "args", false, DisplayName = "ConflictingNames_WhitespaceFullName")]
+    [DataRow("DataRow", true, "full", " ", false, DisplayName = "ConflictingNames_WhitespaceArgumentsName")]
+    [DataRow("TestDataRow<int>", false, "", "args", true, DisplayName = "ConflictingNames_TestDataRowEmptyFullName")]
+    public async Task ConflictingDisplayNames_UseExactSupportedTypes(string typeName, bool attributeForm, string fullName, string argumentsName, bool shouldReport)
+    {
+        string initialization = $"{typeName}(1, DisplayName = \"{fullName}\", ArgumentsDisplayName = \"{argumentsName}\")";
+        string source = $$"""
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type CustomRow(value: int) =
+    inherit DataRowAttribute(value)
+    override _.GetDisplayName(_, _) = "custom"
+[<TestClass>]
+type Tests() =
+    [<TestMethod{{(attributeForm ? "; " + initialization : string.Empty)}}>]
+    member _.Run(value: int) =
+        {{(attributeForm ? "()" : $"""
+let row = {initialization}
+        ignore row
+""")}}
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0089");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0089", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
     [DataRow("MSTEST0030", DisplayName = "UnannotatedDerivedClass_Discovery")]
     [DataRow("MSTEST0078", DisplayName = "UnannotatedDerivedClass_Dependency")]
     public async Task UnannotatedDerivedClass_IsNotDiscoverable(string rule)
@@ -213,7 +318,7 @@ type Fixture() =
     }
 
     [TestMethod]
-    public async Task HostingAnalysis_ReusesSnapshotCacheAndInvalidatesChangedProjects()
+    public async Task ProjectAnalysis_ReusesSnapshotCachesAndInvalidatesChangedProjects()
     {
         const string program = """"
 namespace EditorHost
@@ -246,6 +351,10 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 type Tests(service: string) =
     [<TestMethod>]
     member _.Run() = ()
+    [<TestMethod; DependsOn("Second")>]
+    member _.First() = ()
+    [<TestMethod; DependsOn("First")>]
+    member _.Second() = ()
 """
             let root = Directory.GetCurrentDirectory()
             let registrationPath = Path.Combine(root, "Registration.fs")
@@ -297,7 +406,9 @@ type Tests(service: string) =
                || registrationDiagnostics.Head.Range.StartLine <> 6 then
                 failwithf "Incorrect registration diagnostics: %A" registrationDiagnostics
             let! sampleDiagnostics = Analyzers.analyzeEditor sampleContext
-            if not sampleDiagnostics.IsEmpty then failwithf "Cross-file hosting injection was lost: %A" sampleDiagnostics
+            if codes sampleDiagnostics <> [ "MSTEST0078"; "MSTEST0078" ]
+               || (sampleDiagnostics |> List.exists (fun diagnostic -> diagnostic.Range.FileName <> samplePath)) then
+                failwithf "Cross-file hosting injection or cycle reporting changed: %A" sampleDiagnostics
             let flags = BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.NonPublic
             let analyzerAssembly = Assembly.Load("MSTest.Analyzers.FSharp")
             let accessor = analyzerAssembly.GetType("MSTest.Analyzers.FSharp.DeclarationRules", true).GetMethod("get_hostingLocations", flags)
@@ -306,12 +417,30 @@ type Tests(service: string) =
             let mutable cached = Unchecked.defaultof<Lazy<range list>>
             if not (cache.TryGetValue(project, &cached)) || not cached.IsValueCreated || cached.Value.Length <> 1 then
                 failwith "Hosting locations were not computed once for the checked project."
+            let graphAccessor = analyzerAssembly.GetType("MSTest.Analyzers.FSharp.DependencyRules", true).GetMethod("get_dependencyDiagnostics", flags)
+            if isNull graphAccessor then failwith "Dependency analysis is missing its per-snapshot cache."
+            let graphCache =
+                graphAccessor.Invoke(null, [||])
+                |> Option.ofObj
+                |> Option.defaultWith (fun () -> failwith "Dependency cache was not initialized.")
+            let graphValue (snapshot: FSharpCheckProjectResults) =
+                let values = [| box snapshot; null |]
+                let found = graphCache.GetType().GetMethod("TryGetValue").Invoke(graphCache, values) :?> bool
+                if found then Some values[1] else None
+            let graph =
+                match graphValue project with
+                | Some value when not (isNull value) -> value
+                | _ -> failwith "Dependency diagnostics were not cached for the checked project."
+            if not (graph.GetType().GetProperty("IsValueCreated").GetValue(graph) :?> bool) then
+                failwith "Dependency analysis did not compute the cached diagnostics."
             let! repeated = [| for _ in 1 .. 4 -> Analyzers.analyzeEditor registrationContext |] |> Async.Parallel
             if repeated |> Array.exists (fun diagnostics -> diagnostics <> registrationDiagnostics) then
                 failwithf "Concurrent analysis changed diagnostics: %A" repeated
             let mutable reused = Unchecked.defaultof<Lazy<range list>>
             if not (cache.TryGetValue(project, &reused)) || not (Object.ReferenceEquals(cached, reused)) then
                 failwith "Per-file analysis replaced the checked-project cache."
+            if not (graphValue project |> Option.exists (fun value -> Object.ReferenceEquals(graph, value))) then
+                failwith "Per-file analysis replaced the dependency cache."
             let! partial = Analyzers.analyzeEditor { registrationContext with CheckProjectResults = None }
             if partial <> registrationDiagnostics then failwithf "Partial snapshot lost hosting diagnostics: %A" partial
             let settingsPath = Path.Combine(root, "mstest-analyzers.json")
@@ -319,24 +448,32 @@ type Tests(service: string) =
             File.WriteAllText(settingsPath, settings.Replace("\"warning\"", "\"none\"", StringComparison.Ordinal))
             let! disabled = Analyzers.analyzeEditor registrationContext
             if not disabled.IsEmpty then failwithf "Disabled hosting diagnostics were reported: %A" disabled
+            checker.InvalidateConfiguration(options)
+            let! disabledProject = checkProject ()
+            let! disabledContext = context disabledProject samplePath sample
+            let! disabledGraph = Analyzers.analyzeEditor disabledContext
+            if not disabledGraph.IsEmpty || (graphValue disabledProject).IsSome then
+                failwithf "Disabled dependency analysis still computed a graph: %A" disabledGraph
             File.WriteAllText(settingsPath, settings)
             File.WriteAllText(registrationPath, registration.Replace("services.AddMSTestTestClassInjection()", "services", StringComparison.Ordinal))
             checker.InvalidateConfiguration(options)
             let! updated = checkProject ()
             let! updatedContext = context updated samplePath sample
             let! updatedDiagnostics = Analyzers.analyzeEditor updatedContext
-            if codes updatedDiagnostics <> [ "MSTEST0063" ] then
-                failwithf "A new checked project reused stale hosting injection: %A" updatedDiagnostics
+            if codes updatedDiagnostics <> [ "MSTEST0063"; "MSTEST0078"; "MSTEST0078" ] then
+                failwithf "A new checked project reused stale analysis: %A" updatedDiagnostics
             let mutable refreshed = Unchecked.defaultof<Lazy<range list>>
             if not (cache.TryGetValue(updated, &refreshed)) || Object.ReferenceEquals(cached, refreshed) || not refreshed.Value.IsEmpty then
                 failwith "The updated checked project did not get independent hosting locations."
-            printfn "HOSTING_VALIDATED:SNAPSHOT_REUSED;REFRESHED;PARTIAL;DISABLED"
+            if not (graphValue updated |> Option.exists (fun value -> not (Object.ReferenceEquals(graph, value)))) then
+                failwith "The updated checked project did not get independent dependency diagnostics."
+            printfn "PROJECT_ANALYSIS_VALIDATED:SNAPSHOT_REUSED;REFRESHED;PARTIAL;DISABLED"
             return 0
         }
         |> Async.RunSynchronously
 """";
         using TestAsset asset = await GenerateConsumerAsync(program, editorHost: true, hosting: true);
-        await WriteRuleConfigurationAsync(asset.TargetAssetPath, ["MSTEST0063", "MSTEST0088"], new Dictionary<string, string>
+        await WriteRuleConfigurationAsync(asset.TargetAssetPath, ["MSTEST0063", "MSTEST0078", "MSTEST0088"], new Dictionary<string, string>
         {
             ["MSTestHostTestClassInjectionEnabled"] = "false",
             ["PublishAot"] = "true",
@@ -349,7 +486,7 @@ type Tests(service: string) =
             asset.TargetAssetPath,
             testContext.CancellationToken);
         Assert.AreEqual(0, exitCode, host.StandardOutput + host.StandardError);
-        Assert.AreEqual("HOSTING_VALIDATED:SNAPSHOT_REUSED;REFRESHED;PARTIAL;DISABLED", host.StandardOutput.Trim());
+        Assert.AreEqual("PROJECT_ANALYSIS_VALIDATED:SNAPSHOT_REUSED;REFRESHED;PARTIAL;DISABLED", host.StandardOutput.Trim());
     }
 
     [TestMethod]

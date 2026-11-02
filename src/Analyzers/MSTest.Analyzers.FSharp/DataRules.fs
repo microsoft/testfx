@@ -82,30 +82,43 @@ module internal DataRules =
 
     let private displayType (t: FSharpType) = t.Format(FSharpDisplayContext.Empty)
 
+    type private ArgumentType =
+        | SymbolType of FSharpType
+        | RuntimeType of Type
+        | ArrayType of ArgumentType * int
+
     type private Argument =
         {
             Value: obj | null
-            Type: FSharpType option
-            Elements: Argument list
+            Type: ArgumentType option
         }
 
-    let private argumentTypeName argument =
-        argument.Type
-        |> Option.bind Symbols.typeName
-        |> Option.orElseWith (fun () ->
-            match argument.Value with
-            | null -> None
-            | :? FSharpType -> Some "System.Type"
-            | value -> Option.ofObj (value.GetType().FullName))
+    let rec private symbolType (t: FSharpType) =
+        let t = Symbols.normalizeType t
+        if isArray t then ArrayType(symbolType t.GenericArguments[0], t.TypeDefinition.ArrayRank) else SymbolType t
 
-    let private conflictingArgumentTypes left right =
-        argumentTypeName left <> argumentTypeName right
-        && (match left.Value, right.Value with
-            | null, _ | _, null -> false
-            | leftValue, rightValue ->
-                left.Type.IsSome || right.Type.IsSome
-                || (not (leftValue.GetType().IsAssignableFrom(rightValue.GetType()))
-                    && not (rightValue.GetType().IsAssignableFrom(leftValue.GetType()))))
+    let rec private runtimeType (t: Type) =
+        if t.IsArray then ArrayType(runtimeType (t.GetElementType() |> Option.ofObj |> Option.get), t.GetArrayRank())
+        else RuntimeType t
+
+    let rec private typeName = function
+        | SymbolType t -> Symbols.typeName t
+        | RuntimeType t -> Option.ofObj t.FullName
+        | ArrayType(element, rank) -> typeName element |> Option.map (fun name -> name + "[" + String(',', rank - 1) + "]")
+
+    let private argumentTypeName argument = argument.Type |> Option.bind typeName
+
+    let rec private sameType left right =
+        match left, right with
+        | SymbolType left, SymbolType right -> left.Equals(right)
+        | RuntimeType left, RuntimeType right -> left = right
+        | ArrayType(left, leftRank), ArrayType(right, rightRank) -> leftRank = rightRank && sameType left right
+        | _ -> typeName left = typeName right && (typeName left).IsSome
+
+    let private referenceType = function
+        | SymbolType t -> t.HasTypeDefinition && not t.TypeDefinition.IsValueType
+        | RuntimeType t -> not t.IsValueType
+        | ArrayType _ -> true
 
     let private numericConversion actual expected =
         let targets =
@@ -123,40 +136,44 @@ module internal DataRules =
             | _ -> []
         List.contains expected targets
 
-    let rec private compatible allowNumeric argument (expected: FSharpType) =
-        let expected = Symbols.normalizeType expected
-        match argument.Value with
-        | null -> true
-        | _ when expected.IsGenericParameter -> true
-        | :? Array as actual when isArray expected ->
-            expected.GenericArguments.Count = 1
-            && expected.TypeDefinition.ArrayRank = actual.Rank
-            && (argument.Elements |> List.forall (fun item -> compatible false item expected.GenericArguments[0]))
-        | value ->
-            match Symbols.typeName expected with
-            | Some "System.Object" -> true
-            | Some name ->
-                match argument.Type with
-                | Some actual when not (isArray actual) ->
-                    let rec assignable (actual: FSharpType) =
-                        let actual = Symbols.normalizeType actual
-                        actual.Equals(expected)
-                        || (actual.HasTypeDefinition
-                            && ((actual.TypeDefinition.BaseType |> Option.exists assignable)
-                                || actual.TypeDefinition.AllInterfaces |> Seq.exists (fun i -> i.Equals(expected))))
-                    assignable actual
-                    || (allowNumeric && numericConversion (Symbols.typeName actual |> Option.defaultValue "") name)
-                | _ ->
-                    let actual = value.GetType()
-                    let rec matches (t: Type | null) =
-                        match t with
-                        | null -> false
-                        | t -> t.FullName = name || matches t.BaseType
-                    (argumentTypeName argument = Some name)
-                    || matches actual.BaseType
-                    || (actual.GetInterfaces() |> Array.exists (fun i -> i.FullName = name))
-                    || (allowNumeric && numericConversion (argumentTypeName argument |> Option.defaultValue "") name)
-            | _ -> false
+    let rec private assignable allowNumeric allowBoxing actual expected =
+        let covariant left right =
+            sameType left right
+            || (referenceType left && referenceType right && assignable false false left right)
+        sameType actual expected
+        || (allowNumeric && numericConversion (typeName actual |> Option.defaultValue "") (typeName expected |> Option.defaultValue ""))
+        || match actual, expected with
+           | _, _ when typeName expected = Some "System.Object" -> allowBoxing || referenceType actual
+           | ArrayType(left, leftRank), ArrayType(right, rightRank) -> leftRank = rightRank && covariant left right
+           | ArrayType(element, rank), SymbolType target ->
+               match Symbols.typeName target with
+               | Some name when List.contains name
+                   [ "System.Array"; "System.Collections.IEnumerable"; "System.Collections.ICollection"; "System.Collections.IList";
+                     "System.Collections.IStructuralComparable"; "System.Collections.IStructuralEquatable" ] -> true
+               | Some name when rank = 1 && target.GenericArguments.Count = 1
+                                && List.contains name
+                                    [ "System.Collections.Generic.IEnumerable`1"; "System.Collections.Generic.ICollection`1"; "System.Collections.Generic.IList`1";
+                                      "System.Collections.Generic.IReadOnlyCollection`1"; "System.Collections.Generic.IReadOnlyList`1" ] ->
+                   covariant element (symbolType target.GenericArguments[0])
+               | _ -> false
+           | SymbolType source, _ when source.HasTypeDefinition ->
+               let source = source.TypeDefinition
+               (allowBoxing || not source.IsValueType || not (referenceType expected))
+               && ((source.BaseType |> Option.exists (fun parent -> assignable false allowBoxing (symbolType parent) expected))
+                   // FCS already includes transitive interfaces, including an interface itself.
+                   || source.AllInterfaces |> Seq.exists (fun parent -> sameType (symbolType parent) expected))
+           | RuntimeType source, RuntimeType target ->
+               (allowBoxing || not source.IsValueType || target.IsValueType) && target.IsAssignableFrom(source)
+           | RuntimeType source, _ ->
+               (allowBoxing || not source.IsValueType || not (referenceType expected))
+               && ((Option.ofObj source.BaseType |> Option.exists (fun parent -> assignable false allowBoxing (runtimeType parent) expected))
+                   || source.GetInterfaces() |> Array.exists (fun parent -> assignable false allowBoxing (runtimeType parent) expected))
+           | _ -> false
+
+    let private compatible argument (expected: FSharpType) =
+        argument.Value = null
+        || expected.IsGenericParameter
+        || (argument.Type |> Option.exists (fun actual -> assignable true true actual (symbolType expected)))
 
     let private rowArguments (context: RuleContext) =
         let syntaxAttributes =
@@ -173,8 +190,14 @@ module internal DataRules =
                 attributes |> Seq.toList
         let rec unwrap = function
             | SynExpr.Paren(expr = expression)
-            | SynExpr.Typed(expr = expression) -> unwrap expression
+            | SynExpr.Typed(expr = expression)
+            | SynExpr.Upcast(expr = expression) -> unwrap expression
             | expression -> expression
+        let rec constructorArguments = function
+            | SynExpr.Paren(expr = expression) -> constructorArguments expression
+            | SynExpr.Tuple(exprs = expressions) -> expressions
+            | SynExpr.Const(constant = SynConst.Unit) -> []
+            | expression -> [ expression ]
         let rec arrayElements expression =
             match unwrap expression with
             | SynExpr.ArrayOrList(exprs = expressions) -> expressions
@@ -182,47 +205,90 @@ module internal DataRules =
             | SynExpr.Sequential(expr1 = first; expr2 = rest) -> first :: arrayElements rest
             | SynExpr.Const(constant = SynConst.Unit) -> []
             | expression -> [ expression ]
-        let symbolType expression =
-            let expression = unwrap expression
-            let names =
-                match expression with
-                | SynExpr.LongIdent(longDotId = identifiers) -> identifiers.LongIdent |> List.map (fun identifier -> identifier.idText)
-                | SynExpr.Ident identifier -> [ identifier.idText ]
-                | _ -> []
+        let symbolAt (at: range) (names: string list) =
             if names.IsEmpty then None
             else
                 context.CheckFileResults
                 |> Option.bind (fun checkedFile ->
-                    let at = expression.Range
                     checkedFile.GetSymbolUseAtLocation(at.EndLine, at.EndColumn, context.SourceText.GetLineString(at.EndLine - 1), names))
-                |> Option.bind (fun useInfo ->
-                    match useInfo.Symbol with
-                    | :? FSharpField as field -> Some field.FieldType
-                    | :? FSharpMemberOrFunctionOrValue as value when value.LiteralValue.IsSome -> Some value.FullType
+                |> Option.map (fun useInfo -> useInfo.Symbol)
+        let rec annotationType = function
+            | SynType.Paren(innerType = inner) -> annotationType inner
+            | SynType.Array(rank = rank; elementType = element) -> annotationType element |> Option.map (fun element -> ArrayType(element, rank))
+            | SynType.LongIdent identifiers ->
+                symbolAt identifiers.Range (identifiers.LongIdent |> List.map (fun identifier -> identifier.idText))
+                |> Option.bind (function :? FSharpEntity as entity -> Some (symbolType (entity.AsType())) | _ -> None)
+            | SynType.App(typeName = name; typeArgs = [ element ]) ->
+                annotationType name
+                |> Option.bind (function
+                    | ArrayType _ -> annotationType element |> Option.map (fun element -> ArrayType(element, 1))
+                    | _ -> None)
+            | _ -> None
+        let rec expressionType declared expression =
+            match expression with
+            | SynExpr.Paren(expr = expression) -> expressionType declared expression
+            | SynExpr.Typed(expr = inner; targetType = annotation)
+            | SynExpr.Upcast(expr = inner; targetType = annotation) ->
+                let annotated = annotationType annotation
+                if not declared && (annotated |> Option.bind typeName) = Some "System.Object" then expressionType false inner
+                else annotated |> Option.orElseWith (fun () -> expressionType declared inner)
+            | SynExpr.App(funcExpr = functionExpr; argExpr = inner) ->
+                let at, names =
+                    match unwrap functionExpr with
+                    | SynExpr.Ident identifier -> identifier.idRange, [ identifier.idText ]
+                    | SynExpr.LongIdent(longDotId = identifiers) -> identifiers.Range, identifiers.LongIdent |> List.map (fun identifier -> identifier.idText)
+                    | _ -> functionExpr.Range, []
+                match symbolAt at names with
+                | Some (:? FSharpMemberOrFunctionOrValue as m) when
+                    m.CompiledName = "Box"
+                    && (m.DeclaringEntity |> Option.exists (Symbols.hasTypeName "Microsoft.FSharp.Core.Operators")) ->
+                    if declared then Some (RuntimeType typeof<obj>) else expressionType false inner
+                | _ -> None
+            | _ ->
+                let names =
+                    match expression with
+                    | SynExpr.LongIdent(longDotId = identifiers) -> identifiers.LongIdent |> List.map (fun identifier -> identifier.idText)
+                    | SynExpr.Ident identifier -> [ identifier.idText ]
+                    | _ -> []
+                symbolAt expression.Range names
+                |> Option.bind (fun symbol ->
+                    match symbol with
+                    | :? FSharpField as field -> Some (symbolType field.FieldType)
+                    | :? FSharpMemberOrFunctionOrValue as value when value.LiteralValue.IsSome -> Some (symbolType value.FullType)
                     | _ -> None)
         let rec argument sourceType syntax (value: obj | null) =
             let actualType =
-                syntax |> Option.bind symbolType
-                |> Option.orElse (sourceType |> Option.filter (fun t -> Symbols.typeName t <> Some "System.Object"))
-            let elements =
+                syntax |> Option.bind (expressionType false)
+                |> Option.orElse (sourceType |> Option.filter (fun t -> Symbols.typeName t <> Some "System.Object") |> Option.map symbolType)
+            let actualType =
                 match value with
-                | :? Array ->
+                | :? Array as array ->
                     let expressions = syntax |> Option.map arrayElements |> Option.defaultValue []
-                    let elementType = actualType |> Option.filter isArray |> Option.map (fun t -> t.GenericArguments[0])
-                    values value |> List.mapi (fun index value -> argument elementType (expressions |> List.tryItem index) value)
-                | _ -> []
-            { Value = value; Type = actualType; Elements = elements }
+                    match actualType with
+                    | Some (ArrayType _) -> actualType
+                    | _ ->
+                        let elements =
+                            values value |> List.mapi (fun index value ->
+                                let expression = expressions |> List.tryItem index
+                                expression |> Option.bind (expressionType true)
+                                |> Option.orElseWith (fun () -> (argument None expression value).Type))
+                            |> List.choose id
+                        let elementType =
+                            match elements with
+                            | first :: rest when rest |> List.forall (sameType first) -> first
+                            | _ -> runtimeType (array.GetType().GetElementType() |> Option.ofObj |> Option.get)
+                        Some (ArrayType(elementType, array.Rank))
+                | null -> actualType
+                | :? FSharpType -> Some (RuntimeType typeof<Type>)
+                | value -> actualType |> Option.orElseWith (fun () -> Some (runtimeType (value.GetType())))
+            { Value = value; Type = actualType }
         fun (attribute: FSharpAttribute) ->
             let syntax =
                 syntaxAttributes.Value
                 |> List.tryFind (fun syntax ->
                     syntax.TypeName.Range.Start = attribute.Range.Start
                     && (syntax.Range.EndLine, syntax.Range.EndColumn) >= (attribute.Range.EndLine, attribute.Range.EndColumn))
-                |> Option.map (fun syntax ->
-                    match unwrap syntax.ArgExpr with
-                    | SynExpr.Tuple(exprs = expressions) -> expressions
-                    | SynExpr.Const(constant = SynConst.Unit) -> []
-                    | expression -> [ expression ])
+                |> Option.map (fun syntax -> constructorArguments syntax.ArgExpr)
                 |> Option.defaultValue []
             match attribute.ConstructorArguments |> Seq.toList with
             | [ (t, value) ] when isArray t && Symbols.typeName t.GenericArguments[0] = Some "System.Object" ->
@@ -255,14 +321,35 @@ module internal DataRules =
             | Some (_, first) ->
                 context.Report "MSTEST0042" "DuplicateDataRowTitle" "DuplicateDataRowMessageFormat" (location context methodInfo.DeclarationLocation attribute) [| box first; box index |]
             | None -> seenValues.Add(attribute, index)
+            if Symbols.hasTypeName (Symbols.frameworkNamespace + "DataRowAttribute") attribute.AttributeType
+               && (Symbols.named "DisplayName" attribute |> Option.exists Symbols.nonemptyString)
+               && (Symbols.named "ArgumentsDisplayName" attribute |> Option.exists Symbols.nonemptyString) then
+                context.Report "MSTEST0089" "ConflictingDataRowDisplayNamesTitle" "ConflictingDataRowDisplayNamesMessageFormat"
+                    (location context methodInfo.DeclarationLocation attribute) [||]
             if Symbols.isTest methodInfo then
                 match Symbols.named "DisplayName" attribute |> Option.bind stringValue with
                 | Some name when not (String.IsNullOrWhiteSpace(name)) && not (displayNames.Add(name)) ->
                     context.Report "MSTEST0087" "DuplicateDataRowDisplayNameTitle" "DuplicateDataRowDisplayNameMessageFormat" (location context methodInfo.DeclarationLocation attribute) [| box name |]
                 | _ -> ()
-                let parameters = Symbols.compiledParameters methodInfo
                 let arguments = argumentsFor attribute
-                let arrayOnly = match parameters with | [ p ] -> isArray p.Type | _ -> false
+                let declaredParameters = Symbols.compiledParameters methodInfo
+                let explicitNullToken =
+                    arguments.Length = declaredParameters.Length
+                    && (arguments |> List.tryLast |> Option.exists (fun argument -> argument.Value = null))
+                    && (match declaredParameters, arguments with
+                        | [ data; _ ], first :: _ when isArray data.Type && Symbols.typeName data.Type.GenericArguments[0] = Some "System.Object" ->
+                            first.Value = null || compatible first data.Type
+                        | _ -> true)
+                let parameters =
+                    match declaredParameters |> List.tryLast with
+                    | Some last when Symbols.typeName last.Type = Some "System.Threading.CancellationToken" && not explicitNullToken ->
+                        declaredParameters |> List.take (declaredParameters.Length - 1)
+                    | _ -> declaredParameters
+                let tokenOmitted = parameters.Length < declaredParameters.Length
+                let arrayOnly =
+                    match parameters with
+                    | [ p ] -> isArray p.Type && (not tokenOmitted || Symbols.typeName p.Type.GenericArguments[0] = Some "System.Object")
+                    | _ -> false
                 let paramArray = parameters |> List.tryLast |> Option.exists (fun p -> p.IsParamArrayArg)
                 let required = parameters |> List.filter (fun p -> not p.IsOptionalArg) |> List.length
                 let countValid =
@@ -271,13 +358,13 @@ module internal DataRules =
                         && (paramArray || arguments.Length <= parameters.Length))
                 if not countValid then report attribute "ArgumentCountMismatch" [| box arguments.Length; box parameters.Length |]
                 else
-                    let inferred = Dictionary<FSharpGenericParameter, Argument>()
+                    let inferred = Dictionary<FSharpGenericParameter, ArgumentType>()
                     let mismatches = ResizeArray<string>()
                     for i, argument in List.indexed arguments do
                         if not parameters.IsEmpty then
                             let parameter = parameters[min i (parameters.Length - 1)]
                             let expected =
-                                if (paramArray && i >= parameters.Length - 1) || (arrayOnly && arguments.Length > 1) then
+                                if (paramArray && i >= parameters.Length - 1) || (arrayOnly && (tokenOmitted || arguments.Length > 1)) then
                                     parameter.Type.GenericArguments[0]
                                 else parameter.Type
                             let genericType =
@@ -287,17 +374,20 @@ module internal DataRules =
                             match genericType with
                             | Some generic ->
                                 let item =
-                                    (if isArray expected then argument.Elements else [ argument ])
-                                    |> List.tryFind (fun item -> item.Value <> null)
+                                    if argument.Value = null then None
+                                    elif isArray expected then
+                                        argument.Type |> Option.bind (function ArrayType(element, _) -> Some element | _ -> None)
+                                    else argument.Type
                                 match item with
                                 | Some item ->
                                     match inferred.TryGetValue(generic) with
-                                    | true, previous when conflictingArgumentTypes previous item ->
-                                        let typeName argument = (argumentTypeName argument |> Option.defaultValue "").Split('.') |> Array.last
-                                        report attribute "GenericTypeArgumentConflictingTypes" [| box generic.Name; box (typeName previous); box (typeName item) |]
+                                    | true, previous when assignable false true item previous -> ()
+                                    | true, previous when not (assignable false true previous item) ->
+                                        let name argument = (typeName argument |> Option.defaultValue "").Split('.') |> Array.last
+                                        report attribute "GenericTypeArgumentConflictingTypes" [| box generic.Name; box (name previous); box (name item) |]
                                     | _ -> inferred[generic] <- item
                                 | None -> ()
-                            | None when not (compatible true argument expected) ->
+                            | None when not (compatible argument expected) ->
                                 let actualType = argumentTypeName argument |> Option.defaultValue "null"
                                 mismatches.Add(String.Format(Rules.resource "DataRowShouldBeValidMessageFormat_ParameterMismatch", parameter.Name |> Option.defaultValue "", displayType expected, actualType))
                             | _ -> ()
@@ -463,7 +553,7 @@ module internal DataRules =
         let rec walk (expression: FSharpExpr) =
             match expression with
             | Let((binding, (NewObject(constructor, _, _) as creation), _), body) when
-                constructor.DeclaringEntity |> Option.exists (fun entity -> Symbols.inherits (Symbols.frameworkNamespace + "DataRowAttribute") entity || entity.TryGetFullName() = Some (Symbols.frameworkNamespace + "TestDataRow`1")) ->
+                constructor.DeclaringEntity |> Option.exists (fun entity -> Symbols.hasTypeName (Symbols.frameworkNamespace + "DataRowAttribute") entity || entity.TryGetFullName() = Some (Symbols.frameworkNamespace + "TestDataRow`1")) ->
                 let names = Dictionary<string, string>()
                 let rec setters (e: FSharpExpr) =
                     match e with

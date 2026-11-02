@@ -447,7 +447,7 @@ module internal DeclarationRules =
             for attribute in [ parallelizeAttribute; notParallel ] do
                 if sameFile attribute.Range.FileName then
                     report "MSTEST0059" "DoNotUseParallelizeAndDoNotParallelizeTogether" attribute.Range [||]
-        | None, None when assemblyFile && settingTrue "IsMSTestTestAdapterReferenced" ->
+        | None, None when context.CheckProjectResults.IsSome && assemblyFile && settingTrue "IsMSTestTestAdapterReferenced" ->
             report "MSTEST0001" "UseParallelizeAttributeAnalyzer" assemblyRange [||]
         | _ -> ()
 

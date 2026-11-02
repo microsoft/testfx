@@ -5,7 +5,10 @@ namespace MSTest.Analyzers.FSharp
 
 open System
 open System.Collections.Generic
+open System.Runtime.CompilerServices
+open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Symbols
+open FSharp.Compiler.Text
 
 module internal DependencyRules =
     let private visible context (entity: FSharpEntity) =
@@ -138,96 +141,124 @@ module internal DependencyRules =
                 |> Option.defaultWith (fun () -> entity.BaseType |> Option.exists (fun t -> t.HasTypeDefinition && hidden t.TypeDefinition))
         signatureValid && (classFixture || not (hidden testClass))
 
+    type private DependencyDiagnostic =
+        {
+            Range: range
+            Suffix: string
+            Arguments: (obj | null) array
+        }
+
+    let private dependencyDiagnostics = ConditionalWeakTable<FSharpCheckProjectResults, Lazy<DependencyDiagnostic list>>()
+
+    let private collectDependencyDiagnostics (context: RuleContext) (project: FSharpCheckProjectResults) =
+        let diagnostics = ResizeArray<DependencyDiagnostic>()
+        let entities = Symbols.allEntities project.AssemblySignature.Entities |> Seq.toList
+        let currentAssembly = entities |> List.tryHead |> Option.map (fun e -> e.Assembly.SimpleName)
+        let belongsToCurrent (entity: FSharpEntity) = currentAssembly = Some entity.Assembly.SimpleName
+        let memberCache = Dictionary<FSharpEntity, FSharpMemberOrFunctionOrValue list>()
+        let members entity =
+            match memberCache.TryGetValue(entity) with
+            | true, members -> members
+            | _ ->
+                let members = effectiveMembers entity
+                memberCache[entity] <- members
+                members
+        let selfReferences = HashSet<_>()
+        let report (attribute: FSharpAttribute) suffix args =
+            diagnostics.Add { Range = attribute.Range; Suffix = suffix; Arguments = args }
+        let validate (entity: FSharpEntity) (methodInfo: FSharpMemberOrFunctionOrValue option) attributes =
+            for attribute in Symbols.attributes "DependsOnAttribute" attributes do
+                if methodInfo |> Option.exists (Symbols.isTest >> not) then
+                    report attribute "NoEffect" [| box methodInfo.Value.DisplayName |]
+                elif methodInfo.IsNone && not (runnable context entity) then
+                    report attribute "NoEffectOnClass" [| box entity.DisplayName |]
+                else
+                    match readTarget attribute with
+                    | Some (targetType, targetName) when targetType.IsSome || runnable context entity ->
+                        let target =
+                            match targetType with
+                            | None -> Some entity
+                            | Some t when t.HasTypeDefinition && not t.TypeDefinition.IsArrayType -> Some t.TypeDefinition
+                            | _ -> None
+                        match target with
+                        | None -> report attribute "NotATestClass" [| box (targetType.Value.Format(FSharpDisplayContext.Empty)) |]
+                        | Some target ->
+                            if not (belongsToCurrent target) then report attribute "OtherAssembly" [| box target.DisplayName |]
+                            elif not (runnable context target) then
+                                report attribute (if target.IsAbstractClass && Symbols.isTestClass target then "AbstractTarget" else "NotATestClass") [| box target.DisplayName |]
+                            else
+                                match targetName with
+                                | Some name when not (String.IsNullOrWhiteSpace(name)) ->
+                                    let candidates = members target |> List.filter (fun m -> m.DisplayName = name || m.CompiledName = name)
+                                    if candidates.IsEmpty then report attribute "MethodNotFound" [| box target.DisplayName; box name |]
+                                    elif not (candidates |> List.exists Symbols.isTest) then report attribute "NotATestMethod" [| box target.DisplayName; box name |]
+                                    elif methodInfo |> Option.exists (fun m -> m.DisplayName = name && entity.Equals(target)) then
+                                        selfReferences.Add(attribute.Range) |> ignore
+                                        report attribute "SelfReference" [| box name |]
+                                | _ -> ()
+                    | _ -> ()
+        for entity in entities do
+            validate entity None entity.Attributes
+            for memberInfo in entity.MembersFunctionsAndValues do validate entity (Some memberInfo) memberInfo.Attributes
+        let nodes =
+            entities |> List.filter (runnable context)
+            |> List.collect (fun entity -> members entity |> List.filter (methodRunnable context) |> List.map (fun m -> entity, m.DisplayName))
+            |> List.distinctBy (fun (e, name) -> e.TryGetFullName(), name)
+        let key (e: FSharpEntity, name) = (e.TryGetFullName() |> Option.defaultValue e.DisplayName) + "." + name
+        let duplicates = Dictionary<FSharpEntity, bool>()
+        for entity in nodes |> List.map fst |> List.distinct do
+            let seen = HashSet<_>()
+            let rec check (entity: FSharpEntity) =
+                (entity.MembersFunctionsAndValues
+                 |> Seq.exists (fun m -> methodRunnable context m && not m.IsOverrideOrExplicitInterfaceImplementation && not (seen.Add(signature m))))
+                || (entity.BaseType |> Option.exists (fun t -> t.HasTypeDefinition && check t.TypeDefinition))
+            duplicates[entity] <- check entity
+        let nodesByOwner = nodes |> List.groupBy fst |> dict
+        let edges (entity: FSharpEntity, methodName) =
+            let applications =
+                [ yield! Symbols.attributes "DependsOnAttribute" entity.Attributes |> List.map (fun a -> a, true)
+                  for m in members entity do
+                      if m.DisplayName = methodName && methodRunnable context m then
+                          yield! Symbols.attributes "DependsOnAttribute" m.Attributes |> List.map (fun a -> a, false) ]
+            (if duplicates[entity] then [] else applications) |> List.collect (fun (attribute, classLevel) ->
+                match readTarget attribute with
+                | Some (targetType, targetName) ->
+                    let target = match targetType with | None -> Some entity | Some t when t.HasTypeDefinition -> Some t.TypeDefinition | _ -> None
+                    match target with
+                    | Some target when belongsToCurrent target && runnable context target ->
+                        match nodesByOwner.TryGetValue(target) with
+                        | true, candidates ->
+                            candidates |> List.choose (fun (owner, name) ->
+                                if (targetName.IsNone || targetName = Some name)
+                                   && not ((classLevel || targetName.IsNone) && owner.Equals(entity) && name = methodName) then Some ((owner, name), attribute) else None)
+                        | _ -> []
+                    | _ -> []
+                | _ -> [])
+        let graph = nodes |> List.map (fun node -> node, edges node) |> dict
+        for start in nodes do
+            let visited = HashSet<string>()
+            let rec findCycle node path =
+                if visited.Count >= 512 then None
+                else
+                    graph[node] |> List.tryPick (fun (target, attribute) ->
+                        if key target = key start then Some (List.rev (target :: path), attribute)
+                        elif visited.Add(key target) then findCycle target (target :: path) |> Option.map (fun (p, _) -> p, attribute)
+                        else None)
+            match findCycle start [] with
+            | Some (path, attribute) when path.Length > 1 || not (selfReferences.Contains(attribute.Range)) ->
+                report attribute "Cycle" [| box (String.Join(" > ", key start :: (path |> List.map key))) |]
+            | _ -> ()
+        diagnostics |> Seq.toList
+
     let analyze (context: RuleContext) =
         match context.CheckProjectResults with
         | None -> ()
         | Some project ->
+            if context.Settings.TryFind("MSTEST0078") <> Some "none" then
+                for diagnostic in dependencyDiagnostics.GetValue(project, fun project -> lazy (collectDependencyDiagnostics context project)).Value do
+                    if diagnostic.Range.FileName = context.FileName then
+                        context.Report "MSTEST0078" "DependsOnShouldBeValidTitle" ("DependsOnShouldBeValidMessageFormat_" + diagnostic.Suffix) diagnostic.Range diagnostic.Arguments
             let entities = Symbols.allEntities project.AssemblySignature.Entities |> Seq.toList
-            let currentAssembly = entities |> List.tryHead |> Option.map (fun e -> e.Assembly.SimpleName)
-            let belongsToCurrent (entity: FSharpEntity) = currentAssembly = Some entity.Assembly.SimpleName
-            let selfReferences = HashSet<_>()
-            let report (attribute: FSharpAttribute) suffix args =
-                if attribute.Range.FileName = context.FileName then
-                    context.Report "MSTEST0078" "DependsOnShouldBeValidTitle" ("DependsOnShouldBeValidMessageFormat_" + suffix) attribute.Range args
-
-            let validate (entity: FSharpEntity) (methodInfo: FSharpMemberOrFunctionOrValue option) attributes =
-                for attribute in Symbols.attributes "DependsOnAttribute" attributes do
-                    if methodInfo |> Option.exists (Symbols.isTest >> not) then
-                        report attribute "NoEffect" [| box methodInfo.Value.DisplayName |]
-                    elif methodInfo.IsNone && not (runnable context entity) then
-                        report attribute "NoEffectOnClass" [| box entity.DisplayName |]
-                    else
-                        match readTarget attribute with
-                        | Some (targetType, targetName) when targetType.IsSome || runnable context entity ->
-                            let target =
-                                match targetType with
-                                | None -> Some entity
-                                | Some t when t.HasTypeDefinition && not t.TypeDefinition.IsArrayType -> Some t.TypeDefinition
-                                | _ -> None
-                            match target with
-                            | None -> report attribute "NotATestClass" [| box (targetType.Value.Format(FSharpDisplayContext.Empty)) |]
-                            | Some target ->
-                                if not (belongsToCurrent target) then report attribute "OtherAssembly" [| box target.DisplayName |]
-                                elif not (runnable context target) then
-                                    report attribute (if target.IsAbstractClass && Symbols.isTestClass target then "AbstractTarget" else "NotATestClass") [| box target.DisplayName |]
-                                else
-                                    match targetName with
-                                    | Some name when not (String.IsNullOrWhiteSpace(name)) ->
-                                        let candidates = effectiveMembers target |> List.filter (fun m -> m.DisplayName = name || m.CompiledName = name)
-                                        if candidates.IsEmpty then report attribute "MethodNotFound" [| box target.DisplayName; box name |]
-                                        elif not (candidates |> List.exists Symbols.isTest) then report attribute "NotATestMethod" [| box target.DisplayName; box name |]
-                                        elif methodInfo |> Option.exists (fun m -> m.DisplayName = name && entity.Equals(target)) then
-                                            selfReferences.Add(attribute.Range) |> ignore
-                                            report attribute "SelfReference" [| box name |]
-                                    | _ -> ()
-                        | _ -> ()
-            for entity in entities do
-                validate entity None entity.Attributes
-                for memberInfo in entity.MembersFunctionsAndValues do validate entity (Some memberInfo) memberInfo.Attributes
-
-            let nodes =
-                entities |> List.filter (runnable context)
-                |> List.collect (fun entity -> effectiveMembers entity |> List.filter (methodRunnable context) |> List.map (fun m -> entity, m.DisplayName))
-                |> List.distinctBy (fun (e, name) -> e.TryGetFullName(), name)
-            let key (e: FSharpEntity, name) = (e.TryGetFullName() |> Option.defaultValue e.DisplayName) + "." + name
-            let duplicateSignatures (entity: FSharpEntity) =
-                let seen = HashSet<_>()
-                let rec check (entity: FSharpEntity) =
-                    (entity.MembersFunctionsAndValues
-                     |> Seq.exists (fun m -> methodRunnable context m && not m.IsOverrideOrExplicitInterfaceImplementation && not (seen.Add(signature m))))
-                    || (entity.BaseType |> Option.exists (fun t -> t.HasTypeDefinition && check t.TypeDefinition))
-                check entity
-            let edges (entity: FSharpEntity, methodName) =
-                let applications =
-                    [ yield! Symbols.attributes "DependsOnAttribute" entity.Attributes |> List.map (fun a -> a, true)
-                      for m in effectiveMembers entity do
-                          if m.DisplayName = methodName && methodRunnable context m then
-                              yield! Symbols.attributes "DependsOnAttribute" m.Attributes |> List.map (fun a -> a, false) ]
-                (if duplicateSignatures entity then [] else applications) |> List.collect (fun (attribute, classLevel) ->
-                    match readTarget attribute with
-                    | Some (targetType, targetName) ->
-                        let target = match targetType with | None -> Some entity | Some t when t.HasTypeDefinition -> Some t.TypeDefinition | _ -> None
-                        match target with
-                        | Some target when belongsToCurrent target && runnable context target ->
-                            nodes |> List.choose (fun (owner, name) ->
-                                if owner.Equals(target) && (targetName.IsNone || targetName = Some name)
-                                   && not ((classLevel || targetName.IsNone) && owner.Equals(entity) && name = methodName) then Some ((owner, name), attribute) else None)
-                        | _ -> []
-                    | _ -> [])
-            for start in nodes do
-                let visited = HashSet<string>()
-                let rec findCycle node path =
-                    if visited.Count >= 512 then None
-                    else
-                        edges node |> List.tryPick (fun (target, attribute) ->
-                            if key target = key start then Some (List.rev (target :: path), attribute)
-                            elif visited.Add(key target) then findCycle target (target :: path) |> Option.map (fun (p, _) -> p, attribute)
-                            else None)
-                match findCycle start [] with
-                | Some (path, attribute) when path.Length > 1 || not (selfReferences.Contains(attribute.Range)) ->
-                    report attribute "Cycle" [| box (String.Join(" > ", key start :: (path |> List.map key))) |]
-                | _ -> ()
-
             for entity in entities do
                 if entity.DeclarationLocation.FileName = context.FileName && runnable context entity then
                     let framework =
