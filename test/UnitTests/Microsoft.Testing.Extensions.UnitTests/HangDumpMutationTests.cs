@@ -166,6 +166,67 @@ public sealed class HangDumpActivityIndicatorMutationTests
         await indicator.OnTestSessionFinishingAsync(sessionContext.Object);
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_ShutdownTimeout_DefersPipeClientDisposalUntilTheLoopStops()
+    {
+        HangDumpActivityIndicator indicator = CreateEnabledIndicator();
+        SetPrivateField(indicator, "_activitySignalShutdownTimeout", TimeSpan.FromMilliseconds(50));
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+
+        await AssertPipeClientDisposalDeferredAsync(indicator, loop, () => indicator.DisposeAsync().AsTask());
+    }
+#endif
+
+    [TestMethod]
+    public async Task Dispose_ShutdownTimeout_DefersPipeClientDisposalUntilTheLoopStops()
+    {
+        HangDumpActivityIndicator indicator = CreateEnabledIndicator();
+        SetPrivateField(indicator, "_activitySignalShutdownTimeout", TimeSpan.FromMilliseconds(50));
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+
+        await AssertPipeClientDisposalDeferredAsync(indicator, loop, () => Task.Run(indicator.Dispose, TestContext.CancellationToken));
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_CanceledSessionWithPendingActivity_CompletesSoLaterHandlersRun()
+    {
+        using HangDumpActivityIndicator indicator = CreateEnabledIndicator();
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+        loop.Release();
+        SetPrivateField(indicator, "_activitySignalPending", 1);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        Mock<ITestSessionContext> sessionContext = new();
+        sessionContext.SetupGet(x => x.CancellationToken).Returns(cancellation.Token);
+
+        // The pipe client rejects the canceled token before touching the pipe; the handler must contain that.
+        await indicator.OnTestSessionFinishingAsync(sessionContext.Object);
+
+        Assert.AreEqual(0, GetPrivateField<int>(indicator, "_activitySignalPending"));
+    }
+
+    private async Task AssertPipeClientDisposalDeferredAsync(HangDumpActivityIndicator indicator, GatedActivitySignalLoop loop, Func<Task> dispose)
+    {
+        object pipeClient = GetPrivateField<object>(indicator, "_namedPipeClient");
+        try
+        {
+            Task disposal = dispose();
+            Assert.AreSame(disposal, await Task.WhenAny(disposal, Task.Delay(GateTimeout, TestContext.CancellationToken)), "Disposal must return after the shutdown timeout.");
+            await disposal;
+
+            Assert.IsFalse(GetPrivateField<bool>(pipeClient, "_disposed"), "The pipe client must not be disposed while an activity signal request may still use it.");
+        }
+        finally
+        {
+            loop.Release();
+        }
+
+        Assert.IsTrue(
+            SpinWait.SpinUntil(() => GetPrivateField<bool>(pipeClient, "_disposed"), GateTimeout),
+            "The pipe client must be disposed once the activity signal loop stops.");
+    }
+
     private static async Task AssertDisposalWaitsForLoopAsync(GatedActivitySignalLoop loop, Task dispose)
     {
         try
@@ -245,6 +306,24 @@ public sealed class HangDumpActivityIndicatorMutationTests
         return new(
             new TestCommandLineOptions([]),
             Mock.Of<IEnvironment>(),
+            Mock.Of<ITask>(),
+            loggerFactory.Object,
+            clock.Object);
+    }
+
+    private static HangDumpActivityIndicator CreateEnabledIndicator()
+    {
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(factory => factory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns($"hang_{Guid.NewGuid():N}");
+        Mock<IClock> clock = new();
+        clock.SetupGet(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
+
+        // An enabled indicator owns a real, unconnected pipe client.
+        return new(
+            new TestCommandLineOptions(new Dictionary<string, string[]> { [HangDumpCommandLineProvider.HangDumpOptionName] = [] }),
+            environment.Object,
             Mock.Of<ITask>(),
             loggerFactory.Object,
             clock.Object);

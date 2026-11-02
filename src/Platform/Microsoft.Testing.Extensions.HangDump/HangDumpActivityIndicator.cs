@@ -32,9 +32,9 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
     private readonly NamedPipeClient? _namedPipeClient;
     private readonly bool _traceLevelEnabled;
     private readonly ConcurrentDictionary<TestNodeUid, (string Name, Type Type, DateTimeOffset StartTime)> _testsCurrentExecutionState = new();
-    private static readonly TimeSpan ActivitySignalShutdownTimeout = TimeSpan.FromSeconds(30);
 
     private readonly TimeSpan _activitySignalInterval;
+    private readonly TimeSpan _activitySignalShutdownTimeout = TimeSpan.FromSeconds(30);
 
     private volatile bool _exitSignalActivityIndicatorAsync;
     private int _activitySignalPending;
@@ -262,26 +262,36 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
         // Stop the loop before sending the last pending signal, so two requests never share the pipe.
         await StopActivitySignalLoopAsync().ConfigureAwait(false);
-        await SendPendingActivitySignalAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
+
+        CancellationToken cancellationToken = testSessionContext.CancellationToken;
+        try
+        {
+            await SendPendingActivitySignalAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The final flush is best effort. A canceled session must not skip the session-finishing handlers
+            // that run after this one.
+        }
     }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
         // Wait (bounded) for the loop before disposing the pipe client it may be using. This also covers runs
-        // where session finishing was skipped because execution or a lifecycle handler threw.
+        // where session finishing was skipped because execution or a lifecycle handler threw. If the wait times
+        // out, the pipe client is disposed only when the loop stops.
         Task stop = StopActivitySignalLoopAsync();
         try
         {
-            Task completed = await Task.WhenAny(stop, Task.Delay(ActivitySignalShutdownTimeout)).ConfigureAwait(false);
-            if (completed == stop)
+            Task completed = await Task.WhenAny(stop, Task.Delay(_activitySignalShutdownTimeout)).ConfigureAwait(false);
+            if (completed != stop)
             {
-                await stop.ConfigureAwait(false);
+                DisposePipeClientAfterLateStop(stop);
+                return;
             }
-            else
-            {
-                ObserveLateStopFailure(stop);
-            }
+
+            await stop.ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -294,13 +304,15 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 
     public void Dispose()
     {
-        // Wait (bounded) for the loop before disposing the pipe client it may be using.
+        // Wait (bounded) for the loop before disposing the pipe client it may be using. If the wait times out, the
+        // pipe client is disposed only when the loop stops.
         Task stop = StopActivitySignalLoopAsync();
         try
         {
-            if (!stop.Wait(ActivitySignalShutdownTimeout))
+            if (!stop.Wait(_activitySignalShutdownTimeout))
             {
-                ObserveLateStopFailure(stop);
+                DisposePipeClientAfterLateStop(stop);
+                return;
             }
         }
         catch (Exception ex)
@@ -311,9 +323,22 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         _namedPipeClient?.Dispose();
     }
 
-    private void ObserveLateStopFailure(Task stop)
+    private void DisposePipeClientAfterLateStop(Task stop)
     {
-        _logger.LogDebug("Hang dump activity signal loop did not stop within the shutdown timeout during disposal.");
-        _ = stop.ContinueWith(static task => _ = task.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+        // A request that is still in flight uses the pipe client's stream and buffers. On Windows a write waits for
+        // the controller to drain the pipe, and the stop request cannot interrupt that wait. Disposing the client
+        // under it would make the request fail, and the client then exits the process. Dispose the client only
+        // after the loop has finished, and observe the loop's failure so it is never unobserved.
+        _logger.LogDebug("Hang dump activity signal loop did not stop within the shutdown timeout during disposal; the pipe client is disposed when it stops.");
+        _ = stop.ContinueWith(
+            static (task, state) =>
+            {
+                _ = task.Exception;
+                ((NamedPipeClient?)state)?.Dispose();
+            },
+            _namedPipeClient,
+            CancellationToken.None,
+            TaskContinuationOptions.None,
+            TaskScheduler.Default);
     }
 }
