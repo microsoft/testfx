@@ -122,6 +122,44 @@ public sealed class HangDumpActivityIndicatorMutationTests
         Assert.AreEqual(1, GetPrivateField<int>(indicator, "_activitySignalPending"));
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_StopsAndAwaitsActivitySignalLoop()
+    {
+        using HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+        (CancellationTokenSource cancellation, Task loop) = StartFakeActivitySignalLoop(indicator);
+
+        await indicator.DisposeAsync();
+
+        Assert.IsTrue(cancellation.IsCancellationRequested);
+        Assert.IsTrue(loop.IsCompleted, "Disposal must wait for the loop before disposing the pipe client it may use.");
+        Assert.IsNull(GetPrivateField<Task?>(indicator, "_activitySignalTask"));
+    }
+#endif
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_AfterDispose_DoesNotTouchTheDisposedLoop()
+    {
+        HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+        StartFakeActivitySignalLoop(indicator);
+        indicator.Dispose();
+
+        Mock<ITestSessionContext> sessionContext = new();
+        sessionContext.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        await indicator.OnTestSessionFinishingAsync(sessionContext.Object);
+    }
+
+    private static (CancellationTokenSource Cancellation, Task Loop) StartFakeActivitySignalLoop(HangDumpActivityIndicator indicator)
+    {
+        var cancellation = new CancellationTokenSource();
+        var loopCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        cancellation.Token.Register(() => loopCompletion.TrySetResult(true));
+        SetPrivateField(indicator, "_activitySignalCancellation", cancellation);
+        SetPrivateField<Task?>(indicator, "_activitySignalTask", loopCompletion.Task);
+        return (cancellation, loopCompletion.Task);
+    }
+
     [TestMethod]
     [DataRow(30 * 60 * 1000, 1000, DisplayName = "Default timeout is capped at one second")]
     [DataRow(8000, 800, DisplayName = "Short timeout uses a tenth of the timeout")]
