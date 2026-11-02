@@ -37,13 +37,15 @@ module internal Symbols =
         if t.HasTypeDefinition then t.TypeDefinition.TryGetFullName() else None
 
     let parameters (m: FSharpMemberOrFunctionOrValue) = m.CurriedParameterGroups |> Seq.collect id |> Seq.toList
+    let compiledParameters (m: FSharpMemberOrFunctionOrValue) =
+        // FCS keeps the unnamed unit argument that the CLI signature omits.
+        match parameters m with
+        | [ parameter ] when parameter.Name.IsNone && typeName parameter.Type = Some "Microsoft.FSharp.Core.Unit" -> []
+        | parameters -> parameters
     let members (entity: FSharpEntity) = entity.MembersFunctionsAndValues |> Seq.toList
     let isTest (m: FSharpMemberOrFunctionOrValue) = hasAttribute "TestMethodAttribute" m.Attributes
-    let rec isTestClass (entity: FSharpEntity) =
+    let isTestClass (entity: FSharpEntity) =
         hasAttribute "TestClassAttribute" entity.Attributes
-        || match entity.BaseType with
-           | Some parent when parent.HasTypeDefinition -> isTestClass parent.TypeDefinition
-           | _ -> false
     let positional (attribute: FSharpAttribute) = attribute.ConstructorArguments |> Seq.map snd |> Seq.toList
     let named name (attribute: FSharpAttribute) =
         attribute.NamedArguments |> Seq.tryPick (fun (_, key, _, value) -> if key = name then Some value else None)

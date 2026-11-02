@@ -5,9 +5,11 @@ namespace MSTest.Analyzers.FSharp
 
 open System
 open System.Collections.Generic
+open FSharp.Analyzers.SDK.ASTCollecting
 open FSharp.Analyzers.SDK.TASTCollecting
 open FSharp.Compiler.Symbols
 open FSharp.Compiler.Symbols.FSharpExprPatterns
+open FSharp.Compiler.Syntax
 open FSharp.Compiler.Text
 
 module internal DataRules =
@@ -53,23 +55,25 @@ module internal DataRules =
         | Method of FSharpMemberOrFunctionOrValue
         | Field of FSharpField
 
-    let private findMembers (entity: FSharpEntity) name =
+    let private findMembers flatten (entity: FSharpEntity) name =
         hierarchy entity
-        |> Seq.collect (fun owner ->
-            seq {
+        |> Seq.map (fun owner ->
+            [
                 for m in owner.MembersFunctionsAndValues do
                     if (m.DisplayName = name || m.CompiledName = name)
                        && not m.IsPropertyAccessor
                        && (owner.Equals(entity) || not m.Accessibility.IsPrivate) then yield Method m
                 for field in owner.FSharpFields do
                     if field.Name = name && (owner.Equals(entity) || not field.Accessibility.IsPrivate) then yield Field field
-            })
-        |> Seq.toList
+            ])
+        |> fun members ->
+            if flatten then members |> Seq.collect id |> Seq.toList
+            else members |> Seq.tryFind (List.isEmpty >> not) |> Option.defaultValue []
 
     let private memberType = function Method m -> m.ReturnParameter.Type | Field field -> field.FieldType
     let private memberPublic = function Method m -> m.Accessibility.IsPublic | Field field -> field.Accessibility.IsPublic
     let private memberStatic = function Method m -> not m.IsInstanceMemberInCompiledCode | Field field -> field.IsStatic
-    let private memberParameters = function Method m -> Symbols.parameters m | Field _ -> []
+    let private memberParameters = function Method m -> Symbols.compiledParameters m | Field _ -> []
 
     let private inheritedInterface name (t: FSharpType) =
         match entityOfType t with
@@ -78,29 +82,156 @@ module internal DataRules =
 
     let private displayType (t: FSharpType) = t.Format(FSharpDisplayContext.Empty)
 
-    let rec private compatible (value: obj | null) (expected: FSharpType) =
+    type private Argument =
+        {
+            Value: obj | null
+            Type: FSharpType option
+            Elements: Argument list
+        }
+
+    let private argumentTypeName argument =
+        argument.Type
+        |> Option.bind Symbols.typeName
+        |> Option.orElseWith (fun () ->
+            match argument.Value with
+            | null -> None
+            | :? FSharpType -> Some "System.Type"
+            | value -> Option.ofObj (value.GetType().FullName))
+
+    let private conflictingArgumentTypes left right =
+        argumentTypeName left <> argumentTypeName right
+        && (match left.Value, right.Value with
+            | null, _ | _, null -> false
+            | leftValue, rightValue ->
+                left.Type.IsSome || right.Type.IsSome
+                || (not (leftValue.GetType().IsAssignableFrom(rightValue.GetType()))
+                    && not (rightValue.GetType().IsAssignableFrom(leftValue.GetType()))))
+
+    let private numericConversion actual expected =
+        let targets =
+            match actual with
+            | "System.SByte" -> [ "System.Int16"; "System.Int32"; "System.Int64"; "System.Single"; "System.Double"; "System.Decimal" ]
+            | "System.Byte" -> [ "System.Int16"; "System.UInt16"; "System.Int32"; "System.UInt32"; "System.Int64"; "System.UInt64"; "System.Single"; "System.Double"; "System.Decimal" ]
+            | "System.Int16" -> [ "System.Int32"; "System.Int64"; "System.Single"; "System.Double"; "System.Decimal" ]
+            | "System.UInt16"
+            | "System.Char" -> [ "System.Int32"; "System.UInt32"; "System.Int64"; "System.UInt64"; "System.Single"; "System.Double"; "System.Decimal"; if actual = "System.Char" then "System.UInt16" ]
+            | "System.Int32" -> [ "System.Int64"; "System.Single"; "System.Double"; "System.Decimal" ]
+            | "System.UInt32" -> [ "System.Int64"; "System.UInt64"; "System.Single"; "System.Double"; "System.Decimal" ]
+            | "System.Int64"
+            | "System.UInt64" -> [ "System.Single"; "System.Double"; "System.Decimal" ]
+            | "System.Single" -> [ "System.Double" ]
+            | _ -> []
+        List.contains expected targets
+
+    let rec private compatible allowNumeric argument (expected: FSharpType) =
         let expected = Symbols.normalizeType expected
-        match value with
+        match argument.Value with
         | null -> true
         | _ when expected.IsGenericParameter -> true
+        | :? Array as actual when isArray expected ->
+            expected.GenericArguments.Count = 1
+            && expected.TypeDefinition.ArrayRank = actual.Rank
+            && (argument.Elements |> List.forall (fun item -> compatible false item expected.GenericArguments[0]))
         | value ->
             match Symbols.typeName expected with
             | Some "System.Object" -> true
-            | Some name when (value :? FSharpType) -> name = "System.Type"
             | Some name ->
-                let actual = value.GetType()
-                let rec matches (t: Type | null) =
-                    match t with
-                    | null -> false
-                    | t -> t.FullName = name || matches t.BaseType
-                matches actual
-                || (actual.GetInterfaces() |> Array.exists (fun i -> i.FullName = name))
-                || (isArray expected && actual.IsArray
-                    && expected.GenericArguments.Count = 1
-                    && (values value |> List.forall (fun item -> compatible item expected.GenericArguments[0])))
+                match argument.Type with
+                | Some actual when not (isArray actual) ->
+                    let rec assignable (actual: FSharpType) =
+                        let actual = Symbols.normalizeType actual
+                        actual.Equals(expected)
+                        || (actual.HasTypeDefinition
+                            && ((actual.TypeDefinition.BaseType |> Option.exists assignable)
+                                || actual.TypeDefinition.AllInterfaces |> Seq.exists (fun i -> i.Equals(expected))))
+                    assignable actual
+                    || (allowNumeric && numericConversion (Symbols.typeName actual |> Option.defaultValue "") name)
+                | _ ->
+                    let actual = value.GetType()
+                    let rec matches (t: Type | null) =
+                        match t with
+                        | null -> false
+                        | t -> t.FullName = name || matches t.BaseType
+                    (argumentTypeName argument = Some name)
+                    || matches actual.BaseType
+                    || (actual.GetInterfaces() |> Array.exists (fun i -> i.FullName = name))
+                    || (allowNumeric && numericConversion (argumentTypeName argument |> Option.defaultValue "") name)
             | _ -> false
 
-    let private rows (context: RuleContext) (methodInfo: FSharpMemberOrFunctionOrValue) =
+    let private rowArguments (context: RuleContext) =
+        let syntaxAttributes =
+            lazy
+                let attributes = ResizeArray<SynAttribute>()
+                let collector =
+                    { new SyntaxCollectorBase() with
+                        override _.WalkAttribute(_, attribute) = attributes.Add(attribute)
+                        override _.WalkBinding(_, SynBinding(attributes = lists)) =
+                            for list in lists do
+                                attributes.AddRange(list.Attributes)
+                    }
+                walkAst collector context.ParseFileResults.ParseTree
+                attributes |> Seq.toList
+        let rec unwrap = function
+            | SynExpr.Paren(expr = expression)
+            | SynExpr.Typed(expr = expression) -> unwrap expression
+            | expression -> expression
+        let rec arrayElements expression =
+            match unwrap expression with
+            | SynExpr.ArrayOrList(exprs = expressions) -> expressions
+            | SynExpr.ArrayOrListComputed(expr = body) -> arrayElements body
+            | SynExpr.Sequential(expr1 = first; expr2 = rest) -> first :: arrayElements rest
+            | SynExpr.Const(constant = SynConst.Unit) -> []
+            | expression -> [ expression ]
+        let symbolType expression =
+            let expression = unwrap expression
+            let names =
+                match expression with
+                | SynExpr.LongIdent(longDotId = identifiers) -> identifiers.LongIdent |> List.map (fun identifier -> identifier.idText)
+                | SynExpr.Ident identifier -> [ identifier.idText ]
+                | _ -> []
+            if names.IsEmpty then None
+            else
+                context.CheckFileResults
+                |> Option.bind (fun checkedFile ->
+                    let at = expression.Range
+                    checkedFile.GetSymbolUseAtLocation(at.EndLine, at.EndColumn, context.SourceText.GetLineString(at.EndLine - 1), names))
+                |> Option.bind (fun useInfo ->
+                    match useInfo.Symbol with
+                    | :? FSharpField as field -> Some field.FieldType
+                    | :? FSharpMemberOrFunctionOrValue as value when value.LiteralValue.IsSome -> Some value.FullType
+                    | _ -> None)
+        let rec argument sourceType syntax (value: obj | null) =
+            let actualType =
+                syntax |> Option.bind symbolType
+                |> Option.orElse (sourceType |> Option.filter (fun t -> Symbols.typeName t <> Some "System.Object"))
+            let elements =
+                match value with
+                | :? Array ->
+                    let expressions = syntax |> Option.map arrayElements |> Option.defaultValue []
+                    let elementType = actualType |> Option.filter isArray |> Option.map (fun t -> t.GenericArguments[0])
+                    values value |> List.mapi (fun index value -> argument elementType (expressions |> List.tryItem index) value)
+                | _ -> []
+            { Value = value; Type = actualType; Elements = elements }
+        fun (attribute: FSharpAttribute) ->
+            let syntax =
+                syntaxAttributes.Value
+                |> List.tryFind (fun syntax ->
+                    syntax.TypeName.Range.Start = attribute.Range.Start
+                    && (syntax.Range.EndLine, syntax.Range.EndColumn) >= (attribute.Range.EndLine, attribute.Range.EndColumn))
+                |> Option.map (fun syntax ->
+                    match unwrap syntax.ArgExpr with
+                    | SynExpr.Tuple(exprs = expressions) -> expressions
+                    | SynExpr.Const(constant = SynConst.Unit) -> []
+                    | expression -> [ expression ])
+                |> Option.defaultValue []
+            match attribute.ConstructorArguments |> Seq.toList with
+            | [ (t, value) ] when isArray t && Symbols.typeName t.GenericArguments[0] = Some "System.Object" ->
+                let expressions = if syntax.Length = 1 then arrayElements syntax.Head else syntax
+                values value |> List.mapi (fun index value -> argument None (expressions |> List.tryItem index) value)
+            | arguments ->
+                arguments |> List.mapi (fun index (t, value) -> argument (Some t) (syntax |> List.tryItem index) value)
+
+    let private rows (context: RuleContext) (argumentsFor: FSharpAttribute -> Argument list) (methodInfo: FSharpMemberOrFunctionOrValue) =
         let allAttributes = methodInfo.Attributes |> Seq.toList
         let data = Symbols.attributes "DataRowAttribute" allAttributes
         let report attribute suffix arguments =
@@ -129,11 +260,8 @@ module internal DataRules =
                 | Some name when not (String.IsNullOrWhiteSpace(name)) && not (displayNames.Add(name)) ->
                     context.Report "MSTEST0087" "DuplicateDataRowDisplayNameTitle" "DuplicateDataRowDisplayNameMessageFormat" (location context methodInfo.DeclarationLocation attribute) [| box name |]
                 | _ -> ()
-                let parameters = Symbols.parameters methodInfo
-                let arguments =
-                    match attribute.ConstructorArguments |> Seq.toList with
-                    | [ (t, value) ] when isArray t && Symbols.typeName t.GenericArguments[0] = Some "System.Object" -> values value
-                    | arguments -> arguments |> List.map snd
+                let parameters = Symbols.compiledParameters methodInfo
+                let arguments = argumentsFor attribute
                 let arrayOnly = match parameters with | [ p ] -> isArray p.Type | _ -> false
                 let paramArray = parameters |> List.tryLast |> Option.exists (fun p -> p.IsParamArrayArg)
                 let required = parameters |> List.filter (fun p -> not p.IsOptionalArg) |> List.length
@@ -143,9 +271,9 @@ module internal DataRules =
                         && (paramArray || arguments.Length <= parameters.Length))
                 if not countValid then report attribute "ArgumentCountMismatch" [| box arguments.Length; box parameters.Length |]
                 else
-                    let inferred = Dictionary<FSharpGenericParameter, Type>()
+                    let inferred = Dictionary<FSharpGenericParameter, Argument>()
                     let mismatches = ResizeArray<string>()
-                    for i, value in List.indexed arguments do
+                    for i, argument in List.indexed arguments do
                         if not parameters.IsEmpty then
                             let parameter = parameters[min i (parameters.Length - 1)]
                             let expected =
@@ -158,18 +286,19 @@ module internal DataRules =
                                 else None
                             match genericType with
                             | Some generic ->
-                                let item = if isArray expected then values value |> List.tryPick Option.ofObj else Option.ofObj value
+                                let item =
+                                    (if isArray expected then argument.Elements else [ argument ])
+                                    |> List.tryFind (fun item -> item.Value <> null)
                                 match item with
                                 | Some item ->
                                     match inferred.TryGetValue(generic) with
-                                    | true, previous when previous <> item.GetType()
-                                                          && not (previous.IsAssignableFrom(item.GetType()))
-                                                          && not (item.GetType().IsAssignableFrom(previous)) ->
-                                        report attribute "GenericTypeArgumentConflictingTypes" [| box generic.Name; box previous.Name; box (item.GetType().Name) |]
-                                    | _ -> inferred[generic] <- item.GetType()
+                                    | true, previous when conflictingArgumentTypes previous item ->
+                                        let typeName argument = (argumentTypeName argument |> Option.defaultValue "").Split('.') |> Array.last
+                                        report attribute "GenericTypeArgumentConflictingTypes" [| box generic.Name; box (typeName previous); box (typeName item) |]
+                                    | _ -> inferred[generic] <- item
                                 | None -> ()
-                            | None when not (compatible value expected) ->
-                                let actualType = match value with | null -> "null" | value -> value.GetType().FullName |> Option.ofObj |> Option.defaultValue (value.GetType().Name)
+                            | None when not (compatible true argument expected) ->
+                                let actualType = argumentTypeName argument |> Option.defaultValue "null"
                                 mismatches.Add(String.Format(Rules.resource "DataRowShouldBeValidMessageFormat_ParameterMismatch", parameter.Name |> Option.defaultValue "", displayType expected, actualType))
                             | _ -> ()
                     if mismatches.Count > 0 then report attribute "ArgumentTypeMismatch" [| box (String.Join("; ", mismatches)) |]
@@ -192,7 +321,7 @@ module internal DataRules =
                 context.Report "MSTEST0052" "AvoidExplicitDynamicDataSourceTypeTitle" "AvoidExplicitDynamicDataSourceTypeMessageFormat" at [||]
             match name with
             | Some name ->
-                let candidates = findMembers declaring name
+                let candidates = findMembers false declaring name
                 let selected = candidates |> List.tryFind (function Method m -> m.IsProperty | _ -> false) |> Option.orElse (candidates |> List.tryHead)
                 let args = [| box declaring.DisplayName; box name |]
                 if selected.IsNone then report "MemberNotFound" args
@@ -216,7 +345,7 @@ module internal DataRules =
             | Some name ->
                 let owner = Symbols.named "DynamicDataDisplayNameDeclaringType" attribute |> Option.bind (function :? FSharpType as t -> entityOfType t | _ -> None) |> Option.defaultValue entity
                 let args = [| box owner.DisplayName; box name |]
-                match findMembers owner name with
+                match findMembers false owner name with
                 | [] -> report "MemberNotFound" args
                 | [ Method m ] when not m.IsProperty ->
                     let parameters = Symbols.parameters m
@@ -239,7 +368,7 @@ module internal DataRules =
                     let owner = entityOfType t
                     let typeName = owner |> Option.map (fun e -> e.DisplayName) |> Option.defaultValue (displayType t)
                     let args = [| box typeName; box name |]
-                    let candidates = owner |> Option.map (fun entity -> findMembers entity name) |> Option.defaultValue []
+                    let candidates = owner |> Option.map (fun entity -> findMembers true entity name) |> Option.defaultValue []
                     let runtimeCandidate = candidates |> List.tryFind (fun memberInfo ->
                         memberPublic memberInfo && memberStatic memberInfo && (memberParameters memberInfo).IsEmpty)
                     match runtimeCandidate |> Option.orElse (candidates |> List.tryHead) with
@@ -270,7 +399,7 @@ module internal DataRules =
                         elif entity.IsAbstractClass || entity.IsInterface || entity.IsFSharpModule then report "NotInstantiable" args
                         elif not (inheritedInterface (Symbols.frameworkNamespace + "ITestFilter") t) then report "NotATestFilter" args
                         elif not entity.IsValueType
-                             && not (entity.MembersFunctionsAndValues |> Seq.exists (fun m -> m.IsConstructor && m.Accessibility.IsPublic && (Symbols.parameters m).IsEmpty)) then report "NoParameterlessConstructor" args
+                             && not (entity.MembersFunctionsAndValues |> Seq.exists (fun m -> m.IsConstructor && m.Accessibility.IsPublic && (Symbols.compiledParameters m).IsEmpty)) then report "NoParameterlessConstructor" args
 
     let private platform (context: RuleContext) entity fallback name attributes isMethod =
         let platformAttributes attrs =
@@ -351,6 +480,7 @@ module internal DataRules =
         context.TypedTree |> Option.iter (walkTast walker)
 
     let analyze (context: RuleContext) =
+        let argumentsFor = rowArguments context
         let walker =
             { new TypedTreeCollectorBase() with
                 override _.WalkEntity entity _ =
@@ -358,7 +488,7 @@ module internal DataRules =
                     if Symbols.isTestClass entity then platform context entity entity.DeclarationLocation entity.DisplayName entity.Attributes false
                     for methodInfo in entity.MembersFunctionsAndValues do
                         if not methodInfo.IsPropertyAccessor then
-                            rows context methodInfo
+                            rows context argumentsFor methodInfo
                             dynamicData context entity methodInfo
                             condition context methodInfo.DeclarationLocation methodInfo.Attributes
                             if Symbols.isTest methodInfo then platform context entity methodInfo.DeclarationLocation methodInfo.DisplayName methodInfo.Attributes true

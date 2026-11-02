@@ -8,6 +8,351 @@ namespace MSTest.Analyzers.FSharp.Acceptance.IntegrationTests;
 public sealed partial class FSharpAnalyzersTests
 {
     [TestMethod]
+    [DataRow("MSTEST0030", DisplayName = "UnannotatedDerivedClass_Discovery")]
+    [DataRow("MSTEST0078", DisplayName = "UnannotatedDerivedClass_Dependency")]
+    public async Task UnannotatedDerivedClass_IsNotDiscoverable(string rule)
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type BaseTests() =
+    [<TestMethod>]
+    member _.InheritedTest() = ()
+type DerivedTests() =
+    inherit BaseTests()
+[<TestClass>]
+type Tests() =
+    [<TestMethod; DependsOn(typeof<DerivedTests>, "InheritedTest")>]
+    member _.Run() = ()
+""";
+        JsonElement diagnostic = Assert.ContainsSingle(await AnalyzeAsync(source, FindingsExitCode, rule));
+        Assert.AreEqual(rule, diagnostic.GetProperty("ruleId").GetString());
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "DynamicData_NearestSource")]
+    [DataRow(true, DisplayName = "DynamicData_NearestDisplayName")]
+    public async Task DynamicData_UsesNearestDeclaringType(bool displayName)
+    {
+        string source = $$"""
+namespace Consumer
+open System.Reflection
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type BaseTests() =
+    static member Data(value: int) = [| [| box value |] |]
+    static member Name(methodInfo: MethodInfo, data: obj[]) = "base"
+[<TestClass>]
+type Tests() =
+    inherit BaseTests()
+    static member Data(value: int) = [| [| box value |] |]
+    static member Name(methodInfo: MethodInfo, data: obj[]) = "derived"
+    [<TestMethod; DynamicData("Data", 1{{(displayName ? ", DynamicDataDisplayName = \"Name\"" : string.Empty)}})>]
+    member _.Run(value: int) = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, "MSTEST0018"));
+    }
+
+    [TestMethod]
+    public async Task ParameterlessDataRow_UsesCompiledArity()
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    [<TestMethod; DataRow()>]
+    member _.Run() = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, "MSTEST0014"));
+    }
+
+    [TestMethod]
+    public async Task ParameterlessDynamicData_UsesCompiledArity()
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    static member Data() = [| [| box 1 |] |]
+    [<TestMethod; DynamicData("Data")>]
+    member _.Run(value: int) = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, "MSTEST0018"));
+    }
+
+    [TestMethod]
+    public async Task ParameterlessMemberCondition_UsesCompiledArity()
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type Conditions =
+    static member Ready() = true
+[<TestClass; MemberCondition(typeof<Conditions>, "Ready")>]
+type Tests() =
+    [<TestMethod>]
+    member _.Run() = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, "MSTEST0070"));
+    }
+
+    [TestMethod]
+    public async Task MemberCondition_StillSearchesFlattenedBaseMembers()
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type BaseConditions() =
+    static member Ready() = true
+type Conditions() =
+    inherit BaseConditions()
+    static member Ready(value: int) = true
+[<TestClass; MemberCondition(typeof<Conditions>, "Ready")>]
+type Tests() =
+    [<TestMethod>]
+    member _.Run() = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, "MSTEST0070"));
+    }
+
+    [TestMethod]
+    public async Task ParameterlessFilterConstructor_UsesCompiledArity()
+    {
+        const string source = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type Filter() =
+    interface ITestFilter with
+        member _.Filter(_) = TestFilterResult.Run
+[<assembly: TestFilterProvider(typeof<Filter>)>]
+do ()
+[<TestClass>]
+type Tests() =
+    [<TestMethod>]
+    member _.Run() = ()
+""";
+        Assert.IsEmpty(await AnalyzeAsync(source, 0, "MSTEST0081"));
+    }
+
+    [TestMethod]
+    [DataRow("ConsoleColor.Red", "ConsoleColor", false, DisplayName = "DataRow_EnumIdentity")]
+    [DataRow("[| ConsoleColor.Red; ConsoleColor.Blue |]", "ConsoleColor[]", false, DisplayName = "DataRow_EnumArrayIdentity")]
+    [DataRow("AttributeTargets.Class", "ConsoleColor", true, DisplayName = "DataRow_WrongEnum")]
+    [DataRow("1", "ConsoleColor", true, DisplayName = "DataRow_IntegerIsNotEnum")]
+    [DataRow("ConsoleColor.Red", "int", true, DisplayName = "DataRow_EnumIsNotInteger")]
+    [DataRow("1", "float", false, DisplayName = "DataRow_WidenToDouble")]
+    [DataRow("1", "int64", false, DisplayName = "DataRow_WidenToInt64")]
+    [DataRow("1", "decimal", false, DisplayName = "DataRow_WidenToDecimal")]
+    [DataRow("'c'", "int", false, DisplayName = "DataRow_WidenCharToInt32")]
+    [DataRow("1L", "int", true, DisplayName = "DataRow_RejectInt64Narrowing")]
+    [DataRow("1.0", "int", true, DisplayName = "DataRow_RejectDoubleNarrowing")]
+    public async Task DataRows_PreserveEnumIdentityAndNumericConversions(string argument, string parameterType, bool shouldReport)
+    {
+        string source = $$"""
+namespace Consumer
+open System
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    [<TestMethod; DataRow({{argument}})>]
+    member _.Run(value: {{parameterType}}) = ()
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0014");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0014", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    [DataRow("TestMethod", "member _.InheritedTest() = ()", true, false, DisplayName = "LegacyMember_HiddenTest")]
+    [DataRow("TestMethod", "member _.InheritedTest() = ()", false, true, DisplayName = "LegacyMember_InheritedTest")]
+    [DataRow("TestMethod", "member _.InheritedTest() = 42", false, false, DisplayName = "LegacyMember_InvalidReturn")]
+    [DataRow("TestMethod", "static member InheritedTest() = ()", false, false, DisplayName = "LegacyMember_StaticTest")]
+    [DataRow("TestInitialize", "member _.InheritedTest() = ()", true, false, DisplayName = "LegacyMember_HiddenFixture")]
+    [DataRow("TestInitialize", "member _.InheritedTest() = ()", false, true, DisplayName = "LegacyMember_InheritedFixture")]
+    [DataRow("TestInitialize", "member _.InheritedTest(value: int) = ()", false, false, DisplayName = "LegacyMember_ParameterizedFixture")]
+    public async Task LegacyInheritedMembers_RequireEffectiveRuntimeSignatures(string attributeName, string declaration, bool hidden, bool shouldReport)
+    {
+        string source = $$"""
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests() =
+    inherit Legacy.Fixture()
+    {{(hidden ? $"""
+[<{attributeName}>]
+    member _.InheritedTest() = ()
+""" : string.Empty)}}
+    [<TestMethod>]
+    member _.Run() = ()
+#file Legacy/Legacy.fsproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Fixture.fs" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.11.1" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
+#file Legacy/Fixture.fs
+namespace Legacy
+open Microsoft.VisualStudio.TestTools.UnitTesting
+type Fixture() =
+    [<{{attributeName}}>]
+    {{declaration}}
+""";
+        JsonElement[] diagnostics = await AnalyzeAsync(source, shouldReport ? FindingsExitCode : 0, "MSTEST0082");
+        Assert.HasCount(shouldReport ? 1 : 0, diagnostics);
+        foreach (JsonElement diagnostic in diagnostics)
+        {
+            Assert.AreEqual("MSTEST0082", diagnostic.GetProperty("ruleId").GetString());
+        }
+    }
+
+    [TestMethod]
+    public async Task HostingAnalysis_ReusesSnapshotCacheAndInvalidatesChangedProjects()
+    {
+        const string program = """"
+namespace EditorHost
+open System
+open System.IO
+open System.Reflection
+open System.Runtime.CompilerServices
+open FSharp.Analyzers.SDK
+open FSharp.Compiler.CodeAnalysis
+open FSharp.Compiler.Diagnostics
+open FSharp.Compiler.Text
+open Microsoft.Extensions.DependencyInjection
+open MSTest.Analyzers.FSharp
+
+module Program =
+    [<EntryPoint>]
+    let main _ =
+        async {
+            let registration = """
+namespace Consumer
+open Microsoft.Extensions.DependencyInjection
+module Registration =
+    let register (services: IServiceCollection) =
+        services.AddMSTestTestClassInjection()
+"""
+            let sample = """
+namespace Consumer
+open Microsoft.VisualStudio.TestTools.UnitTesting
+[<TestClass>]
+type Tests(service: string) =
+    [<TestMethod>]
+    member _.Run() = ()
+"""
+            let root = Directory.GetCurrentDirectory()
+            let registrationPath = Path.Combine(root, "Registration.fs")
+            let samplePath = Path.Combine(root, "Sample.fs")
+            File.WriteAllText(registrationPath, registration)
+            File.WriteAllText(samplePath, sample)
+            let references =
+                [| yield! (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") :?> string).Split(Path.PathSeparator)
+                   yield typeof<MSTestHostingServiceCollectionExtensions>.Assembly.Location
+                   yield typeof<IServiceCollection>.Assembly.Location |]
+                |> Array.distinct
+                |> Array.map (fun path -> "-r:" + path)
+            let checker = FSharpChecker.Create(keepAssemblyContents = true)
+            let options =
+                checker.GetProjectOptionsFromCommandLineArgs(
+                    Path.Combine(root, "Analysis.fsproj"),
+                    [| "--target:library"; "--targetprofile:netcore"; "--noframework"; yield! references; registrationPath; samplePath |])
+            let checkProject () = async {
+                let! project = checker.ParseAndCheckProject(options)
+                let errors = project.Diagnostics |> Array.filter (fun diagnostic -> diagnostic.Severity = FSharpDiagnosticSeverity.Error)
+                if not (Array.isEmpty errors) then failwithf "Samples failed to type-check: %A" errors
+                return project
+            }
+            let context project path text : Async<EditorContext> = async {
+                let sourceText = SourceText.ofString text
+                let! parsed, answer = checker.ParseAndCheckFileInProject(path, 0, sourceText, options)
+                let checkedFile =
+                    match answer with
+                    | FSharpCheckFileAnswer.Succeeded checkedFile -> checkedFile
+                    | FSharpCheckFileAnswer.Aborted -> failwith "Sample type-check was aborted."
+                return {
+                    FileName = path
+                    SourceText = sourceText
+                    ParseFileResults = parsed
+                    CheckFileResults = Some checkedFile
+                    TypedTree = checkedFile.ImplementationFile
+                    CheckProjectResults = Some project
+                    ProjectOptions = AnalyzerProjectOptions.BackgroundCompilerOptions options
+                    AnalyzerIgnoreRanges = Map.empty
+                }
+            }
+            let codes (diagnostics: Message list) = diagnostics |> List.map (fun diagnostic -> diagnostic.Code) |> List.sort
+            let! project = checkProject ()
+            let! registrationContext = context project registrationPath registration
+            let! sampleContext = context project samplePath sample
+            let! registrationDiagnostics = Analyzers.analyzeEditor registrationContext
+            if codes registrationDiagnostics <> [ "MSTEST0088" ]
+               || registrationDiagnostics.Head.Range.FileName <> registrationPath
+               || registrationDiagnostics.Head.Range.StartLine <> 6 then
+                failwithf "Incorrect registration diagnostics: %A" registrationDiagnostics
+            let! sampleDiagnostics = Analyzers.analyzeEditor sampleContext
+            if not sampleDiagnostics.IsEmpty then failwithf "Cross-file hosting injection was lost: %A" sampleDiagnostics
+            let flags = BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.NonPublic
+            let analyzerAssembly = Assembly.Load("MSTest.Analyzers.FSharp")
+            let accessor = analyzerAssembly.GetType("MSTest.Analyzers.FSharp.DeclarationRules", true).GetMethod("get_hostingLocations", flags)
+            if isNull accessor then failwith "Hosting analysis is missing its per-snapshot cache."
+            let cache = accessor.Invoke(null, [||]) :?> ConditionalWeakTable<FSharpCheckProjectResults, Lazy<range list>>
+            let mutable cached = Unchecked.defaultof<Lazy<range list>>
+            if not (cache.TryGetValue(project, &cached)) || not cached.IsValueCreated || cached.Value.Length <> 1 then
+                failwith "Hosting locations were not computed once for the checked project."
+            let! repeated = [| for _ in 1 .. 4 -> Analyzers.analyzeEditor registrationContext |] |> Async.Parallel
+            if repeated |> Array.exists (fun diagnostics -> diagnostics <> registrationDiagnostics) then
+                failwithf "Concurrent analysis changed diagnostics: %A" repeated
+            let mutable reused = Unchecked.defaultof<Lazy<range list>>
+            if not (cache.TryGetValue(project, &reused)) || not (Object.ReferenceEquals(cached, reused)) then
+                failwith "Per-file analysis replaced the checked-project cache."
+            let! partial = Analyzers.analyzeEditor { registrationContext with CheckProjectResults = None }
+            if partial <> registrationDiagnostics then failwithf "Partial snapshot lost hosting diagnostics: %A" partial
+            let settingsPath = Path.Combine(root, "mstest-analyzers.json")
+            let settings = File.ReadAllText(settingsPath)
+            File.WriteAllText(settingsPath, settings.Replace("\"warning\"", "\"none\"", StringComparison.Ordinal))
+            let! disabled = Analyzers.analyzeEditor registrationContext
+            if not disabled.IsEmpty then failwithf "Disabled hosting diagnostics were reported: %A" disabled
+            File.WriteAllText(settingsPath, settings)
+            File.WriteAllText(registrationPath, registration.Replace("services.AddMSTestTestClassInjection()", "services", StringComparison.Ordinal))
+            checker.InvalidateConfiguration(options)
+            let! updated = checkProject ()
+            let! updatedContext = context updated samplePath sample
+            let! updatedDiagnostics = Analyzers.analyzeEditor updatedContext
+            if codes updatedDiagnostics <> [ "MSTEST0063" ] then
+                failwithf "A new checked project reused stale hosting injection: %A" updatedDiagnostics
+            let mutable refreshed = Unchecked.defaultof<Lazy<range list>>
+            if not (cache.TryGetValue(updated, &refreshed)) || Object.ReferenceEquals(cached, refreshed) || not refreshed.Value.IsEmpty then
+                failwith "The updated checked project did not get independent hosting locations."
+            printfn "HOSTING_VALIDATED:SNAPSHOT_REUSED;REFRESHED;PARTIAL;DISABLED"
+            return 0
+        }
+        |> Async.RunSynchronously
+"""";
+        using TestAsset asset = await GenerateConsumerAsync(program, editorHost: true, hosting: true);
+        await WriteRuleConfigurationAsync(asset.TargetAssetPath, ["MSTEST0063", "MSTEST0088"], new Dictionary<string, string>
+        {
+            ["MSTestHostTestClassInjectionEnabled"] = "false",
+            ["PublishAot"] = "true",
+        });
+        await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\"", cancellationToken: testContext.CancellationToken);
+        await AssertPackedProvenanceAsync(asset.TargetAssetPath);
+        using DotnetMuxer host = new();
+        int exitCode = await host.ExecuteAsync(
+            $"\"{Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net10.0", "Consumer.dll")}\"",
+            asset.TargetAssetPath,
+            testContext.CancellationToken);
+        Assert.AreEqual(0, exitCode, host.StandardOutput + host.StandardError);
+        Assert.AreEqual("HOSTING_VALIDATED:SNAPSHOT_REUSED;REFRESHED;PARTIAL;DISABLED", host.StandardOutput.Trim());
+    }
+
+    [TestMethod]
     public async Task DataRows_PreserveDistinctGenericDiagnosticsAtTheSameLocation()
     {
         const string source = """
@@ -50,10 +395,12 @@ type Tests() =
     }
 
     [TestMethod]
-    public void RuleInventory_AccountsForEveryCurrentDiagnostic()
+    public void RuleInventory_AccountsForEveryDiagnosticThroughMSTEST0089()
     {
         string source = File.ReadAllText(Path.Combine(Constants.Root, "src", "Analyzers", "MSTest.Analyzers", "Helpers", "DiagnosticIds.cs"));
-        string[] current = [.. Regex.Matches(source, @"(?m)^\s*public const string \w+ = ""(MSTEST\d+)"";").Select(match => match.Groups[1].Value)];
+        string[] current = [.. Regex.Matches(source, @"(?m)^\s*public const string \w+ = ""(MSTEST\d+)"";")
+            .Select(match => match.Groups[1].Value)
+            .Where(rule => string.CompareOrdinal(rule, "MSTEST0089") <= 0)];
         string[] excluded = ["MSTEST0026", "MSTEST0027", "MSTEST0028", "MSTEST0033", "MSTEST0040", "MSTEST0047", "MSTEST0055"];
         (string Rule, string Source, bool ShouldReport)[] cases = [.. DataRuleCases.Cases, .. DeclarationRuleCases.Cases, .. ExpressionRuleCases.Cases];
         string[] pilotAndCrossAssembly = ["MSTEST0003", "MSTEST0017", "MSTEST0066", "MSTEST0082"];

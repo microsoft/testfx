@@ -11,7 +11,7 @@
     <AssemblyMetadata Include="FSharpAnalyzersCoreVersion" Value="$(FSharpAnalyzersCoreVersion)" />
     <PackageDownload Include="fsharp-analyzers" Version="[$(FSharpAnalyzersSdkVersion)]" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
-    <Compile Include="$(RepoRoot)test\UnitTests\Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests\Program.cs" Link="Program.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTest.Analyzers.UnitTests\Program.cs" Link="Program.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="AcceptanceFixture.cs" />
   </ItemGroup>
 

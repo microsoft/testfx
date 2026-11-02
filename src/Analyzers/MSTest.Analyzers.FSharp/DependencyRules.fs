@@ -18,19 +18,20 @@ module internal DependencyRules =
     let private runnable context (entity: FSharpEntity) =
         Symbols.isTestClass entity && visible context entity && not entity.IsAbstractClass && not entity.IsFSharpModule
 
+    let private hasBody (m: FSharpMemberOrFunctionOrValue) =
+        not m.IsDispatchSlot
+        || (m.DeclaringEntity |> Option.exists (fun owner ->
+            owner.MembersFunctionsAndValues |> Seq.exists (fun implementation ->
+                implementation.IsOverrideOrExplicitInterfaceImplementation
+                && (implementation.ImplementedAbstractSignatures |> Seq.exists (fun slot ->
+                    slot.Name = m.LogicalName
+                    && slot.DeclaringType.HasTypeDefinition && slot.DeclaringType.TypeDefinition.Equals(owner)
+                    && slot.MethodGenericParameters.Count = m.GenericParameters.Count
+                    && (slot.AbstractArguments |> Seq.collect id |> Seq.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty)) |> Seq.toList)
+                       = (Symbols.parameters m |> List.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty))))))))
+
     let private methodRunnable context (m: FSharpMemberOrFunctionOrValue) =
-        let hasBody =
-            not m.IsDispatchSlot
-            || (m.DeclaringEntity |> Option.exists (fun owner ->
-                owner.MembersFunctionsAndValues |> Seq.exists (fun implementation ->
-                    implementation.IsOverrideOrExplicitInterfaceImplementation
-                    && (implementation.ImplementedAbstractSignatures |> Seq.exists (fun slot ->
-                        slot.Name = m.LogicalName
-                        && slot.DeclaringType.HasTypeDefinition && slot.DeclaringType.TypeDefinition.Equals(owner)
-                        && slot.MethodGenericParameters.Count = m.GenericParameters.Count
-                        && (slot.AbstractArguments |> Seq.collect id |> Seq.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty)) |> Seq.toList)
-                           = (Symbols.parameters m |> List.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty))))))))
-        Symbols.isTest m && m.IsInstanceMemberInCompiledCode && hasBody
+        Symbols.isTest m && m.IsInstanceMemberInCompiledCode && hasBody m
         && (m.Accessibility.IsPublic || (context.DiscoverInternals <> Some false && m.Accessibility.IsInternal))
 
     let private signature (m: FSharpMemberOrFunctionOrValue) =
@@ -55,6 +56,87 @@ module internal DependencyRules =
             let target = Symbols.positional attribute |> List.tryPick (function :? FSharpType as t -> Some t | _ -> None)
             let name = Symbols.positional attribute |> List.tryPick (function :? string as name -> Some name | _ -> None)
             if target.IsNone && name.IsNone then None else Some (target, name)
+
+    let rec private canonicalAttribute (entity: FSharpEntity) =
+        let names = [ "TestClassAttribute"; "TestMethodAttribute"; "TestInitializeAttribute"; "TestCleanupAttribute"; "ClassInitializeAttribute"; "ClassCleanupAttribute" ]
+        if names |> List.exists (fun name -> Symbols.hasTypeName (Symbols.frameworkNamespace + name) entity) then Some entity
+        else entity.BaseType |> Option.bind (fun t -> if t.HasTypeDefinition then canonicalAttribute t.TypeDefinition else None)
+
+    let private validReturn (m: FSharpMemberOrFunctionOrValue) =
+        [ "Microsoft.FSharp.Core.Unit"; "System.Void"; "System.Threading.Tasks.Task"; "System.Threading.Tasks.ValueTask" ]
+        |> List.exists (fun name -> Symbols.typeName m.ReturnParameter.Type = Some name)
+
+    let private genericMethod (m: FSharpMemberOrFunctionOrValue) =
+        m.GenericParameters
+        |> Seq.exists (fun parameter ->
+            m.DeclaringEntity
+            |> Option.forall (fun owner -> owner.GenericParameters |> Seq.forall (fun parent -> not (parent.Equals(parameter)))))
+
+    let private sameRuntimeSignature (left: FSharpMemberOrFunctionOrValue) (right: FSharpMemberOrFunctionOrValue) =
+        let returnType (m: FSharpMemberOrFunctionOrValue) =
+            match Symbols.typeName m.ReturnParameter.Type with
+            | Some "Microsoft.FSharp.Core.Unit" | Some "System.Void" -> "System.Void"
+            | _ -> m.ReturnParameter.Type.Format(FSharpDisplayContext.Empty)
+        left.CompiledName = right.CompiledName
+        && left.IsInstanceMemberInCompiledCode = right.IsInstanceMemberInCompiledCode
+        && left.GenericParameters.Count = right.GenericParameters.Count
+        && returnType left = returnType right
+        && (Symbols.compiledParameters left |> List.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty)))
+           = (Symbols.compiledParameters right |> List.map (fun p -> p.Type.Format(FSharpDisplayContext.Empty)))
+
+    let rec private inheritableAttribute (entity: FSharpEntity) =
+        match entity.Attributes |> Seq.tryFind (fun attribute ->
+            not attribute.IsUnresolved && Symbols.hasTypeName "System.AttributeUsageAttribute" attribute.AttributeType) with
+        | Some usage ->
+            match Symbols.named "Inherited" usage with
+            | Some (:? bool as inherited) -> inherited
+            | _ -> true
+        | None -> entity.BaseType |> Option.exists (fun t -> t.HasTypeDefinition && inheritableAttribute t.TypeDefinition)
+
+    let private wouldRun context (testClass: FSharpEntity) (parent: FSharpEntity) framework name (attribute: FSharpAttribute) (m: FSharpMemberOrFunctionOrValue) =
+        let parameters = Symbols.compiledParameters m
+        let instanceFixture = name = "TestInitializeAttribute" || name = "TestCleanupAttribute"
+        let classFixture = name = "ClassInitializeAttribute" || name = "ClassCleanupAttribute"
+        let testContext (parameter: FSharpParameter) =
+            Symbols.typeName parameter.Type = Some (Symbols.frameworkNamespace + "TestContext")
+            && parameter.Type.HasTypeDefinition
+            && ([ "MSTest.TestFramework"; "MSTest.TestFramework.Extensions"; "Microsoft.VisualStudio.TestPlatform.TestFramework"; "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions" ]
+                |> List.contains parameter.Type.TypeDefinition.Assembly.SimpleName)
+        let signatureValid =
+            m.Accessibility.IsPublic && validReturn m && hasBody m
+            && not m.IsProperty && not m.IsPropertyAccessor && not m.IsConstructor
+            && (if classFixture then
+                    not m.IsInstanceMemberInCompiledCode && not (genericMethod m)
+                    && ((name = "ClassCleanupAttribute" && parameters.IsEmpty)
+                        || (match parameters with | [ parameter ] -> testContext parameter | _ -> false))
+                    && (attribute.ConstructorArguments |> Seq.exists (fun (t, value) ->
+                        Symbols.typeName t = Some (Symbols.frameworkNamespace + "InheritanceBehavior") && Object.Equals(value, 1)))
+                else
+                    m.IsInstanceMemberInCompiledCode
+                    && (not instanceFixture || (parameters.IsEmpty && not (genericMethod m))))
+        let currentAttribute (candidate: FSharpMemberOrFunctionOrValue) =
+            candidate.Attributes |> Seq.exists (fun attribute ->
+                not attribute.IsUnresolved
+                && (canonicalAttribute attribute.AttributeType |> Option.exists (fun canonical ->
+                    canonical.DisplayName = name && canonical.Assembly.SimpleName = framework)))
+        let rec hidden (entity: FSharpEntity) =
+            if entity.Equals(parent) then false
+            else
+                let decision =
+                    entity.MembersFunctionsAndValues |> Seq.tryPick (fun candidate ->
+                        if candidate.CompiledName <> m.CompiledName || candidate.IsProperty || candidate.IsPropertyAccessor then None
+                        elif candidate.IsOverrideOrExplicitInterfaceImplementation && sameRuntimeSignature candidate m then
+                            Some (not (inheritableAttribute attribute.AttributeType) || currentAttribute candidate)
+                        elif instanceFixture
+                             && candidate.Accessibility.IsPublic && candidate.IsInstanceMemberInCompiledCode
+                             && (Symbols.compiledParameters candidate).IsEmpty && validReturn candidate && hasBody candidate then Some true
+                        elif not instanceFixture
+                             && methodRunnable context candidate && validReturn candidate && currentAttribute candidate
+                             && sameRuntimeSignature candidate m then Some true
+                        else None)
+                decision
+                |> Option.defaultWith (fun () -> entity.BaseType |> Option.exists (fun t -> t.HasTypeDefinition && hidden t.TypeDefinition))
+        signatureValid && (classFixture || not (hidden testClass))
 
     let analyze (context: RuleContext) =
         match context.CheckProjectResults with
@@ -148,7 +230,10 @@ module internal DependencyRules =
 
             for entity in entities do
                 if entity.DeclarationLocation.FileName = context.FileName && runnable context entity then
-                    let framework = Symbols.attribute "TestClassAttribute" entity.Attributes |> Option.map (fun a -> a.AttributeType.Assembly.SimpleName)
+                    let framework =
+                        Symbols.attribute "TestClassAttribute" entity.Attributes
+                        |> Option.bind (fun attribute -> canonicalAttribute attribute.AttributeType)
+                        |> Option.map (fun attribute -> attribute.Assembly.SimpleName)
                     let rec bases (entity: FSharpEntity) =
                         seq {
                             match entity.BaseType with
@@ -160,21 +245,15 @@ module internal DependencyRules =
                     for parent in bases entity do
                         if parent.Assembly.SimpleName <> entity.Assembly.SimpleName then
                             for methodInfo in parent.MembersFunctionsAndValues do
-                                if methodInfo.Accessibility.IsPublic && not methodInfo.IsDispatchSlot then
+                                if methodInfo.Accessibility.IsPublic then
                                     for attribute in methodInfo.Attributes |> Seq.filter (fun attribute -> not attribute.IsUnresolved) do
-                                        let rec canonical (entity: FSharpEntity) =
-                                            let names = [ "TestMethodAttribute"; "TestInitializeAttribute"; "TestCleanupAttribute"; "ClassInitializeAttribute"; "ClassCleanupAttribute" ]
-                                            if names |> List.exists (fun name -> Symbols.hasTypeName (Symbols.frameworkNamespace + name) entity) then Some entity
-                                            else entity.BaseType |> Option.bind (fun t -> if t.HasTypeDefinition then canonical t.TypeDefinition else None)
-                                        let canonicalAttribute = canonical attribute.AttributeType
-                                        let name = canonicalAttribute |> Option.map (fun entity -> entity.DisplayName) |> Option.defaultValue ""
-                                        let relevant = [ "TestMethodAttribute"; "TestInitializeAttribute"; "TestCleanupAttribute" ] |> List.contains name
-                                        let inheritedClassFixture =
-                                            [ "ClassInitializeAttribute"; "ClassCleanupAttribute" ] |> List.contains name
-                                            && (attribute.ConstructorArguments |> Seq.exists (fun (t, value) -> Symbols.typeName t = Some (Symbols.frameworkNamespace + "InheritanceBehavior") && Object.Equals(value, 1)))
-                                        let attributeAssembly = canonicalAttribute |> Option.map (fun entity -> entity.Assembly.SimpleName)
+                                        let canonical = canonicalAttribute attribute.AttributeType
+                                        let name = canonical |> Option.map (fun entity -> entity.DisplayName) |> Option.defaultValue ""
+                                        let attributeAssembly = canonical |> Option.map (fun entity -> entity.Assembly.SimpleName)
                                         let knownAssembly = attributeAssembly |> Option.exists (fun name -> [ "MSTest.TestFramework"; "MSTest.TestFramework.Extensions"; "Microsoft.VisualStudio.TestPlatform.TestFramework"; "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions" ] |> List.contains name)
-                                        if knownAssembly && framework.IsSome && attributeAssembly <> framework && (relevant || inheritedClassFixture) then
+                                        if knownAssembly && framework.IsSome && attributeAssembly <> framework
+                                           && name <> "TestClassAttribute"
+                                           && wouldRun context entity parent framework.Value name attribute methodInfo then
                                             let appliedName = attribute.AttributeType.DisplayName
                                             let appliedName = if appliedName.EndsWith("Attribute", StringComparison.Ordinal) then appliedName.Substring(0, appliedName.Length - 9) else appliedName
                                             context.Report "MSTEST0082" "InheritedMemberFromDifferentMSTestVersionTitle" "InheritedMemberFromDifferentMSTestVersionMessageFormat" entity.DeclarationLocation

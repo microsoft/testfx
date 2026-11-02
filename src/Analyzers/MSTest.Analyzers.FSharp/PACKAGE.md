@@ -6,7 +6,7 @@ enable itself through `MSTest.TestFramework` or `MSTest.Sdk`.
 
 ## Rule coverage
 
-The package ports the 77 current diagnostics whose checks apply to F#. It retains
+The initial package ports the 77 applicable diagnostics through MSTEST0089. It retains
 the `MSTESTxxxx` identifiers, existing messages, severities, and disabled-by-default
 design preferences. Checks use resolved F# symbols and syntax rather than matching
 source text or short API names.
@@ -34,6 +34,8 @@ Every number in this table has the `MSTEST` prefix. Numeric ranges are inclusive
 
 MSTEST0006, MSTEST0034, MSTEST0039 and MSTEST0053 were removed from the current
 analyzer set; their identifiers are not reused.
+
+Diagnostics introduced after MSTEST0089 are not part of this initial port.
 
 ## Installation and CLI
 

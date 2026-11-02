@@ -375,7 +375,7 @@ type Tests() =
             host.StandardOutput.Trim());
     }
 
-    private static async Task<TestAsset> GenerateConsumerAsync(string source, bool editorHost = false)
+    private static async Task<TestAsset> GenerateConsumerAsync(string source, bool editorHost = false, bool hosting = false)
     {
         string frameworkPackage = Directory.GetFiles(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.*.nupkg")
             .Concat(Directory.GetFiles(Constants.ArtifactsTmpPackages, "MSTest.TestFramework.*.nupkg")).Single();
@@ -383,6 +383,26 @@ type Tests() =
         using Stream frameworkManifest = frameworkArchive.GetEntry("MSTest.TestFramework.nuspec")!.Open();
         string frameworkVersion = XDocument.Load(frameworkManifest).Descendants().Single(element => element.Name.LocalName == "version").Value;
         string coreVersion = typeof(FSharpAnalyzersTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "FSharpAnalyzersCoreVersion").Value!;
+        string loggingVersion = string.Empty;
+        if (editorHost)
+        {
+            string cliDependencies = Path.Combine(AppContext.BaseDirectory, "FSharpAnalyzerCli", "FSharp.Analyzers.Cli.deps.json");
+            using var dependencies = JsonDocument.Parse(await File.ReadAllTextAsync(cliDependencies));
+            loggingVersion = dependencies.RootElement.GetProperty("libraries").EnumerateObject()
+                .Single(library => library.Name.StartsWith("Microsoft.Extensions.Logging.Abstractions/", StringComparison.Ordinal))
+                .Name.Split('/')[1];
+        }
+
+        string hostingReference = string.Empty;
+        if (hosting)
+        {
+            string hostingPackage = Directory.GetFiles(Constants.ArtifactsPackagesShipping, "MSTest.Extensions.Hosting.*.nupkg").Single();
+            using ZipArchive hostingArchive = ZipFile.OpenRead(hostingPackage);
+            using Stream hostingManifest = hostingArchive.GetEntry("MSTest.Extensions.Hosting.nuspec")!.Open();
+            string hostingVersion = XDocument.Load(hostingManifest).Descendants().Single(element => element.Name.LocalName == "version").Value;
+            hostingReference = $"""<PackageReference Include="MSTest.Extensions.Hosting" Version="{hostingVersion}" />""";
+        }
+
         string assetCode = $$"""
 #file Consumer.fsproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -396,10 +416,12 @@ type Tests() =
     <Compile Include="Tests.fs" />
     <PackageReference Include="MSTest.TestFramework" Version="{{frameworkVersion}}" />
     <PackageReference Include="{{PackageId}}" Version="{{PackageVersion}}" PrivateAssets="all" IncludeAssets="analyzers" GeneratePathProperty="true" />
+    {{hostingReference}}
     {{(source.Contains("#file Legacy", StringComparison.Ordinal) ? "<ProjectReference Include=\"Legacy/Legacy.fsproj\" />" : string.Empty)}}
     {{(source.Contains("3.11.1", StringComparison.Ordinal) ? "<Reference Include=\"Microsoft.VisualStudio.TestPlatform.TestFramework\" HintPath=\"$(NuGetPackageRoot)\\mstest.testframework\\3.11.1\\lib\\net8.0\\Microsoft.VisualStudio.TestPlatform.TestFramework.dll\" />" : string.Empty)}}
     {{(editorHost ? $"""
     <PackageReference Include="FSharp.Core" Version="{coreVersion}" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="{loggingVersion}" />
     <Reference Include="MSTest.Analyzers.FSharp" HintPath="$(PkgMSTest_Analyzers_FSharp)/{AnalyzerEntry}" />
     <Reference Include="FSharp.Analyzers.SDK" HintPath="$(PkgMSTest_Analyzers_FSharp)/analyzers/dotnet/fs/FSharp.Analyzers.SDK.dll" />
     <Reference Include="FSharp.Compiler.Service" HintPath="$(PkgMSTest_Analyzers_FSharp)/analyzers/dotnet/fs/FSharp.Compiler.Service.dll" />

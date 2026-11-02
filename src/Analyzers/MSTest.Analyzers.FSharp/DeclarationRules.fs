@@ -9,8 +9,10 @@ open System.Collections.Immutable
 open System.IO
 open System.Reflection.Metadata
 open System.Reflection.PortableExecutable
+open System.Runtime.CompilerServices
 open FSharp.Analyzers.SDK.ASTCollecting
 open FSharp.Analyzers.SDK.TASTCollecting
+open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Symbols
 open FSharp.Compiler.Symbols.FSharpExprPatterns
 open FSharp.Compiler.Syntax
@@ -176,10 +178,7 @@ module internal DeclarationRules =
         && not memberInfo.IsCompilerGenerated
 
     let private methodParameters (memberInfo: FSharpMemberOrFunctionOrValue) =
-        // FCS represents a unit argument even though the compiled CLI method is parameterless.
-        match Symbols.parameters memberInfo with
-        | [ parameter ] when parameter.Name.IsNone && Symbols.typeName parameter.Type = Some "Microsoft.FSharp.Core.Unit" -> []
-        | parameters -> parameters
+        Symbols.compiledParameters memberInfo
 
     let private methodGenericParameters (entity: FSharpEntity) (memberInfo: FSharpMemberOrFunctionOrValue) =
         memberInfo.GenericParameters
@@ -393,6 +392,26 @@ module internal DeclarationRules =
             | _ -> false
         | _ -> false
 
+    let private hostingLocations = ConditionalWeakTable<FSharpCheckProjectResults, Lazy<range list>>()
+
+    let private collectHostingLocations files =
+        let locations = ResizeArray<range>()
+        let collector =
+            { new TypedTreeCollectorBase() with
+                override _.WalkCall _ methodInfo _ _ _ callRange =
+                    if methodInfo.CompiledName = "AddMSTestTestClassInjection"
+                       && (methodInfo.DeclaringEntity
+                           |> Option.exists (fun entity ->
+                               Symbols.hasTypeName "Microsoft.Extensions.DependencyInjection.MSTestHostingServiceCollectionExtensions" entity
+                               && entity.Assembly.SimpleName = "MSTest.Extensions.Hosting"))
+                       && (methodParameters methodInfo |> List.map (fun parameter -> Symbols.typeName parameter.Type)) =
+                           [ Some "Microsoft.Extensions.DependencyInjection.IServiceCollection" ]
+                       && Symbols.typeName methodInfo.ReturnParameter.Type = Some "Microsoft.Extensions.DependencyInjection.IServiceCollection" then
+                        locations.Add(callRange)
+            }
+        files |> Seq.iter (walkTast collector)
+        locations |> Seq.toList
+
     let analyze (context: RuleContext) : unit =
         let report id prefix diagnosticRange arguments =
             context.Report id (prefix + "Title") (prefix + "MessageFormat") diagnosticRange arguments
@@ -432,33 +451,34 @@ module internal DeclarationRules =
             report "MSTEST0001" "UseParallelizeAttributeAnalyzer" assemblyRange [||]
         | _ -> ()
 
-        let hostInjectionLocations = ResizeArray<range>()
-        let hostCollector =
-            { new TypedTreeCollectorBase() with
-                override _.WalkCall _ methodInfo _ _ _ callRange =
-                    if methodInfo.CompiledName = "AddMSTestTestClassInjection"
-                       && (methodInfo.DeclaringEntity
-                           |> Option.exists (fun entity ->
-                               Symbols.hasTypeName "Microsoft.Extensions.DependencyInjection.MSTestHostingServiceCollectionExtensions" entity
-                               && entity.Assembly.SimpleName = "MSTest.Extensions.Hosting"))
-                       && (methodParameters methodInfo |> List.map (fun parameter -> Symbols.typeName parameter.Type)) =
-                           [ Some "Microsoft.Extensions.DependencyInjection.IServiceCollection" ]
-                       && Symbols.typeName methodInfo.ReturnParameter.Type = Some "Microsoft.Extensions.DependencyInjection.IServiceCollection" then
-                        hostInjectionLocations.Add(callRange)
-            }
-        match context.CheckProjectResults with
-        | Some project when not project.HasCriticalErrors ->
-            for file in project.AssemblyContents.ImplementationFiles do
-                walkTast hostCollector file
-        | _ -> context.TypedTree |> Option.iter (walkTast hostCollector)
-        let referencedInjection =
+        let hostingRulesEnabled =
+            [ "MSTEST0063"; "MSTEST0088" ]
+            |> List.exists (fun rule -> context.Settings.TryFind rule <> Some "none")
+        let referencedAssemblies =
             context.CheckFileResults
-            |> Option.exists (fun checkedFile ->
-                checkedFile.ProjectContext.GetReferencedAssemblies()
-                |> Seq.exists (fun assembly ->
-                    metadata "MSTestHostTestClassInjectionEnabled" assembly.Contents.Attributes = Some "true"))
+            |> Option.map (fun checkedFile -> checkedFile.ProjectContext.GetReferencedAssemblies() |> Seq.toList)
+            |> Option.defaultValue []
+        let hasHostingAssembly =
+            context.CheckFileResults.IsNone
+            || (referencedAssemblies |> List.exists (fun assembly -> assembly.SimpleName = "MSTest.Extensions.Hosting"))
+            || (context.CheckProjectResults
+                |> Option.exists (fun project ->
+                    project.AssemblySignature.Entities |> Seq.exists (fun entity -> entity.Assembly.SimpleName = "MSTest.Extensions.Hosting")))
+        let hostInjectionLocations =
+            if not hostingRulesEnabled || not hasHostingAssembly then []
+            else
+                match context.CheckProjectResults with
+                | Some project when not project.HasCriticalErrors ->
+                    // Weak snapshot keys avoid stale editor results without retaining completed projects.
+                    hostingLocations.GetValue(project, fun project ->
+                        lazy (collectHostingLocations project.AssemblyContents.ImplementationFiles)).Value
+                | _ -> context.TypedTree |> Option.toList |> collectHostingLocations
+        let referencedInjection =
+            hostingRulesEnabled
+            && (referencedAssemblies |> List.exists (fun assembly ->
+                metadata "MSTestHostTestClassInjectionEnabled" assembly.Contents.Attributes = Some "true"))
         let hostInjection =
-            hostInjectionLocations.Count > 0
+            not hostInjectionLocations.IsEmpty
             || referencedInjection
             || settingTrue "MSTestHostTestClassInjectionEnabled"
         let unsupportedMode =
@@ -478,7 +498,7 @@ module internal DeclarationRules =
                 if not currentLocations.IsEmpty then
                     for location in currentLocations do
                         report "MSTEST0088" "MSTestHostTestClassInjectionNotSupported" location [| box mode |]
-                elif hostInjectionLocations.Count = 0 && assemblyFile then
+                elif hostInjectionLocations.IsEmpty && assemblyFile then
                     report "MSTEST0088" "MSTestHostTestClassInjectionNotSupported" assemblyRange [| box mode |])
 
         let syntaxAttributes = ResizeArray<SynAttribute>()
