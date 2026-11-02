@@ -31,6 +31,10 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class HangDumpActivityIndicatorMutationTests
 {
+    private static readonly TimeSpan GateTimeout = TimeSpan.FromSeconds(30);
+
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public async Task ConsumeAsync_PreCanceledToken_ThrowsBeforeInspectingTheMessage()
     {
@@ -105,6 +109,131 @@ public sealed class HangDumpActivityIndicatorMutationTests
             CancellationToken.None);
 
         Assert.HasCount(1, messages.Where(message => message.Contains("Signal for action node Test uid", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_CoalescesActivityInsteadOfSendingAnIpcRequestPerResult()
+    {
+        // The indicator has no pipe client here, so any per-result IPC attempt would fail the guard.
+        using HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+
+        await indicator.ConsumeAsync(null!, CreateUpdate("uid", InProgressTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        Assert.AreEqual(0, GetPrivateField<int>(indicator, "_activitySignalPending"), "An in-progress update is not activity.");
+
+        await indicator.ConsumeAsync(null!, CreateUpdate("uid", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        await indicator.ConsumeAsync(null!, CreateUpdate("other", PassedTestNodeStateProperty.CachedInstance), CancellationToken.None);
+
+        Assert.AreEqual(1, GetPrivateField<int>(indicator, "_activitySignalPending"));
+    }
+
+#if NETCOREAPP
+    [TestMethod]
+    public async Task DisposeAsync_WaitsForInFlightActivitySignalBeforeReturning()
+    {
+        using HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+
+        Task dispose = indicator.DisposeAsync().AsTask();
+
+        await AssertDisposalWaitsForLoopAsync(loop, dispose);
+        Assert.IsNull(GetPrivateField<Task?>(indicator, "_activitySignalTask"));
+    }
+#endif
+
+    [TestMethod]
+    public async Task Dispose_WaitsForInFlightActivitySignalBeforeReturning()
+    {
+        HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+
+        var dispose = Task.Run(indicator.Dispose, TestContext.CancellationToken);
+
+        await AssertDisposalWaitsForLoopAsync(loop, dispose);
+        Assert.IsNull(GetPrivateField<Task?>(indicator, "_activitySignalTask"));
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_AfterDispose_DoesNotTouchTheDisposedLoop()
+    {
+        HangDumpActivityIndicator indicator = CreateIndicator(Mock.Of<ILogger>(), DateTimeOffset.UtcNow);
+        GatedActivitySignalLoop loop = StartGatedActivitySignalLoop(indicator);
+        loop.Release();
+        indicator.Dispose();
+
+        Mock<ITestSessionContext> sessionContext = new();
+        sessionContext.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        await indicator.OnTestSessionFinishingAsync(sessionContext.Object);
+    }
+
+    private static async Task AssertDisposalWaitsForLoopAsync(GatedActivitySignalLoop loop, Task dispose)
+    {
+        try
+        {
+            // The loop has seen the stop request but its in-flight request (the gate) has not finished yet.
+            Assert.AreSame(loop.CancellationObserved, await Task.WhenAny(loop.CancellationObserved, Task.Delay(GateTimeout)), "Disposal must stop the loop.");
+            await Task.Delay(100);
+            Assert.IsFalse(dispose.IsCompleted, "Disposal must not return while an activity signal request may still use the pipe client.");
+        }
+        finally
+        {
+            loop.Release();
+        }
+
+        Assert.AreSame(dispose, await Task.WhenAny(dispose, Task.Delay(GateTimeout)), "Disposal must complete once the loop finishes.");
+        await dispose;
+    }
+
+    private static GatedActivitySignalLoop StartGatedActivitySignalLoop(HangDumpActivityIndicator indicator)
+    {
+        // The fake loop observes cancellation like the real one, but finishes only when the gate is released,
+        // the way an in-flight request finishes only when the controller replies.
+        var cancellation = new CancellationTokenSource();
+        var cancellationObserved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        cancellation.Token.Register(() => cancellationObserved.TrySetResult(true));
+        SetPrivateField(indicator, "_activitySignalCancellation", cancellation);
+        SetPrivateField<Task?>(indicator, "_activitySignalTask", gate.Task);
+        return new GatedActivitySignalLoop(cancellationObserved.Task, gate);
+    }
+
+    private sealed class GatedActivitySignalLoop(Task cancellationObserved, TaskCompletionSource<bool> gate)
+    {
+        public Task CancellationObserved { get; } = cancellationObserved;
+
+        public void Release() => gate.TrySetResult(true);
+    }
+
+    [TestMethod]
+    [DataRow(30 * 60 * 1000, 1000, DisplayName = "Default timeout is capped at one second")]
+    [DataRow(8000, 800, DisplayName = "Short timeout uses a tenth of the timeout")]
+    [DataRow(50, 10, DisplayName = "Tiny timeout is floored")]
+    [DataRow(0, 10, DisplayName = "Zero timeout is floored")]
+    public void GetActivitySignalInterval_IsATenthOfTheTimeoutWithinBounds(int timeoutMilliseconds, int expectedMilliseconds)
+        => Assert.AreEqual(
+            TimeSpan.FromMilliseconds(expectedMilliseconds),
+            HangDumpOptions.GetActivitySignalInterval(TimeSpan.FromMilliseconds(timeoutMilliseconds)));
+
+    [TestMethod]
+    [DataRow(10_500, DisplayName = "Reviewer example: 10.5 s timeout, 1 s interval")]
+    [DataRow(8_000, DisplayName = "8 s timeout")]
+    [DataRow(30 * 60 * 1000, DisplayName = "Default 30 min timeout")]
+    [DataRow(50, DisplayName = "Tiny timeout with floored interval")]
+    public void InactivityTimer_NeverExpiresBeforeTheTimeoutSinceTheLastActivity(int timeoutMilliseconds)
+    {
+        var timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
+        TimeSpan interval = HangDumpOptions.GetActivitySignalInterval(timeout);
+        TimeSpan dueTime = HangDumpOptions.GetInactivityTimerDueTime(timeout);
+
+        // The controller re-arms its timer when a signal is delivered. The worst case is activity just before the
+        // timeout elapses since that delivery, which then waits a full interval for the next flush.
+        var lastDelivery = TimeSpan.FromSeconds(1);
+        TimeSpan controllerExpiry = lastDelivery + dueTime;
+        TimeSpan latestActivity = lastDelivery + timeout - TimeSpan.FromTicks(1);
+        TimeSpan latestDelivery = latestActivity + interval;
+
+        Assert.IsLessThan(controllerExpiry, latestDelivery, "Pending activity must reach the controller before its timer expires.");
+        Assert.AreEqual(timeout + interval, dueTime);
     }
 
     private static HangDumpActivityIndicator CreateIndicator(ILogger logger, DateTimeOffset utcNow)
@@ -248,6 +377,7 @@ public sealed class HangDumpLifetimeMutationTests
             await handler.BeforeTestHostProcessStartAsync(TestContext.CancellationToken);
 
             Assert.AreEqual(TimeSpan.FromMinutes(30), GetPrivateField<TimeSpan?>(handler, "_activityTimerValue"));
+            Assert.AreEqual(TimeSpan.FromMinutes(30) + TimeSpan.FromSeconds(1), GetPrivateField<TimeSpan?>(handler, "_activityTimerDueTime"));
             Assert.IsNull(GetPrivateField<DateTimeOffset?>(handler, "_deadlineDumpAt"));
             Assert.Contains("Hang dump timeout setup 00:30:00.", messages);
 
