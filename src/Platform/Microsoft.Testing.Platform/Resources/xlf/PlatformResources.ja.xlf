@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 有効な値は 'allow-skipped' (既定) と 'strict' です。'allow-skipped' はスキップされたテストを実行済みとして扱うため、テストが1つも見つからなかった実行のみが終了コード 8 で失敗します。'strict' はスキップされたテストを未実行として扱うため、すべてのテストがスキップされた場合、またはテストが 1 つも見つからなかった場合に終了コード 8 で失敗します。</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
-        <source>Press Ctrl+C again to force exit.</source>
-        <target state="translated">強制終了するには、Ctrl+C キーをもう一度押してください。</target>
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
+        <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

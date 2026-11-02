@@ -74,7 +74,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
         return manager;
     }
 
-    public async Task<IHost> BuildAsync(
+    public async Task<(IHost Host, CTRLPlusCCancellationTokenSource CancellationTokenSource)> BuildAsync(
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
@@ -100,12 +100,14 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
             context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
         }
 
-        return testApplicationOptions.CancellationToken.CanBeCanceled
+        IHost applicationHost = testApplicationOptions.CancellationToken.CanBeCanceled
             ? new ExternallyCancellableHost(
                 host,
                 context.TestApplicationCancellationTokenSource,
                 testApplicationOptions.CancellationToken)
             : host;
+
+        return (applicationHost, context.TestApplicationCancellationTokenSource);
     }
 
     private sealed class ExternallyCancellableHost : IHost, IDisposable

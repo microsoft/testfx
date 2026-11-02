@@ -179,7 +179,7 @@ internal static partial class TerminalResources
 
     internal static string @PassedLowercase => GetResourceString("PassedLowercase");
 
-    internal static string @PressCtrlCAgainToForceExit => GetResourceString("PressCtrlCAgainToForceExit");
+    internal static string @PressCtrlCAgainToAbortOrForceExit => GetResourceString("PressCtrlCAgainToAbortOrForceExit");
 
     internal static string @Retried => GetResourceString("Retried");
 

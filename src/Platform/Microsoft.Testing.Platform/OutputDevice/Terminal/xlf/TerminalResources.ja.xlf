@@ -387,9 +387,9 @@
         <target state="translated">合格しました</target>
         <note />
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
-        <source>Press Ctrl+C again to force exit.</source>
-        <target state="translated">強制終了するには、Ctrl+C キーをもう一度押してください。</target>
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
+        <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">

@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 Gültige Werte sind „allow-skipped“ (Standard), bei dem übersprungene Tests als ausgeführt gezählt werden, sodass nur ein Testlauf, in dem überhaupt kein Test gefunden wurde, mit dem Exitcode 8 fehlschlägt, und „strict“, bei dem übersprungene Tests als nicht ausgeführt behandelt werden, sodass ein Testlauf, bei dem alle Tests übersprungen wurden (oder kein Test gefunden wurde), mit dem Exitcode 8 fehlschlägt.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
-        <source>Press Ctrl+C again to force exit.</source>
-        <target state="translated">Drücken Sie erneut Ctrl+C, um das Beenden zu erzwingen.</target>
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
+        <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

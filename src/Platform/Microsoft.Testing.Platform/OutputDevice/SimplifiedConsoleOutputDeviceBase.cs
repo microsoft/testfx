@@ -124,7 +124,7 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase : IPlatformOut
             {
                 _wasCancelled = true;
                 ConsoleLog(PlatformResources.CancellingTestSession);
-                ConsoleLog(PlatformResources.PressCtrlCAgainToForceExit);
+                ConsoleLog(PlatformResources.PressCtrlCAgainToAbortOrForceExit);
                 return Task.CompletedTask;
             }).ConfigureAwait(false);
 

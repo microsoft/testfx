@@ -28,18 +28,24 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0, aborted: true);
     }
 
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public static IEnumerable<(string Tfm, bool SendSecondSignal)> CooperativeCancellationCases
+        => TargetFrameworks.All.SelectMany(tfm => new[] { (tfm, false), (tfm, true) });
+
+    [DynamicData(nameof(CooperativeCancellationCases))]
     [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "The targeted SIGINT test uses the Unix kill API.")]
-    public async Task AbortControllerWithSIGINT_AllowsChildCleanupToComplete(string tfm)
+    public async Task AbortControllerWithSIGINT_AllowsChildCleanupToComplete(string tfm, bool sendSecondSignal)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
+        string cleanupStartedMarker = Path.Combine(testHost.DirectoryName, $"cleanup-started-{Guid.NewGuid():N}.txt");
         string trxFileName = $"abort-{Guid.NewGuid():N}.trx";
         var environmentVariables = new Dictionary<string, string?>
         {
             ["ABORT_CONTROLLER_ONLY"] = "1",
+            ["ABORT_CONTROLLER_TWICE"] = sendSecondSignal ? "1" : "0",
             ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
+            ["ABORT_CLEANUP_STARTED_MARKER"] = cleanupStartedMarker,
         };
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -56,16 +62,19 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     [OSCondition(ConditionMode.Exclude, OperatingSystems.Windows, IgnoreMessage = "The targeted SIGINT test uses the Unix kill API.")]
-    public async Task AbortControllerWithSecondSIGINT_ForceTerminatesChild(string tfm)
+    public async Task AbortControllerWithThirdSIGINT_ForceTerminatesChild(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string cleanupMarker = Path.Combine(testHost.DirectoryName, $"cleanup-{Guid.NewGuid():N}.txt");
         string cleanupStartedMarker = Path.Combine(testHost.DirectoryName, $"cleanup-started-{Guid.NewGuid():N}.txt");
         string childPidMarker = Path.Combine(testHost.DirectoryName, $"child-pid-{Guid.NewGuid():N}.txt");
+        string secondSignalMarker = Path.Combine(testHost.DirectoryName, $"second-signal-{Guid.NewGuid():N}.txt");
         var environmentVariables = new Dictionary<string, string?>
         {
             ["ABORT_CONTROLLER_ONLY"] = "1",
             ["ABORT_CONTROLLER_TWICE"] = "1",
+            ["ABORT_CONTROLLER_THREE_TIMES"] = "1",
+            ["ABORT_SECOND_SIGNAL_MARKER"] = secondSignalMarker,
             ["ABORT_CLEANUP_MARKER"] = cleanupMarker,
             ["ABORT_CLEANUP_STARTED_MARKER"] = cleanupStartedMarker,
             ["ABORT_CHILD_PID_MARKER"] = childPidMarker,
@@ -76,8 +85,9 @@ public class AbortionTests : AcceptanceTestBase<AbortionTests.TestAssetFixture>
             environmentVariables,
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.TestSessionAborted);
-        Assert.IsTrue(File.Exists(cleanupStartedMarker), "The second SIGINT must be sent only after child cleanup starts.");
+        Assert.AreEqual(130, testHostResult.ExitCode, "The third SIGINT must use the runtime's signal-termination exit code.");
+        Assert.IsTrue(File.Exists(cleanupStartedMarker), "Escalation must start only after child cleanup starts.");
+        Assert.IsTrue(File.Exists(secondSignalMarker), "The second SIGINT must be handled before the third is sent.");
         int childPid = int.Parse(File.ReadAllText(childPidMarker), CultureInfo.InvariantCulture);
         await AssertProcessExitedAsync(childPid, TestContext.CancellationToken);
         Assert.IsFalse(File.Exists(cleanupMarker), "Force cancellation must terminate the child before its delayed cleanup completes.");
@@ -157,6 +167,19 @@ internal sealed class Program
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
         builder.AddTrxReportProvider();
         using ITestApplication app = await builder.BuildAsync();
+        string? secondSignalMarker = Environment.GetEnvironmentVariable("ABORT_SECOND_SIGNAL_MARKER");
+        if (secondSignalMarker is not null)
+        {
+            int signalCount = 0;
+            Console.CancelKeyPress += (_, __) =>
+            {
+                if (Interlocked.Increment(ref signalCount) == 2)
+                {
+                    File.WriteAllText(secondSignalMarker, "aborting");
+                }
+            };
+        }
+
         _ = Task.Run(() =>
         {
             DummyTestFramework.FireCancel.Wait();
@@ -193,6 +216,25 @@ internal sealed class Program
                     if (kill(controllerPid, 2) != 0)
                     {
                         throw new Exception($"Second kill(SIGINT) failed with errno '{Marshal.GetLastWin32Error()}'.");
+                    }
+
+                    if (Environment.GetEnvironmentVariable("ABORT_CONTROLLER_THREE_TIMES") == "1")
+                    {
+                        DateTime secondSignalTimeout = DateTime.UtcNow.AddSeconds(15);
+                        while (!File.Exists(secondSignalMarker) && DateTime.UtcNow < secondSignalTimeout)
+                        {
+                            Thread.Sleep(10);
+                        }
+
+                        if (!File.Exists(secondSignalMarker))
+                        {
+                            throw new Exception("The controller did not handle the second SIGINT before the timeout.");
+                        }
+
+                        if (kill(controllerPid, 2) != 0)
+                        {
+                            throw new Exception($"Third kill(SIGINT) failed with errno '{Marshal.GetLastWin32Error()}'.");
+                        }
                     }
                 }
 

@@ -427,14 +427,29 @@ public sealed class TestHostOrchestratorHostTests
     private sealed class FakeApplicationCancellationTokenSource : ITestApplicationCancellationTokenSource, IDisposable
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly CancellationTokenSource _abortingTokenSource = new();
 
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
+        public CancellationToken DrainingToken => _cancellationTokenSource.Token;
+
+        public CancellationToken AbortingToken => _abortingTokenSource.Token;
+
 #pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
         public void Cancel() => _cancellationTokenSource.Cancel();
+
+        public void Abort()
+        {
+            Cancel();
+            _abortingTokenSource.Cancel();
+        }
 #pragma warning restore VSTHRD103
 
-        public void Dispose() => _cancellationTokenSource.Dispose();
+        public void Dispose()
+        {
+            _cancellationTokenSource.Dispose();
+            _abortingTokenSource.Dispose();
+        }
     }
 
     private sealed class NopLoggerFactory : ILoggerFactory

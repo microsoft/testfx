@@ -238,7 +238,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             [
                 "Test session is aborting due to reaching failures ('3') specified by the '--maximum-failed-tests' option.",
                 "Canceling the test session...",
-                "Press Ctrl+C again to force exit.",
+                "Press Ctrl+C again to abort, or a third time to force exit.",
             ],
             device.Logs);
         Assert.AreEqual(
@@ -251,6 +251,33 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             """,
             Assert.ContainsSingle(device.Errors));
         await device.OnTestSessionFinishingAsync(Mock.Of<ITestSessionContext>());
+    }
+
+    [TestMethod]
+    public async Task LifecycleAbort_DoesNotReuseForceExitOnlyTranslation()
+    {
+        CultureInfo previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-Hans");
+            using var monitor = new SystemAsyncMonitor();
+            var policies = new Mock<IStopPoliciesService>();
+            Func<Task>? abort = null;
+            policies.Setup(value => value.RegisterOnAbortCallbackAsync(It.IsAny<Func<Task>>()))
+                .Callback<Func<Task>>(value => abort = value).Returns(Task.CompletedTask);
+            RecordingSimplifiedOutputDevice device = CreateOutputDevice(monitor, slowTestThreshold: TimeSpan.Zero, policies: policies.Object);
+            await device.InitializeAsync();
+            Assert.IsNotNull(abort);
+
+            await abort();
+
+            Assert.HasCount(2, device.Logs);
+            Assert.AreNotEqual("再次按 Ctrl+C 强制退出。", device.Logs[1]);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+        }
     }
 
     [TestMethod]

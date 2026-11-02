@@ -166,9 +166,11 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
-        _host = await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
+        (IHost host, CTRLPlusCCancellationTokenSource cancellationTokenSource) =
+            await _testHostBuilder.BuildAsync(_loggingState, _testApplicationOptions, _unhandledExceptionsHandler, _createBuilderStart).ConfigureAwait(false);
+        _host = host;
 
-        return new TestApplication(_host);
+        return new TestApplication(host, cancellationTokenSource);
     }
 
     async Task IAsyncCleanableExtension.CleanupAsync()

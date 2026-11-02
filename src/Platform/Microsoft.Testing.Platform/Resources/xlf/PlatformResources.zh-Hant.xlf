@@ -1132,9 +1132,9 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
 有效的值為 'allow-skipped' (預設) 會將已略過的測試計為執行，使得只有完全找不到測試的執行才會失敗，出現結束代碼 8，而 'strict' 會將略過的測試視為未執行，使得每個測試都略過 (或找不到測試) 的執行會失敗，出現結束代碼 8。</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
-      <trans-unit id="PressCtrlCAgainToForceExit">
-        <source>Press Ctrl+C again to force exit.</source>
-        <target state="translated">再次按 Ctrl+C 以強制離開。</target>
+      <trans-unit id="PressCtrlCAgainToAbortOrForceExit">
+        <source>Press Ctrl+C again to abort, or a third time to force exit.</source>
+        <target state="new">Press Ctrl+C again to abort, or a third time to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">

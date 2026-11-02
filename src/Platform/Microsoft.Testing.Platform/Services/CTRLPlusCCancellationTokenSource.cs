@@ -6,31 +6,89 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.Services;
 
+/// <summary>
+/// Two-phase, Ctrl+C-aware <see cref="ITestApplicationCancellationTokenSource"/>.
+/// </summary>
+/// <remarks>
+/// Phase machine (see RFC "Phased graceful shutdown for MTP", issue #5345):
+/// <code>
+/// RUNNING ──Ctrl+C / Cancel()──▶ DRAINING ──grace elapsed / 2nd Ctrl+C / Abort()──▶ ABORTING
+///                                                                              ──3rd Ctrl+C──▶ (process terminated by runtime)
+/// </code>
+/// <para>
+/// Transitions are idempotent and one-way. Existing consumers reading
+/// <see cref="CancellationToken"/> automatically observe Draining (back-compat).
+/// </para>
+/// </remarks>
 internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTokenSource, IDisposable
 {
-    private const int StateIdle = 0;
-    private const int StateCancelling = 1;
-    private const int StateForcing = 2;
+    // Conservative defaults inspired by .NET HostOptions.ShutdownTimeout (30s) and
+    // Vitest's teardownTimeout (10s). Will become CLI options in a follow-up
+    // (--shutdown-grace-period, --shutdown-abort-timeout).
+    // TODO(#5345): wire to PlatformCommandLineProvider.
+    internal static readonly TimeSpan DefaultGracePeriod = TimeSpan.FromSeconds(30);
+    internal static readonly TimeSpan DefaultAbortTimeout = TimeSpan.FromSeconds(10);
 
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private const int PhaseRunning = 0;
+    private const int PhaseDraining = 1;
+    private const int PhaseAborting = 2;
+
+    private readonly CancellationTokenSource _drainingCts = new();
+    private readonly CancellationTokenSource _abortingCts = new();
+    private readonly TimeSpan _gracePeriod;
+    private readonly TimeSpan _abortTimeout;
     private readonly IEnvironment _environment;
     private readonly ILogger? _logger;
-    private readonly IConsole? _subscribedConsole;
+    private readonly IConsole? _console;
+#if NET9_0_OR_GREATER
+    private readonly Lock _escalationLock = new();
+#else
+    private readonly object _escalationLock = new();
+#endif
+
+    // Mutable phase state updated through Interlocked APIs.
+    private readonly StrongBox<int> _phase = new(PhaseRunning);
+
+    // Keep timer registrations until shutdown completes, independently of the
+    // tokens that late output can still read after the application has returned.
+    private List<(CancellationTokenSource Timer, CancellationTokenRegistration Registration)>? _escalations;
+
     private Action? _forceExitAction;
-    private int _state = StateIdle;
+    private int _ctrlCCount;
+    private int _shutdownCompleted;
     private int _disposed;
 
     public CTRLPlusCCancellationTokenSource(IConsole? console = null, ILogger? logger = null, IEnvironment? environment = null)
+        : this(console, logger, DefaultGracePeriod, DefaultAbortTimeout, environment)
     {
-        if (console is not null && !IsCancelKeyPressNotSupported())
-        {
-            console.CancelKeyPress += OnConsoleCancelKeyPressed;
-            _subscribedConsole = console;
-        }
+    }
 
+    private CTRLPlusCCancellationTokenSource(
+        IConsole? console,
+        ILogger? logger,
+        TimeSpan gracePeriod,
+        TimeSpan abortTimeout,
+        IEnvironment? environment)
+    {
+        _gracePeriod = gracePeriod;
+        _abortTimeout = abortTimeout;
         _environment = environment ?? new SystemEnvironment();
         _logger = logger;
+
+        if (console is not null && !IsCancelKeyPressNotSupported())
+        {
+            _console = console;
+            console.CancelKeyPress += OnConsoleCancelKeyPressed;
+        }
     }
+
+    internal static CTRLPlusCCancellationTokenSource CreateWithTimeouts(
+        IConsole? console,
+        ILogger? logger,
+        TimeSpan gracePeriod,
+        TimeSpan abortTimeout,
+        IEnvironment? environment = null)
+        => new(console, logger, gracePeriod, abortTimeout, environment);
 
     [SupportedOSPlatformGuard("android")]
     [SupportedOSPlatformGuard("ios")]
@@ -44,13 +102,22 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             OperatingSystem.IsWasi() ||
             OperatingSystem.IsBrowser();
 
-    public void CancelAfter(TimeSpan timeout) => _cancellationTokenSource.CancelAfter(timeout);
+    /// <inheritdoc />
+    public CancellationToken CancellationToken => _drainingCts.Token;
 
-    public CancellationToken CancellationToken
-        => _cancellationTokenSource.Token;
+    /// <inheritdoc />
+    public CancellationToken DrainingToken => _drainingCts.Token;
+
+    /// <inheritdoc />
+    public CancellationToken AbortingToken => _abortingCts.Token;
+
+    internal int CurrentPhase => Volatile.Read(ref _phase.Value);
+
+    private bool IsShutdownCompleted
+        => Volatile.Read(ref _shutdownCompleted) != 0 || Volatile.Read(ref _disposed) != 0;
 
     public bool WasCancellationRequestedByConsole
-        => Volatile.Read(ref _state) != StateIdle;
+        => Volatile.Read(ref _ctrlCCount) != 0;
 
     public IDisposable RegisterForceExitAction(Action forceExitAction)
     {
@@ -58,45 +125,30 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         return new ForceExitRegistration(this, forceExitAction);
     }
 
-    private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
+    public void CancelAfter(TimeSpan timeout)
     {
-        // Suppress the runtime's default Ctrl+C handling so we control the exit code on
-        // both the first (cooperative) and the second (force-exit) press.
-        e.Cancel = true;
-
-        // The state machine counts user Ctrl+C presses *independently* of external cancellation
-        // sources (timeout, max-failed-tests, explicit Cancel()). This honors the contract
-        // advertised next to the "Cancelling..." message ("Press Ctrl+C again to force exit.")
-        // regardless of who initiated the cancellation: the user must always press Ctrl+C twice
-        // to force-exit.
-        if (Interlocked.CompareExchange(ref _state, StateCancelling, StateIdle) == StateIdle)
+        if (timeout == Timeout.InfiniteTimeSpan)
         {
-            // First user Ctrl+C: cooperative cancellation. If the token was already cancelled
-            // by an external source this is effectively a no-op, but we still transitioned the
-            // state so the next press goes to force-exit.
-            Cancel();
-
             return;
         }
 
-        // Second user Ctrl+C: force-exit. We intentionally do not print an extra
-        // "Forcing exit..." message here because the IConsole abstraction has no stderr channel
-        // and writing to stdout would corrupt the JSON document produced by --list-tests json.
-        // The user already saw the "Press Ctrl+C again to force exit." hint, so the exit itself
-        // is the confirmation. Any subsequent presses are suppressed by the StateForcing guard.
-        if (Interlocked.CompareExchange(ref _state, StateForcing, StateCancelling) == StateCancelling)
+        if (timeout == TimeSpan.Zero)
         {
-            try
-            {
-                Volatile.Read(ref _forceExitAction)?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning($"Exception while force-terminating the active test host:\n{ex}");
-            }
-
-            _environment.Exit((int)ExitCode.TestSessionAborted);
+            EnterDraining();
+            return;
         }
+
+        ScheduleEscalation(timeout, EnterDraining);
+    }
+
+    /// <inheritdoc />
+    public void Cancel() => EnterDraining();
+
+    /// <inheritdoc />
+    public void Abort()
+    {
+        EnterDraining();
+        EnterAborting();
     }
 
     public void Dispose()
@@ -106,26 +158,202 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             return;
         }
 
-        // We stored the console reference only when subscription was actually performed
-        // (i.e. when CancelKeyPress is supported on this platform), so we can safely call -=
-        // on the same supported-platform paths.
-        if (_subscribedConsole is not null && !IsCancelKeyPressNotSupported())
-        {
-            _subscribedConsole.CancelKeyPress -= OnConsoleCancelKeyPressed;
-        }
-
-        _cancellationTokenSource.Dispose();
+        CompleteShutdown();
+        _drainingCts.Dispose();
+        _abortingCts.Dispose();
     }
 
-    public void Cancel()
+    internal void CompleteShutdown()
     {
+        if (Interlocked.Exchange(ref _shutdownCompleted, 1) != 0)
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref _forceExitAction, null);
+
+        if (_console is not null && !IsCancelKeyPressNotSupported())
+        {
+            _console.CancelKeyPress -= OnConsoleCancelKeyPressed;
+        }
+
+        List<(CancellationTokenSource Timer, CancellationTokenRegistration Registration)>? escalations;
+        lock (_escalationLock)
+        {
+            escalations = _escalations;
+            _escalations = null;
+        }
+
+        if (escalations is not null)
+        {
+            foreach ((CancellationTokenSource timer, CancellationTokenRegistration registration) in escalations)
+            {
+                registration.Dispose();
+                timer.Dispose();
+            }
+        }
+    }
+
+    private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
+    {
+        // The event invocation list may have captured this delegate before shutdown completed.
+        if (IsShutdownCompleted)
+        {
+            return;
+        }
+
+        int count = Interlocked.Increment(ref _ctrlCCount);
+
+        switch (count)
+        {
+            case 1:
+                // 1st Ctrl+C: cooperative cancel.
+                e.Cancel = true;
+                EnterDraining();
+                break;
+            case 2:
+                // 2nd Ctrl+C: escalate to abort. Go through Abort() (which calls
+                // EnterDraining() then EnterAborting()) so the
+                // Running → Draining → Aborting invariant holds even if a future
+                // refactor lets a 2nd Ctrl+C arrive before the 1st has been
+                // processed (or before EnterDraining was reached at all).
+                e.Cancel = true;
+                Abort();
+                break;
+            default:
+                // 3rd+ Ctrl+C: stop intercepting and let the runtime terminate
+                // the process. This matches docker compose / kubectl / npm UX:
+                // the user has explicitly asked us to die.
+                InvokeForceExitAction();
+                e.Cancel = false;
+                break;
+        }
+    }
+
+    private void EnterDraining()
+    {
+        if (IsShutdownCompleted)
+        {
+            return;
+        }
+
+        if (Interlocked.CompareExchange(ref _phase.Value, PhaseDraining, PhaseRunning) != PhaseRunning)
+        {
+            return;
+        }
+
         try
         {
-            _cancellationTokenSource.Cancel();
+            _drainingCts.Cancel();
         }
         catch (AggregateException ex)
         {
-            _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
+            _logger?.LogWarning($"Exception during shutdown (Draining):\n{ex}");
+        }
+
+        // Auto-escalate to Aborting after the grace period.
+        if (_gracePeriod > TimeSpan.Zero && _gracePeriod != Timeout.InfiniteTimeSpan)
+        {
+            ScheduleEscalation(_gracePeriod, EnterAborting);
+        }
+        else if (_gracePeriod == TimeSpan.Zero)
+        {
+            EnterAborting();
+        }
+    }
+
+    private void EnterAborting()
+    {
+        if (IsShutdownCompleted)
+        {
+            return;
+        }
+
+        // Aborting implies Draining: ensure the legacy CancellationToken /
+        // DrainingToken are always signaled when Aborting is signaled, even if
+        // EnterAborting is invoked from a Running state (e.g., via Abort() or a
+        // future direct trigger). EnterDraining is idempotent.
+        EnterDraining();
+
+        if (Interlocked.CompareExchange(ref _phase.Value, PhaseAborting, PhaseDraining) != PhaseDraining)
+        {
+            return;
+        }
+
+        try
+        {
+            _abortingCts.Cancel();
+        }
+        catch (AggregateException ex)
+        {
+            _logger?.LogWarning($"Exception during shutdown (Aborting):\n{ex}");
+        }
+
+        // After abort timeout, if the host is still alive, hard-terminate.
+        // FailFast is intentional: at this point we asked twice and waited; any
+        // remaining work has had its chance. This is the safety net that breaks
+        // hangs in non-cooperative frameworks (issue #5345).
+        if (_abortTimeout > TimeSpan.Zero && _abortTimeout != Timeout.InfiniteTimeSpan)
+        {
+            ScheduleEscalation(_abortTimeout, ForceTerminate);
+        }
+    }
+
+    private void ScheduleEscalation(TimeSpan delay, Action action)
+    {
+        lock (_escalationLock)
+        {
+            if (IsShutdownCompleted)
+            {
+                return;
+            }
+
+            var timerCts = new CancellationTokenSource();
+            CancellationTokenRegistration registration = timerCts.Token.Register(() =>
+            {
+                if (!IsShutdownCompleted)
+                {
+                    action();
+                }
+            });
+
+            // Publish the registration before starting the timer so completion can unregister
+            // queued work and join an active callback without canceling (and executing) it.
+            (_escalations ??= []).Add((timerCts, registration));
+            timerCts.CancelAfter(delay);
+        }
+    }
+
+    private void ForceTerminate()
+    {
+        if (IsShutdownCompleted)
+        {
+            return;
+        }
+
+        _logger?.LogWarning(
+            $"Shutdown abort timeout exhausted ({_abortTimeout}); terminating host.");
+        if (IsShutdownCompleted)
+        {
+            return;
+        }
+
+        InvokeForceExitAction();
+        if (!IsShutdownCompleted)
+        {
+            _environment.FailFast("Test platform shutdown abort timeout exhausted.");
+        }
+    }
+
+    private void InvokeForceExitAction()
+    {
+        try
+        {
+            Interlocked.Exchange(ref _forceExitAction, null)?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning($"Exception while force-terminating the active test host:\n{ex}");
         }
     }
 
