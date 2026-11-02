@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import pathlib
+import re
 import subprocess
 import tempfile
 import unittest
@@ -39,13 +40,23 @@ def manifest(*modules: dict) -> dict:
     }
 
 
-def declared_target_frameworks(project: ET.Element) -> set[str]:
+def declared_target_frameworks(
+    project: ET.Element, properties: dict[str, str] | None = None
+) -> set[str]:
+    def expand_property(match: re.Match[str]) -> str:
+        name = match.group(1)
+        if properties is None or name not in properties:
+            raise ValueError(f"Unknown target-framework property: {name}")
+        return properties[name]
+
     return {
         framework.strip()
         for declaration in project.iter()
         if declaration.tag in ("TargetFramework", "TargetFrameworks")
         and declaration.text is not None
-        for framework in declaration.text.split(";")
+        for framework in re.sub(
+            r"\$\(([^)]+)\)", expand_property, declaration.text
+        ).split(";")
         if framework.strip()
     }
 
@@ -165,6 +176,60 @@ class MutationTestingTests(unittest.TestCase):
             with self.subTest(case=case):
                 self.assertEqual(expected, declared_target_frameworks(ET.fromstring(xml)))
 
+    def test_declared_target_frameworks_expands_shared_properties(self) -> None:
+        for case, declaration, shared_frameworks, expected in [
+            (
+                "shared-only",
+                "<TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>",
+                "net8.0;net9.0;net10.0;net11.0",
+                {"net8.0", "net9.0", "net10.0", "net11.0"},
+            ),
+            (
+                "mixed-literal-shared",
+                "<TargetFrameworks> net472 ; $(SupportedNetFrameworks) ; net9.0 ; </TargetFrameworks>",
+                " net8.0 ; net9.0 ; ",
+                {"net472", "net8.0", "net9.0"},
+            ),
+            (
+                "unused-property",
+                "<TargetFramework>net8.0</TargetFramework>",
+                "net9.0",
+                {"net8.0"},
+            ),
+            (
+                "empty-shared-property",
+                "<TargetFrameworks>net472;$(SupportedNetFrameworks)</TargetFrameworks>",
+                "",
+                {"net472"},
+            ),
+        ]:
+            with self.subTest(case=case):
+                project = ET.fromstring(
+                    f"<Project><PropertyGroup>{declaration}</PropertyGroup></Project>"
+                )
+                self.assertEqual(
+                    expected,
+                    declared_target_frameworks(
+                        project, {"SupportedNetFrameworks": shared_frameworks}
+                    ),
+                )
+
+    def test_declared_target_frameworks_rejects_unknown_properties(self) -> None:
+        project = ET.fromstring(
+            "<Project><PropertyGroup>"
+            "<TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>"
+            "</PropertyGroup></Project>"
+        )
+        for case, properties in [
+            ("no-properties", None),
+            ("unrelated-properties", {"OtherFrameworks": "net9.0"}),
+        ]:
+            with self.subTest(case=case):
+                with self.assertRaisesRegex(
+                    ValueError, "Unknown target-framework property: SupportedNetFrameworks"
+                ):
+                    declared_target_frameworks(project, properties)
+
     def test_repository_platform_core_uses_net9_direct_reference_tests(self) -> None:
         target_manifest = MUTATION_TESTING.load_manifest(
             REPOSITORY_ROOT / "eng" / "mutation-testing" / "modules.json"
@@ -179,7 +244,16 @@ class MutationTestingTests(unittest.TestCase):
         self.assertEqual("net9.0", core.get("targetFramework"))
         self.assertIn(direct_test_project, core["testProjects"])
         project = ET.parse(REPOSITORY_ROOT / direct_test_project).getroot()
-        self.assertIn(core["targetFramework"], declared_target_frameworks(project))
+        shared_props = ET.parse(REPOSITORY_ROOT / "Directory.Build.props").getroot()
+        shared_frameworks = shared_props.findtext("PropertyGroup/SupportedNetFrameworks")
+        if shared_frameworks is None:
+            self.fail("Root Directory.Build.props must declare SupportedNetFrameworks")
+        self.assertIn(
+            core["targetFramework"],
+            declared_target_frameworks(
+                project, {"SupportedNetFrameworks": shared_frameworks}
+            ),
+        )
         self.assertIn(
             "$(RepoRoot)" + core["project"].replace("/", "\\"),
             [
