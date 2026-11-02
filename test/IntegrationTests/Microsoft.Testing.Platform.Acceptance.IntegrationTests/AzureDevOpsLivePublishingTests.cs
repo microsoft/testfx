@@ -60,20 +60,21 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
             environment,
             cancellationToken: TestContext.CancellationToken);
 
-        result.AssertExitCodeIs(ExitCode.Success);
-        result.AssertOutputContainsSummary(failed: 0, passed: 7, skipped: 0);
-        (string AutomatedTestName, string TestCaseTitle)[] expected =
+        TestContext.WriteLine(result.ToString());
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        result.AssertOutputContainsSummary(failed: 3, passed: 4, skipped: 0);
+        (string AutomatedTestName, string TestCaseTitle, string Outcome)[] expected =
         [
-            ("AzureDevOpsDataRows.AuthenticationTests.Collision (1)", "1"),
-            ("AzureDevOpsDataRows.AuthenticationTests.Collision (Collision (1))", "Collision (1)"),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("administrator","wrongPassword"))""", """Folded ("administrator","wrongPassword")"""),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("nonExistentUser","password"))""", """Folded ("nonExistentUser","password")"""),
-            ("AzureDevOpsDataRows.AuthenticationTests.Ordinary", "Ordinary"),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("administrator","wrongPassword"))""", """Unfolded ("administrator","wrongPassword")"""),
-            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("nonExistentUser","password"))""", """Unfolded ("nonExistentUser","password")"""),
+            ("AzureDevOpsDataRows.AuthenticationTests.Collision (1)", "1", "Failed"),
+            ("AzureDevOpsDataRows.AuthenticationTests.Collision (Collision (1))", "Collision (1)", "Passed"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("administrator","wrongPassword"))""", """Folded ("administrator","wrongPassword")""", "Failed"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Folded (Folded ("nonExistentUser","password"))""", """Folded ("nonExistentUser","password")""", "Passed"),
+            ("AzureDevOpsDataRows.AuthenticationTests.Ordinary", "Ordinary", "Passed"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("administrator","wrongPassword"))""", """Unfolded ("administrator","wrongPassword")""", "Failed"),
+            ("""AzureDevOpsDataRows.AuthenticationTests.Unfolded (Unfolded ("nonExistentUser","password"))""", """Unfolded ("nonExistentUser","password")""", "Passed"),
         ];
-        (string AutomatedTestName, string TestCaseTitle)[] actual = [.. service.TestIdentities.OrderBy(identity => identity.AutomatedTestName, StringComparer.Ordinal)];
-        TestContext.WriteLine(JsonSerializer.Serialize(actual.Select(identity => new { identity.AutomatedTestName, identity.TestCaseTitle })));
+        (string AutomatedTestName, string TestCaseTitle, string Outcome)[] actual = [.. service.TestResults.OrderBy(publishedResult => publishedResult.AutomatedTestName, StringComparer.Ordinal)];
+        TestContext.WriteLine(JsonSerializer.Serialize(actual.Select(publishedResult => new { publishedResult.AutomatedTestName, publishedResult.TestCaseTitle, publishedResult.Outcome })));
         Assert.AreSequenceEqual(expected, actual);
         Assert.AreEqual(1, service.CreatedRunCount);
         Assert.AreEqual(1, service.CompletedRunCount);
@@ -282,8 +283,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
         private readonly ConcurrentBag<Task> _requests = [];
         private readonly ConcurrentDictionary<int, string> _states = new();
         private readonly ConcurrentBag<string> _testNames = [];
-        private readonly ConcurrentBag<(string AutomatedTestName, string TestCaseTitle)> _testIdentities = [];
-        private readonly ConcurrentDictionary<(int RunId, int ResultId), string> _namesByResult = new();
+        private readonly ConcurrentDictionary<(int RunId, int ResultId), (string AutomatedTestName, string TestCaseTitle, string Outcome)> _resultsById = new();
         private readonly ConcurrentDictionary<string, string> _canonicalMetadata = new();
         private readonly ConcurrentBag<(string FileName, long Size)> _attachments = [];
         private readonly Task _acceptLoop;
@@ -308,7 +308,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
 
         public IEnumerable<string> TestNames => _testNames;
 
-        public IEnumerable<(string AutomatedTestName, string TestCaseTitle)> TestIdentities => _testIdentities;
+        public IEnumerable<(string AutomatedTestName, string TestCaseTitle, string Outcome)> TestResults => _resultsById.Values;
 
         public IEnumerable<KeyValuePair<string, string>> CanonicalMetadata => _canonicalMetadata;
 
@@ -433,10 +433,10 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 {
                     string testCaseTitle = result.GetProperty("testCaseTitle").GetString()!;
                     string automatedTestName = result.GetProperty("automatedTestName").GetString()!;
+                    string outcome = result.GetProperty("outcome").GetString()!;
                     _testNames.Add(testCaseTitle);
-                    _testIdentities.Add((automatedTestName, testCaseTitle));
                     int id = Interlocked.Increment(ref _nextResultId);
-                    _namesByResult[(runId, id)] = automatedTestName;
+                    _resultsById[(runId, id)] = (automatedTestName, testCaseTitle, outcome);
                     return new { id, automatedTestName };
                 }).ToArray();
                 FirstResultPublished.TrySetResult(true);
@@ -448,10 +448,20 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                 var results = body.EnumerateArray().Select(result =>
                 {
                     int id = result.GetProperty("id").GetInt32();
-                    string automatedTestName = _namesByResult[(runId, id)];
+                    (string automatedTestName, string testCaseTitle, string outcome) = _resultsById[(runId, id)];
                     if (result.TryGetProperty("automatedTestName", out JsonElement publishedName))
                     {
                         Assert.AreEqual(automatedTestName, publishedName.GetString());
+                    }
+
+                    if (result.TryGetProperty("testCaseTitle", out JsonElement publishedTitle))
+                    {
+                        testCaseTitle = publishedTitle.GetString()!;
+                    }
+
+                    if (result.TryGetProperty("outcome", out JsonElement publishedOutcome))
+                    {
+                        outcome = publishedOutcome.GetString()!;
                     }
 
                     if (result.TryGetProperty("subResults", out JsonElement subResults))
@@ -459,6 +469,7 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
                         Assert.AreEqual(JsonValueKind.Null, subResults.ValueKind, "Metadata must not manufacture retry attempts.");
                     }
 
+                    _resultsById[(runId, id)] = (automatedTestName, testCaseTitle, outcome);
                     _canonicalMetadata[automatedTestName] = result.GetProperty("comment").GetString()!;
                     return new { id, automatedTestName };
                 }).ToArray();
@@ -495,6 +506,9 @@ public sealed class AzureDevOpsLivePublishingTests : AcceptanceTestBase<AzureDev
 </Project>
 
 #file Program.cs
+using System.Reflection;
+using System.Text.Json;
+
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -515,6 +529,19 @@ ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args)
 if (Environment.GetEnvironmentVariable("AZDO_DATA_ROWS") == "true")
 {
     builder.AddMSTest(() => [typeof(AzureDevOpsDataRows.AuthenticationTests).Assembly]);
+    Type[] packageTypes =
+    [
+        typeof(Assert),
+        typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions),
+        typeof(TestApplication),
+        typeof(AzureDevOpsExtensions),
+    ];
+    Console.WriteLine("Packaged DataRow assemblies: " + JsonSerializer.Serialize(packageTypes.Select(type => new
+    {
+        Assembly = type.Assembly.GetName().Name,
+        type.Assembly.Location,
+        InformationalVersion = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion,
+    })));
 }
 else
 {
@@ -592,19 +619,19 @@ public sealed class AuthenticationTests
     [DataRow("nonExistentUser", "password")]
     [DataRow("administrator", "wrongPassword")]
     public void Unfolded(string username, string password)
-        => Assert.AreNotEqual(username, password);
+        => Assert.AreEqual("password", password, username);
 
     [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]
     [DataRow("nonExistentUser", "password")]
     [DataRow("administrator", "wrongPassword")]
     public void Folded(string username, string password)
-        => Assert.AreNotEqual(username, password);
+        => Assert.AreEqual("password", password, username);
 
     [TestMethod]
     [DataRow(1)]
     [DataRow(2, DisplayName = "1")]
     public void Collision(int value)
-        => Assert.IsGreaterThan(0, value);
+        => Assert.AreEqual(1, value);
 
     [TestMethod]
     public void Ordinary()
