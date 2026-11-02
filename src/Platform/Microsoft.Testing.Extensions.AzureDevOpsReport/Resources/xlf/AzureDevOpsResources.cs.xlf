@@ -62,6 +62,11 @@
         <target state="translated">Ověření Azure DevOps REST API selhalo nebo bylo přesměrováno na přihlášení (stav: {0}), což znamená, že SYSTEM_ACCESSTOKEN není platný nebo dostupný. U ověřovacích buildů žádostí o přijetí změn z forku nevystavujte tajné údaje nedůvěryhodnému kódu forku. Výsledky publikujte ze samostatného důvěryhodného kontextu pipeline nebo vypněte živé publikování Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Živému publikování Azure DevOps se nepodařilo dokončit testovací běh.</target>
