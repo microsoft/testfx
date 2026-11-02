@@ -53,6 +53,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
 #endif
 
     private TimeSpan? _activityTimerValue;
+    private TimeSpan? _activityTimerDueTime;
     private Timer? _activityTimer;
     private DateTimeOffset? _deadlineDumpAt;
     private Timer? _deadlineTimer;
@@ -128,6 +129,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
     public async Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
         _activityTimerValue = HangDumpOptions.GetTimeout(_commandLineOptions);
+        _activityTimerDueTime = HangDumpOptions.GetInactivityTimerDueTime(_activityTimerValue.Value);
 
         if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpTypeOptionName, out string[]? dumpType))
         {
@@ -210,7 +212,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
         }
         else if (request is ActivitySignalRequest)
         {
-            _activityTimer?.Change(_activityTimerValue!.Value, TimeSpan.FromMilliseconds(-1));
+            _activityTimer?.Change(_activityTimerDueTime!.Value, TimeSpan.FromMilliseconds(-1));
 
             if (_traceEnabled)
             {
@@ -291,7 +293,7 @@ internal sealed partial class HangDumpProcessLifetimeHandler : ITestHostProcessL
                 _activityTimer = new Timer(
                     _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
                     null,
-                    _activityTimerValue!.Value,
+                    _activityTimerDueTime!.Value,
                     TimeSpan.FromMilliseconds(-1));
             }
             catch (Exception ex) when (Volatile.Read(ref _dumpTaken) != 0)

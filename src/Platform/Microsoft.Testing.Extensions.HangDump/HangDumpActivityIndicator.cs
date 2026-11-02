@@ -64,22 +64,8 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
             _namedPipeClient.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
             _namedPipeClient.RegisterSerializer(new ActivitySignalRequestSerializer(), typeof(ActivitySignalRequest));
-            _activitySignalInterval = GetActivitySignalInterval(HangDumpOptions.GetTimeout(_commandLineOptions));
+            _activitySignalInterval = HangDumpOptions.GetActivitySignalInterval(HangDumpOptions.GetTimeout(_commandLineOptions));
         }
-    }
-
-    /// <summary>
-    /// Activity is coalesced and sent to the controller at most once per interval instead of once per test
-    /// result, so fast tests do not pay a cross-process round trip each. Coalescing can only delay a signal,
-    /// never drop the latest one, so a dump can fire at most one interval later than the configured timeout,
-    /// never earlier.
-    /// </summary>
-    internal static TimeSpan GetActivitySignalInterval(TimeSpan hangTimeout)
-    {
-        var maxInterval = TimeSpan.FromSeconds(1);
-        var minInterval = TimeSpan.FromMilliseconds(10);
-        var interval = TimeSpan.FromTicks(hangTimeout.Ticks / 10);
-        return interval > maxInterval ? maxInterval : interval < minInterval ? minInterval : interval;
     }
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
@@ -282,10 +268,20 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        // Wait for the loop before disposing the pipe client it may be using.
+        // Wait (bounded) for the loop before disposing the pipe client it may be using. This also covers runs
+        // where session finishing was skipped because execution or a lifecycle handler threw.
+        Task stop = StopActivitySignalLoopAsync();
         try
         {
-            await StopActivitySignalLoopAsync().ConfigureAwait(false);
+            Task completed = await Task.WhenAny(stop, Task.Delay(ActivitySignalShutdownTimeout)).ConfigureAwait(false);
+            if (completed == stop)
+            {
+                await stop.ConfigureAwait(false);
+            }
+            else
+            {
+                ObserveLateStopFailure(stop);
+            }
         }
         catch (Exception ex)
         {
@@ -304,8 +300,7 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         {
             if (!stop.Wait(ActivitySignalShutdownTimeout))
             {
-                _logger.LogDebug("Hang dump activity signal loop did not stop within the shutdown timeout during disposal.");
-                _ = stop.ContinueWith(static task => _ = task.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+                ObserveLateStopFailure(stop);
             }
         }
         catch (Exception ex)
@@ -314,5 +309,11 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
         }
 
         _namedPipeClient?.Dispose();
+    }
+
+    private void ObserveLateStopFailure(Task stop)
+    {
+        _logger.LogDebug("Hang dump activity signal loop did not stop within the shutdown timeout during disposal.");
+        _ = stop.ContinueWith(static task => _ = task.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
     }
 }

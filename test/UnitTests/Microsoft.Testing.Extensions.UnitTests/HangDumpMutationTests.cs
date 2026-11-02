@@ -168,7 +168,29 @@ public sealed class HangDumpActivityIndicatorMutationTests
     public void GetActivitySignalInterval_IsATenthOfTheTimeoutWithinBounds(int timeoutMilliseconds, int expectedMilliseconds)
         => Assert.AreEqual(
             TimeSpan.FromMilliseconds(expectedMilliseconds),
-            HangDumpActivityIndicator.GetActivitySignalInterval(TimeSpan.FromMilliseconds(timeoutMilliseconds)));
+            HangDumpOptions.GetActivitySignalInterval(TimeSpan.FromMilliseconds(timeoutMilliseconds)));
+
+    [TestMethod]
+    [DataRow(10_500, DisplayName = "Reviewer example: 10.5 s timeout, 1 s interval")]
+    [DataRow(8_000, DisplayName = "8 s timeout")]
+    [DataRow(30 * 60 * 1000, DisplayName = "Default 30 min timeout")]
+    [DataRow(50, DisplayName = "Tiny timeout with floored interval")]
+    public void InactivityTimer_NeverExpiresBeforeTheTimeoutSinceTheLastActivity(int timeoutMilliseconds)
+    {
+        var timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
+        TimeSpan interval = HangDumpOptions.GetActivitySignalInterval(timeout);
+        TimeSpan dueTime = HangDumpOptions.GetInactivityTimerDueTime(timeout);
+
+        // The controller re-arms its timer when a signal is delivered. The worst case is activity just before the
+        // timeout elapses since that delivery, which then waits a full interval for the next flush.
+        var lastDelivery = TimeSpan.FromSeconds(1);
+        TimeSpan controllerExpiry = lastDelivery + dueTime;
+        TimeSpan latestActivity = lastDelivery + timeout - TimeSpan.FromTicks(1);
+        TimeSpan latestDelivery = latestActivity + interval;
+
+        Assert.IsLessThan(controllerExpiry, latestDelivery, "Pending activity must reach the controller before its timer expires.");
+        Assert.AreEqual(timeout + interval, dueTime);
+    }
 
     private static HangDumpActivityIndicator CreateIndicator(ILogger logger, DateTimeOffset utcNow)
     {
@@ -311,6 +333,7 @@ public sealed class HangDumpLifetimeMutationTests
             await handler.BeforeTestHostProcessStartAsync(TestContext.CancellationToken);
 
             Assert.AreEqual(TimeSpan.FromMinutes(30), GetPrivateField<TimeSpan?>(handler, "_activityTimerValue"));
+            Assert.AreEqual(TimeSpan.FromMinutes(30) + TimeSpan.FromSeconds(1), GetPrivateField<TimeSpan?>(handler, "_activityTimerDueTime"));
             Assert.IsNull(GetPrivateField<DateTimeOffset?>(handler, "_deadlineDumpAt"));
             Assert.Contains("Hang dump timeout setup 00:30:00.", messages);
 
