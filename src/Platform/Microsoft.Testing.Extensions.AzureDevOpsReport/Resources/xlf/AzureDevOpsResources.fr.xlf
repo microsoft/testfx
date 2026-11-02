@@ -62,6 +62,11 @@
         <target state="translated">Nous n’avons pas pu effectuer l’authentification de REST API Azure DevOps ou elle a été redirigée vers la connexion (état : {0}), ce qui indique que SYSTEM_ACCESSTOKEN n’est pas valide ou disponible. Pour les builds de validation d’une demande de tirage (pull request) issues d’une duplication (fork), n’exposez pas les secrets au code d’une duplication (fork) non approuvé, publiez les résultats depuis un contexte de pipeline distinct et approuvé, ou désactivez la publication en direct Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Nous n’avons pas pu effectuer la publication en direct d’Azure DevOps pour effectuer l’exécution de tests.</target>

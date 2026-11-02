@@ -376,6 +376,243 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult publishedResult = result!;
         Assert.AreEqual("My.Namespace.MyType.MyMethod", publishedResult.AutomatedTestName);
         Assert.AreEqual("MyMethod", publishedResult.TestCaseTitle);
+        Assert.IsNull(publishedResult.Comment);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, DisplayName = "Native unfolded rows")]
+    [DataRow(true, true, DisplayName = "Native folded rows")]
+    [DataRow(false, false, DisplayName = "VSTest unfolded rows")]
+    [DataRow(false, true, DisplayName = "VSTest folded rows")]
+    public void CreateTestCaseResult_DataDrivenRowsHaveDistinctAutomatedTestNames(bool useTestMethodIdentifier, bool shareUid)
+    {
+        TestNode firstRow = CreateRow("first-row", """MyMethod ("nonExistentUser","password")""", 1593);
+        TestNode secondRow = CreateRow(shareUid ? "first-row" : "second-row", """MyMethod ("administrator","wrongPassword")""", 1434);
+
+        AzureDevOpsTestCaseResult? firstResult = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(firstRow, "tests.dll")?.Result;
+        AzureDevOpsTestCaseResult? secondResult = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(secondRow, "tests.dll")?.Result;
+
+        Assert.IsNotNull(firstResult);
+        Assert.IsNotNull(secondResult);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod (MyMethod ("nonExistentUser","password"))""", firstResult.AutomatedTestName);
+        Assert.AreEqual("""My.Namespace.MyType.MyMethod (MyMethod ("administrator","wrongPassword"))""", secondResult.AutomatedTestName);
+        Assert.AreEqual(firstRow.DisplayName, firstResult.TestCaseTitle);
+        Assert.AreEqual(secondRow.DisplayName, secondResult.TestCaseTitle);
+        Assert.AreEqual(1593L, firstResult.DurationInMs);
+        Assert.AreEqual(1434L, secondResult.DurationInMs);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", firstResult.Comment);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", secondResult.Comment);
+
+        TestNode CreateRow(string uid, string displayName, int durationInMs)
+        {
+            IProperty identity = useTestMethodIdentifier
+                ? new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, ["System.String", "System.String"], "System.Void")
+                : new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "My.Namespace.MyType.MyMethod");
+            var duration = TimeSpan.FromMilliseconds(durationInMs);
+            return new TestNode
+            {
+                Uid = new TestNodeUid(uid),
+                DisplayName = displayName,
+                Properties = new PropertyBag(
+                    PassedTestNodeStateProperty.CachedInstance,
+                    identity,
+                    new TimingProperty(new TimingInfo(RetryTestStartTime, RetryTestStartTime + duration, duration))),
+            };
+        }
+    }
+
+    [TestMethod]
+    public void CreateTestCaseResult_OrdinaryDottedMethod_PreservesIdentity()
+    {
+        TestNode node = new()
+        {
+            Uid = "method",
+            DisplayName = "Verify.thing",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "Verify.thing", 0, [], "System.Void")),
+        };
+
+        AzureDevOpsTestCaseResult result = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(node, "tests.dll")!.Result;
+
+        Assert.AreEqual("My.Namespace.MyType.Verify.thing", result.AutomatedTestName);
+        Assert.AreEqual("Verify.thing", result.TestCaseTitle);
+        Assert.IsNull(result.Comment);
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Native custom row title remains distinct")]
+    [DataRow(false, DisplayName = "Bridge custom row title remains distinct")]
+    public void CreateTestCaseResult_CustomRowNamesDoNotCollapse(bool nativeMetadata)
+    {
+        IProperty identity = nativeMetadata
+            ? new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, ["System.Int32"], "System.Void")
+            : new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", "My.Namespace.MyType.MyMethod");
+        AzureDevOpsTestCaseResult normal = CreateRow("MyMethod (1)");
+        AzureDevOpsTestCaseResult custom = CreateRow("1");
+
+        Assert.AreNotEqual(normal.AutomatedTestName, custom.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethod (1))", normal.AutomatedTestName);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (1)", custom.AutomatedTestName);
+        Assert.AreEqual("MyMethod (1)", normal.TestCaseTitle);
+        Assert.AreEqual("1", custom.TestCaseTitle);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", normal.Comment);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", custom.Comment);
+
+        AzureDevOpsTestCaseResult CreateRow(string title)
+            => AzureDevOpsTestResultsPublisher.CreateTestCaseResult(
+                new TestNode
+                {
+                    Uid = "shared-row-uid",
+                    DisplayName = title,
+                    Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, identity),
+                }, "tests.dll")!.Result;
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Canonical metadata is saved")]
+    [DataRow(true, DisplayName = "Metadata failure never republishes accepted results")]
+    public async Task DataRows_PatchCanonicalMetadataWithoutCreatingRerunAttempts(bool failMetadata)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            new AzureDevOpsTestResultsPublisherOptions(1, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1)),
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out CollectingLogger logger);
+        int createCount = 0;
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) =>
+        {
+            createCount++;
+            return Task.FromResult<IReadOnlyList<int>?>([401]);
+        };
+        if (failMetadata)
+        {
+            client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("metadata failed"));
+        }
+
+        TestNode row = new()
+        {
+            Uid = "row",
+            DisplayName = "MyMethod (1)",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void")),
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(row), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.AreEqual(1, createCount);
+        AzureDevOpsTestCaseResult update = Assert.ContainsSingle(Assert.ContainsSingle(client.UpdateTestResultsCalls).Results);
+        Assert.AreEqual(401, update.Id);
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethod (1))", update.AutomatedTestName);
+        Assert.AreEqual("MyMethod (1)", update.TestCaseTitle);
+        Assert.AreEqual("MTP.CanonicalTestName/1:28", update.Comment);
+        Assert.IsNull(update.ResultGroupType);
+        Assert.IsNull(update.SubResults);
+        Assert.IsNull(update.CustomFields);
+        if (failMetadata)
+        {
+            Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed, string.Join(Environment.NewLine, logger.Logs));
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, false, DisplayName = "Shutdown saves accepted row metadata")]
+    [DataRow(true, false, DisplayName = "Shutdown metadata failure is reported")]
+    [DataRow(false, true, DisplayName = "Inherited shutdown saves accepted row metadata")]
+    [DataRow(true, true, DisplayName = "Metadata failure preserves remaining results")]
+    public async Task DataRows_ShutdownDuringMetadataPatch_RetriesOnlyCanonicalMetadata(bool failFinalMetadata, bool inheritedRun)
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId(inheritedRun ? "123:42" : null);
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            new AzureDevOpsTestResultsPublisherOptions(20, TimeSpan.FromMilliseconds(20), 2, TimeSpan.FromMilliseconds(1)),
+            out FakeAzureDevOpsTestResultsClient client,
+            out FakeClock clock,
+            out CollectingLogger logger,
+            environment: environment);
+        TaskCompletionSource<bool> patchStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releasePatch = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var rendezvousTimeout = TimeSpan.FromSeconds(30);
+        int creates = 0;
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) =>
+        {
+            creates++;
+            return Task.FromResult<IReadOnlyList<int>?>([400 + creates]);
+        };
+        client.UpdateTestResultsAsyncFunc = async (_, _, _, token) =>
+        {
+            patchStarted.TrySetResult(true);
+            using (token.Register(() => releasePatch.TrySetResult(true)))
+            {
+                await releasePatch.Task;
+            }
+
+            token.ThrowIfCancellationRequested();
+        };
+        if (failFinalMetadata)
+        {
+            client.UpdateTestResultMetadataAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("metadata failed"));
+        }
+
+        Task? finishing = null;
+        Task? remaining = null;
+        try
+        {
+            await StartPublisherAsync(publisher);
+            await publisher.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(new TestNode
+                {
+                    Uid = "row",
+                    DisplayName = "MyMethod (1)",
+                    Properties = new PropertyBag(
+                        PassedTestNodeStateProperty.CachedInstance,
+                        new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void")),
+                }),
+                CancellationToken.None);
+            clock.UtcNow += TimeSpan.FromSeconds(1);
+            Assert.AreSame(patchStarted.Task, await Task.WhenAny(patchStarted.Task, Task.Delay(rendezvousTimeout, CancellationToken.None)));
+            await patchStarted.Task;
+
+            if (inheritedRun)
+            {
+                remaining = publisher.ConsumeAsync(
+                    Mock.Of<IDataProducer>(),
+                    CreateMessage(CreateNode("ordinary", PassedTestNodeStateProperty.CachedInstance, RetryTestStartTime)),
+                    CancellationToken.None);
+            }
+
+            finishing = publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+            Assert.AreSame(finishing, await Task.WhenAny(finishing, Task.Delay(rendezvousTimeout, CancellationToken.None)));
+            await finishing;
+            if (remaining is not null)
+            {
+                await remaining;
+            }
+
+            Assert.AreEqual(inheritedRun ? 2 : 1, creates, string.Join(Environment.NewLine, logger.Logs));
+            IReadOnlyDictionary<int, string> metadata = Assert.ContainsSingle(client.MetadataUpdateCalls);
+            Assert.HasCount(1, metadata);
+            Assert.AreEqual("MTP.CanonicalTestName/1:28", metadata[401]);
+            Assert.AreEqual(
+                failFinalMetadata,
+                logger.Logs.Any(log => log.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed)));
+        }
+        finally
+        {
+            releasePatch.TrySetResult(true);
+            await (finishing ?? publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None)));
+            if (remaining is not null)
+            {
+                await remaining;
+            }
+        }
     }
 
     [TestMethod]
@@ -545,6 +782,28 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(3, pipelineReference.GetProperty("phaseReference").GetProperty("attempt").GetInt32());
         Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
         Assert.AreEqual(4, pipelineReference.GetProperty("jobReference").GetProperty("attempt").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_MetadataUpdate_PreservesAllOtherResultFields()
+    {
+        string? body = null;
+        QueueHttpMessageHandler handler = new(async (request, token) =>
+        {
+            Assert.AreEqual("PATCH", request.Method.Method);
+            body = await ReadRequestBodyAsync(request, token);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}", Encoding.UTF8, "application/json"),
+            };
+        });
+        using HttpClient httpClient = new(handler);
+        AzureDevOpsTestResultsClient client = new(httpClient, new FakeTask(), new FakeClock());
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+        await client.UpdateTestResultMetadataAsync(configuration, 42, new Dictionary<int, string> { [401] = "MTP.CanonicalTestName/1:28" }, CancellationToken.None);
+
+        Assert.AreEqual("""[{"id":401,"comment":"MTP.CanonicalTestName/1:28"}]""", body);
     }
 
     [TestMethod]
@@ -2871,7 +3130,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[2].Outcome);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[3].Outcome);
         Assert.IsTrue(created.All(result => result.SubResults is null));
-        Assert.IsEmpty(client.UpdateTestResultsCalls);
+        AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 100, 101, 102, 103);
         Assert.HasCount(2, client.UploadTestResultAttachmentCalls);
         Assert.AreEqual(100, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
         Assert.AreEqual("row A output", client.UploadTestResultAttachmentCalls[0].Attachment.InlineContent);
@@ -3384,7 +3643,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.IsEmpty(secondClient.UpdateTestResultsCalls, "Ambiguous rows must never be PATCHed to a guessed parent.");
+        AssertMetadataOnlyUpdates(secondClient.UpdateTestResultsCalls.SelectMany(call => call.Results), 413, 414);
     }
 
     [TestMethod]
@@ -3423,7 +3682,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.IsEmpty(client.UpdateTestResultsCalls, "Repeated matches to one parent must never produce duplicate PATCH ids.");
+        AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 422, 423);
     }
 
     [TestMethod]
@@ -3460,7 +3719,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(2, created);
-        Assert.IsEmpty(client.UpdateTestResultsCalls, "A parent created in this attempt must never be reused by another row.");
+        AssertMetadataOnlyUpdates(client.UpdateTestResultsCalls.SelectMany(call => call.Results), 471, 472);
     }
 
     [TestMethod]
@@ -4450,9 +4709,12 @@ public sealed class AzureDevOpsLivePublishingTests
             CancellationToken.None);
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
-        Assert.HasCount(1, client.UpdateTestResultsCalls, "The persisted parent may be updated only once in this attempt.");
+        AzureDevOpsTestCaseResult[] updatedResults = [.. client.UpdateTestResultsCalls.SelectMany(call => call.Results)];
+        AzureDevOpsTestCaseResult retried = Assert.ContainsSingle(updatedResults.Where(result => result.SubResults is not null));
+        Assert.AreEqual(461, retried.Id, "Only the original parent may receive another attempt.");
+        AssertMetadataOnlyUpdates(updatedResults.Where(result => result.SubResults is null), 462);
         Assert.HasCount(1, created);
-        Assert.AreEqual("SharedUid", created[0].AutomatedTestName);
+        Assert.AreEqual("SharedUid (Duplicate title)", created[0].AutomatedTestName);
     }
 
     [TestMethod]
@@ -5510,6 +5772,22 @@ public sealed class AzureDevOpsLivePublishingTests
         }
     }
 
+    private static void AssertMetadataOnlyUpdates(IEnumerable<AzureDevOpsTestCaseResult> results, params int[] expectedIds)
+    {
+        AzureDevOpsTestCaseResult[] updates = [.. results];
+        Assert.AreSequenceEqual(
+            expectedIds.Select(id => (int?)id).OrderBy(id => id),
+            updates.Select(result => result.Id).OrderBy(id => id),
+            "Metadata may target only the exact newly created result IDs, never an ambiguous prior parent.");
+        foreach (AzureDevOpsTestCaseResult update in updates)
+        {
+            Assert.AreEqual("MTP.CanonicalTestName/1:9", update.Comment);
+            Assert.IsNull(update.ResultGroupType);
+            Assert.IsNull(update.SubResults);
+            Assert.IsNull(update.CustomFields);
+        }
+    }
+
     private sealed class FakeAzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
     {
         public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(1);
@@ -5533,6 +5811,10 @@ public sealed class AzureDevOpsLivePublishingTests
         public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken, Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?>>? UpdateTestResultsWithSubResultsAsyncFunc { get; set; }
 
         public List<(int RunId, IReadOnlyList<AzureDevOpsTestCaseResult> Results)> UpdateTestResultsCalls { get; } = [];
+
+        public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyDictionary<int, string>, CancellationToken, Task> UpdateTestResultMetadataAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
+
+        public List<IReadOnlyDictionary<int, string>> MetadataUpdateCalls { get; } = [];
 
         public Func<AzureDevOpsPublishConfiguration, int, int, int?, AzureDevOpsTestResultAttachment, CancellationToken, Task> UploadTestResultAttachmentAsyncFunc { get; set; } = (_, _, _, _, _, _) => Task.CompletedTask;
 
@@ -5584,6 +5866,12 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             UpdateTestRunStateCalls.Add((configuration, runId, state));
             return UpdateTestRunStateAsyncFunc(configuration, runId, state, cancellationToken);
+        }
+
+        public Task UpdateTestResultMetadataAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyDictionary<int, string> metadata, CancellationToken cancellationToken)
+        {
+            MetadataUpdateCalls.Add(metadata.ToDictionary(static entry => entry.Key, static entry => entry.Value));
+            return UpdateTestResultMetadataAsyncFunc(configuration, runId, metadata, cancellationToken);
         }
 
         public Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
