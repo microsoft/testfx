@@ -6,7 +6,7 @@ Bootstrap and build NonWindowsTests.slnf with the repository build scripts first
 Each pair uses fresh, task-owned outputs, warmed package caches, identical options,
 and alternating execution order. Timings include a cold-output restore/build,
 a no-change build, and a timestamp-only source change. This does not benchmark pack or tests.
-Only the experiment's work directory is deleted; normal artifacts and caches are preserved.
+Only the experiment's bin/obj subdirectories are deleted; normal artifacts and caches are preserved.
 .EXAMPLE
 pwsh -File eng\measure-msbuild-graph.ps1 -Iterations 3 -MaxCpuCount 8
 #>
@@ -43,9 +43,12 @@ if ($sdkVersion -ne $globalJson.tools.dotnet) {
 }
 
 $experimentRoot = Join-Path $repoRoot 'artifacts\msbuild-graph-performance'
-$resultRoot = Join-Path $experimentRoot ([Guid]::NewGuid().ToString('N'))
+$experimentId = [Guid]::NewGuid().ToString('N')
+$resultRoot = Join-Path $experimentRoot $experimentId
 $null = New-Item -ItemType Directory -Path $resultRoot
-$workRoot = Join-Path $resultRoot 'work'
+# Keep generated files under artifacts/obj so the repository's analyzer exclusions still apply.
+$binRoot = Join-Path $repoRoot "artifacts\bin\msbuild-graph-performance\$experimentId"
+$objRoot = Join-Path $repoRoot "artifacts\obj\msbuild-graph-performance\$experimentId"
 $resultFile = Join-Path $resultRoot 'results.json'
 $sourceFile = Join-Path $repoRoot 'src\TestFramework\TestFramework\Assertions\Assert.cs'
 $sourceTimestamp = [IO.File]::GetLastWriteTimeUtc($sourceFile)
@@ -60,9 +63,12 @@ $report = [ordered]@{
     operatingSystem = [Runtime.InteropServices.RuntimeInformation]::OSDescription
     processors = [Environment]::ProcessorCount
     maxCpuCount = $MaxCpuCount
+    iterations = $Iterations
     configuration = $Configuration
     solution = $solution
     selectedProjects = (Get-Content -LiteralPath (Join-Path $repoRoot $solution) -Raw | ConvertFrom-Json).solution.projects.Count
+    binDirectory = $binRoot
+    objDirectory = $objRoot
     continuousIntegrationBuild = ($env:GITHUB_ACTIONS -eq 'true')
     cacheState = 'Fresh outputs per mode/iteration; package, SDK and filesystem caches warmed by bootstrap.'
     sourceChange = 'Timestamp-only touch of src\TestFramework\TestFramework\Assertions\Assert.cs; bytes unchanged.'
@@ -71,6 +77,7 @@ $report = [ordered]@{
     skipLegacyUap = $IsWindows
     startedUtc = [DateTime]::UtcNow.ToString('O')
     completedUtc = $null
+    succeeded = $false
     runs = $runs
     outputChecks = $manifests
     summary = @()
@@ -101,7 +108,8 @@ function Invoke-MeasuredBuild([string] $Mode, [int] $Iteration, [string] $Scenar
         "-property:Configuration=$Configuration"
         "-property:ContinuousIntegrationBuild=$($report.continuousIntegrationBuild)"
         '-property:NonWindowsBuild=true'
-        "-property:ArtifactsDir=$workRoot$([IO.Path]::DirectorySeparatorChar)"
+        "-property:ArtifactsBinDir=$binRoot$([IO.Path]::DirectorySeparatorChar)"
+        "-property:ArtifactsObjDir=$objRoot$([IO.Path]::DirectorySeparatorChar)"
         "-binaryLogger:$binlogFile;ProjectImports=None"
         '-detailedSummary'
     )
@@ -131,7 +139,7 @@ function Invoke-MeasuredBuild([string] $Mode, [int] $Iteration, [string] $Scenar
     Save-Report
     Write-Host ("Finished {0}: {1:N3}s, exit {2}" -f $name, $run.seconds, $exitCode)
     if ($exitCode -ne 0) {
-        Get-Content -LiteralPath $logFile -Tail 65 | Write-Host
+        Get-Content -LiteralPath $logFile -Tail 20 | Write-Host
         throw "$name failed with exit $exitCode; failed builds are not performance samples."
     }
     if (-not (Test-Path -LiteralPath $binlogFile) -or (Get-Item -LiteralPath $binlogFile).Length -eq 0) {
@@ -140,7 +148,6 @@ function Invoke-MeasuredBuild([string] $Mode, [int] $Iteration, [string] $Scenar
 }
 
 function Get-OutputManifest {
-    $binRoot = Join-Path $workRoot 'bin'
     $files = @(Get-ChildItem -LiteralPath $binRoot -Recurse -File |
         Where-Object { $_.Extension -in '.dll', '.exe', '.pdb' -or $_.Name -like '*.deps.json' -or $_.Name -like '*.runtimeconfig.json' } |
         Sort-Object FullName)
@@ -162,9 +169,11 @@ try {
     for ($iteration = 1; $iteration -le $Iterations; $iteration++) {
         $modes = if ($iteration % 2 -eq 1) { @('classic', 'graph') } else { @('graph', 'classic') }
         foreach ($mode in $modes) {
-            # This directory was created by this invocation, never borrowed from a normal build.
-            if (Test-Path -LiteralPath $workRoot) {
-                Remove-Item -LiteralPath $workRoot -Recurse -Force
+            # These directories were created by this invocation, never borrowed from a normal build.
+            foreach ($directory in @($binRoot, $objRoot)) {
+                if (Test-Path -LiteralPath $directory) {
+                    Remove-Item -LiteralPath $directory -Recurse -Force
+                }
             }
             Invoke-MeasuredBuild $mode $iteration 'cold-output-restore-build'
             Invoke-MeasuredBuild $mode $iteration 'no-change'
@@ -197,13 +206,16 @@ try {
             }
         }
     }
+    $report.succeeded = $true
 }
 finally {
     [IO.File]::SetLastWriteTimeUtc($sourceFile, $sourceTimestamp)
     Pop-Location
     $report.completedUtc = [DateTime]::UtcNow.ToString('O')
+    $validPairs = @($manifests | Where-Object matchesClassic | ForEach-Object { "$($_.mode)-$($_.iteration)" })
     $report.summary = @(
-        $runs | Where-Object exitCode -EQ 0 | Group-Object mode, scenario | ForEach-Object {
+        $runs | Where-Object { $_.exitCode -eq 0 -and "$($_.mode)-$($_.iteration)" -in $validPairs } |
+        Group-Object mode, scenario | ForEach-Object {
             $values = @($_.Group.seconds | Sort-Object)
             $middle = [int][Math]::Floor($values.Count / 2)
             $median = if ($values.Count % 2 -eq 0) { ($values[$middle - 1] + $values[$middle]) / 2 } else { $values[$middle] }
