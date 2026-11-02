@@ -17,6 +17,33 @@ internal sealed class TestFrameworkBuilderData(ServiceProvider serviceProvider, 
     TestFrameworkManager testFrameworkManager, TestHostManager testSessionManager, MessageBusProxy messageBusProxy,
     bool isForDiscoveryRequest)
 {
+    internal TestFrameworkBuilderData(
+        ServiceProvider serviceProvider,
+        ITestExecutionRequestFactory testExecutionRequestFactory,
+        ITestFrameworkInvoker testExecutionRequestInvoker,
+        ITestExecutionFilterFactory testExecutionFilterFactory,
+        IPlatformOutputDevice platformOutputDisplayService,
+        IEnumerable<IDataConsumer> serverPerCallConsumers,
+        TestFrameworkManager testFrameworkManager,
+        TestHostManager testSessionManager,
+        MessageBusProxy messageBusProxy,
+        bool isForDiscoveryRequest,
+        bool isServerRequest)
+        : this(
+            serviceProvider,
+            testExecutionRequestFactory,
+            testExecutionRequestInvoker,
+            testExecutionFilterFactory,
+            platformOutputDisplayService,
+            serverPerCallConsumers,
+            testFrameworkManager,
+            testSessionManager,
+            messageBusProxy,
+            isForDiscoveryRequest)
+    {
+        IsServerRequest = isServerRequest;
+    }
+
     public ServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public ITestExecutionRequestFactory TestExecutionRequestFactory { get; } = testExecutionRequestFactory;
@@ -36,4 +63,6 @@ internal sealed class TestFrameworkBuilderData(ServiceProvider serviceProvider, 
     public MessageBusProxy MessageBusProxy { get; } = messageBusProxy;
 
     public bool IsForDiscoveryRequest { get; } = isForDiscoveryRequest;
+
+    public bool IsServerRequest { get; }
 }

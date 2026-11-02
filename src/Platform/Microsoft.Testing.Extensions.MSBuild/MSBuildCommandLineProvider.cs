@@ -10,14 +10,15 @@ internal sealed class MSBuildCommandLineProvider : CommandLineOptionsProviderBas
 {
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
-        new(MSBuildConstants.MSBuildNodeOptionKey, "Used to pass the MSBuild node handle", ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
+        new(MSBuildConstants.MSBuildNodeOptionKey, Resources.ExtensionResources.MSBuildNodeOptionDescription, ArgumentArity.ExactlyOne, isHidden: true, isBuiltIn: true)
     ];
 
     public MSBuildCommandLineProvider()
         : base(
-            nameof(MSBuildCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "MSBuildCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
-            nameof(MSBuildCommandLineProvider),
+            Resources.ExtensionResources.MSBuildCommandLineProviderDisplayName,
             Resources.ExtensionResources.MSBuildExtensionsDescription,
             CachedCommandLineOptions)
     {

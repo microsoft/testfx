@@ -3,10 +3,67 @@
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
+// InvokeTestingPlatformTask does not yet preserve its terminal summary and artifacts in -mt's
+// out-of-process TaskHost, so tests that exercise the MSBuild Test target must opt out.
 [TestClass]
 public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSBuildTests";
+
+    [TestMethod]
+    [DataRow("Test", "", true, DisplayName = "TestTarget_NoController_Passing")]
+    [DataRow("Test", "", false, DisplayName = "TestTarget_NoController_Failing")]
+    [DataRow("Test", "--report-trx", true, DisplayName = "TestTarget_Trx_Passing")]
+    [DataRow("Test", "--report-trx", false, DisplayName = "TestTarget_Trx_Failing")]
+    [DataRow("Test", "--hangdump", true, DisplayName = "TestTarget_HangDump_Passing")]
+    [DataRow("Test", "--hangdump", false, DisplayName = "TestTarget_HangDump_Failing")]
+    [DataRow("Test", "--crashdump", true, DisplayName = "TestTarget_CrashDump_Passing")]
+    [DataRow("Test", "--crashdump", false, DisplayName = "TestTarget_CrashDump_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "", true, DisplayName = "InvokeTestingPlatform_NoController_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "", false, DisplayName = "InvokeTestingPlatform_NoController_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "--report-trx", true, DisplayName = "InvokeTestingPlatform_Trx_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "--report-trx", false, DisplayName = "InvokeTestingPlatform_Trx_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "--hangdump", true, DisplayName = "InvokeTestingPlatform_HangDump_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "--hangdump", false, DisplayName = "InvokeTestingPlatform_HangDump_Failing")]
+    [DataRow("Build,InvokeTestingPlatform", "--crashdump", true, DisplayName = "InvokeTestingPlatform_CrashDump_Passing")]
+    [DataRow("Build,InvokeTestingPlatform", "--crashdump", false, DisplayName = "InvokeTestingPlatform_CrashDump_Failing")]
+    public async Task InvokeTestingPlatform_Target_With_AutoRegistered_Extensions_Should_Report_Test_Results(string target, string extensionOption, bool testSucceeded)
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "MSBuildControllerTests",
+            ControllerSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant()));
+        string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "results");
+
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build -t:{target} -p:TestingPlatformShowTestsFailure=true -p:TestingPlatformCommandLineArguments=\"{extensionOption} --results-directory %22{resultsDirectory}%22\" \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.DoesNotContain("MSBuild extension failed to receive test application information", result.StandardOutput);
+        Assert.DoesNotContain("MSBuild extension failed to receive test run summary information", result.StandardOutput);
+        Assert.AreEqual(testSucceeded ? 0 : 1, result.ExitCode, result.ToString());
+        result.AssertOutputContains(testSucceeded
+            ? "Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1"
+            : "Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1");
+        if (!testSucceeded)
+        {
+            result.AssertOutputContains("error test failed: ControllerTest");
+        }
+
+        if (extensionOption == "--report-trx")
+        {
+            string trxPath = Assert.ContainsSingle(Directory.GetFiles(resultsDirectory, "*.trx"));
+            XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+            XElement testResult = Assert.ContainsSingle(XDocument.Load(trxPath).Descendants(ns + "UnitTestResult"));
+            Assert.AreEqual("ControllerTest", (string?)testResult.Attribute("testName"));
+            Assert.AreEqual(testSucceeded ? "Passed" : "Failed", (string?)testResult.Attribute("outcome"));
+        }
+    }
 
     public static string? FormatBuildMatrixEntry(MethodInfo method, object?[]? data)
         => $"{data![0]},{(Equals(TargetFrameworks.All.ToMSBuildTargetFrameworks(), data[1]) ? "multitfm" : data[1])},{data[2]},{((bool)data[3]! ? "Succeeded" : "Failed")}";
@@ -53,7 +110,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         string testResultFolder = Path.Combine(testAsset.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformCommandLineArguments=\"--results-directory %22{testResultFolder}%22\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -85,10 +142,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = testCommand.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             ? await DotnetCli.RunAsync(
                 $"{testCommand} -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\" -- --treenode-filter <whatever> --results-directory \"{testResultFolder}\"",
-                workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken)
+                workingDirectory: testAsset.TargetAssetPath, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken)
             : await DotnetCli.RunAsync(
                 $"{testCommand} -p:TestingPlatformCommandLineArguments=\"--treenode-filter <whatever> --results-directory \"{testResultFolder}\"\" -p:Configuration={compilationMode} \"{testAsset.TargetAssetPath}\"",
-                workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+                workingDirectory: testAsset.TargetAssetPath, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         foreach (string tfmToAssert in tfmsToAssert)
         {
@@ -109,11 +166,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
         string msbuildExe = await FindMsbuildWithVsWhereAsync(TestContext.CancellationToken);
-        var commandLine = new TestInfrastructure.CommandLine();
-        string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}.binlog");
-        await commandLine.RunAsync($"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:Restore", cancellationToken: TestContext.CancellationToken);
+        using var commandLine = new TestInfrastructure.CommandLine();
+        string restoreBinlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}-restore-{{}}.binlog");
+        string binlogFile = Path.Combine(TempDirectory.TestSuiteDirectory, $"{nameof(RunUsingTestTargetWithNetfxMSBuild)}-build-{{}}.binlog");
+        await commandLine.RunAsync($"\"{msbuildExe}\" \"{testAsset.TargetAssetPath}\" /t:Restore /bl:\"{restoreBinlogFile}\"", cancellationToken: TestContext.CancellationToken);
         await commandLine.RunAsync(
-            $"\"{msbuildExe}\" {testAsset.TargetAssetPath} /t:\"Build;Test\" /bl:\"{binlogFile}\"",
+            $"\"{msbuildExe}\" \"{testAsset.TargetAssetPath}\" /t:\"Build;Test\" /p:UseSharedCompilation=false /bl:\"{binlogFile}\"",
             environmentVariables: new Dictionary<string, string?>
             {
                 ["DOTNET_ROOT"] = Path.Combine(RootFinder.Find(), ".dotnet"),
@@ -145,6 +203,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetRootX86,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x86.log", SearchOption.AllDirectories);
@@ -178,6 +237,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             $"build -t:Test --arch {incompatibleArchitecture} \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         // The build should fail and the failure should mention the incompatible target architecture
@@ -213,7 +273,19 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
             if (OperatingSystem.IsWindows())
             {
-                result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+                // Launching an incompatible-architecture apphost can surface with different native
+                // error text depending on the exact Windows build/runtime path:
+                //   1) CreateProcess fails with ERROR_BAD_EXE_FORMAT / ERROR_EXE_MACHINE_TYPE_MISMATCH
+                //      and .NET wraps it with the friendly "not a valid application for this OS platform".
+                //   2) CreateProcess fails but GetLastError() reports 0, so the raw Win32Exception message
+                //      is "The operation completed successfully." (HResult 0x80004005).
+                // Both prove we attempted to launch the incompatible-arch apphost and failed. The MSB6003 +
+                // "An error occurred trying to start process" assertions above already establish that.
+                bool hasInvalidApplication = result.StandardOutput.Contains("The specified executable is not a valid application for this OS platform.", StringComparison.Ordinal);
+                bool hasOperationCompleted = result.StandardOutput.Contains("The operation completed successfully.", StringComparison.Ordinal);
+                Assert.IsTrue(
+                    hasInvalidApplication || hasOperationCompleted,
+                    $"Expected output to contain either \"The specified executable is not a valid application for this OS platform.\" or \"The operation completed successfully.\". Actual output: {result.StandardOutput}");
             }
             else if (OperatingSystem.IsMacOS())
             {
@@ -250,6 +322,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             workingDirectory: testAsset.TargetAssetPath,
             environmentVariables: dotnetHostPathEnvVar,
             failIfReturnValueIsNotZero: false,
+            useMultithreadedMSBuild: false,
             cancellationToken: TestContext.CancellationToken);
 
         string[] outputLogFiles = Directory.GetFiles(testAsset.TargetAssetPath, $"MSBuild Tests_{TargetFrameworks.NetCurrent}_x64.log", SearchOption.AllDirectories);
@@ -303,7 +376,7 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{tfm}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", testSucceeded.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"{testCommand} -p:TestingPlatformShowTestsFailure=True -p:TestingPlatformCaptureOutput=False -p:Configuration={compilationMode} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("error test failed: Test2 (");
         compilationResult.AssertOutputContains("FAILED: Expected 'true', but got 'false'.");
@@ -320,10 +393,141 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
             .PatchCodeWithReplace("$AssertValue$", "true")
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", failIfReturnValueIsNotZero: false, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -p:TestingPlatformDisableCustomTestTarget=true -p:ImportUserDefinedTestTarget=true -t:\"Build;Test\"", failIfReturnValueIsNotZero: false, useMultithreadedMSBuild: false, cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
     }
+
+    [TestMethod]
+    public async Task InvokeTestingPlatform_Target_Should_Pass_EnvironmentVariables_To_TestProcess()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        // TestingPlatformCaptureOutput=False routes the test process stdout through the MSBuild log so the values the
+        // test process actually observed can be asserted on.
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:AddTestingPlatformEnvironmentVariableItem=true \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                // Deliberately NOT declared as a TestingPlatformEnvironmentVariable item: it only reaches the test
+                // process by inheritance from the MSBuild process.
+                ["MTP_ENV_INHERITED"] = "inherited-value",
+            },
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        compilationResult.AssertOutputContains("[env] MTP_ENV_SIMPLE=simple-value");
+
+        // The value is carried by item metadata, which MSBuild does not split on ';', so it must arrive intact.
+        compilationResult.AssertOutputContains("[env] MTP_ENV_WITH_SEMICOLON=first;second");
+
+        // ToolTask layers EnvironmentVariables on top of the inherited environment rather than replacing it. This is
+        // the load-bearing half of the feature: if it ever became replace semantics, declaring a single variable would
+        // strip PATH / DOTNET_ROOT / ... from every test process, so pin it here alongside the declared values.
+        compilationResult.AssertOutputContains("[env] MTP_ENV_INHERITED=inherited-value");
+    }
+
+    [TestMethod]
+    public async Task InvokeTestingPlatform_Target_Should_Set_DotnetRoot_For_AppHost()
+    {
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString();
+        string dotnetRootVariableName = $"DOTNET_ROOT_{architecture.ToUpperInvariant()}";
+        string dotnetRoot = Path.Combine(RootFinder.Find(), ".dotnet");
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", $"<PlatformTarget>{architecture.ToLowerInvariant()}</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        Dictionary<string, string?> CreateEnvironmentVariables()
+            => new()
+            {
+                [dotnetRootVariableName] = null,
+            };
+
+        DotnetMuxerResult derivedResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: CreateEnvironmentVariables(),
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        string dotnetRootOutputPrefix = $"[env] {dotnetRootVariableName}=";
+        string? dotnetRootOutput = derivedResult.StandardOutputLines
+            .Select(line => line.TrimStart())
+            .FirstOrDefault(line => line.StartsWith(dotnetRootOutputPrefix, StringComparison.Ordinal));
+        Assert.IsNotNull(dotnetRootOutput, derivedResult.ToString());
+        // DOTNET_HOST_PATH can preserve different drive-letter casing than RootFinder on Windows.
+        Assert.AreEqual(
+            dotnetRoot,
+            dotnetRootOutput[dotnetRootOutputPrefix.Length..],
+            ignoreCase: OperatingSystem.IsWindows(),
+            derivedResult.ToString());
+
+        DotnetMuxerResult explicitResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:ExplicitDotnetRoot=\"{dotnetRoot}\" \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                // An inherited architecture-specific root has higher apphost precedence than DOTNET_ROOT. Use an
+                // existing directory without a dotnet installation to prove the explicit item clears this override.
+                [dotnetRootVariableName] = Path.GetTempPath(),
+            },
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        explicitResult.AssertOutputContains($"[env] DOTNET_ROOT={dotnetRoot}");
+        explicitResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
+
+        DotnetMuxerResult disabledResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:TestingPlatformDisableAppHostDotnetRoot=true \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: CreateEnvironmentVariables(),
+            useMultithreadedMSBuild: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        disabledResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
+    }
+
+    private const string ControllerSourceCode = """
+#file MSBuildControllerTests.csproj
+<Project Sdk="MSTest.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <TestingExtensionsProfile>None</TestingExtensionsProfile>
+        <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
+        <EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>
+        <EnableMicrosoftTestingExtensionsCrashDump>true</EnableMicrosoftTestingExtensionsCrashDump>
+    </PropertyGroup>
+</Project>
+
+#file global.json
+{
+  "msbuild-sdks": {
+    "MSTest.Sdk": "$MSTestVersion$"
+  }
+}
+
+#file Test1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class ControllerTests
+{
+    [TestMethod]
+    public void ControllerTest() => Assert.IsTrue($AssertValue$);
+}
+""";
 
     private const string SourceCode = """
 #file MSBuild Tests.csproj
@@ -342,6 +546,16 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(AddTestingPlatformEnvironmentVariableItem)' == 'true'">
+        <TestingPlatformEnvironmentVariable Include="MTP_ENV_SIMPLE" Value="simple-value" />
+        <!-- The value intentionally contains a ';' to prove item metadata is not subject to MSBuild's ';' splitting. -->
+        <TestingPlatformEnvironmentVariable Include="MTP_ENV_WITH_SEMICOLON" Value="first;second" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT" Value="$(ExplicitDotnetRoot)" Condition="'$(ExplicitDotnetRoot)' != ''" />
     </ItemGroup>
 
     <Import Project="UserDefinedTestTarget.targets" Condition="'$(ImportUserDefinedTestTarget)' == 'true'" />
@@ -370,11 +584,18 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Services;
+using System.Runtime.InteropServices;
 
 public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        string dotnetRootArchVariableName = $"DOTNET_ROOT_{RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}";
+        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON", "MTP_ENV_INHERITED", "DOTNET_ROOT", dotnetRootArchVariableName })
+        {
+            Console.WriteLine($"[env] {name}={Environment.GetEnvironmentVariable(name)}");
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         MyExtension myExtension = new();
         builder.RegisterTestFramework(

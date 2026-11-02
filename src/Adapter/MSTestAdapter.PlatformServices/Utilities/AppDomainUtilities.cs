@@ -6,7 +6,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -18,8 +17,21 @@ internal static class AppDomainUtilities
 {
     private const string ObjectModelVersionBuiltAgainst = "11.0.0.0";
 
+    private const string ObjectModelAssemblyName = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
+
     private static readonly Version DefaultVersion = new();
     private static readonly Version Version45 = new("4.5");
+
+    /// <summary>
+    /// Resolves the loaded VSTest object-model assembly by simple name, so this AppDomain-wiring code does not
+    /// need a compile-time reference to it. By the time these methods run (test source host setup during
+    /// discovery/execution) the adapter has already loaded the object model into the current (parent) domain,
+    /// so its identity — including any binding redirect in effect — matches what a direct type reference resolved to.
+    /// </summary>
+    /// <returns>The object-model assembly.</returns>
+    private static Assembly GetObjectModelAssembly()
+        => AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, ObjectModelAssemblyName, StringComparison.Ordinal))
+            ?? Assembly.Load(ObjectModelAssemblyName);
 
     /// <summary>
     /// Gets or sets the Xml Utilities instance.
@@ -56,9 +68,11 @@ internal static class AppDomainUtilities
     /// The path of the dll.
     /// </param>
     /// <returns>
-    /// Framework string
-    /// TODO: Need to add components/E2E tests to cover these scenarios.
+    /// Framework string.
     /// </returns>
+    /// <remarks>
+    /// Components/E2E tests could be added to cover these scenarios.
+    /// </remarks>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     internal static string GetTargetFrameworkVersionString(string testSourcePath)
     {
@@ -90,7 +104,7 @@ internal static class AppDomainUtilities
 
             var resolutionPaths = new List<string>
                 {
-                    Path.GetDirectoryName(typeof(TestCase).Assembly.Location),
+                    Path.GetDirectoryName(GetObjectModelAssembly().Location),
                     Path.GetDirectoryName(testSourcePath),
                 };
 
@@ -123,7 +137,7 @@ internal static class AppDomainUtilities
         }
         finally
         {
-            if (appDomain != null)
+            if (appDomain is not null)
             {
                 AppDomain.Unload(appDomain);
             }
@@ -157,10 +171,10 @@ internal static class AppDomainUtilities
         try
         {
             // Add redirection of the built 11.0 Object Model assembly to the current version if that is not 11.0
-            string currentVersionOfObjectModel = typeof(TestCase).Assembly.GetName().Version.ToString();
+            string currentVersionOfObjectModel = GetObjectModelAssembly().GetName().Version.ToString();
             if (!string.Equals(currentVersionOfObjectModel, ObjectModelVersionBuiltAgainst, StringComparison.Ordinal))
             {
-                AssemblyName assemblyName = typeof(TestCase).Assembly.GetName();
+                AssemblyName assemblyName = GetObjectModelAssembly().GetName();
                 byte[] configurationBytes =
                     XmlUtilities.AddAssemblyRedirection(
                         testSourceConfigFile,
@@ -182,11 +196,11 @@ internal static class AppDomainUtilities
     internal static object CreateInstance(AppDomain appDomain, Type type, object?[]? arguments)
     {
         string? typeAssemblyLocation = type.Assembly.Location;
-        string? fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
+        string? fullFilePath = typeAssemblyLocation is null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
 
         EnsureRelevantStaticStateIsRestored(appDomain);
 
-        if (fullFilePath == null || File.Exists(fullFilePath))
+        if (fullFilePath is null || File.Exists(fullFilePath))
         {
             // If the assembly exists in the app base directory, load it from there itself.
             // Even if it does not exist, Create the type in the default Load Context and let the CLR resolve the assembly path.

@@ -7,12 +7,14 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\*.cs" Link="IPC\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer.cs" Link="IPC\Serializers\BaseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\BaseSerializer*.cs" Link="IPC\Serializers\%(Filename)%(Extension)" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\NamedPipeSerializer.cs" Link="IPC\Serializers\NamedPipeSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Models\VoidResponse.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\ObjectFieldIds.cs" Link="IPC\ObjectFieldIds.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
+    <!-- Keep the netstandard2.0 MSBuild task self-contained without a runtime JSON package dependency. -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\JsonRpc\Json\Jsonite\*.cs" Link="Jsonite\%(Filename)%(Extension)" />
 
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
@@ -31,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
@@ -54,11 +57,9 @@
   <PropertyGroup>
     <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
     <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides MSBuild integration of the platform, its extensions and configuration files.
 
-This package provides MSBuild integration of the platform, its extensions and configuration files.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->

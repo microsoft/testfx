@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
@@ -27,7 +28,7 @@ internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions comm
         bool hasTestNodeUidFilter = _commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.FilterUidOptionKey, out string[]? uidFilter);
         ITestExecutionFilter filter = (hasTreenodeFilter, hasTestNodeUidFilter) switch
         {
-            (true, true) => throw new NotSupportedException(PlatformResources.OnlyOneFilterSupported),
+            (true, true) => throw ApplicationStateGuard.Unreachable(),
             (true, false) => new TreeNodeFilter(treenodeFilter![0]),
             (false, true) => new TestNodeUidListFilter([.. uidFilter!.Select(x => new TestNodeUid(x))]),
             (false, false) => new NopFilter(),

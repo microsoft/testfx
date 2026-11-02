@@ -1,0 +1,4798 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using AwesomeAssertions;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
+
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.UnitTests;
+
+/// <summary>
+/// Behavior tests for <see cref="MSTestReflectionMetadataGenerator" />.
+/// These pin the current PoC output so the upcoming follow-up PRs (#1837) can extend it safely.
+/// </summary>
+[TestClass]
+public sealed class MSTestReflectionMetadataGeneratorTests
+{
+    [TestMethod]
+    public void AotSourceGeneratorDiagnostics_HaveDocumentationLinks() =>
+        new[]
+        {
+            DiagnosticDescriptors.StaticTestClass,
+            DiagnosticDescriptors.GenericTestClass,
+            DiagnosticDescriptors.InaccessibleTestClass,
+            DiagnosticDescriptors.GenericTestMethod,
+            DiagnosticDescriptors.ByRefParameter,
+        }
+            .Select(descriptor => descriptor.HelpLinkUri)
+            .Should()
+            .Equal(
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0001",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0002",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0003",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0004",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0005");
+
+    [TestMethod]
+    public void CollectInheritedPropertyAttributes_PreservesOrderMultipleAndNearestSingleApplications()
+    {
+        CSharpCompilation compilation = CreateCompilation(
+            """
+            using System;
+            [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+            public sealed class MultiAttribute(string value) : Attribute { }
+            [AttributeUsage(AttributeTargets.All)]
+            public sealed class SingleAttribute(string value) : Attribute { }
+            [AttributeUsage(AttributeTargets.All, Inherited = false)]
+            public class LocalAttribute : Attribute { }
+            public sealed class DerivedLocalAttribute : LocalAttribute { }
+            public class Grand
+            {
+                [Multi("grand"), Single("grand"), DerivedLocal]
+                public virtual int Value { get; set; }
+            }
+            public class Middle : Grand
+            {
+                [Multi("middle"), Single("middle")]
+                public override int Value { get; set; }
+            }
+            public sealed class Leaf : Middle
+            {
+                [Multi("leaf")]
+                public override int Value { get; set; }
+            }
+            """);
+        compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        IPropertySymbol property = compilation.GetTypeByMetadataName("Leaf")!.GetMembers("Value").OfType<IPropertySymbol>().Single();
+
+        System.Collections.Immutable.ImmutableArray<AttributeData> attributes = AttributeMaterializationHelper.CollectInheritedAttributes(property);
+
+        attributes.Select(attribute => (attribute.AttributeClass!.Name, (string)attribute.ConstructorArguments[0].Value!))
+            .Should().Equal(("MultiAttribute", "leaf"), ("MultiAttribute", "middle"), ("SingleAttribute", "middle"), ("MultiAttribute", "grand"));
+    }
+
+    [TestMethod]
+    public void CollectInheritedPropertyAttributes_NoOverrideKeepsOwnNonInheritedAttributeAndEmptyIsEmpty()
+    {
+        CSharpCompilation compilation = CreateCompilation(
+            """
+            using System;
+            [AttributeUsage(AttributeTargets.All, Inherited = false)]
+            public sealed class LocalAttribute : Attribute { }
+            public sealed class Sample
+            {
+                [Local]
+                public int Own { get; set; }
+                public int Empty { get; set; }
+            }
+            """);
+        compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        INamedTypeSymbol type = compilation.GetTypeByMetadataName("Sample")!;
+        IPropertySymbol own = type.GetMembers("Own").OfType<IPropertySymbol>().Single();
+        IPropertySymbol empty = type.GetMembers("Empty").OfType<IPropertySymbol>().Single();
+
+        AttributeMaterializationHelper.CollectInheritedAttributes(own).Select(attribute => attribute.AttributeClass!.Name)
+            .Should().Equal("LocalAttribute");
+        AttributeMaterializationHelper.CollectInheritedAttributes(empty).Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Minimal MSTest attribute stubs so the generator can locate <c>[TestClass]</c> /
+    /// <c>[TestMethod]</c> in test fixtures without dragging the real TestFramework
+    /// assemblies into the Roslyn compilation.
+    /// </summary>
+    private const string MinimalMSTestStub = """
+        namespace Microsoft.VisualStudio.TestTools.UnitTesting
+        {
+            [System.AttributeUsage(System.AttributeTargets.Class)]
+            public class TestClassAttribute : System.Attribute { }
+
+            [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+            public class TestMethodAttribute : System.Attribute
+            {
+                public TestMethodAttribute() { }
+                public TestMethodAttribute(string displayName) { DisplayName = displayName; }
+                public string? DisplayName { get; set; }
+            }
+
+            [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
+            public class TestCategoryAttribute : System.Attribute
+            {
+                public TestCategoryAttribute(string category) { Category = category; }
+                public string Category { get; }
+            }
+
+            [System.AttributeUsage(System.AttributeTargets.Property)]
+            public class TestContextAttribute : System.Attribute { }
+
+            [System.AttributeUsage(System.AttributeTargets.Method)]
+            public class TestInitializeAttribute : System.Attribute { }
+
+            [System.AttributeUsage(System.AttributeTargets.Method)]
+            public class TestCleanupAttribute : System.Attribute { }
+
+            [System.AttributeUsage(System.AttributeTargets.Assembly, AllowMultiple = true)]
+            public class ParallelizeAttribute : System.Attribute
+            {
+                public int Workers { get; set; }
+                public string? Scope { get; set; }
+            }
+
+            [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+            public class DataRowAttribute : System.Attribute
+            {
+                public DataRowAttribute() : this(System.Array.Empty<object?>()) { }
+                public DataRowAttribute(object? data) { Data = new object?[] { data }; }
+                public DataRowAttribute(string?[]? stringArrayData) : this(new object?[] { stringArrayData }) { }
+                public DataRowAttribute(params object?[]? data) { Data = data ?? new object?[] { null }; }
+
+                public object?[] Data { get; }
+            }
+
+            public enum DynamicDataSourceType { Property = 0, Method = 1, AutoDetect = 2, Field = 3 }
+
+            [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+            public class DynamicDataAttribute : System.Attribute
+            {
+                public DynamicDataAttribute(string sourceName) { }
+                public DynamicDataAttribute(string sourceName, DynamicDataSourceType sourceType) { }
+                public DynamicDataAttribute(string sourceName, System.Type declaringType) { }
+                public DynamicDataAttribute(string sourceName, System.Type declaringType, DynamicDataSourceType sourceType) { }
+                public DynamicDataAttribute(string sourceName, params object?[] arguments) { }
+                public DynamicDataAttribute(string sourceName, System.Type declaringType, params object?[] arguments) { }
+                public string? DynamicDataDisplayName { get; set; }
+                public System.Type? DynamicDataDisplayNameDeclaringType { get; set; }
+            }
+
+            public static class DynamicDataSourceResolver
+            {
+                public static void RegisterDataProvider(System.Type declaringType, string sourceName, DynamicDataSourceType sourceType, System.Func<object?[], object?> dataProvider) { }
+                public static void RegisterDisplayNameProvider(System.Type declaringType, string methodName, System.Func<System.Reflection.MethodInfo, object?[]?, string?> displayNameProvider) { }
+            }
+        }
+        """;
+
+    /// <summary>
+    /// Minimal stub of the adapter's runtime hook so the emitted <c>[ModuleInitializer]</c> wiring
+    /// (shared from MSTest.SourceGeneration) compiles in the Roslyn test compilation without
+    /// referencing MSTestAdapter.PlatformServices.
+    /// </summary>
+    private const string RuntimeHookStub = """
+        namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration
+        {
+            public readonly struct ConstructorInvokerInfo
+            {
+                public ConstructorInvokerInfo(System.Type[] parameterTypes, System.Func<object[], object> invoker) { ParameterTypes = parameterTypes; Invoker = invoker; }
+                public System.Type[] ParameterTypes { get; }
+                public System.Func<object[], object> Invoker { get; }
+            }
+
+            public static class ReflectionMetadataHook
+            {
+                public static System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]>? RegisteredTestMethods { get; private set; }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Attribute[]> methodAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> descriptorTestMethods, System.Type[] descriptorCompleteTypes) { RegisteredTestMethods = testMethods; }
+            }
+        }
+        """;
+
+    [TestMethod]
+    public void Generator_EmitsSupportTypes_OnAnyCompilation()
+    {
+        const string userCode = """
+            // Intentionally empty — no [TestClass] in the consumer.
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        // Support types are emitted via RegisterPostInitializationOutput → always present.
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
+
+        support.Should().Contain("namespace MSTest.SourceGenerated");
+        support.Should().Contain("internal sealed class TestClassReflectionInfo");
+        support.Should().Contain("internal sealed class TestMethodReflectionInfo");
+        support.Should().Contain("internal sealed class TestPropertyReflectionInfo");
+        support.Should().Contain("internal sealed class TestConstructorReflectionInfo");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsRegistry_WithDiscoveredTestClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        registry.Should().Contain("internal static class MSTestReflectionMetadata");
+        registry.Should().Contain("public const string AssemblyName = \"TestSample\";");
+        registry.Should().Contain("Type = typeof(global::Sample.MyTests)");
+        registry.Should().Contain("Name = \"Test1\"");
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.MyTests)instance!).Test1(); return Task.CompletedTask; },");
+        registry.Should().Contain("SupportsGeneratedDescriptors = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("IsDescriptorSupported = true");
+    }
+
+    [TestMethod]
+    public void Generator_DeclaresDescriptorSupportOnlyForBoundedSynchronousSubset()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    public void Supported(int value) { }
+
+                    [TestMethod]
+                    [TestCategory("fallback")]
+                    public void AttributeFallback() { }
+
+                    [TestMethod]
+                    public async System.Threading.Tasks.Task AsyncFallback()
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        string registration = result.GeneratedSources
+            .Single(source => source.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        int supportedIndex = registry.IndexOf("Name = \"Supported\"", System.StringComparison.Ordinal);
+        int attributeFallbackIndex = registry.IndexOf("Name = \"AttributeFallback\"", System.StringComparison.Ordinal);
+        int asyncFallbackIndex = registry.IndexOf("Name = \"AsyncFallback\"", System.StringComparison.Ordinal);
+        supportedIndex.Should().BeGreaterThan(-1);
+        attributeFallbackIndex.Should().BeGreaterThan(supportedIndex);
+        asyncFallbackIndex.Should().BeGreaterThan(attributeFallbackIndex);
+        registry.Substring(supportedIndex, attributeFallbackIndex - supportedIndex)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(attributeFallbackIndex, asyncFallbackIndex - attributeFallbackIndex)
+            .Should().Contain("IsDescriptorSupported = false");
+        registry[asyncFallbackIndex..].Should().Contain("IsDescriptorSupported = false");
+        registration.Should().Contain("descriptorTestMethods[type] = descriptorMethodRoots.ToArray();");
+        registration.Should().Contain("areDescriptorMethodsResolved = false;");
+        registration.Should().Contain("testClass.AreGeneratedDescriptorsComplete && areDescriptorMethodsResolved");
+        registration.Should().Contain("descriptorCompleteTypes.Add(type);");
+        registration.Should().Contain("descriptorTestMethods, descriptorCompleteTypes.ToArray()");
+    }
+
+    [TestMethod]
+    public void Generator_InaccessibleTestMethodRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Supported() { }
+
+                    [TestMethod]
+                    private void InaccessibleFallback() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Supported\"");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("Name = \"InaccessibleFallback\"");
+    }
+
+    [TestMethod]
+    public void Generator_UnsupportedExecutionShapesRetainLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public static void StaticTest() { }
+
+                    [TestMethod]
+                    public System.Threading.Tasks.Task SynchronousTaskTest()
+                        => System.Threading.Tasks.Task.CompletedTask;
+
+                    [TestMethod]
+                    public System.Threading.Tasks.ValueTask SynchronousValueTaskTest()
+                        => default;
+
+                    [TestMethod]
+                    public async void AsyncVoidTest()
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        foreach (string methodName in new[] { "StaticTest", "SynchronousTaskTest", "SynchronousValueTaskTest", "AsyncVoidTest" })
+        {
+            int methodIndex = registry.IndexOf($"Name = \"{methodName}\"", System.StringComparison.Ordinal);
+            methodIndex.Should().BeGreaterThan(-1);
+            int nextMethodIndex = registry.IndexOf("Name = \"", methodIndex + 1, System.StringComparison.Ordinal);
+            string methodEntry = nextMethodIndex < 0
+                ? registry[methodIndex..]
+                : registry.Substring(methodIndex, nextMethodIndex - methodIndex);
+            methodEntry.Should().Contain("IsDescriptorSupported = false");
+        }
+    }
+
+    [TestMethod]
+    public void Generator_PartialTestClassRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public partial class PartialTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+
+                public partial class PartialTests
+                {
+                    [TestMethod]
+                    public void Test2() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int test1Index = registry.IndexOf("Name = \"Test1\"", System.StringComparison.Ordinal);
+        int test2Index = registry.IndexOf("Name = \"Test2\"", System.StringComparison.Ordinal);
+        int propertiesIndex = registry.IndexOf("Properties = ", test2Index, System.StringComparison.Ordinal);
+        test1Index.Should().BeGreaterThan(-1);
+        test2Index.Should().BeGreaterThan(test1Index);
+        propertiesIndex.Should().BeGreaterThan(test2Index);
+        registry.Should().Contain("Type = typeof(global::Sample.PartialTests)");
+        registry.Substring(test1Index, test2Index - test1Index)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Substring(test2Index, propertiesIndex - test2Index)
+            .Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_InheritedCustomTestMethodOverrideRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, Inherited = true)]
+                public sealed class InheritedTestMethodAttribute : TestMethodAttribute
+                {
+                }
+
+                public class BaseTests
+                {
+                    [InheritedTestMethod]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+
+                    [TestMethod]
+                    public void Supported() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int runIndex = registry.IndexOf("Name = \"Run\"", System.StringComparison.Ordinal);
+        int supportedIndex = registry.IndexOf("Name = \"Supported\"", runIndex, System.StringComparison.Ordinal);
+        runIndex.Should().BeGreaterThan(-1);
+        supportedIndex.Should().BeGreaterThan(runIndex);
+        string runEntry = registry.Substring(runIndex, supportedIndex - runIndex);
+        runEntry.Should().Contain("IsTestMethod = true");
+        runEntry.Should().Contain("IsDescriptorSupported = false");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_TestMethodAccessorRetainsLegacyDiscoveryFallback()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class AccessorTests
+                {
+                    public int Value
+                    {
+                        get => 0;
+
+                        [TestMethod]
+                        [DataRow(1)]
+                        set { }
+                    }
+
+                    [TestMethod]
+                    public void Supported() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Supported\"");
+        registry.Should().Contain("IsDescriptorSupported = true");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("Name = \"set_Value\"");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsEmptyRegistry_WhenNoTestClasses()
+    {
+        const string userCode = """
+            namespace Sample
+            {
+                // No [TestClass] anywhere.
+                public class NotATest { public void Foo() { } }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("public static IReadOnlyList<TestClassReflectionInfo> TestClasses { get; } = new TestClassReflectionInfo[]");
+        // No concrete TestClassReflectionInfo instance is emitted (note the open paren).
+        registry.Should().NotContain("new TestClassReflectionInfo(");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsStaticTestClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public static class StaticTests
+                {
+                    [TestMethod]
+                    public static void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0001");
+        string registry = GetRegistry(result);
+        // Static classes are excluded from the registry (cannot be instantiated) and reported via AOTSG0001.
+        registry.Should().NotContain("StaticTests");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsAbstractTestClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public abstract class AbstractTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+
+                [TestClass]
+                public class ConcreteTests
+                {
+                    [TestMethod]
+                    public void Test2() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        // Abstract classes are filtered in BuildModel — they cannot be instantiated.
+        registry.Should().NotContain("AbstractTests");
+        registry.Should().Contain("typeof(global::Sample.ConcreteTests)");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsGenericTestClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class GenericTests<T>
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0002");
+        string registry = GetRegistry(result);
+        // Open-generic test classes are out of scope for this PoC and reported via AOTSG0002.
+        registry.Should().NotContain("GenericTests");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsConstructorInvoker()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class CtorTests
+                {
+                    public CtorTests() { }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Constructors = new TestConstructorReflectionInfo[]");
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
+    }
+
+    [TestMethod]
+    public void Generator_RegistersOnlySupportedConstructorShapes()
+    {
+        // MSTest only instantiates a test class via a parameterless or single-TestContext ctor. An
+        // additional ctor(object) (or any other shape) must NOT be registered: it is never selected by
+        // the adapter, and registering it could let the runtime's argument-type matching pick it over
+        // the intended ctor.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+            }
+
+            namespace Sample
+            {
+                [TestClass]
+                public class CtorTests
+                {
+                    public CtorTests() { }
+                    public CtorTests(TestContext context) { }
+                    public CtorTests(object anything) { }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        // Parameterless and single-TestContext ctors are registered.
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests((global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext)args![0]!),");
+
+        // The unsupported ctor(object) is not registered.
+        registry.Should().NotContain("new global::Sample.CtorTests((object)args![0]!)");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsParameterTypes_ForMethodWithParameters()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class ParamTests
+                {
+                    [TestMethod]
+                    public void Test1(int x, string y) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("ParameterTypes = new Type[] { typeof(int), typeof(string) }");
+        registry.Should().NotContain("ParameterNames");
+    }
+
+    [TestMethod]
+    public void Generator_FlagsAsyncReturnTypes()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class AsyncTests
+                {
+                    [TestMethod]
+                    public Task Test1() => Task.CompletedTask;
+
+                    [TestMethod]
+                    public ValueTask Test2() => default;
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Test1\"");
+        registry.Should().Contain("ReturnsTask = true");
+        registry.Should().Contain("Name = \"Test2\"");
+        registry.Should().Contain("ReturnsValueTask = true");
+    }
+
+    [TestMethod]
+    public void Generator_OmitsInaccessibleAttribute_AndStillCompiles()
+    {
+        // [Mark] resolves to Outer.MarkAttribute, which is private to Outer. It is validly applied to
+        // Inner (nested in Outer, so it can see Outer's private members), but the generated registry —
+        // a top-level type in a different namespace — cannot reference it. Emitting
+        // `new global::Sample.Outer.MarkAttribute()` would fail with CS0122, so the safener must omit
+        // it while still materializing the accessible [TestCategory] on the same class.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class MarkAttribute : System.Attribute { }
+
+                    [TestClass]
+                    [Mark]
+                    [TestCategory("Smoke")]
+                    public class Inner
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        // The emitted registry must compile — no CS0122 from referencing the private attribute.
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty("the safener must omit attributes the generated code cannot reference");
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+        string registry = GetRegistry(result);
+
+        // Accessible attribute is still materialized; the inaccessible one is omitted.
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute");
+        registry.Should().NotContain("MarkAttribute");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesClassLevelAttributes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                [TestCategory("Smoke")]
+                public class TaggedTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute");
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute");
+        registry.Should().Contain("\"Smoke\"");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsPropertyGetterAndSetter()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Context\"");
+        registry.Should().Contain("HasPublicSetter = true");
+        registry.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
+        registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
+    }
+
+    [TestMethod]
+    public void Generator_NonPublicSetter_IsNotPubliclySettable_AndNotRegistered()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; private set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        // A non-public setter is not callable from the generated code, so the registry emits a
+        // throwing setter (never a direct assignment) and reports HasPublicSetter = false.
+        registry.Should().Contain("HasPublicSetter = false");
+        registry.Should().Contain("Property 'Context' has no public setter.");
+        registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
+
+        // The module initializer gates setter registration on HasPublicSetter, so this property's
+        // (throwing) setter is never published; the adapter falls back to PropertyInfo.SetValue.
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        registration.Should().Contain("if (property.HasPublicSetter)");
+    }
+
+    [TestMethod]
+    public void Generator_InitOnlySetter_IsNotPubliclySettable_AndDoesNotEmitAssignment()
+    {
+        // An init-only setter has public accessibility but cannot be assigned outside an object
+        // initializer; emitting `instance.Prop = value` would not compile (CS8852). The generator
+        // must treat it as non-settable.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; init; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        registry.Should().Contain("HasPublicSetter = false");
+        registry.Should().Contain("Property 'Context' has no public setter.");
+        registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsStaticPropertyAccess_WithoutInstanceCast()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class StaticProps
+                {
+                    public static int Value { get; set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Value\"");
+
+        // A static member must be accessed through the type, never through an instance cast,
+        // otherwise the generated code fails to compile with CS0176.
+        registry.Should().Contain("Get = static instance => (object?)global::Sample.StaticProps.Value,");
+        registry.Should().Contain("Set = static (instance, value) => global::Sample.StaticProps.Value = (int)value!,");
+        registry.Should().NotContain("((global::Sample.StaticProps)instance).Value");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsIndexerProperty()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class WithIndexer
+                {
+                    public int this[int index] => index;
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        // Indexers cannot be represented by the name-based Get/Set delegate shape, so they are
+        // dropped entirely instead of emitting non-compiling `((T)instance).this[]` code.
+        registry.Should().NotContain("this[");
+        registry.Should().NotContain("Name = \"Item\"");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("indexers must be skipped so the emitted registry still compiles");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsThrowingGetter_ForSetOnlyProperty()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class WriteOnly
+                {
+                    private int _value;
+                    public int Value { set { _value = value; } }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("Name = \"Value\"");
+
+        // A set-only property has no readable getter; emitting `instance.Value` would not compile,
+        // so the Get delegate throws instead.
+        registry.Should().Contain("Get = static instance => throw new InvalidOperationException(\"Property 'Value' has no accessible getter.\"),");
+        registry.Should().Contain("((global::Sample.WriteOnly)instance!).Value = (int)value!");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("a set-only property must still produce a compiling registry");
+    }
+
+    [TestMethod]
+    public void Generator_EmittedSource_CompilesCleanly()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                [TestCategory("Smoke")]
+                public class FullShape
+                {
+                    [TestContext]
+                    public TestContext? Context { get; set; }
+
+                    public FullShape() { }
+
+                    [TestMethod("alias")]
+                    public void Sync(int x) { }
+
+                    [TestMethod]
+                    public Task Asynchronous() => Task.CompletedTask;
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        IEnumerable<Diagnostic> diagnostics = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+
+        diagnostics.Should().BeEmpty(
+            "the generated source MUST compile cleanly when consumed in the same compilation as the user code");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsProtectedMembers()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class ProtectedShapes
+                {
+                    [TestContext]
+                    protected TestContext? Context { get; set; }
+
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+
+                    [TestMethod]
+                    protected internal void ProtectedInternalTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().NotContain("ProtectedTest");
+        registry.Should().NotContain("PrivateProtectedTest");
+        registry.Should().NotContain("Context");
+        registry.Should().Contain("ProtectedInternalTest");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the registry can only call members accessible from a non-derived type in the same assembly");
+    }
+
+    [TestMethod]
+    public void Generator_StripsNullableAnnotation_FromTypeofExpressions()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class NullableShapes
+                {
+                    [TestContext]
+                    public TestContext? Context { get; set; }
+
+                    [TestMethod]
+                    public void TakesNullableRef(string? value) { }
+
+                    [TestMethod]
+                    public void TakesNullableValueType(int? n) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        // typeof(...) MUST NOT carry nullable reference type annotation (CS8639).
+        registry.Should().NotContain("typeof(global::Sample.TestContext?)");
+        registry.Should().NotContain("typeof(string?)");
+        // Reference types in typeof drop the annotation entirely.
+        registry.Should().Contain("typeof(global::Sample.TestContext)");
+        registry.Should().Contain("typeof(string)");
+        // Nullable value types are still distinct from their underlying type and must be preserved as Nullable<T>.
+        registry.Should().Contain("typeof(int?)");
+
+        // The whole compilation must be free of CS errors.
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("typeof(T?) on a reference type is invalid C# (CS8639)");
+    }
+
+    [TestMethod]
+    public void Generator_IsIncremental_ProducesStableOutputAndCachesSteps_WhenInputUnchanged()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class IncTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: ReflectionFreeOptionsProvider.Instance,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
+        GeneratorDriver firstDriver = driver.RunGenerators(compilation);
+        GeneratorDriverRunResult firstResult = firstDriver.GetRunResult();
+
+        GeneratorDriver secondDriver = firstDriver.RunGenerators(compilation);
+        GeneratorDriverRunResult secondResult = secondDriver.GetRunResult();
+
+        firstResult.Diagnostics.Should().BeEmpty();
+        secondResult.Diagnostics.Should().BeEmpty();
+        firstResult.Results.Should().ContainSingle();
+        secondResult.Results.Should().ContainSingle();
+
+        // Two passes against the same compilation MUST produce identical sources (deterministic output).
+        secondResult.Results[0].GeneratedSources
+            .Select(s => (s.HintName, Text: s.SourceText.ToString()))
+            .Should()
+            .BeEquivalentTo(firstResult.Results[0].GeneratedSources
+                .Select(s => (s.HintName, Text: s.SourceText.ToString())));
+
+        // The implementation-source-output pipeline MUST report cached steps on the second run
+        // (proves the generator's incremental graph actually short-circuits when inputs are unchanged).
+        secondResult.Results[0].TrackedOutputSteps
+            .Should()
+            .NotBeEmpty("the generator registers RegisterImplementationSourceOutput which produces a tracked output step");
+
+        secondResult.Results[0].TrackedOutputSteps
+            .SelectMany(static kv => kv.Value)
+            .SelectMany(static step => step.Outputs)
+            .Should()
+            .OnlyContain(
+                static o => o.Reason == IncrementalStepRunReason.Cached || o.Reason == IncrementalStepRunReason.Unchanged,
+                "output steps for unchanged inputs MUST be Cached or Unchanged on subsequent runs");
+    }
+
+    [TestMethod]
+    public void Generator_IsIncremental_SupportTypesAreCached_WhenInputUnchanged()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class IncTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CreateDriver(compilation);
+
+        // Track step output cache reasons.
+        driver = driver.RunGenerators(compilation);
+        driver = driver.RunGenerators(compilation);
+
+        GeneratorDriverRunResult result = driver.GetRunResult();
+        result.Diagnostics.Should().BeEmpty();
+        result.Results.Should().ContainSingle();
+        // Two passes against the same compilation must produce identical sources:
+        // support types + registry + module-initializer registration.
+        result.Results[0].GeneratedSources.Should().HaveCount(3);
+    }
+
+    [TestMethod]
+    public void Generator_IncludesMethodsFromBaseType()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestInitialize]
+                    public void Setup() { }
+
+                    [TestMethod]
+                    public void InheritedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void DerivedTest() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Name = \"InheritedTest\"");
+        registry.Should().Contain("Name = \"Setup\"");
+        registry.Should().Contain("Name = \"DerivedTest\"");
+        // The TestInitialize attribute applied on the base method must propagate too.
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute");
+    }
+
+    [TestMethod]
+    public void Generator_ExcludesProtectedAndPrivateProtectedMembersFromBaseType()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+
+                    [TestMethod]
+                    protected internal void ProtectedInternalTest() { }
+
+                    [TestContext]
+                    protected TestContext ProtectedContext { get; set; } = new();
+
+                    [TestContext]
+                    private protected TestContext PrivateProtectedContext { get; set; } = new();
+
+                    [TestContext]
+                    protected internal TestContext ProtectedInternalContext { get; set; } = new();
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("Name = \"ProtectedTest\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
+        registry.Should().NotContain("Name = \"ProtectedContext\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedContext\"");
+        registry.Should().Contain("Name = \"ProtectedInternalTest\"");
+        registry.Should().Contain("Name = \"ProtectedInternalContext\"");
+    }
+
+    [TestMethod]
+    public void Generator_ExcludesInaccessibleMembersFromBaseTypeInAnotherAssembly()
+    {
+        const string baseCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class GrandparentTests
+            {
+                [TestMethod]
+                public void HiddenTest() { }
+
+                [TestMethod]
+                public void PropertyHidesMethod() { }
+
+                [TestMethod]
+                public void StaticHidesInstance() { }
+
+                [TestMethod]
+                public void InaccessibleOverloadHidesMethodGroup(int value) { }
+
+                [TestContext]
+                public int HiddenContext { get; set; }
+
+                public int MethodHidesProperty { [TestMethod] get; set; }
+            }
+
+            public class BaseTests : GrandparentTests
+            {
+                [TestMethod]
+                public void PublicInheritedTest() { }
+
+                [TestMethod]
+                protected internal void InheritedTest() { }
+
+                [TestMethod]
+                internal void InternalTest() { }
+
+                protected internal new void HiddenTest() { }
+
+                protected internal int PropertyHidesMethod { get; set; }
+
+                protected internal static new void StaticHidesInstance() { }
+
+                protected internal void InaccessibleOverloadHidesMethodGroup(string value) { }
+
+                [TestContext]
+                public int PublicContext { get; set; }
+
+                [TestContext]
+                protected internal int InaccessibleContext { get; set; }
+
+                [TestContext]
+                internal int InternalContext { get; set; }
+
+                protected internal new int HiddenContext { get; set; }
+
+                protected internal void MethodHidesProperty() { }
+
+                public int ContextWithInaccessibleGetter { protected internal get; set; }
+
+                public int ContextWithInternalGetter { internal get; set; }
+            }
+            """;
+
+        CSharpCompilation baseCompilation = CreateCompilation(MinimalMSTestStub, baseCode)
+            .WithAssemblyName("BaseAssembly");
+        using var stream = new MemoryStream();
+        baseCompilation.Emit(stream).Success.Should().BeTrue();
+        MetadataReference baseReference = MetadataReference.CreateFromImage(stream.ToArray());
+
+        const string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class DerivedTests : BaseTests { }
+            """;
+
+        CSharpCompilation consumerCompilation = CreateCompilation(consumerCode);
+        consumerCompilation = consumerCompilation
+            .WithOptions(consumerCompilation.Options.WithMetadataImportOptions(MetadataImportOptions.All))
+            .AddReferences(baseReference);
+        GeneratorDriver driver = CreateDriver(consumerCompilation);
+        driver.RunGeneratorsAndUpdateCompilation(consumerCompilation, out Compilation outputCompilation, out _);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().NotContain("Name = \"InheritedTest\"");
+        registry.Should().NotContain("Name = \"InternalTest\"");
+        registry.Should().Contain("Name = \"PublicInheritedTest\"");
+        registry.Should().NotContain("Name = \"InaccessibleContext\"");
+        registry.Should().NotContain("Name = \"InternalContext\"");
+        registry.Should().Contain("Name = \"PublicContext\"");
+        registry.Should().NotContain("Name = \"HiddenTest\"");
+        registry.Should().NotContain("Name = \"HiddenContext\"");
+        registry.Should().NotContain("Name = \"PropertyHidesMethod\"");
+        registry.Should().NotContain("Name = \"StaticHidesInstance\"");
+        registry.Should().NotContain("Name = \"InaccessibleOverloadHidesMethodGroup\"");
+        registry.Should().NotContain("Name = \"MethodHidesProperty\"");
+        registry.Should().Contain("Property 'ContextWithInaccessibleGetter' has no accessible getter.");
+        registry.Should().Contain("Property 'ContextWithInternalGetter' has no accessible getter.");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_PropertyHidingTestMethod_MarksDescriptorsIncomplete()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new int Hidden { get; set; }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("((global::DerivedTests)instance!).Hidden();");
+    }
+
+    [TestMethod]
+    public void Generator_NonMethodMembersHideBaseMethods()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void FieldHidden() { }
+
+                [TestMethod]
+                public void EventHidden() { }
+
+                [TestMethod]
+                public void TypeHidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int FieldHidden;
+
+                public event Action? EventHidden;
+
+                public class TypeHidden { }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("((global::DerivedTests)instance!).FieldHidden();");
+        registry.Should().NotContain("((global::DerivedTests)instance!).EventHidden();");
+        registry.Should().NotContain("((global::DerivedTests)instance!).TypeHidden();");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_MethodHidingTestAttributedPropertyAccessor_MarksDescriptorsIncomplete()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                public int Hidden { [TestMethod] get; set; }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("PropertyType = typeof(int)");
+    }
+
+    [TestMethod]
+    public void Generator_HiddenUnsupportedInheritedMethods_ReportDiagnostics()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void GenericHidden<T>() { }
+
+                [TestMethod]
+                public void ByRefHidden(ref int value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int GenericHidden { get; set; }
+
+                public int ByRefHidden { get; set; }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0004");
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+    }
+
+    [TestMethod]
+    public void Generator_IncludesMethodsFromMultiLevelInheritance()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class GrandparentTests
+                {
+                    [TestMethod]
+                    public void GrandparentTest() { }
+                }
+
+                public class ParentTests : GrandparentTests
+                {
+                    [TestMethod]
+                    public void ParentTest() { }
+                }
+
+                [TestClass]
+                public class LeafTests : ParentTests
+                {
+                    [TestMethod]
+                    public void LeafTest() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Name = \"GrandparentTest\"");
+        registry.Should().Contain("Name = \"ParentTest\"");
+        registry.Should().Contain("Name = \"LeafTest\"");
+    }
+
+    [TestMethod]
+    public void Generator_OverriddenVirtualMethod_KeepsOnlyDerivedImplementation()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Only one entry for Run should be emitted, and the invoker must dispatch on the derived type.
+        int runEntries = registry.Split(["Name = \"Run\""], System.StringSplitOptions.None).Length - 1;
+        runEntries.Should().Be(1, "the derived override must replace the base entry (not duplicate it)");
+        registry.Should().Contain("((global::Sample.DerivedTests)instance!).Run();");
+        registry.Should().NotContain("((global::Sample.BaseTests)instance!).Run();");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+
+        // TestMethodAttribute is not inherited, so the override should not pick up the base attribute.
+        registry.Should().NotContain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute");
+    }
+
+    [TestMethod]
+    public void Generator_OverriddenVirtualMethod_HonorsInheritedAttributeUsage()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("Base")]
+                    [DataRow(1)]
+                    public virtual void Run(int value) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("Derived")]
+                    public override void Run(int value) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"Base\"");
+        registry.Should().Contain("\"Derived\"");
+        registry.Should().NotContain("DataRows");
+        registry.Should().NotContain("new object?[] { 1 }");
+    }
+
+    [TestMethod]
+    public void Generator_NewKeywordHiddenMethod_DedupsBySignature()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    public void Hidden() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public new void Hidden() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        int hiddenEntries = registry.Split(["Name = \"Hidden\""], System.StringSplitOptions.None).Length - 1;
+        hiddenEntries.Should().Be(1, "members with the same name and signature must be de-duplicated; derived wins");
+        registry.Should().Contain("((global::Sample.DerivedTests)instance!).Hidden();");
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+    }
+
+    [TestMethod]
+    public void Generator_PrivateSameSignatureMethod_DoesNotReplaceInheritedTest()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                private new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().NotContain("((global::DerivedTests)instance!).Hidden();");
+    }
+
+    [TestMethod]
+    public void Generator_PublicNonTestSameSignatureMethod_DoesNotReplaceInheritedTest()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().Contain("((global::DerivedTests)instance!).Hidden();");
+    }
+
+    [TestMethod]
+    public void Generator_InstanceTestMethod_ReplacesStaticAncestor()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public static void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Hidden() { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).Hidden();");
+    }
+
+    [TestMethod]
+    public void Generator_DynamicTestMethod_ReplacesObjectAncestor()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden(object value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Hidden(dynamic value) { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).Hidden((dynamic)args![0]!);");
+    }
+
+    [TestMethod]
+    public void RuntimeSignature_DynamicAndObjectReturnTypes_AreEquivalent()
+    {
+        const string userCode = """
+            public class DynamicReturn
+            {
+                public dynamic Method() => new object();
+            }
+
+            public class ObjectReturn
+            {
+                public object Method() => new object();
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(userCode);
+        var dynamicMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("DynamicReturn")!.GetMembers("Method").Single();
+        var objectMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("ObjectReturn")!.GetMembers("Method").Single();
+
+        TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(dynamicMethod, objectMethod).Should().BeTrue();
+    }
+
+    [TestMethod]
+    public void RuntimeSignature_DifferentReturnTypes_AreNotEquivalent()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new int Hidden() => 1;
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(userCode);
+        var baseMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("BaseTests")!.GetMembers("Hidden").Single();
+        var derivedMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("DerivedTests")!.GetMembers("Hidden").Single();
+
+        TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(derivedMethod, baseMethod).Should().BeFalse();
+        GetRegistry(RunGenerator(MinimalMSTestStub, userCode))
+            .Should().Contain("AreGeneratedDescriptorsComplete = false");
+    }
+
+    [TestMethod]
+    public void RuntimeSignature_DifferentlyNamedMethodTypeParameters_AreNotEquivalent()
+    {
+        const string userCode = """
+            public class First
+            {
+                public void Method<T>(T value) { }
+            }
+
+            public class Second
+            {
+                public void Method<U>(U value) { }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(userCode);
+        var firstMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("First")!.GetMembers("Method").Single();
+        var secondMethod = (IMethodSymbol)compilation.GetTypeByMetadataName("Second")!.GetMembers("Method").Single();
+
+        TestMemberValidationHelper.HaveSameRuntimeDiscoverySignature(firstMethod, secondMethod).Should().BeFalse();
+    }
+
+    [TestMethod]
+    public void Generator_NestedGenericContainingTypeSubstitutions_HaveDistinctRuntimeSignatures()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Outer<T>
+            {
+                public class Middle<U>
+                {
+                    public class Inner { }
+                }
+            }
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Hidden(Outer<int>.Middle<string>.Inner value) { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Hidden(Outer<long>.Middle<string>.Inner value) { }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().Contain("typeof(global::Outer<long>.Middle<string>.Inner)");
+        registry.Should().NotContain("typeof(global::Outer<int>.Middle<string>.Inner)");
+    }
+
+    [TestMethod]
+    public void Generator_DerivedMethodGroup_HidesBaseOverloads()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    public void Op(int x) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Op(string x) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        int opEntries = registry.Split(["Name = \"Op\""], System.StringSplitOptions.None).Length - 1;
+        opEntries.Should().Be(1);
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = false");
+        registry.Should().Contain("typeof(string)");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_DerivedIndexer_DoesNotHideBaseItemMethod()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Item() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int this[int index] => index;
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).Item();");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_DerivedPropertyAccessor_DoesNotHideBaseAccessorNamedMethod()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void get_Value() { }
+            }
+
+            [TestClass]
+            public class DerivedTests : BaseTests
+            {
+                public int Value => 1;
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("AreGeneratedDescriptorsComplete = true");
+        registry.Should().Contain("((global::DerivedTests)instance!).get_Value();");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+
+        using var assemblyStream = new MemoryStream();
+        outputCompilation.Emit(assemblyStream).Success.Should().BeTrue();
+        var assembly = System.Reflection.Assembly.Load(assemblyStream.ToArray());
+        Type hookType = assembly.GetType("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook")!;
+        var registeredTestMethods = (IReadOnlyDictionary<Type, System.Reflection.MethodInfo[]>)hookType
+            .GetProperty("RegisteredTestMethods")!
+            .GetValue(null)!;
+        System.Reflection.MethodInfo registeredMethod = registeredTestMethods.Values.SelectMany(static methods => methods).Single();
+        registeredMethod.DeclaringType!.Name.Should().Be("BaseTests");
+        registeredMethod.ReturnType.Should().Be(typeof(void));
+    }
+
+    [TestMethod]
+    public void Generator_IncludesPropertiesFromBaseType()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                public class BaseTests
+                {
+                    [TestContext]
+                    public virtual TestContext Context { get; set; } = new();
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Name = \"Context\"");
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContextAttribute");
+    }
+
+    [TestMethod]
+    public void Generator_ExcludesProtectedBaseMembers()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class BaseTests
+                {
+                    [TestInitialize]
+                    protected void ProtectedSetup() { }
+
+                    [TestCleanup]
+                    private protected void PrivateProtectedCleanup() { }
+
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void PublicTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("PublicTest");
+        registry.Should().NotContain("ProtectedSetup");
+        registry.Should().NotContain("PrivateProtectedCleanup");
+        registry.Should().NotContain("ProtectedTest");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("generated invokers are emitted from a non-derived type and cannot call protected base members");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInheritConstructors()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    public BaseTests(int x) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public DerivedTests() : base(1) { }
+
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Only the derived ctor (parameterless) should be emitted — base ctor is never inherited.
+        registry.Should().Contain("Invoke = static args => new global::Sample.DerivedTests(),");
+        registry.Should().NotContain("Invoke = static args => new global::Sample.BaseTests(");
+        // No int parameter from the base constructor leaks into the constructor list.
+        registry.Should().NotContain("ParameterTypes = new Type[] { typeof(int) },");
+    }
+
+    [TestMethod]
+    public void Generator_AbstractBaseWithConcreteDerived_FoldsBaseMembers()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                public abstract class AbstractBase
+                {
+                    [TestInitialize]
+                    public void Setup() { }
+
+                    [TestContext]
+                    public TestContext Ctx { get; set; } = new();
+                }
+
+                [TestClass]
+                public class Concrete : AbstractBase
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Name = \"Setup\"");
+        registry.Should().Contain("Name = \"Ctx\"");
+        registry.Should().Contain("Name = \"Test\"");
+        // The base class was abstract but the concrete derived type is the one emitted.
+        registry.Should().Contain("Type = typeof(global::Sample.Concrete)");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotWalkPastSystemObject()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class SimpleTests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Members of System.Object (ToString, Equals, GetHashCode, GetType) must NOT be emitted.
+        registry.Should().NotContain("Name = \"ToString\"");
+        registry.Should().NotContain("Name = \"Equals\"");
+        registry.Should().NotContain("Name = \"GetHashCode\"");
+        registry.Should().NotContain("Name = \"GetType\"");
+    }
+
+    [TestMethod]
+    public void Generator_MaterializesSchedulingAttributes_OnMethodAndClass()
+    {
+        // '[DependsOn]' and '[ResourceLock]' are not part of the generator's small set of specially
+        // understood attributes; they ride the generic attribute-materialization path, which is what
+        // makes them work under Native AOT. This pins that so the generic path is not narrowed to an
+        // allow-list by accident.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+                public sealed class DependsOnAttribute : System.Attribute
+                {
+                    public DependsOnAttribute(string testMethodName) { }
+                    public DependsOnAttribute(System.Type testClass) { }
+                    public bool ProceedOnFailure { get; set; }
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+                public sealed class ResourceLockAttribute : System.Attribute
+                {
+                    public ResourceLockAttribute(string resource) { }
+                }
+            }
+
+            namespace Sample
+            {
+                [TestClass]
+                [DependsOn(typeof(Tests))]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void CreateCart() { }
+
+                    [TestMethod]
+                    [DependsOn(nameof(CreateCart), ProceedOnFailure = true)]
+                    [ResourceLock("database")]
+                    public void AddItem() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute(\"CreateCart\")");
+        registry.Should().Contain("ProceedOnFailure = true");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute(typeof(global::Sample.Tests))");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute(\"database\")");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesAssemblyLevelAttribute()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 4, Scope = "Method")]
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("#pragma warning disable MSTESTEXP");
+        registry.Should().Contain("public static object[] AssemblyAttributes { get; } = new object[]");
+        registry.Should().Contain("(Attribute)new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
+        registry.Should().Contain("Workers = 4");
+        registry.Should().Contain("Scope = \"Method\"");
+    }
+
+    [TestMethod]
+    public void Generator_AssemblyAttributes_IsEmptyArray_WhenNoneApplied()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("public static object[] AssemblyAttributes { get; } = Array.Empty<object>();");
+        registry.Should().NotContain("public static object[] AssemblyAttributes { get; } = new object[]");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesMultipleAssemblyAttributes_InDeclarationOrder()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 1)]
+            [assembly: Parallelize(Workers = 2)]
+            [assembly: Parallelize(Workers = 3)]
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        int idx1 = registry.IndexOf("Workers = 1", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("Workers = 2", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("Workers = 3", StringComparison.Ordinal);
+
+        idx1.Should().BeGreaterThan(-1);
+        idx2.Should().BeGreaterThan(idx1);
+        idx3.Should().BeGreaterThan(idx2);
+    }
+
+    [TestMethod]
+    public void Generator_AssemblyAttributes_AreEmittedEvenWithNoTestClasses()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 8)]
+
+            namespace Sample
+            {
+                public class NotATest { }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
+        registry.Should().Contain("Workers = 8");
+        registry.Should().NotContain("new TestClassReflectionInfo(");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitRedundantDataRowsDescriptor()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void NoData() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
+        string registry = GetRegistry(result);
+        support.Should().NotContain("DataRows");
+        registry.Should().NotContain("DataRows");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDataRowAttributeWithoutDuplicateArgumentArray()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, "x")]
+                    public void Test(int a, string b) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, \"x\" })");
+        registry.Should().NotContain("DataRows");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsMultipleDataRowAttributes_InDeclarationOrder()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, "a")]
+                    [DataRow(2, "b")]
+                    [DataRow(3, "c")]
+                    public void Test(int a, string b) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        int idx1 = registry.IndexOf("DataRowAttribute(new object[] { 1, \"a\" })", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("DataRowAttribute(new object[] { 2, \"b\" })", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("DataRowAttribute(new object[] { 3, \"c\" })", StringComparison.Ordinal);
+
+        idx1.Should().BeGreaterThan(-1);
+        idx2.Should().BeGreaterThan(idx1);
+        idx3.Should().BeGreaterThan(idx2);
+    }
+
+    [TestMethod]
+    public void Generator_LeavesDataRowParamsMaterializationToAttribute()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, 2, 3, 4)]
+                    public void Test(int a, int b, int c, int d) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, 2, 3, 4 })");
+        registry.Should().NotContain("DataRows");
+    }
+
+    [TestMethod]
+    public void Generator_MaterializesDataRowArrayTypeArguments()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(typeof(int), "Int32", "kind")]
+                    [DataRow(typeof(int[]), "Int32[]", "kind")]
+                    [DataRow(typeof(int[][]), "Int32[][]", "kind")]
+                    [DataRow(typeof(int[,]), "Int32[,]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.List<int[]>[]), "List`1[]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.Dictionary<int[], string>.KeyCollection[]), "KeyCollection[]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.List<>), "List`1", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.Dictionary<,>.KeyCollection), "KeyCollection", "kind")]
+                    public void Test(Type type, string name, string kind) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("AreAttributesComplete = false");
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        rows.Should().HaveCount(8);
+        rows[0].Should().Equal(typeof(int), "Int32", "kind");
+        rows[1].Should().Equal(typeof(int[]), "Int32[]", "kind");
+        rows[2].Should().Equal(typeof(int[][]), "Int32[][]", "kind");
+        rows[3].Should().Equal(typeof(int[,]), "Int32[,]", "kind");
+        rows[4].Should().Equal(typeof(List<int[]>[]), "List`1[]", "kind");
+        rows[5].Should().Equal(typeof(Dictionary<int[], string>.KeyCollection[]), "KeyCollection[]", "kind");
+        rows[6].Should().Equal(typeof(List<>), "List`1", "kind");
+        rows[7].Should().Equal(typeof(Dictionary<,>.KeyCollection), "KeyCollection", "kind");
+    }
+
+    [TestMethod]
+    public void Generator_MaterializesArrayTypeNamedArgument()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public sealed class MarkerAttribute : Attribute
+                {
+                    public Type Type { get; set; }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [Marker(Type = typeof(int[][]))]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain("new global::Sample.MarkerAttribute() { Type = typeof(int[][]) }");
+        registry.Should().NotContain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
+    [DataRow("Hidden[][]")]
+    [DataRow("System.Collections.Generic.List<Hidden[]>[]")]
+    [DataRow("System.Collections.Generic.Dictionary<Hidden[], int>.KeyCollection[]")]
+    [DataRow("System.Collections.Generic.Dictionary<Hidden, int>.KeyCollection[]")]
+    public void Generator_OmitsArrayTypeArgument_WhenElementTypeIsInaccessible(string typeName)
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class Hidden { }
+
+                    [TestClass]
+                    public class Tests
+                    {
+                        [TestMethod]
+                        [DataRow(typeof($Type$))]
+                        public void Test(Type type) { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode.Replace("$Type$", typeName, StringComparison.Ordinal));
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("DataRowAttribute");
+        registry.Should().Contain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
+    public void Generator_PreservesDataRowConstantTypes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                internal enum ByteEnum : byte { Max = byte.MaxValue }
+                internal enum SByteEnum : sbyte { Min = sbyte.MinValue }
+                internal enum ShortEnum : short { Min = short.MinValue }
+                internal enum UShortEnum : ushort { Max = ushort.MaxValue }
+                internal enum IntEnum : int { Min = int.MinValue }
+                internal enum UIntEnum : uint { Max = uint.MaxValue }
+                internal enum LongEnum : long { Min = long.MinValue }
+                internal enum ULongEnum : ulong { Max = ulong.MaxValue }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(false, (byte)0x4D, (sbyte)-1, (short)-2, (ushort)3, uint.MaxValue, ulong.MaxValue, '\n')]
+                    [DataRow(ByteEnum.Max, SByteEnum.Min, ShortEnum.Min, UShortEnum.Max, IntEnum.Min, UIntEnum.Max, LongEnum.Min, ULongEnum.Max)]
+                    public void Test(params object?[] values) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain(
+            "DataRowAttribute(new object[] { false, (byte)77, (sbyte)(-1), (short)(-2), (ushort)3, 4294967295U, 18446744073709551615UL, '\\n' })");
+        registry.Should().Contain("(global::Sample.ByteEnum)(255)");
+        registry.Should().Contain("(global::Sample.SByteEnum)(-128)");
+        registry.Should().Contain("(global::Sample.ShortEnum)(-32768)");
+        registry.Should().Contain("(global::Sample.UShortEnum)(65535)");
+        registry.Should().Contain("(global::Sample.IntEnum)(-2147483648)");
+        registry.Should().Contain("(global::Sample.UIntEnum)(4294967295U)");
+        registry.Should().Contain("(global::Sample.LongEnum)(-9223372036854775808L)");
+        registry.Should().Contain("(global::Sample.ULongEnum)(18446744073709551615UL)");
+        Diagnostic[] errors = outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ToArray();
+        errors.Should().BeEmpty(
+            "the typed-constant corpus should compile. Diagnostics: {0}",
+            string.Join(Environment.NewLine, errors.Select(diagnostic => diagnostic.ToString())));
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+
+        rows[0][1].Should().BeOfType<byte>().Which.Should().Be(0x4D);
+        rows[0][2].Should().BeOfType<sbyte>().Which.Should().Be(-1);
+        rows[0][3].Should().BeOfType<short>().Which.Should().Be(-2);
+        rows[0][4].Should().BeOfType<ushort>().Which.Should().Be(3);
+        rows[0][5].Should().BeOfType<uint>().Which.Should().Be(uint.MaxValue);
+        rows[0][6].Should().BeOfType<ulong>().Which.Should().Be(ulong.MaxValue);
+        rows[0][7].Should().BeOfType<char>().Which.Should().Be('\n');
+        rows[1].Select(value => value.GetType().FullName).Should().Equal(
+            "Sample.ByteEnum",
+            "Sample.SByteEnum",
+            "Sample.ShortEnum",
+            "Sample.UShortEnum",
+            "Sample.IntEnum",
+            "Sample.UIntEnum",
+            "Sample.LongEnum",
+            "Sample.ULongEnum");
+    }
+
+    [TestMethod]
+    public void Generator_EscapesDataRowStringAndCharacterLiterals()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow("\tMZXW6\r\n", "\"\\\0\u2028\u2029", '\'', '\\', '\0', '\u2028')]
+                    public void Test(params object?[] values) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("\"\\tMZXW6\\r\\n\"");
+        registry.Should().Contain("\"\\\"\\\\\\0\\u2028\\u2029\"");
+        registry.Should().Contain("'\\''");
+        registry.Should().Contain("'\\\\'");
+        registry.Should().Contain("'\\0'");
+        registry.Should().Contain("'\\u2028'");
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        rows[0][0].Should().Be("\tMZXW6\r\n");
+        rows[0][1].Should().Be("\"\\\0\u2028\u2029");
+        rows[0][2].Should().Be('\'');
+        rows[0][3].Should().Be('\\');
+        rows[0][4].Should().Be('\0');
+        rows[0][5].Should().Be('\u2028');
+    }
+
+    [TestMethod]
+    public void Generator_DeterministicLiteralCorpus_CompilesWithoutGeneratedDiagnostics()
+    {
+        const int seed = 0x5EED;
+        var random = new Random(seed);
+        string[] values =
+        [
+            "\uD800",
+            "\uDFFF",
+            "\uD83D\uDE00",
+            .. Enumerable.Range(0, 64)
+            .Select(_ => new string(Enumerable.Range(0, random.Next(0, 24))
+                .Select(_ => (char)random.Next(char.MinValue, char.MaxValue + 1))
+                .ToArray()))
+        ];
+        string dataRows = string.Join(
+            Environment.NewLine,
+            values.Select(value => $"        [DataRow({Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatLiteral(value, quote: true)})]"));
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+            {{dataRows}}
+                    [DataRow(float.NaN)]
+                    [DataRow(float.PositiveInfinity)]
+                    [DataRow(float.NegativeInfinity)]
+                    [DataRow(double.NaN)]
+                    [DataRow(double.PositiveInfinity)]
+                    [DataRow(double.NegativeInfinity)]
+                    [DataRow(float.MinValue)]
+                    [DataRow(float.MaxValue)]
+                    [DataRow(-0.0F)]
+                    [DataRow(float.Epsilon)]
+                    [DataRow(double.MinValue)]
+                    [DataRow(double.MaxValue)]
+                    [DataRow(-0.0D)]
+                    [DataRow(double.Epsilon)]
+                    [DataRow(new int[] { int.MinValue, 0, int.MaxValue })]
+                    [TestMethod]
+                    public void Test(object? value) { }
+                }
+            }
+            """;
+        var parseOptions = new CSharpParseOptions(documentationMode: DocumentationMode.Diagnose);
+        CSharpCompilation compilation = CreateCompilation(parseOptions, MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CreateDriver(compilation);
+        driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+
+        Diagnostic[] generatedDiagnostics = outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity >= DiagnosticSeverity.Warning
+                && diagnostic.Location.SourceTree?.FilePath.EndsWith(".g.cs", StringComparison.Ordinal) is true)
+            .ToArray();
+
+        generatedDiagnostics.Should().BeEmpty($"the deterministic literal corpus with seed {seed} should produce clean generated source");
+
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain("global::System.Single.NaN");
+        registry.Should().Contain("global::System.Single.PositiveInfinity");
+        registry.Should().Contain("global::System.Single.NegativeInfinity");
+        registry.Should().Contain("global::System.Double.NaN");
+        registry.Should().Contain("global::System.Double.PositiveInfinity");
+        registry.Should().Contain("global::System.Double.NegativeInfinity");
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        string[] actualValues = rows.Take(values.Length).Select(row => (string)row[0]).ToArray();
+        actualValues.Should().Equal(values, $"the deterministic literal corpus with seed {seed} should round-trip");
+
+        int rowIndex = values.Length;
+        float.IsNaN((float)rows[rowIndex++][0]).Should().BeTrue();
+        float.IsPositiveInfinity((float)rows[rowIndex++][0]).Should().BeTrue();
+        float.IsNegativeInfinity((float)rows[rowIndex++][0]).Should().BeTrue();
+        double.IsNaN((double)rows[rowIndex++][0]).Should().BeTrue();
+        double.IsPositiveInfinity((double)rows[rowIndex++][0]).Should().BeTrue();
+        double.IsNegativeInfinity((double)rows[rowIndex++][0]).Should().BeTrue();
+        rows[rowIndex++][0].Should().Be(float.MinValue);
+        rows[rowIndex++][0].Should().Be(float.MaxValue);
+        BitConverter.SingleToInt32Bits((float)rows[rowIndex++][0]).Should().Be(BitConverter.SingleToInt32Bits(-0.0F));
+        rows[rowIndex++][0].Should().Be(float.Epsilon);
+        rows[rowIndex++][0].Should().Be(double.MinValue);
+        rows[rowIndex++][0].Should().Be(double.MaxValue);
+        BitConverter.DoubleToInt64Bits((double)rows[rowIndex++][0]).Should().Be(BitConverter.DoubleToInt64Bits(-0.0D));
+        rows[rowIndex++][0].Should().Be(double.Epsilon);
+        rows[rowIndex++][0].Should().BeOfType<int[]>().Which.Should().Equal(int.MinValue, 0, int.MaxValue);
+        rowIndex.Should().Be(rows.Length);
+    }
+
+    [TestMethod]
+    [DataRow("null", "string[]")]
+    [DataRow("(object)null", "object")]
+    [DataRow("(object[])null", "object[]")]
+    [DataRow("(string[])null", "string[]")]
+    [DataRow("(int[])null", "object")]
+    public void Generator_HandlesNullValueInDataRow(string argument, string emittedType)
+    {
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow({{argument}})]
+                    public void Test(string? value) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain($"new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(({emittedType})null!)");
+        registry.Should().NotContain("DataRows");
+        GetMaterializedDataRows(outputCompilation).Should().ContainSingle()
+            .Which.Should().ContainSingle()
+            .Which.Should().BeNull();
+    }
+
+    [TestMethod]
+    public void Generator_HandlesNestedNullArraysInDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(new object[] { (int[])null, new object[] { (string[])null } })]
+                    public void Test(int[]? value, object[] nested) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        object[] row = GetMaterializedDataRows(outputCompilation).Should().ContainSingle().Which;
+        row.Should().HaveCount(2);
+        row[0].Should().BeNull();
+        row[1].Should().BeOfType<object[]>().Which.Should().ContainSingle().Which.Should().BeNull();
+    }
+
+    [TestMethod]
+    [DataRow("null", "((global::Sample.Value[])null!)")]
+    [DataRow("Property = null", "() { Property = (global::Sample.Value[])null! }")]
+    [DataRow("Field = null", "() { Field = (global::Sample.Value[])null! }")]
+    [DataRow("new Value[0]", "(Array.Empty<global::Sample.Value>())")]
+    [DataRow("new[] { Value.First }", "(new global::Sample.Value[] { (global::Sample.Value)(0) })")]
+    public void Generator_MaterializesArrayAttributeArguments(string arguments, string expectedArguments)
+    {
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                internal enum Value { First }
+
+                internal sealed class ArrayMarkerAttribute : System.Attribute
+                {
+                    public ArrayMarkerAttribute() { }
+                    public ArrayMarkerAttribute(Value[]? values) { }
+                    public Value[]? Property { get; set; }
+                    public Value[]? Field;
+                }
+
+                [TestClass]
+                [ArrayMarker({{arguments}})]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain($"new global::Sample.ArrayMarkerAttribute{expectedArguments}");
+        registry.Should().NotContain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
+    [DataRow("new Hidden[0]", null)]
+    [DataRow("new[] { Hidden.First }", null)]
+    [DataRow("new object[] { new Hidden[0] }", null)]
+    [DataRow("Value = new Hidden[0]", null)]
+    [DataRow("Value = new[] { Hidden.First }", null)]
+    [DataRow("Value = new object[] { new Hidden[0] }", null)]
+    // Roslyn types boxed null arrays as object, so they do not require an inaccessible Hidden[] cast.
+    [DataRow("(Hidden[])null", "((object)null!)")]
+    [DataRow("new object[] { (Hidden[])null }", "(new object[] { (object)null! })")]
+    [DataRow("Value = (Hidden[])null", "() { Value = (object)null! }")]
+    [DataRow("Value = new object[] { (Hidden[])null }", "() { Value = new object[] { (object)null! } }")]
+    public void Generator_HandlesArrayArgumentsWithInaccessibleElementTypes(string arguments, string? expectedArguments)
+    {
+        string userCode = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public sealed class ArrayMarkerAttribute : System.Attribute
+                {
+                    public ArrayMarkerAttribute() { }
+                    public ArrayMarkerAttribute(object? value) { }
+                    public object? Value { get; set; }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    private enum Hidden { First }
+
+                    [TestMethod]
+                    [ArrayMarker({{arguments}})]
+                    [TestCategory("retained")]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        if (expectedArguments is null)
+        {
+            registry.Should().NotContain("ArrayMarkerAttribute");
+            registry.Should().Contain("AreAttributesComplete = false");
+        }
+        else
+        {
+            registry.Should().Contain($"new global::Sample.ArrayMarkerAttribute{expectedArguments}");
+            registry.Should().NotContain("AreAttributesComplete = false");
+        }
+
+        registry.Should().NotContain("global::Sample.Tests.Hidden");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"retained\")");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsProtectedAndPrivateProtectedMembers()
+    {
+        // Generated invokers live in a separate static helper class (not a derived type),
+        // so 'protected' and 'private protected' members are not callable from the emitted
+        // code. They MUST be excluded from the registry to keep the generated source compiling.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void PublicTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the generated registry MUST NOT reference protected / private protected members");
+
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("Name = \"PublicTest\"");
+        registry.Should().NotContain("Name = \"ProtectedTest\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
+    }
+
+    [TestMethod]
+    public void Generator_KeepsAllowMultipleAttributes_AcrossOverrideChain()
+    {
+        // [TestCategory] is AllowMultiple=true. Collecting attributes across the override chain
+        // MUST keep every instance instead of collapsing them by type, otherwise the inherited
+        // categories disappear from the registry.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("BaseCat")]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestCategory("DerivedCat")]
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"BaseCat\"");
+        registry.Should().Contain("\"DerivedCat\"");
+    }
+
+    [TestMethod]
+    public void Generator_HonorsAttributeUsage_DeclaredOnBaseAttributeType()
+    {
+        // GetAttributeUsage MUST walk the attribute type's base-type chain. AllowMultiple is
+        // inherited from a base attribute that declares [AttributeUsage(AllowMultiple = true)]
+        // even when the derived attribute does not redeclare its own [AttributeUsage]. If the
+        // walk were skipped, the fallback default AllowMultiple=false would silently drop the
+        // second occurrence below.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+                public class BaseTagAttribute : Attribute
+                {
+                    public BaseTagAttribute(string value) { Value = value; }
+                    public string Value { get; }
+                }
+
+                // No [AttributeUsage] here on purpose — must inherit AllowMultiple=true from BaseTagAttribute.
+                public class DerivedTagAttribute : BaseTagAttribute
+                {
+                    public DerivedTagAttribute(string value) : base(value) { }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DerivedTag("first")]
+                    [DerivedTag("second")]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"first\"");
+        registry.Should().Contain("\"second\"");
+    }
+
+    [TestMethod]
+    public void Generator_ReportsAndSkipsGenericMethods_WithSameName()
+    {
+        // Methods that differ only in generic arity (e.g. M() vs M<T>()) MUST be treated as
+        // distinct in the per-class dedup key, otherwise the generator might drop the
+        // non-generic overload alongside the generic ones.
+        //
+        // Generic test methods themselves are unsupported (AOTSG0004), so they are excluded
+        // from the registry — but the non-generic overload must still be emitted independently.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class GenericArityTests
+                {
+                    [TestMethod]
+                    public void Run() { }
+
+                    [TestMethod]
+                    public void Run<T>() { }
+
+                    [TestMethod]
+                    public void Run<T, U>() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty();
+
+        result.Diagnostics.Where(d => d.Id == "AOTSG0004").Should().HaveCount(2);
+        string registry = GetRegistry(result);
+
+        // Only the non-generic Run must be emitted. The generic overloads are excluded by AOTSG0004
+        // but must not cause the non-generic sibling to be dropped through key collision.
+        int occurrences = System.Text.RegularExpressions.Regex
+            .Matches(registry, "Name = \"Run\"")
+            .Count;
+        occurrences.Should().Be(1);
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInherit_TestMethodOrDataRow_OntoOverride()
+    {
+        // [TestMethod] and [DataRow] are declared with AttributeUsage(Inherited = false) in
+        // the real MSTest assembly. An override that does NOT re-apply [TestMethod] is not a
+        // test, and inherited [DataRow]s must not leak from the base method onto the override.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    [DataRow(2)]
+                    public virtual void Run(int x) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    // Override deliberately does not re-apply [TestMethod] or any [DataRow].
+                    public override void Run(int x) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Neither the [TestMethod] nor the inherited [DataRow]s should propagate onto the override.
+        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute()");
+        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(");
+        registry.Should().NotContain("new DataRowModel(");
+    }
+
+    [TestMethod]
+    public void Generator_SupportType_DeclaresInvokeAsTaskReturning()
+    {
+        const string userCode = """
+            // Empty consumer — we only care about the post-init support types.
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
+
+        support.Should().Contain("using System.Threading.Tasks;");
+        // Invoke must be Task-returning so consumers can await without type-testing the result.
+        // Uses `set` (not `init`) per the repo guideline that new public-shaped API must not use init accessors.
+        support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForVoidMethod_ReturnsCompletedTask()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void SyncVoid() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.Tests)instance!).SyncVoid(); return Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForTaskMethod_ForwardsTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public Task AsyncTask() => Task.CompletedTask;
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Task and Task<T> both forward via the same `Task? __t = …` path; null is tolerated so
+        // the invoker contract (non-null Task) holds even for a misbehaving test method.
+        registry.Should().Contain("Invoke = static (instance, args) => { Task? __t = ((global::Sample.Tests)instance!).AsyncTask(); return __t ?? Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForTaskOfTMethod_ForwardsTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public Task<int> AsyncTaskOfInt() => Task.FromResult(42);
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Invoke = static (instance, args) => { Task? __t = ((global::Sample.Tests)instance!).AsyncTaskOfInt(); return __t ?? Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForValueTaskMethod_ConsumesCompletedValueTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public ValueTask AsyncValueTask() => default;
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // ValueTask unwrap uses IsCompletedSuccessfully so the synchronous-completion fast path
+        // skips the Task allocation while still consuming the ValueTask source.
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTask(); if (__vt.IsCompletedSuccessfully) { __vt.GetAwaiter().GetResult(); return Task.CompletedTask; } return __vt.AsTask(); },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForValueTaskOfTMethod_ConsumesCompletedValueTask()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public ValueTask<string> AsyncValueTaskOfString() => new ValueTask<string>("ok");
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTaskOfString(); if (__vt.IsCompletedSuccessfully) { __vt.GetAwaiter().GetResult(); return Task.CompletedTask; } return __vt.AsTask(); },");
+    }
+
+    [TestMethod]
+    public void Generator_InvokerForNonVoidSyncMethod_DiscardsResultAndReturnsCompletedTask()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public int SyncInt() => 42;
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // For a sync non-void test the returned value is discarded but the call must still execute
+        // (its side-effects ARE the test). A plain invocation statement discards the value while also
+        // supporting `ref`-returning methods, where assigning a byref return to `_` would not compile.
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.Tests)instance!).SyncInt(); return Task.CompletedTask; },");
+    }
+
+    [TestMethod]
+    public void Generator_EmittedRegistry_ImportsSystemThreadingTasks()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // The registry file references Task.CompletedTask directly in every invoker, so it must
+        // bring System.Threading.Tasks into scope.
+        registry.Should().Contain("using System.Threading.Tasks;");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
+    {
+        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
+        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public class NonInheritedMarkerAttribute : System.Attribute { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [NonInheritedMarker]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("NonInheritedMarker");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0002_ReportedForNestedClassInsideGenericOuter()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer<T>
+                {
+                    [TestClass]
+                    public class InnerTests
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0002");
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("InnerTests");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0003_ReportedForFileLocalClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample;
+
+            [TestClass]
+            file class FileLocalTests
+            {
+                [TestMethod]
+                public void Test1() { }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0003");
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("FileLocalTests");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0003_ReportedForPrivateNestedClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    [TestClass]
+                    private class HiddenTests
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0003");
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("HiddenTests");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0003_NotReportedForInternalNestedInPublicOuter()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    [TestClass]
+                    internal class VisibleTests
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("typeof(global::Sample.Outer.VisibleTests)");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0003_ReportedWhenOuterIsPrivateNested()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private class HiddenOuter
+                    {
+                        [TestClass]
+                        public class Tests
+                        {
+                            [TestMethod]
+                            public void Test1() { }
+                        }
+                    }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0003");
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("typeof(global::Sample.Outer.HiddenOuter.Tests)");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0004_ReportedForGenericTestMethod_OtherMethodsStillEmitted()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void GenericMethod<T>() { }
+
+                    [TestMethod]
+                    public void NormalMethod() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0004");
+        string registry = GetRegistry(result);
+        // The class itself is still emitted because at least one supported member remains.
+        registry.Should().Contain("typeof(global::Sample.Tests)");
+        // The generic method is excluded from the registry; the normal one is present.
+        registry.Should().NotContain("\"GenericMethod\"");
+        registry.Should().Contain("\"NormalMethod\"");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0005_ReportedForByRefParameter()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void RefParam(ref int x) { }
+
+                    [TestMethod]
+                    public void NormalMethod() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+        string registry = GetRegistry(result);
+        registry.Should().Contain("typeof(global::Sample.Tests)");
+        registry.Should().NotContain("\"RefParam\"");
+        registry.Should().Contain("\"NormalMethod\"");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0005_ReportedForOutAndInParameters()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void OutParam(out int x) { x = 0; }
+
+                    [TestMethod]
+                    public void InParam(in int x) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Where(d => d.Id == "AOTSG0005").Should().HaveCount(2);
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("\"OutParam\"");
+        registry.Should().NotContain("\"InParam\"");
+    }
+
+    [TestMethod]
+    public void Diagnostic_AOTSG0005_ReportedForByRefConstructorParameter()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    public Tests() { }
+
+                    public Tests(ref int x) { }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+        // Constructor display name in the diagnostic must not produce a double-dot ("Tests..ctor"); we emit "Tests.ctor".
+        Diagnostic ctorDiagnostic = result.Diagnostics.Single(d => d.Id == "AOTSG0005");
+        string message = ctorDiagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().NotContain("..ctor");
+        message.Should().Contain("Sample.Tests.ctor");
+        string registry = GetRegistry(result);
+        // The valid parameterless constructor is still emitted.
+        registry.Should().Contain("typeof(global::Sample.Tests)");
+    }
+
+    [TestMethod]
+    public void Diagnostic_NoneReportedForWellFormedTestClass()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+
+                    [TestMethod]
+                    public void Test2(int x, string y) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void Generator_SupportTypes_DoNotUseInitAccessors()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
+
+        // Repo guideline: newly introduced public-shaped API (even when emitted as `internal sealed`
+        // into the consumer assembly) MUST NOT use `init` accessors. Guard against accidental
+        // reintroduction.
+        support.Should().NotContain("{ get; init; }");
+    }
+
+    [TestMethod]
+    public void Generator_DynamicDependenciesDoNotRootNestedTypes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    private sealed class NestedException : System.Exception { }
+
+                    [TestMethod]
+                    public void InheritedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    private sealed class NestedStream : System.IO.MemoryStream { }
+                    private enum ScenarioState { Ready }
+
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registration.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.DerivedTests))]");
+        registration.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.BaseTests))]");
+        foreach (string memberType in new[]
+        {
+            "PublicConstructors",
+            "NonPublicConstructors",
+            "PublicMethods",
+            "NonPublicMethods",
+            "PublicFields",
+            "NonPublicFields",
+            "PublicProperties",
+            "NonPublicProperties",
+        })
+        {
+            registration.Should().Contain($"DynamicallyAccessedMemberTypes.{memberType}");
+        }
+
+        registration.Should().NotContain("DynamicallyAccessedMemberTypes.All");
+        registration.Should().NotContain("DynamicallyAccessedMemberTypes.PublicNestedTypes");
+        registration.Should().NotContain("DynamicallyAccessedMemberTypes.NonPublicNestedTypes");
+    }
+
+    [TestMethod]
+    public void Generator_RootsClosedGenericBaseForDynamicDataReflectionFallback()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class GenericBase<T>
+                {
+                    protected static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+                }
+
+                [TestClass]
+                public class DerivedTests : GenericBase<int>
+                {
+                    [TestMethod]
+                    [DynamicData(nameof(Data))]
+                    public void Test(int value) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        string registry = GetRegistry(result);
+
+        registration.Should().Contain(
+            "[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.GenericBase<int>))]");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_PreservesNullableEnumTestMethodParametersForNativeAot()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public enum CustomValue
+                {
+                    First,
+                    Second,
+                }
+
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1(CustomValue? value) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registration.Should().Contain(
+            "[DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields, typeof(global::Sample.CustomValue))]");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsModuleInitializer_RegisteringAssemblyWithAttributes_AndCompilesAgainstHook()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                [TestCategory("Smoke")]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+
+                    public void NotATest() { }
+                }
+            }
+            """;
+
+        // The AOT generator is self-contained: it emits a single [ModuleInitializer] that registers
+        // the assembly with the adapter (so referencing only this package makes tests runnable),
+        // and the registration also publishes pre-materialized type-level attributes so the adapter
+        // serves them without runtime reflection.
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CreateDriver(compilation);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+
+        GeneratorRunResult result = driver.GetRunResult().Results[0];
+
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registration.Should().Contain("[ModuleInitializer]");
+        registration.Should().Contain("[DynamicDependency(TestClassMemberTypes, typeof(global::Sample.MyTests))]");
+
+        // The initializer consumes the MSTestReflectionMetadata registry (no more dead code) and
+        // publishes the delegate-based invokers via the richer Register overload so the adapter
+        // executes tests without runtime reflection.
+        registration.Should().Contain("global::MSTest.SourceGenerated.MSTestReflectionMetadata.TestClasses");
+        registration.Should().Contain("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(");
+        registration.Should().Contain("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>(0);");
+        registration.Should().Contain("methodInvokers[methodInfo] = method.Invoke;");
+        registration.Should().Contain("constructorInvokers[type] = constructors;");
+        registration.Should().Contain("propertySetters[propertyInfo] = property.Set;");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
+
+        // Only [TestMethod]-annotated methods become test roots; the registry's IsTestMethod flag
+        // drives that filtering at module-load time.
+        registration.Should().Contain("if (method.IsTestMethod)");
+        registration.Should().Contain("testMethodRoots.Add(methodInfo);");
+
+        // Enumerate reflection members once per class, then preserve the existing exact-signature
+        // matching and unresolved-member fallback over those cached arrays.
+        registration.Should().Contain("MethodInfo[]? availableMethods = null;");
+        registration.Should().Contain("availableMethods ??= type.GetMethods(memberFlags);");
+        registration.Should().Contain("ResolveMethod(availableMethods, method.DeclaringType, method.Name, method.ParameterTypes)");
+        registration.Should().Contain("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, Type declaringType");
+        registration.Should().Contain("availableProperties ??= type.GetProperties(memberFlags);");
+        registration.Should().Contain("private static PropertyInfo? ResolveProperty(PropertyInfo[] availableProperties");
+        registration.Should().NotContain("type.GetMethods(flags)");
+        registration.Should().Contain("object[] assemblyAttributes = global::MSTest.SourceGenerated.MSTestReflectionMetadata.AssemblyAttributes;");
+        registration.Should().NotContain("assemblyAttributeList");
+
+        // The generator run itself should produce no diagnostics. This guards against future
+        // generator changes that emit warnings/errors going unnoticed because the emitted code
+        // still happens to compile.
+        result.Diagnostics.Should().BeEmpty();
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the emitted module initializer must compile against the adapter's ReflectionMetadataHook");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsNothing_InRootingMode()
+    {
+        // The reflection-free generator must stay completely silent unless the consumer opts in via
+        // <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>. When the property is unset (no
+        // options provider below) the generator falls back to rooting, where the separate rooting
+        // generator owns emission, so this generator emits no sources at all — otherwise the assembly
+        // would be registered twice. (The shipped product default is ReflectionFree, supplied by
+        // MSTest.TestAdapter.targets; this test exercises the generator's unset fallback directly.)
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+
+        // No options provider => MSTestSourceGenMode is unset => generator falls back to rooting
+        // (independent of the shipped ReflectionFree product default, which comes from MSBuild targets).
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: null,
+            driverOptions: default);
+        driver = driver.RunGenerators(compilation);
+
+        GeneratorRunResult result = driver.GetRunResult().Results[0];
+        result.Diagnostics.Should().BeEmpty();
+        result.GeneratedSources.Should().BeEmpty("the reflection-free generator must not emit in rooting mode");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForPropertySource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DynamicDataSources = new DynamicDataSourceReflectionInfo[]");
+        registry.Should().Contain("SourceName = \"Data\"");
+        registry.Should().Contain("DeclaringType = typeof(global::Sample.MyTests)");
+        registry.Should().Contain("return (object?)global::Sample.MyTests.Data;");
+
+        // Property reads run user code, so the reflection fallback (PropertyInfo.GetValue) wraps a thrown
+        // exception in TargetInvocationException; the generated accessor must preserve that.
+        registry.Should().Contain("throw new global::System.Reflection.TargetInvocationException(ex);");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForParameterlessMethodSource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> GetData() => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(GetData))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("SourceName = \"GetData\"");
+        registry.Should().Contain("return (object?)global::Sample.MyTests.GetData();");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_ForMethodSourceWithArguments()
+    {
+        // A source method that takes arguments is invoked via MethodInfo.Invoke at runtime, whose binder
+        // applies primitive widening / conversions (e.g. int 3 -> long) that a direct unbox cast cannot
+        // replicate. Such sources must keep the (DAM-safe) reflection fallback instead of a generated
+        // accessor.
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> GetData(int count, string label) => new[] { new object[] { count, label } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(GetData), 3, "x")]
+                    public void Test1(int a, string b) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_ForVoidMethodSource()
+    {
+        // A void source method cannot be cast to object ((object?)Type.Source() would not compile), so the
+        // generator must skip it and keep the reflection fallback (which fails at runtime, as it did before).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static void GetData() { }
+
+                    [TestMethod]
+                    [DynamicData(nameof(GetData))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_WhenSourceKindMismatchesExplicitSourceType()
+    {
+        // 'Data' is a property, but the attribute explicitly requests a Method source. Reflection would look
+        // for a method named Data (and throw), so the generator must not register a property accessor that
+        // would silently satisfy the (invalid) method request.
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), DynamicDataSourceType.Method)]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForFieldSource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static readonly IEnumerable<object[]> DataField = new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(DataField), DynamicDataSourceType.Field)]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // A field read cannot run user code, so it stays a plain expression-bodied accessor with no
+        // TargetInvocationException wrapping (reflection reads fields via FieldInfo.GetValue without wrapping).
+        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.DataField");
+        registry.Should().NotContain("TargetInvocationException");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_ForUndefinedSourceType()
+    {
+        // (DynamicDataSourceType)99 is a legal cast in an attribute but not a defined enum member. Emitting
+        // DynamicDataSourceType.99 would not compile, so the generator must skip it and keep the reflection
+        // fallback.
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), (DynamicDataSourceType)99)]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForCrossTypeSource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public static class DataHolder
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+                }
+
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DynamicData(nameof(DataHolder.Data), typeof(DataHolder))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DeclaringType = typeof(global::Sample.DataHolder)");
+        registry.Should().Contain("return (object?)global::Sample.DataHolder.Data;");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDisplayNameAccessor_WhenCustomDisplayNameSpecified()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    public static string GetName(MethodInfo methodInfo, object[] data) => "custom";
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), DynamicDataDisplayName = nameof(GetName))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DisplayNameMethodName = \"GetName\"");
+        registry.Should().Contain("return global::Sample.MyTests.GetName(methodInfo, data!);");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsUnresolvableDynamicDataSource()
+    {
+        // The source name does not match any member, so the generator must not emit an accessor
+        // (the runtime falls back to reflection for it).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DynamicData("DoesNotExist")]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_DynamicDataRegistration_Compiles()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    public static string GetName(MethodInfo methodInfo, object[] data) => "custom";
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), DynamicDataDisplayName = nameof(GetName))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void GeneratedTypeAttributes_IncludeInheritedAttributes_WhenInheritedIsTrue()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Class, Inherited = true)]
+                public sealed class InheritedMarkerAttribute : Attribute { }
+
+                [InheritedMarker]
+                public abstract class BaseTests { }
+
+                [TestClass]
+                public sealed class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Sample.InheritedMarkerAttribute()");
+        registry.Should().Contain("AreAttributesComplete = true");
+    }
+
+    [TestMethod]
+    public void GeneratedTypeAttributes_ExcludeBaseAttributes_WhenInheritedIsFalse()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+                public sealed class BaseOnlyMarkerAttribute : Attribute { }
+
+                [BaseOnlyMarker]
+                public abstract class BaseTests { }
+
+                [TestClass]
+                public sealed class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        GetRegistry(result).Should().NotContain("global::Sample.BaseOnlyMarkerAttribute");
+    }
+
+    [TestMethod]
+    public void GeneratedTypeAttributes_KeepMostDerivedAttribute_WhenAllowMultipleIsFalse()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+                public sealed class MarkerAttribute : Attribute
+                {
+                    public MarkerAttribute(string value) { }
+                }
+
+                [Marker("base")]
+                public abstract class BaseTests { }
+
+                [TestClass]
+                [Marker("derived")]
+                public sealed class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("new global::Sample.MarkerAttribute(\"derived\")");
+        registry.Should().NotContain("new global::Sample.MarkerAttribute(\"base\")");
+    }
+
+    [TestMethod]
+    public void GeneratedTypeAttributes_KeepAllDerivedAndBaseAttributes_WhenAllowMultipleIsTrue()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = true)]
+                public sealed class MarkerAttribute : Attribute
+                {
+                    public MarkerAttribute(string value) { }
+                }
+
+                [Marker("base")]
+                public abstract class BaseTests { }
+
+                [TestClass]
+                [Marker("derived")]
+                public sealed class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        int derivedIndex = registry.IndexOf("new global::Sample.MarkerAttribute(\"derived\")", System.StringComparison.Ordinal);
+        int baseIndex = registry.IndexOf("new global::Sample.MarkerAttribute(\"base\")", System.StringComparison.Ordinal);
+        derivedIndex.Should().BeGreaterThan(-1);
+        baseIndex.Should().BeGreaterThan(derivedIndex, "inherited attributes should be emitted in derived-to-base order");
+    }
+
+    [TestMethod]
+    public void GeneratedTypeAttributes_MarkMetadataIncomplete_WhenAttributeCannotBeMaterialized()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class HiddenMarkerAttribute : System.Attribute { }
+
+                    [TestClass]
+                    [HiddenMarker]
+                    public sealed class Tests
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("HiddenMarkerAttribute");
+        registry.Should().Contain("AreAttributesComplete = false");
+        string registration = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registration.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+        int completenessGuardIndex = registration.IndexOf("if (testClass.AreAttributesComplete)", System.StringComparison.Ordinal);
+        int registrationIndex = registration.IndexOf("typeAttributes[type] = testClass.Attributes;", completenessGuardIndex, System.StringComparison.Ordinal);
+        completenessGuardIndex.Should().BeGreaterThan(-1);
+        registrationIndex.Should().BeGreaterThan(completenessGuardIndex);
+    }
+
+    [TestMethod]
+    public void GeneratedMethodAttributes_MarkEmptyMetadataComplete()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    public void Helper() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int helperIndex = registry.IndexOf("Name = \"Helper\"", System.StringComparison.Ordinal);
+        int emptyAttributesIndex = registry.IndexOf("Attributes = Array.Empty<Attribute>()", helperIndex, System.StringComparison.Ordinal);
+        int completeIndex = registry.IndexOf("AreAttributesComplete = true", emptyAttributesIndex, System.StringComparison.Ordinal);
+        helperIndex.Should().BeGreaterThan(-1);
+        emptyAttributesIndex.Should().BeGreaterThan(helperIndex);
+        completeIndex.Should().BeGreaterThan(emptyAttributesIndex);
+    }
+
+    [TestMethod]
+    public void GeneratedMethodAttributes_KeepAsyncDeclaredMetadataComplete()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    [TestMethod]
+                    [TestCategory("Async")]
+                    [DataRow(1, "small", true)]
+                    public async Task AsyncTaskTest(int size, string category, bool enabled)
+                        => await Task.Yield();
+
+                    [TestMethod]
+                    public async void AsyncVoidTest()
+                        => await Task.Yield();
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int asyncTaskIndex = registry.IndexOf("Name = \"AsyncTaskTest\"", System.StringComparison.Ordinal);
+        int asyncVoidIndex = registry.IndexOf("Name = \"AsyncVoidTest\"", System.StringComparison.Ordinal);
+        int asyncTaskCompleteIndex = registry.IndexOf("AreAttributesComplete = true", asyncTaskIndex, System.StringComparison.Ordinal);
+        int asyncVoidCompleteIndex = registry.IndexOf("AreAttributesComplete = true", asyncVoidIndex, System.StringComparison.Ordinal);
+        asyncTaskIndex.Should().BeGreaterThan(-1);
+        asyncVoidIndex.Should().BeGreaterThan(asyncTaskIndex);
+        asyncTaskCompleteIndex.Should().BeGreaterThan(asyncTaskIndex).And.BeLessThan(asyncVoidIndex);
+        asyncVoidCompleteIndex.Should().BeGreaterThan(asyncVoidIndex);
+        registry.Should().Contain("IsAsync = true");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"Async\")");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, \"small\", true })");
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        registration.Should().Contain("if (method.IsAsync)");
+        registration.Should().Contain("methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false)");
+        registration.Should().Contain("methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false)");
+        registration.Should().Contain("attributesWithCompilerMetadata");
+    }
+
+    [TestMethod]
+    public void GeneratedMethodAttributes_LeaveExplicitCompilerSpecialAsyncMetadataToTargetedReflection()
+    {
+        const string userCode = """
+            using System.Diagnostics;
+            using System.Runtime.CompilerServices;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    [TestMethod]
+                    [AsyncStateMachine(typeof(Tests))]
+                    [DebuggerStepThrough]
+                    public async Task AsyncTaskTest()
+                        => await Task.Yield();
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("new global::System.Runtime.CompilerServices.AsyncStateMachineAttribute");
+        registry.Should().NotContain("new global::System.Diagnostics.DebuggerStepThroughAttribute");
+        registry.Should().Contain("AreAttributesComplete = true");
+    }
+
+    [TestMethod]
+    public void RuntimeRegistration_RegistersCompleteMethodAttributes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    [TestMethod]
+                    [TestCategory("Generated")]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registration = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registration.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registration.Should().Contain("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>(");
+        int resolvedGuard = registration.IndexOf("if (methodInfo is not null)", System.StringComparison.Ordinal);
+        int completenessGuard = registration.IndexOf("if (method.AreAttributesComplete)", resolvedGuard, System.StringComparison.Ordinal);
+        int assignment = registration.IndexOf("methodAttributes[methodInfo] = attributes;", completenessGuard, System.StringComparison.Ordinal);
+        resolvedGuard.Should().BeGreaterThan(-1);
+        completenessGuard.Should().BeGreaterThan(resolvedGuard);
+        assignment.Should().BeGreaterThan(completenessGuard);
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters, descriptorTestMethods, descriptorCompleteTypes.ToArray());");
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity >= DiagnosticSeverity.Warning
+                && d.Location.SourceTree?.FilePath.EndsWith(".g.cs", System.StringComparison.Ordinal) is true)
+            .Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void RuntimeRegistration_DoesNotRegisterIncompleteMethodAttributes()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class HiddenAttribute : System.Attribute { }
+
+                    [TestClass]
+                    public sealed class Tests
+                    {
+                        [TestMethod]
+                        [Hidden]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+        string registration = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registration.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("AreAttributesComplete = false");
+        registry.Should().NotContain("new global::Sample.Outer.HiddenAttribute");
+        registration.Should().Contain("if (method.AreAttributesComplete)");
+        outputCompilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+    }
+
+    [TestMethod]
+    public void RuntimeRegistration_RegistersCompleteEmptyMethodAttributeArray()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    public void Helper() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+        string registry = GetRegistry(result);
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registry.Should().Contain("Attributes = Array.Empty<Attribute>()");
+        registry.Should().Contain("AreAttributesComplete = true");
+        registration.Should().Contain("methodAttributes[methodInfo] = attributes;");
+    }
+
+    [TestMethod]
+    public void RuntimeRegistration_DoesNotPopulatePropertyOrLocationDictionaries()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        string registration = RunGenerator(MinimalMSTestStub, userCode).GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+
+        registration.Should().NotContain("TypeProperties");
+        registration.Should().NotContain("TypePropertiesByName");
+        registration.Should().NotContain("TypeMethodLocations");
+        registration.Should().NotContain("typeof(global::Sample.Tests).GetProperty(");
+    }
+
+    private static string GetRegistry(GeneratorRunResult result)
+        => result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registry.g.cs")
+            .SourceText.ToString()
+            .Replace("\r\n", "\n");
+
+    private static GeneratorRunResult RunGenerator(params string[] sources)
+    {
+        CSharpCompilation compilation = CreateCompilation(sources);
+        GeneratorDriver driver = CreateDriver(compilation);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
+        return driver.GetRunResult().Results[0];
+    }
+
+    private static Compilation RunGeneratorAndGetCompilation(params string[] sources)
+    {
+        CSharpCompilation compilation = CreateCompilation(sources);
+        GeneratorDriver driver = CreateDriver(compilation);
+        driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+        return outputCompilation;
+    }
+
+    private static object[][] GetMaterializedDataRows(Compilation outputCompilation)
+    {
+        using var assemblyStream = new MemoryStream();
+        outputCompilation.Emit(assemblyStream).Success.Should().BeTrue();
+        var assembly = System.Reflection.Assembly.Load(assemblyStream.ToArray());
+        Type registryType = assembly.GetType("MSTest.SourceGenerated.MSTestReflectionMetadata")!;
+        var testClasses = (System.Collections.IEnumerable)registryType.GetProperty("TestClasses")!.GetValue(null)!;
+        object testClass = testClasses.Cast<object>().Single();
+        var methods = (System.Collections.IEnumerable)testClass.GetType().GetProperty("Methods")!.GetValue(testClass)!;
+        object method = methods.Cast<object>().Single();
+        var attributes = (Attribute[])method.GetType().GetProperty("Attributes")!.GetValue(method)!;
+        return attributes
+            .Where(attribute => attribute.GetType().Name == "DataRowAttribute")
+            .Select(attribute => (object[])attribute.GetType().GetProperty("Data")!.GetValue(attribute)!)
+            .ToArray();
+    }
+
+    // Drives the generator in ReflectionFree mode (the mode under test). Without the
+    // MSTestSourceGenMode=ReflectionFree option the generator stays silent (rooting is the default),
+    // so the test harness always opts in.
+    private static GeneratorDriver CreateDriver(CSharpCompilation compilation, bool trackIncrementalGeneratorSteps = false)
+        => CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: ReflectionFreeOptionsProvider.Instance,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps));
+
+    private static CSharpCompilation CreateCompilation(params string[] sources)
+        => CreateCompilation(CSharpParseOptions.Default, sources);
+
+    private static CSharpCompilation CreateCompilation(CSharpParseOptions parseOptions, params string[] sources)
+    {
+        // Always include the adapter hook stub so the emitted [ModuleInitializer] registration
+        // (which calls ReflectionMetadataHook.Register) compiles in the Roslyn test compilation
+        // without referencing MSTestAdapter.PlatformServices.
+        IEnumerable<SyntaxTree> trees = sources.Append(RuntimeHookStub).Select(source => CSharpSyntaxTree.ParseText(source, parseOptions));
+        MetadataReference[] references = new[]
+        {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Runtime.CompilerServices.ModuleInitializerAttribute).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Reflection.Assembly).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Collections.Generic.Dictionary<,>).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Reflection.MethodInfo).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Threading.Tasks.Task).Assembly.Location),
+        };
+
+        return CSharpCompilation.Create(
+            "TestSample",
+            trees,
+            references,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    /// <summary>
+    /// An <see cref="AnalyzerConfigOptionsProvider"/> whose global options report
+    /// <c>build_property.MSTestSourceGenMode = ReflectionFree</c>, so the generator under test emits
+    /// its reflection-free output instead of staying silent (rooting is the default mode).
+    /// </summary>
+    private sealed class ReflectionFreeOptionsProvider : AnalyzerConfigOptionsProvider
+    {
+        public static readonly ReflectionFreeOptionsProvider Instance = new();
+
+        public override AnalyzerConfigOptions GlobalOptions { get; } = new ReflectionFreeOptions();
+
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => GlobalOptions;
+
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => GlobalOptions;
+
+        private sealed class ReflectionFreeOptions : AnalyzerConfigOptions
+        {
+            public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value)
+            {
+                if (key == "build_property.MSTestSourceGenMode")
+                {
+                    value = "ReflectionFree";
+                    return true;
+                }
+
+                value = null;
+                return false;
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -8,6 +9,74 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
+
+#pragma warning disable RS0051 // Report engine internals are shared-source implementation detail, not package API.
+
+internal readonly record struct ReportEngineContext(
+    IFileSystem FileSystem,
+    ITestApplicationModuleInfo TestApplicationModuleInfo,
+    IEnvironment Environment,
+    ICommandLineOptions CommandLineOptions,
+    IConfiguration Configuration,
+    IClock Clock,
+    ITestFramework TestFramework,
+    DateTimeOffset TestStartTime,
+    int ExitCode,
+    CancellationToken CancellationToken,
+    int? ProcessId = null,
+    bool IsIncomplete = false)
+{
+    public ReportEngineContext(
+        IFileSystem fileSystem,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        IEnvironment environment,
+        ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
+        IClock clock,
+        ITestFramework testFramework,
+        DateTimeOffset testStartTime,
+        int exitCode,
+        CancellationToken cancellationToken)
+        : this(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken,
+            ProcessId: null,
+            IsIncomplete: false)
+    {
+    }
+
+    public void Deconstruct(
+        out IFileSystem fileSystem,
+        out ITestApplicationModuleInfo testApplicationModuleInfo,
+        out IEnvironment environment,
+        out ICommandLineOptions commandLineOptions,
+        out IConfiguration configuration,
+        out IClock clock,
+        out ITestFramework testFramework,
+        out DateTimeOffset testStartTime,
+        out int exitCode,
+        out CancellationToken cancellationToken)
+    {
+        fileSystem = FileSystem;
+        testApplicationModuleInfo = TestApplicationModuleInfo;
+        environment = Environment;
+        commandLineOptions = CommandLineOptions;
+        configuration = Configuration;
+        clock = Clock;
+        testFramework = TestFramework;
+        testStartTime = TestStartTime;
+        exitCode = ExitCode;
+        cancellationToken = CancellationToken;
+    }
+}
 
 /// <summary>
 /// Shared base class for report engine implementations (CTRF, JUnit, HTML, ...) that all consume
@@ -27,54 +96,97 @@ internal abstract class ReportEngineBase
     protected readonly DateTimeOffset _testStartTime;
     protected readonly int _exitCode;
     protected readonly CancellationToken _cancellationToken;
+    protected readonly int? _processId;
+    protected readonly bool _isIncomplete;
 #pragma warning restore SA1401
 
-    protected ReportEngineBase(
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IEnvironment environment,
-        ICommandLineOptions commandLineOptions,
-        IConfiguration configuration,
-        IClock clock,
-        ITestFramework testFramework,
-        DateTimeOffset testStartTime,
-        int exitCode,
-        CancellationToken cancellationToken)
+    protected ReportEngineBase(ReportEngineContext context)
     {
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
-        _commandLineOptions = commandLineOptions;
-        _configuration = configuration;
-        _clock = clock;
-        _testFramework = testFramework;
-        _testStartTime = testStartTime;
-        _exitCode = exitCode;
-        _cancellationToken = cancellationToken;
+        _fileSystem = context.FileSystem;
+        _testApplicationModuleInfo = context.TestApplicationModuleInfo;
+        _environment = context.Environment;
+        _commandLineOptions = context.CommandLineOptions;
+        _configuration = context.Configuration;
+        _clock = context.Clock;
+        _testFramework = context.TestFramework;
+        _testStartTime = context.TestStartTime;
+        _exitCode = context.ExitCode;
+        _cancellationToken = context.CancellationToken;
+        _processId = context.ProcessId;
+        _isIncomplete = context.IsIncomplete;
     }
 
-    protected static string GetProvidedFileName(string[]? providedFileName)
+    internal static string GetProvidedFileName(string[]? providedFileName)
         => providedFileName is { Length: > 0 }
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
 
+    protected static string ReplaceInvalidFileNameChars(string fileName)
+        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
+
     protected string ResolveProvidedFileName(string template)
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        string processId = (_processId ?? _environment.ProcessId).ToString(CultureInfo.InvariantCulture);
         return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
     protected string BuildDefaultFileName(string extension)
+        => BuildDefaultFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), extension);
+
+    internal static string BuildDefaultFileName(string testApplicationModule, string extension)
     {
         // Deterministic <asm>_<tfm>_<arch>.<extension> shape — discoverable across
         // reruns and multi-target/multi-arch matrices. A second run into the same
         // TestResults folder overwrites the previous file (with a warning), matching
         // the behavior of an explicitly-provided file name.
-        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string moduleName = Path.GetFileNameWithoutExtension(testApplicationModule);
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";
-        return ReportFileNameSanitizer.ReplaceInvalidFileNameChars(raw);
+        return ReplaceInvalidFileNameChars(raw);
+    }
+
+    protected (string FinalPath, bool WasExplicit) ResolveOutputPath(string fileNameOptionName, string extension)
+        => ResolveOutputPath(fileNameOptionName, () => BuildDefaultFileName(extension));
+
+    protected (string FinalPath, bool WasExplicit) ResolveOutputPath(string fileNameOptionName, Func<string> defaultFileNameFactory)
+    {
+        _cancellationToken.ThrowIfCancellationRequested();
+
+        // TryGetOptionArgumentListOrDefault also returns true for a passive default coming from
+        // testconfig.json, so it cannot be used to determine explicitness. Use it only to pick the
+        // file name, and derive wasExplicit from IsOptionSet to preserve the documented contract.
+        bool wasExplicit = _commandLineOptions.IsOptionSet(fileNameOptionName);
+        string fileName = _commandLineOptions.TryGetOptionArgumentListOrDefault(fileNameOptionName, out string[]? providedFileName)
+            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
+            : defaultFileNameFactory();
+
+        string outputDirectory = _configuration.GetTestResultDirectory();
+        // Path.Combine short-circuits when the second argument is rooted, so an absolute
+        // user-provided file name overrides the test results directory while validated
+        // relative paths stay nested under it.
+        string finalPath = Path.Combine(outputDirectory, fileName);
+        string? finalDirectory = Path.GetDirectoryName(finalPath);
+        if (!RoslynString.IsNullOrEmpty(finalDirectory))
+        {
+            _fileSystem.CreateDirectory(finalDirectory);
+        }
+
+        return (finalPath, wasExplicit);
+    }
+
+    protected async Task WriteBytesAsync(string path, FileMode mode, byte[] bytes)
+    {
+        // Note that we need to dispose the IFileStream, not the inner stream.
+        // IFileStream implementations will be responsible to dispose their inner stream.
+        using IFileStream stream = _fileSystem.NewFileStream(path, mode);
+#if NETCOREAPP
+        await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
+#else
+        await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
+#endif
     }
 }
+
+#pragma warning restore RS0051

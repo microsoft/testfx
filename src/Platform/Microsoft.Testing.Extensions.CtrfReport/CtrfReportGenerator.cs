@@ -1,46 +1,28 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using Microsoft.Testing.Extensions.CtrfReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
+#pragma warning disable RS0051 // Crash-recovery serialization is an implementation detail.
+
 internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenerator, CapturedTestResult>
 {
-    public CtrfReportGenerator(
-        IConfiguration configuration,
-        ICommandLineOptions commandLineOptions,
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IMessageBus messageBus,
-        IClock clock,
-        IEnvironment environment,
-        IOutputDevice outputDevice,
-        ITestFramework testFramework,
-        ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILogger<CtrfReportGenerator> logger)
-        : base(
-            configuration,
-            commandLineOptions,
-            fileSystem,
-            testApplicationModuleInfo,
-            messageBus,
-            clock,
-            environment,
-            outputDevice,
-            testFramework,
-            testApplicationProcessExitCode,
-            logger,
-            CtrfReportGeneratorCommandLine.CtrfReportOptionName)
+    internal const string CtrfArtifactKind = "microsoft.testing.ctrf";
+    internal const string JournalEnvironmentVariableName = "TESTINGPLATFORM_CTRFREPORT_JOURNAL";
+
+    public CtrfReportGenerator(IServiceProvider serviceProvider)
+        : base(serviceProvider, CtrfReportGeneratorCommandLine.CtrfReportOptionName, JournalEnvironmentVariableName)
+    {
+    }
+
+    internal CtrfReportGenerator(IServiceProvider serviceProvider, RecoveredReportMetadata recoveredMetadata)
+        : base(serviceProvider, CtrfReportGeneratorCommandLine.CtrfReportOptionName, recoveredMetadata)
     {
     }
 
@@ -55,10 +37,21 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
 
     protected override string ArtifactDisplayName => ExtensionResources.CtrfReportArtifactDisplayName;
 
+    protected override string? ArtifactKind => CtrfArtifactKind;
+
     protected override string ArtifactDescription => ExtensionResources.CtrfReportArtifactDescription;
 
     protected override string GetGenerationLogMessage(int testResultCount)
         => $"Generating CTRF report for {testResultCount} test result(s).";
+
+    protected override string SerializeJournalRecord(ReportJournalRecord<CapturedTestResult> record)
+        => JsonSerializer.Serialize(record, typeof(ReportJournalRecord<CapturedTestResult>), ReportJournalJsonSerializerContext.Default);
+
+    internal static ReportJournalRecord<CapturedTestResult>? DeserializeJournalRecord(string json)
+        => (ReportJournalRecord<CapturedTestResult>?)JsonSerializer.Deserialize(
+            json,
+            typeof(ReportJournalRecord<CapturedTestResult>),
+            ReportJournalJsonSerializerContext.Default);
 
     protected override CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
         => TestResultCapture.TryCapture(update.TestNode);
@@ -68,18 +61,10 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-    {
-        var engine = new CtrfReportEngine(
-            FileSystem,
-            TestApplicationModuleInfo,
-            Environment,
-            CommandLineOptions,
-            Configuration,
-            Clock,
-            TestFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken);
-        return engine.GenerateReportAsync(tests);
-    }
+        => new CtrfReportEngine(CreateReportEngineContext(testStartTime, exitCode, cancellationToken)).GenerateReportAsync(tests);
 }
+
+[JsonSerializable(typeof(ReportJournalRecord<CapturedTestResult>))]
+internal sealed partial class ReportJournalJsonSerializerContext : JsonSerializerContext;
+
+#pragma warning restore RS0051

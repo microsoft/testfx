@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -193,6 +193,76 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
             {
                 [CustomTestMethod]
                 public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsNotInTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                [[|TestMethod(DisplayName = "MyTestMethod")|]]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodHasCustomDerivedAttributeAndBuiltinTestMethodAttributeAndOnlyCustomHasRedundantDisplayName_SingleDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [[|CustomTestMethod(DisplayName = "MyTestMethod")|]]
+                [DataTestMethod(DisplayName = "My friendly name")]
+                [DataRow(1)]
+                public void MyTestMethod(int value)
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [CustomTestMethod]
+                [DataTestMethod(DisplayName = "My friendly name")]
+                [DataRow(1)]
+                public void MyTestMethod(int value)
                 {
                 }
             }

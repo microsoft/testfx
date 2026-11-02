@@ -20,10 +20,6 @@ internal partial class TestMethodInfo : ITestMethod
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
-    private object? _classInstance;
-    private bool _isTestContextSet;
-    private bool _isTestCleanupInvoked;
-
     private ExecutionContext? _executionContext;
 
 #if NETFRAMEWORK
@@ -32,8 +28,8 @@ internal partial class TestMethodInfo : ITestMethod
 
     internal TestMethodInfo(MethodInfo testMethod, TestClassInfo parent)
     {
-        DebugEx.Assert(testMethod != null, "TestMethod should not be null");
-        DebugEx.Assert(parent != null, "Parent should not be null");
+        DebugEx.Assert(testMethod is not null, "TestMethod should not be null");
+        DebugEx.Assert(parent is not null, "Parent should not be null");
 
         MethodInfo = testMethod;
         Parent = parent;
@@ -60,7 +56,91 @@ internal partial class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets the parameter types of the test method.
     /// </summary>
-    public ParameterInfo[] ParameterTypes => MethodInfo.GetParameters();
+    /// <remarks>
+    /// Lazy-cached: <c>MethodInfo.GetParameters()</c> returns a fresh array copy on every call
+    /// (CLR safety guarantee), so caching avoids N redundant copies for data-driven tests with N rows.
+    /// This cached array is shared across internal call sites and MUST NOT be mutated. The explicit
+    /// <see cref="ITestMethod.ParameterTypes"/> implementation hands external consumers a fresh copy to
+    /// preserve the previous "fresh array per call" behavior and protect the cache from mutation.
+    /// </remarks>
+    public ParameterInfo[] ParameterTypes => field ??= MethodInfo.GetParameters();
+
+    /// <inheritdoc />
+    ParameterInfo[] ITestMethod.ParameterTypes => (ParameterInfo[])ParameterTypes.Clone();
+
+    // Immutable parameter metadata (params-parameter index and required-parameter count) is a pure function
+    // of the MethodInfo. It is cached at process scope keyed by MethodInfo so that ResolveArguments does not
+    // re-run a reflective attribute scan for it. This is shared across TestMethodInfo instances, so even the
+    // default execution path — where discovery unfolds data sources and each row constructs a fresh
+    // TestMethodInfo — performs the scan only once per test method rather than once per row.
+    // The Lazy ensures the scan runs exactly once per method even when method-level parallelization lets
+    // several unfolded rows reach the miss path concurrently.
+    private static readonly ConcurrentDictionary<MethodInfo, Lazy<ParameterMetadata>> ParameterMetadataCache = new();
+
+    // Test-only instrumentation counting how many times the reflective parameter scan actually ran, so tests
+    // can assert that repeated and concurrent access for one MethodInfo collapses to a single computation.
+    private static int s_parameterMetadataScanCount;
+
+    // Test-only callback invoked at the start of each parameter scan. Tests use it to hold a scan open long
+    // enough to make competing cache misses race deterministically. Never set outside tests.
+    private static Action? s_onParameterMetadataScanForTesting;
+
+    internal static int ParameterMetadataScanCount => s_parameterMetadataScanCount;
+
+    internal static void SetParameterMetadataScanCallbackForTesting(Action? callback)
+        => s_onParameterMetadataScanForTesting = callback;
+
+    internal static void ResetParameterMetadataCacheForTesting()
+    {
+        ParameterMetadataCache.Clear();
+        Interlocked.Exchange(ref s_parameterMetadataScanCount, 0);
+        s_onParameterMetadataScanForTesting = null;
+    }
+
+    private ParameterMetadata GetParameterMetadata()
+    {
+        if (!ParameterMetadataCache.TryGetValue(MethodInfo, out Lazy<ParameterMetadata>? metadata))
+        {
+            ParameterInfo[] parametersInfo = ParameterTypes;
+            metadata = ParameterMetadataCache.GetOrAdd(
+                MethodInfo,
+                _ => new Lazy<ParameterMetadata>(() => ParameterMetadata.Compute(parametersInfo), isThreadSafe: true));
+        }
+
+        return metadata.Value;
+    }
+
+    private readonly record struct ParameterMetadata(int ParamsParameterIndex, int RequiredParameterCount)
+    {
+        internal bool HasParams => ParamsParameterIndex >= 0;
+
+        internal static ParameterMetadata Compute(ParameterInfo[] parametersInfo)
+        {
+            Interlocked.Increment(ref s_parameterMetadataScanCount);
+            s_onParameterMetadataScanForTesting?.Invoke();
+            int requiredParameterCount = 0;
+            int paramsParameterIndex = -1;
+            for (int i = 0; i < parametersInfo.Length; i++)
+            {
+                ParameterInfo parameter = parametersInfo[i];
+
+                // A params array parameter is not required and, when present, is always the last parameter.
+                // Use IsDefined rather than GetCustomAttribute to avoid materializing the attribute instance.
+                if (parameter.IsDefined(typeof(ParamArrayAttribute), inherit: false))
+                {
+                    paramsParameterIndex = i;
+                    break;
+                }
+
+                if (!parameter.IsOptional)
+                {
+                    requiredParameterCount++;
+                }
+            }
+
+            return new ParameterMetadata(paramsParameterIndex, requiredParameterCount);
+        }
+    }
 
     /// <summary>
     /// Gets the return type of the test method.
@@ -119,6 +199,8 @@ internal partial class TestMethodInfo : ITestMethod
     /// <returns>Result of test method invocation.</returns>
     public virtual async Task<TestResult> InvokeAsync(object?[]? arguments)
     {
+        var testContextImpl = TestContext as TestContextImplementation;
+        using IDisposable? assertionFailureDiagnosticsScope = testContextImpl?.StartAssertionFailureDiagnosticsScope();
         Stopwatch watch = new();
         TestResult? result = null;
 
@@ -138,13 +220,10 @@ internal partial class TestMethodInfo : ITestMethod
             // Handle logs & debug traces.
             watch.Stop();
 
-            if (result != null)
+            if (result is not null)
             {
-                var testContextImpl = TestContext as TestContextImplementation;
-                result.LogOutput = testContextImpl?.GetAndClearOutput();
-                result.LogError = testContextImpl?.GetAndClearError();
-                result.DebugTrace = testContextImpl?.GetAndClearTrace();
-                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                result.SetOutputAndTraces(testContextImpl, TestContext);
+                testContextImpl?.FinalizeAssertionFailureDiagnostics(result.Outcome);
                 result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
             }

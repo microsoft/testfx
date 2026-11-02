@@ -23,12 +23,13 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PreferAssertFailOverAlwaysFalseConditionsRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Design,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -61,7 +62,11 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
             IsAlwaysFalse(operation))
         {
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties: null, operation.TargetMethod.Name));
+            // Assert.Fail returns void, so it cannot replace a result used by another expression.
+            ImmutableDictionary<string, string?>? properties = operation.TargetMethod.ReturnsVoid || operation.Parent is IExpressionStatementOperation
+                ? null
+                : DiagnosticDescriptorHelper.CannotFixProperties;
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties, operation.TargetMethod.Name));
         }
     }
 
@@ -78,12 +83,25 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         {
             "IsTrue" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
             "IsFalse" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
-            "AreEqual" => AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.NotEqual,
-            "AreNotEqual" => AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal
-                || AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActual(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName),
+            "AreEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
+                && AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.NotEqual,
+            "AreNotEqual" => !AssertConditionAnalyzerHelper.HasNonDefaultEqualityComparerArgument(operation)
+                && (AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal
+                    || AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActualWithBuiltInEquality(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName)),
             "AreNotSame" => AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActual(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName),
             "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
+            "IsExactInstanceOfType" => operation.TargetMethod.TypeArguments is [{ IsAbstract: true }]
+                || IsAbstractTypeOf(operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == "expectedType")?.Value),
+            _ => false,
+        };
+
+    private static bool IsAbstractTypeOf(IOperation? operation)
+        => operation switch
+        {
+            ITypeOfOperation { TypeOperand.IsAbstract: true } => true,
+            IParenthesizedOperation parenthesized => IsAbstractTypeOf(parenthesized.Operand),
+            IConversionOperation { Conversion.IsUserDefined: false } conversion => IsAbstractTypeOf(conversion.Operand),
             _ => false,
         };
 }

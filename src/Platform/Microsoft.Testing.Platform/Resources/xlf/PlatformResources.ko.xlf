@@ -2,6 +2,31 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortAtDeadlineCapabilityUnavailableWarning">
+        <source>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</source>
+        <target state="translated">환경 변수 '{0}'이(가) 설정되었지만 테스트 프레임워크에서 '{1}'을(를) 지원하지 않습니다. 마감일 전에 플랫폼이 테스트 실행을 중지할 수 없습니다.</target>
+        <note>{0} is the environment variable name. {1} is the capability interface name.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineDescription">
+        <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
+        <target state="translated">보고서를 마무리할 수 있도록 CI 적용 마감일 직전에 테스트 실행을 정상적으로 중지하는 확장입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidDeadlineWarning">
+        <source>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</source>
+        <target state="translated">환경 변수 '{0}'은(는) '{1}'(으)로 설정되어 있지만 유효한 절대 ISO 8601 인스턴스가 아닙니다. 마감일 인식 취소를 사용할 수 없습니다.</target>
+        <note>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineInvalidMarginOrderWarning">
+        <source>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</source>
+        <target state="translated">마감일 덤프 여유 시간({0})이 중지 여유 시간({1})보다 크거나 같습니다. 중지 덤프는 정상 중지 전에 시작될 수 있습니다.</target>
+        <note>{0} is the dump margin. {1} is the stop margin.</note>
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineMessage">
+        <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
+        <target state="translated">마감일 임박: CI 강제 취소(hard-cancel) 전에 보고서를 마무리할 수 있도록 테스트 실행을 정상적으로 중지합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
         <target state="translated">현재 테스트 프레임워크는 '--maximum-failed-tests' 기능에 필요한 'IGracefulStopTestExecutionCapability'를 구현하지 않습니다.</target>
@@ -16,6 +41,86 @@
         <source>Aborted</source>
         <target state="translated">중단됨</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherCommandLineDescription">
+        <source>Internal command line for artifact post-processing.</source>
+        <target state="translated">아티팩트 후처리를 위한 내부 명령줄입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDescription">
+        <source>Dispatches artifact post-processing jobs selected by dotnet test.</source>
+        <target state="translated">dotnet test에서 선택한 아티팩트 후처리 작업을 전달합니다.</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDisplayName">
+        <source>Artifact post-processing dispatcher</source>
+        <target state="translated">아티팩트 후처리 디스패처</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
+        <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
+        <target state="translated">처리된 아티팩트는 출력 디렉터리 아래에 있는 기존 파일이어야 하며 입력 아티팩트를 덮어쓸 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
+        <source>The artifact post-processing manifest does not exist.</source>
+        <target state="translated">아티팩트 후처리 매니페스트가 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestOptionDescription">
+        <source>Path to the artifact post-processing manifest.</source>
+        <target state="translated">아티팩트 후처리 매니페스트 경로입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorConflict">
+        <source>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</source>
+        <target state="translated">'{0}'과(와) 일치하는 아티팩트 후처리기가 여러 개 있습니다. 먼저 등록된 처리기 '{1}'을(를) 사용합니다.</target>
+        <note>{0} is an artifact kind or file extension. {1} is an extension UID.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorFailed">
+        <source>Artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">아티팩트 후처리기 '{0}'이(가) 실패함: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherRequiresPipe">
+        <source>The artifact post-processing dispatcher requires a dotnet test pipe.</source>
+        <target state="translated">아티팩트 후처리 디스패처에는 dotnet test 파이프가 필요합니다.</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputMissingPath">
+        <source>Artifact post-processing manifest input {0} does not have a path.</source>
+        <target state="translated">아티팩트 후처리 매니페스트 입력 {0}에 경로가 없습니다.</target>
+        <note>{0} is the zero-based input index.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
+        <source>The artifact post-processing manifest inputs property must be an array.</source>
+        <target state="translated">아티팩트 후처리 매니페스트의 inputs 속성은 배열이어야 합니다.</target>
+        <note>Do not localize property name {Locked="inputs"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInvalid">
+        <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
+        <target state="translated">아티팩트 후처리 매니페스트에는 schemaVersion 1과 outputDirectory가 있어야 합니다.</target>
+        <note>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestReadError">
+        <source>Cannot read the artifact post-processing manifest: {0}</source>
+        <target state="translated">아티팩트 후처리 매니페스트를 읽을 수 없음: {0}</target>
+        <note>{0} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="translated">아티팩트 사후 처리 매니페스트 runSummary에는 유효한 totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode 및 testModuleCount 값이 포함되어야 합니다.</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
+        <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
+        <target state="translated">아티팩트 후처리기 '{0}'은(는) 기능 '{1}'을(를) 선언합니다. 이 기능에는 세미콜론 구분 기호를 포함할 수 없습니다.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
+        <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
+        <target state="translated">아티팩트 후처리기 '{0}'이(가) 잘못된 기능 '{1}'을(를) 선언합니다. 종류는 비어 있을 수 없고, 대체 확장명은 소문자여야 하며 점으로 시작해야 합니다.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
@@ -33,9 +138,9 @@
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="translated">3초 후에 고유한 로그 파일을 만들지 못했습니다. 마지막으로 시도한 파일 이름은 '{0}'입니다.</target>
-        <note>{0} is the last log file name that was tried.</note>
+        <source>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</source>
+        <target state="translated">진단 로그 파일 '{0}'을(를) {1}번 시도한 후에도 만들지 못했습니다. 마지막 오류: {2}</target>
+        <note>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
@@ -117,6 +222,16 @@
         <target state="translated">공급자 '{1}'(UID: {2})의 옵션 '-- {0}'이 예약된 접두사 '--internal'을 사용하고 있습니다.</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
       </trans-unit>
+      <trans-unit id="CommandLineOptionRequiresExtension">
+        <source>Option '--{0}' is provided by the '{1}' extension. Add a package reference to use it.</source>
+        <target state="translated">'--{0}' 옵션은 '{1}' 확장에서 제공됩니다. 사용할 패키지 참조를 추가합니다.</target>
+        <note>{0} is the option name without the leading dashes. {1} is the extension's NuGet package name.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineOptionSuggestion">
+        <source>Did you mean '--{0}'?</source>
+        <target state="translated">'--{0}'을(를) 의미했나요?</target>
+        <note>{0} is the suggested option name without the leading dashes.</note>
+      </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
         <target state="translated">ICommandLineOptions가 아직 빌드되지 않았습니다.</target>
@@ -125,7 +240,12 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">응답 파일 '{0}'을(를) 읽지 못했습니다. {1}.</target>
-        <note>{0} is the response file path. {1} is the exception message.</note>
+        <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineParserRecursiveResponseFile">
+        <source>A recursive response file reference was detected.</source>
+        <target state="translated">응답 파일에 재귀 참조가 감지되었습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
@@ -162,15 +282,75 @@
         <target state="translated">알 수 없는 옵션 '--{0}'</target>
         <note>{0} is the unknown option name without the leading dashes.</note>
       </trans-unit>
+      <trans-unit id="CommandLineUnknownOptionsHint">
+        <source>Run '--help' to see the options registered by this test application. If the option belongs to an extension, ensure its package is referenced and the extension is registered.</source>
+        <target state="translated">'--help'를 실행하여 이 테스트 애플리케이션에서 등록된 옵션을 확인합니다. 옵션이 확장에 속하는 경우 패키지가 참조되고 확장이 등록되어 있는지 확인합니다.</target>
+        <note>{Locked="--help"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestBlameReplacement">
+        <source>Use '--crashdump' and/or '--hangdump' instead. MTP separates crash and hang diagnostics, so there is no one-to-one replacement for the VSTest blame collector.</source>
+        <target state="translated">대신 '--crashdump' 및/또는 '--hangdump'를 사용하세요. MTP는 충돌 및 중단 진단을 분리하여 제공하므로, VSTest의 블레임 수집기를 일대일로 대체할 수는 없습니다.</target>
+        <note>{Locked="--crashdump"}{Locked="--hangdump"}{Locked="MTP"}{Locked="VSTest"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestCollectorGuidance">
+        <source>MTP uses collector-specific options. Consult the extension's documentation for its MTP option.</source>
+        <target state="translated">MTP는 수집기별 옵션을 사용합니다. 해당 MTP 옵션은 확장의 문서를 참조하세요.</target>
+        <note>{Locked="MTP"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestConsoleLoggerReplacement">
+        <source>For comparable console verbosity, use '--output {0}'. MTP console output is configured differently, so this is not an exact replacement.</source>
+        <target state="translated">콘솔의 세부 정보 표시를 비교하려면 '--output {0}'를 사용합니다. 콘솔 출력MTP 다르게 구성되었으므로 정확한 대체가 아닙니다.</target>
+        <note>{0} is the MTP output verbosity. {Locked="MTP"}{Locked="--output {0}"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestLoggerGuidance">
+        <source>MTP uses reporter-specific options such as '--report-trx', '--report-html', and '--report-junit'. Consult the reporter extension's documentation for its MTP option.</source>
+        <target state="translated">MTP는 '--report-trx', '--report-html', '--report-junit'과 같은 리포터별 옵션을 사용합니다. 해당 MTP 옵션은 리포터 확장의 문서를 참조하세요.</target>
+        <note>{Locked="MTP"}{Locked="--report-trx"}{Locked="--report-html"}{Locked="--report-junit"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestOptionUnsupported">
+        <source>Option '--{0}' uses VSTest syntax, which is not supported by Microsoft.Testing.Platform.</source>
+        <target state="translated">'--{0}' 옵션은 Microsoft.Testing.Platform에서 지원하지 않는 VSTest 구문을 사용합니다.</target>
+        <note>{0} is the unsupported VSTest option name without the leading dashes. {Locked="VSTest"}{Locked="Microsoft.Testing.Platform"}</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestReplacementSuggestion">
+        <source>Use {0} instead.</source>
+        <target state="translated">{0}을(를) 대신 사용하세요.</target>
+        <note>{0} is one or more replacement MTP command-line options, including their leading dashes.</note>
+      </trans-unit>
+      <trans-unit id="CommandLineVSTestXPlatCoverageReplacement">
+        <source>For MTP code coverage, use '--coverage'. This is not a transparent replacement for Coverlet's 'XPlat Code Coverage' collector.</source>
+        <target state="translated">MTP 코드 검사에는 '--coverage'를 사용하세요. 이 옵션은 Coverlet의 'XPlat Code Coverage' 수집기를 그대로 대체하지는 않습니다.</target>
+        <note>{Locked="MTP"}{Locked="--coverage"}{Locked="Coverlet"}{Locked="XPlat Code Coverage"}</note>
+      </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
         <source>Command line: {0}</source>
         <target state="translated">명령줄: {0}</target>
         <note>{0} is the command line used to run the application.</note>
       </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
+        <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
+        <target state="translated">복합 확장 '{0}'의 인스턴스를 만들지 못했습니다. 자세한 내용은 내부 예외를 참조하세요.</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
+        <source>The factory for composite extension '{0}' returned a null instance.</source>
+        <target state="translated">복합 확장 '{0}'의 팩터리에서 null 인스턴스를 반환했습니다.</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">동일한 'CompositeExtensionFactory' 인스턴스가 이미 등록됨</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
+        <source>A composite test execution filter cannot contain a null child filter.</source>
+        <target state="translated">복합 테스트 실행 필터는 null 자식 필터를 포함할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
+        <source>A composite test execution filter requires at least two child filters.</source>
+        <target state="translated">복합 테스트 실행 필터에는 두 개 이상의 자식 필터가 필요합니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
@@ -202,6 +382,26 @@
         <target state="translated">{0} 디렉터리를 찾을 수 없음</target>
         <note>{0} is the directory path.</note>
       </trans-unit>
+      <trans-unit id="CoverageThresholdAmbiguous">
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
+        <target state="translated">여러 검사 생산자 또는 세션이 요청된 메트릭에 대한 전체 측정값을 보고했기 때문에 '--{0}'을(를) 평가할 수 없습니다. 요청된 메트릭에 정확히 하나의 전체 측정값이 있는지 확인합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdEmptyMeasurement">
+        <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
+        <target state="translated">'--{0}'에는 요청된 메트릭에 대한 비어 있지 않은 전체 코드 검사 데이터가 필요합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdMissingMeasurement">
+        <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
+        <target state="translated">'--{0}'을(를) 사용하려면 요청된 메트릭에 대한 전체 검사 측정값이 필요합니다. 호환되는 검사 수집기를 사용하도록 설정합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNotMet">
+        <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
+        <target state="translated">'--{0}'에 대한 적용 범위 임계값이 실패했습니다. {1}% &lt; {2}%.</target>
+        <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
+      </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
         <target state="translated">경고: 환경 변수 '{0}'은(는) 더 이상 사용되지 않으며 향후 주 버전에서 제거됩니다. 대신 '{1}'을(를) 사용합니다.</target>
@@ -226,6 +426,136 @@
         <source>Discovering tests from</source>
         <target state="translated">다음에서 테스트 검색하는 중</target>
         <note />
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
+        <target state="translated">확장 매니페스트 '{2}'에 선언된 확장 '{1}'의 어셈블리 '{0}'을(를) 로드할 수 없습니다.</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
+        <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
+        <target state="translated">확장 매니페스트 '{2}'에 선언된 확장 '{1}'의 어셈블리 '{0}'을(를) 찾을 수 없습니다.</target>
+        <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
+        <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
+        <target state="translated">확장 매니페스트 '{0}'에 선언된 확장 '{1}'이(가) 테스트 프레임워크를 등록하려고 했습니다. 동적으로 로드되는 확장은 테스트 프레임워크를 대체하면 안 됩니다. 그러면 어떤 테스트가 실행되고 어떤 결과가 보고되는지 조용히 바뀔 수 있기 때문입니다.</target>
+        <note>{0} is the extension display name. {1} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
+        <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
+        <target state="translated">확장 ID '{0}'이(가) 서로 다른 내용으로 두 번 선언되었습니다. 확장 매니페스트 '{2}'의 '{1}'과(와) 확장 매니페스트 '{4}'의 '{3}’입니다. ID는 같은 확장을 식별해야 합니다. 그렇지 않으면 한 선언이 다른 선언을 조용히 대체하게 됩니다.</target>
+        <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookFailedErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
+        <target state="translated">확장 매니페스트 '{3}'에 선언된 어셈블리 '{2}'의 '{0}.{1}' 확장 후크가 실패했습니다.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
+        <target state="translated">확장 매니페스트 '{3}'에 선언된 어셈블리 '{2}'의 '{0}.{1}' 확장 후크가 'async void'로 선언되어 있습니다. 플랫폼은 후크를 동기적으로 호출하므로 첫 번째 await에서 반환됩니다. 그 이후에 등록하는 항목은 테스트 애플리케이션 자체 설정과 경쟁하게 되며, 실패가 발생해도 기록되지 않습니다. 후크를 동기식으로 만드세요.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="async void"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
+        <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
+        <target state="translated">확장 매니페스트 '{3}'에 선언된 어셈블리 '{2}'의 '{0}.{1}' 확장 후크가 '{4}'을(를) 반환하지만, 반환 형식은 'void'여야 합니다. 플랫폼은 후크를 동기적으로 호출하므로 반환 값은 사용되지 않습니다. 특히 반환된 작업은 await되지 않으며, 그 안에서 등록한 내용과 실패는 모두 사라집니다.</target>
+        <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="void"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
+        <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
+        <target state="translated">확장 매니페스트 '{2}'에 선언된 어셈블리 '{1}'의 형식 '{0}'에는 'ITestApplicationBuilder'와 'string[]'를 받는 '{3}'라는 'public static void' 메서드가 없습니다.</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="public static void"}{Locked="ITestApplicationBuilder"}{Locked="string[]"}</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
+        <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
+        <target state="translated">디렉터리 '{0}'에서 확장 매니페스트를 검색할 수 없습니다. 따라서 플랫폼에서 어떤 확장을 로드해야 하는지 알 수 없습니다. 확장 매니페스트 검색을 건너뛰려면 명령줄에서 '{1}'을(를) 제거하세요.</target>
+        <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. '{1}' 속성이 두 번 이상 선언되어 있어 선언 중 하나가 무시됩니다.</target>
+        <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 인덱스 {1}의 확장이 '{2}' 속성을 두 번 이상 선언하여 선언 중 하나가 무시됩니다.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 인덱스 {1}의 확장에 있는 어셈블리 경로 '{2}'이(가) 올바른 경로가 아닙니다.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 인덱스 {1}의 확장에 필요한 '{2}' 속성이 없거나 값이 비어 있습니다.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. '{2}'의 인덱스 {1}에 있는 요소는 JSON 개체여야 합니다.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 인덱스 {1}에 있는 확장의 '{2}' 속성은 JSON 부울이어야 합니다.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 인덱스 {1}에 있는 확장의 '{2}' 속성은 JSON 문자열이어야 합니다.</target>
+        <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. '{1}' 속성은 JSON 배열이어야 합니다.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
+        <source>The extension manifest '{0}' is not valid JSON. {1}</source>
+        <target state="translated">'{0}' 확장 매니페스트는 유효한 JSON이 아닙니다. {1}</target>
+        <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 필요한 '{1}' 속성이 없습니다.</target>
+        <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
+        <source>The extension manifest '{0}' could not be read.</source>
+        <target state="translated">확장 매니페스트 '{0}'을(를) 읽을 수 없습니다.</target>
+        <note>{0} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
+        <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
+        <target state="translated">확장 매니페스트 '{0}'이(가) 잘못되었습니다. 최상위 JSON 요소는 개체여야 하지만 '{1}'이(가) 발견되었습니다.</target>
+        <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
+        <source>Unexpected content after the top-level JSON object.</source>
+        <target state="translated">최상위 JSON 개체 뒤에 예상하지 못한 내용이 있습니다.</target>
+        <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
+        <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
+        <target state="translated">확장 매니페스트 '{2}'에 선언된 어셈블리 '{1}'에서 형식 '{0}'을(를) 찾을 수 없습니다.</target>
+        <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedEntry">
+        <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
+        <target state="translated">  {0} -&gt; {1} ({2}), {3}에 선언됨</target>
+        <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedHeader">
+        <source>Dynamically loaded test platform extensions ({0}):</source>
+        <target state="translated">동적으로 로드된 테스트 플랫폼 확장({0}):</target>
+        <note>{0} is the number of extensions that were loaded.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
+        <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
+        <target state="translated">확장 매니페스트 '{0}'은(는) 로드할 확장을 선언하지만, 현재 런타임은 어셈블리를 동적으로 로드하는 기능을 지원하지 않습니다(예: 네이티브 AOT로 게시한 경우). 각 확장의 '{1}' 속성을 'false'로 설정하거나, 매니페스트를 제거하거나, 명령줄에서 '{2}'을(를) 제거하세요.</target>
+        <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="false"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -329,6 +659,11 @@
         <target state="translated">&lt;test application runner&gt;</target>
         <note>{Locked="&lt;test application runner&gt;"}</note>
       </trans-unit>
+      <trans-unit id="IncompleteInformationalResponse">
+        <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
+        <target state="translated">테스트 호스트가 예상된 도움말 또는 검색 프로토콜을 완료하지 않은 채 종료되었습니다. 완전한 정보 결과를 받지 못했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
         <target state="translated">'{0}' 메서드가 성공적으로 종료되지 않았습니다.</target>
@@ -339,20 +674,30 @@
         <target state="translated">잘못된 명령줄 인수:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultMustHaveValueErrorMessage">
+        <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must provide a non-null scalar value or a non-empty array of scalar values.</source>
+        <target state="translated">testconfig.json 파일(''{2}'')의 섹션 '{1}' 아래에 있는 항목 '{0}'은(는) null이 아닌 스칼라 값 또는 비어 있지 않은 스칼라 값 배열을 제공해야 합니다.</target>
+        <note>{0} is the option name. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
+      </trans-unit>
+      <trans-unit id="JsonCommandLineOptionDefaultsValidationErrorPrefix">
+        <source>In testconfig.json under 'commandLineOptionDefaults': {0}</source>
+        <target state="translated">testconfig.json의 'commandLineOptionDefaults' 아래: {0}</target>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptionDefaults"}</note>
+      </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
-        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
-        <target state="translated">'--{0}' 옵션은 플랫폼 부트스트랩 중에 읽히며(testconfig.json 파일이 로드되기 전), 따라서 testconfig.json의 'commandLineOptions' 아래에 선언하는 대신 명령줄에서 전달해야 합니다.</target>
-        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
+        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under '{1}' in testconfig.json.</source>
+        <target state="translated">'--{0}' 옵션은 플랫폼 부트스트랩 중에 읽히며(testconfig.json 파일이 로드되기 전), 따라서 testconfig.json의 '{1}' 아래에 선언하는 대신 명령줄에서 전달해야 합니다.</target>
+        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {1} is the JSON section name. {Locked="--"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
         <target state="translated">testconfig.json 파일의 '{1}' 섹션 아래에 있는 항목 '{0}'('{2}')은(는) 스칼라 값(문자열, 숫자, 부울) 또는 스칼라 값의 배열이어야 합니다. 중첩된 개체는 지원되지 않습니다.</target>
-        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptions"}{Locked="timeout"}{Locked="timeout:0"}</note>
+        <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
         <target state="translated">testconfig.json의 'commandLineOptions' 아래: {0}</target>
-        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
+        <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). Translate the surrounding text. Do not localize {Locked="testconfig.json"} or {Locked="commandLineOptions"}.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
@@ -362,12 +707,12 @@
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
         <target state="translated">최상위 JSON 요소는 개체여야 합니다. 대신 '{0}'을(를) 찾았습니다.</target>
-        <note>{0} is the JSON value kind that was found.</note>
+        <note>{0} is the JSON value kind that was found and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">지원되지 않는 JSON 토큰('{0}')을 발견했습니다.</target>
-        <note>{0} is the unsupported JSON token type.</note>
+        <note>{0} is the unsupported JSON token type and must occur exactly once in the translation.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
@@ -377,7 +722,7 @@
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
         <target state="translated">testconfig.json 파일('{1}')의 '{0}' 섹션은 JSON 개체여야 합니다.</target>
-        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="environmentVariables"}</note>
+        <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
@@ -419,6 +764,16 @@
         <target state="translated">실행 중인 테스트 {0}</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
+        <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</source>
+        <target state="translated">명명된 파이프 디렉터리 '{0}'이(가) 없거나 쓸 수 없습니다: {1}. '{2}' 환경 변수를 기존의 쓰기 가능한 디렉터리로 설정하거나, 설정을 해제하여 기본 임시 디렉터리를 사용합니다.</target>
+        <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NamedPipePathTooLongErrorMessage">
+        <source>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Use a shorter directory by setting the '{3}' environment variable, or by setting 'TMPDIR' when '{3}' is not set.</source>
+        <target state="translated">명명된 파이프 경로 '{0}'의 길이는 {1}바이트로, Unix 도메인 소켓에 허용되는 최대 길이인 {2}바이트를 초과합니다. '{3}' 환경 변수를 설정하여 더 짧은 디렉터리를 사용하거나, '{3}'이(가) 설정되지 않은 경우 'TMPDIR'을 설정합니다.</target>
+        <note>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
+      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">사용할 수 없음</target>
@@ -434,9 +789,19 @@
         <target state="translated">'--treenode-filter'와 '--filter-uid'를 동시에 전달하는 것은 지원되지 않습니다.</target>
         <note>{Locked="--treenode-filter"}{Locked="--filter-uid"}</note>
       </trans-unit>
+      <trans-unit id="OnlyOneTestHostLauncherSupported">
+        <source>Only one test host launcher can be registered.</source>
+        <target state="translated">테스트 호스트 시작 관리자는 하나만 등록할 수 있습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
         <target state="translated">통과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineAppModelActivationPayloadOptionDescription">
+        <source>Specifies the app-model activation payload.</source>
+        <target state="translated">앱 모델 활성화 페이로드를 지정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
@@ -454,6 +819,31 @@
         <target state="translated">testconfig.json 파일을 지정합니다.</target>
         <note>{Locked="testconfig.json"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
+        <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="translated">전체 분기 코드 검사율의 최솟값을 0에서 100 사이의 백분율로 지정하세요. 호환되는 수집기에서 비어 있지 않은 코드 검사 데이터가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
+        <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
+        <target state="translated">코드 검사 임계값은 '--list-tests'와 함께 사용할 수 없습니다.</target>
+        <note>{Locked="--list-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
+        <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
+        <target state="translated">검사 임계값은 '--retry-failed-tests'와 결합할 수 없습니다. 전체 임계값을 평가하기 전에 별도의 프로세스 시도에서 적용 범위를 병합해야 합니다.</target>
+        <note>{Locked="--retry-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
+        <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
+        <target state="translated">'--{0}'은(는) 소수 구분 기호로 점을 사용하여 0에서 100까지의 백분율을 예상합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
+        <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="translated">전체 줄 코드 검사율의 최솟값을 0에서 100 사이의 백분율로 지정하세요. 호환되는 수집기에서 비어 있지 않은 코드 검사 데이터가 필요합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
         <target state="translated">디버그 목적으로 프로세스에 연결하기 위해 실행을 일시 중지할 수 있습니다.</target>
@@ -470,8 +860,8 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">진단 로깅을 사용합니다. 기본 로그 수준은 'Trace'입니다.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="translated">진단 로깅을 활성화합니다. 기본 로그 수준은 'Trace'입니다.
 파일은 log_[yyMMddHHmmssfff].diag라는 이름으로 출력 디렉터리에 기록됩니다.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -493,8 +883,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">'[log]_.'를 대체할 로그 파일 이름의 접두사입니다.</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="translated">'[log]_.'를 지정된 로그 파일 이름 접두사로 바꿉니다.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -507,7 +897,7 @@ The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', an
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">'--list-tests'에 예상하지 못한 값 '{0}'이(가) 전달되었습니다. 지원되는 값은 {1}입니다.</target>
-        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}{Locked="text"}{Locked="json"}</note>
+        <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
@@ -519,12 +909,67 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
         <target state="translated">'--server {0}'를 사용하려면 '--{1}'를 지정해야 합니다.</target>
-        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
+        <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
+        <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
+        <target state="translated">'--server dotnettestcli'에는 '--dotnet-test-pipe' 또는 '--dotnet-test-transport http'가 필요합니다.</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
+        <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
+        <target state="translated">'--dotnet-test-http-endpoint'에는 사용자 정보, 쿼리, 조각이 없는 절대 HTTPS URL 또는 HTTP 루프백 URL이 필요합니다.</target>
+        <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
+        <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
+        <target state="translated">dotnet test 프로토콜의 인증된 HTTP 엔드포인트를 지정합니다.</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
+        <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
+        <target state="translated">dotnet test HTTP 엔드포인트와 토큰 옵션에는 '--dotnet-test-transport http'가 필요합니다.</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
+        <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
+        <target state="translated">'--dotnet-test-transport http'에는 '--dotnet-test-http-endpoint'와 '--dotnet-test-http-token'이 모두 필요합니다.</target>
+        <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
+        <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
+        <target state="translated">'--dotnet-test-http-token'에는 공백이나 제어 문자가 없으며 비어 있지 않은 유효한 전달자 토큰이 필요합니다.</target>
+        <note>{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
+        <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
+        <target state="translated">dotnet test 프로토콜의 실행별 HTTP 전달자 토큰을 지정합니다.</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet test 파이프.</target>
         <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
+        <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
+        <target state="translated">dotnet test 명명된 파이프 전송과 HTTP 전송은 함께 선택할 수 없습니다.</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
+        <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">`'--dotnet-test-transport'에서 예기치 않은 값 '{0}'이(가) 수신되었습니다. 지원되는 값은 {1}입니다.</target>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
+        <source>Selects the pre-launch transport for the dotnet test protocol.</source>
+        <target state="translated">dotnet test 프로토콜의 사전 실행 전송 방식을 선택합니다.</target>
+        <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
+        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
+        <target state="translated">테스트 응용 프로그램 옆에서 찾은 '*.testingplatformextensions.json' 매니페스트에 선언된 테스트 플랫폼 확장 로드를 사용하도록 설정합니다. 기본적으로 사용하지 않도록 설정됩니다.</target>
+        <note>{Locked="*.testingplatformextensions.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -537,6 +982,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
         <target state="translated">브라우저 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
         <note>{Locked="--exit-on-process-exit"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
+        <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
+        <target state="translated">WASI 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
+        <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
@@ -559,11 +1009,13 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
-        <source>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="translated">특정 종료 코드에 대해 실패한 종료 값을 보고하지 마세요.
-(예: '--ignore-exit-code 8;9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환합니다.)</target>
-        <note>{Locked="--ignore-exit-code 8;9"}</note>
+        <source>Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
+        <target state="translated">지정된 종료 코드에 대해 실패 종료 값을 보고하지 마세요.
+예를 들어 '--ignore-exit-code 8;9'는 종료 코드 8과 9를 무시하고, 해당 경우에는 0을 반환합니다.
+종료 코드에 대한 자세한 내용은 https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes를 참조하세요.</target>
+        <note>{Locked="--ignore-exit-code 8;9"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
@@ -597,6 +1049,16 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <target state="translated">시작 배너, 저작권 메시지 또는 원격 분석 배너를 표시하지 마세요.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
+        <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">dotnet test 명명된 파이프 전송은 browser-wasm에서 지원되지 않습니다. '--dotnet-test-transport http'를 사용하세요.</target>
+        <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
+        <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">dotnet test 명명된 파이프 전송은 wasi-wasm에서 지원되지 않습니다. '--dotnet-test-transport http'를 사용하세요.</target>
+        <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
         <target state="translated">서버의 포트를 지정합니다.</target>
@@ -608,8 +1070,8 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Microsoft 테스팅 플랫폼 명령줄 공급자</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="translated">Microsoft 테스팅 플랫폼 명령줄 공급자입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -629,7 +1091,7 @@ The default is TestResults in the directory that contains the test application.<
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">'--server'가 예기치 않은 값 '{0}'을(를) 받았습니다. 지원되는 값은 {1}입니다.</target>
-        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}{Locked="jsonrpc"}{Locked="dotnettestcli"}</note>
+        <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
@@ -637,8 +1099,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">테스트용</target>
+        <source>For testing purposes.</source>
+        <target state="translated">테스트용입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -648,15 +1110,27 @@ The default is TestResults in the directory that contains the test application.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="timeout"}{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
+        <target state="translated">'timeout' 옵션은 명시적 단위 접미사가 포함된 시간 값이어야 하며, 지원되는 범위(최대 약 49.7일) 내의 양수 값을 하나의 인수로 입력해야 합니다. 허용되는 접미사는 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', 'd'/'day(s)'입니다. (예: '500ms', '5400s', '90m', '1.5h', '1d')</target>
+        <note>{Locked="timeout"}{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="new">A global test execution timeout.
-Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
+        <target state="translated">전역 테스트 실행 시간 제한입니다.
+명시적 단위 접미사가 포함된 시간 값을 하나의 인수로 입력해야 합니다. 허용되는 접미사는 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', 'd'/'day(s)'입니다. (예: '500ms', '5400s', '90m', '1.5h', '1d')</target>
+        <note>{Locked="'ms'"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="'s'"}{Locked="sec(s)"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="'h'"}{Locked="hour(s)"}{Locked="'d'"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
+        <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
+        <target state="translated">'--zero-tests-policy'에 잘못된 값 '{0}'이(가) 지정되었습니다. 유효한 값은 {1}입니다.</target>
+        <note>{Locked="--zero-tests-policy"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
+        <source>Specifies how a run that executed no tests is treated.
+Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
+        <target state="translated">테스트를 실행하지 않은 실행을 처리하는 방법을 지정합니다.
+유효한 값은 'allow-skipped'(기본값)과 'strict'입니다. 'allow-skipped'는 건너뛴 테스트를 실행된 것으로 계산하므로, 테스트를 하나도 찾지 못한 실행만 종료 코드 8로 실패합니다. 'strict'는 건너뛴 테스트를 실행되지 않은 것으로 처리하므로, 모든 테스트를 건너뛴 실행 또는 테스트를 찾지 못한 실행은 종료 코드 8로 실패합니다.</target>
+        <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
@@ -736,7 +1210,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
         <target state="translated">아직 대기 중: </target>
-        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ". {Locked="{DisplayName} ({Phase}, {Seconds}s)"}{Locked="; "}</note>
+        <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ".</note>
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
@@ -800,7 +1274,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TerminalNoProgressDeprecatedWarning">
         <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="new">warning: --no-progress is deprecated; use --progress off instead.</target>
+        <target state="translated">경고: --no-progress는 더 이상 사용되지 않습니다. 대신 --progress off를 사용하세요.</target>
         <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
@@ -868,6 +1342,11 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">테스트 검색 요약: {1}개의 어셈블리에서 {0}개의 테스트를 찾았습니다.</target>
         <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
+      <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
+        <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
+        <target state="translated">JSON-RPC 서버 요청에 대해 테스트 실행 필터 공급자 '{0}'이(가) 필터 유형 '{1}'을(를) 반환했습니다. 공급자 제약 조건은 서버 요청에 적용되지 않습니다. TestExecutionFilterContext.Origin이 Server인 경우 null을 반환합니다.</target>
+        <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
+      </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
         <target state="translated">이 프록시 개체에서 '{0}' 메서드를 호출하지 않아야 합니다.</target>
@@ -878,10 +1357,50 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">테스트 어댑터 테스트 세션 실패</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
+        <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
+        <target state="translated">테스트 호스트 시작 관리자 '{0}'(UID: {1})에서 테스트 호스트 컨트롤러 연결 시 보안 ID '{2}'에 권한을 부여해 달라고 요청했습니다. 하지만 단일 샌드박스가 적용된 애플리케이션의 ID만에만 권한을 부여할 수 있습니다(Windows에서는 'S-1-15-2-...' 형식의 보안 식별자). 사용자, 그룹 그리고 모두 캐치 '{3}' 보안 ID에는 절대 액세스 권한이 부여되지 않습니다.</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="S-1-15-2-..."}</note>
+      </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
         <target state="translated">프로세스를 다시 시작해야 하는 테스트 호스트 컨트롤러 확장은 브라우저/WebAssembly 플랫폼에서 지원되지 않습니다.</target>
         <note>{Locked="WebAssembly"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareFabricatedSuccessErrorMessage">
+        <source>Middleware '{0}' short-circuited the test host execution orchestrator pipeline (it did not invoke 'next') but returned the success exit code. Short-circuiting middleware must return an explicit non-success exit code so skipped execution cannot be reported as if tests actually ran and passed.</source>
+        <target state="translated">미들웨어 '{0}'이(가) 테스트 호스트 실행 오케스트레이터 파이프라인을 조기에 종료('next'를 호출하지 않음)했지만 성공 종료 코드를 반환했습니다. 조기에 종료하는 미들웨어는 명시적인 비성공 종료 코드를 반환해야 합니다. 그래야 건너뛴 실행이 마치 테스트가 실제로 실행되어 통과된 것처럼 보고되지 않습니다.</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextInvokedMoreThanOnceErrorMessage">
+        <source>The 'next' delegate passed to an 'ITestHostExecutionOrchestratorMiddleware' can be invoked at most once. It was invoked again after already being invoked, concurrently with another invocation, or after the middleware's own call already returned or threw.</source>
+        <target state="translated">'ITestHostExecutionOrchestratorMiddleware'에 전달된 'next' 대리자는 최대 한 번만 호출할 수 있습니다. 이미 호출된 후, 다른 호출과 동시에 또는 미들웨어 자체 호출이 이미 반환되거나 throw된 후에 다시 호출되었습니다.</target>
+        <note>{Locked="next"} {Locked="ITestHostExecutionOrchestratorMiddleware"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareNextReturnedNullErrorMessage">
+        <source>The test host execution orchestrator middleware continuation returned a null task.</source>
+        <target state="translated">테스트 호스트 실행 오케스트레이터 미들웨어의 연속 실행에서 null 작업을 반환했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRequiresExactlyOneOrchestratorErrorMessage">
+        <source>One or more 'ITestHostExecutionOrchestratorMiddleware' instances are registered, but exactly one 'ITestHostExecutionOrchestrator' must also be registered for middleware to wrap. Found {0} orchestrator(s) instead.</source>
+        <target state="translated">하나 이상의 'ITestHostExecutionOrchestratorMiddleware' 인스턴스가 등록되었지만 미들웨어를 래핑하려면 정확히 하나의 'ITestHostExecutionOrchestrator'도 등록해야 합니다. 대신 {0} 오케스트레이터를 찾았습니다.</target>
+        <note>{0} is the number of registered orchestrators (0 or more than 1). {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestrator"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareRewroteDownstreamResultErrorMessage">
+        <source>Middleware '{0}' changed the downstream exit code from {1} to {2}. This version of the test host execution orchestrator pipeline does not allow middleware to rewrite the downstream result.</source>
+        <target state="translated">미들웨어 '{0}'이(가) 다운스트림 종료 코드를 {1} 에서 {2}(으)로 변경했습니다. 이 버전의 테스트 호스트 실행 오케스트레이터 파이프라인에서는 미들웨어가 다운스트림 결과를 다시 쓸 수 없습니다.</target>
+        <note>{0} is the middleware's Uid. {1} is the exit code the downstream execution actually produced. {2} is the exit code the middleware returned instead.</note>
+      </trans-unit>
+      <trans-unit id="TestHostExecutionOrchestratorMiddlewareSwallowedDownstreamFailureErrorMessage">
+        <source>Middleware '{0}' returned successfully after the downstream execution it started with 'next' actually faulted. The failure was not observed or propagated by the middleware, so it cannot be allowed to look like success.</source>
+        <target state="translated">'next'로 시작한 다운스트림 실행이 실제로 오류가 발생했음에도 불구하고 미들웨어 '{0}'은(는) 올바르게 반환되었습니다. 미들웨어에서 실패를 확인하거나 전파하지 않았으므로 이를 성공으로 간주해서는 안 됩니다.</target>
+        <note>{0} is the middleware's Uid. {Locked="next"}</note>
+      </trans-unit>
+      <trans-unit id="TestHostOrchestratorManagerDoesNotSupportMiddlewareErrorMessage">
+        <source>Test host orchestrator manager of type '{0}' does not support 'ITestHostExecutionOrchestratorMiddleware' registration. Implement 'ITestHostExecutionOrchestratorMiddlewareManager' on the manager type to support it.</source>
+        <target state="translated">'{0}' 유형의 테스트 호스트 오케스트레이터 관리자가 'ITestHostExecutionOrchestratorMiddleware' 등록을 지원하지 않습니다. 관리자 유형에 'ITestHostExecutionOrchestratorMiddlewareManager'를 구현하여 지원하세요.</target>
+        <note>{0} is the concrete manager type name. {Locked="ITestHostExecutionOrchestratorMiddleware"} {Locked="ITestHostExecutionOrchestratorMiddlewareManager"}</note>
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
@@ -894,9 +1413,9 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="translated">'{0}'초의 시간 제한 전에 로그를 플러시하지 못했습니다.</target>
-        <note>{0} is the timeout in seconds.</note>
+        <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
+        <target state="translated">'{1}'초의 시간 제한이 지나기 전에 로그를 로그 파일 '{0}'에 플러시하지 못했습니다. 로그 파일이 완전하지 않을 수 있습니다.</target>
+        <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
@@ -936,7 +1455,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
         <target state="translated">필터 식 '{0}'이(가) '{1}' '{2}' 연산자의 균형이 맞지 않는 개수를 포함함</target>
-        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs. {Locked="()"}{Locked="[]"}</note>
+        <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
@@ -946,7 +1465,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
         <target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함합니다. 필터: '{0}'. 하나의 경로 세그먼트에 대한 여러 대안을 결합하려면 '/A/B/C/(X|Y)'와 같은 구문을 사용하세요.</target>
-        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}{Locked="/A/(B/C)"}</note>
+        <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
@@ -954,16 +1473,36 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
-{0}</source>
-        <target state="translated">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
-{0}</target>
-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
+        <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+{1}</source>
+        <target state="translated">로그 파일 '{0}'에 대한 'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다. 로그 파일이 완전하지 않을 수 있습니다.
+{1}</target>
+        <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">처리되지 않은 예외 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedProviderTestExecutionFilter">
+        <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
+        <target state="translated">테스트 실행 필터 공급자 '{0}'이(가) 지원되지 않는 필터 유형 '{1}'을(를) 반환했습니다. 공급자는 NopFilter, TestNodeUidListFilter, TreeNodeFilter 또는 And CompositeTestExecutionFilter만 반환할 수 있습니다.</target>
+        <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTestExecutionFilter">
+        <source>The request contains unsupported test execution filter type '{0}'.</source>
+        <target state="translated">요청에 지원되지 않는 테스트 실행 필터 유형 '{0}'이(가) 포함되어 있습니다.</target>
+        <note>{0} is the unsupported filter type.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperator">
+        <source>Only the And test execution filter operator is supported.</source>
+        <target state="translated">And 테스트 실행 필터 연산자만 지원됩니다.</target>
+        <note>{Locked="And"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
+        <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
+        <target state="translated">테스트 실행 필터 연산자 '{0}'은(는) 지원되지 않습니다. And만 지원됩니다.</target>
+        <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>

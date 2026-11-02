@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -689,5 +689,74 @@ public sealed class MemberConditionShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.MemberNotFoundRule)
                 .WithLocation(0)
                 .WithArguments("Conditions", "Missing2"));
+    }
+
+    [TestMethod]
+    public async Task WhenMemberNameIsEmptyString_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsReady => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), "")]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMemberNameIsWhitespace_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsReady => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), "   ")]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMemberNameIsEmptyInParamsArray_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsReady => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), "IsReady", "")]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }

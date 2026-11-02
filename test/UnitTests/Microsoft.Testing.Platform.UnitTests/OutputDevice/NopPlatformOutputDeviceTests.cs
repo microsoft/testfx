@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -24,8 +24,10 @@ public sealed class NopPlatformOutputDeviceTests
     {
         var device = new NopPlatformOutputDevice();
 
-        Assert.AreEqual(nameof(NopPlatformOutputDevice), device.Uid);
-        Assert.AreEqual(nameof(NopPlatformOutputDevice), device.DisplayName);
+        // Assert the stable UID/DisplayName as string literals (not nameof) so that renaming
+        // NopPlatformOutputDevice trips this test instead of silently changing the runtime value.
+        Assert.AreEqual("NopPlatformOutputDevice", device.Uid);
+        Assert.AreEqual("NopPlatformOutputDevice", device.DisplayName);
 
         // NopPlatformOutputDevice.Version returns the Platform assembly's PlatformVersion.Version.
         // We can't assert equality against this test assembly's PlatformVersion.Version because it

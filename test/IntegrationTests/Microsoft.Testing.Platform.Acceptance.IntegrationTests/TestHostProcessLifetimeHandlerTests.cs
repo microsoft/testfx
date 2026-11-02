@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<TestHostProcessLifetimeHandlerTests.TestAssetFixture>
 {
     private const string AssetName = "TestHostProcessLifetimeHandler";
+    private static readonly TimeSpan MaximumFinalizationTime = TimeSpan.FromSeconds(5);
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -19,6 +20,90 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessStartedAsync.txt")));
         Assert.AreEqual("TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "OnTestHostProcessExitedAsync.txt")));
     }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_FinalizesProcessLifetimeHandlerWithUncanceledToken(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string finalizationFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.txt");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["FINALIZATION_FILE"] = finalizationFile,
+                ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.AreEqual(bool.FalseString, File.ReadAllText(finalizationFile));
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_BoundsBlockingFinalizationWithoutDisposingRunningHandler(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string finalizationStartedFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.started.txt");
+        string disposalFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.disposed.txt");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["BLOCK_FINALIZATION"] = "1",
+                ["FINALIZATION_STARTED_FILE"] = finalizationStartedFile,
+                ["DISPOSAL_FILE"] = disposalFile,
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "0.5",
+                ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.IsTrue(File.Exists(finalizationStartedFile), testHostResult.ToString());
+        Assert.IsFalse(File.Exists(disposalFile), testHostResult.ToString());
+
+        // The child records a monotonic timestamp at callback entry, excluding process startup and JIT without a
+        // parent-observation race. Five seconds gives the 500ms budget ample margin but remains below the 10s blocker.
+        Assert.IsLessThan(MaximumFinalizationTime, GetElapsedTimeSince(finalizationStartedFile), testHostResult.ToString());
+    }
+
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Timeout_BoundsBlockingDisposalWithoutRetryingIt(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        string disposalAttemptsFile = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.dispose-attempts.txt");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--timeout 500ms",
+            new()
+            {
+                ["BLOCK_UNTIL_TIMEOUT"] = "1",
+                ["BLOCK_DISPOSAL"] = "1",
+                ["DISPOSAL_ATTEMPTS_FILE"] = disposalAttemptsFile,
+                // Leave enough room for the canceled-run cleanup to enter Dispose before its bounded wait
+                // expires. The handler then blocks for 10s, so the test still verifies that cleanup abandons it
+                // within the five-second assertion budget and never retries disposal.
+                ["TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS"] = "2",
+                ["SKIP_FIXED_LIFECYCLE_FILES"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        Assert.HasCount(1, File.ReadAllLines(disposalAttemptsFile), testHostResult.ToString());
+
+        // The child records a monotonic timestamp at disposal entry, excluding process startup and JIT without a
+        // parent-observation race. Five seconds gives the 500ms budget ample margin but remains below the 10s blocker.
+        Assert.IsLessThan(MaximumFinalizationTime, GetElapsedTimeSince(disposalAttemptsFile), testHostResult.ToString());
+    }
+
+    private static TimeSpan GetElapsedTimeSince(string timestampFile)
+        => Stopwatch.GetElapsedTime(long.Parse(File.ReadAllText(timestampFile), CultureInfo.InvariantCulture));
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
@@ -40,6 +125,8 @@ public sealed class TestHostProcessLifetimeHandlerTests : AcceptanceTestBase<Tes
 
 #file Program.cs
 using System;
+using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Testing.Platform.Builder;
@@ -63,7 +150,7 @@ public class Startup
     }
 }
 
-public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
+public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler, IDisposable
 {
     public string Uid => nameof(TestHostProcessLifetimeHandler);
 
@@ -75,7 +162,11 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
 
     public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("BeforeTestHostProcessStartAsync.txt", "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
+        if (Environment.GetEnvironmentVariable("SKIP_FIXED_LIFECYCLE_FILES") != "1")
+        {
+            System.IO.File.WriteAllText("BeforeTestHostProcessStartAsync.txt", "TestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync");
+        }
+
         return Task.CompletedTask;
     }
 
@@ -86,14 +177,55 @@ public class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
 
     public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("OnTestHostProcessExitedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
+        if (Environment.GetEnvironmentVariable("SKIP_FIXED_LIFECYCLE_FILES") != "1")
+        {
+            System.IO.File.WriteAllText("OnTestHostProcessExitedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync");
+        }
+
+        if (Environment.GetEnvironmentVariable("FINALIZATION_FILE") is { Length: > 0 } finalizationFile)
+        {
+            System.IO.File.WriteAllText(finalizationFile, cancellationToken.IsCancellationRequested.ToString());
+        }
+
+        if (Environment.GetEnvironmentVariable("FINALIZATION_STARTED_FILE") is { Length: > 0 } finalizationStartedFile)
+        {
+            System.IO.File.WriteAllText(finalizationStartedFile, Stopwatch.GetTimestamp().ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (Environment.GetEnvironmentVariable("BLOCK_FINALIZATION") == "1")
+        {
+            Thread.Sleep(10000);
+        }
+
         return Task.CompletedTask;
     }
 
     public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("OnTestHostProcessStartedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
+        if (Environment.GetEnvironmentVariable("SKIP_FIXED_LIFECYCLE_FILES") != "1")
+        {
+            System.IO.File.WriteAllText("OnTestHostProcessStartedAsync.txt", "TestHostProcessLifetimeHandler.OnTestHostProcessStartedAsync");
+        }
+
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        if (Environment.GetEnvironmentVariable("DISPOSAL_ATTEMPTS_FILE") is { Length: > 0 } disposalAttemptsFile)
+        {
+            System.IO.File.AppendAllText(disposalAttemptsFile, Stopwatch.GetTimestamp().ToString(CultureInfo.InvariantCulture) + Environment.NewLine);
+        }
+
+        if (Environment.GetEnvironmentVariable("DISPOSAL_FILE") is { Length: > 0 } disposalFile)
+        {
+            System.IO.File.WriteAllText(disposalFile, string.Empty);
+        }
+
+        if (Environment.GetEnvironmentVariable("BLOCK_DISPOSAL") == "1")
+        {
+            Thread.Sleep(10000);
+        }
     }
 }
 
@@ -119,6 +251,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        if (Environment.GetEnvironmentVariable("BLOCK_UNTIL_TIMEOUT") == "1")
+        {
+            Thread.Sleep(2000);
+        }
+
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
         {
             Uid = "Test1",

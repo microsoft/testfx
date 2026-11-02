@@ -9,9 +9,11 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
-    /// Gets a value indicating whether we should show passed tests.
+    /// Gets the set of test outcomes whose per-test terminal block (result line, informative details, stack
+    /// trace, expected/actual, and captured stdout/stderr) is rendered. Resolved once, at construction time, from
+    /// <c>--show-test-results</c> (when passed) or from <c>--output</c> otherwise.
     /// </summary>
-    public Func<bool> ShowPassedTests { get; init; } = () => true;
+    public TestResultVisibility ShowTestResults { get; init; } = TestResultVisibility.All;
 
     /// <summary>
     /// Gets minimum amount of tests to run.
@@ -19,8 +21,23 @@ internal sealed class TerminalTestReporterOptions
     public int MinimumExpectedTests { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether we should write the progress periodically to screen. When ANSI is allowed we update the progress as often as we can.
-    /// When ANSI is not allowed we never have progress.
+    /// Gets the policy that controls whether an all-skipped run is treated as a "zero tests ran" failure.
+    /// </summary>
+    public CommandLine.ZeroTestsPolicy ZeroTestsPolicy { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether an otherwise-successful zero-test run is expected.
+    /// </summary>
+    public bool AllowZeroTests { get; init; }
+
+    /// <summary>
+    /// Gets a callback indicating whether the framework session failed independently of individual test results.
+    /// </summary>
+    public Func<bool> HasTestSessionFailure { get; init; } = static () => false;
+
+    /// <summary>
+    /// Gets a value indicating whether we should write progress periodically to screen. Cursor-capable terminals
+    /// update in place; non-cursor terminals emit bounded progress lines after visible-output silence.
     /// This is a callback to nullable bool, because we don't know if we are running as test host controller until after we setup the console. So we should be polling for the value, until we get non-null boolean
     /// and then cache that value.
     /// </summary>
@@ -60,10 +77,10 @@ internal sealed class TerminalTestReporterOptions
     public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
 
     /// <summary>
-    /// Gets the silence threshold for the non-cursor heartbeat renderer (E1). When no test completes for this
-    /// duration, a single heartbeat line is emitted. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
+    /// Gets the visible-output silence threshold for the non-cursor heartbeat renderer (E1). Hidden test
+    /// completions do not reset this interval. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
     /// </summary>
-    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(30);
+    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>
     /// Gets the per-test threshold for the non-cursor heartbeat renderer (E2). When a single test exceeds this
@@ -71,6 +88,31 @@ internal sealed class TerminalTestReporterOptions
     /// disables slow-test surfacing.
     /// </summary>
     public TimeSpan SlowTestThreshold { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Gets the number of slowest tests to list in the run summary. When greater than zero, a "Slowest tests"
+    /// section ranking the longest-running tests (by their reported execution duration) is appended to the summary.
+    /// Zero (the default) disables the section.
+    /// </summary>
+    public int SlowestTestsCount { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether tests that failed at least once but eventually passed after a retry are
+    /// reported (the "flaky: N" summary line and the "Flaky tests" section). On by default; turned off by
+    /// <c>--show-flaky-tests off</c>. Has no effect on a run where nothing was retried.
+    /// </summary>
+    public bool ShowFlakyTests { get; init; } = true;
+
+    /// <summary>
+    /// Gets a value indicating whether the run-summary verdict and its counts are rendered. Turned off for the
+    /// <em>retry</em> attempts of the <c>--retry-failed-tests</c> orchestrator, meaning the second and later ones:
+    /// those re-run only the previously-failed tests, so their summary reports a shrinking, filtered subset
+    /// ("total: 1" for a four-test suite) that reads as the run's verdict but is not. The first attempt executes
+    /// the whole suite, so its summary is accurate and is kept. The orchestrator then prints one reconciled retry
+    /// summary at the end. Everything else — produced artifacts, the slowest-tests section and the error recaps —
+    /// is still rendered for every attempt, since none of it is restated by the orchestrator.
+    /// </summary>
+    public bool ShowRunSummary { get; init; } = true;
 }
 
 [Embedded]
@@ -90,6 +132,41 @@ internal enum OutputShowMode
     /// Never show the output.
     /// </summary>
     None,
+}
+
+/// <summary>
+/// Which test outcomes get a rendered per-test terminal block. Resolved once from <c>--show-test-results</c> or
+/// <c>--output</c> into <see cref="TerminalTestReporterOptions.ShowTestResults"/>.
+/// </summary>
+[Embedded]
+[Flags]
+internal enum TestResultVisibility
+{
+    /// <summary>
+    /// No test outcome is rendered.
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// Tests that passed.
+    /// </summary>
+    Passed = 1,
+
+    /// <summary>
+    /// Tests that did not pass: <see cref="TestOutcome.Fail"/>, <see cref="TestOutcome.Error"/>,
+    /// <see cref="TestOutcome.Timeout"/>, and <see cref="TestOutcome.Canceled"/>.
+    /// </summary>
+    Failed = 1 << 1,
+
+    /// <summary>
+    /// Tests that were skipped.
+    /// </summary>
+    Skipped = 1 << 2,
+
+    /// <summary>
+    /// Every test outcome.
+    /// </summary>
+    All = Passed | Failed | Skipped,
 }
 
 [Embedded]

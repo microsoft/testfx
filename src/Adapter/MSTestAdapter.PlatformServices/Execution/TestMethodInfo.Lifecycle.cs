@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -22,20 +22,57 @@ internal partial class TestMethodInfo
     /// </summary>
     /// <param name="result">Instance of TestResult.</param>
     /// <param name="timeoutTokenSource">The timeout token source.</param>
+    /// <param name="invocationState">The activation and cleanup state for this invocation.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask RunTestCleanupMethodAsync(
+        TestResult result,
+        CancellationTokenSource? timeoutTokenSource,
+        TestInvocationState invocationState)
     {
-        DebugEx.Assert(result != null, "result != null");
+        _ = result ?? throw new ArgumentNullException(nameof(result));
 
-        if (_classInstance is null || !_isTestContextSet || _isTestCleanupInvoked ||
-            // Fast check to see if we can return early.
-            // This avoids the code below that allocates CancellationTokenSource
-            !HasCleanupsToInvoke())
+        if (!invocationState.TryGetCleanupSnapshot(out TestInvocationCleanupSnapshot snapshot))
         {
             return;
         }
 
-        _isTestCleanupInvoked = true;
+        bool hasCleanupsToInvoke = HasCleanupsToInvoke(snapshot.ClassInstanceLease);
+        bool shouldResetCancellationTokenSource = snapshot.IsTestContextSet
+            && TestContext.Context.CancellationTokenSource.IsCancellationRequested;
+        if ((!hasCleanupsToInvoke && !shouldResetCancellationTokenSource)
+            || !invocationState.TryBeginCleanup())
+        {
+            return;
+        }
+
+        if (shouldResetCancellationTokenSource)
+        {
+            TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
+        }
+
+        if (!hasCleanupsToInvoke)
+        {
+            return;
+        }
+
+        if (!snapshot.IsTestContextSet)
+        {
+            try
+            {
+                if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
+                {
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception exception)
+            {
+                result.Outcome = result.Outcome.GetMoreImportantOutcome(UnitTestOutcome.Failed);
+                result.TestFailureException = exception;
+            }
+
+            return;
+        }
+
         MethodInfo? testCleanupMethod = Parent.TestCleanupMethod;
         Exception? testCleanupException;
         TestFailedException? globalTestCleanupException = null;
@@ -45,9 +82,6 @@ internal partial class TestMethodInfo
         {
             try
             {
-                // Reset the cancellation token source to avoid cancellation of cleanup methods because of the init or test method cancellation.
-                TestContext.Context.CancellationTokenSource = new CancellationTokenSource();
-
                 // If we are running with a method timeout, we need to cancel the cleanup when the overall timeout expires. If it already expired, nothing to do.
                 if (timeoutTokenSource is { IsCancellationRequested: false })
                 {
@@ -57,14 +91,14 @@ internal partial class TestMethodInfo
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = testCleanupMethod is not null
-                    ? await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false)
+                    ? await InvokeCleanupMethodAsync(testCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
                 if (testCleanupException is null)
                 {
                     foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
                     {
                         testCleanupMethod = baseCleanupMethod;
-                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
+                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, snapshot.ClassInstance, timeoutTokenSource).ConfigureAwait(false);
                         if (testCleanupException is not null)
                         {
                             break;
@@ -74,16 +108,9 @@ internal partial class TestMethodInfo
             }
             finally
             {
-#if NET6_0_OR_GREATER
-                if (_classInstance is IAsyncDisposable classInstanceAsAsyncDisposable)
+                if (snapshot.ClassInstanceLease is { RequiresCleanup: true } classInstanceLease)
                 {
-                    // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
-                    await classInstanceAsAsyncDisposable.DisposeAsync().ConfigureAwait(false);
-                }
-#endif
-                if (_classInstance is IDisposable classInstanceAsDisposable)
-                {
-                    classInstanceAsDisposable.Dispose();
+                    await classInstanceLease.DisposeAsync().ConfigureAwait(false);
                 }
 
                 foreach ((MethodInfo method, TimeoutInfo? timeoutInfo) in Parent.Parent.GlobalTestCleanups)
@@ -125,7 +152,7 @@ internal partial class TestMethodInfo
         }
 
         // If testCleanup was successful, then don't do anything
-        if (testCleanupException == null)
+        if (testCleanupException is null)
         {
             return;
         }
@@ -142,7 +169,7 @@ internal partial class TestMethodInfo
                 : UnitTestOutcome.Failed;
         result.Outcome = result.Outcome.GetMoreImportantOutcome(outcomeFromRealException);
 
-        realException = testCleanupMethod != null
+        realException = testCleanupMethod is not null
             ? new TestFailedException(
                 outcomeFromRealException,
                 string.Format(CultureInfo.CurrentCulture, Resource.UTA_CleanupMethodThrows, TestClassName, testCleanupMethod.Name, realException.GetFormattedExceptionMessage()),
@@ -157,13 +184,10 @@ internal partial class TestMethodInfo
         result.TestFailureException = realException;
     }
 
-    private bool HasCleanupsToInvoke() =>
+    private bool HasCleanupsToInvoke(ITestClassInstanceLease? classInstanceLease) =>
         Parent.TestCleanupMethod is not null ||
         Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
-        _classInstance is IDisposable ||
-#if NET6_0_OR_GREATER
-        _classInstance is IAsyncDisposable ||
-#endif
+        classInstanceLease is { RequiresCleanup: true } ||
         Parent.Parent.GlobalTestCleanups is { Count: > 0 };
 
     /// <summary>
@@ -174,10 +198,10 @@ internal partial class TestMethodInfo
     /// <param name="timeoutTokenSource">The timeout token source.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<bool> RunTestInitializeMethodAsync(object? classInstance, TestResult result, CancellationTokenSource? timeoutTokenSource)
     {
-        DebugEx.Assert(classInstance != null, "classInstance != null");
-        DebugEx.Assert(result != null, "result != null");
+        DebugEx.Assert(classInstance is not null || Parent.IsFSharpModule, "classInstance is null for a non-module test");
+        DebugEx.Assert(result is not null, "result != null");
 
         MethodInfo? testInitializeMethod = null;
         Exception? testInitializeException = null;
@@ -199,7 +223,7 @@ internal partial class TestMethodInfo
                 }
             }
 
-            if (testInitializeException == null)
+            if (testInitializeException is null)
             {
                 testInitializeMethod = Parent.TestInitializeMethod;
                 testInitializeException = testInitializeMethod is not null
@@ -213,7 +237,7 @@ internal partial class TestMethodInfo
         }
 
         // If testInitialization was successful, then don't do anything
-        if (testInitializeException == null)
+        if (testInitializeException is null)
         {
             return true;
         }
@@ -252,7 +276,7 @@ internal partial class TestMethodInfo
         return false;
     }
 
-    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeInitializeMethodAsync(MethodInfo methodInfo, object? classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -260,73 +284,42 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-#if NETFRAMEWORK
-                CallContext.HostContext = _hostContext;
-#endif
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.TestInitialize,
+                "test_initialize",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
 
-                Task? task = methodInfo.GetInvokeResultAsync(classInstance, null);
-                if (task is not null)
-                {
-                    await task.ConfigureAwait(false);
-                }
-
-                CaptureExecutionContextAfterFixtureIfNeeded(timeout);
-
-#if NETFRAMEWORK
-                _hostContext = CallContext.HostContext;
-#endif
-            },
-            TestContext.Context.CancellationTokenSource,
-            timeout,
+        TestFailedException? result = await InvokeFixtureMethodAsync(
             methodInfo,
-            _executionContext,
+            classInstance,
+            arguments: null,
+            timeout,
+            timeoutTokenSource,
             Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut,
-            timeoutTokenSource is null
-                ? null
-                : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
+            Resource.TestInitializeTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
 
         return result;
     }
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
-    {
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-#if NETFRAMEWORK
-                CallContext.HostContext = _hostContext;
-#endif
-
-                Task? task = methodInfo.GetInvokeResultAsync(null, [TestContext]);
-                if (task is not null)
-                {
-                    await task.ConfigureAwait(false);
-                }
-
-                CaptureExecutionContextAfterFixtureIfNeeded(timeoutInfo);
-
-#if NETFRAMEWORK
-                _hostContext = CallContext.HostContext;
-#endif
-            },
-            TestContext.Context.CancellationTokenSource,
-            timeoutInfo: timeoutInfo,
+        => await InvokeFixtureMethodAsync(
             methodInfo,
-            _executionContext,
-            Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut,
-            timeoutTokenSource is null
-                ? null
-                : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
+            classInstance: null,
+            arguments: [TestContext],
+            timeoutInfo,
+            timeoutTokenSource,
+            Resource.GlobalTestInitializeWasCancelled,
+            Resource.GlobalTestInitializeTimedOut).ConfigureAwait(false);
 
-        return result;
-    }
-
-    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object? classInstance, CancellationTokenSource? timeoutTokenSource)
     {
         TimeoutInfo? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out TimeoutInfo localTimeout))
@@ -334,6 +327,50 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.TestCleanup,
+                "test_cleanup",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
+
+        TestFailedException? result = await InvokeFixtureMethodAsync(
+            methodInfo,
+            classInstance,
+            arguments: null,
+            timeout,
+            timeoutTokenSource,
+            Resource.TestCleanupWasCancelled,
+            Resource.TestCleanupTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
+
+        return result;
+    }
+
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+        => await InvokeFixtureMethodAsync(
+            methodInfo,
+            classInstance: null,
+            arguments: [TestContext],
+            timeoutInfo,
+            timeoutTokenSource,
+            Resource.GlobalTestCleanupWasCancelled,
+            Resource.GlobalTestCleanupTimedOut).ConfigureAwait(false);
+
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeFixtureMethodAsync(
+        MethodInfo methodInfo,
+        object? classInstance,
+        object?[]? arguments,
+        TimeoutInfo? timeout,
+        CancellationTokenSource? timeoutTokenSource,
+        string cancelledMessage,
+        string timedOutMessage)
+    {
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
             {
@@ -341,7 +378,7 @@ internal partial class TestMethodInfo
                 CallContext.HostContext = _hostContext;
 #endif
 
-                Task? task = methodInfo.GetInvokeResultAsync(classInstance, null);
+                Task? task = methodInfo.GetInvokeResultAsync(classInstance, arguments);
                 if (task is not null)
                 {
                     await task.ConfigureAwait(false);
@@ -357,42 +394,8 @@ internal partial class TestMethodInfo
             timeout,
             methodInfo,
             _executionContext,
-            Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut,
-            timeoutTokenSource is null
-                ? null
-                : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
-
-        return result;
-    }
-
-    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
-    {
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-#if NETFRAMEWORK
-                CallContext.HostContext = _hostContext;
-#endif
-
-                Task? task = methodInfo.GetInvokeResultAsync(null, [TestContext]);
-                if (task is not null)
-                {
-                    await task.ConfigureAwait(false);
-                }
-
-                CaptureExecutionContextAfterFixtureIfNeeded(timeoutInfo);
-
-#if NETFRAMEWORK
-                _hostContext = CallContext.HostContext;
-#endif
-            },
-            TestContext.Context.CancellationTokenSource,
-            timeoutInfo: timeoutInfo,
-            methodInfo,
-            _executionContext,
-            Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut,
+            cancelledMessage,
+            timedOutMessage,
             timeoutTokenSource is null
                 ? null
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
@@ -414,4 +417,9 @@ internal partial class TestMethodInfo
             _executionContext = ExecutionContext.Capture() ?? _executionContext;
         }
     }
+
+    private readonly record struct TestInvocationCleanupSnapshot(
+        object? ClassInstance,
+        ITestClassInstanceLease? ClassInstanceLease,
+        bool IsTestContextSet);
 }

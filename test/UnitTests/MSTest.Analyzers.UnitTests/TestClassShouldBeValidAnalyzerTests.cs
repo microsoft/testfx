@@ -545,4 +545,64 @@ public sealed class TestClassShouldBeValidAnalyzerTests
                 .WithArguments("MyTestClass"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenStaticTestClassContainsDerivedTestMethodAttribute_Diagnostic()
+    {
+        // The static-class guard uses Inherits() for TestMethodAttribute subclasses,
+        // so [DataTestMethod] (which inherits from [TestMethod]) triggers the diagnostic
+        // because static classes cannot be test classes.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyTestClass|}
+            {
+                [DataTestMethod]
+                public static void TestMethod()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                public static void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenStaticTestClassContainsGlobalTestInitialize_NoDiagnostic()
+    {
+        // The static-class guard only checks TestInitialize, TestCleanup, ClassInitialize,
+        // ClassCleanup and TestMethod-derived attributes. GlobalTestInitialize is not part
+        // of that set, so a static [TestClass] containing only [GlobalTestInitialize] is not flagged.
+        string code = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static Task GlobalInitialize(TestContext testContext) => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

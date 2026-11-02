@@ -7,9 +7,14 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// Manages the registration of a custom output device for Microsoft.Testing.Platform.
 /// </summary>
 /// <remarks>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
+/// <para>
 /// Only one custom output device can be registered. Calling
 /// <see cref="SetOutputDevice(Func{IServiceProvider, ICustomOutputDevice})"/>
 /// more than once throws <see cref="InvalidOperationException"/>.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IOutputDeviceManager
@@ -19,6 +24,7 @@ public interface IOutputDeviceManager
     /// </summary>
     /// <param name="outputDeviceFactory">A factory that builds the <see cref="ICustomOutputDevice"/> from the service provider.</param>
     /// <remarks>
+    /// The factory is not invoked when the dotnet test pipe protocol owns the output.
     /// If the resolved <see cref="ICustomOutputDevice"/> reports itself as disabled via
     /// <see cref="Microsoft.Testing.Platform.Extensions.IExtension.IsEnabledAsync"/>, the platform falls back
     /// to its default terminal output device.

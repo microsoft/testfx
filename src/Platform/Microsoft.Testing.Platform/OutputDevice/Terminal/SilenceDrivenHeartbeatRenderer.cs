@@ -11,10 +11,10 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// i.e. CI / piped / file-redirected output). Instead of redrawing a progress block in place, it emits
 /// single, durable scrollback lines and only when there is a reason to:
 /// <list type="number">
-/// <item><description>E1 silence heartbeat — one summary line when no test completed for the silence threshold.</description></item>
+/// <item><description>E1 silence heartbeat — one summary line when no visible output was written for the silence threshold.</description></item>
 /// <item><description>E2 slow-test surfacing — one line per test that exceeds the slow-test threshold, with exponential backoff.</description></item>
 /// </list>
-/// A healthy fast suite emits zero heartbeat lines.
+/// Hidden test results do not postpone visible progress.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
 [Embedded]
@@ -23,22 +23,36 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
     private readonly TimeSpan _silenceThreshold;
     private readonly TimeSpan _slowTestThreshold;
     private readonly Func<IStopwatch> _createStopwatch;
+    private readonly Func<IEnumerable<TestProgressState>>? _getTestRuns;
 
-    // Per running-test backoff state: test detail id -> next elapsed threshold (in ticks) at which to emit.
+    // Per running-test backoff state: test detail id -> next elapsed threshold at which to emit.
     // Only touched from the single rendering thread inside OnTick.
-    private readonly Dictionary<long, long> _slowTestNextThresholdTicks = [];
+    private readonly Dictionary<long, SlowTestThresholdState> _slowTestThresholdStates = [];
+
+    // Scratch buffer for composing slow-test descriptions, created on first use so a healthy run that never
+    // surfaces a slow test allocates nothing. Like _slowTestThresholdStates it is only touched from the single
+    // rendering thread inside OnTick, so it can be reused across reports.
+    private StringBuilder? _slowTestDescriptionBuilder;
 
     private IStopwatch? _clock;
 
-    // Ticks (on _clock's timeline) of the last activity (test completion) or last heartbeat emission.
-    // Read/written from multiple threads, so guarded with Interlocked.
-    private long _lastActivityTicks;
+    // Initialized in OnStart before the rendering thread starts. OnWrite and OnTick accesses are protected
+    // by TestProgressStateAwareTerminal's lock; OnTestCompleted does not access this field.
+    private long _lastVisibleOutputTicks;
 
-    public SilenceDrivenHeartbeatRenderer(TimeSpan silenceThreshold, TimeSpan slowTestThreshold, Func<IStopwatch> createStopwatch)
+    // Completion notifications arrive outside the rendering lock. -1 means no completion in this run.
+    private long _lastCompletionTicks = -1;
+
+    public SilenceDrivenHeartbeatRenderer(
+        TimeSpan silenceThreshold,
+        TimeSpan slowTestThreshold,
+        Func<IStopwatch> createStopwatch,
+        Func<IEnumerable<TestProgressState>>? getTestRuns = null)
     {
         _silenceThreshold = silenceThreshold;
         _slowTestThreshold = slowTestThreshold;
         _createStopwatch = createStopwatch;
+        _getTestRuns = getTestRuns;
     }
 
     // The heartbeat rules only need second-level granularity, so we tick once per second instead of the
@@ -53,20 +67,28 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
 
     public void OnStart()
     {
-        _slowTestNextThresholdTicks.Clear();
+        _slowTestThresholdStates.Clear();
         IStopwatch clock = _createStopwatch();
         Volatile.Write(ref _clock, clock);
-        Interlocked.Exchange(ref _lastActivityTicks, clock.Elapsed.Ticks);
+        _lastVisibleOutputTicks = clock.Elapsed.Ticks;
+        Interlocked.Exchange(ref _lastCompletionTicks, -1);
     }
 
     public void OnTestCompleted()
-        => Interlocked.Exchange(ref _lastActivityTicks, NowTicks);
+        => Interlocked.Exchange(ref _lastCompletionTicks, NowTicks);
 
-    public void OnWrite(ITerminal terminal, TestProgressState?[] progressItems, Action<ITerminal> write)
+    public void OnWrite(
+        ITerminal terminal,
+        TestProgressState?[] progressItems,
+        Action<ITerminal> write,
+        TerminalProgressMessageState[]? messages = null)
+    {
         // Heartbeat lines are durable scrollback; a user write does not need to erase or re-render any progress.
-        => write(terminal);
+        write(terminal);
+        _lastVisibleOutputTicks = NowTicks;
+    }
 
-    public void OnTick(ITerminal terminal, TestProgressState?[] progressItems)
+    public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
     {
         EmitSilenceHeartbeat(terminal, progressItems);
         EmitSlowTests(terminal, progressItems);
@@ -80,19 +102,24 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
         }
 
         long now = NowTicks;
-        long last = Interlocked.Read(ref _lastActivityTicks);
-        if (now - last < _silenceThreshold.Ticks)
+        if (now - _lastVisibleOutputTicks < _silenceThreshold.Ticks)
         {
             return;
         }
 
         // Reset the baseline so that, during a prolonged silence, the heartbeat repeats once per threshold interval.
-        Interlocked.Exchange(ref _lastActivityTicks, now);
+        _lastVisibleOutputTicks = now;
 
         int completed = 0;
         int failed = 0;
-        string? activeTest = null;
-        foreach (TestProgressState? item in progressItems)
+        // The reporter retains completed assemblies after their worker slots are freed.
+        IEnumerable<TestProgressState?> testRuns = progressItems;
+        if (_getTestRuns is not null)
+        {
+            testRuns = _getTestRuns();
+        }
+
+        foreach (TestProgressState? item in testRuns)
         {
             if (item is null)
             {
@@ -101,7 +128,18 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
 
             completed += item.TotalTests;
             failed += item.FailedTests;
+        }
 
+        int activeModules = 0;
+        string? activeTest = null;
+        foreach (TestProgressState? item in progressItems)
+        {
+            if (item is null)
+            {
+                continue;
+            }
+
+            activeModules++;
             if (activeTest is null)
             {
                 TestDetailState? active = item.TestNodeResultsState?.GetSingleActiveOrSummaryTask();
@@ -112,7 +150,14 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
             }
         }
 
-        string line = string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressHeartbeat, completed, failed);
+        string line = string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressHeartbeat, completed, failed, activeModules);
+        long lastCompletion = Interlocked.Read(ref _lastCompletionTicks);
+        line += lastCompletion < 0
+            ? TerminalResources.TerminalProgressHeartbeatNoCompletionSuffix
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                TerminalResources.TerminalProgressHeartbeatLastCompletionSuffix,
+                HumanReadableDurationFormatter.Render(TimeSpan.FromTicks(Math.Max(0, now - lastCompletion)), wrapInParentheses: false));
         if (activeTest is not null)
         {
             line += string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressHeartbeatActiveSuffix, activeTest);
@@ -127,8 +172,6 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
         {
             return;
         }
-
-        long slowTicks = _slowTestThreshold.Ticks;
 
         foreach (TestProgressState? item in progressItems)
         {
@@ -146,27 +189,37 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
                     continue;
                 }
 
-                long elapsed = detail.Stopwatch.Elapsed.Ticks;
-                long next = _slowTestNextThresholdTicks.TryGetValue(detail.Id, out long stored) ? stored : slowTicks;
-                if (elapsed < next)
+                TimeSpan elapsed = detail.Stopwatch.Elapsed;
+                if (!_slowTestThresholdStates.TryGetValue(detail.Id, out SlowTestThresholdState? thresholdState))
+                {
+                    if (elapsed < _slowTestThreshold)
+                    {
+                        continue;
+                    }
+
+                    thresholdState = new(_slowTestThreshold);
+                }
+
+                if (!thresholdState.IsDue(elapsed))
                 {
                     continue;
                 }
 
-                // Exponential backoff: next emission at twice the crossed threshold (60s -> 2m -> 4m -> 8m ...).
-                _slowTestNextThresholdTicks[detail.Id] = next * 2;
+                _slowTestThresholdStates[detail.Id] = thresholdState;
 
                 // Report the test's actual elapsed time rather than the scheduled threshold so a delayed
                 // tick (GC pause, debugger break, CPU starvation) does not under-report the runtime.
-                string duration = HumanReadableDurationFormatter.Render(TimeSpan.FromTicks(elapsed), wrapInParentheses: false);
+                string duration = HumanReadableDurationFormatter.Render(elapsed, wrapInParentheses: false);
                 terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressSlowTest, duration, BuildSlowTestDescription(item, detail)));
+                _lastVisibleOutputTicks = NowTicks;
             }
         }
     }
 
-    private static string BuildSlowTestDescription(TestProgressState item, TestDetailState detail)
+    private string BuildSlowTestDescription(TestProgressState item, TestDetailState detail)
     {
-        var builder = new StringBuilder();
+        StringBuilder builder = _slowTestDescriptionBuilder ??= new StringBuilder();
+        builder.Clear();
         builder.Append(detail.Text);
         builder.Append(" (");
         builder.Append(item.AssemblyName);

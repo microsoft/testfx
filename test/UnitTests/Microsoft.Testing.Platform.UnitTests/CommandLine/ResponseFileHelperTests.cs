@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -47,6 +49,11 @@ public sealed class ResponseFileHelperTests
                 Assert.IsNull(args);
                 Assert.HasCount(1, errors);
                 Assert.Contains(path, errors[0]);
+
+                // The error must retain the full exception detail (type name, message, and stack trace via
+                // ToString()), not just the exception Message, so the failure stays diagnosable.
+                Assert.Contains(nameof(IOException), errors[0]);
+                Assert.Contains(nameof(ResponseFileHelper.TryReadResponseFile), errors[0]);
             }
         }
         finally
@@ -169,6 +176,11 @@ public sealed class ResponseFileHelperTests
             // The unclosed-quote diagnostic is interpolated with the offending line number,
             // so the message — whatever its localized wording — must contain "2".
             Assert.Contains("2", errors[0]);
+
+            // The error must retain the full exception detail (type name and stack trace via ToString()), not
+            // just the exception Message, consistent with the IOException branch.
+            Assert.Contains(nameof(FormatException), errors[0]);
+            Assert.Contains(nameof(ResponseFileHelper.TryReadResponseFile), errors[0]);
         }
         finally
         {
@@ -195,6 +207,147 @@ public sealed class ResponseFileHelperTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MissingNestedFile_ReportsRedactedNestedPath()
+    {
+        string outerPath = Path.GetTempFileName();
+        string sensitiveNestedPath = $"{Guid.NewGuid():N}-sensitive-missing.rsp";
+        try
+        {
+            File.WriteAllText(
+                outerPath,
+                $"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}{Environment.NewLine}@{sensitiveNestedPath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains("***REDACTED***", errors[0]);
+            Assert.DoesNotContain(sensitiveNestedPath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+        }
+        finally
+        {
+            File.Delete(outerPath);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MissingNestedFile_ReportsNestedPath()
+    {
+        string outerPath = Path.GetTempFileName();
+        string nestedPath = $"{Guid.NewGuid():N}-missing.rsp";
+        try
+        {
+            File.WriteAllText(outerPath, $"@{nestedPath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains(nestedPath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+        }
+        finally
+        {
+            File.Delete(outerPath);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MissingNestedFileBelowRedactedFile_InheritsRedaction()
+    {
+        string outerPath = Path.GetTempFileName();
+        string middlePath = Path.GetTempFileName();
+        string sensitiveNestedPath = $"{Guid.NewGuid():N}-sensitive-missing.rsp";
+        try
+        {
+            File.WriteAllText(middlePath, $"@{sensitiveNestedPath}");
+            File.WriteAllText(
+                outerPath,
+                $"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}{Environment.NewLine}@{middlePath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains("***REDACTED***", errors[0]);
+            Assert.DoesNotContain(sensitiveNestedPath, errors[0]);
+            Assert.DoesNotContain(middlePath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+        }
+        finally
+        {
+            File.Delete(middlePath);
+            File.Delete(outerPath);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MalformedNestedFile_ReportsRedactedNestedPathWithoutDetails()
+    {
+        string outerPath = Path.GetTempFileName();
+        string sensitiveNestedPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(sensitiveNestedPath, "--filter \"unclosed");
+            File.WriteAllText(
+                outerPath,
+                $"--{PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey}{Environment.NewLine}@{sensitiveNestedPath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains("***REDACTED***", errors[0]);
+            Assert.Contains(nameof(FormatException), errors[0]);
+            Assert.DoesNotContain(sensitiveNestedPath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+            Assert.DoesNotContain(nameof(ResponseFileHelper.TryReadResponseFile), errors[0]);
+        }
+        finally
+        {
+            File.Delete(sensitiveNestedPath);
+            File.Delete(outerPath);
+        }
+    }
+
+    [TestMethod]
+    public void TryReadResponseFile_MalformedNestedFile_ReportsNestedPathWithDetails()
+    {
+        string outerPath = Path.GetTempFileName();
+        string nestedPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(nestedPath, "--filter \"unclosed");
+            File.WriteAllText(outerPath, $"@{nestedPath}");
+            var errors = new List<string>();
+
+            bool result = ResponseFileHelper.TryReadResponseFile(outerPath, errors, out string[]? args);
+
+            Assert.IsFalse(result);
+            Assert.IsNull(args);
+            Assert.HasCount(1, errors);
+            Assert.Contains(nestedPath, errors[0]);
+            Assert.DoesNotContain(outerPath, errors[0]);
+            Assert.Contains(nameof(FormatException), errors[0]);
+            Assert.Contains(nameof(ResponseFileHelper.TryReadResponseFile), errors[0]);
+        }
+        finally
+        {
+            File.Delete(nestedPath);
+            File.Delete(outerPath);
         }
     }
 

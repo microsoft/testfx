@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Buffers;
@@ -40,6 +40,11 @@ internal static class DotnetTestPipeProtocol
         public const int TestSessionEvent = 8;
         public const int HandshakeMessage = 9;
         public const int TestInProgressMessages = 10;
+        public const int AzureDevOpsLogMessage = 11;
+        public const int DisplayMessage = 12;
+        public const int WaitForServerControlRequest = 13;
+        public const int ServerControlMessage = 14;
+        public const int CoverageSummaryMessages = 15;
     }
 
     public static class HandshakeProperties
@@ -56,6 +61,20 @@ internal static class DotnetTestPipeProtocol
         public const byte IsIDE = 9;
         public const byte ExecutionMode = 10;
         public const byte OrchestratorFeature = 11;
+        public const byte ServerControlPipeName = 12;
+        public const byte AttemptNumber = 13;
+        public const byte SupportedPostProcessorKinds = 14;
+        public const byte SupportedPostProcessorExtensionsLegacy = 15;
+        public const byte SupportedTruncatedRunPostProcessorKinds = 16;
+        public const byte SupportedTruncatedRunPostProcessorExtensionsLegacy = 17;
+        public const byte RequiredPostProcessorKinds = 18;
+        public const byte RequiredPostProcessingSupported = 19;
+        public const byte CoverageSummaryVersion = 20;
+    }
+
+    public static class ServerControlKinds
+    {
+        public const byte CancelSession = 1;
     }
 
     public static class SessionEventTypes
@@ -69,6 +88,28 @@ internal static class DotnetTestPipeProtocol
         public const ushort SessionType = 1;
         public const ushort SessionUid = 2;
         public const ushort ExecutionId = 3;
+    }
+
+    public static class AzureDevOpsLogMessageFields
+    {
+        public const ushort ExecutionId = 1;
+        public const ushort InstanceId = 2;
+        public const ushort LogText = 3;
+    }
+
+    public static class DisplayMessageFields
+    {
+        public const ushort ExecutionId = 1;
+        public const ushort InstanceId = 2;
+        public const ushort Level = 3;
+        public const ushort Text = 4;
+    }
+
+    public static class DisplayMessageLevels
+    {
+        public const byte Information = 0;
+        public const byte Warning = 1;
+        public const byte Error = 2;
     }
 
     /// <summary>
@@ -175,6 +216,24 @@ internal static class DotnetTestPipeProtocol
     }
 
     /// <summary>
+    /// Encodes the body of a <see cref="SerializerIds.ServerControlMessage"/> frame. Mirrors
+    /// <c>ServerControlMessageSerializer</c>: a field-tagged object with a single <c>Kind</c> field (id 1)
+    /// carrying one byte (<see cref="ServerControlKinds"/>).
+    /// </summary>
+    public static byte[] EncodeServerControlMessageBody(byte kind)
+    {
+        const ushort kindFieldId = 1;
+
+        using MemoryStream stream = new();
+        WriteUShort(stream, 1); // field count
+        WriteUShort(stream, kindFieldId);
+        WriteInt(stream, sizeof(byte)); // field size
+        stream.WriteByte(kind);
+
+        return stream.ToArray();
+    }
+
+    /// <summary>
     /// Decodes the body of a <see cref="SerializerIds.TestSessionEvent"/> frame.
     /// Format: <c>ushort fieldCount; (ushort fieldId, int fieldSize, payload)*fieldCount</c>
     /// where payload shape is determined by fieldId. Returns <c>null</c> for fields that are absent.
@@ -219,6 +278,257 @@ internal static class DotnetTestPipeProtocol
         }
 
         return (sessionType, sessionUid, executionId);
+    }
+
+    /// <summary>
+    /// Decodes the body of a <see cref="SerializerIds.AzureDevOpsLogMessage"/> frame.
+    /// Format: <c>ushort fieldCount; (ushort fieldId, int fieldSize, payload)*fieldCount</c>
+    /// where every field is a length-prefixed UTF-8 string. Returns <c>null</c> for absent fields.
+    /// </summary>
+    public static (string? ExecutionId, string? InstanceId, string? LogText) DecodeAzureDevOpsLogMessageBody(byte[] body)
+    {
+        string? executionId = null;
+        string? instanceId = null;
+        string? logText = null;
+
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            switch (fieldId)
+            {
+                case AzureDevOpsLogMessageFields.ExecutionId:
+                    executionId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case AzureDevOpsLogMessageFields.InstanceId:
+                    instanceId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case AzureDevOpsLogMessageFields.LogText:
+                    logText = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                default:
+                    stream.Seek(fieldSize, SeekOrigin.Current);
+                    break;
+            }
+        }
+
+        return (executionId, instanceId, logText);
+    }
+
+    /// <summary>
+    /// Decodes the body of a <see cref="SerializerIds.DisplayMessage"/> frame.
+    /// Format: <c>ushort fieldCount; (ushort fieldId, int fieldSize, payload)*fieldCount</c>
+    /// where the id fields and the text are length-prefixed UTF-8 strings and Level is a single byte.
+    /// Returns <c>null</c> for absent string fields and <c>null</c> for an absent Level.
+    /// </summary>
+    public static (string? ExecutionId, string? InstanceId, byte? Level, string? Text) DecodeDisplayMessageBody(byte[] body)
+    {
+        string? executionId = null;
+        string? instanceId = null;
+        byte? level = null;
+        string? text = null;
+
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            switch (fieldId)
+            {
+                case DisplayMessageFields.ExecutionId:
+                    executionId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case DisplayMessageFields.InstanceId:
+                    instanceId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case DisplayMessageFields.Level:
+                    // Respect the declared field size and handle truncation explicitly: only read a Level byte
+                    // when the field actually carries one (fieldSize >= 1 and a byte is available), then skip any
+                    // extra bytes a future wire revision may add so subsequent fields stay aligned. ReadByte
+                    // returns -1 at end-of-stream, so guard against it rather than casting -1 to a byte.
+                    if (fieldSize >= 1)
+                    {
+                        int read = stream.ReadByte();
+                        if (read >= 0)
+                        {
+                            level = (byte)read;
+                        }
+
+                        if (fieldSize > 1)
+                        {
+                            stream.Seek(fieldSize - 1, SeekOrigin.Current);
+                        }
+                    }
+
+                    break;
+                case DisplayMessageFields.Text:
+                    text = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                default:
+                    stream.Seek(fieldSize, SeekOrigin.Current);
+                    break;
+            }
+        }
+
+        return (executionId, instanceId, level, text);
+    }
+
+    public static CoverageSummaryBatch DecodeCoverageSummaryMessagesBody(byte[] body)
+    {
+        string? executionId = null, instanceId = null;
+        IReadOnlyList<CoverageSummary> summaries = [];
+        using MemoryStream stream = new(body, writable: false);
+        ushort fields = ReadUShort(stream);
+        for (int i = 0; i < fields; i++)
+        {
+            ushort id = ReadUShort(stream);
+            int size = ReadInt(stream);
+            long end = stream.Position + size;
+            switch (id)
+            {
+                case 1:
+                    executionId = ReadFixedSizeString(stream, size);
+                    break;
+                case 2:
+                    instanceId = ReadFixedSizeString(stream, size);
+                    break;
+                case 3:
+                    summaries = ReadCoverageSummaries(stream);
+                    break;
+            }
+
+            stream.Position = end;
+        }
+
+        return new(executionId, instanceId, summaries);
+    }
+
+    private static IReadOnlyList<CoverageSummary> ReadCoverageSummaries(Stream stream)
+    {
+        int count = ReadInt(stream);
+        List<CoverageSummary> summaries = [];
+        for (int i = 0; i < count; i++)
+        {
+            string? sessionUid = null, producerId = null, scopeName = null, customMetricName = null;
+            int? scopeLevel = null, metric = null;
+            long? coveredCount = null, coverableCount = null;
+            ushort fields = ReadUShort(stream);
+            for (int j = 0; j < fields; j++)
+            {
+                ushort id = ReadUShort(stream);
+                int size = ReadInt(stream);
+                long end = stream.Position + size;
+                switch (id)
+                {
+                    case 1:
+                        sessionUid = ReadFixedSizeString(stream, size);
+                        break;
+                    case 2:
+                        producerId = ReadFixedSizeString(stream, size);
+                        break;
+                    case 3:
+                        scopeLevel = ReadInt(stream);
+                        break;
+                    case 4:
+                        scopeName = ReadFixedSizeString(stream, size);
+                        break;
+                    case 5:
+                        metric = ReadInt(stream);
+                        break;
+                    case 6:
+                        customMetricName = ReadFixedSizeString(stream, size);
+                        break;
+                    case 7:
+                        coveredCount = ReadLong(stream);
+                        break;
+                    case 8:
+                        coverableCount = ReadLong(stream);
+                        break;
+                }
+
+                stream.Position = end;
+            }
+
+            summaries.Add(new(sessionUid, producerId, scopeLevel, scopeName, metric, customMetricName, coveredCount, coverableCount));
+        }
+
+        return summaries;
+    }
+
+    public static IReadOnlyList<FileArtifact> DecodeFileArtifacts(byte[] body, bool readInputArtifactPaths = true, bool readCoverageSummary = true)
+    {
+        const ushort fileArtifactMessageListFieldId = 3;
+        const ushort fullPathFieldId = 1;
+        const ushort displayNameFieldId = 2;
+        const ushort kindFieldId = 7;
+        const ushort inputArtifactPathsFieldId = 8;
+        const ushort coverageSummaryFieldId = 9;
+
+        List<FileArtifact> artifacts = [];
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            if (fieldId != fileArtifactMessageListFieldId)
+            {
+                stream.Seek(fieldSize, SeekOrigin.Current);
+                continue;
+            }
+
+            int messageCount = ReadInt(stream);
+            for (int messageIndex = 0; messageIndex < messageCount; messageIndex++)
+            {
+                string? fullPath = null;
+                string? displayName = null;
+                string? kind = null;
+                string[]? inputArtifactPaths = null;
+                IReadOnlyList<CoverageSummary>? coverageSummary = null;
+                ushort messageFieldCount = ReadUShort(stream);
+                for (int messageFieldIndex = 0; messageFieldIndex < messageFieldCount; messageFieldIndex++)
+                {
+                    ushort messageFieldId = ReadUShort(stream);
+                    int messageFieldSize = ReadInt(stream);
+                    switch (messageFieldId)
+                    {
+                        case fullPathFieldId:
+                            fullPath = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case displayNameFieldId:
+                            displayName = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case kindFieldId:
+                            kind = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case inputArtifactPathsFieldId when readInputArtifactPaths:
+                            int inputArtifactPathCount = ReadInt(stream);
+                            inputArtifactPaths = new string[inputArtifactPathCount];
+                            for (int inputArtifactPathIndex = 0; inputArtifactPathIndex < inputArtifactPathCount; inputArtifactPathIndex++)
+                            {
+                                inputArtifactPaths[inputArtifactPathIndex] = ReadLengthPrefixedString(stream);
+                            }
+
+                            break;
+                        case coverageSummaryFieldId when readCoverageSummary:
+                            coverageSummary = ReadCoverageSummaries(stream);
+                            break;
+                        default:
+                            stream.Seek(messageFieldSize, SeekOrigin.Current);
+                            break;
+                    }
+                }
+
+                artifacts.Add(new FileArtifact(fullPath, displayName, kind, inputArtifactPaths, coverageSummary));
+            }
+        }
+
+        return artifacts;
     }
 
     /// <summary>
@@ -416,9 +726,23 @@ internal static class DotnetTestPipeProtocol
         return BitConverter.ToInt32(bytes);
     }
 
+    private static long ReadLong(Stream stream)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(long)];
+        stream.ReadExactly(bytes);
+        return BitConverter.ToInt64(bytes);
+    }
+
     private static void WriteUShort(Stream stream, ushort value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
+        BitConverter.TryWriteBytes(bytes, value);
+        stream.Write(bytes);
+    }
+
+    private static void WriteInt(Stream stream, int value)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int)];
         BitConverter.TryWriteBytes(bytes, value);
         stream.Write(bytes);
     }
@@ -464,6 +788,25 @@ internal static class DotnetTestPipeProtocol
 
 /// <summary>A raw decoded pipe frame (serializer id + body bytes, no further decoding).</summary>
 internal sealed record RawMessage(int SerializerId, byte[] Body);
+
+internal sealed record FileArtifact(
+    string? FullPath,
+    string? DisplayName,
+    string? Kind,
+    string[]? InputArtifactPaths,
+    IReadOnlyList<CoverageSummary>? CoverageSummary = null);
+
+internal sealed record CoverageSummaryBatch(string? ExecutionId, string? InstanceId, IReadOnlyList<CoverageSummary> Summaries);
+
+internal sealed record CoverageSummary(
+    string? SessionUid,
+    string? ProducerId,
+    int? ScopeLevel,
+    string? ScopeName,
+    int? Metric,
+    string? CustomMetricName,
+    long? CoveredCount,
+    long? CoverableCount);
 
 /// <summary>
 /// A fully decoded discovered test message: the complete discovery object the SDK needs to build the

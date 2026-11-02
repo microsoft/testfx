@@ -2,20 +2,15 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
-    <VersionPrefix>$(MicrosoftTestingExtensionsOpenTelemetryVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides Open Telemetry for the platform.
 
-This package provides Open Telemetry for the platform.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,14 +22,30 @@ This package provides Open Telemetry for the platform.]]>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <TfmSpecificPackageFile Include="buildTransitive/**">
+      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
   </ItemGroup>
 
   <ItemGroup>

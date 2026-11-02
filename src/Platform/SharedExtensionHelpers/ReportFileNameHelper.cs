@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Services;
@@ -26,13 +26,5 @@ internal static class ReportFileNameHelper
     /// The resolved and sanitized file name (or path, if the template contained a directory component).
     /// </returns>
     public static string ResolveAndSanitize(string template, string processName, string processId, DateTimeOffset now)
-    {
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, now);
-        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
-        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-        string sanitizedFileName = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
-        return directoryPart.Length == 0
-            ? sanitizedFileName
-            : Path.Combine(directoryPart, sanitizedFileName);
-    }
+        => ArtifactNamingHelper.ResolveAndSanitize(template, processName, processId, now, ReportFileNameSanitizer.ReplaceInvalidFileNameChars);
 }

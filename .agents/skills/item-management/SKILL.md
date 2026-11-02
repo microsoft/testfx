@@ -1,0 +1,163 @@
+---
+name: item-management
+description: "Own concrete MSBuild ItemGroup and item-expression questions. USE FOR: Include, Remove, Update, item identity and metadata, transforms, filtering, batching, duplicate or overlapping items, and reviews that verify whether those operations are correct. Generated items stay in scope when the central defect is item identity, metadata, batching, duplicate declarations, or glob/Remove/Update semantics. For a generated artifact missing from compilation or output, wrong target timing/path, or FileWrites clean tracking without a broader item-semantics defect, use including-generated-files. The item operation may be broken, suspected, or already correct. Exclude property-only issues, general incrementality with no item question, broad reviews with no concrete item concern, and non-MSBuild systems."
+license: MIT
+---
+
+# MSBuild Item Management Patterns
+
+Canonical patterns for working with item groups, from `Microsoft.Common.CurrentVersion.targets`.
+
+## Include / Remove / Update — Three Operations
+
+| Operation | Purpose | When to use |
+|---|---|---|
+| `Include` | Add new items to the group | Creating items with identity + metadata |
+| `Remove` | Remove items matching a pattern | Excluding files or clearing a group |
+| `Update` | Modify metadata on existing items | Adding/changing metadata without re-adding |
+
+### Include — Add Items
+
+```xml
+<ItemGroup>
+  <Compile Include="Generated\*.cs">
+    <AutoGen>true</AutoGen>
+  </Compile>
+</ItemGroup>
+```
+
+### Remove — Subtract Items
+
+```xml
+<ItemGroup>
+  <!-- Remove specific items -->
+  <Reference Remove="$(AdditionalExplicitAssemblyReferences)" />
+
+  <!-- Set subtraction: prior minus current -->
+  <_CleanOrphanFileWrites Include="@(_CleanPriorFileWrites)"
+      Exclude="@(_CleanCurrentFileWrites)" />
+
+  <!-- Clear an entire group -->
+  <_Temporary Remove="@(_Temporary)" />
+</ItemGroup>
+```
+
+### Update — Modify Existing Items
+
+```xml
+<ItemGroup>
+  <EmbeddedResource Update="@(EmbeddedResource)"
+      Condition="'%(NuGetPackageId)' == 'Microsoft.CodeAnalysis.Collections'">
+    <GenerateSource>true</GenerateSource>
+    <ClassName>Microsoft.CodeAnalysis.Collections.SR</ClassName>
+  </EmbeddedResource>
+</ItemGroup>
+```
+
+`Update` does not add items — it only modifies items already in the group.
+
+## Item Batching — %(Metadata)
+
+When `%(Metadata)` appears in target attributes or task parameters, MSBuild **batches** execution per unique metadata value.
+
+### Target-level batching (Outputs)
+
+```xml
+<Target Name="GenerateSatelliteAssemblies"
+    Inputs="$(MSBuildAllProjects);@(_SatelliteAssemblyResourceInputs)"
+    Outputs="$(IntermediateOutputPath)%(Culture)\$(TargetName).resources.dll">
+  <!-- Runs once per unique Culture value -->
+</Target>
+```
+
+### Task-level batching
+
+```xml
+<Copy SourceFiles="@(_SourceItems)"
+    DestinationFiles="@(_SourceItems->'$(OutDir)%(TargetPath)')">
+</Copy>
+```
+
+### Per-item filtering with Condition
+
+```xml
+<ItemGroup>
+  <_ResxOutput Include="@(EmbeddedResource->'%(OutputResource)')"
+      Condition="'%(EmbeddedResource.WithCulture)' == 'false'" />
+</ItemGroup>
+```
+
+### Batching rules
+
+- `%(Metadata)` in `Condition` or `Outputs` → target batches per unique value.
+- `%(Metadata)` in task parameters → task batches per unique value.
+- **Do not mix `%()` from different item groups** in the same expression — this causes a cross-product (see Common Pitfalls).
+
+## Item Transforms — @(Item->'expression')
+
+Transforms create new item lists by applying an expression to each item:
+
+```xml
+<!-- Transform file paths to destinations -->
+<Copy SourceFiles="@(IntermediateAssembly)"
+    DestinationFiles="@(IntermediateAssembly->'$(OutDir)%(Filename)%(Extension)')"/>
+
+<!-- Transform with separator for display -->
+<Message Text="Files: @(Compile->'%(Filename)', ', ')" />
+```
+
+## Exclude Pattern — Set Subtraction on Include
+
+```xml
+<ItemGroup>
+  <Compile Include="**\*.cs" Exclude="Generated\**;Tests\**" />
+</ItemGroup>
+```
+
+`Exclude` only works on `Include` — it cannot be used with `Update` or `Remove`.
+
+## Conditional Item Inclusion
+
+```xml
+<!-- Condition on ItemGroup — all or nothing -->
+<ItemGroup Condition="'$(NetCoreBuild)' == 'true'">
+  <PackageReference Include="System.IO.Pipelines" />
+</ItemGroup>
+
+<!-- Condition on individual items -->
+<ItemGroup>
+  <PackageReference Include="System.IO.Pipelines"
+      Condition="'$(NetCoreBuild)' == 'true'" />
+</ItemGroup>
+```
+
+## PrivateAssets on Tool/Analyzer Packages
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="all" />
+  <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
+</ItemGroup>
+```
+
+## Common Pitfalls
+
+### Cross-product batching
+
+Referencing `%(Metadata)` from two different item groups creates O(N×M) executions:
+
+```xml
+<!-- BAD: Cross-product of @(Source) × @(Config) -->
+<Exec Command="process %(Source.Identity) with %(Config.Identity)" />
+
+<!-- GOOD: Reference one group via batching, the other via property -->
+<Exec Command="process %(Source.Identity) with $(ConfigFile)" />
+```
+
+### Generated files in source tree
+
+Write to `$(IntermediateOutputPath)` (obj/), not the source directory. Source-tree generation pollutes version control and can cause duplicate compilation via globs.
+
+### Missing FileWrites
+
+Every file created during a target must be added to `@(FileWrites)` for `dotnet clean` support.

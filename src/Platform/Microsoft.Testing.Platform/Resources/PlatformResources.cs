@@ -32,7 +32,31 @@ internal static partial class PlatformResources
 
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
+    internal static string @NamedPipePathTooLongErrorMessage => GetResourceString("NamedPipePathTooLongErrorMessage");
+
+    internal static string @NamedPipeDirectoryNotWritableErrorMessage => GetResourceString("NamedPipeDirectoryNotWritableErrorMessage");
+
 #if IS_MTP_UNIT_TESTS
+    internal static string @PlatformCommandLineCoverageThresholdInvalid => GetResourceString("PlatformCommandLineCoverageThresholdInvalid");
+
+    internal static string @PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests");
+
+    internal static string @PlatformCommandLineCoverageThresholdIncompatibleRetries => GetResourceString("PlatformCommandLineCoverageThresholdIncompatibleRetries");
+
+    internal static string @CoverageThresholdMissingMeasurement => GetResourceString("CoverageThresholdMissingMeasurement");
+
+    internal static string @CoverageThresholdEmptyMeasurement => GetResourceString("CoverageThresholdEmptyMeasurement");
+
+    internal static string @CoverageThresholdAmbiguous => GetResourceString("CoverageThresholdAmbiguous");
+
+    internal static string @ArtifactPostProcessingManifestInvalid => GetResourceString("ArtifactPostProcessingManifestInvalid");
+
+    internal static string @ArtifactPostProcessingManifestRunSummaryInvalid => GetResourceString("ArtifactPostProcessingManifestRunSummaryInvalid");
+
+    internal static string @CommandLineParserRecursiveResponseFile => GetResourceString("CommandLineParserRecursiveResponseFile");
+
+    internal static string @MissingClientPortFoJsonRpc => GetResourceString("MissingClientPortFoJsonRpc");
+
     internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
 
     internal static string @ActiveTestsRunning_MoreTestsCount => GetResourceString("ActiveTestsRunning_MoreTestsCount");
@@ -43,13 +67,35 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineServerInvalidArgument => GetResourceString("PlatformCommandLineServerInvalidArgument");
 
+    internal static string @PlatformCommandLineZeroTestsPolicyInvalidArgument => GetResourceString("PlatformCommandLineZeroTestsPolicyInvalidArgument");
+
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
+
+    internal static string @PlatformCommandLineDotnetTestTransportInvalid => GetResourceString("PlatformCommandLineDotnetTestTransportInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestHttpEndpointInvalid => GetResourceString("PlatformCommandLineDotnetTestHttpEndpointInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestHttpTokenInvalid => GetResourceString("PlatformCommandLineDotnetTestHttpTokenInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestTransportConflict => GetResourceString("PlatformCommandLineDotnetTestTransportConflict");
+
+    internal static string @PlatformCommandLineDotnetTestHttpOptionsRequireTransport => GetResourceString("PlatformCommandLineDotnetTestHttpOptionsRequireTransport");
+
+    internal static string @PlatformCommandLineDotnetTestCliRequiresTransport => GetResourceString("PlatformCommandLineDotnetTestCliRequiresTransport");
+
+    internal static string @PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken => GetResourceString("PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnBrowser => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnBrowser");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnWasi => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnWasi");
 
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");
 
     internal static string @PlatformCommandLineDiagnosticOptionIsMissing => GetResourceString("PlatformCommandLineDiagnosticOptionIsMissing");
 
     internal static string @PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests");
+
+    internal static string @OnlyOneFilterSupported => GetResourceString("OnlyOneFilterSupported");
 
     internal static string @PlatformCommandLineMinimumExpectedTestsOptionSingleArgument => GetResourceString("PlatformCommandLineMinimumExpectedTestsOptionSingleArgument");
 
@@ -72,6 +118,8 @@ internal static partial class PlatformResources
     internal static string @SucceededLowercase => GetResourceString("SucceededLowercase");
 
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
+
+    internal static string @ChatClientProviderAlreadyRegistered => GetResourceString("ChatClientProviderAlreadyRegistered");
 #endif
 
 #endif

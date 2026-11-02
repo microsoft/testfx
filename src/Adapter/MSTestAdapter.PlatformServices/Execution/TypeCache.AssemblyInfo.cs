@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -45,8 +45,8 @@ internal sealed partial class TypeCache
         {
             try
             {
-                // Only examine classes which are TestClass or derives from TestClass attribute
-                if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
+                // F# modules can contain fixtures without an explicit TestClass attribute.
+                if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t) && !t.IsFSharpModule())
                 {
                     continue;
                 }
@@ -94,12 +94,12 @@ internal sealed partial class TypeCache
 
                     if (isValid && isGlobalTestInitialize)
                     {
-                        assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestInitialize)));
+                        assemblyInfo.GlobalTestInitializations.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.GlobalTestInitialize)));
                     }
 
                     if (isValid && isGlobalTestCleanup)
                     {
-                        assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.TestCleanup)));
+                        assemblyInfo.GlobalTestCleanups.Add((methodInfo, @this.TryGetTimeoutInfo(methodInfo, FixtureKind.GlobalTestCleanup)));
                     }
                 }
             }

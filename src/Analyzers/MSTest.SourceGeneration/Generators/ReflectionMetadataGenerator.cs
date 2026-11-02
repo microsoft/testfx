@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -44,12 +44,30 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
 
         IncrementalValueProvider<ImmutableArray<TestClassMetadata?>> collected = testClasses.Collect();
 
-        IncrementalValueProvider<(string? AssemblyName, ImmutableArray<TestClassMetadata?> Classes)> source =
+        // MSTestSourceGenMode selects which generator emits. This (rooting) generator emits whenever
+        // the mode is not ReflectionFree -- that is, when the consumer opts into Rooting or leaves the
+        // property unset (IsReflectionFree returns false in both cases). When ReflectionFree is selected
+        // (the shipped default supplied by MSTest.TestAdapter.targets) the reflection-free generator
+        // emits instead and this one stays silent so the assembly is never registered twice.
+        IncrementalValueProvider<bool> reflectionFree = context.AnalyzerConfigOptionsProvider
+            .Select(static (provider, _) => SourceGenModeHelper.IsReflectionFree(provider.GlobalOptions));
+
+        IncrementalValueProvider<(string? AssemblyName, ImmutableArray<TestClassMetadata?> Classes, bool ReflectionFree)> source =
             context.CompilationProvider
                 .Select(static (compilation, _) => compilation.AssemblyName)
-                .Combine(collected);
+                .Combine(collected)
+                .Combine(reflectionFree)
+                .Select(static (tuple, _) => (tuple.Left.Left, tuple.Left.Right, tuple.Right));
 
-        context.RegisterImplementationSourceOutput(source, EmitMetadata);
+        context.RegisterImplementationSourceOutput(source, static (ctx, payload) =>
+        {
+            if (payload.ReflectionFree)
+            {
+                return;
+            }
+
+            EmitMetadata(ctx, (payload.AssemblyName, payload.Classes));
+        });
     }
 
     private static TestClassMetadata? BuildTestClass(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
@@ -94,16 +112,15 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Capture every base type that the generated module initializer can reference, so we
+            // Capture every closed base type that the generated module initializer can reference, so we
             // can root its members (ClassInitialize / ClassCleanup / AssemblyInitialize /
             // AssemblyCleanup / TestContext setter) via [DynamicDependency] under trimming or
             // Native AOT. Without this, those members live on the abstract base only and the
-            // trimmer removes them because [DynamicDependency(All, typeof(Concrete))] does not
-            // preserve base-type members. We intentionally do NOT add the base to types[] or
+            // test-class member roots on the concrete type do not preserve base-type members.
+            // We intentionally do NOT add the base to types[] or
             // testMethods{}; runtime discovery still flows through the concrete [TestClass].
             if (!SymbolEqualityComparer.Default.Equals(currentType, typeSymbol)
-                && !currentType.IsGenericType
-                && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(currentType))
+                && SymbolReferenceabilityHelper.IsClosedReferenceableType(currentType, typeSymbol.ContainingAssembly))
             {
                 baseTypes.Add(currentType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
             }
@@ -137,7 +154,7 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
                 // for by-ref parameters `ParameterType` is `T&` (i.e. `MakeByRefType()`), so a
                 // naive `typeof(T)` match always fails and ResolveMethod would throw inside the
                 // module initializer — aborting test discovery for the whole assembly. The
-                // experimental source-gen path doesn't model by-ref signatures yet, so skip.
+                // source-generated reflection path doesn't model by-ref signatures yet, so skip.
                 if (HasByRefParameter(method))
                 {
                     continue;

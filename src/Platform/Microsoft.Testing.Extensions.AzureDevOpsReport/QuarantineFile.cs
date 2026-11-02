@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -13,7 +13,7 @@ internal sealed class QuarantineFile
     private const int MaxPatternCount = 10_000;
     private const int MaxPatternLength = 4 * 1024;
 
-    // TODO: Consider an opt-in modifier for case-insensitive quarantine matching if customer scenarios require it.
+    // An opt-in modifier for case-insensitive quarantine matching could be added if customer scenarios require it.
     private static readonly RegexOptions RegexOptions = RegexOptions.CultureInvariant;
 
     private readonly Regex[] _patterns;

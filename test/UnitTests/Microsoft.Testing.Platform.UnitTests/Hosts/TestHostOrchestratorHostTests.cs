@@ -1,0 +1,635 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostOrchestrator;
+
+using Moq;
+
+namespace Microsoft.Testing.Platform.UnitTests;
+
+/// <summary>
+/// Covers the orchestrator host's application-lifetime contract: whatever <c>BeforeRunAsync</c> acquired
+/// must be released on every exit path, including cancellation and failure. See
+/// <see href="https://github.com/microsoft/testfx/issues/10360"/> — an Azure DevOps test run created there
+/// and never closed stays "InProgress" and never appears in the build's Tests tab.
+/// </summary>
+[TestClass]
+public sealed class TestHostOrchestratorHostTests
+{
+    [TestMethod]
+    public async Task RunAsync_OrchestratorSucceeds_CallsAfterRunWithTheOrchestratorExitCode()
+    {
+        RecordingLifetime lifetime = new();
+        TestHostOrchestratorHost host = CreateHost(new RecordingOrchestrator(exitCode: 7), lifetime, out _);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(7, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual(7, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OrchestratorCanceled_StillCallsAfterRunAndDisposes()
+    {
+        RecordingLifetime lifetime = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: cancellationTokenSource =>
+            {
+                cancellationTokenSource.Cancel();
+                throw new OperationCanceledException();
+            }),
+            lifetime,
+            out _);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OrchestratorThrows_CallsAfterRunAndDisposesThenRethrows()
+    {
+        RecordingLifetime lifetime = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: _ => throw new InvalidOperationException("orchestrator exploded")),
+            lifetime,
+            out _);
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+        Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_LifetimeBeforeRunThrows_StillCallsAfterRunOnEveryLifetime()
+    {
+        // A lifetime whose BeforeRunAsync faulted, and one whose BeforeRunAsync never ran, both still get
+        // AfterRunAsync so neither can strand a resource it may have partially acquired.
+        RecordingLifetime faulting = new(beforeRunException: new InvalidOperationException("before-run exploded"));
+        RecordingLifetime never = new();
+        TestHostOrchestratorHost host = CreateHost(new RecordingOrchestrator(exitCode: 0), [faulting, never], out _);
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+        Assert.AreEqual(1, faulting.BeforeRunCount);
+        Assert.AreEqual(1, faulting.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, faulting.LastExitCode);
+        Assert.AreEqual(1, faulting.DisposeCount);
+        Assert.AreEqual(0, never.BeforeRunCount);
+        Assert.AreEqual(1, never.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, never.LastExitCode);
+        Assert.AreEqual(1, never.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OrchestratorThrows_OneLifetimeFailingDoesNotBlockTheNext()
+    {
+        RecordingLifetime failing = new(afterRunException: new InvalidOperationException("cleanup exploded"));
+        RecordingLifetime healthy = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: _ => throw new InvalidOperationException("orchestrator exploded")),
+            [failing, healthy],
+            out _);
+
+        // The orchestrator's failure is what surfaces, not the cleanup failure.
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+        Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, failing.BeforeRunCount);
+        Assert.AreEqual(1, failing.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, failing.LastExitCode);
+        Assert.AreEqual(1, failing.DisposeCount);
+        Assert.AreEqual(1, healthy.BeforeRunCount);
+        Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, healthy.LastExitCode);
+        Assert.AreEqual(1, healthy.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OrchestratorCanceled_LifetimeAfterRunFailureIsSwallowed()
+    {
+        RecordingLifetime lifetime = new(afterRunException: new InvalidOperationException("cleanup exploded"));
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: cancellationTokenSource =>
+            {
+                cancellationTokenSource.Cancel();
+                throw new OperationCanceledException();
+            }),
+            lifetime,
+            out _);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OrchestratorSucceeds_LifetimeIsNotInvokedTwice()
+    {
+        RecordingLifetime lifetime = new();
+        TestHostOrchestratorHost host = CreateHost(new RecordingOrchestrator(exitCode: 0), lifetime, out _);
+
+        await host.RunAsync();
+
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual(0, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_LoggerThrows_StillCleansUpEveryLifetime()
+    {
+        // Diagnostic logging in the cleanup loop is best-effort: the aggregate logger propagates provider
+        // exceptions, so a broken log provider must not skip disposal or the remaining lifetimes - the very
+        // resources this loop exists to release.
+        RecordingLifetime failing = new(afterRunException: new InvalidOperationException("cleanup exploded"));
+        RecordingLifetime healthy = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: _ => throw new InvalidOperationException("orchestrator exploded")),
+            [failing, healthy],
+            out _,
+            new ThrowingLoggerFactory());
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+        Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, failing.BeforeRunCount);
+        Assert.AreEqual(1, failing.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, failing.LastExitCode);
+        Assert.AreEqual(1, failing.DisposeCount);
+        Assert.AreEqual(1, healthy.BeforeRunCount);
+        Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, healthy.LastExitCode);
+        Assert.AreEqual(1, healthy.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_WithMiddleware_WrapsOrchestratorAndLifetimesRunOnceAroundTheWholePipeline()
+    {
+        RecordingLifetime lifetime = new();
+        List<string> log = [];
+        RecordingMiddleware outer = new("outer", log);
+        RecordingMiddleware inner = new("inner", log);
+        TestHostOrchestratorHost host = CreateHostWithMiddleware(
+            new RecordingOrchestrator(exitCode: 7, onOrchestrate: _ => log.Add("orchestrator")),
+            [outer, inner],
+            lifetime);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual(7, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual(7, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+        Assert.AreSequenceEqual(
+            new[] { "outer-before", "inner-before", "orchestrator", "inner-after", "outer-after" },
+            log);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_MiddlewareShortCircuits_OrchestratorNeverRunsButLifetimesStillRunOnce()
+    {
+        RecordingLifetime lifetime = new();
+        bool orchestratorInvoked = false;
+        RecordingMiddleware gatekeeper = new("gatekeeper", [], behaviorOverride: (_, _) => Task.FromResult((int)ExitCode.GenericFailure));
+        TestHostOrchestratorHost host = CreateHostWithMiddleware(
+            new RecordingOrchestrator(onOrchestrate: _ => orchestratorInvoked = true),
+            [gatekeeper],
+            lifetime);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual((int)ExitCode.GenericFailure, exitCode);
+        Assert.IsFalse(orchestratorInvoked);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_NormalCompletionCleanupFailures_PreserveFirstFailureAndDisposeEveryLifetime()
+    {
+        InvalidOperationException expectedFailure = new("first cleanup failed");
+        RecordingLifetime first = new(afterRunException: expectedFailure);
+        RecordingLifetime second = new(afterRunException: new ArgumentException("second cleanup failed"));
+        RecordingLifetime healthy = new();
+        TestHostOrchestratorHost host = CreateHost(new RecordingOrchestrator(exitCode: 7), [first, second, healthy], out FakeApplicationCancellationTokenSource cancellation);
+        using (cancellation)
+        {
+            InvalidOperationException actualFailure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+            Assert.AreSame(expectedFailure, actualFailure);
+            foreach (RecordingLifetime lifetime in new[] { first, second, healthy })
+            {
+                Assert.AreEqual(1, lifetime.BeforeRunCount);
+                Assert.AreEqual(1, lifetime.AfterRunCount);
+                Assert.AreEqual(7, lifetime.LastExitCode);
+                Assert.AreEqual(1, lifetime.DisposeCount);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task RunAsync_UnrelatedCancellationException_DoesNotBecomeAnApplicationCancellationVerdict()
+    {
+        OperationCanceledException expectedFailure = new("extension canceled its own work");
+        RecordingLifetime lifetime = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: _ => throw expectedFailure),
+            lifetime,
+            out FakeApplicationCancellationTokenSource cancellation);
+        using (cancellation)
+        {
+            OperationCanceledException actualFailure = await Assert.ThrowsExactlyAsync<OperationCanceledException>(host.RunAsync);
+
+            Assert.AreSame(expectedFailure, actualFailure);
+            Assert.IsFalse(cancellation.CancellationToken.IsCancellationRequested);
+            Assert.AreEqual((int)ExitCode.GenericFailure, lifetime.LastExitCode);
+            Assert.AreEqual(1, lifetime.AfterRunCount);
+            Assert.AreEqual(1, lifetime.DisposeCount);
+        }
+    }
+
+    private static TestHostOrchestratorHost CreateHost(
+        RecordingOrchestrator orchestrator,
+        RecordingLifetime lifetime,
+        out FakeApplicationCancellationTokenSource cancellationTokenSource)
+        => CreateHost(orchestrator, [lifetime], out cancellationTokenSource);
+
+    private static TestHostOrchestratorHost CreateHost(
+        RecordingOrchestrator orchestrator,
+        RecordingLifetime[] lifetimes,
+        out FakeApplicationCancellationTokenSource cancellationTokenSource,
+        ILoggerFactory? loggerFactory = null)
+    {
+        ServiceProvider serviceProvider = new();
+        cancellationTokenSource = new FakeApplicationCancellationTokenSource();
+        orchestrator.CancellationTokenSource = cancellationTokenSource;
+        serviceProvider.AddService(cancellationTokenSource);
+        serviceProvider.AddService(loggerFactory ?? new NopLoggerFactory());
+        serviceProvider.AddServices([.. lifetimes]);
+
+        return new TestHostOrchestratorHost(new TestHostOrchestratorConfiguration([orchestrator]), serviceProvider);
+    }
+
+    private static TestHostOrchestratorHost CreateHostWithMiddleware(
+        RecordingOrchestrator orchestrator,
+        ITestHostExecutionOrchestratorMiddleware[] middleware,
+        RecordingLifetime lifetime)
+    {
+        ServiceProvider serviceProvider = new();
+        FakeApplicationCancellationTokenSource cancellationTokenSource = new();
+        orchestrator.CancellationTokenSource = cancellationTokenSource;
+        serviceProvider.AddService(cancellationTokenSource);
+        serviceProvider.AddService(new NopLoggerFactory());
+        serviceProvider.AddServices([lifetime]);
+
+        return new TestHostOrchestratorHost(new TestHostOrchestratorConfiguration([orchestrator], middleware), serviceProvider);
+    }
+
+    private sealed class RecordingOrchestrator : ITestHostExecutionOrchestrator
+    {
+        private readonly Action<FakeApplicationCancellationTokenSource>? _onOrchestrate;
+
+        public RecordingOrchestrator(int exitCode = 0, Action<FakeApplicationCancellationTokenSource>? onOrchestrate = null)
+        {
+            ExitCode = exitCode;
+            _onOrchestrate = onOrchestrate;
+        }
+
+        public int ExitCode { get; }
+
+        public FakeApplicationCancellationTokenSource CancellationTokenSource { get; set; } = new();
+
+        public string Uid => nameof(RecordingOrchestrator);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => nameof(RecordingOrchestrator);
+
+        public string Description => nameof(RecordingOrchestrator);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<int> OrchestrateTestHostExecutionAsync(CancellationToken cancellationToken)
+        {
+            _onOrchestrate?.Invoke(CancellationTokenSource);
+            return Task.FromResult(ExitCode);
+        }
+    }
+
+    private sealed class RecordingMiddleware : ITestHostExecutionOrchestratorMiddleware
+    {
+        private readonly Func<Func<CancellationToken, Task<int>>, CancellationToken, Task<int>> _behavior;
+
+        public RecordingMiddleware(string uid, List<string> log, Func<Func<CancellationToken, Task<int>>, CancellationToken, Task<int>>? behaviorOverride = null)
+        {
+            Uid = uid;
+            _behavior = behaviorOverride ?? (async (next, ct) =>
+            {
+                log.Add($"{uid}-before");
+                int result = await next(ct);
+                log.Add($"{uid}-after");
+                return result;
+            });
+        }
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<int> OrchestrateTestHostExecutionAsync(Func<CancellationToken, Task<int>> next, CancellationToken cancellationToken)
+            => _behavior(next, cancellationToken);
+    }
+
+    private sealed class RecordingLifetime : ITestHostOrchestratorApplicationLifetime, IDisposable
+    {
+        private readonly Exception? _beforeRunException;
+        private readonly Exception? _afterRunException;
+
+        public RecordingLifetime(Exception? beforeRunException = null, Exception? afterRunException = null)
+        {
+            _beforeRunException = beforeRunException;
+            _afterRunException = afterRunException;
+
+            // A per-instance GUID (rather than a shared static counter) keeps Uid unique without any
+            // process-global state: every test method in this class constructs its own RecordingLifetime
+            // instances, and under the assembly's method-level parallelization those constructions can run
+            // concurrently on different worker threads. Nothing asserts on the specific Uid value, only that
+            // it is stable and unique per instance, so a GUID satisfies that without a shared counter.
+            Uid = $"{nameof(RecordingLifetime)}-{Guid.NewGuid():N}";
+        }
+
+        public int BeforeRunCount { get; private set; }
+
+        public int AfterRunCount { get; private set; }
+
+        public int DisposeCount { get; private set; }
+
+        public int? LastExitCode { get; private set; }
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task BeforeRunAsync(CancellationToken cancellationToken)
+        {
+            BeforeRunCount++;
+            return _beforeRunException is null ? Task.CompletedTask : throw _beforeRunException;
+        }
+
+        public Task AfterRunAsync(int exitCode, CancellationToken cancellationToken)
+        {
+            AfterRunCount++;
+            LastExitCode = exitCode;
+            return _afterRunException is null ? Task.CompletedTask : throw _afterRunException;
+        }
+
+        public void Dispose() => DisposeCount++;
+    }
+
+    private sealed class FakeApplicationCancellationTokenSource : ITestApplicationCancellationTokenSource, IDisposable
+    {
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+        public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+        public void Cancel() => _cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103
+
+        public void Dispose() => _cancellationTokenSource.Dispose();
+    }
+
+    private sealed class NopLoggerFactory : ILoggerFactory
+    {
+        public ILogger CreateLogger(string categoryName) => new NopLogger();
+
+        private sealed class NopLogger : ILogger
+        {
+            public bool IsEnabled(LogLevel logLevel) => false;
+
+            public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+            }
+
+            public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+                => Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// A logger whose provider throws for the levels the cleanup loop uses, mirroring the aggregate
+    /// logger's behaviour of propagating provider exceptions to the caller. Other levels pass through so
+    /// the host's own startup logging, which is outside the cleanup path, still works.
+    /// </summary>
+    private sealed class ThrowingLoggerFactory : ILoggerFactory
+    {
+        public ILogger CreateLogger(string categoryName) => new ThrowingLogger();
+
+        private sealed class ThrowingLogger : ILogger
+        {
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+                => ThrowIfCleanupLevel(logLevel);
+
+            public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                ThrowIfCleanupLevel(logLevel);
+                return Task.CompletedTask;
+            }
+
+            private static void ThrowIfCleanupLevel(LogLevel logLevel)
+            {
+                if (logLevel is LogLevel.Warning or LogLevel.Debug)
+                {
+                    throw new InvalidOperationException("log provider exploded");
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, false, 12)]
+    [DataRow(true, false, 7)]
+    [DataRow(true, true, 3)]
+    public async Task RunAsync_ProtocolNegotiationPreservesRoleAndServerCancellation(bool compatible, bool control, int expectedExit)
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        RecordingLifetime lifetime = new();
+        Mock<ITestHostExecutionOrchestrator> orchestrator = new();
+        orchestrator.SetupGet(o => o.Uid).Returns("wire-orchestrator");
+        CancellationToken executionToken = default;
+        orchestrator.Setup(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns<CancellationToken>(token =>
+            {
+                executionToken = token;
+                return control ? Task.FromCanceled<int>(token) : Task.FromResult(7);
+            });
+        Mock<IPushOnlyProtocol> protocol = new();
+        protocol.SetupGet(p => p.IsServerMode).Returns(true);
+        protocol.SetupGet(p => p.IsServerControlChannelSupported).Returns(control);
+        string? role = null;
+        IReadOnlyDictionary<byte, string>? properties = null;
+        protocol.Setup(p => p.IsCompatibleProtocolAsync(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<byte, string>?>()))
+            .Callback<string, IReadOnlyDictionary<byte, string>?>((value, extra) =>
+            {
+                role = value;
+                properties = extra;
+            })
+            .ReturnsAsync(compatible);
+        protocol.Setup(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()))
+            .Returns<Func<CancellationToken, Task>>(callback => callback(new CancellationToken(canceled: true)));
+        ServiceProvider services = new();
+        services.AddServices([cancellation, new NopLoggerFactory(), protocol.Object, lifetime]);
+        TestHostOrchestratorHost host = new(new([orchestrator.Object]), services);
+
+        Assert.AreEqual(expectedExit, await host.RunAsync());
+
+        Assert.AreEqual("TestHostOrchestrator", role);
+        Assert.IsNotNull(properties);
+        Assert.AreEqual(new KeyValuePair<byte, string>(11, "wire-orchestrator"), Assert.ContainsSingle(properties));
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.BeforeRunCount);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.AfterRunCount);
+        Assert.AreEqual(compatible ? 1 : 0, lifetime.DisposeCount);
+        Assert.AreEqual(compatible ? expectedExit : null, lifetime.LastExitCode);
+        Assert.AreEqual(compatible && control, cancellation.CancellationToken.IsCancellationRequested);
+        if (compatible)
+        {
+            Assert.AreEqual(cancellation.CancellationToken, executionToken);
+        }
+
+        orchestrator.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), compatible ? Times.Once() : Times.Never());
+        protocol.Verify(p => p.StartServerControlChannelAsync(It.IsAny<Func<CancellationToken, Task>>()), compatible && control ? Times.Once() : Times.Never());
+    }
+
+    [TestMethod]
+    public async Task RunAsync_MultipleOrchestratorsRejectBeforeLifetimeOrExecution()
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        RecordingLifetime lifetime = new();
+        Mock<ITestHostExecutionOrchestrator> first = new();
+        Mock<ITestHostExecutionOrchestrator> second = new();
+        ServiceProvider services = new();
+        services.AddServices([cancellation, new NopLoggerFactory(), lifetime]);
+        TestHostOrchestratorHost host = new(new([first.Object, second.Object]), services);
+
+        NotSupportedException error = await Assert.ThrowsExactlyAsync<NotSupportedException>(host.RunAsync);
+
+        Assert.AreEqual("Multiple test orchestrator not supported", error.Message);
+        Assert.AreEqual(0, lifetime.BeforeRunCount);
+        Assert.AreEqual(0, lifetime.AfterRunCount);
+        Assert.AreEqual(0, lifetime.DisposeCount);
+        first.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        second.Verify(o => o.OrchestrateTestHostExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RunAsync_DisposalFailurePreservesNormalFailureAndCanceledVerdict(bool canceled)
+    {
+        using FakeApplicationCancellationTokenSource cancellation = new();
+        Action<FakeApplicationCancellationTokenSource>? cancel = null;
+        if (canceled)
+        {
+            cancel = source =>
+            {
+                source.Cancel();
+                throw new OperationCanceledException();
+            };
+        }
+
+        RecordingOrchestrator orchestrator = new(7, cancel) { CancellationTokenSource = cancellation };
+        InvalidOperationException expected = new("owned disposal sentinel");
+        Mock<ITestHostOrchestratorApplicationLifetime> failing = new();
+        Mock<IDisposable> disposable = failing.As<IDisposable>();
+        disposable.Setup(d => d.Dispose()).Throws(expected);
+        failing.SetupGet(l => l.Uid).Returns("first-disposer");
+        failing.Setup(l => l.BeforeRunAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        failing.Setup(l => l.AfterRunAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns<int, CancellationToken>((_, token) => canceled ? Task.FromCanceled(token) : Task.CompletedTask);
+        RecordingLifetime healthy = new();
+        List<(LogLevel Level, string Text)> logs = [];
+        Mock<ILoggerFactory> factory = new();
+        factory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new CleanupRecordingLogger(logs));
+        ServiceProvider services = new();
+        services.AddServices([cancellation, factory.Object, failing.Object, healthy]);
+        TestHostOrchestratorHost host = new(new([orchestrator]), services);
+
+        if (canceled)
+        {
+            Assert.AreEqual(3, await host.RunAsync());
+        }
+        else
+        {
+            Assert.AreSame(expected, await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync));
+        }
+
+        Assert.AreEqual(1, healthy.BeforeRunCount);
+        Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual(canceled ? 3 : 7, healthy.LastExitCode);
+        Assert.AreEqual(1, healthy.DisposeCount);
+        disposable.Verify(d => d.Dispose(), Times.Once);
+        failing.Verify(l => l.AfterRunAsync(canceled ? 3 : 7, cancellation.CancellationToken), Times.Once);
+        string warning = Assert.ContainsSingle(logs.Where(l => l.Level == LogLevel.Warning)).Text;
+        Assert.StartsWith("Orchestrator lifetime 'first-disposer' failed to dispose: ", warning);
+        Assert.Contains("owned disposal sentinel", warning);
+        string[] debug = logs.Where(l => l.Level == LogLevel.Debug).Select(l => l.Text).ToArray();
+        string[] expectedDebug = canceled
+            ? ["Orchestrator lifetime 'first-disposer' did not complete AfterRunAsync because the run was canceled."]
+            : [];
+        Assert.AreSequenceEqual(expectedDebug, debug);
+    }
+
+    private sealed class CleanupRecordingLogger(List<(LogLevel Level, string Text)> logs) : ILogger
+    {
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => logs.Add((logLevel, formatter(state, exception)));
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Log(logLevel, state, exception, formatter);
+            return Task.CompletedTask;
+        }
+    }
+}

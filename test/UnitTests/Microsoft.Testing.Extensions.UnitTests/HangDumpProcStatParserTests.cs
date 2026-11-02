@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics.Helpers;
@@ -17,6 +17,8 @@ public sealed class HangDumpProcStatParserTests
     [DataRow("42 (My (App)) R 100 42 42 0 -1 4194304 0 0", 100)]
     [DataRow("5000 (chrome_helper_re) S 4999 5000 5000 0 -1 4194304 0 0", 4999)]
     [DataRow("1 (systemd) S 0 1 1 0 -1 4194560 0 0", 0)]
+    [DataRow(") S 42", 42)]
+    [DataRow("1 (a) S 42", 42)]
     public void ParseParentPidFromProcStat_ValidInput_ReturnsParentPid(string stat, int expected)
     {
         int actual = IProcessExtensions.ParseParentPidFromProcStat(stat);

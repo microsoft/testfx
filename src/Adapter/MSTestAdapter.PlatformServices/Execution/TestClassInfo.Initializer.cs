@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -70,7 +70,7 @@ internal sealed partial class TestClassInfo
         }
 
         // If classInitialization was successful, then don't do anything
-        if (ClassInitializationException == null)
+        if (ClassInitializationException is null)
         {
             return;
         }
@@ -103,7 +103,7 @@ internal sealed partial class TestClassInfo
         throw testFailedException;
     }
 
-    private TestResult? TryGetClonedCachedClassInitializeResult()
+    internal TestResult? TryGetClonedCachedClassInitializeResult()
     {
         // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
         // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,
@@ -253,10 +253,7 @@ internal sealed partial class TestClassInfo
             {
                 // Assembly initialize and class initialize logs are pre-pended to the first result.
                 var testContextImpl = testContext as TestContextImplementation;
-                result.LogOutput = initializationLogs + testContextImpl?.GetAndClearOutput();
-                result.LogError = initializationErrorLogs + testContextImpl?.GetAndClearError();
-                result.DebugTrace = initializationTrace + testContextImpl?.GetAndClearTrace();
-                result.TestContextMessages = initializationTestContextMessages + testContext.GetAndClearDiagnosticMessages();
+                result.SetOutputAndTraces(testContextImpl, testContext, initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages);
             }
 
             // Publish with Volatile.Write so callers on the cached-result fast path of
@@ -282,30 +279,31 @@ internal sealed partial class TestClassInfo
             timeout = localTimeout;
         }
 
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext))
-                {
-                    Task? task = methodInfo.GetInvokeResultAsync(null, testContext);
-                    if (task is not null)
-                    {
-                        await task.ConfigureAwait(false);
-                    }
-                }
+        // One span per class-initialize method (including inherited ones), so a slow or throwing class fixture is
+        // attributable in the trace instead of being folded into the first test of the class.
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.ClassInitialize,
+                "class_initialize",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
 
-                // **After** we have executed the class initialize, we save the current context.
-                // This context will contain async locals set by the class initialize method.
-                ExecutionContext = ExecutionContext.Capture();
-            },
+        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
+            () => methodInfo.InvokeAsFixtureMethodAsync(
+                testContext,
+                ec => ExecutionContext = ec),
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
             ExecutionContext ?? Parent?.ExecutionContext,
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
 
         return result;
     }

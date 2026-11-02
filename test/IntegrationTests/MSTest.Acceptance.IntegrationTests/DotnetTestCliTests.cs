@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -12,8 +13,8 @@ public class DotnetTestCliTests : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSTestProject";
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async Task DotnetTest_Should_Execute_Tests(string tfm, BuildConfiguration buildConfiguration)
+    [CombinatorialData]
+    public async Task DotnetTest_Should_Execute_Tests([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,

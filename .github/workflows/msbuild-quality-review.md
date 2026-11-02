@@ -15,16 +15,21 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 imports:
   - shared/msbuild-review-shared.md
 
 timeout-minutes: 30
 
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
 network:
   allowed:
     - defaults
     - dotnet
+    - github.com
 ---
 
 <!--

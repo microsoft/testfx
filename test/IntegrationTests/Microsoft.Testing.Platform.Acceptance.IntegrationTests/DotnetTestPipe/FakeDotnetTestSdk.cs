@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -33,6 +33,9 @@ internal static class FakeDotnetTestSdk
         Dictionary<string, string?>? environmentVariables = null,
         string supportedProtocolVersions = DefaultSupportedProtocolVersions,
         bool isIde = false,
+        bool advertiseServerControlPipe = false,
+        string? toolName = null,
+        string? coverageSummaryVersion = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(testHost);
@@ -49,17 +52,46 @@ internal static class FakeDotnetTestSdk
         // path (matching what NamedPipeServer.GetPipeName produces with Path.Combine("/tmp", name)).
         using NamedPipeServerStream stream = new(osPipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Byte, options);
 
+        // Optional reverse "server control" pipe: when advertised, the test app connects back and parks a
+        // WaitForServerControlRequest that we complete with a CancelSession, exercising server-initiated
+        // session cancellation (issue #8691). Declared with 'await using' so the OS handle is released reliably
+        // on every exit path (including exceptions), and remains a no-op when the feature is not advertised.
+        string? controlOsPipeName = advertiseServerControlPipe ? DotnetTestPipeProtocol.GetPipeName(Guid.NewGuid().ToString("N")) : null;
+        await using NamedPipeServerStream? controlStream = controlOsPipeName is null
+            ? null
+            : new(controlOsPipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Byte, options);
+
         List<RawMessage> received = [];
         Dictionary<byte, string>? receivedHandshake = null;
         Dictionary<byte, string>? sentHandshakeReply = null;
         string? negotiatedVersion = null;
+        var controlObservations = new ServerControlObservations();
 
         string pipeArgs = $"--server dotnettestcli --dotnet-test-pipe {osPipeName}";
         string finalArgs = extraArguments is null ? pipeArgs : $"{pipeArgs} {extraArguments}";
-        Task<TestHostResult> hostRun = testHost.ExecuteAsync(finalArgs, environmentVariables, cancellationToken: cancellationToken);
+        Task<TestHostResult> hostRun = testHost.ExecuteAsync(
+            finalArgs,
+            environmentVariables,
+            cancellationToken: cancellationToken,
+            toolName: toolName);
 
-        // Wait for the test app to connect.
-        await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+        // Wait for the test app to connect, but surface an early process exit instead of hanging forever.
+        Task connectionTask = stream.WaitForConnectionAsync(cancellationToken);
+        if (await Task.WhenAny(connectionTask, hostRun).ConfigureAwait(false) == hostRun)
+        {
+            TestHostResult earlyExit = await hostRun.ConfigureAwait(false);
+            throw new InvalidOperationException(
+                $"Test host exited with code {earlyExit.ExitCode} before connecting to the dotnet-test pipe.{Environment.NewLine}" +
+                $"Stdout:{Environment.NewLine}{earlyExit.StandardOutput}{Environment.NewLine}" +
+                $"Stderr:{Environment.NewLine}{earlyExit.StandardError}");
+        }
+
+        await connectionTask.ConfigureAwait(false);
+
+        // Accept the control connection and push the cancel signal concurrently with the data read loop.
+        Task? controlTask = controlStream is null
+            ? null
+            : Task.Run(() => DriveServerControlAsync(controlStream, controlObservations, cancellationToken), cancellationToken);
 
         // Read frames until the peer disconnects.
         while (true)
@@ -77,7 +109,7 @@ internal static class FakeDotnetTestSdk
                 receivedHandshake = DotnetTestPipeProtocol.DecodeHandshakeBody(frame.Body);
                 string selected = SelectHighestMutuallySupportedVersion(receivedHandshake, supportedProtocolVersions);
                 negotiatedVersion = selected;
-                sentHandshakeReply = BuildSdkHandshakeReply(selected, isIde);
+                sentHandshakeReply = BuildSdkHandshakeReply(selected, isIde, controlOsPipeName, coverageSummaryVersion);
                 byte[] replyBody = DotnetTestPipeProtocol.EncodeHandshakeBody(sentHandshakeReply);
                 await DotnetTestPipeProtocol.WriteFrameAsync(stream, DotnetTestPipeProtocol.SerializerIds.HandshakeMessage, replyBody, cancellationToken).ConfigureAwait(false);
             }
@@ -90,12 +122,55 @@ internal static class FakeDotnetTestSdk
 
         TestHostResult hostResult = await hostRun.ConfigureAwait(false);
 
+        if (controlTask is not null)
+        {
+            try
+            {
+                await controlTask.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Best-effort: the control interaction is observed via controlObservations; don't let its
+                // teardown fail the harness.
+            }
+        }
+
         return new FakeDotnetTestSdkResult(
             hostResult,
             received,
             receivedHandshake,
             sentHandshakeReply,
-            negotiatedVersion);
+            negotiatedVersion,
+            controlObservations.Connected,
+            controlObservations.CancelSent);
+    }
+
+    /// <summary>
+    /// Accepts the reverse control-pipe connection, reads the single parked
+    /// <see cref="DotnetTestPipeProtocol.SerializerIds.WaitForServerControlRequest"/>, and completes it with a
+    /// <see cref="DotnetTestPipeProtocol.ServerControlKinds.CancelSession"/> message.
+    /// </summary>
+    private static async Task DriveServerControlAsync(NamedPipeServerStream controlStream, ServerControlObservations observations, CancellationToken cancellationToken)
+    {
+        await controlStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+        observations.Connected = true;
+
+        RawMessage? request = await DotnetTestPipeProtocol.ReadFrameAsync(controlStream, cancellationToken).ConfigureAwait(false);
+        if (request is null || request.SerializerId != DotnetTestPipeProtocol.SerializerIds.WaitForServerControlRequest)
+        {
+            return;
+        }
+
+        byte[] body = DotnetTestPipeProtocol.EncodeServerControlMessageBody(DotnetTestPipeProtocol.ServerControlKinds.CancelSession);
+        await DotnetTestPipeProtocol.WriteFrameAsync(controlStream, DotnetTestPipeProtocol.SerializerIds.ServerControlMessage, body, cancellationToken).ConfigureAwait(false);
+        observations.CancelSent = true;
+    }
+
+    private sealed class ServerControlObservations
+    {
+        public bool Connected { get; set; }
+
+        public bool CancelSent { get; set; }
     }
 
     /// <summary>
@@ -141,7 +216,8 @@ internal static class FakeDotnetTestSdk
         return best ?? string.Empty;
     }
 
-    private static Dictionary<byte, string> BuildSdkHandshakeReply(string selectedVersion, bool isIde)
+    private static Dictionary<byte, string> BuildSdkHandshakeReply(
+        string selectedVersion, bool isIde, string? serverControlPipeName = null, string? coverageSummaryVersion = null)
     {
         Dictionary<byte, string> properties = new(capacity: 6)
         {
@@ -155,6 +231,16 @@ internal static class FakeDotnetTestSdk
         if (isIde)
         {
             properties.Add(DotnetTestPipeProtocol.HandshakeProperties.IsIDE, bool.TrueString);
+        }
+
+        if (!string.IsNullOrEmpty(serverControlPipeName))
+        {
+            properties.Add(DotnetTestPipeProtocol.HandshakeProperties.ServerControlPipeName, serverControlPipeName);
+        }
+
+        if (coverageSummaryVersion is not null)
+        {
+            properties.Add(DotnetTestPipeProtocol.HandshakeProperties.CoverageSummaryVersion, coverageSummaryVersion);
         }
 
         return properties;

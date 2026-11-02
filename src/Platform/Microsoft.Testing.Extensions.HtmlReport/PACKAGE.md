@@ -20,6 +20,9 @@ This package extends Microsoft.Testing.Platform with:
 - **Triage-friendly UX**: failed tests first, outcome filter, free-text search, sort by name / duration / outcome, expandable per-test detail panel with error message, stack trace, standard output and standard error
 - **Light and dark theme** that follows the user's system preference
 - **Performance**: pagination keeps the report usable even for very large runs
+- **Automatic consolidation**: reports from multi-process, multi-target-framework and retry runs are merged into one HTML summary while the original per-process reports remain available
+
+## Usage
 
 Enable the report via the `--report-html` command line option. The report file name can be overridden with `--report-html-filename <name>.html`.
 

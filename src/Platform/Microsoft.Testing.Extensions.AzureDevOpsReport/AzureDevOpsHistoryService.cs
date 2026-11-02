@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -90,7 +90,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
         if (!TryCreateQuery(historyWindowInDays, out AzureDevOpsHistoryQuery? query))
         {
-            _logger.LogWarning(AzureDevOpsResources.FlakyHistoryMissingEnvironmentWarning);
+            await _logger.LogWarningAsync(AzureDevOpsResources.FlakyHistoryMissingEnvironmentWarning).ConfigureAwait(false);
             return;
         }
 
@@ -112,7 +112,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
                     loadCancellationTokenSource.Cancel();
 #pragma warning restore VSTHRD103
                     ResetHistoryState();
-                    _logger.LogInformation(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo, (int)HistoryLoadBudget.TotalSeconds));
+                    await _logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo, (int)HistoryLoadBudget.TotalSeconds)).ConfigureAwait(false);
 
                     try
                     {
@@ -138,7 +138,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             ResetHistoryState();
-            _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadFailedWarning, ex.Message));
+            await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryLoadFailedWarning, ex.Message)).ConfigureAwait(false);
         }
     }
 
@@ -154,7 +154,8 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
-        return Volatile.Read(ref _statsByTest).TryGetValue(testName, out stats);
+        IReadOnlyDictionary<string, FlakyStats> statsByTest = Volatile.Read(ref _statsByTest);
+        return statsByTest.TryGetValue(testName, out stats);
     }
 
     public bool IsLikelyFlaky(string testName, double threshold)
@@ -171,7 +172,30 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
-        return Volatile.Read(ref _durationStatsByTest).TryGetValue(testName, out stats);
+        IReadOnlyDictionary<string, DurationHistoryStats> statsByTest = Volatile.Read(ref _durationStatsByTest);
+        return statsByTest.TryGetValue(testName, out stats);
+    }
+
+    private static string GetCanonicalTestName(AzureDevOpsTestResult result)
+    {
+        string name = result.AutomatedTestName;
+        return result.Comment switch
+        {
+            string comment when comment.StartsWith(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataFamily, StringComparison.Ordinal)
+                => !comment.StartsWith(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix, StringComparison.Ordinal)
+                    ? throw new NotSupportedException()
+                    : int.TryParse(
+                comment.Substring(AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix.Length),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out int length)
+            && length > 0
+            && length <= name.Length
+            && (length == name.Length || name.Substring(length).StartsWith(" (", StringComparison.Ordinal))
+                    ? name.Substring(0, length)
+                    : throw new FormatException(),
+            _ => name,
+        };
     }
 
     private async Task LoadHistoryAsync(AzureDevOpsHistoryQuery query, int historyWindowInDays, CancellationToken cancellationToken)
@@ -179,7 +203,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         IReadOnlyList<AzureDevOpsTestRun> runs = await _historyClient.GetRunsAsync(query, MaxRunsToInspect + 1, cancellationToken).ConfigureAwait(false);
         if (runs.Count > MaxRunsToInspect)
         {
-            _logger.LogInformation(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryRunsCappedInfo, runs.Count, MaxRunsToInspect));
+            await _logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryRunsCappedInfo, runs.Count, MaxRunsToInspect)).ConfigureAwait(false);
             runs = [.. runs.Take(MaxRunsToInspect)];
         }
 
@@ -214,12 +238,13 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             AzureDevOpsTestResultsPage page = await _historyClient.GetResultsAsync(query, run.Url, skip, ResultsPageSize, continuationToken, cancellationToken).ConfigureAwait(false);
             foreach (AzureDevOpsTestResult result in page.Results)
             {
-                if (!counts.TryGetValue(result.AutomatedTestName, out (int PassCount, int FailCount) currentCount))
+                string testName = GetCanonicalTestName(result);
+                if (!counts.TryGetValue(testName, out (int PassCount, int FailCount) currentCount))
                 {
                     currentCount = default;
                 }
 
-                counts[result.AutomatedTestName] = result.Outcome switch
+                counts[testName] = result.Outcome switch
                 {
                     "Passed" => (currentCount.PassCount + 1, currentCount.FailCount),
                     "Failed" => (currentCount.PassCount, currentCount.FailCount + 1),
@@ -228,10 +253,10 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
                 if (durations is not null && result.DurationMilliseconds is double durationMs && durationMs > 0)
                 {
-                    if (!durations.TryGetValue(result.AutomatedTestName, out List<double>? samples))
+                    if (!durations.TryGetValue(testName, out List<double>? samples))
                     {
                         samples = [];
-                        durations[result.AutomatedTestName] = samples;
+                        durations[testName] = samples;
                     }
 
                     if (samples.Count < MaxDurationSamplesPerTest)
@@ -259,7 +284,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
             if (page.ContinuationToken == previousContinuationToken)
             {
-                _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun));
+                await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun)).ConfigureAwait(false);
                 return;
             }
 
@@ -268,7 +293,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             continuationToken = page.ContinuationToken;
         }
 
-        _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun));
+        await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun)).ConfigureAwait(false);
     }
 
     private void PublishHistoryStats(int historyWindowInDays, Dictionary<string, (int PassCount, int FailCount)> counts, Dictionary<string, List<double>>? durations)

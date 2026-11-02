@@ -17,7 +17,17 @@ public class TestDataRowTests : TestContainer
         testDataRow.Value.Should().Be(value);
         testDataRow.IgnoreMessage.Should().BeNull();
         testDataRow.DisplayName.Should().BeNull();
+        testDataRow.ArgumentsDisplayName.Should().BeNull();
         testDataRow.TestCategories.Should().BeNull();
+    }
+
+    public void TestDataRowShouldExposeArgumentsDisplayNameThroughInterface()
+    {
+        var testDataRow = new TestDataRow<string>(string.Empty) { ArgumentsDisplayName = "empty input" };
+
+        testDataRow.ArgumentsDisplayName.Should().Be("empty input");
+        ITestDataRow dataRow = testDataRow;
+        dataRow.ArgumentsDisplayName.Should().Be("empty input");
     }
 
     public void TestDataRowShouldAllowSettingTestCategories()
@@ -77,5 +87,19 @@ public class TestDataRowTests : TestContainer
         ITestDataRow dataRow = testDataRow;
         dataRow.TestCategories.Should().NotBeNull();
         dataRow.TestCategories.Should().HaveCount(0);
+    }
+
+    public void TestDataRow_InterfaceValuePreservesTupleShapeAndReferenceIdentity()
+    {
+        ITestDataRow tupleRow = new TestDataRow<(int, string)>((37, "label"));
+        (int Number, string Label) tuple = tupleRow.Value.Should().BeOfType<(int, string)>().Which;
+        tuple.Number.Should().Be(37);
+        tuple.Label.Should().Be("label");
+
+        object identity = new();
+        ITestDataRow referenceRow = new TestDataRow<object>(identity);
+        referenceRow.Value.Should().BeSameAs(identity);
+        ITestDataRow nullRow = new TestDataRow<string?>(null);
+        nullRow.Value.Should().BeNull();
     }
 }

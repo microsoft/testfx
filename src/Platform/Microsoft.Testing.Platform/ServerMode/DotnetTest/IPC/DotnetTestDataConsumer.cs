@@ -10,10 +10,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
-    private readonly DotnetTestConnection? _dotnetTestConnection;
+    private readonly DotnetTestConnection _dotnetTestConnection;
     private readonly string? _executionId;
 
     public DotnetTestDataConsumer(DotnetTestConnection dotnetTestConnection, IEnvironment environment)
@@ -27,6 +26,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
         typeof(FileArtifact),
+        typeof(TestCoverageMessage),
     ];
 
     public string Uid => nameof(DotnetTestDataConsumer);
@@ -39,8 +39,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         switch (value)
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
@@ -61,12 +59,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         // `dotnet test --list-tests json`). Plain runs keep the payload minimal.
                         TestFileLocationProperty? testFileLocationProperty = null;
                         TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
-                        TestMetadataProperty[] traits = [];
+                        TraitMessage[] traits = [];
                         if (_dotnetTestConnection.IsIDE)
                         {
                             testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
                             testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-                            traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
+                            // Convert the platform's TestMetadataProperty to the shared, platform-decoupled wire type.
+                            traits = [.. testNodeDetails.Traits.Select(static t => new TraitMessage(t.Key, t.Value))];
                         }
 
                         DiscoveredTestMessages discoveredTestMessages = new(
@@ -103,7 +102,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Reason ?? string.Empty,
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
-                                   testNodeUpdateMessage.SessionUid.Value)
+                                   testNodeUpdateMessage.SessionUid.Value,
+                                   testNodeDetails.RetryAttemptNumber,
+                                   testNodeDetails.IsSuperseded)
                             ],
                             []);
 
@@ -143,14 +144,18 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Exceptions,
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
-                                   testNodeUpdateMessage.SessionUid.Value)
+                                   testNodeUpdateMessage.SessionUid.Value,
+                                   testNodeDetails.Expected,
+                                   testNodeDetails.Actual,
+                                   testNodeDetails.RetryAttemptNumber,
+                                   testNodeDetails.IsSuperseded)
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
                         break;
                 }
 
-                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.TestNode.Properties.OfType<FileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeDetails.Artifacts)
                 {
                     FileArtifactMessages testFileArtifactMessages = new(
                         _executionId,
@@ -162,7 +167,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 artifact.Description ?? string.Empty,
                                 testNodeUpdateMessage.TestNode.Uid.Value,
                                 testNodeUpdateMessage.TestNode.DisplayName,
-                                testNodeUpdateMessage.SessionUid.Value)
+                                testNodeUpdateMessage.SessionUid.Value,
+                                null)
                         ]);
 
                     await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
@@ -171,58 +177,102 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
-                var fileArtifactMessages = new FileArtifactMessages(
-                    _executionId,
-                    DotnetTestConnection.InstanceId,
-                    [
-                        new FileArtifactMessage(
-                            sessionFileArtifact.FileInfo.FullName,
-                            sessionFileArtifact.DisplayName,
-                            sessionFileArtifact.Description ?? string.Empty,
-                            string.Empty,
-                            string.Empty,
-                            sessionFileArtifact.SessionUid.Value)
-                    ]);
+                FileArtifactMessages fileArtifactMessages = CreateFileArtifactMessages(_executionId, sessionFileArtifact);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
 
             case FileArtifact fileArtifact:
-                fileArtifactMessages = new(
-                    _executionId,
-                    DotnetTestConnection.InstanceId,
-                    [
-                        new FileArtifactMessage(
-                            fileArtifact.FileInfo.FullName,
-                            fileArtifact.DisplayName,
-                            fileArtifact.Description ?? string.Empty,
-                            string.Empty,
-                            string.Empty,
-                            string.Empty)
-                    ]);
+                fileArtifactMessages = CreateFileArtifactMessages(_executionId, fileArtifact);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
+
+            case TestCoverageMessage coverage when _dotnetTestConnection.IsCoverageSummarySupported
+                && coverage.Scope.Level is CoverageScopeLevel.Overall or CoverageScopeLevel.Module:
+                await _dotnetTestConnection.SendMessageAsync(new CoverageSummaryMessages(
+                    _executionId,
+                    DotnetTestConnection.InstanceId,
+                    [
+                        new CoverageSummaryMessage(
+                            coverage.SessionUid.Value,
+                            coverage.ProducerId,
+                            (int)coverage.Scope.Level,
+                            coverage.Scope.Name,
+                            (int)coverage.Metric,
+                            coverage.CustomMetricName,
+                            coverage.CoveredCount,
+                            coverage.CoverableCount),
+                    ])).ConfigureAwait(false);
+                break;
         }
     }
+
+    // Maps a session-scoped artifact to its wire message. Extracted so the producer-to-wire mapping
+    // (in particular the Kind carried for post-processing grouping) is unit-testable without a live pipe.
+    internal static FileArtifactMessages CreateFileArtifactMessages(string? executionId, SessionFileArtifact sessionFileArtifact)
+        => new(
+            executionId,
+            DotnetTestConnection.InstanceId,
+            [
+                new FileArtifactMessage(
+                    sessionFileArtifact.FileInfo.FullName,
+                    sessionFileArtifact.DisplayName,
+                    sessionFileArtifact.Description ?? string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    sessionFileArtifact.SessionUid.Value,
+                    sessionFileArtifact.Kind)
+            ]);
+
+    // Maps a (non session-scoped) artifact to its wire message. See the SessionFileArtifact overload.
+    internal static FileArtifactMessages CreateFileArtifactMessages(string? executionId, FileArtifact fileArtifact)
+        => new(
+            executionId,
+            DotnetTestConnection.InstanceId,
+            [
+                new FileArtifactMessage(
+                    fileArtifact.FileInfo.FullName,
+                    fileArtifact.DisplayName,
+                    fileArtifact.Description ?? string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    fileArtifact.Kind)
+            ]);
 
     private static TestNodeDetails? GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
     {
         byte? state = null;
         long? duration = null;
         string? reason = string.Empty;
+        string? expected = null;
+        string? actual = null;
         ExceptionMessage[]? exceptions = null;
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (nodeState is null)
+        bool executionCompleted = testNodeUpdateMessage.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>();
+        if (nodeState is null && !executionCompleted)
         {
             return null;
         }
 
-        // Single pass over the property bag to collect all needed properties at once,
-        // instead of 3 separate linked-list walks for StandardOutput, StandardError, and TimingProperty.
+        // This method already performs a single GetStructEnumerator() walk to collect the
+        // StandardOutput, StandardError, and TimingProperty values. Folding FileArtifactProperty
+        // and TestMetadataProperty collection into that same walk removes the two additional
+        // PropertyBag.OfType<T>() linked-list traversals that ConsumeAsync used to perform for
+        // every test node update.
         TimingProperty? timingProperty = null;
         StandardOutputProperty? standardOutputProperty = null;
         StandardErrorProperty? standardErrorProperty = null;
+        AssertionFailureProperty? assertionFailureProperty = null;
+        RetryAttemptProperty? retryAttemptProperty = null;
+
+        // Mirror PropertyBag.OfType<T>()'s "first + overflow list" pattern so the common case of
+        // zero or one match doesn't allocate a List<T>.
+        FileArtifactProperty? firstArtifact = null;
+        List<FileArtifactProperty>? artifactsOverflow = null;
+        TestMetadataProperty? firstTrait = null;
+        List<TestMetadataProperty>? traitsOverflow = null;
         PropertyBag.PropertyBagEnumerator enumerator = testNodeUpdateMessage.TestNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
@@ -237,65 +287,123 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 case StandardErrorProperty errorProperty:
                     standardErrorProperty = GetSingleOrDefaultValue(standardErrorProperty, errorProperty);
                     break;
+                case AssertionFailureProperty assertionFailure:
+                    assertionFailureProperty = GetSingleOrDefaultValue(assertionFailureProperty, assertionFailure);
+                    break;
+                case RetryAttemptProperty retryAttempt:
+                    retryAttemptProperty = GetSingleOrDefaultValue(retryAttemptProperty, retryAttempt);
+                    break;
+                case FileArtifactProperty artifact:
+                    if (firstArtifact is null)
+                    {
+                        firstArtifact = artifact;
+                    }
+                    else
+                    {
+                        (artifactsOverflow ??= [firstArtifact]).Add(artifact);
+                    }
+
+                    break;
+                case TestMetadataProperty trait:
+                    if (firstTrait is null)
+                    {
+                        firstTrait = trait;
+                    }
+                    else
+                    {
+                        (traitsOverflow ??= [firstTrait]).Add(trait);
+                    }
+
+                    break;
             }
         }
+
+        FileArtifactProperty[] artifacts = firstArtifact is null
+            ? []
+            : artifactsOverflow is not null ? [.. artifactsOverflow] : [firstArtifact];
+        TestMetadataProperty[] traits = firstTrait is null
+            ? []
+            : traitsOverflow is not null ? [.. traitsOverflow] : [firstTrait];
 
         string? standardOutput = standardOutputProperty?.StandardOutput;
         string? standardError = standardErrorProperty?.StandardError;
 
-        switch (nodeState)
+        // RetryAttemptProperty is a sibling of the outcome state property (see RetryAttemptPropertyExtensions'
+        // remarks), so it is extracted unconditionally here rather than per-state below - it can accompany a
+        // passed, failed, or any other terminal outcome.
+        int? retryAttemptNumber = retryAttemptProperty?.AttemptNumber;
+        bool? isSuperseded = retryAttemptProperty?.IsSuperseded;
+
+        if (executionCompleted)
         {
-            case DiscoveredTestNodeStateProperty:
-                state = TestStates.Discovered;
-                break;
+            // The pipe protocol has no outcome-less terminal state. Return the test to discovered so
+            // clients clear in-progress state without recording a pass, failure, or skip.
+            state = TestStates.Discovered;
+        }
+        else
+        {
+            switch (nodeState)
+            {
+                case DiscoveredTestNodeStateProperty:
+                    state = TestStates.Discovered;
+                    break;
 
-            case PassedTestNodeStateProperty:
-                state = TestStates.Passed;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                break;
+                case PassedTestNodeStateProperty:
+                    state = TestStates.Passed;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    break;
 
-            case SkippedTestNodeStateProperty:
-                state = TestStates.Skipped;
-                reason = nodeState.Explanation;
-                break;
+                case SkippedTestNodeStateProperty:
+                    state = TestStates.Skipped;
+                    reason = nodeState.Explanation;
+                    break;
 
-            case FailedTestNodeStateProperty failedTestNodeStateProperty:
-                state = TestStates.Failed;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
-                break;
+                case FailedTestNodeStateProperty failedTestNodeStateProperty:
+                    state = TestStates.Failed;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
 
-            case ErrorTestNodeStateProperty errorTestNodeStateProperty:
-                state = TestStates.Error;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
-                break;
+                    // Mirror TerminalOutputDevice's single-assembly rendering so the SDK can show an
+                    // expected-vs-actual diff. AssertionFailureProperty is the supported channel;
+                    // Exception.Data is the legacy fallback for producers that have not been updated yet. The
+                    // choice is all-or-nothing so the two halves of a diff always come from the same producer.
+                    // Only failed tests carry these (error/timeout/cancelled pass null, as in single-assembly).
+                    expected = assertionFailureProperty is not null ? assertionFailureProperty.Expected : failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
+                    actual = assertionFailureProperty is not null ? assertionFailureProperty.Actual : failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
+                    break;
 
-            case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
-                state = TestStates.Timeout;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
-                break;
+                case ErrorTestNodeStateProperty errorTestNodeStateProperty:
+                    state = TestStates.Error;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
+                    break;
+
+                case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
+                    state = TestStates.Timeout;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
+                    break;
 
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+                case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                state = TestStates.Cancelled;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
-                break;
+                    state = TestStates.Cancelled;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
+                    break;
 
-            case InProgressTestNodeStateProperty:
-                state = TestStates.InProgress;
-                break;
+                case InProgressTestNodeStateProperty:
+                    state = TestStates.InProgress;
+                    break;
+            }
         }
 
-        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError);
+        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError, artifacts, traits, expected, actual, retryAttemptNumber, isSuperseded);
 
         static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
             where TProperty : IProperty
@@ -322,14 +430,12 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
+    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError, FileArtifactProperty[] Artifacts, TestMetadataProperty[] Traits, string? Expected, string? Actual, int? RetryAttemptNumber, bool? IsSuperseded);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
             testSessionContext.SessionUid.Value,
@@ -340,8 +446,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
             testSessionContext.SessionUid.Value,

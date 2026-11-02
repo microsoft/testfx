@@ -96,6 +96,81 @@ public sealed class PropertyBagTests
     }
 
     [TestMethod]
+    public void FirstOrDefault_Should_Return_TestNodeStateProperty_WhenPresent()
+    {
+        PropertyBag property = new();
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
+
+        // Exercises the _testNodeStateProperty fast path.
+        Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.FirstOrDefault<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenTestNodeStateProperty_NotPresent()
+    {
+        PropertyBag property = new();
+        property.Add(new DummyProperty());
+
+        // Exercises the IsAssignableFrom early-return without walking the linked list.
+        Assert.IsNull(property.FirstOrDefault<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenSubtype_NotPresent()
+    {
+        PropertyBag property = new();
+        property.Add(new FailedTestNodeStateProperty());
+
+        // Exercises the subtype guard: asking for a different TestNodeStateProperty subtype must return null.
+        Assert.IsNull(property.FirstOrDefault<PassedTestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_CorrectObject_WhenSingleMatchExists()
+    {
+        PropertyBag property = new();
+        DummyProperty prop = new();
+        property.Add(prop);
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.AreEqual(prop, property.FirstOrDefault<DummyProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_FirstObject_WhenMultipleMatchesExist()
+    {
+        PropertyBag property = new();
+        DummyProperty prop1 = new();
+        DummyProperty prop2 = new();
+        property.Add(prop1);
+        property.Add(prop2);
+
+        // Unlike SingleOrDefault, FirstOrDefault must NOT throw when multiple matches exist.
+        DummyProperty? result = property.FirstOrDefault<DummyProperty>();
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result == prop1 || result == prop2);
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenNoMatchExists()
+    {
+        PropertyBag property = new();
+        property.Add(new DummyProperty());
+
+        // Exercises the linked-list miss path.
+        Assert.IsNull(property.FirstOrDefault<DummyProperty2>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenBagIsEmpty()
+    {
+        PropertyBag property = new();
+
+        Assert.IsNull(property.FirstOrDefault<DummyProperty>());
+        Assert.IsNull(property.FirstOrDefault<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
     public void Single_Should_Return_CorrectObject()
     {
         PropertyBag property = new();
@@ -196,7 +271,141 @@ public sealed class PropertyBagTests
         }
     }
 
+    [TestMethod]
+    public void LinkedProperties_SearchAndFilterTraversePastHead()
+    {
+        DummyProperty tail = new();
+        DummyProperty middle = new();
+        DummyProperty2 head = new();
+        PropertyBag.Property tailNode = new(tail);
+        PropertyBag.Property properties = new(head, new(middle, tailNode));
+
+        // Assert the linked-list operations themselves, not LINQ's enumeration/count alternatives.
+        int singletonCount = tailNode.Count;
+        int linkedCount = properties.Count;
+        bool containsHead = properties.Contains(head);
+        bool containsMiddle = properties.Contains(middle);
+        bool containsTail = properties.Contains(tail);
+        bool containsOtherInstance = properties.Contains(new DummyProperty());
+        Assert.AreEqual(1, singletonCount);
+        Assert.AreEqual(3, linkedCount);
+        Assert.IsTrue(containsHead);
+        Assert.IsTrue(containsMiddle);
+        Assert.IsTrue(containsTail);
+        Assert.IsFalse(containsOtherInstance);
+        Assert.IsTrue(properties.Any<DummyProperty2>());
+        Assert.IsTrue(properties.Any<DummyProperty>());
+        Assert.IsFalse(properties.Any<FailedTestNodeStateProperty>());
+        Assert.AreSequenceEqual([middle, tail], properties.OfType<DummyProperty>());
+        Assert.AreSequenceEqual([head], properties.OfType<DummyProperty2>());
+        Assert.IsEmpty(properties.OfType<FailedTestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Generic enumerator")]
+    [DataRow(false, DisplayName = "Non generic enumerator")]
+    public void LinkedProperties_EnumeratorRejectsInvalidCurrentAndResets(bool generic)
+    {
+        DummyProperty head = new();
+        DummyProperty2 tail = new();
+        PropertyBag.Property properties = new(head, new(tail));
+        IEnumerator enumerator = generic
+            ? properties.GetEnumerator()
+            : ((IEnumerable)properties).GetEnumerator();
+        Func<object> current = generic
+            ? () => ((IEnumerator<IProperty>)enumerator).Current
+            : () => enumerator.Current;
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = current());
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(head, current());
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(tail, current());
+        Assert.IsFalse(enumerator.MoveNext());
+        enumerator.Reset();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = current());
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(head, current());
+        ((IDisposable)enumerator).Dispose();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = current());
+    }
+
+    [TestMethod]
+    public void Add_DuplicateAtTail_IsRejected()
+    {
+        DummyProperty tail = new();
+        PropertyBag properties = new([tail, new DummyProperty2(), new DummyProperty()]);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => properties.Add(tail));
+        Assert.AreEqual(3, properties.Count);
+    }
+
+    [TestMethod]
+    public void Enumeration_CombinesCachedStateWithAllAncillaryPropertiesInTheirDocumentedOrder()
+    {
+        FailedTestNodeStateProperty state = new("failure");
+        TestMetadataProperty first = new("Category", "first");
+        TestMetadataProperty last = new("Owner", "last");
+        PropertyBag bag = new(first, state, last);
+        List<IProperty> enumerated = [];
+
+        foreach (IProperty property in bag)
+        {
+            enumerated.Add(property);
+        }
+
+        Assert.AreSequenceEqual(new IProperty[] { last, first, state }, enumerated);
+        Assert.AreSequenceEqual(new[] { last, first }, bag.OfType<TestMetadataProperty>());
+        Assert.AreSame(state, bag.Single<TestNodeStateProperty>());
+        Assert.IsTrue(bag.Any<FailedTestNodeStateProperty>());
+        Assert.IsFalse(bag.Any<PassedTestNodeStateProperty>());
+        Assert.AreEqual(3, bag.Count);
+    }
+
+    [TestMethod]
+    public void Add_RejectedSecondState_PreservesOriginalStateAndAllowsSubsequentAncillaryProperties()
+    {
+        FailedTestNodeStateProperty original = new("original failure");
+        TestMetadataProperty first = new("Category", "first");
+        PropertyBag bag = new(original, first);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => bag.Add(PassedTestNodeStateProperty.CachedInstance));
+        TestMetadataProperty last = new("Owner", "last");
+        bag.Add(last);
+
+        Assert.AreSame(original, bag.Single<TestNodeStateProperty>());
+        Assert.AreEqual("original failure", bag.Single<FailedTestNodeStateProperty>().Explanation);
+        Assert.AreSequenceEqual(new[] { last, first }, bag.OfType<TestMetadataProperty>());
+        Assert.AreEqual(3, bag.Count);
+    }
+
     private sealed class DummyProperty : IProperty;
 
     private sealed class DummyProperty2 : IProperty;
+
+    [TestMethod]
+    public void Enumeration_NonGenericViewResetAndDisposePreserveOrderAndInvalidCurrent()
+    {
+        TestMetadataProperty first = new("first", "value-a");
+        TestMetadataProperty second = new("second", "value-b");
+        IProperty state = PassedTestNodeStateProperty.CachedInstance;
+        PropertyBag bag = new(first, state, second);
+        IEnumerator enumerator = ((IEnumerable)bag.AsEnumerable()).GetEnumerator();
+        Assert.AreEqual(
+            "Invalid Current state, possible wrong usage.",
+            Assert.ThrowsExactly<InvalidOperationException>(() => _ = enumerator.Current).Message);
+        List<object> observed = [];
+        while (enumerator.MoveNext())
+        {
+            observed.Add(enumerator.Current);
+        }
+
+        Assert.AreSequenceEqual<object>([second, first, state], observed);
+        enumerator.Reset();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = enumerator.Current);
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreSame(second, enumerator.Current);
+        ((IDisposable)enumerator).Dispose();
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = enumerator.Current);
+    }
 }

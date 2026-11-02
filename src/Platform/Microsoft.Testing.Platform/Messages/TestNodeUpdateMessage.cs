@@ -62,3 +62,12 @@ public sealed class TestNodeUpdateMessage(SessionUid sessionUid, TestNode testNo
         return builder.ToString();
     }
 }
+
+internal sealed class TestNodeExecutionCompletedProperty : IProperty
+{
+    private TestNodeExecutionCompletedProperty()
+    {
+    }
+
+    internal static TestNodeExecutionCompletedProperty CachedInstance { get; } = new();
+}

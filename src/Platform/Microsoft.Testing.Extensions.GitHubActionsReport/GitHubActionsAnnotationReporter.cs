@@ -1,0 +1,420 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
+
+namespace Microsoft.Testing.Extensions.GitHubActionsReport;
+
+/// <summary>
+/// Emits a GitHub Actions <c>::error</c> workflow command for each failing test so the failure surfaces
+/// both in the workflow run's Annotations tab and, when the source location can be resolved, on the
+/// pull request's "Files changed" diff gutter. Skipped tests are surfaced as <c>::warning</c> workflow
+/// commands so they are visible in the Annotations tab too.
+/// </summary>
+/// <remarks>
+/// The source location is resolved from the failure's exception stack trace when possible (it pinpoints the
+/// statement that failed) and otherwise falls back to the location the test framework reported for the test
+/// itself via <see cref="TestFileLocationProperty"/> — which is also the only location available for a skipped
+/// test. That property is populated by the MSTest adapter and by the VSTest bridge, so the fallback works for
+/// xUnit, NUnit and any other framework running through the bridge that supplies source information.
+/// <para>
+/// It also implements <see cref="ITestSessionLifetimeHandler"/> so that, at session end, it can emit one
+/// extra <c>::error</c> for a non-test-result failure exit code (e.g. a <c>--minimum-expected-tests</c>
+/// violation or a run that discovered zero tests). Those outcomes carry no failing <see cref="TestNode"/>,
+/// so without this they would leave the Annotations tab empty despite the run failing.
+/// </para>
+/// </remarks>
+internal sealed class GitHubActionsAnnotationReporter :
+    IDataConsumer,
+    ITestSessionLifetimeHandler,
+    IOutputDeviceDataProducer
+{
+    private const int MinSamplesForRegressionContext = 5;
+
+    private readonly IEnvironment _environment;
+    private readonly IFileSystem _fileSystem;
+    private readonly IOutputDevice _outputDisplay;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ILogger _logger;
+    private readonly IGitHubActionsHistoryService _historyService;
+    private readonly bool _isEnabled;
+
+    public GitHubActionsAnnotationReporter(
+        ICommandLineOptions commandLine,
+        IEnvironment environment,
+        IFileSystem fileSystem,
+        IOutputDevice outputDisplay,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ILoggerFactory loggerFactory,
+        IGitHubActionsHistoryService? historyService = null)
+    {
+        _environment = environment;
+        _fileSystem = fileSystem;
+        _outputDisplay = outputDisplay;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _logger = loggerFactory.CreateLogger<GitHubActionsAnnotationReporter>();
+        _historyService = historyService ?? DisabledGitHubActionsHistoryService.Instance;
+        _isEnabled = GitHubActionsFeature.IsEnabled(commandLine, environment, GitHubActionsCommandLineOptions.GitHubActionsAnnotations);
+    }
+
+    public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
+
+    /// <inheritdoc />
+    public string Uid => nameof(GitHubActionsAnnotationReporter);
+
+    /// <inheritdoc />
+    public string Version => ExtensionVersion.DefaultSemVer;
+
+    /// <inheritdoc />
+    public string DisplayName { get; } = GitHubActionsResources.DisplayName;
+
+    /// <inheritdoc />
+    public string Description { get; } = GitHubActionsResources.Description;
+
+    /// <inheritdoc />
+    public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    {
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (value is not TestNodeUpdateMessage nodeUpdateMessage)
+            {
+                return;
+            }
+
+            // A test framework that retries in-process reports every attempt under the same test node uid. A
+            // superseded attempt is not the test's outcome, so annotating it would surface a GitHub error
+            // annotation for a [Retry] test that goes on to pass.
+            if (nodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
+            {
+                return;
+            }
+
+            // FirstOrDefault (not SingleOrDefault): a malformed node that somehow carries more than one state
+            // property must degrade to "no annotation for this test" rather than throwing into the platform's
+            // data-consumer dispatch.
+            TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
+
+            (string? Explanation, Exception? Exception)? failure = nodeState switch
+            {
+                FailedTestNodeStateProperty failed => (failed.Explanation, failed.Exception),
+                ErrorTestNodeStateProperty error => (error.Explanation, error.Exception),
+                TimeoutTestNodeStateProperty timeout => (timeout.Explanation, timeout.Exception),
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+                CancelledTestNodeStateProperty cancelled => (cancelled.Explanation, cancelled.Exception),
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+                _ => null,
+            };
+
+            if (failure is null)
+            {
+                // Skipped tests carry no exception (and therefore no stack trace); surface them as a
+                // '::warning' — pinned to the test's declared location when the framework reported one —
+                // so intentionally or unexpectedly skipped tests are visible in the workflow Annotations
+                // tab alongside failures, rather than being silently absent.
+                if (nodeState is SkippedTestNodeStateProperty skipped)
+                {
+                    // GetTestName is computed lazily at the call sites so the common passing/in-progress path
+                    // (which returns below without annotating) does not walk the property bag or allocate the
+                    // formatted name it would immediately discard.
+                    await WriteSkippedAnnotationAsync(nodeUpdateMessage.TestNode, GetTestName(nodeUpdateMessage.TestNode), skipped.Explanation, cancellationToken).ConfigureAwait(false);
+                }
+
+                return;
+            }
+
+            string testName = GetTestName(nodeUpdateMessage.TestNode);
+            await WriteAnnotationAsync(
+                nodeUpdateMessage.TestNode,
+                testName,
+                AppendHistoryContext(
+                    nodeUpdateMessage.TestNode.Uid,
+                    testName,
+                    nodeUpdateMessage.TestNode.DisplayName,
+                    failure.Value.Explanation,
+                    failure.Value.Exception),
+                failure.Value.Exception,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Mirror the sibling reporters: a failure while building/emitting an annotation (e.g. a malformed
+            // stack-trace path making IFileSystem.ExistFile throw) degrades to "no annotation" instead of
+            // propagating into the platform's consumer dispatch.
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
+        }
+    }
+
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
+
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    {
+        try
+        {
+            testSessionContext.CancellationToken.ThrowIfCancellationRequested();
+
+            if (!_isEnabled)
+            {
+                return;
+            }
+
+            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+
+            // Only emit the run-level annotation for a non-test-result failure. Plain "at least one test failed"
+            // (and success) are already conveyed by the per-test annotations above, so we would otherwise add a
+            // redundant, location-less error on top of the real ones.
+            // NOTE: a hard abort/cancellation (ExitCode.TestSessionAborted) never reaches this handler — the host
+            // swallows the OperationCanceledException before the end-of-session notification completes — so this
+            // path only surfaces session-derived outcomes such as ZeroTests, MinimumExpectedTestsPolicyViolation,
+            // TestAdapterTestSessionFailure and TestExecutionStoppedForMaxFailedTests.
+            if (GitHubActionsExitCode.IsTestResultOutcome(exitCode))
+            {
+                return;
+            }
+
+            string line = GetExitCodeAnnotation(exitCode);
+
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                await _logger.LogTraceAsync($"Showing exit-code annotation '{line}'.").ConfigureAwait(false);
+            }
+
+            await DisplayAnnotationLineAsync(line, testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    internal static /* for testing */ string GetExitCodeAnnotation(int exitCode)
+    {
+        string title = string.Format(
+            CultureInfo.InvariantCulture,
+            GitHubActionsResources.ExitCodeAnnotationTitle,
+            exitCode.ToString(CultureInfo.InvariantCulture),
+            GitHubActionsExitCode.GetName(exitCode));
+        string message = GitHubActionsExitCode.GetReason(exitCode);
+
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "::error title={0}::{1}",
+            GitHubActionsEscaper.EscapeProperty(title),
+            GitHubActionsEscaper.EscapeData(message));
+    }
+
+    private async Task WriteAnnotationAsync(TestNode testNode, string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
+    {
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            await _logger.LogTraceAsync("Failure received.").ConfigureAwait(false);
+        }
+
+        string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
+        string line = GetErrorAnnotation(testName, explanation, exception, repoRoot, _fileSystem, _logger, StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime, TryResolveDeclaredLocation(testNode, repoRoot, _fileSystem));
+
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            await _logger.LogTraceAsync($"Showing failure annotation '{line}'.").ConfigureAwait(false);
+        }
+
+        await DisplayAnnotationLineAsync(line, cancellationToken).ConfigureAwait(false);
+    }
+
+    internal string? AppendHistoryContext(
+        string testId,
+        string fullyQualifiedName,
+        string displayName,
+        string? explanation,
+        Exception? exception)
+    {
+        if (!_historyService.TryGetStats(
+                testId,
+                fullyQualifiedName,
+                displayName,
+                out GitHubActionsHistoryStats stats)
+            || (stats.TotalCount == 0 && stats.DurationSampleCount == 0))
+        {
+            return explanation;
+        }
+
+        string failure = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
+        return FormatHistoryContext(failure, stats, _historyService.HistoryWindowInDays);
+    }
+
+    internal static string FormatHistoryContext(
+        string failure,
+        GitHubActionsHistoryStats stats,
+        int historyWindowInDays)
+    {
+        string outcomeContext = stats.FailCount > 0
+            ? string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.HistoryFailureContext,
+                stats.FailCount,
+                stats.FlakyCount,
+                stats.TotalCount,
+                historyWindowInDays)
+            : stats.FlakyCount > 0
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.HistoryFlakyContext,
+                    stats.FlakyCount,
+                    stats.TotalCount,
+                    historyWindowInDays)
+                : stats.TotalCount >= MinSamplesForRegressionContext
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.HistoryRegressionContext,
+                    stats.TotalCount,
+                    historyWindowInDays)
+                : string.Empty;
+        string durationContext = stats.DurationSampleCount == 0
+            ? string.Empty
+            : string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.HistoryDurationContext,
+                FormatDuration(stats.P95Duration),
+                FormatDuration(stats.P99Duration),
+                stats.DurationSampleCount);
+        return string.Join(" ", new[] { failure, outcomeContext, durationContext }.Where(static value => value.Length > 0));
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1}s", "{0}h {1}m {2}s");
+
+    internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger, bool skipAssertionFrames, GitHubActionsSourceLocation? declaredLocation = null)
+    {
+        string message = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
+        string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.AnnotationTitle, testName);
+
+        // Prefer the exception's call site: it points at the exact statement that failed. Only when no frame
+        // resolves to a file in the workspace (no exception at all, a trimmed/PDB-less stack, or a framework
+        // that reports failures without a usable trace) do we fall back to the test's declared location.
+        (string RelativeNormalizedPath, int LineNumber)? stackLocation = StackTraceSourceLocationResolver.TryResolve(exception?.StackTrace, repoRoot, fileSystem, logger, skipAssertionFrames);
+        GitHubActionsSourceLocation? location = stackLocation is { } resolved
+            ? new GitHubActionsSourceLocation(resolved.RelativeNormalizedPath, resolved.LineNumber)
+            : declaredLocation;
+
+        return FormatAnnotation("error", title, message, location);
+    }
+
+    private async Task WriteSkippedAnnotationAsync(TestNode testNode, string testName, string? explanation, CancellationToken cancellationToken)
+    {
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            await _logger.LogTraceAsync("Skip received.").ConfigureAwait(false);
+        }
+
+        string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
+        string line = GetSkippedAnnotation(testName, explanation, TryResolveDeclaredLocation(testNode, repoRoot, _fileSystem));
+
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            await _logger.LogTraceAsync($"Showing skip annotation '{line}'.").ConfigureAwait(false);
+        }
+
+        await DisplayAnnotationLineAsync(line, cancellationToken).ConfigureAwait(false);
+    }
+
+    // Prepend a newline so every workflow command annotation ('::error' or '::warning') starts at column 0
+    // on its own line. In CI the terminal output device runs in SimpleAnsi mode and emits a color reset
+    // ('\e[m') WITHOUT a trailing newline after the preceding colored test block. Emitting the annotation
+    // directly would yield "\e[m::error ..." and GitHub only recognizes a workflow command when the line
+    // begins with '::', so the dangling reset would silently drop the annotation. The leading newline pushes
+    // the reset onto its own (ignored) line and keeps the annotation parseable.
+    private Task DisplayAnnotationLineAsync(string line, CancellationToken cancellationToken)
+        => _outputDisplay.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData($"\n{line}"), cancellationToken);
+
+    internal static /* for testing */ string GetSkippedAnnotation(string testName, string? explanation, GitHubActionsSourceLocation? declaredLocation = null)
+    {
+        string message = explanation ?? GitHubActionsResources.NoSkipReasonFallback;
+        string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.SkippedAnnotationTitle, testName);
+
+        // Skipped nodes never carry a stack trace, so the only location available is the one the test framework
+        // reported for the test itself (TestFileLocationProperty). When present it pins the warning to the test's
+        // declaration; otherwise a title-only '::warning' still surfaces in the workflow Annotations tab.
+        return FormatAnnotation("warning", title, message, declaredLocation);
+    }
+
+    /// <summary>
+    /// Resolves the location the test framework reported for the test itself (<see cref="TestFileLocationProperty"/>),
+    /// as a workspace-relative path. Used when an exception stack trace yields no usable frame, and as the only
+    /// available location for skipped tests.
+    /// </summary>
+    /// <remarks>
+    /// The property is populated by the MSTest adapter from the test method's declaring file, and by the
+    /// VSTest bridge from <c>TestCase.CodeFilePath</c>, so this also covers xUnit, NUnit and any other framework
+    /// running through the bridge that supplies source information.
+    /// </remarks>
+    internal static /* for testing */ GitHubActionsSourceLocation? TryResolveDeclaredLocation(TestNode testNode, string? repoRoot, IFileSystem fileSystem)
+    {
+        if (testNode.Properties.FirstOrDefault<TestFileLocationProperty>() is not { } fileLocation)
+        {
+            return null;
+        }
+
+        string? relativeNormalizedPath = StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(fileLocation.FilePath, repoRoot, fileSystem);
+        if (relativeNormalizedPath is null)
+        {
+            return null;
+        }
+
+        // A framework that knows the file but not the line reports a sentinel (-1) or 0; GitHub accepts a
+        // 'file'-only annotation, so drop the line rather than emitting an invalid one.
+        int line = fileLocation.LineSpan.Start.Line;
+        return new GitHubActionsSourceLocation(relativeNormalizedPath, line > 0 ? line : 0);
+    }
+
+    private static string FormatAnnotation(string command, string title, string message, GitHubActionsSourceLocation? location)
+        => location switch
+        {
+            { LineNumber: > 0 } pinned => string.Format(
+                CultureInfo.InvariantCulture,
+                "::{0} file={1},line={2},col=1,title={3}::{4}",
+                command,
+                GitHubActionsEscaper.EscapeProperty(pinned.RelativeNormalizedPath),
+                pinned.LineNumber.ToString(CultureInfo.InvariantCulture),
+                GitHubActionsEscaper.EscapeProperty(title),
+                GitHubActionsEscaper.EscapeData(message)),
+            { } fileOnly => string.Format(
+                CultureInfo.InvariantCulture,
+                "::{0} file={1},title={2}::{3}",
+                command,
+                GitHubActionsEscaper.EscapeProperty(fileOnly.RelativeNormalizedPath),
+                GitHubActionsEscaper.EscapeProperty(title),
+                GitHubActionsEscaper.EscapeData(message)),
+
+            // The file/line/col properties are optional; a title-only annotation still surfaces in the
+            // workflow Annotations tab.
+            null => string.Format(
+                CultureInfo.InvariantCulture,
+                "::{0} title={1}::{2}",
+                command,
+                GitHubActionsEscaper.EscapeProperty(title),
+                GitHubActionsEscaper.EscapeData(message)),
+        };
+
+    private static string GetTestName(TestNode testNode)
+        => TestNodeIdentity.GetTestName(testNode);
+}

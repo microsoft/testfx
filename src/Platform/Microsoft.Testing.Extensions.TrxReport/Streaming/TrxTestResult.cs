@@ -41,6 +41,10 @@ internal sealed class TrxTestResult
 
     public IReadOnlyList<string>? Categories { get; init; }
 
+#pragma warning disable RS0051 // Internal streaming implementation detail is not a compatibility contract.
+    internal IReadOnlyList<string>? WorkItemIds { get; init; }
+#pragma warning restore RS0051
+
     public IReadOnlyList<TrxTestMetadata>? Metadata { get; init; }
 
     public IReadOnlyList<TrxTestFileArtifact>? FileArtifacts { get; init; }

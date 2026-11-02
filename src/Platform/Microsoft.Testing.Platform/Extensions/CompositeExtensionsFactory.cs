@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
@@ -27,6 +28,10 @@ public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory,
     private readonly Func<TExtension>? _factory;
     private TExtension? _instance;
 
+    // This raw string literal's value embeds the source file's line endings (CRLF on Windows, LF on Linux),
+    // so its compile-time const value is not deterministic across platforms and must not be tracked by the
+    // internal API analyzers.
+#pragma warning disable RS0051 // Add internal types and members to the declared API
     internal const /* for testing */ string ValidateCompositionErrorMessage =
 """
 You cannot compose extensions that belong to different areas.
@@ -34,6 +39,7 @@ Valid composition are:
 TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
 TestHost: IDataConsumer, ITestApplicationLifetime
 """;
+#pragma warning restore RS0051 // Add internal types and members to the declared API
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
@@ -62,19 +68,32 @@ TestHost: IDataConsumer, ITestApplicationLifetime
         {
             if (Volatile.Read(ref _instance) is null)
             {
-                if (_factoryWithServiceProvider is not null)
+                try
                 {
-                    Volatile.Write(ref _instance, _factoryWithServiceProvider(serviceProvider!));
-                }
+                    if (_factoryWithServiceProvider is not null)
+                    {
+                        Volatile.Write(ref _instance, _factoryWithServiceProvider(serviceProvider!));
+                    }
 
-                if (_factory is not null)
+                    if (_factory is not null)
+                    {
+                        Volatile.Write(ref _instance, _factory());
+                    }
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException and not StackOverflowException)
                 {
-                    Volatile.Write(ref _instance, _factory());
+                    // Preserve the original exception as InnerException so the underlying failure (e.g. a
+                    // dependency the factory tried to resolve or construct) is never lost, while making the
+                    // outer message actionable by identifying which composite extension failed to build.
+                    throw new InvalidOperationException(
+                        string.Format(CultureInfo.InvariantCulture, PlatformResources.CompositeExtensionFactoryInstantiationFailedErrorMessage, typeof(TExtension)),
+                        ex);
                 }
 
                 if (_instance is null)
                 {
-                    throw new InvalidOperationException("Initialization failed");
+                    throw new InvalidOperationException(
+                        string.Format(CultureInfo.InvariantCulture, PlatformResources.CompositeExtensionFactoryReturnedNullInstanceErrorMessage, typeof(TExtension)));
                 }
             }
         }

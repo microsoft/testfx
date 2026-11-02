@@ -70,6 +70,24 @@ internal class AssemblyEnumerator
     /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
     /// <returns>A collection of Test Elements.</returns>
     internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize)
+        => EnumerateAssembly(assemblyFileName, mustSerialize, useGeneratedDescriptors: false);
+
+    /// <summary>
+    /// Enumerates through all types in the assembly in search of valid test methods.
+    /// </summary>
+    /// <param name="assemblyFileName">The assembly file name.</param>
+    /// <param name="mustSerialize">Flag set to true when parameterized test data must be serialized.</param>
+    /// <param name="useGeneratedDescriptors">Whether native MTP discovery may consume complete source-generated descriptors.</param>
+    /// <returns>A collection of Test Elements.</returns>
+    internal AssemblyEnumerationResult EnumerateAssembly(string assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors)
+        => EnumerateAssembly(assemblyFileName, mustSerialize, useGeneratedDescriptors, null, null);
+
+    internal AssemblyEnumerationResult EnumerateAssembly(
+        string assemblyFileName,
+        bool mustSerialize,
+        bool useGeneratedDescriptors,
+        Type[]? types,
+        Action<Type, IReadOnlyList<UnitTestElement>?>? typeObserver)
     {
         List<string> warnings = [];
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -77,7 +95,7 @@ internal class AssemblyEnumerator
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
 
-        Type[] types = GetTypes(assembly);
+        types ??= GetTypes(assembly);
         bool discoverInternals = ReflectHelper.HasDiscoverInternalsAttribute(assembly);
 
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy = ReflectHelper.GetTestDataSourceOptions(assembly)?.UnfoldingStrategy switch
@@ -96,8 +114,10 @@ internal class AssemblyEnumerator
 
         foreach (Type type in types)
         {
+            typeObserver?.Invoke(type, null);
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, type, warnings, discoverInternals,
-                dataSourcesUnfoldingStrategy, mustSerialize);
+                dataSourcesUnfoldingStrategy, mustSerialize, useGeneratedDescriptors);
+            typeObserver?.Invoke(type, testsInType);
             tests.AddRange(testsInType);
         }
 
@@ -117,7 +137,7 @@ internal class AssemblyEnumerator
         }
         catch (ReflectionTypeLoadException ex)
         {
-            if (ex.LoaderExceptions != null)
+            if (ex.LoaderExceptions is not null)
             {
                 if (ex.LoaderExceptions.Length == 1 && ex.LoaderExceptions[0] is { } singleLoaderException)
                 {
@@ -161,7 +181,8 @@ internal class AssemblyEnumerator
         List<string> warningMessages,
         bool discoverInternals,
         TestDataSourceUnfoldingStrategy dataSourcesUnfoldingStrategy,
-        bool mustSerialize)
+        bool mustSerialize,
+        bool useGeneratedDescriptors)
     {
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -170,9 +191,11 @@ internal class AssemblyEnumerator
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
-            List<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
+            List<UnitTestElement>? unitTestCases = useGeneratedDescriptors
+                ? testTypeEnumerator.Enumerate(warningMessages, useGeneratedDescriptors: true)
+                : testTypeEnumerator.Enumerate(warningMessages);
 
-            if (unitTestCases != null)
+            if (unitTestCases is not null)
             {
                 foreach (UnitTestElement test in unitTestCases)
                 {
@@ -247,7 +270,7 @@ internal class AssemblyEnumerator
                 isDataDriven = true;
                 if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
-                    // TODO: Improve multi-source design!
+                    // The multi-source design could be improved.
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
                     // we will run all sources from the given method so we need to bail-out "globally".
                     return false;
@@ -285,19 +308,26 @@ internal class AssemblyEnumerator
         // This code is to discover tests. To run the tests code is in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync.
         // Any change made here should be reflected in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync as well.
         IEnumerable<object?[]> dataEnumerable = dataSource.GetData(methodInfo);
-        string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
+        string? sourceLevelIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
         var discoveredTests = new List<UnitTestElement>();
         bool dataSourceHasData = false;
+        // PERF: Hoist outside the loop — MethodInfo.GetParameters() returns a fresh array copy on each
+        // call (CLR safety guarantee), so calling it per row allocates N identical arrays for N data rows.
+        ParameterInfo[] parameters = methodInfo.GetParameters();
 
         foreach (object?[] dataOrTestDataRow in dataEnumerable)
         {
             dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
-            ParameterInfo[] parameters = methodInfo.GetParameters();
-            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
+
+            // The effective ignore message for this row is the row-level ignore message (from
+            // TestDataRow<T>), falling back to the whole-source ignore message. It must be
+            // recomputed per row so an ignore message on one row does not leak to later rows.
+            string? testDataSourceIgnoreMessage = sourceLevelIgnoreMessage;
+            if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow, out string? argumentsDisplayNameFromTestDataRow))
             {
-                testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
+                testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? sourceLevelIgnoreMessage;
             }
             else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(d, parameters))
             {
@@ -322,6 +352,9 @@ internal class AssemblyEnumerator
 
             UnitTestElement discoveredTest = test.Clone();
             discoveredTest.TestMethod.DisplayName = displayNameFromTestDataRow
+                ?? (!StringEx.IsNullOrWhiteSpace(argumentsDisplayNameFromTestDataRow)
+                    ? TestDataSourceUtilities.ComputeDisplayName(methodInfo, argumentsDisplayNameFromTestDataRow)
+                    : null)
                 ?? dataSource.GetDisplayName(methodInfo, d)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, d)
                 ?? discoveredTest.TestMethod.DisplayName;
@@ -375,7 +408,7 @@ internal class AssemblyEnumerator
             UnitTestElement discoveredTest = test.Clone();
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
-            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = sourceLevelIgnoreMessage;
             discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
             tests.Add(discoveredTest);
 

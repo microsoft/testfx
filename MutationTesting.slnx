@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/Platform/">
+    <Project Path="src/Platform/Microsoft.Testing.Platform.ServerMode.Client.Sources/Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" />
+  </Folder>
+  <Folder Name="/test/UnitTests/">
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests.csproj" />
+  </Folder>
+</Solution>

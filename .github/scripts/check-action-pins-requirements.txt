@@ -1,0 +1,12 @@
+# Pinned dependency for .github/scripts/check_action_pins.py.
+#
+# The pin gate parses each workflow with PyYAML to find every `uses` value that
+# GitHub Actions would really execute, so it cannot fall back to a text-only scan.
+# Hash-pinned because this check is a security gate: an unpinned install would let
+# a compromised release run arbitrary code in the job that validates our pins.
+#
+# Both the cp312 manylinux wheel (what the runner installs) and the sdist (the
+# fallback if no wheel matches) are listed so --require-hashes can verify either.
+pyyaml==6.0.3 \
+    --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc \
+    --hash=sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f

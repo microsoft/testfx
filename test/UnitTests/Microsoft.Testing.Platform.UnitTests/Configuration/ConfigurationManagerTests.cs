@@ -45,6 +45,12 @@ public sealed class ConfigurationManagerTests
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions:0", "1");
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions:1", "2");
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions", "[1,2]");
+        yield return ("{// Configure crash dumps\n\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{// Comment containing \0 a null character\n\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {/* Configure crash dumps */\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {/* Comment containing \0 a null character */\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {\"Count\": 1 /* Number of retries */}}", "platformOptions:Count", "1");
+        yield return ("{\"platformOptions\": {\"Url\": \"https://example.com\"}}", "platformOptions:Url", "https://example.com");
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0", null);
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0:Key", "Value");
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:1:Key", "3");
@@ -258,6 +264,45 @@ public sealed class ConfigurationManagerTests
         Assert.AreEqual("True", entries.Single(e => e.Key == "ENABLED").Value);
     }
 
+    [TestMethod]
+    public async ValueTask ConfigurationSection_TraversesCommentedJsonWithoutExposingRawJson()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            """
+            {
+              "codeCoverage": {
+                "Configuration": {
+                  "IncludeTestAssembly": true, // Include the test assembly.
+                  "CodeCoverage": {
+                    "CollectFromChildProcesses": true,
+                  },
+                },
+              },
+            }
+            """);
+
+        IConfigurationSection coverageConfiguration = configuration
+            .GetSection("codeCoverage")
+            .GetSection("Configuration");
+
+        Assert.AreEqual("Configuration", coverageConfiguration.Key);
+        Assert.AreEqual("codeCoverage:Configuration", coverageConfiguration.Path);
+        Assert.IsFalse(coverageConfiguration.HasValue);
+        Assert.IsNull(coverageConfiguration.Value);
+        Assert.AreEqual("True", coverageConfiguration["IncludeTestAssembly"]);
+        Assert.IsNull(coverageConfiguration["CodeCoverage"]);
+
+        IConfigurationSection includeTestAssembly = coverageConfiguration.GetSection("IncludeTestAssembly");
+        Assert.IsTrue(includeTestAssembly.HasValue);
+        Assert.AreEqual("True", includeTestAssembly.Value);
+
+        IConfigurationSection codeCoverage = Assert.ContainsSingle(
+            coverageConfiguration.GetChildren().Where(child => child.Key == "CodeCoverage"));
+        Assert.AreEqual(
+            "True",
+            codeCoverage.GetSection("CollectFromChildProcesses").Value);
+    }
+
     private static async Task<AggregatedConfiguration> BuildAggregatedConfigurationAsync(string jsonFileContent)
     {
         Mock<IFileSystem> fileSystem = new();
@@ -309,5 +354,59 @@ public sealed class ConfigurationManagerTests
         ValueTask IAsyncDisposable.DisposeAsync()
             => _stream.DisposeAsync();
 #endif
+    }
+
+    [TestMethod]
+    public async Task JsonProvider_InvalidExplicitPathPreservesRequestedFileAndDebugDiagnostic()
+    {
+        const string InvalidPath = "invalid\0config.json";
+        Mock<IFileSystem> files = new(MockBehavior.Strict);
+        files.Setup(f => f.ExistFile(InvalidPath)).Returns(false);
+        Mock<ILogger> logger = new();
+        string? debug = null;
+        logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, message, _, _) => debug = message)
+            .Returns(Task.CompletedTask);
+        JsonConfigurationSource.JsonConfigurationProvider provider = new(
+            new Mock<ITestApplicationModuleInfo>(MockBehavior.Strict).Object,
+            files.Object,
+            new(null, [new(PlatformCommandLineProvider.ConfigFileOptionKey, [InvalidPath])], []),
+            logger.Object);
+
+        FileNotFoundException failure = await Assert.ThrowsExactlyAsync<FileNotFoundException>(provider.LoadAsync);
+
+        Assert.AreEqual(InvalidPath, failure.FileName);
+        Assert.AreEqual($"The configuration file '{InvalidPath}' specified with '--config-file' could not be found.", failure.Message);
+        Assert.IsNotNull(debug);
+        Assert.StartsWith($"Path.GetFullPath('{InvalidPath}') failed while preparing FileNotFoundException: System.ArgumentException:", debug);
+        Assert.IsNull(provider.ConfigurationFile);
+        files.Verify(f => f.ExistFile(InvalidPath), Times.Once);
+        files.VerifyNoOtherCalls();
+    }
+
+    [TestMethod]
+    public async Task JsonProvider_MissingDefaultFileUsesAssemblyNameAndDoesNotOpenStream()
+    {
+        Mock<ITestApplicationModuleInfo> module = new();
+        module.Setup(m => m.TryGetAssemblyName()).Returns("MissingTests");
+        Mock<IFileSystem> files = new(MockBehavior.Strict);
+        files.Setup(f => f.ExistFile("MissingTests.testconfig.json")).Returns(false);
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(
+            LogLevel.Debug, "Default JSON config file 'MissingTests.testconfig.json' not found; skipping load.", null, LoggingExtensions.Formatter))
+            .Returns(Task.CompletedTask);
+        JsonConfigurationSource.JsonConfigurationProvider provider = new(module.Object, files.Object, CommandLineParseResult.Empty, logger.Object);
+
+        await provider.LoadAsync();
+
+        Assert.IsNull(provider.ConfigurationFile);
+        Assert.IsFalse(provider.TryGet("Layer:Value", out string? value));
+        Assert.IsNull(value);
+        Assert.IsEmpty(provider.GetChildKeys(null));
+        logger.Verify(
+            l => l.LogAsync(LogLevel.Debug, "Default JSON config file 'MissingTests.testconfig.json' not found; skipping load.", null, LoggingExtensions.Formatter),
+            Times.Once);
+        files.Verify(f => f.ExistFile("MissingTests.testconfig.json"), Times.Once);
+        files.VerifyNoOtherCalls();
     }
 }

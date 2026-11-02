@@ -2,12 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
@@ -15,30 +10,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 {
     private const string TemplateResourceName = "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html";
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
+    private const string DataElementStart = "<script id=\"mtp-data\" type=\"application/json\">";
+    private const string DataElementEnd = "</script>";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
 
-    public HtmlReportEngine(
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IEnvironment environment,
-        ICommandLineOptions commandLineOptions,
-        IConfiguration configuration,
-        IClock clock,
-        ITestFramework testFramework,
-        DateTimeOffset testStartTime,
-        int exitCode,
-        CancellationToken cancellationToken)
-        : base(
-            fileSystem,
-            testApplicationModuleInfo,
-            environment,
-            commandLineOptions,
-            configuration,
-            clock,
-            testFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken)
+    public HtmlReportEngine(ReportEngineContext context)
+        : base(context)
     {
     }
 
@@ -47,37 +24,33 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 
     private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        bool fileNameExplicitlyProvided = _commandLineOptions.TryGetOptionArgumentList(
+        (string finalPath, _) = ResolveOutputPath(
             HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName,
-            out string[]? providedFileName);
+            "html");
 
-        string fileName = fileNameExplicitlyProvided
-            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName("html");
-
-        string outputDirectory = _configuration.GetTestResultDirectory();
-        // Path.Combine short-circuits when the second argument is rooted, so an absolute
-        // user-provided file name overrides the test results directory while validated
-        // relative paths stay nested under it.
-        string finalPath = Path.Combine(outputDirectory, fileName);
-        string? finalDirectory = Path.GetDirectoryName(finalPath);
-        if (!RoslynString.IsNullOrEmpty(finalDirectory))
-        {
-            _fileSystem.CreateDirectory(finalDirectory);
-        }
-
-        string template = LoadTemplate();
         string json = BuildJson(results, finishTime);
-
-        string html = template
-            .Replace(GeneratorVersionPlaceholder, ExtensionVersion.DefaultSemVer)
-            .Replace(DataPlaceholder, json);
+        string html = RenderReport(json);
 
         byte[] bytes = Encoding.UTF8.GetBytes(html);
 
         return await WriteAsync(finalPath, bytes).ConfigureAwait(false);
+    }
+
+    internal static string RenderReport(string json)
+        => LoadTemplate()
+            .Replace(GeneratorVersionPlaceholder, ExtensionVersion.DefaultSemVer)
+            .Replace(DataPlaceholder, json);
+
+    internal static string ExtractReportJson(string html)
+    {
+        int dataStart = html.IndexOf(DataElementStart, StringComparison.Ordinal);
+        dataStart = dataStart >= 0
+            ? dataStart + DataElementStart.Length
+            : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html));
+        int dataEnd = html.IndexOf(DataElementEnd, dataStart, StringComparison.Ordinal);
+        return dataEnd >= 0
+            ? html.Substring(dataStart, dataEnd - dataStart)
+            : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(html));
     }
 
     private async Task<(string FileName, string? Warning)> WriteAsync(string finalPath, byte[] bytes)
@@ -86,30 +59,13 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         // provided or generated from the default <asm>_<tfm>_<arch>.html shape. Emit a warning
         // when overwriting so users have a single, predictable rule to reason about.
         bool willOverwrite = _fileSystem.ExistFile(finalPath);
-        await WriteFileAsync(finalPath, bytes).ConfigureAwait(false);
+        await WriteBytesAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
         return (
             finalPath,
             willOverwrite
                 ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
                 : null);
     }
-
-    private async Task WriteFileAsync(string path, byte[] bytes)
-    {
-        // Note that we need to dispose the IFileStream, not the inner stream.
-        // IFileStream implementations will be responsible to dispose their inner stream.
-        using IFileStream stream = _fileSystem.NewFileStream(path, FileMode.Create);
-#if NETCOREAPP
-        await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
-#else
-        await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
-#endif
-    }
-
-#pragma warning disable IDE0051 // Accessed by unit tests through reflection.
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
-#pragma warning restore IDE0051
 
     private static string LoadTemplate()
     {
@@ -127,7 +83,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         int skipped = 0;
         int timedout = 0;
         int errored = 0;
-        TimeSpan totalDuration = TimeSpan.Zero;
+        TimeSpan elapsedTime = finishTime - _testStartTime;
 
         // First pass: count how many entries each UID is going to produce so we can
         // annotate rows that share a UID with "attemptIndex"/"attemptOf". This lets the
@@ -167,6 +123,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         AppendStringPair(sb, "endTime", finishTime.ToString("O", CultureInfo.InvariantCulture));
         sb.Append(',');
         AppendNumberPair(sb, "exitCode", _exitCode.ToString(CultureInfo.InvariantCulture));
+        if (_isIncomplete)
+        {
+            sb.Append(',');
+            AppendBooleanPair(sb, "incomplete", true);
+            sb.Append(',');
+            AppendStringPair(sb, "runStatus", "aborted");
+        }
+
         sb.Append(',');
         AppendKey(sb, "tests");
         sb.Append('[');
@@ -183,8 +147,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             first = false;
 
             CountOutcome(r.Outcome, ref passed, ref failed, ref skipped, ref timedout, ref errored);
-            totalDuration += r.Duration;
-
             int attemptOf = countByUid[r.Uid];
             int attemptIndex = emittedByUid.TryGetValue(r.Uid, out int alreadyEmitted) ? alreadyEmitted + 1 : 1;
             emittedByUid[r.Uid] = attemptIndex;
@@ -199,6 +161,14 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             AppendStringPair(sb, "outcome", r.Outcome);
             sb.Append(',');
             AppendNumberPair(sb, "durationMs", r.Duration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+
+            if (r.RetryAttemptNumber is int retryAttemptNumber)
+            {
+                sb.Append(',');
+                AppendNumberPair(sb, "retryAttemptNumber", retryAttemptNumber.ToString(CultureInfo.InvariantCulture));
+                sb.Append(',');
+                AppendBooleanPair(sb, "isSupersededRetryAttempt", r.IsSupersededRetryAttempt == true);
+            }
 
             if (attemptOf > 1)
             {
@@ -304,7 +274,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         sb.Append(',');
         AppendNumberPair(sb, "errored", errored.ToString(CultureInfo.InvariantCulture));
         sb.Append(',');
-        AppendNumberPair(sb, "totalDurationMs", totalDuration.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
+        AppendNumberPair(sb, "totalDurationMs", elapsedTime.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture));
         sb.Append('}');
 
         sb.Append('}');
@@ -351,6 +321,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     {
         AppendKey(sb, key);
         sb.Append(number);
+    }
+
+    private static void AppendBooleanPair(StringBuilder sb, string key, bool value)
+    {
+        AppendKey(sb, key);
+        sb.Append(value ? "true" : "false");
     }
 
     private static void AppendString(StringBuilder sb, string value)

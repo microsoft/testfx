@@ -160,7 +160,7 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        _console.Write(_stringBuilder.ToString());
+        _console.Write(_stringBuilder);
         _isBatching = false;
     }
 
@@ -192,7 +192,7 @@ internal sealed class AnsiTerminal : ITerminal
         }
 
         // If the output path is under the initial working directory, make the console output relative to that to save space.
-        if (_baseDirectory != null && path.StartsWith(_baseDirectory, FileUtilities.PathComparison))
+        if (_baseDirectory is not null && path.StartsWith(_baseDirectory, FileUtilities.PathComparison))
         {
             if (path.Length > _baseDirectory.Length
                 && (path[_baseDirectory.Length] == Path.DirectorySeparatorChar
@@ -202,7 +202,7 @@ internal sealed class AnsiTerminal : ITerminal
             }
         }
 
-        if (lineNumber != null)
+        if (lineNumber is not null)
         {
             path += $":{lineNumber}";
         }
@@ -269,12 +269,12 @@ internal sealed class AnsiTerminal : ITerminal
         _currentFrame.Clear();
     }
 
-    public void RenderProgress(TestProgressState?[] progress)
+    public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
         // Reuse the spare frame instead of allocating a new one every tick.
         AnsiTerminalTestProgressFrame nextFrame = _spareFrame;
         nextFrame.Reset(Width, Height);
-        nextFrame.Render(_currentFrame, progress, terminal: this);
+        nextFrame.Render(_currentFrame, progress, messages, terminal: this);
         _spareFrame = _currentFrame;
         _currentFrame = nextFrame;
     }

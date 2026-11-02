@@ -1,0 +1,52 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Telemetry;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+/// <summary>
+/// Bridges the engine's dependency-free <see cref="IMSTestActivity"/> seam onto the platform's OpenTelemetry
+/// service, so MSTest fixture and test-method spans nest under the platform's test-case spans.
+/// </summary>
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
+internal sealed class MSTestPlatformActivity(IPlatformActivity activity) : IMSTestActivity
+{
+    public void SetTag(string key, object? value)
+        => activity.SetTag(key, value);
+
+    public void RecordException(Exception exception)
+        => activity.RecordException(exception);
+
+    public void SetFailed(string? description)
+        => activity.SetStatus(PlatformActivityStatusCode.Error, description);
+
+    public void Dispose()
+        => activity.Dispose();
+
+    /// <summary>
+    /// Installs the tracing factory on <see cref="MSTestInstrumentation"/> when the platform has an OpenTelemetry
+    /// service registered. Does nothing (leaving MSTest tracing disabled and free) otherwise.
+    /// </summary>
+    internal static void TryEnable(IServiceProvider serviceProvider)
+    {
+        if (serviceProvider.GetService(typeof(IPlatformOpenTelemetryService)) is not IPlatformOpenTelemetryService otelService)
+        {
+            MSTestInstrumentation.SetActivityFactory(null);
+            return;
+        }
+
+        MSTestInstrumentation.SetActivityFactory((name, tags)
+            // A non-ambient span is required, not an optimization - see the remarks on MSTestInstrumentation.
+            // Inherit the current ambient activity when one exists: under canonical execution this makes the
+            // test initialize/cleanup spans children of the test activity, while assembly/class fixtures still
+            // inherit the test-framework activity.
+            => otelService.StartNonAmbientActivity(
+                name,
+                tags,
+                parentId: otelService.HasCurrentActivity ? null : otelService.TestFrameworkActivity?.Id) is { } platformActivity
+                ? new MSTestPlatformActivity(platformActivity)
+                : null);
+    }
+}

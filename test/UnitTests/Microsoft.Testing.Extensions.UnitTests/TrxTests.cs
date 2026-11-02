@@ -805,6 +805,28 @@ public class TrxTests
         Assert.Contains("Unable to copy attachment", warningText);
         Assert.Contains("badFile", warningText);
         Assert.Contains("UnauthorizedAccessException", warningText);
+
+        // The warning must also be reachable by the caller so it can be surfaced on the output device.
+        // Without that, a dropped attachment only shows up in the TRX nobody reads until much later.
+        Assert.ContainsSingle(trxReportEngine.AttachmentWarnings);
+        Assert.Contains("badFile", trxReportEngine.AttachmentWarnings[0]);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WhenNoAttachmentFails_AttachmentWarningsIsEmpty()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new FileArtifactProperty(new FileInfo("goodFile"), "TestMethod", "description"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        _ = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsEmpty(trxReportEngine.AttachmentWarnings);
     }
 
     [TestMethod]
@@ -935,6 +957,30 @@ public class TrxTests
     </UnitTest>
  ";
         Assert.IsTrue(Regex.IsMatch(trxContent, trxContentsPattern), trxContent);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WithWorkItems_TrxContainsWorkItems()
+    {
+        using MemoryFileStream memoryStream = new();
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TrxWorkItemsProperty(["123", "456"]),
+            new TestMetadataProperty(nameof(TrxWorkItemsProperty), "NotAWorkItem"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        (string fileName, string? warning) = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        Assert.IsNull(warning);
+        AssertExpectedTrxFileName(fileName);
+        Assert.IsNotNull(memoryStream.TrxContent);
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement unitTest = memoryStream.TrxContent.Descendants(ns + "UnitTest").Single();
+        string[] workItemIds = [.. unitTest.Element(ns + "Workitems")!.Elements(ns + "WorkItem").Select(element => element.Attribute("id")!.Value)];
+        Assert.AreSequenceEqual(["123", "456"], workItemIds);
+        XElement metadataProperty = unitTest.Element(ns + "Properties")!.Element(ns + "Property")!;
+        Assert.AreEqual(nameof(TrxWorkItemsProperty), metadataProperty.Element(ns + "Key")!.Value);
+        Assert.AreEqual("NotAWorkItem", metadataProperty.Element(ns + "Value")!.Value);
     }
 
     [TestMethod]

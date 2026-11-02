@@ -40,11 +40,30 @@ internal sealed class PlatformOutputDeviceManager : IOutputDeviceManager
     internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice, bool isPipeProtocol)
     {
         // Under the dotnet test pipe protocol, the SDK's TerminalTestReporter owns all
-        // user-facing output, so we deliberately install a no-op device here. See #7161
-        // and dotnet/sdk#51615 for the broader context.
+        // user-facing output, so regular host output must not be written directly to the console.
+        // Startup diagnostics fall back to captured console output until the connection exists.
+        // See #7161 and dotnet/sdk#51615 for the broader context.
+        //
+        // DotnetTestPassthroughOutputDevice discards regular informational output exactly like a no-op device, but
+        // forwards selected host messages to the SDK over the protocol so they are not swallowed in
+        // multi-assembly runs:
+        //   - Durable session messages (SessionMessageOutputDeviceData) as informational DisplayMessage
+        //     (protocol 1.3.0+).
+        //   - GitHub Actions workflow commands (GitHubActionsCommandOutputDeviceData) as informational
+        //     DisplayMessage (protocol 1.3.0+), preserving the command text for the runner.
+        //   - Warning/error host messages (WarningMessageOutputDeviceData / ErrorMessageOutputDeviceData) as
+        //     DisplayMessage (protocol 1.3.0+). This covers hang/crash dump diagnostics, retry summaries, and
+        //     generic extension/framework warnings and errors — regardless of environment.
+        //   - Azure DevOps logging commands (##[group], ##vso[...]) produced by the AzureDevOpsReport extension as
+        //     AzureDevOpsLogMessage (protocol 1.2.0+). The extension only produces these on an Azure DevOps agent
+        //     (TF_BUILD), so off-agent that branch is naturally inert; the device itself is installed everywhere so
+        //     the warning/error forwarding above is not gated on the agent. The Azure DevOps forwarder gates on the
+        //     agent only (TF_BUILD), NOT the TESTINGPLATFORM_AZDO_OUTPUT opt-out: that opt-out is scoped to the
+        //     platform's automatic ##vso[task.logissue] emission, and honoring it here would make multi-assembly
+        //     forwarding inconsistent with single-assembly runs.
         if (isPipeProtocol)
         {
-            return new ProxyOutputDevice(new NopPlatformOutputDevice(), serverModeOutputDevice: null);
+            return new ProxyOutputDevice(new DotnetTestPassthroughOutputDevice(serviceProvider), serverModeOutputDevice: null);
         }
 
         // SetPlatformOutputDevice isn't public yet. Before exposing it, we should decide
@@ -80,6 +99,7 @@ internal sealed class PlatformOutputDeviceManager : IOutputDeviceManager
                 serviceProvider.GetRuntimeFeature(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetPlatformInformation(),
+                serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetRequiredService<IStopPoliciesService>());
 #else
             throw new PlatformNotSupportedException(PlatformResources.BrowserPlatformNotSupportedOnOlderFrameworks);
@@ -112,6 +132,11 @@ internal sealed class PlatformOutputDeviceManager : IOutputDeviceManager
             serviceProvider.GetLoggerFactory(),
             serviceProvider.GetClock(),
             serviceProvider.GetRequiredService<IStopPoliciesService>(),
-            serviceProvider.GetTestApplicationCancellationTokenSource());
+            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            serviceProvider.GetRequiredService<ITestCoverageResult>())
+        {
+            // The result is registered after the output device and may fail after initialization.
+            TestSessionFailureProvider = () => serviceProvider.GetService<ITestApplicationProcessExitCode>()?.HasTestAdapterTestSessionFailure == true,
+        };
     }
 }

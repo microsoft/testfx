@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -123,21 +125,22 @@ public sealed partial class CollectionAssert
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
-        if (expected == null != (actual == null))
+        if ((expected is null) != (actual is null))
         {
             Assert.ReportAssertFailed("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message));
         }
 
         // If the references are the same or both collections are null, they are equivalent.
-        if (object.ReferenceEquals(expected, actual) || expected == null)
+        // A scope records a mismatch instead of throwing, so a null expected sequence must also return.
+        if (expected == actual || expected is null)
         {
             return;
         }
 
         DebugEx.Assert(actual is not null, "actual is not null here");
 
-        int expectedCollectionCount = expected.Count();
-        int actualCollectionCount = actual.Count();
+        int expectedCollectionCount = CollectionCountHelper.GetCount(expected);
+        int actualCollectionCount = CollectionCountHelper.GetCount(actual);
 
         // Check whether the element counts are different.
         if (expectedCollectionCount != actualCollectionCount)
@@ -291,7 +294,7 @@ public sealed partial class CollectionAssert
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer");
 
         // Check whether one is null while the other is not.
-        if (notExpected == null != (actual == null))
+        if ((notExpected is null) != (actual is null))
         {
             return;
         }
@@ -312,8 +315,8 @@ public sealed partial class CollectionAssert
         DebugEx.Assert(notExpected is not null, "expected is not null here");
 
         // Check whether the element counts are different.
-        int notExpectedCount = notExpected.Count();
-        int actualCount = actual.Count();
+        int notExpectedCount = CollectionCountHelper.GetCount(notExpected);
+        int actualCount = CollectionCountHelper.GetCount(actual);
         if (notExpectedCount != actualCount)
         {
             return;

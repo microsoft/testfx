@@ -8,13 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
-#if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-#endif
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-#endif
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
@@ -30,6 +23,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #pragma warning disable CA1852 // Seal internal types - needs to be non-sealed because it's mocked in tests.
 internal class TestSourceHost : ITestSourceHost
 {
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
+    private const string ObjectModelAssemblyName = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
+#endif
+#if NETFRAMEWORK
+    private const string CoreUtilitiesAssemblyName = "Microsoft.TestPlatform.CoreUtilities";
+#endif
+
 #if !WINDOWS_UWP
 #pragma warning disable IDE0052 // Remove unread private members
     private readonly string _sourceFileName;
@@ -66,10 +66,10 @@ internal class TestSourceHost : ITestSourceHost
     /// Initializes a new instance of the <see cref="TestSourceHost"/> class.
     /// </summary>
     /// <param name="sourceFileName"> The source file name. </param>
-    /// <param name="runSettings"> The run-settings provided for this session. </param>
-    public TestSourceHost(string sourceFileName, IRunSettings? runSettings)
+    /// <param name="settingsXml"> The run-settings XML provided for this session. </param>
+    public TestSourceHost(string sourceFileName, string? settingsXml)
 #if NETFRAMEWORK
-        : this(sourceFileName, runSettings, new AppDomainWrapper())
+        : this(sourceFileName, settingsXml, new AppDomainWrapper())
 #endif
     {
 #if !WINDOWS_UWP && !NETFRAMEWORK
@@ -81,7 +81,7 @@ internal class TestSourceHost : ITestSourceHost
     }
 
 #if NETFRAMEWORK
-    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IAppDomain appDomain)
+    internal TestSourceHost(string sourceFileName, string? settingsXml, IAppDomain appDomain)
     {
         _sourceFileName = sourceFileName;
         _appDomain = appDomain;
@@ -90,7 +90,7 @@ internal class TestSourceHost : ITestSourceHost
         SetContext(sourceFileName);
 
         // Set isAppDomainCreationDisabled flag
-        _isAppDomainCreationDisabled = runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runSettings.SettingsXml);
+        _isAppDomainCreationDisabled = settingsXml is not null && MSTestAdapterSettings.IsAppDomainCreationDisabled(settingsXml);
     }
 
     /// <summary>
@@ -179,7 +179,7 @@ internal class TestSourceHost : ITestSourceHost
             // For unknown reasons, with MSTest 3.4+ we start to see infinite cycles of assembly resolution of this dll in the new app
             // domain. In older versions, this was not the case, and the callback was allowing to fully lookup and load the dll before
             // triggering the next resolution.
-            AppDomain.Load(typeof(EqtTrace).Assembly.GetName());
+            AppDomain.Load(GetLoadedAssembly(CoreUtilitiesAssemblyName).GetName());
 
             // Add an assembly resolver in the child app-domain...
             Type assemblyResolverType = typeof(AssemblyResolver);
@@ -237,7 +237,7 @@ internal class TestSourceHost : ITestSourceHost
         _childDomainAssemblyResolver?.Dispose();
         _childDomainAssemblyResolver = null;
 
-        if (AppDomain != null)
+        if (AppDomain is not null)
         {
             try
             {
@@ -301,12 +301,16 @@ internal class TestSourceHost : ITestSourceHost
         {
             setWorkingDirectoryException = ex;
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            setWorkingDirectoryException = ex;
+        }
         catch (System.Security.SecurityException ex)
         {
             setWorkingDirectoryException = ex;
         }
 
-        if (setWorkingDirectoryException != null)
+        if (setWorkingDirectoryException is not null)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.Error("MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
         }
@@ -319,7 +323,31 @@ internal class TestSourceHost : ITestSourceHost
     {
         if (!StringEx.IsNullOrEmpty(_currentDirectory))
         {
-            Environment.CurrentDirectory = _currentDirectory;
+            try
+            {
+                Environment.CurrentDirectory = _currentDirectory;
+            }
+            catch (IOException ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "MSTestExecutor.ResetWorkingDirectory: Failed to restore the working directory to '{0}'. {1}",
+                    _currentDirectory,
+                    ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "MSTestExecutor.ResetWorkingDirectory: Failed to restore the working directory to '{0}'. {1}",
+                    _currentDirectory,
+                    ex);
+            }
+            catch (System.Security.SecurityException ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                    "MSTestExecutor.ResetWorkingDirectory: Failed to restore the working directory to '{0}'. {1}",
+                    _currentDirectory,
+                    ex);
+            }
         }
     }
 #endif
@@ -352,6 +380,17 @@ internal class TestSourceHost : ITestSourceHost
 #endif
 
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
+    /// <summary>
+    /// Resolves a loaded test-platform assembly by simple name, so this file needs no compile-time reference to
+    /// the VSTest object model. These assemblies are loaded by the adapter/host before the source host runs, so
+    /// the resolved identity matches what a direct type reference would have produced.
+    /// </summary>
+    /// <param name="simpleName">The simple assembly name.</param>
+    /// <returns>The loaded assembly.</returns>
+    private static Assembly GetLoadedAssembly(string simpleName)
+        => AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, simpleName, StringComparison.Ordinal))
+            ?? Assembly.Load(simpleName);
+
     /// <summary>
     /// Gets the probing paths to load the test assembly dependencies.
     /// </summary>
@@ -403,7 +442,7 @@ internal class TestSourceHost : ITestSourceHost
             resolutionPaths.Add(adapterDirectory);
         }
 
-        string? testPlatformDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(typeof(AssemblyHelper).Assembly));
+        string? testPlatformDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(GetLoadedAssembly(ObjectModelAssemblyName)));
         if (!string.IsNullOrEmpty(testPlatformDirectory) && !resolutionPaths.Contains(testPlatformDirectory))
         {
             // Adding TestPlatform folder to resolution paths

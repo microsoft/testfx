@@ -41,9 +41,7 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? testHost.FullName
-            : testHost.FullName + ".dll";
+        string exeOrDllName = GetTestExecutablePath(testHost);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {exeOrDllName}",
             workingDirectory: AssetFixture.PlaywrightProjectPath,

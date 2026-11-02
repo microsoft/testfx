@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -16,7 +16,7 @@ namespace MSTest.Analyzers;
 
 public sealed partial class UseProperAssertMethodsAnalyzer
 {
-    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol)
+    private static void AnalyzeIsTrueOrIsFalseInvocation(OperationAnalysisContext context, IOperation conditionArgument, bool isTrueInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol, INamedTypeSymbol? iDictionaryTypeSymbol)
     {
         RoslynDebug.Assert(context.Operation is IInvocationOperation, "Expected IInvocationOperation.");
 
@@ -62,7 +62,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
         // For Any() and Where().Any() patterns
         if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny &&
-            linqCollectionExpr != null && predicateExpr != null)
+            linqCollectionExpr is not null && predicateExpr is not null)
         {
             string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 
@@ -107,7 +107,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         }
 
         // Check for collection method patterns: myCollection.Contains(...)
-        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, objectTypeSymbol, enumerableTypeSymbol, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr, out SyntaxNode? comparerExpr);
+        CollectionCheckStatus collectionMethodStatus = RecognizeCollectionMethodCheck(conditionArgument, objectTypeSymbol, enumerableTypeSymbol, iDictionaryTypeSymbol, out SyntaxNode? collectionExpr, out SyntaxNode? itemExpr, out SyntaxNode? comparerExpr);
         if (collectionMethodStatus != CollectionCheckStatus.Unknown)
         {
             if (collectionMethodStatus == CollectionCheckStatus.Contains)
@@ -182,8 +182,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 out _);
 
             if ((countLinqStatus is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount) &&
-                countCollectionExpr != null &&
-                countPredicateExpr != null)
+                countCollectionExpr is not null &&
+                countPredicateExpr is not null)
             {
                 string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 

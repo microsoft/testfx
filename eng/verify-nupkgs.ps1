@@ -19,13 +19,17 @@ function Unzip {
 function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
-        "MSTest.Sdk"                                  = 15
-        "MSTest.TestFramework"                        = 105
-        "MSTest.TestAdapter"                          = 53
-        "MSTest"                                      = 10
+        "MSTest.Sdk"                                  = 16
+        "MSTest.TestFramework"                        = 143
+        "MSTest.TestAdapter"                          = 90
+        "MSTest.Extensions.Hosting"                   = 87
+        "MSTest"                                      = 12
         "MSTest.Analyzers"                            = 56
-        "MSTest.AotReflection.SourceGeneration"       = 6
+        "MSTest.SourceGeneration"                     = 8
+        "MSTest.Windows.UIAutomation"                 = 66
     }
+    # These packages include PDBs only in some build modes; validate their stable non-symbol payload.
+    $packagesWithOptionalPdbFiles = @("MSTest.Extensions.Hosting", "MSTest.Sdk", "MSTest.Windows.UIAutomation")
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
     $tmpDirectory = Resolve-Path "$PSScriptRoot/../artifacts/tmp/$configuration"
@@ -54,9 +58,39 @@ function Confirm-NugetPackages {
 
     Write-Verbose "Verifying NuGet packages files."
     $errors = @()
+    $verifiedPackageKeys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
+            $nuspecFiles = @(Get-ChildItem -Path $unzipNugetPackageDir -Filter "*.nuspec" -File)
+            if ($nuspecFiles.Count -ne 1) {
+                $errors += "Expected exactly one nuspec in '$packageName', actual: $($nuspecFiles.Count)"
+            }
+            else {
+                $nuspec = [xml](Get-Content -Raw $nuspecFiles[0].FullName)
+                $metadata = $nuspec.package.metadata
+
+                if ([string]::IsNullOrWhiteSpace([string]$metadata.tags)) {
+                    $errors += "Package '$packageName' does not define tags"
+                }
+
+                $readme = [string]$metadata.readme
+                if ([string]::IsNullOrWhiteSpace($readme)) {
+                    $errors += "Package '$packageName' does not define a readme"
+                }
+                elseif (!(Test-Path -Path (Join-Path $unzipNugetPackageDir $readme) -PathType Leaf)) {
+                    $errors += "Package '$packageName' readme '$readme' is not included in the package"
+                }
+
+                $icon = [string]$metadata.icon
+                if ([string]::IsNullOrWhiteSpace($icon)) {
+                    $errors += "Package '$packageName' does not define an icon"
+                }
+                elseif (!(Test-Path -Path (Join-Path $unzipNugetPackageDir $icon) -PathType Leaf)) {
+                    $errors += "Package '$packageName' icon '$icon' is not included in the package"
+                }
+            }
+
             $versionIndex = $packageName.LastIndexOf($version)
             if ($versionIndex -lt 0) {
                 continue
@@ -64,8 +98,14 @@ function Confirm-NugetPackages {
 
             $packageKey = $packageName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
+            $null = $verifiedPackageKeys.Add($packageKey)
 
-            $actualNumOfFiles = (Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir).Count
+            $packageFiles = @(Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir)
+            if ($packagesWithOptionalPdbFiles -contains $packageKey) {
+                $packageFiles = @($packageFiles | Where-Object Extension -ne ".pdb")
+            }
+
+            $actualNumOfFiles = $packageFiles.Count
             if ($expectedNumOfFiles[$packageKey] -ne $actualNumOfFiles) {
                 $errors += "Number of files are not equal for '$packageKey', expected: $($expectedNumOfFiles[$packageKey]) actual: $actualNumOfFiles"
             }
@@ -77,10 +117,26 @@ function Confirm-NugetPackages {
         }
     }
 
+    $isMSTestProductBuild = $false
+    foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+        if ($verifiedPackageKeys.Contains($expectedPackageKey)) {
+            $isMSTestProductBuild = $true
+            break
+        }
+    }
+
+    if ($isMSTestProductBuild) {
+        foreach ($expectedPackageKey in $expectedNumOfFiles.Keys) {
+            if (!$verifiedPackageKeys.Contains($expectedPackageKey)) {
+                $errors += "Expected package '$expectedPackageKey' was not found"
+            }
+        }
+    }
+
     if ($errors) {
         Write-Error "Validation of NuGet packages failed with $($errors.Count) errors:`n$($errors -join "`n")"
     } else {
-        Write-Host "Successfully validated content of NuGet packages"
+        Write-Host "Successfully validated content and metadata of NuGet packages"
     }
 }
 

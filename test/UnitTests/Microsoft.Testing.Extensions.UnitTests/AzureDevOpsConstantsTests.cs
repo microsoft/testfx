@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
+using Microsoft.Testing.Extensions.Reporting;
+using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
 using Moq;
@@ -66,5 +68,38 @@ public sealed class AzureDevOpsConstantsTests
 
         Assert.IsTrue(AzureDevOpsConstants.IsRunningInAzureDevOps(environmentMock.Object));
         environmentMock.Verify(e => e.GetEnvironmentVariable("TF_BUILD"), Times.Once);
+    }
+
+    [TestMethod]
+    public void IsFeatureKnobEnabled_ReturnsTrue_WhenKnobNotSet()
+    {
+        TestCommandLineOptions options = new([]);
+        Assert.IsTrue(AzureDevOpsConstants.IsFeatureKnobEnabled(options, AzureDevOpsCommandLineOptions.AzureDevOpsGroups));
+    }
+
+    [TestMethod]
+    [DataRow("on")]
+    [DataRow("On")]
+    [DataRow("anything")]
+    public void IsFeatureKnobEnabled_ReturnsTrue_WhenKnobIsNotOff(string value)
+    {
+        TestCommandLineOptions options = new(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsGroups] = [value],
+        });
+        Assert.IsTrue(AzureDevOpsConstants.IsFeatureKnobEnabled(options, AzureDevOpsCommandLineOptions.AzureDevOpsGroups));
+    }
+
+    [TestMethod]
+    [DataRow("off")]
+    [DataRow("OFF")]
+    [DataRow("Off")]
+    public void IsFeatureKnobEnabled_ReturnsFalse_WhenKnobIsOff(string value)
+    {
+        TestCommandLineOptions options = new(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations] = [value],
+        });
+        Assert.IsFalse(AzureDevOpsConstants.IsFeatureKnobEnabled(options, AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations));
     }
 }

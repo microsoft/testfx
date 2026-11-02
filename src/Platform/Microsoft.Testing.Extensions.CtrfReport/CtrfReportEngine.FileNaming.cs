@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
@@ -11,7 +11,7 @@ internal sealed partial class CtrfReportEngine
             ?? _environment.GetEnvironmentVariable("USER")
             ?? "user";
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
         string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.ctrf.json";
         return ReplaceInvalidFileNameChars(raw);
     }
@@ -44,7 +44,4 @@ internal sealed partial class CtrfReportEngine
 
         return "unknown";
     }
-
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 }

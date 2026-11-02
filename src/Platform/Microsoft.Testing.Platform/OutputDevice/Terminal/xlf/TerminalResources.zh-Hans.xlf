@@ -4,172 +4,442 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">已中止</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">实际</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="new">canceled</target>
+        <target state="translated">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="new">Canceling the test session...</target>
+        <target state="translated">正在取消测试会话...</target>
         <note />
+      </trans-unit>
+      <trans-unit id="CodeCoverageSummary">
+        <source>Code Coverage Summary:</source>
+        <target state="translated">代码覆盖率摘要:</target>
+        <note>Heading printed before the per-scope code coverage percentages in the run summary.</note>
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="new">Console is already in batching mode.</target>
+        <target state="translated">控制台已处于批处理模式。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationAverage">
+        <source>Average</source>
+        <target state="translated">平均值</target>
+        <note>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMaximum">
+        <source>Maximum</source>
+        <target state="translated">最大值</target>
+        <note>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMinimum">
+        <source>Minimum</source>
+        <target state="translated">最小值</target>
+        <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationOver">
+        <source>{0} over {1}</source>
+        <target state="translated">{0} - {1}</target>
+        <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationTotal">
+        <source>Total</source>
+        <target state="translated">总计</target>
+        <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBlock">
+        <source>Block</source>
+        <target state="translated">阻止</target>
+        <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBranch">
+        <source>Branch</source>
+        <target state="translated">分支</target>
+        <note>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricClass">
+        <source>Class</source>
+        <target state="translated">类</target>
+        <note>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricComplexity">
+        <source>Complexity</source>
+        <target state="translated">复杂性</target>
+        <note>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricCondition">
+        <source>Condition</source>
+        <target state="translated">条件</target>
+        <note>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricFunction">
+        <source>Function</source>
+        <target state="translated">函数</target>
+        <note>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricInstruction">
+        <source>Instruction</source>
+        <target state="translated">指令</target>
+        <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricLine">
+        <source>Line</source>
+        <target state="translated">行</target>
+        <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricMethod">
+        <source>Method</source>
+        <target state="translated">方法</target>
+        <note>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricRegion">
+        <source>Region</source>
+        <target state="translated">区域</target>
+        <note>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricStatement">
+        <source>Statement</source>
+        <target state="translated">语句</target>
+        <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricWithProducer">
+        <source>{0} [{1}]</source>
+        <target state="translated">{0} [{1}]</target>
+        <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
+      </trans-unit>
+      <trans-unit id="CoverageNoData">
+        <source>N/A</source>
+        <target state="translated">暂缺</target>
+        <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeAssembly">
+        <source>Assembly</source>
+        <target state="translated">程序集</target>
+        <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeFile">
+        <source>File</source>
+        <target state="translated">文件</target>
+        <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeModule">
+        <source>Module</source>
+        <target state="translated">模块</target>
+        <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeNamespace">
+        <source>Namespace</source>
+        <target state="translated">命名空间</target>
+        <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeOverall">
+        <source>Total</source>
+        <target state="translated">总计</target>
+        <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeType">
+        <source>Type</source>
+        <target state="translated">类型</target>
+        <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailed">
+        <source>{0}% &lt; {1}% threshold</source>
+        <target state="translated">{0}% &lt; {1}% 阈值</target>
+        <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailedRoundedValues">
+        <source>Coverage is below the required threshold (the percentages round to the same value).</source>
+        <target state="translated">覆盖率低于所需的阈值(百分比舍入后数值相同)。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataFailed">
+        <source>No coverable data (failed by policy)</source>
+        <target state="translated">无可覆盖数据(策略检查未通过)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataPassed">
+        <source>No coverable data (passed by policy)</source>
+        <target state="translated">无可覆盖数据(策略检查通过)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdPassed">
+        <source>{0}% &gt;= {1}% threshold</source>
+        <target state="translated">{0}% &gt;= {1}% 阈值</target>
+        <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdResults">
+        <source>Coverage Threshold Results:</source>
+        <target state="translated">覆盖率阈值结果:</target>
+        <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
-        <target state="new">Discovered {0} tests in assembly</target>
+        <target state="translated">在程序集中发现了 {0} 个测试</target>
         <note>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummary">
         <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="new">Discovered {0} tests in {1} assemblies.</target>
+        <target state="translated">在 {1} 个程序集中发现了 {0} 个测试。</target>
         <note>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummarySingular">
         <source>Discovered {0} tests.</source>
-        <target state="new">Discovered {0} tests.</target>
+        <target state="translated">已发现 {0} 个测试。</target>
         <note>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
-        <target state="new">Discovering tests from</target>
+        <target state="translated">正在发现以下位置中的测试</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">持续时间</target>
         <note />
       </trans-unit>
       <trans-unit id="Error">
         <source>error</source>
-        <target state="new">error</target>
+        <target state="translated">错误</target>
         <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
+      </trans-unit>
+      <trans-unit id="ErroredAssembliesHeader">
+        <source>Errored assemblies:</source>
+        <target state="translated">出错的程序集:</target>
+        <note />
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
-        <target state="new">Exit code</target>
+        <target state="translated">退出代码</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeAtLeastOneTestFailedDescription">
+        <source>At least one test failed.</source>
+        <target state="translated">至少有一个测试失败。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeCoverageThresholdFailedDescription">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">未达到一个或多个代码覆盖率阈值。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeDependentProcessExitedDescription">
+        <source>A dependent process exited.</source>
+        <target state="translated">依赖进程已退出。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeGenericFailureDescription">
+        <source>An unexpected error occurred.</source>
+        <target state="translated">出现了错误。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeIncompatibleProtocolVersionDescription">
+        <source>The test platform protocol version is incompatible.</source>
+        <target state="translated">测试平台协议版本不兼容。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidCommandLineDescription">
+        <source>The command-line arguments are invalid.</source>
+        <target state="translated">命令行参数无效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeInvalidPlatformSetupDescription">
+        <source>The test platform setup or extension configuration is invalid.</source>
+        <target state="translated">测试平台设置或扩展配置无效。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeMinimumExpectedTestsPolicyViolationDescription">
+        <source>Fewer tests ran than required by the minimum expected tests policy.</source>
+        <target state="translated">运行的测试少于最低预期测试策略所要求的数量。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestAdapterTestSessionFailureDescription">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">测试适配器报告了测试会话失败。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedAtDeadlineDescription">
+        <source>Test execution stopped because the configured deadline was approaching.</source>
+        <target state="translated">测试执行已停止，因为配置的最后期限即将到来。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestExecutionStoppedForMaxFailedTestsDescription">
+        <source>Test execution stopped after reaching the maximum failed tests limit.</source>
+        <target state="translated">测试执行在达到最大失败测试数限制后停止。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestHostProcessExitedNonGracefullyDescription">
+        <source>The test host process exited unexpectedly.</source>
+        <target state="translated">测试主机进程意外退出。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeTestSessionAbortedDescription">
+        <source>The test session was aborted.</source>
+        <target state="translated">测试会话已中止。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeUnknownDescription">
+        <source>The exit code is not recognized.</source>
+        <target state="translated">无法识别退出代码。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeZeroTestsDescription">
+        <source>No tests ran.</source>
+        <target state="translated">没有运行任何测试。</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">预期</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">失败</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">失败</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="new">failed with {0} error(s)</target>
+        <target state="translated">失败并出现 {0} 个错误</target>
         <note>{0} is the number of errors in an assembly summary line</note>
+      </trans-unit>
+      <trans-unit id="FlakyAttempts">
+        <source>{0} attempts</source>
+        <target state="translated">{0} 次尝试</target>
+        <note>{0} is the total number of times the test ran (first run plus retries), shown next to a flaky test's name.</note>
+      </trans-unit>
+      <trans-unit id="FlakyLowercase">
+        <source>flaky: {0} (passed after retry)</source>
+        <target state="translated">不稳定: {0} (重试后通过)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTests">
+        <source>Flaky tests:</source>
+        <target state="translated">不稳定的测试:</target>
+        <note>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTransition">
+        <source>failed -&gt; passed</source>
+        <target state="translated">失败 -&gt; 通过</target>
+        <note>Describes the outcome change of a flaky test, shown next to its name in the 'Flaky tests:' section. The arrow reads left (first outcome) to right (final outcome).</note>
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">用于测试</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="HandshakeFailuresHeader">
         <source>Handshake failures:</source>
-        <target state="new">Handshake failures:</target>
+        <target state="translated">握手失败：</target>
         <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">生成的进程内文件项目:</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">最低预期测试策略冲突，测试已运行 {0} 次，最低预期 {1} 次</target>
         <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">和其他 {0} 项</target>
         <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="new">{0} tests running</target>
+        <target state="translated">{0} 个测试正在运行</target>
         <note>{0} is the number of currently running tests.</note>
+      </trans-unit>
+      <trans-unit id="NoAffectedTestsSelected">
+        <source>No affected tests selected</source>
+        <target state="translated">未选择受影响的测试</target>
+        <note>Neutral module status when affected-test selection succeeds without starting a test host. This is not the skipped test outcome and no test count is known.</note>
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">生成的进程外文件项目:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">已通过</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">已通过</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="new">Press Ctrl+C again to force exit.</target>
+        <target state="translated">再次按 Ctrl+C 强制退出。</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">
         <source>retried</source>
-        <target state="new">retried</target>
-        <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
+        <target state="translated">已重试</target>
+        <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
+      </trans-unit>
+      <trans-unit id="RetriedTestsAndRuns">
+        <source>{0} test(s), {1} extra run(s)</source>
+        <target state="translated">{0} 个测试，{1} 次额外运行</target>
+        <note>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
-        <target state="new">Running tests from</target>
+        <target state="translated">正在从以下位置运行测试</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">已跳过</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SlowestTests">
+        <source>Slowest tests:</source>
+        <target state="translated">速度最慢的测试:</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="new">at</target>
+        <target state="translated">在</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="new">in</target>
+        <target state="translated">位于</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">错误输出</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">标准输出</target>
         <note />
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">成功</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionDescription">
@@ -181,44 +451,54 @@ When both --ansi and --no-ansi are provided, --ansi wins.</source>
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</target>
-        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi 需要值为“auto”、“on”(或 'true'、“enable”、'1')或“off”(或 'false'、“disable”、'0')的单个参数。</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <target state="translated">禁用将 ANSI 转义字符输出到屏幕。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="new">[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</target>
+        <target state="translated">[已弃用，改用 "--progress off"]禁用向屏幕报告进度。</target>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
-        <source>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
-        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</source>
+        <target state="translated">预设终端中显示的每测试结果块。
+有效值为 'Minimal'、'Normal'、'Detailed'。默认值为 'Normal'。使用 '--show-test-results' 进行精确的结果选择。</target>
+        <note>{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
-        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
-        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+        <source>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</source>
+        <target state="translated">--output 需要值为 'Minimal'、'Normal'或 'Detailed' 的单个参数。</target>
+        <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
-        <source>running... {0} completed, {1} failed</source>
-        <target state="new">running... {0} completed, {1} failed</target>
-        <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
+        <source>running... {0} completed, {1} failed, active modules: {2}</source>
+        <target state="new">running... {0} completed, {1} failed, active modules: {2}</target>
+        <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
         <source> | active: {0}</source>
-        <target state="new"> | active: {0}</target>
+        <target state="translated"> | 活动: {0}</target>
         <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatLastCompletionSuffix">
+        <source> | last completion: {0} ago</source>
+        <target state="new"> | last completion: {0} ago</target>
+        <note>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatNoCompletionSuffix">
+        <source> | no tests completed yet</source>
+        <target state="new"> | no tests completed yet</target>
+        <note />
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
         <source>Control whether progress is reported to screen.
@@ -229,70 +509,128 @@ This option takes precedence over the deprecated --no-progress flag.</source>
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
 This option takes precedence over the deprecated --no-progress flag.</target>
-        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
+        <note>{Locked="auto"}{Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--progress 需要值为 "auto"、"on"(或 "true"、"enable"、"1")或 "off"(或 "false"、"disable"、"0")的单个参数。</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] 在 {0}后仍在运行: {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionDescription">
+        <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</source>
+        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</target>
+        <note>Do not localize the values {Locked="'on'"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
+        <source>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</source>
+        <target state="translated">--show-flaky-tests 不需要参数，或需要单个 "‌on"‌ 或 "‌off"‌ 参数。</target>
+        <note>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <target state="translated">--show-stdout and --show-stderr 需要值为“All”、“Failed”或“None”的单个参数。</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionDescription">
+        <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
+        <target state="translated">在运行摘要中显示指定的速度最慢测试数(按报告的执行持续时间)。应为正整数。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
+        <source>--show-slowest-tests expects a single positive integer parameter.</source>
+        <target state="translated">--show-slowest-tests 需要单个正整数参数。</target>
+        <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">确定何时显示测试捕获的错误输出。
+有效值为 'All'、'Failed'、'None'。默认值为 'All' (如果检测到 LLM/AI 智能体环境，则为 'Failed')。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">确定何时显示测试的捕获标准输出。
+有效值为 'All'、'Failed'、'None'。默认值为 'All' (如果检测到 LLM/AI 智能体环境，则为 'Failed')。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="translated">--show-test-results 值 'all' 或 'none' 不能与任何其他值组合。</target>
+        <note>{Locked="--show-test-results"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</source>
+        <target state="translated">选择哪些测试结果在终端中呈现每测试结果块(包含其信息性详细信息、堆栈跟踪和捕获的输出)。
+有效值为 'passed'、'failed'(还包括错误、超时和已取消的测试)、'skipped'、'all' 和 'none'。将多个值组合为逗号或空格分隔列表，或重复该选项；'all' 和 'none' 不能与任何其他值组合。
+当 '--output' 为 'Minimal' 时，默认值为 'failed'，当它为 'Normal' 或省略时，默认值为 'failed' 和 'skipped'，当它为 'Detailed' 时，则为 'all'。显式 '--show-test-results' 始终优先于 '--output'，而无论它们的传入顺序如何。</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}{Locked="--show-test-results"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results 至少需要一个来自 'passed'、'failed'、'skipped'、'all' 或 'none' 的值。</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="translated">--show-test-results 需要一个或多个 'passed'、'failed'、'skipped'、'all' 或 'none' 值并使用逗号或空格分隔。</target>
+        <note>{Locked="--show-test-results"}{Locked="passed"}{Locked="failed"}{Locked="skipped"}{Locked="all"}{Locked="none"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">将测试结果写入终端。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">终端测试报告器</target>
         <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoveryExitCode">
+        <source>Test discovery completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">测试发现已完成，退出代码为非成功: {0}。{1} 请参阅: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="new">Test discovery summary: found {0} test(s)</target>
+        <target state="translated">测试发现摘要: 找到 {0} 个测试</target>
         <note>{0} is the number of discovered tests.</note>
+      </trans-unit>
+      <trans-unit id="TestRunExitCode">
+        <source>Test run completed with non-success exit code: {0}. {1} See: https://aka.ms/testingplatform/exitcodes</source>
+        <target state="translated">测试运行已完成，退出代码为非成功: {0}。{1} 请参阅: https://aka.ms/testingplatform/exitcodes</target>
+        <note>{0} is the numeric exit code. {1} is a concise description of the exit code. {Locked="https://aka.ms/testingplatform/exitcodes"}</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="new">Test run summary:</target>
+        <target state="translated">测试运行摘要:</target>
         <note />
       </trans-unit>
       <trans-unit id="Try">
         <source>try {0}</source>
-        <target state="new">try {0}</target>
+        <target state="translated">尝试 {0}</target>
         <note>number of tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">运行了零个测试</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">总计</target>
         <note />
       </trans-unit>
     </body>

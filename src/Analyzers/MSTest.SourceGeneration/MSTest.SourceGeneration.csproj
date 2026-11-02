@@ -19,19 +19,14 @@
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
 
-    <VersionPrefix>$(MSTestSourceGenerationVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MSTestSourceGenerationPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[MSTest is Microsoft supported Test Framework.
+    <PackageDescription><![CDATA[This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.
 
-This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,6 +39,7 @@ This package provides the C# source generators that emit reflection metadata so 
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Shared\EquatableArray.cs" Link="Shared\EquatableArray.cs" />
     <Compile Include="..\Shared\SymbolAccessibilityHelper.cs" Link="Shared\SymbolAccessibilityHelper.cs" />
+    <Compile Include="..\Shared\SourceGenModeHelper.cs" Link="Shared\SourceGenModeHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>

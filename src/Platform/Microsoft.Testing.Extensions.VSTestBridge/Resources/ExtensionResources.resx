@@ -121,6 +121,10 @@
     <value>runsettings file '{0}' cannot be read</value>
     <comment>0 is the {Locked="runsettings"} file path.</comment>
   </data>
+  <data name="RunSettingsEnvironmentVariablesNotSupportedOnBrowser" xml:space="preserve">
+    <value>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</value>
+    <comment>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</comment>
+  </data>
   <data name="RunsettingsFileDoesNotExist" xml:space="preserve">
     <value>runsettings file '{0}' does not exist</value>
     <comment>0 is the {Locked="runsettings"} file path.</comment>
@@ -134,11 +138,11 @@
     <comment>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</comment>
   </data>
   <data name="RunSettingsOptionDescription" xml:space="preserve">
-    <value>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</value>
+    <value>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file.</value>
     <comment>Do not localize file extension {Locked=".runsettings"} or link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file"}.</comment>
   </data>
   <data name="TestRunParameterOptionDescription" xml:space="preserve">
-    <value>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</value>
+    <value>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters.</value>
     <comment>Do not localize link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters"}.</comment>
   </data>
   <data name="TestRunParameterOptionArgumentIsNotParameter" xml:space="preserve">
@@ -152,6 +156,10 @@
   <data name="UnsupportedRunsettingsLoggers" xml:space="preserve">
     <value>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</value>
     <comment>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilter" xml:space="preserve">
+    <value>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</value>
+    <comment>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</comment>
   </data>
   <data name="UnsupportedRunsettingsDatacollectors" xml:space="preserve">
     <value>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</value>

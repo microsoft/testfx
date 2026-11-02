@@ -43,7 +43,7 @@ internal sealed class TestAssemblyInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 DebugEx.Assert(field.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, field.DeclaringType.FullName);
@@ -72,7 +72,7 @@ internal sealed class TestAssemblyInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 DebugEx.Assert(field.DeclaringType?.FullName is not null, "AssemblyCleanupMethod.DeclaringType.FullName is null");
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, field.DeclaringType.FullName);
@@ -148,7 +148,7 @@ internal sealed class TestAssemblyInfo
     /// </summary>
     public bool HasExecutableCleanupMethod =>
             // If no assembly cleanup, then continue with the next one.
-            AssemblyCleanupMethod != null;
+            AssemblyCleanupMethod is not null;
 
     /// <summary>
     /// Gets the <see cref="Assembly"/> this class represents.
@@ -169,7 +169,7 @@ internal sealed class TestAssemblyInfo
     public async Task<TestResult> RunAssemblyInitializeAsync(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
-        if (AssemblyInitializeMethod == null)
+        if (AssemblyInitializeMethod is null)
         {
             IsAssemblyInitializeExecuted = true;
             return new TestResult { Outcome = UnitTestOutcome.Passed };
@@ -186,42 +186,40 @@ internal sealed class TestAssemblyInfo
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
+                    // Assembly initialize can dominate the wall-clock time of a run (spinning up a database,
+                    // a browser, ...). Giving it its own span is what lets you tell "the test is slow" apart
+                    // from "the assembly fixture is slow".
+                    using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+                        ? MSTestInstrumentation.StartFixtureActivity(
+                            MSTestInstrumentation.ActivityNames.AssemblyInitialize,
+                            "assembly_initialize",
+                            AssemblyInitializeMethod.DeclaringType?.FullName,
+                            Assembly.GetName().Name)
+                        : null;
                     try
                     {
                         AssemblyInitializationException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-                            async () =>
-                            {
-                                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                                // It's safer to reset it before the capture.
-                                using (TestContextImplementation.SetCurrentTestContext(testContext))
+                            () => AssemblyInitializeMethod.InvokeAsFixtureMethodAsync(
+                                testContext,
+                                ec => ExecutionContext = ec,
+                                () =>
                                 {
-                                    Task? task = AssemblyInitializeMethod.GetInvokeResultAsync(null, testContext);
-                                    if (task is not null)
+                                    // The `is` check is defensive: this method is part of an internal
+                                    // but mockable surface, so unit tests can legitimately pass a
+                                    // mocked TestContext. Production callers always pass a
+                                    // TestContextImplementation.
+                                    if (testContext is TestContextImplementation testContextImpl)
                                     {
-                                        await task.ConfigureAwait(false);
+                                        // Capture a snapshot of TestContext.Properties so that values
+                                        // set during AssemblyInitialize flow to subsequent contexts
+                                        // (class init, test execution, class cleanup, assembly cleanup).
+                                        // PostAssemblyInitProperties uses Volatile.Read/Write so that
+                                        // callers on the IsAssemblyInitializeExecuted fast path
+                                        // (which bypasses _assemblyInfoExecuteSyncSemaphore) safely
+                                        // observe the published snapshot.
+                                        PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
                                     }
-                                }
-
-                                // **After** we have executed the assembly initialize, we save the current context.
-                                // This context will contain async locals set by the assembly initialize method.
-                                ExecutionContext = ExecutionContext.Capture();
-
-                                // The `is` check is defensive: this method is part of an internal
-                                // but mockable surface, so unit tests can legitimately pass a
-                                // mocked TestContext. Production callers always pass a
-                                // TestContextImplementation.
-                                if (testContext is TestContextImplementation testContextImpl)
-                                {
-                                    // Capture a snapshot of TestContext.Properties so that values
-                                    // set during AssemblyInitialize flow to subsequent contexts
-                                    // (class init, test execution, class cleanup, assembly cleanup).
-                                    // PostAssemblyInitProperties uses Volatile.Read/Write so that
-                                    // callers on the IsAssemblyInitializeExecuted fast path
-                                    // (which bypasses _assemblyInfoExecuteSyncSemaphore) safely
-                                    // observe the published snapshot.
-                                    PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
-                                }
-                            },
+                                }),
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
@@ -235,6 +233,13 @@ internal sealed class TestAssemblyInfo
                     }
                     finally
                     {
+                        // RunWithTimeoutAndCancellationAsync *returns* (rather than throws) the failure for the
+                        // timeout and cancellation paths, so the catch above is not enough to mark the span failed.
+                        if (AssemblyInitializationException is not null)
+                        {
+                            activity?.RecordException(AssemblyInitializationException);
+                        }
+
                         IsAssemblyInitializeExecuted = true;
                     }
                 }
@@ -277,7 +282,7 @@ internal sealed class TestAssemblyInfo
     /// </summary>
     internal async Task<TestFailedException?> ExecuteAssemblyCleanupAsync(TestContext testContext)
     {
-        if (AssemblyCleanupMethod == null)
+        if (AssemblyCleanupMethod is null)
         {
             return null;
         }
@@ -285,30 +290,30 @@ internal sealed class TestAssemblyInfo
         try
         {
             await _assemblyInfoExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
+            using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+                ? MSTestInstrumentation.StartFixtureActivity(
+                    MSTestInstrumentation.ActivityNames.AssemblyCleanup,
+                    "assembly_cleanup",
+                    AssemblyCleanupMethod.DeclaringType?.FullName,
+                    Assembly.GetName().Name)
+                : null;
             AssemblyCleanupException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-                 async () =>
-                 {
-                     // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                     // It's safer to reset it before the capture.
-                     using (TestContextImplementation.SetCurrentTestContext(testContext))
-                     {
-                         Task? task = AssemblyCleanupMethod.GetParameters().Length == 0
-                             ? AssemblyCleanupMethod.GetInvokeResultAsync(null)
-                             : AssemblyCleanupMethod.GetInvokeResultAsync(null, testContext);
-                         if (task is not null)
-                         {
-                             await task.ConfigureAwait(false);
-                         }
-                     }
-
-                     ExecutionContext = ExecutionContext.Capture();
-                 },
+                 () => AssemblyCleanupMethod.InvokeAsFixtureMethodAsync(
+                     testContext,
+                     ec => ExecutionContext = ec),
                  testContext.CancellationTokenSource,
                  AssemblyCleanupMethodTimeoutMilliseconds,
                  AssemblyCleanupMethod,
                  ExecutionContext,
                  Resource.AssemblyCleanupWasCancelled,
                  Resource.AssemblyCleanupTimedOut).ConfigureAwait(false);
+
+            // RunWithTimeoutAndCancellationAsync returns (rather than throws) the failure for the timeout and
+            // cancellation paths, so record it here while the span is still open.
+            if (AssemblyCleanupException is not null)
+            {
+                activity?.RecordException(AssemblyCleanupException);
+            }
         }
         catch (Exception ex)
         {

@@ -39,7 +39,8 @@ public sealed class TestHost
         Dictionary<string, string?>? environmentVariables = null,
         bool disableTelemetry = true,
         bool disableAzureDevOpsOutput = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? toolName = null)
     {
         await s_maxOutstandingExecutions_semaphore.WaitAsync(cancellationToken);
         try
@@ -91,12 +92,15 @@ public sealed class TestHost
             // Disable ANSI rendering so tests have easier time parsing the output.
             // Disable progress so tests don't mix progress with overall progress, and with test process output.
             int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                $"{FullName} --no-ansi --progress off {finalArguments}",
+                toolName is null
+                    ? $"{FullName} --no-ansi --progress off {finalArguments}"
+                    : $"{FullName} {toolName} --no-ansi --progress off {finalArguments}",
                 environmentVariables: environmentVariables,
                 workingDirectory: null,
                 cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
                 cancellationToken: cancellationToken);
-            string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
+            string commandPrefix = toolName is null ? FullName : $"{FullName} {toolName}";
+            string fullCommand = command is not null ? $"{commandPrefix} {command}" : commandPrefix;
             return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
         }
         finally
@@ -121,10 +125,28 @@ public sealed class TestHost
         string tfm,
         string rid = "",
         Verb verb = Verb.build,
-        BuildConfiguration buildConfiguration = BuildConfiguration.Release)
+        BuildConfiguration buildConfiguration = BuildConfiguration.Release,
+        MetadataMode metadataMode = MetadataMode.Reflection)
     {
         string moduleName = $"{testHostModuleNameWithoutExtension}{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty)}";
-        string expectedRootPath = Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm);
+
+        // Each source-generation build variant is redirected to its own bin sub-folder (see
+        // AcceptanceSourceGen), so it never overwrites the default reflection build under bin.
+        string expectedRootPath = metadataMode == MetadataMode.Reflection
+            ? Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm)
+            : Path.Combine(rootFolder, "bin", AcceptanceSourceGen.GetOutputSubFolder(metadataMode), buildConfiguration.ToString(), tfm);
+
+        // Directory.GetFiles throws a non-actionable DirectoryNotFoundException when the expected
+        // output folder is missing (typically because the fixture did not build this metadata variant,
+        // for example a fixture that did not opt the mode into SourceGenMetadataModes). Surface a clear
+        // message instead.
+        if (!Directory.Exists(expectedRootPath))
+        {
+            throw new InvalidOperationException(
+                $"Expected build output folder for metadata mode '{metadataMode}' was not found: '{expectedRootPath}'. " +
+                $"Ensure the asset fixture builds the '{metadataMode}' variant (see TestAssetFixtureBase.SourceGenMetadataModes).");
+        }
+
         string[] executables = Directory.GetFiles(expectedRootPath, moduleName, SearchOption.AllDirectories);
         string? expectedPath = executables.SingleOrDefault(p => p.Contains(rid) && p.Contains(verb == Verb.publish ? "publish" : string.Empty));
 

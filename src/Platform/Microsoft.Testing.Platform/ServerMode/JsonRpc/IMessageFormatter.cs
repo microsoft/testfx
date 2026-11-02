@@ -20,15 +20,16 @@ internal interface IMessageFormatter
     /// <typeparam name="T">The type of the object to deserialize.</typeparam>
     /// <param name="serializedUtf8Content">The serialized utf-8 content.</param>
     /// <returns>The deserialized object.</returns>
-    // Note: The current design might impose performance overhead, since the data
-    //       is not directly deserialized from a stream, but rather first a string is extracted
-    //       and allocated and then a string is deserialized.
-    //       We could create a version that uses System.Buffers APIs that would only be supported for
-    //       .NET 6 and above.
 #if NETCOREAPP
-    T Deserialize<T>(ReadOnlyMemory<char> serializedUtf8Content);
+    // The content is passed as UTF-8 bytes because that is what the wire carries (Content-Length counts
+    // bytes) and what System.Text.Json parses, so no transcoding is needed on the read path.
+    //
+    // Implementations must fully materialize the result before returning: JsonDocument.Parse does not copy
+    // the buffer it is given, and the caller is free to reuse or pool it once this returns.
+    T Deserialize<T>(ReadOnlyMemory<byte> serializedUtf8Content);
 
 #else
+    // Jsonite only accepts a string, so the net462/netstandard2.0 path still decodes before parsing.
     T Deserialize<T>(string serializedUtf8Content);
 
 #endif

@@ -1,11 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -20,7 +18,7 @@ internal partial class TestExecutionManager
     /// <param name="unitTestElement">The unit test element to get properties from.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?>? tcmProperties,
+        IReadOnlyDictionary<string, object?>? tcmProperties,
         IDictionary<string, object> sourceLevelParameters,
         UnitTestElement unitTestElement)
     {
@@ -38,9 +36,9 @@ internal partial class TestExecutionManager
         // Add tcm properties.
         if (tcmProperties is not null)
         {
-            foreach (KeyValuePair<TestProperty, object?> kvp in tcmProperties)
+            foreach (KeyValuePair<string, object?> kvp in tcmProperties)
             {
-                testContextProperties[kvp.Key.Id] = kvp.Value;
+                testContextProperties[kvp.Key] = kvp.Value;
             }
         }
 
@@ -52,7 +50,7 @@ internal partial class TestExecutionManager
 
         if (unitTestElement.Traits is { Length: > 0 })
         {
-            foreach (Trait trait in unitTestElement.Traits)
+            foreach (TestTrait trait in unitTestElement.Traits)
             {
                 ValidateAndAssignTestProperty(testContextProperties, trait.Name, trait.Value);
             }
@@ -99,17 +97,17 @@ internal partial class TestExecutionManager
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
-    private void CacheSessionParameters(IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder)
+    private void CacheSessionParameters(string? settingsXml, IAdapterMessageLogger messageLogger)
     {
-        if (StringEx.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
+        if (StringEx.IsNullOrEmpty(settingsXml))
         {
             return;
         }
 
         try
         {
-            Dictionary<string, object>? testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
-            if (testRunParameters != null)
+            Dictionary<string, object>? testRunParameters = RunSettingsUtilities.GetTestRunParameters(settingsXml);
+            if (testRunParameters is not null)
             {
                 // Clear sessionParameters to prevent key collisions of test run parameters in case
                 // "Keep Test Execution Engine Alive" is selected in VS.
@@ -122,7 +120,7 @@ internal partial class TestExecutionManager
         }
         catch (Exception ex)
         {
-            testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
+            messageLogger.SendMessage(MessageLevel.Error, ex.Message);
         }
     }
 }

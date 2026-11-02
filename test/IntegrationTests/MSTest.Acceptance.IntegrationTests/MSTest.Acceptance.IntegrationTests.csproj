@@ -3,11 +3,16 @@
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
+    <UseMSTestFromSource>true</UseMSTestFromSource>
+    <!-- TestContext properties are assigned by MSTest after construction. Building against the
+         source framework exposes their nullability and otherwise reports CS8618 for existing tests. -->
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
     <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\EnvironmentVariableConstants.cs" Link="Helpers\EnvironmentVariableConstants.cs" />
@@ -19,8 +24,8 @@
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceAssert.cs" Link="Helpers\AcceptanceAssert.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceFixture.cs" Link="Helpers\AcceptanceFixture.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\AcceptanceTestBase.cs" Link="Helpers\AcceptanceTestBase.cs" />
+    <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\Helpers\BinlogReader.cs" Link="Helpers\BinlogReader.cs" />
     <Compile Include="$(RepoRoot)test\IntegrationTests\Microsoft.Testing.Platform.Acceptance.IntegrationTests\ServerMode\**\*.cs" Link="ServerMode\%(RecursiveDir)%(FileName)%(Extension)" />
-    <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\VSTestConsoleLocator.cs" Link="Helpers\VSTestConsoleLocator.cs" />
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="Helpers\RootFinder.cs" />
   </ItemGroup>
 
@@ -38,17 +43,27 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+    <!-- The MTP server-mode client under test (P4). Referenced through the `serverclient` extern alias so
+         its internal TestNode/TestNodeUpdateMessage (same namespaces as the platform's public types) stay
+         out of the global namespace and never clash in the non-aliased files of this assembly. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerMode.Client.Sources\Microsoft.Testing.Platform.ServerMode.Client.Sources.csproj" Aliases="serverclient" />
   </ItemGroup>
 
-  <!-- Packages needed for the test assets but that we don't want to reference -->
+  <!-- Packages needed to stage nupkgs for the generated test assets (see
+       CopyNuGetPackagesForTestAssets below) but that we don't want to reference. -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.CodeCoverage" Version="[$(MicrosoftTestingExtensionsCodeCoverageVersion)]" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <MicrosoftTestingExtensionsCodeCoveragePackage Include="$(PkgMicrosoft_Testing_Extensions_CodeCoverage)\microsoft.testing.extensions.codecoverage.*.nupkg" />
+      <MicrosoftTestingExtensionsCodeCoveragePackage Include="$(NuGetPackageRoot)microsoft.testing.extensions.codecoverage\$(MicrosoftTestingExtensionsCodeCoverageVersion)\microsoft.testing.extensions.codecoverage.$(MicrosoftTestingExtensionsCodeCoverageVersion).nupkg"
+                                                    Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' != '$(MicrosoftTestingExtensionsAffectedTestsVersion)' " />
     </ItemGroup>
 
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingExtensionsCodeCoveragePackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />

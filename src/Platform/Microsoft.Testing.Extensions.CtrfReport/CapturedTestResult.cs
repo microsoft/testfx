@@ -5,6 +5,8 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed class CapturedTestResult : CapturedTestResultBase
 {
+    public string TestId { get; init; } = string.Empty;
+
     // CTRF status (passed/failed/skipped/pending/other) — already normalized.
     public required string Status { get; init; }
 
@@ -17,4 +19,10 @@ internal sealed class CapturedTestResult : CapturedTestResultBase
     public string? FilePath { get; init; }
 
     public int? Line { get; init; }
+
+    public IReadOnlyList<CapturedAttachment>? Attachments { get; init; }
+
+    public int? RetryAttemptNumber { get; init; }
+
+    public bool IsSupersededRetryAttempt { get; init; }
 }

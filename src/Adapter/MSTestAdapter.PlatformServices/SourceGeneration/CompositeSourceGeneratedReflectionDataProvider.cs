@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
@@ -186,6 +186,10 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             var typeConstructors = new Dictionary<Type, ConstructorInfo[]>();
             var typePropertiesByName = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
             var typeConstructorsInvoker = new Dictionary<Type, ConstructorInvoker[]>();
+            var typeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();
+            var typePropertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();
+            var descriptorTestMethods = new Dictionary<Type, MethodInfo[]>();
+            var descriptorCompleteTypes = new Dictionary<Type, bool>();
 
             foreach (SourceGeneratedReflectionDataProvider provider in providers)
             {
@@ -199,6 +203,10 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
                 MergeInto(typeConstructors, provider.TypeConstructors);
                 MergeInto(typePropertiesByName, provider.TypePropertiesByName);
                 MergeInto(typeConstructorsInvoker, provider.TypeConstructorsInvoker);
+                MergeInto(typeMethodInvokers, provider.TypeMethodInvokers);
+                MergeInto(typePropertySetters, provider.TypePropertySetters);
+                MergeDescriptorMethods(descriptorTestMethods, provider.DescriptorTestMethods);
+                MergeDescriptorCompleteness(descriptorCompleteTypes, provider.DescriptorTestMethods.Keys, provider.DescriptorCompleteTypes);
             }
 
             return new SourceGeneratedReflectionDataProvider
@@ -213,15 +221,59 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
                 TypeConstructors = typeConstructors,
                 TypePropertiesByName = typePropertiesByName,
                 TypeConstructorsInvoker = typeConstructorsInvoker,
+                TypeMethodInvokers = typeMethodInvokers,
+                TypePropertySetters = typePropertySetters,
+                DescriptorTestMethods = descriptorTestMethods,
+                DescriptorCompleteTypes = descriptorCompleteTypes,
             };
         }
 
-        private static void MergeInto<TKey, TValue>(Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> source)
+        private static void MergeInto<TKey, TValue>(Dictionary<TKey, TValue> target, IReadOnlyDictionary<TKey, TValue> source)
             where TKey : notnull
         {
             foreach (KeyValuePair<TKey, TValue> kvp in source)
             {
                 target[kvp.Key] = kvp.Value;
+            }
+        }
+
+        private static void MergeDescriptorMethods(
+            Dictionary<Type, MethodInfo[]> target,
+            IReadOnlyDictionary<Type, MethodInfo[]> source)
+        {
+            foreach (KeyValuePair<Type, MethodInfo[]> kvp in source)
+            {
+                if (!target.TryGetValue(kvp.Key, out MethodInfo[]? existing))
+                {
+                    target[kvp.Key] = kvp.Value;
+                    continue;
+                }
+
+                var seen = new HashSet<MethodInfo>(existing);
+                var merged = new List<MethodInfo>(existing);
+                foreach (MethodInfo method in kvp.Value)
+                {
+                    if (seen.Add(method))
+                    {
+                        merged.Add(method);
+                    }
+                }
+
+                target[kvp.Key] = [.. merged];
+            }
+        }
+
+        private static void MergeDescriptorCompleteness(
+            Dictionary<Type, bool> target,
+            IEnumerable<Type> descriptorTypes,
+            IReadOnlyDictionary<Type, bool> source)
+        {
+            foreach (Type type in descriptorTypes)
+            {
+                bool isComplete = source.TryGetValue(type, out bool value) && value;
+                target[type] = !target.TryGetValue(type, out bool existing)
+                    ? isComplete
+                    : existing && isComplete;
             }
         }
     }

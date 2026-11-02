@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -45,6 +45,43 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         Assert.IsTrue(match.Success, $"JUnit report path not found in output:\n{testHostResult.StandardOutput}");
 
         AssertSinglePassingTestJUnitReportShape(match.Value);
+    }
+
+    [TestMethod]
+    public async Task JUnit_WhenTestHostCrashes_RecoversCompletedResultsAndParentPath()
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-junit --report-junit-filename crash-{{pid}}.xml --results-directory \"{resultDirectory}\"",
+            new()
+            {
+                ["CRASHPROCESS"] = "1",
+                ["JUNIT_REPORT_EMIT_MIXED"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        string[] files = Directory.GetFiles(resultDirectory, "crash-*.xml");
+        Assert.HasCount(1, files);
+        testHostResult.AssertOutputContains("Out of process file artifacts produced:");
+        testHostResult.AssertOutputContains(files[0]);
+
+        Match pidMatch = Regex.Match(testHostResult.StandardOutput, @"CRASHED_CHILD_PID=(\d+)");
+        Assert.IsTrue(pidMatch.Success, testHostResult.StandardOutput);
+        Assert.AreEqual($"crash-{pidMatch.Groups[1].Value}.xml", Path.GetFileName(files[0]));
+
+        string content = File.ReadAllText(files[0]);
+        var document = System.Xml.Linq.XDocument.Parse(content);
+        Assert.HasCount(2, document.Descendants("testcase").ToArray());
+        Assert.Contains("name=\"incomplete\" value=\"true\"", content);
+        Assert.Contains("name=\"run-status\" value=\"aborted\"", content);
+        Assert.Contains("PassingTest", content);
+        Assert.Contains("FailingChild", content);
+        Assert.Contains("Container1", content);
+        Assert.DoesNotContain("SkippedChild", content);
+        Assert.DoesNotContain("ErroredChild", content);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -207,7 +244,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         // fallback for the root passing test, then Container1 for its children).
         // Exit code is 2 (AtLeastOneTestFailed). The failure/error exceptions are
         // constructed but never thrown, so they have no stack trace and the
-        // <failure>/<error> elements are self-closing with just message/type.
+        // <failure>/<error> bodies contain only the "type: message" header line.
         const string expected = """
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites name="JUnitReportTest" tests="4" failures="1" errors="1" skipped="1" time="<TIME>" timestamp="<TIMESTAMP>">
@@ -237,7 +274,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         <property name="uid" value="test-fail" />
         <property name="testpath" value="Container1/FailingChild" />
       </properties>
-      <failure message="boom" type="System.InvalidOperationException" />
+      <failure message="boom" type="System.InvalidOperationException">System.InvalidOperationException: boom</failure>
     </testcase>
     <testcase name="SkippedChild" classname="Container1" time="<TIME>">
       <properties>
@@ -251,7 +288,7 @@ public class JUnitReportTests : AcceptanceTestBase<JUnitReportTests.TestAssetFix
         <property name="uid" value="test-error" />
         <property name="testpath" value="Container1/ErroredChild" />
       </properties>
-      <error message="kaboom" type="System.InvalidProgramException" />
+      <error message="kaboom" type="System.InvalidProgramException">System.InvalidProgramException: kaboom</error>
     </testcase>
   </testsuite>
 </testsuites>
@@ -377,6 +414,40 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     Properties = new PropertyBag(new FailedTestNodeStateProperty(new InvalidOperationException("boom"))),
                 },
                 parentTestNodeUid: "container-1"));
+
+            if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
+            {
+                string journalPath = Environment.GetEnvironmentVariable("TESTINGPLATFORM_JUNITREPORT_JOURNAL")
+                    ?? throw new InvalidOperationException("JUnit report recovery journal was not configured.");
+                bool journalReady = false;
+                for (int i = 0; i < 100; i++)
+                {
+                    using FileStream stream = File.Open(journalPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var reader = new StreamReader(stream);
+                    int lineCount = 0;
+                    while (lineCount < 4 && reader.ReadLine() is not null)
+                    {
+                        lineCount++;
+                    }
+
+                    if (lineCount == 4)
+                    {
+                        journalReady = true;
+                        break;
+                    }
+
+                    await Task.Delay(50);
+                }
+
+                if (!journalReady)
+                {
+                    throw new TimeoutException("JUnit report recovery journal did not contain the expected results before the crash deadline.");
+                }
+
+                Console.WriteLine($"CRASHED_CHILD_PID={System.Diagnostics.Process.GetCurrentProcess().Id}");
+                await Console.Out.FlushAsync();
+                Environment.FailFast("CRASHPROCESS");
+            }
 
             await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
                 context.Request.Session.SessionUid,

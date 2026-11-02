@@ -22,6 +22,7 @@ public static class RetryExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     public static void AddRetryProvider(this ITestApplicationBuilder builder)
     {
         if (OperatingSystem.IsBrowser())

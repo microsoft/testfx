@@ -1,0 +1,160 @@
+# Windows Release full-test and coverage steps plus Debug unit tests, shared by PR and main-branch validation.
+#
+# Assumes the consuming job declares:
+#   - the matrix variable `_BuildConfig` (Debug or Release)
+#   - `_CollectAffectedTests=true` only for the dedicated main collection matrix entry
+#   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
+parameters:
+- name: enableAffectedTests
+  type: boolean
+  default: false
+- name: affectedTestsMode
+  type: string
+  default: disabled
+  values:
+  - disabled
+  - collect
+  - run
+
+steps:
+- pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+  displayName: Validate generated coverage settings
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+
+# Because the build step is using -ci, restore is done in a local .packages directory.
+# NUGET_PACKAGES must point to that directory so test project evaluation imports the restored package props/targets.
+#
+# -p:TestingPlatformCaptureOutput=false streams each test executable's output to the AzDO console instead of
+# buffering it until failure, preserving live progress during long-running test sessions.
+- ${{ if eq(parameters.enableAffectedTests, false) }}:
+  - script: |
+      echo ##vso[task.setvariable variable=PublishCoverageReport]true
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
+    name: Test
+    displayName: Test
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'))
+    env:
+      # Secret variables are not automatically exposed to scripts. Fork PR builds do not receive this token,
+      # so report-azdo history queries no-op there; trusted branch builds exercise them end-to-end.
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+# These branches share affected-test execution with the non-Windows template.
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'collect')) }}:
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: TestFx.slnx
+      affectedTestsMode: collect
+
+  # Map collection owns code-coverage instrumentation and launches discovery children with --list-tests, so
+  # ordinary coverage and report options cannot participate in that invocation. The ordinary Release matrix
+  # entry owns full testing and coverage; it does not share the collection entry's timeout or failure state.
+  - script: |
+      echo ##vso[task.setvariable variable=PublishCoverageReport]true
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
+    name: Test
+    displayName: Test
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'))
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'run')) }}:
+  - template: /eng/pipelines/steps/test-affected-tests.yml
+    parameters:
+      solution: TestFx.slnx
+      affectedTestsMode: run
+
+  # Scheduled and manual runs keep their full-validation contract. PRs use this explicit fallback only when the
+  # affected-test command fails; missing, stale, incompatible, or inaccessible maps are handled inside the extension
+  # by running all tests.
+  - pwsh: |
+      Write-Host "##vso[task.setvariable variable=PublishCoverageReport]true"
+
+      $testResultsDirectory = "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)"
+      if (Test-Path $testResultsDirectory) {
+        Get-ChildItem $testResultsDirectory -Filter *.coverage -File -ErrorAction SilentlyContinue |
+          Remove-Item -Force
+      }
+
+      dotnet test --solution TestFx.slnx -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestFallback.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --show-test-results failed
+      exit $LASTEXITCODE
+    name: Test
+    displayName: Test (affected-test fallback)
+    condition: and(succeeded(), eq(variables._BuildConfig, 'Release'), ne(variables._XmlDocsOnly, 'true'), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['AffectedTestsSucceeded'], 'true')))
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- ${{ if and(eq(parameters.enableAffectedTests, true), eq(parameters.affectedTestsMode, 'disabled')) }}:
+  - pwsh: throw "affectedTestsMode must be 'collect' or 'run' when enableAffectedTests is true."
+    displayName: Reject invalid affected-test configuration
+
+# The Debug leg exists to exercise DEBUG-conditional product code and tests. The Release integration suite
+# already creates child test assets in both configurations, so repeating that suite in Debug is redundant.
+# --test-modules bypasses MSBuild evaluation, so explicitly provide the reporting and diagnostics arguments.
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_DebugUnitTestReportArgs) $(AZDO_LIVE_PUBLISHING_ARGS) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace --show-test-results failed
+  name: TestDebug
+  displayName: Test (unit tests only)
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), ne(variables._XmlDocsOnly, 'true'))
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- template: /eng/pipelines/steps/finalize-azdo-live-test-publishing.yml
+
+- task: PublishTestResults@2
+  displayName: Publish TRX Test Results (fallback)
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: '*.trx'
+    searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+    testRunTitle: '$(System.JobName)-trx'
+  continueOnError: true
+  condition: and(always(), ne(variables._XmlDocsOnly, 'true'), ne(variables._CollectAffectedTests, 'true'), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
+
+# Publish a portable, compact report separately from the large TestResults artifact so external consumers can
+# retrieve it without downloading every test result and binary .coverage file.
+- task: PowerShell@2
+  displayName: 'Merge coverage as Cobertura'
+  inputs:
+    targetType: 'inline'
+    script: |
+      dotnet tool restore
+      if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+      }
+
+      $testResultsDirectory = "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)"
+      $coverageFiles = @()
+      if (Test-Path $testResultsDirectory) {
+        $coverageFiles = @(Get-ChildItem $testResultsDirectory -Filter *.coverage -File)
+      }
+      if ($coverageFiles.Count -eq 0) {
+        Write-Host "##vso[task.logissue type=error]No coverage files were produced; every Windows Release run must publish coverage."
+        exit 1
+      }
+
+      $coverageOutputDirectory = "$(Build.ArtifactStagingDirectory)\coverage"
+      New-Item -Path $coverageOutputDirectory -ItemType Directory -Force | Out-Null
+
+      $mergeArguments = @("coverage", "merge") + $coverageFiles.FullName + @("--output", "$coverageOutputDirectory\coverage.cobertura.xml", "--output-format", "cobertura")
+      & dotnet @mergeArguments
+      if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+      }
+
+      Write-Host "##vso[task.setvariable variable=CoverageReportReady]true"
+  condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Release'), eq(variables['PublishCoverageReport'], 'true'))
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Cobertura coverage report'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/coverage'
+    ArtifactName: Coverage_Windows_Release_Attempt$(System.JobAttempt)
+  condition: and(succeededOrFailed(), eq(variables['CoverageReportReady'], 'true'))
+
+# Use the merged Cobertura report for the Azure DevOps Code Coverage tab and summary. This is the same portable
+# report saved above, avoiding a second merge of the binary .coverage inputs inside the publishing task.
+- task: PublishCodeCoverageResults@2
+  displayName: 'Publish coverage to Azure DevOps'
+  inputs:
+    summaryFileLocation: '$(Build.ArtifactStagingDirectory)/coverage/coverage.cobertura.xml'
+    pathToSources: '$(Build.SourcesDirectory)/src'
+  condition: and(succeededOrFailed(), eq(variables['CoverageReportReady'], 'true'))

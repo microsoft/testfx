@@ -34,8 +34,8 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         ("AreNotEqual", 2),
         ("AreEquivalent", 2),
         ("AreNotEquivalent", 2),
-        // TODO: Is it really bad to have Assert.Contains(myCollection, expression_with_conditional_access)? A codefix seems like may not always yield the correct result for this case.
-        // TODO: Maybe we should check one argument only (the collection itself)
+        // It is unclear whether CollectionAssert.Contains(myCollection, expression_with_conditional_access) is genuinely problematic; a codefix may not always yield the correct result for this case.
+        // We might only need to check one argument (the collection itself).
         // Same applies to DoesNotContain
         ("Contains", 2),
         ("DoesNotContain", 2),
@@ -56,12 +56,13 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AssertionArgsShouldAvoidConditionalAccessRuleId,
         Title,
         MessageFormat,
-        description: null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Info,
         isEnabledByDefault: false);

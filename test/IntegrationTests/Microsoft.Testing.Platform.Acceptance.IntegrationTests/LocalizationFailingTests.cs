@@ -5,9 +5,6 @@ using System.Text;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-// Temporarily disabled: OneLocBuild keeps reverting the TerminalResources.*.xlf targets to English,
-// which makes these tests fail on every loc check-in. Re-enable once proper translations flow. See https://github.com/microsoft/testfx/issues/9295.
-[Ignore("Disabled until OneLocBuild ships proper TerminalResources translations. See https://github.com/microsoft/testfx/issues/9295.")]
 [TestClass]
 public sealed class LocalizationFailingTests : AcceptanceTestBase<LocalizationFailingTests.TestAssetFixture>
 {

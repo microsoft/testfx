@@ -122,19 +122,19 @@ public sealed class OSConditionAttribute : ConditionBaseAttribute
         PropertyInfo? osxProp = osPlatformType.GetProperty("OSX", BindingFlags.Public | BindingFlags.Static);
         PropertyInfo? freebsdProp = osPlatformType.GetProperty("FreeBSD", BindingFlags.Public | BindingFlags.Static);
 
-        if (windowsProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, windowsProp))
+        if (windowsProp is not null && IsOSPlatformViaProperty(isOSPlatformMethod, windowsProp))
         {
             return OperatingSystems.Windows;
         }
-        else if (linuxProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, linuxProp))
+        else if (linuxProp is not null && IsOSPlatformViaProperty(isOSPlatformMethod, linuxProp))
         {
             return OperatingSystems.Linux;
         }
-        else if (osxProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, osxProp))
+        else if (osxProp is not null && IsOSPlatformViaProperty(isOSPlatformMethod, osxProp))
         {
             return OperatingSystems.OSX;
         }
-        else if (freebsdProp != null && IsOSPlatformViaProperty(isOSPlatformMethod, freebsdProp))
+        else if (freebsdProp is not null && IsOSPlatformViaProperty(isOSPlatformMethod, freebsdProp))
         {
             return OperatingSystems.FreeBSD;
         }

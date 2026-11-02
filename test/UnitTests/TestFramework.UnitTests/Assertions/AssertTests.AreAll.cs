@@ -15,17 +15,17 @@ public partial class AssertTests : TestContainer
     #region AreAllNotNull
 
     public void AreAllNotNull_Generic_NoNulls_ShouldPass()
-        => Assert.AreAllNotNull(new[] { "a", "b", "c" });
+        => Assert.AreAllNotNull(["a", "b", "c"]);
 
     public void AreAllNotNull_Generic_Empty_ShouldPass()
         => Assert.AreAllNotNull(Array.Empty<string>());
 
     public void AreAllNotNull_Generic_ValueTypes_ShouldPass()
-        => Assert.AreAllNotNull(new[] { 1, 2, 3 });
+        => Assert.AreAllNotNull([1, 2, 3]);
 
     public void AreAllNotNull_Generic_HasNull_ShouldFail()
     {
-        Action action = () => Assert.AreAllNotNull(new[] { "a", null, "b", null });
+        Action action = () => Assert.AreAllNotNull(["a", null, "b", null]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -34,13 +34,13 @@ public partial class AssertTests : TestContainer
                 null indices: [1, 3]
                 collection:   ["a", null, "b", null]
 
-                Assert.AreAllNotNull(new[] { "a", null, "b", null })
+                Assert.AreAllNotNull(["a", null, "b", null])
                 """);
     }
 
     public void AreAllNotNull_Generic_WithUserMessage_ShouldFail()
     {
-        Action action = () => Assert.AreAllNotNull(new[] { "a", null }, "User-provided message");
+        Action action = () => Assert.AreAllNotNull(["a", null], "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -50,7 +50,7 @@ public partial class AssertTests : TestContainer
                 null indices: [1]
                 collection:   ["a", null]
 
-                Assert.AreAllNotNull(new[] { "a", null })
+                Assert.AreAllNotNull(["a", null])
                 """);
     }
 
@@ -141,17 +141,17 @@ public partial class AssertTests : TestContainer
     #region AreAllDistinct
 
     public void AreAllDistinct_Generic_AllDistinct_ShouldPass()
-        => Assert.AreAllDistinct(new[] { 1, 2, 3 });
+        => Assert.AreAllDistinct([1, 2, 3]);
 
     public void AreAllDistinct_Generic_Empty_ShouldPass()
         => Assert.AreAllDistinct(Array.Empty<int>());
 
     public void AreAllDistinct_Generic_SingleNull_ShouldPass()
-        => Assert.AreAllDistinct(new string?[] { "a", null, "b" });
+        => Assert.AreAllDistinct(["a", null, "b"]);
 
     public void AreAllDistinct_Generic_HasDuplicate_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new[] { 1, 2, 3, 4, 3 });
+        Action action = () => Assert.AreAllDistinct([1, 2, 3, 4, 3]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -160,13 +160,13 @@ public partial class AssertTests : TestContainer
                 duplicates: [3]
                 collection: [1, 2, 3, 4, 3]
 
-                Assert.AreAllDistinct(new[] { 1, 2, 3, 4, 3 })
+                Assert.AreAllDistinct([1, 2, 3, 4, 3])
                 """);
     }
 
     public void AreAllDistinct_Generic_HasMultipleDuplicates_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new[] { 1, 2, 3, 2, 1, 1 });
+        Action action = () => Assert.AreAllDistinct([1, 2, 3, 2, 1, 1]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -175,13 +175,13 @@ public partial class AssertTests : TestContainer
                 duplicates: [2, 1]
                 collection: [1, 2, 3, 2, 1, 1]
 
-                Assert.AreAllDistinct(new[] { 1, 2, 3, 2, 1, 1 })
+                Assert.AreAllDistinct([1, 2, 3, 2, 1, 1])
                 """);
     }
 
     public void AreAllDistinct_Generic_NullDuplicate_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new string?[] { "a", null, "b", null });
+        Action action = () => Assert.AreAllDistinct(["a", null, "b", null]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -190,13 +190,13 @@ public partial class AssertTests : TestContainer
                 duplicates: [null]
                 collection: ["a", null, "b", null]
 
-                Assert.AreAllDistinct(new string?[] { "a", null, "b", null })
+                Assert.AreAllDistinct(["a", null, "b", null])
                 """);
     }
 
     public void AreAllDistinct_Generic_WithUserMessage_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new[] { 1, 1 }, "User-provided message");
+        Action action = () => Assert.AreAllDistinct([1, 1], "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -206,12 +206,12 @@ public partial class AssertTests : TestContainer
                 duplicates: [1]
                 collection: [1, 1]
 
-                Assert.AreAllDistinct(new[] { 1, 1 })
+                Assert.AreAllDistinct([1, 1])
                 """);
     }
 
     public void AreAllDistinct_Generic_WithComparer_AllDistinct_ShouldPass()
-        => Assert.AreAllDistinct(new[] { "a", "B", "c" }, new CaseInsensitiveStringComparer());
+        => Assert.AreAllDistinct(["a", "B", "c"], new CaseInsensitiveStringComparer());
 
     public void AreAllDistinct_Generic_WithComparer_HasDuplicate_ShouldFail()
     {
@@ -223,9 +223,9 @@ public partial class AssertTests : TestContainer
             collection: ["A", "B", "a"]
             comparer:   __COMPARER__
 
-            Assert.AreAllDistinct(new[] { "A", "B", "a" }, <comparer>)
+            Assert.AreAllDistinct(["A", "B", "a"], <comparer>)
             """.Replace("__COMPARER__", comparerTypeName);
-        Action action = () => Assert.AreAllDistinct(new[] { "A", "B", "a" }, new CaseInsensitiveStringComparer());
+        Action action = () => Assert.AreAllDistinct(["A", "B", "a"], new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(expectedMessage);
     }
@@ -239,7 +239,7 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_Generic_NullComparer_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new[] { 1, 2 }, (IEqualityComparer<int>?)null);
+        Action action = () => Assert.AreAllDistinct([1, 2], (IEqualityComparer<int>?)null);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.AreAllDistinct failed. The parameter 'comparer' is invalid. The value cannot be null.");
     }
@@ -340,7 +340,7 @@ public partial class AssertTests : TestContainer
 
     public void AreAllDistinct_Generic_ManyNulls_ReportsNullOnce_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new string?[] { null, "a", null, "b", null });
+        Action action = () => Assert.AreAllDistinct([null, "a", null, "b", null]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -349,13 +349,13 @@ public partial class AssertTests : TestContainer
                 duplicates: [null]
                 collection: [null, "a", null, "b", null]
 
-                Assert.AreAllDistinct(new string?[] { null, "a", null, "b", null })
+                Assert.AreAllDistinct([null, "a", null, "b", null])
                 """);
     }
 
     public void AreAllDistinct_Generic_ManyDuplicatesOfSameValue_ReportsValueOnce_ShouldFail()
     {
-        Action action = () => Assert.AreAllDistinct(new[] { 5, 5, 5, 5 });
+        Action action = () => Assert.AreAllDistinct([5, 5, 5, 5]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -364,19 +364,19 @@ public partial class AssertTests : TestContainer
                 duplicates: [5]
                 collection: [5, 5, 5, 5]
 
-                Assert.AreAllDistinct(new[] { 5, 5, 5, 5 })
+                Assert.AreAllDistinct([5, 5, 5, 5])
                 """);
     }
 
     // Pins the current behavior: null elements are short-circuited and never passed to the user-provided comparer.
     // A comparer that treats null as equal to "" is therefore not consulted, and [null, ""] is considered distinct.
     public void AreAllDistinct_Generic_ComparerTreatsNullAsEmpty_NullAndEmpty_ShouldPass()
-        => Assert.AreAllDistinct(new string?[] { null, string.Empty }, new NullEqualsEmptyStringComparer());
+        => Assert.AreAllDistinct([null, string.Empty], new NullEqualsEmptyStringComparer());
 
     // Pins the current behavior: a comparer that throws on null is never invoked with a null argument because
     // null elements are short-circuited before the comparer is consulted.
     public void AreAllDistinct_Generic_ComparerThrowsOnNull_WithNulls_ShouldNotInvokeComparerForNull()
-        => Assert.AreAllDistinct(new string?[] { null, "a", "b" }, new ThrowOnNullStringComparer());
+        => Assert.AreAllDistinct([null, "a", "b"], new ThrowOnNullStringComparer());
 
     private sealed class CaseInsensitiveStringComparer : IEqualityComparer<string?>, IEqualityComparer
     {

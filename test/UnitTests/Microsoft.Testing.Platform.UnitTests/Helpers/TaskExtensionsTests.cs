@@ -71,49 +71,59 @@ public sealed class TaskExtensionsTests
     }
 
     [TestMethod]
-    [Ignore("https://github.com/microsoft/testfx/issues/6907")]
     public async Task CancellationAsync_ObserveException_Succeeds()
     {
-        ManualResetEvent waitException = new(false);
-        CancellationToken token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async ()
-            => await Task.Run(
-                async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
-                    waitException.Set();
-                    throw new InvalidOperationException();
-                }, TestContext.CancellationToken).WithCancellationAsync(token));
-#if !NETFRAMEWORK // Polyfill bug in Task.WaitAsync implementation :/
+        TaskCompletionSource<bool> exceptionThrown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> throwException = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenSource cancellationTokenSource = new();
+        CancellationToken token = cancellationTokenSource.Token;
+        Task task = Task.Run(
+            async () =>
+            {
+                await throwException.Task;
+                exceptionThrown.SetResult(true);
+                throw new InvalidOperationException();
+            }, TestContext.CancellationToken).WithCancellationAsync(token);
+
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+        cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
-#endif
-        waitException.WaitOne();
+        throwException.SetResult(true);
+        Task completedTask = await Task.WhenAny(exceptionThrown.Task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(exceptionThrown.Task, completedTask, "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     [TestMethod]
-    [Ignore("https://github.com/microsoft/testfx/issues/6907")]
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
     {
-        ManualResetEvent waitException = new(false);
-        CancellationToken token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async ()
-            => await Task.Run(async () =>
+        TaskCompletionSource<bool> exceptionThrown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenSource cancellationTokenSource = new();
+        CancellationToken token = cancellationTokenSource.Token;
+        Task<int> task = Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+            try
             {
-                await Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
-                try
-                {
-                    return 2;
-                }
-                finally
-                {
-                    waitException.Set();
+                return 2;
+            }
+            finally
+            {
+                exceptionThrown.SetResult(true);
 #pragma warning disable CA2219 // Do not raise exceptions in finally clauses
-                    throw new InvalidOperationException();
+                throw new InvalidOperationException();
 #pragma warning restore CA2219 // Do not raise exceptions in finally clauses
-                }
-            }).WithCancellationAsync(token));
+            }
+        }).WithCancellationAsync(token);
+
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+        cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
-        waitException.WaitOne();
+        Task completedTask = await Task.WhenAny(exceptionThrown.Task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(exceptionThrown.Task, completedTask, "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     private static async Task<string> DoSomething()

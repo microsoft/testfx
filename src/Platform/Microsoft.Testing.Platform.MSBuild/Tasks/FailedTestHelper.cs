@@ -15,7 +15,7 @@ internal static class FailedTestHelper
         if (StackTraceHelper.TryFindLocationFromStackFrame(failedTestInfoRequest.ErrorStackTrace, out string? filePath, out lineNumber, out string? place))
         {
         }
-        else if (!string.IsNullOrEmpty(failedTestInfoRequest.CodeFilePath))
+        else if (!RoslynString.IsNullOrEmpty(failedTestInfoRequest.CodeFilePath))
         {
             // If there is no frame with location, but we collect source info, use the source info.
             filePath = failedTestInfoRequest.CodeFilePath;
@@ -45,13 +45,13 @@ internal static class FailedTestHelper
         errorMessage.Append(": ");
         errorMessage.AppendLine(failedTestInfoRequest.ErrorMessage);
 
-        if (!string.IsNullOrEmpty(failedTestInfoRequest.Expected))
+        if (!RoslynString.IsNullOrEmpty(failedTestInfoRequest.Expected))
         {
             errorMessage.AppendLine(string.Format(culture, Resources.MSBuildResources.ExpectedValue, failedTestInfoRequest.Expected));
             errorMessage.AppendLine(string.Format(culture, Resources.MSBuildResources.ActualValue, failedTestInfoRequest.Actual));
         }
 
-        if (!string.IsNullOrEmpty(failedTestInfoRequest.ErrorStackTrace))
+        if (!RoslynString.IsNullOrEmpty(failedTestInfoRequest.ErrorStackTrace))
         {
             errorMessage.AppendLine(string.Format(culture, Resources.MSBuildResources.StackTrace));
             errorMessage.AppendLine(failedTestInfoRequest.ErrorStackTrace);
@@ -68,7 +68,7 @@ internal static class FailedTestHelper
         {
             lowPriorityMessage = errorMessage.ToString();
 
-            string nameAndPlace = place == null
+            string nameAndPlace = place is null
                 ? $"{failedTestInfoRequest.DisplayName} ({failedTestInfoRequest.Duration})"
                     : $"{failedTestInfoRequest.DisplayName} ({failedTestInfoRequest.Duration}): {place}";
 
@@ -77,7 +77,7 @@ internal static class FailedTestHelper
     }
 
     private static string JoinSingleLineAndShorten(string first, string? second)
-        => second == null
+        => second is null
             ? SingleLineAndShorten(first)
             : SingleLineAndShorten(first) + " " + SingleLineAndShorten(second);
 

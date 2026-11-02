@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="ActivationArgumentsInvalidArgumentCount">
+        <source>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードの引数が、無効な個数になっています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidArgumentLength">
+        <source>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードの引数が、無効な長さになっています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidFileKey">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</source>
+        <target state="translated">Microsoft Testing Platform のアクティブ化引数に、無効なファイル ペイロード キーが含まれています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidFileReference">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</source>
+        <target state="translated">Microsoft Testing Platform のアクティブ化引数に無効なファイル ペイロード参照が含まれています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsInvalidInlinePayload">
+        <source>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</source>
+        <target state="translated">Microsoft Testing Platform のアクティブ化引数に、無効なインライン ペイロードが含まれています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsMissingPayload">
+        <source>The launch activation does not contain Microsoft Testing Platform arguments.</source>
+        <target state="translated">起動のアクティブ化に Microsoft Testing Platform の引数が含まれていません。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadAuthenticationFailed">
+        <source>The Microsoft Testing Platform activation-argument payload failed authentication.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードが認証に失敗しました。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadReadFailed">
+        <source>The Microsoft Testing Platform activation-argument payload could not be read.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードを読み取れませんでした。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadTooLarge">
+        <source>The Microsoft Testing Platform activation-argument payload is too large.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードが大きすぎます。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsPayloadTruncated">
+        <source>The Microsoft Testing Platform activation-argument payload is truncated.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードが切り詰められています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="ActivationArgumentsTrailingData">
+        <source>The Microsoft Testing Platform activation-argument payload contains trailing data.</source>
+        <target state="translated">Microsoft Testing Platform の activation-argument ペイロードの末尾に、データが含まれています。</target>
+        <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="AmbiguousAppxManifestApplication">
+        <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
+        <target state="translated">パッケージ化されたアプリ マニフェストで複数のアプリケーションが宣言されており、実行可能ファイル '{0}' に一意に一致するものがありません。候補のアプリケーション ユーザー モデル ID: {1}。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="translated">パッケージ化されたアプリ マニフェストでは、実行可能ファイル '{0}' のアプリケーションが宣言されていないため、別のアプリケーションが記述されています。これをアクティブ化すると、誤った Application User Model ID が対象になります。宣言されたアプリケーションの実行可能ファイル: {1}。</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
+      <trans-unit id="InvalidAppxManifestMissingIdentity">
+        <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
+        <target state="translated">パッケージ アプリ マニフェストに有効な &lt;Identity Name="..." Publisher="..." /&gt;要素が宣言されていません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerInvalidBootstrap">
+        <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
+        <target state="translated">パッケージ アプリ コントローラーの起動引数が無効です。Microsoft.Testing.Extensions.PackagedApp.MSBuild と Microsoft.Testing.Extensions.PackagedApp の各パッケージの一致するバージョンを復元します。</target>
+        <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerInvalidTransport">
+        <source>The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</source>
+        <target state="translated">パッケージ アプリのコントローラーには、ネイティブ SDK の名前付きパイプ トランスポートが 1 つだけ必要です。重複した引数、不完全な引数、その他の --server 引数および --dotnet-test-* 引数はサポートされていません。</target>
+        <note>{Locked="--server"}{Locked="--dotnet-test-*"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
+        <source>Native dotnet test cannot connect an AppContainer test host to the SDK named pipe. Use the InvokeTestingPlatform MSBuild target for this application. No test host was activated.</source>
+        <target state="translated">ネイティブ dotnet test は、AppContainer テスト ホストを SDK 名前付きパイプに接続できません。このアプリケーションの InvokeTestingPlatform MSBuild ターゲットを使用します。テスト ホストがアクティブ化されませんでした。</target>
+        <note>{Locked="dotnet test"}{Locked="AppContainer"}{Locked="InvokeTestingPlatform"}{Locked="MSBuild"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppControllerNativeLauncherDisabled">
+        <source>Packaged-app help and discovery require an enabled packaged-app launcher. Enable the packaged-app extension and remove TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never. No test host was activated.</source>
+        <target state="translated">パッケージ アプリのヘルプと検出には、有効なパッケージ アプリ起動ツールが必要です。パッケージ アプリ拡張機能を有効にし、TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never を削除します。テスト ホストはアクティブ化されませんでした。</target>
+        <note>{Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=never"}</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppExtensionDescription">
+        <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
+        <target state="translated">パッケージ化された MSIX テスト ホストの登録と Application User Model ID (Windows ビルド) でのアクティブ化を行ない、packagedClassicApp/win32App ホスト (クラシックの AppContainer ホストを含む) の argv を介して Microsoft Testing Platform の引数を配信するか、windowsApp/UWP ホストのアクティブ化を起動します。TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always を通じてオプトインすると、パッケージ化されていない (ルースレイアウトの) Windows テスト ホストも分離されたディレクトリに展開され、そこから起動されます。既定ではパッケージ化されたレイアウトに対してのみ有効なため、パッケージ化されていないアプリは既定の起動パスに残されます。エンドツーエンドの AppContainer の実行には、さらにコントローラー パイプの認可が必要です。次を参照してください: https://github.com/microsoft/testfx/issues/10486。</target>
+        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppExtensionDisplayName">
+        <source>Packaged app test host launcher</source>
+        <target state="translated">パッケージ アプリ テスト ホスト ランチャー</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppLaunchNotSupported">
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">パッケージ化された Windows アプリ '{0}' を起動できません ('{1}' が見つかりました)。パッケージ化された (MSIX) アプリを登録してアクティブ化するには、この拡張機能の Windows ビルドが必要です。これは net8.0-windows10.0.19041.0 以降向けに提供されています。NuGet が該当するアセットを選択できるように、'net8.0-windows10.0.19041.0' (またはプラットフォーム バージョン 10.0.19041.0 以上の、より新しい net*-windows ターゲット フレームワーク モニカー) をターゲットに設定します。現在のビルドでは、パッケージ化されていない (loose-layout) テスト ホストのみが起動されます。https://github.com/microsoft/testfx/issues/9933 を参照してください。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppNoApplicationToActivate">
+        <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
+        <target state="translated">パッケージ化された Windows アプリ '{0}' をアクティブ化できません ('{1}' が見つかりました): マニフェストで &lt;Application&gt;が宣言されていないため、アクティブ化するためのアプリケーション ユーザー モデル ID がありません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationFailed">
+        <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
+        <target state="translated">パッケージ化された Windows アプリ レイアウト '{0}' を登録できませんでした。署名されていないビルド出力レイアウトを登録するには、開発者モード (またはサイドローディング) を有効にする必要があります。エラー: {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationLocationMismatch">
+        <source>Cannot activate the requested layout '{0}': Windows reported registration success, but the current user's registered package locations are [{1}]. Close any running instances of the package and retry. No test host was activated.</source>
+        <target state="translated">要求されたレイアウト '{0}' をアクティブ化できません: Windows は登録が成功したと報告しましたが、現在のユーザーの登録済みパッケージの場所は [{1}] です。パッケージの実行中のインスタンスをすべて閉じて、もう一度お試しください。テスト ホストはアクティブ化されませんでした。</target>
+        <note>{0} is the requested layout directory. {1} is a comma-separated list of registered layout directories, or empty if no registration was found.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationLockDirectoryUnavailable">
+        <source>Cannot serialize packaged app registration because the current user's local application data directory is unavailable. Ensure the user profile is loaded before retrying. No test host was activated.</source>
+        <target state="translated">現在のユーザーのローカル アプリケーション データ ディレクトリを使用できないため、パッケージ アプリの登録をシリアル化できません。再試行する前に、ユーザー プロファイルが読み込まれていることを確認してください。テスト ホストがアクティブ化されませんでした。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationNotDevelopment">
+        <source>Cannot switch package '{0}' from '{1}' to '{2}': the existing package is not a development registration, so it cannot be removed while preserving application data. Use a separate package identity for development. No test host was activated.</source>
+        <target state="translated">パッケージ '{0}' を '{1}' から '{2}' に切り替えられません: 既存のパッケージは開発用登録ではないため、アプリケーション データを保持したまま削除することはできません。開発には別のパッケージ ID を使用してください。テスト ホストはアクティブ化されませんでした。</target>
+        <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationRemovalFailed">
+        <source>Failed to remove the existing packaged Windows app registration '{0}' before registering manifest '{1}'. Close any running instances of the package and retry. Error: {2}</source>
+        <target state="translated">マニフェスト '{1}' を登録する前に、既存のパッケージ化された Windows アプリ登録 '{0}' を削除できませんでした。パッケージの実行中のインスタンスをすべて閉じてから、再試行してください。エラー: {2}</target>
+        <note>{0} is the package full name. {1} is the requested AppxManifest.xml path. {2} is the removal error.</note>
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationRemovalIncomplete">
+        <source>Cannot switch package '{0}' from '{1}' to '{2}': Windows completed the removal request, but the package remains registered. Close any running instances of the package and retry. No replacement registration or test host activation was attempted.</source>
+        <target state="translated">パッケージ '{0}' を '{1}' から '{2}' に切り替えられません: Windows は削除要求を完了しましたが、パッケージは登録されたままです。パッケージの実行中のインスタンスをすべて閉じて、もう一度お試しください。置換登録もテスト ホストのアクティブ化も試行されませんでした。</target>
+        <note>{0} is the package full name. {1} is the registered layout directory. {2} is the requested layout directory.</note>
+      </trans-unit>
+      <trans-unit id="TestCaseFilterOptionDescription">
+        <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
+        <target state="translated">指定された式を使用してテストをフィルター処理します。詳細については、「フィルター オプションの詳細」セクションを参照してください。選択的単体テスト フィルターの使用方法の詳細と例については、https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests を参照してください。</target>
+        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

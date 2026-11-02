@@ -16,6 +16,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private readonly IEnvironment _environment;
     private readonly ILogger? _logger;
     private readonly IConsole? _subscribedConsole;
+    private Action? _forceExitAction;
     private int _state = StateIdle;
     private int _disposed;
 
@@ -48,6 +49,15 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     public CancellationToken CancellationToken
         => _cancellationTokenSource.Token;
 
+    public bool WasCancellationRequestedByConsole
+        => Volatile.Read(ref _state) != StateIdle;
+
+    public IDisposable RegisterForceExitAction(Action forceExitAction)
+    {
+        Volatile.Write(ref _forceExitAction, forceExitAction);
+        return new ForceExitRegistration(this, forceExitAction);
+    }
+
     private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
     {
         // Suppress the runtime's default Ctrl+C handling so we control the exit code on
@@ -64,14 +74,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
             // First user Ctrl+C: cooperative cancellation. If the token was already cancelled
             // by an external source this is effectively a no-op, but we still transitioned the
             // state so the next press goes to force-exit.
-            try
-            {
-                _cancellationTokenSource.Cancel();
-            }
-            catch (AggregateException ex)
-            {
-                _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
-            }
+            Cancel();
 
             return;
         }
@@ -83,6 +86,15 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         // is the confirmation. Any subsequent presses are suppressed by the StateForcing guard.
         if (Interlocked.CompareExchange(ref _state, StateForcing, StateCancelling) == StateCancelling)
         {
+            try
+            {
+                Volatile.Read(ref _forceExitAction)?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning($"Exception while force-terminating the active test host:\n{ex}");
+            }
+
             _environment.Exit((int)ExitCode.TestSessionAborted);
         }
     }
@@ -106,5 +118,20 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     }
 
     public void Cancel()
-        => _cancellationTokenSource.Cancel();
+    {
+        try
+        {
+            _cancellationTokenSource.Cancel();
+        }
+        catch (AggregateException ex)
+        {
+            _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
+        }
+    }
+
+    private sealed class ForceExitRegistration(CTRLPlusCCancellationTokenSource owner, Action forceExitAction) : IDisposable
+    {
+        public void Dispose()
+            => Interlocked.CompareExchange(ref owner._forceExitAction, null, forceExitAction);
+    }
 }

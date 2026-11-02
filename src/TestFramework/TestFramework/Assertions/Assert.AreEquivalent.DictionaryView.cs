@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -146,6 +146,8 @@ public sealed partial class Assert
 
         internal Type KeyType { get; }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "The public structural equivalence assertion APIs declare that comparison requires unreferenced code.")]
+        [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The public structural equivalence assertion APIs declare that comparison requires dynamic code.")]
         internal static GenericDictionaryAccessors Build(Type dictionaryInterface)
         {
             Type[] args = dictionaryInterface.GetGenericArguments();

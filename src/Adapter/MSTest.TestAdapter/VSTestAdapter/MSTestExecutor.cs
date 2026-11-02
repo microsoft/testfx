@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -21,15 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [StackTraceHidden]
 internal sealed class MSTestExecutor : ITestExecutor
 {
-    private readonly CancellationToken _cancellationToken;
-#if !WINDOWS_UWP && !WIN_UI
-    private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
-#endif
-
-    /// <summary>
-    /// Token for canceling the test run.
-    /// </summary>
-    private TestRunCancellationToken? _testRunCancellationToken;
+    private readonly MSTestEngine _engine;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.
@@ -37,18 +29,13 @@ internal sealed class MSTestExecutor : ITestExecutor
     public MSTestExecutor()
     {
         TestExecutionManager = new TestExecutionManager();
-        _cancellationToken = CancellationToken.None;
+        _engine = new MSTestEngine(CancellationToken.None, testExecutionManager: TestExecutionManager);
     }
 
     internal MSTestExecutor(CancellationToken cancellationToken, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
         TestExecutionManager = new TestExecutionManager();
-        _cancellationToken = cancellationToken;
-#if !WINDOWS_UWP && !WIN_UI
-        _telemetrySender = telemetrySender;
-#else
-        _ = telemetrySender;
-#endif
+        _engine = new MSTestEngine(cancellationToken, telemetrySender, TestExecutionManager);
     }
 
     /// <summary>
@@ -121,7 +108,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             throw new ArgumentNullException(nameof(frameworkHandle));
         }
 
-        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        // VSTest annotates the IEnumerable as nullable; the exact reason is unclear.
         if (tests is null)
         {
             throw new ArgumentNullException(nameof(tests));
@@ -129,30 +116,47 @@ internal sealed class MSTestExecutor : ITestExecutor
 
         Ensure.NotEmpty(tests);
 
-        // Initialize telemetry collection if not already set
-#if !WINDOWS_UWP && !WIN_UI
-        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
-        {
-            _ = MSTestTelemetryDataCollector.EnsureInitialized();
-        }
-#endif
-
-        try
-        {
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
-            {
-                return;
-            }
-
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
-        }
-        finally
-        {
-            await SendTelemetryAsync().ConfigureAwait(false);
-        }
+        // Unwrap the VSTest run context / framework handle into neutral inputs and delegate to the
+        // platform-agnostic engine, which owns telemetry, apartment-state handling and the platform-services
+        // execution pipeline. The host test cases are converted into the neutral model lazily (after settings are
+        // resolved) so a settings error bails out before any conversion, matching the historical order. Each
+        // element keeps its originating test case as an opaque handle plus the host execution-context (TCM)
+        // properties surfaced through TestContext.
+        await _engine.RunFromTestElementsAsync(
+            () => [.. tests.Select(ToUnitTestElement)],
+            from test in tests select test.Source,
+            runContext?.RunSettings?.SettingsXml,
+            runContext?.TestRunDirectory,
+            frameworkHandle.ToAdapterMessageLogger(),
+            settings => frameworkHandle.ToTestResultRecorder(Environment.MachineName, settings),
+            new TestElementFilterProvider(runContext),
+            configuration,
+            new TestSourceHandler()).ConfigureAwait(false);
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
+    private static UnitTestElement ToUnitTestElement(TestCase testCase)
+    {
+        UnitTestElement testElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+        testElement.ExecutionContextProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        testElement.HostRecordingHandle = testCase;
+        return testElement;
+    }
+
+    internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
+        => RunTestsFromSourcesCoreAsync(sources, runContext, frameworkHandle, settings => frameworkHandle!.ToTestResultRecorder(Environment.MachineName, settings), configuration, isMTP);
+
+    /// <summary>
+    /// Runs the tests from sources, reporting results to a caller-provided platform-agnostic
+    /// <see cref="ITestResultRecorder"/> (used by the native Microsoft.Testing.Platform integration, which
+    /// publishes test nodes itself instead of recording through the VSTest <see cref="IFrameworkHandle"/>).
+    /// The <paramref name="frameworkHandle"/> is still used for message logging and apartment-state handling.
+    /// The recorder is created via <paramref name="recorderFactory"/> after settings are resolved so it observes
+    /// the effective <see cref="MSTestSettings"/>.
+    /// </summary>
+    internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, Func<MSTestSettings, ITestResultRecorder> recorderFactory, IConfiguration? configuration, bool isMTP)
+        => RunTestsFromSourcesCoreAsync(sources, runContext, frameworkHandle, recorderFactory, configuration, isMTP);
+
+    private async Task RunTestsFromSourcesCoreAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, Func<MSTestSettings, ITestResultRecorder> recorderFactory, IConfiguration? configuration, bool isMTP)
     {
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
@@ -164,91 +168,31 @@ internal sealed class MSTestExecutor : ITestExecutor
             throw new ArgumentNullException(nameof(frameworkHandle));
         }
 
-        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        // VSTest annotates the IEnumerable as nullable; the exact reason is unclear.
         if (sources is null)
         {
             throw new ArgumentNullException(nameof(sources));
         }
 
-        Ensure.NotEmpty(sources);
-
-        // Initialize telemetry collection if not already set
-#if !WINDOWS_UWP && !WIN_UI
-        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
-        {
-            _ = MSTestTelemetryDataCollector.EnsureInitialized();
-        }
-#endif
-
-        try
-        {
-            TestSourceHandler testSourceHandler = new();
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
-            {
-                return;
-            }
-
-            sources = testSourceHandler.GetTestSources(sources);
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
-        }
-        finally
-        {
-            await SendTelemetryAsync().ConfigureAwait(false);
-        }
+        // Unwrap the VSTest run context / framework handle into neutral inputs and delegate to the
+        // platform-agnostic engine. The recorder is created via the factory after settings are resolved so it
+        // observes the effective MSTestSettings; for the VSTest path this wraps the framework handle, for the
+        // native MTP path it publishes test nodes directly.
+        await _engine.RunFromSourcesAsync(
+            sources,
+            runContext?.RunSettings?.SettingsXml,
+            runContext?.TestRunDirectory,
+            frameworkHandle.ToAdapterMessageLogger(),
+            recorderFactory,
+            new TestElementFilterProvider(runContext),
+            configuration,
+            new TestSourceHandler(),
+            isMTP).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Cancel the test run.
     /// </summary>
     public void Cancel()
-        => _testRunCancellationToken?.Cancel();
-
-#if !WINDOWS_UWP && !WIN_UI
-    private Task SendTelemetryAsync()
-        => MSTestTelemetryDataCollector.SendExecutionTelemetryAndResetAsync(_telemetrySender);
-#else
-    private static Task SendTelemetryAsync()
-        => Task.CompletedTask;
-#endif
-
-    private async Task RunTestsFromRightContextAsync(IFrameworkHandle frameworkHandle, Func<TestRunCancellationToken, Task> runTestsAction)
-    {
-        ApartmentState? requestedApartmentState = MSTestSettings.RunConfigurationSettings.ExecutionApartmentState;
-
-        await StaThreadHelper.RunOnApartmentThreadIfNeededAsync(
-            requestedApartmentState,
-            "MSTest Entry Point",
-            async () =>
-            {
-                await DoRunTestsAsync().ConfigureAwait(false);
-                return 0;
-            },
-            () => 0,
-            entryPointThread => Task.Run(entryPointThread.Join, _cancellationToken),
-            (_, ex) =>
-            {
-                frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
-                return 0;
-            },
-            () => frameworkHandle.SendMessage(
-                TestMessageLevel.Warning,
-                Resource.STAIsOnlySupportedOnWindowsWarning)).ConfigureAwait(false);
-
-        // Local functions
-        async Task DoRunTestsAsync()
-        {
-            using (_cancellationToken.Register(Cancel))
-            {
-                try
-                {
-                    _testRunCancellationToken = new TestRunCancellationToken(_cancellationToken);
-                    await runTestsAction(_testRunCancellationToken).ConfigureAwait(false);
-                }
-                finally
-                {
-                    _testRunCancellationToken = null;
-                }
-            }
-        }
-    }
+        => _engine.Cancel();
 }

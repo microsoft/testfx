@@ -5,6 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -208,6 +209,35 @@ public class MSTestDiscovererTests : TestContainer
         MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object).Should().BeFalse();
     }
 
+    public void GetSettingsExceptionMessageShouldReturnPlainMessageWhenThereIsNoInnerException()
+    {
+        var ex = new AdapterSettingsException("Invalid value 'Pond' specified for 'Scope'.");
+
+        MSTestDiscovererHelpers.GetSettingsExceptionMessage(ex).Should().Be("Invalid value 'Pond' specified for 'Scope'.");
+    }
+
+    public void GetSettingsExceptionMessageShouldIncludeMalformedXmlDetailsFromPopulateSettings()
+    {
+        Action act = () => MSTestSettings.PopulateSettings("<RunSettings><MSTest>", null, null);
+        AdapterSettingsException ex = act.Should().Throw<AdapterSettingsException>().Which;
+
+        string message = MSTestDiscovererHelpers.GetSettingsExceptionMessage(ex);
+
+        ex.InnerException.Should().BeOfType<XmlException>();
+        message.Should().Contain(ex.Message);
+        message.Should().Contain(nameof(XmlException));
+        message.Should().Contain(ex.InnerException.Message);
+    }
+
+    public void AdapterSettingsExceptionShouldSetInnerExceptionWhenProvided()
+    {
+        var innerException = new FormatException("bad format");
+        var ex = new AdapterSettingsException("outer message", innerException);
+
+        ex.Message.Should().Be("outer message");
+        ex.InnerException.Should().BeSameAs(innerException);
+    }
+
     [TestClass]
     public class DummyClass
     {
@@ -217,5 +247,41 @@ public class MSTestDiscovererTests : TestContainer
             // This is a dummy test method to ensure that the MSTestDiscoverer can discover tests.
             // It does not perform any assertions or operations.
         }
+    }
+
+    public async Task NeutralDiscoveryRejectsNullSinkAndBoundaryArguments()
+    {
+        Func<Task> missingSink = () => _discoverer.DiscoverTestsAsync(
+            ["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, (IUnitTestElementSink)null!, null, true);
+        Func<Task> missingSources = () => _discoverer.DiscoverTestsAsync(
+            null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, Mock.Of<IUnitTestElementSink>(), null, true);
+        Func<Task> missingLogger = () => _discoverer.DiscoverTestsAsync(
+            ["source.dll"], _mockDiscoveryContext.Object, null!, Mock.Of<IUnitTestElementSink>(), null, true);
+        Action syncMissingSink = () => _discoverer.DiscoverTests(
+            ["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, null!);
+
+        (await missingSink.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("elementSink");
+        (await missingSources.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("sources");
+        (await missingLogger.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("logger");
+        syncMissingSink.Should().ThrowExactly<ArgumentNullException>().WithParameterName("discoverySink");
+    }
+
+    public async Task NeutralDiscoveryStopsBeforePublishingWhenSettingsAreInvalid()
+    {
+        const string Settings = "<RunSettings><MSTest><Parallelize><Scope>Pond</Scope></Parallelize></MSTest></RunSettings>";
+        _mockTestSourceHandler.SetupGet(value => value.ValidSourceExtensions).Returns([".dll"]);
+        _mockDiscoveryContext.SetupGet(value => value.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.SetupGet(value => value.SettingsXml).Returns(Settings);
+        var sink = new Mock<IUnitTestElementSink>(MockBehavior.Strict);
+        var discoverer = new MSTestDiscoverer(_mockTestSourceHandler.Object, (_, _) => Task.CompletedTask);
+
+        await discoverer.DiscoverTestsAsync(["source.dll"], _mockDiscoveryContext.Object, _mockMessageLogger.Object, sink.Object, null, true);
+
+        sink.VerifyNoOtherCalls();
+        _mockMessageLogger.Verify(
+            value => value.SendMessage(
+            TestMessageLevel.Error,
+            "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockTestSourceHandler.Verify(value => value.GetTestSources(It.IsAny<IEnumerable<string>>()), Times.Never);
     }
 }

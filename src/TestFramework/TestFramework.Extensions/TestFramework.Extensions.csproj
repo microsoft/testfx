@@ -1,5 +1,9 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <_UsesMSBuildSdkExtras Condition=" '$(OS)' == 'Windows_NT' ">true</_UsesMSBuildSdkExtras>
+  </PropertyGroup>
+
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
@@ -18,19 +22,17 @@
     -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestFramework</PackageId>
-    <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework MSTestV2 Framework</PackageTags>
+    <PackageDescription><![CDATA[This package includes the libraries for writing tests with MSTest. To ensure discovery and execution of your tests, install the MSTest.TestAdapter package.
 
-      This package includes the libraries for writing tests with MSTest. To ensure discovery and execution of your tests, install the MSTest.TestAdapter package.
+Supported platforms:
+- .NET 4.6.2+
+- .NET 8.0+
+- .NET 8.0 Windows.18362+ (WinUI)
+- UWP 10.0.16299
+- UWP 10.0.17763 with .NET 9+
 
-      Supported platforms:
-      - .NET 4.6.2+
-      - .NET 8.0+
-      - .NET 8.0 Windows.18362+ (WinUI)
-      - UWP 10.0.16299
-      - UWP 10.0.17763 with .NET 9+
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
     <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
   </PropertyGroup>
 
@@ -98,14 +100,23 @@
     <Reference Include="System.Configuration" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <_ApiTargetFramework>$(TargetFramework)</_ApiTargetFramework>
+    <_ApiTargetFramework Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0')) AND !$(TargetFramework.Contains('-'))">net9.0</_ApiTargetFramework>
+  </PropertyGroup>
+
   <ItemGroup>
     <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" />
     <!-- Framework specific API -->
-    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(_ApiTargetFramework)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(_ApiTargetFramework)\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\$(_ApiTargetFramework)\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\$(_ApiTargetFramework)\InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <!--
@@ -118,10 +129,14 @@
     <None Include="build\netstandard2.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\netstandard2.0\" />
     <None Include="build\net8.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net8.0\" />
     <None Include="build\net9.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net9.0\" />
+    <None Include="build\net10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net10.0\" />
+    <None Include="build\net11.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net11.0\" />
 
     <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\netstandard2.0\" />
     <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
     <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net10.0\" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net11.0\" />
   </ItemGroup>
 
   <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
@@ -191,7 +206,7 @@
     exist. Placement differs per TFM:
       - core MSTest.TestFramework.dll/.xml/resources -> lib/<tfm> (except the WinUI/UWP only passes)
       - MSTest.TestFramework.Extensions.dll/.xml     -> lib/<tfm> for netstandard2.0/net462/uap10.0
-                                                     -> buildTransitive/<tfm> for net8.0/net9.0
+                                                     -> buildTransitive/<tfm> for supported .NET frameworks
                                                      -> buildTransitive/net8.0/winui (WinUI pass)
                                                      -> buildTransitive/net9.0/uwp   (ModernUwp pass)
   -->
@@ -207,7 +222,7 @@
 
       <!-- Destination of the Extensions assembly and whether the core assembly is bundled in lib for this TFM. -->
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' ">lib\$(_PackageTfm)\</_ExtensionsPackagePath>
-      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' ">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_ExtensionsPackagePath>
       <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_ExtensionsPackagePath>
 
@@ -237,6 +252,9 @@
   <ItemGroup>
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Extensions.Hosting" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <!-- SDK bottom import -->

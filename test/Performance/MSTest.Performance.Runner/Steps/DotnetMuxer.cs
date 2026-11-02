@@ -20,23 +20,37 @@ internal class DotnetMuxer : IStep<SingleProject, BuildArtifact>
             throw new NotSupportedException();
         }
 
-        string buildCommand = $"build {payload.TestAsset.TargetAssetPath} -c {_buildConfiguration}";
+        string binlogPath = Path.Combine(payload.TestAsset.TargetAssetPath, "Build.binlog");
+        string buildCommand = $"build \"{payload.TestAsset.TargetAssetPath}\" -c {_buildConfiguration} -bl:\"{binlogPath}\"";
         Console.WriteLine($"Building: '{buildCommand}'");
         await DotnetCli.RunAsync(buildCommand);
-        var testHost = TestHost.LocateFrom(payload.TestAsset.TargetAssetPath, payload.AssetName, payload.Tfms.Single(), buildConfiguration: _buildConfiguration);
-        return new BuildArtifact(testHost, payload.TestAsset);
+        TestHost? testHost = payload.TestPlatform == TestPlatform.Mtp
+            ? TestHost.LocateFrom(payload.TestAsset.TargetAssetPath, payload.AssetName, payload.Tfms.Single(), buildConfiguration: _buildConfiguration)
+            : null;
+
+        return new BuildArtifact(testHost, payload, _buildConfiguration);
     }
 }
 
 internal class BuildArtifact : IPayload
 {
-    public BuildArtifact(TestHost testHost, TestAsset testAsset)
+    public BuildArtifact(TestHost? testHost, SingleProject project, BuildConfiguration buildConfiguration)
     {
         TestHost = testHost;
-        TestAsset = testAsset;
+        Project = project;
+        BuildConfiguration = buildConfiguration;
     }
 
-    public TestHost TestHost { get; }
+    public TestHost? TestHost { get; }
 
-    public TestAsset TestAsset { get; }
+    public SingleProject Project { get; }
+
+    public BuildConfiguration BuildConfiguration { get; }
+
+    public TestAsset TestAsset => Project.TestAsset;
+
+    public string ResultFilePath => Path.Combine(Project.TestAsset.TargetAssetPath, "Result.json");
+
+    public TestHost GetRequiredTestHost()
+        => TestHost ?? throw new InvalidOperationException($"Pipeline '{Project.AssetName}' requires an executable MTP test host.");
 }

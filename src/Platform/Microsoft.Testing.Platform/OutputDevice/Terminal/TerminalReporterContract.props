@@ -5,39 +5,57 @@
 
     PURPOSE
       The terminal reporter (progress rendering, summary, ANSI/non-ANSI terminals, state model) is hard-forked
-      into dotnet/sdk's 'dotnet test' implementation. This .props lets the same source files be compiled into
-      another assembly - a standalone consumer test, or (once packaged as a source NuGet) the dotnet/sdk copy -
-      so the reporter has a single source of truth instead of being duplicated by hand.
+      into dotnet/sdk's 'dotnet test' implementation. testfx is the SOURCE OF TRUTH; this .props is the canonical
+      enumeration of the shared reporter source. It lets the same files be compiled into a standalone in-repo
+      consumer (the reporter contract test project) that guarantees they build independently, and it tells testfx
+      contributors exactly which files dotnet/sdk vendors. dotnet/sdk hand-copies these files and tracks them in its
+      eng/vendored-files.json manifest; a scheduled workflow there opens an issue whenever these upstream files
+      change, so any change here may require a coordinated port in dotnet/sdk (see dotnet/sdk eng/vendored-files.md).
+
+    ADDING A FILE HERE ALSO NEEDS A dotnet/sdk MANIFEST CHANGE
+      The reporter Include below is a *glob*, so a new file in this folder joins the contract automatically and the
+      build stays green. dotnet/sdk's eng/vendored-files.json instead enumerates each upstream path by hand, and its
+      drift workflow only watches the paths it lists. A file added here is therefore not merely unported downstream,
+      it is INVISIBLE there: later edits to it raise no drift issue at all. Renames and deletions do not have this
+      problem - the tracked path then 404s and the workflow reports 'upstream path missing' - so additions are the
+      one asymmetric case, and the one that fails silently.
+
+      So when you add a file to this folder, also append it to the dotnet-test-terminal-reporter entry in that
+      manifest. Append, never insert: the workflow keys its tracking issues on the source's position in the array
+      (its hidden 'vendored-sync:id={id}:{source-index}' issue marker), so reordering re-points open issues at the
+      wrong file. Splitting TerminalTestReporter.Summary.cs into partials hit exactly this; see #10390.
 
     SCOPE
       The set is the reporter + its rendering/state types + the small platform abstractions it depends on
-      (IConsole/IStopwatch/IColor/System* + RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser
-      /TestRunSummaryHelper). It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
+      (IConsole/IStopwatch/IColor/System* + ILogger/LogLevel/LoggingExtensions/NopLogger +
+      ExitCode/RoslynString/ApplicationStateGuard/StackTraceHelper/SlowTestThresholdState/TargetFrameworkParser/
+      TestRunSummaryHelper/ZeroTestsPolicy).
+      It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
       command-line specific - the SDK has its own CLI) and TerminalResources.cs (the hand-written [Embedded]
       accessor used by in-repo IVT-linked consumers; standalone consumers compile the resx instead - see below).
 
-      The reporter + rendering + state types are [Microsoft.CodeAnalysis.Embedded], so a consumer that also
-      references Microsoft.Testing.Platform never sees them as conflicting types. The small platform abstractions
-      in this set (IConsole/IStopwatch/IColor/SystemConsole/SystemConsoleColor/SystemStopwatch) are NOT embedded -
-      they are foundational, platform-wide types used far beyond the terminal. A consumer that compiles this
-      contract AND references Microsoft.Testing.Platform will therefore get benign CS0436 conflict warnings for
-      those types (the compiler uses the locally-compiled copy); such consumers should suppress CS0436 (the
-      in-repo standalone test does). A consumer that does NOT reference Microsoft.Testing.Platform - the real
-      target, e.g. dotnet/sdk's 'dotnet test' - sees no conflict at all.
+      The reporter + rendering + state types are [Microsoft.CodeAnalysis.Embedded], so they are NOT exported by
+      Microsoft.Testing.Platform; a consumer that also references the platform compiles its own (single-source)
+      copy and never sees a conflict. The small internal platform abstractions in this set (IConsole/IStopwatch/
+      SystemConsole/SystemStopwatch + RoslynString/ApplicationStateGuard/StackTraceHelper/SlowTestThresholdState/
+      TargetFrameworkParser/TestRunSummaryHelper/ZeroTestsPolicy) are 'internal' and not exported either (no
+      InternalsVisibleTo to an external consumer), so they also never conflict.
+
+      The exceptions are the public logging abstractions (ILogger, LogLevel, and LoggingExtensions) plus IColor and
+      SystemConsoleColor, which are shipped *public* API of Microsoft.Testing.Platform. A consumer that ALSO references
+      the platform would get CS0436 conflicts for local copies. These types cannot be made [Embedded]/internal in the
+      platform, so the duplicated copies are dropped when the consumer references Microsoft.Testing.Platform (see the
+      _RemoveTerminalReporter* target below), allowing reporter references to bind to the platform's public types
+      without consumer-side NoWarn. A standalone consumer keeps the copies and compiles without a platform reference.
 
     USAGE
       Import this file from any project that needs the reporter source. Microsoft.Testing.Platform itself does
       NOT import it (it compiles these files via its default source globbing); importing it there would
-      double-include them.
-
-      - Source consumers (e.g. the standalone contract test project) get the .cs as <Compile> items and the resx
-        as an <EmbeddedResource GenerateSource="true"> (the defaults below), so the generated TerminalResources
-        accessor + satellites are embedded in the consumer's own assembly. No IS_CORE_MTP symbol is needed:
-        TerminalResources.cs (the only IS_CORE_MTP-conditional file) is excluded, and the resx generates the
-        accessor unconditionally.
-      - A future Microsoft.Testing.Platform.DotnetTestTerminal package sets TerminalReporterContractCompile=false
-        and instead packs @(TerminalReporterContractSource) + @(TerminalReporterContractResource) as contentFiles,
-        so the NuGet and the source-share never drift.
+      double-include them. Importing consumers (e.g. the standalone contract test project) get the .cs as <Compile>
+      items and the resx as an <EmbeddedResource GenerateSource="true"> (the defaults below), so the generated
+      TerminalResources accessor + satellites are embedded in the consumer's own assembly. No IS_CORE_MTP symbol is
+      needed: TerminalResources.cs (the only IS_CORE_MTP-conditional file) is excluded, and the resx generates the
+      accessor unconditionally.
   -->
 
   <PropertyGroup>
@@ -51,6 +69,7 @@
                                     Exclude="$(MSBuildThisFileDirectory)TerminalTestReporterCommandLineOptionsProvider.cs;$(MSBuildThisFileDirectory)TerminalResources.cs" />
 
     <!-- Small platform abstractions the reporter depends on. -->
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\ExitCodes.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\RoslynString.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\ApplicationStateGuard.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\StackTraceHelper.cs" />
@@ -58,10 +77,28 @@
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\IStopwatch.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemConsole.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemStopwatch.cs" />
-    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs" />
-    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\ILogger.cs">
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\LogLevel.cs">
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\LoggingExtensions.cs">
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\NopLogger.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs">
+      <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs">
+      <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SlowTestThresholdState.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TargetFrameworkParser.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TestRunSummaryHelper.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\CommandLine\ZeroTestsPolicy.cs" />
   </ItemGroup>
 
   <!-- The shared localized resource (resx + xlf) the reporter strings come from. -->
@@ -69,11 +106,34 @@
     <TerminalReporterContractResource Include="$(MSBuildThisFileDirectory)TerminalResources.resx" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TerminalReporterContractCompile)' != 'false' ">
+  <ItemGroup>
     <Compile Include="@(TerminalReporterContractSource)" Link="TerminalReporter\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- No Link on the resource: its manifest name / generated-accessor namespace must stay
          Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources so the reporter source resolves it. -->
     <EmbeddedResource Include="@(TerminalReporterContractResource)" GenerateSource="true" />
   </ItemGroup>
+
+  <!--
+    Some contract dependencies (logging abstractions and color types) are shipped *public* API of
+    Microsoft.Testing.Platform. When the consumer of this contract ALSO references Microsoft.Testing.Platform,
+    compiling local copies would raise CS0436 conflicts with the imported public types. Drop those local copies in
+    that case so reporter references bind to the platform's public types instead. A standalone consumer keeps the
+    copies and compiles without a platform reference.
+  -->
+  <Target Name="_RemoveTerminalReporterDuplicatePublicAbstractions"
+          AfterTargets="ResolveReferences"
+          BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_TerminalReporterPlatformRef Remove="@(_TerminalReporterPlatformRef)" />
+      <_TerminalReporterPlatformRef Include="@(ReferencePath)" Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_TerminalReporterReferencesPlatform>false</_TerminalReporterReferencesPlatform>
+      <_TerminalReporterReferencesPlatform Condition=" '@(_TerminalReporterPlatformRef)' != '' ">true</_TerminalReporterReferencesPlatform>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_TerminalReporterReferencesPlatform)' == 'true' ">
+      <Compile Remove="@(Compile)" Condition=" '%(Compile.PlatformPublicAbstraction)' == 'true' " />
+    </ItemGroup>
+  </Target>
 
 </Project>

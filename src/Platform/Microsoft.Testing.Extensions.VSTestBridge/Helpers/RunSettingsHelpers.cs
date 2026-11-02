@@ -10,8 +10,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 
 internal static class RunSettingsHelpers
 {
-    // TODO: There are two code paths that read runsettings. One is calling the ICommandLineOptions overload, other is calling the CommandLineParseResult overload.
-    // Figure out if they can/should be unified so that we do one I/O operation instead of two.
+    // There are two code paths that read runsettings. One calls the ICommandLineOptions overload, the other calls the CommandLineParseResult overload.
+    // It is unclear whether they can/should be unified so that a single I/O operation is done instead of two.
     public static string ReadRunSettings(ICommandLineOptions commandLineOptions, IFileSystem fileSystem)
     {
         _ = commandLineOptions.TryGetOptionArgumentList(RunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? fileNames);

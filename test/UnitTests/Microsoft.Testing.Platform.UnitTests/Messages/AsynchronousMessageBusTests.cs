@@ -6,6 +6,9 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -35,6 +38,158 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
+    public async Task PublishAsync_InProgressTest_CapturesExecutionActivityContextBeforeDispatch()
+    {
+        var executionContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: "vendor=value");
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.Setup(s => s.CaptureCurrentActivityContext()).Returns(executionContext);
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        await asynchronousMessageBus.PublishAsync(
+            new DummyProducer("producer", typeof(TestNodeUpdateMessage)),
+            message);
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(1, consumer.ExecutionActivityContexts);
+        Assert.AreSame(executionContext, consumer.ExecutionActivityContexts[0]);
+        openTelemetryService.Verify(s => s.CaptureCurrentActivityContext(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task PublishAsync_WhenMessageInstanceIsReused_PreservesMissingContextPerPublication()
+    {
+        var secondContext = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.SetupSequence(s => s.CaptureCurrentActivityContext())
+            .Returns((PlatformActivityContext?)null)
+            .Returns(secondContext);
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        var producer = new DummyProducer("producer", typeof(TestNodeUpdateMessage));
+
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(2, consumer.ExecutionActivityContexts);
+        Assert.IsNull(consumer.ExecutionActivityContexts[0]);
+        Assert.AreSame(secondContext, consumer.ExecutionActivityContexts[1]);
+    }
+
+    [TestMethod]
+    [UnsupportedOSPlatform("browser")]
+    public async Task PublishAsync_WhenCapturesCompleteOutOfOrder_BindsContextToPublication()
+    {
+        var firstContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            isRecorded: true,
+            traceState: null);
+        var secondContext = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        using ManualResetEventSlim firstCaptureStarted = new();
+        using ManualResetEventSlim releaseFirstCapture = new();
+        int captureCount = 0;
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> openTelemetryService = new();
+        openTelemetryService.Setup(s => s.CaptureCurrentActivityContext())
+            .Returns(() =>
+            {
+                if (Interlocked.Increment(ref captureCount) != 1)
+                {
+                    return secondContext;
+                }
+
+                firstCaptureStarted.Set();
+                releaseFirstCapture.Wait(TestContext.CancellationToken);
+                return firstContext;
+            });
+        TestNodeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment(),
+            shutdownProgressReporter: null,
+            openTelemetryService: openTelemetryService.Object);
+        await asynchronousMessageBus.InitAsync();
+        var message = new TestNodeUpdateMessage(
+            new("session"),
+            new TestNode
+            {
+                Uid = "test",
+                DisplayName = "Test",
+                Properties = new PropertyBag(new InProgressTestNodeStateProperty()),
+            });
+        var producer = new DummyProducer("producer", typeof(TestNodeUpdateMessage));
+
+        var firstPublish = Task.Run(
+            async () => await asynchronousMessageBus.PublishAsync(producer, message),
+            TestContext.CancellationToken);
+        firstCaptureStarted.Wait(TestContext.CancellationToken);
+        await asynchronousMessageBus.PublishAsync(producer, message);
+        releaseFirstCapture.Set();
+        await firstPublish;
+        await asynchronousMessageBus.DrainDataAsync();
+
+        Assert.HasCount(2, consumer.ExecutionActivityContexts);
+        Assert.AreSame(secondContext, consumer.ExecutionActivityContexts[0]);
+        Assert.AreSame(firstContext, consumer.ExecutionActivityContexts[1]);
+    }
+
+    // This test relies on the background consumer tasks (started via ITask.Run) ping-ponging
+    // messages between the two consumers so the drain keeps observing newly received payloads and
+    // ultimately surfaces the publisher/consumer loop. On .NET Framework, under the assembly's
+    // method-level parallelism (many concurrent test methods competing for the slowly-growing
+    // ThreadPool), those background tasks can be starved long enough that the drain finishes its
+    // attempts without seeing the loop, making the test intermittently fail (see #6892). Running it
+    // non-parallel removes that contention and keeps the loop detection deterministic.
+    [TestMethod]
+    [DoNotParallelize]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
         using MessageBusProxy proxy = new();
@@ -160,9 +315,769 @@ public sealed class AsynchronousMessageBusTests
         }
     }
 
+    [TestMethod]
+    public async Task BlockingDataConsumer_PublishAsync_DoesNotReturnUntilConsumeCompletes()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+
+        // Start publishing. Because the consumer is blocking, PublishAsync must not complete until
+        // ConsumeAsync completes, which we control through the gate below.
+        Task publishTask = proxy.PublishAsync(producer, new BlockingData());
+
+        // Wait for the consumer to be invoked inline. This proves the consumption happens as part of
+        // the publish call rather than being deferred to a background loop.
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // The consumer is still gated, so the publish call cannot have returned yet.
+        Assert.IsFalse(publishTask.IsCompleted);
+
+        // Release the gate and let consumption (and therefore the publish) complete.
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await publishTask;
+
+        Assert.HasCount(1, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_WhenConsumerIsProducer_ShouldNotConsumeOwnData()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+
+        // Release the gate upfront: if the consumer were (incorrectly) invoked for its own data, the
+        // test would fail fast on the assertion below instead of hanging on the gate.
+        consumer.AllowConsumeToComplete.SetResult(true);
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        await proxy.PublishAsync(consumer, new BlockingData());
+
+        Assert.IsEmpty(consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_SerializesConcurrentPublishes()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer")
+        {
+            ConsumeDelay = TimeSpan.FromMilliseconds(20),
+        };
+
+        // Don't gate consumption for this test; we want it to run as soon as it is invoked.
+        consumer.AllowConsumeToComplete.SetResult(true);
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        const int publishCount = 8;
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+        await Task.WhenAll(Enumerable.Range(0, publishCount)
+            .Select(_ => Task.Run(async () => await proxy.PublishAsync(producer, new BlockingData()), TestContext.CancellationToken)));
+
+        // Even though publishes happen concurrently, the blocking processor must serialize the inline
+        // consumption so the consumer never observes overlapping ConsumeAsync calls.
+        Assert.AreEqual(1, consumer.MaxObservedConcurrency);
+        Assert.HasCount(publishCount, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_WhenConsumeThrows_PublishAsyncSurfacesTheException()
+    {
+        using MessageBusProxy proxy = new();
+        ThrowingBlockingConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+
+        // Because the consumer runs inline, its exception must propagate to the publishing producer.
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await proxy.PublishAsync(producer, new BlockingData()));
+        Assert.AreEqual("Blocking consumer failure", ex.Message);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_CalledTwice_ShouldBeIdempotent()
+    {
+        using MessageBusProxy proxy = new();
+        MultiTypeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        await asynchronousMessageBus.DisableAsync();
+
+        // The session-end path disables the bus and the host teardown disables it again as a safety net,
+        // so the second call has to be a no-op rather than an error.
+        await asynchronousMessageBus.DisableAsync();
+
+        Assert.AreEqual(0, consumer.ReceivedTypeA);
+
+        // The repeat call must also leave the bus fully drained, not just avoid throwing.
+        Assert.IsEmpty(asynchronousMessageBus.ConsumersStillRunning.ToList());
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenSessionIsCanceled_ShouldWaitForTheInFlightConsumeToComplete()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        GatedConsumer consumer = new(nameof(GatedConsumer));
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // This is the cancellation path: the session-end notification is skipped and the platform closes the
+        // message bus handshake from its teardown safety net instead.
+        cancellationTokenSource.Cancel();
+
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+
+        // The consumer is still inside ConsumeAsync. If disabling reported completion here, the platform
+        // would go on to dispose the consumer while it is still consuming.
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+        Assert.IsFalse(disableTask.IsCompleted);
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await disableTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        Assert.IsTrue(consumer.ConsumeCompleted);
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenOneConsumerFaults_ShouldStillCompleteTheOtherConsumers()
+    {
+        using MessageBusProxy proxy = new();
+        ThrowingConsumer throwingConsumer = new();
+        GatedConsumer gatedConsumer = new(nameof(GatedConsumer));
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [throwingConsumer, gatedConsumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+
+        await throwingConsumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        await gatedConsumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+
+        // The first processor has faulted, but a single misbehaving consumer must not make us abandon the
+        // remaining ones: they would then keep running while they are being disposed.
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+        Assert.IsFalse(disableTask.IsCompleted);
+
+        gatedConsumer.AllowConsumeToComplete.SetResult(true);
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(async () => await disableTask);
+        Assert.AreEqual("Async consumer failure", ex.Message);
+        Assert.IsTrue(gatedConsumer.ConsumeCompleted);
+    }
+
+    [TestMethod]
+    public async Task PublishAsync_WhenBusIsDisabledAndSessionIsCanceled_ShouldBeANoOp()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        MultiTypeConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        cancellationTokenSource.Cancel();
+        await asynchronousMessageBus.DisableAsync();
+
+        // Extensions that publish while they are being torn down must observe a silent no-op instead of a
+        // failure that would mask the cancellation.
+        DummyProducer producer = new("MultiTypeProducer", typeof(MultiTypeConsumer.DataTypeA));
+        await proxy.PublishAsync(producer, new MultiTypeConsumer.DataTypeA());
+
+        Assert.AreEqual(0, consumer.ReceivedTypeA);
+    }
+
+    [TestMethod]
+    public async Task MessageBusProxy_DisableAsync_WhenConcreteBusWasNeverBuilt_ShouldBeANoOp()
+    {
+        using MessageBusProxy proxy = new();
+
+        // The teardown safety net disables the bus for every outcome, including runs that failed before the
+        // concrete bus was built. There is nothing to disable then, so this must not throw.
+        await proxy.DisableAsync();
+
+        // The other operations still require the concrete bus.
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(proxy.DrainDataAsync);
+    }
+
+    [TestMethod]
+    public async Task ConsumeLoop_WhenSessionIsCanceled_ShouldStillDrainAlreadyQueuedPayloads()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        GatedConsumer consumer = new(nameof(GatedConsumer));
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        // Two payloads: the consumer parks on the first one, so the second is still sitting in the channel
+        // when the run gets canceled.
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await proxy.PublishAsync(producer, new GatedData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        cancellationTokenSource.Cancel();
+        consumer.AllowConsumeToComplete.SetResult(true);
+
+        await asynchronousMessageBus.DisableAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // The pump is not cancelable, so completing the channel drains what was already queued instead of
+        // dropping it. Cancelling the read instead is how a canceled run used to lose its partial results.
+        Assert.AreEqual(2, consumer.ConsumedCount);
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenCanceledConsumerIgnoresTheToken_ShouldGiveUpAndReportItStillRunning()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        GatedConsumer consumer = new(nameof(GatedConsumer));
+
+        // Keep the shutdown budget short so the test does not have to wait for the 30s default.
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("0.5");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        cancellationTokenSource.Cancel();
+
+        // The consumer never observes the token, so an unbounded wait here would hang the abort. Unlike an
+        // interactive Ctrl+C, a '--timeout' or a server-initiated cancellation has no second escape hatch.
+        await asynchronousMessageBus.DisableAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // Having given up on the wait, the bus must report the consumer as still running so the platform
+        // leaves it alone instead of disposing it mid-consumption.
+        Assert.Contains(consumer, asynchronousMessageBus.ConsumersStillRunning.ToList());
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+    }
+
+    [TestMethod]
+    public async Task ConsumersStillRunning_WhenTheHandshakeCompleted_ShouldBeEmpty()
+    {
+        using MessageBusProxy proxy = new();
+        GatedConsumer consumer = new(nameof(GatedConsumer));
+        consumer.AllowConsumeToComplete.SetResult(true);
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await asynchronousMessageBus.DisableAsync();
+
+        Assert.IsEmpty(asynchronousMessageBus.ConsumersStillRunning.ToList());
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenCalledConcurrently_ShouldAwaitTheSameCompletion()
+    {
+        using MessageBusProxy proxy = new();
+        GatedConsumer consumer = new(nameof(GatedConsumer));
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        Task first = asynchronousMessageBus.DisableAsync();
+        Task second = asynchronousMessageBus.DisableAsync();
+
+        // "Disable started" must not be reported as "disable completed": a second caller that returned here
+        // would go on to dispose a consumer whose loop is still running.
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+        Assert.IsFalse(second.IsCompleted);
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await Task.WhenAll(first, second).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        Assert.AreEqual(1, consumer.ConsumedCount);
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenCancellationArrivesDuringTheWait_ShouldDowngradeToTheBoundedWait()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        GatedConsumer consumer = new(nameof(GatedConsumer));
+
+        // Keep the shutdown budget short so the test does not have to wait for the 30s default.
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("0.5");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // Nothing is canceled yet, so this is the regular session-end shutdown and the wait is unbounded: a
+        // consumer flushing a large report must not be cut off.
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+        Assert.IsFalse(disableTask.IsCompleted);
+
+        // The abort arrives while that wait is in flight. It has to downgrade to the bounded wait, otherwise a
+        // consumer that ignores the token keeps the abort blocked for as long as it likes.
+        cancellationTokenSource.Cancel();
+
+        Task completed = await Task.WhenAny(disableTask, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(disableTask, completed, "DisableAsync kept waiting on a consumer that ignores the cancellation token.");
+        await disableTask;
+
+        Assert.Contains(consumer, asynchronousMessageBus.ConsumersStillRunning.ToList());
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+    }
+
+    [TestMethod]
+    [DataRow("1e300", DisplayName = "Out of range")]
+    [DataRow("3000000", DisplayName = "Past the SemaphoreSlim limit")]
+    [DataRow("1e-300", DisplayName = "Rounds down to zero")]
+    [DataRow("0.0001", DisplayName = "Sub-millisecond")]
+    [DataRow("NaN", DisplayName = "NaN")]
+    [DataRow("0", DisplayName = "Zero")]
+    [DataRow("-5", DisplayName = "Negative")]
+    [DataRow("abc", DisplayName = "Not a number")]
+    [DataRow("", DisplayName = "Empty")]
+    public void GetCanceledConsumerCompletion_WhenValueIsInvalidOrOutOfRange_ShouldFallBackToTheDefault(string value)
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns(value);
+
+        // An optional override must never be able to break the message bus. '1e300' in particular parses fine
+        // and would then overflow TimeSpan / the wait itself.
+        Assert.AreEqual(
+            ShutdownTimeouts.DefaultCanceledConsumerCompletion,
+            ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+    }
+
+    [TestMethod]
+    public void GetCanceledConsumerCompletion_WhenValueIsValid_ShouldUseIt()
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1.5");
+
+        Assert.AreEqual(TimeSpan.FromSeconds(1.5), ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+    }
+
+    [TestMethod]
+    public void GetControllerFinalization_WhenBothOverridesAreSet_ShouldUseDedicatedValue()
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1.5");
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_FINALIZATION_TIMEOUT_SECONDS))
+            .Returns("2.5");
+
+        Assert.AreEqual(TimeSpan.FromSeconds(1.5), ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+        Assert.AreEqual(TimeSpan.FromSeconds(2.5), ShutdownTimeouts.GetControllerFinalization(environmentMock.Object));
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenConsumerThrowsTimeoutException_ShouldNotSwallowIt()
+    {
+        using MessageBusProxy proxy = new();
+        TimeoutThrowingConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+
+        // The shutdown budget is signalled with TimeoutException too, so a consumer that throws that exact type
+        // must not be mistaken for our own timeout and silently swallowed.
+        TimeoutException ex = await Assert.ThrowsExactlyAsync<TimeoutException>(async () => await asynchronousMessageBus.DisableAsync());
+        Assert.AreEqual("Consumer failure", ex.Message);
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenBlockingConsumerIgnoresTheTokenMidWait_ShouldDowngradeToTheBoundedWait()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+
+        // Keep the shutdown budget short so the test does not have to wait for the 30s default.
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("0.5");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+        Task publishTask = proxy.PublishAsync(producer, new BlockingData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // Nothing is canceled yet, so the blocking processor waits for the inline consumption without a bound.
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+        Assert.IsFalse(disableTask.IsCompleted);
+
+        // The abort arrives mid-wait. The blocking processor has to downgrade to the bounded wait just like the
+        // asynchronous one, otherwise a blocking consumer that ignores its token still hangs the abort.
+        cancellationTokenSource.Cancel();
+
+        Task completed = await Task.WhenAny(disableTask, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(disableTask, completed, "DisableAsync kept waiting on a blocking consumer that ignores the cancellation token.");
+        await disableTask;
+
+        Assert.Contains(consumer, asynchronousMessageBus.ConsumersStillRunning.ToList());
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await publishTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task DisableAsync_WithManyCanceledConsumersIgnoringTheToken_ShouldNotMultiplyTheBudget()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+
+        // Eight consumers that all park inside ConsumeAsync. The processors are completed sequentially, so a
+        // purely per-consumer bound would make the abort take 8 budgets instead of one.
+        const int consumerCount = 8;
+        const double budgetSeconds = 1;
+        GatedConsumer[] consumers = [.. Enumerable.Range(0, consumerCount).Select(i => new GatedConsumer($"GatedConsumer{i}"))];
+
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns(budgetSeconds.ToString(CultureInfo.InvariantCulture));
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [.. consumers],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        foreach (GatedConsumer consumer in consumers)
+        {
+            await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        }
+
+        cancellationTokenSource.Cancel();
+
+        var stopwatch = Stopwatch.StartNew();
+        await asynchronousMessageBus.DisableAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        stopwatch.Stop();
+
+        // Correct behaviour takes about one budget; the per-consumer regression takes about
+        // consumerCount budgets. Sit halfway between the two so the check both separates them clearly and
+        // keeps several times the expected duration as slack for a loaded machine.
+        Assert.IsLessThan(TimeSpan.FromSeconds(consumerCount * budgetSeconds / 2), stopwatch.Elapsed);
+
+        // Deterministic half of the same property: we bailed out of the wait with every consumer still going,
+        // rather than working through them one budget at a time.
+        Assert.HasCount(consumerCount, asynchronousMessageBus.ConsumersStillRunning.ToList());
+
+        foreach (GatedConsumer consumer in consumers)
+        {
+            consumer.AllowConsumeToComplete.SetResult(true);
+        }
+    }
+
+    [TestMethod]
+    public async Task InitAsync_WhenALaterConsumerFails_ShouldTearDownTheProcessorsItAlreadyStarted()
+    {
+        GatedConsumer goodConsumer = new(nameof(GatedConsumer));
+        DisabledConsumer failingConsumer = new();
+        RecordingTask task = new();
+
+        var asynchronousMessageBus = new AsynchronousMessageBus(
+            [goodConsumer, failingConsumer],
+            new CTRLPlusCCancellationTokenSource(),
+            task,
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(asynchronousMessageBus.InitAsync);
+
+        // The first consumer's pump was already started before the second consumer failed validation.
+        Assert.IsNotEmpty(task.Started);
+
+        // A bus whose InitAsync threw never reaches SetBuiltMessageBus, so nothing else would ever complete
+        // that channel. Without the teardown the pump would park forever on a non-cancelable read, rooting the
+        // consumer and everything queued for it.
+        await Task.WhenAll(task.Started).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+    }
+
+    private sealed class RecordingTask : ITask
+    {
+        private readonly SystemTask _inner = new();
+
+        public List<Task> Started { get; } = [];
+
+        public Task Run(Func<Task> function, CancellationToken cancellationToken)
+        {
+            Task task = _inner.Run(function, cancellationToken);
+            lock (Started)
+            {
+                Started.Add(task);
+            }
+
+            return task;
+        }
+
+        public Task Run(Action action) => _inner.Run(action);
+
+        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken) => _inner.Run(function, cancellationToken);
+
+        // Not used by the message bus; forwarding would trip CA1416 since it is unsupported on browser.
+        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
+
+        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
+
+        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
+    }
+
+    private sealed class DisabledConsumer : IDataConsumer
+    {
+        public Type[] DataTypesConsumed => [typeof(GatedData)];
+
+        public string Uid => nameof(DisabledConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        // Makes AsynchronousMessageBus.InitAsync throw after the previous consumer's processor was built.
+        public Task<bool> IsEnabledAsync() => Task.FromResult(false);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
+
+    // This test asserts that the idle pumps have finished within a window, which depends on the background
+    // consumer tasks (started via ITask.Run) getting scheduled promptly. Under the assembly's method-level
+    // parallelism those tasks can be starved on .NET Framework, exactly as documented for
+    // DrainDataAsync_Loop_ShouldFail above. Running it non-parallel removes that contention.
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task DisableAsync_WhenOnlyOneCanceledConsumerIgnoresTheToken_ShouldNotReportTheCooperativeOnes()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+
+        // The stuck consumer is registered first, so it is the one that eats the shared budget. The others are
+        // idle and must still be told to stop before that wait begins.
+        GatedConsumer stuckConsumer = new("StuckConsumer");
+        GatedConsumer[] idleConsumers = [.. Enumerable.Range(0, 3).Select(i => new GatedConsumer($"IdleConsumer{i}"))];
+        foreach (GatedConsumer idle in idleConsumers)
+        {
+            idle.AllowConsumeToComplete.SetResult(true);
+        }
+
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [stuckConsumer, .. idleConsumers],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await stuckConsumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        cancellationTokenSource.Cancel();
+
+        // Sample while the shutdown is still inside the shared budget. Correct behaviour signals every
+        // processor up front, so the idle pumps have long since finished by now and only the stuck consumer is
+        // reported. Signalling lazily inside the wait loop would leave them parked on a non-cancelable read,
+        // still unsignalled, because the stuck consumer has not released the loop yet.
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+
+        List<IDataConsumer> stillRunning = [.. asynchronousMessageBus.ConsumersStillRunning];
+        Assert.HasCount(1, stillRunning);
+        Assert.AreSame(stuckConsumer, stillRunning[0]);
+
+        stuckConsumer.AllowConsumeToComplete.SetResult(true);
+        await disableTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
+    }
+
+    private sealed class TestNodeConsumer : IDataConsumer, ITestExecutionActivityContextConsumer
+    {
+        public List<PlatformActivityContext?> ExecutionActivityContexts { get; } = [];
+
+        public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
+
+        public string Uid => nameof(TestNodeConsumer);
+
+        public string Version => PlatformVersion.Version;
+
+        public string DisplayName => nameof(TestNodeConsumer);
+
+        public string Description => nameof(TestNodeConsumer);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => throw new InvalidOperationException("The activity-context-aware consumer path was not used.");
+
+        Task ITestExecutionActivityContextConsumer.ConsumeAsync(
+            IDataProducer dataProducer,
+            IData data,
+            PlatformActivityContext? executionActivityContext,
+            CancellationToken cancellationToken)
+        {
+            ExecutionActivityContexts.Add(executionActivityContext);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class DummyConsumer : IDataConsumer
@@ -396,6 +1311,182 @@ public sealed class AsynchronousMessageBusTests
         }
     }
 
+    private sealed class BlockingData : IData
+    {
+        public string DisplayName => nameof(BlockingData);
+
+        public string? Description => nameof(BlockingData);
+    }
+
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    private sealed class BlockingConsumer : IBlockingDataConsumer, IDataProducer
+    {
+        private int _currentConcurrency;
+
+        public BlockingConsumer(string id) => Uid = id;
+
+        public List<IData> ConsumedData { get; } = [];
+
+        public TaskCompletionSource<bool> ConsumeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> AllowConsumeToComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // When set, ConsumeAsync delays for this duration while inside the consumption to widen the
+        // window in which a missing serialization guarantee would surface as overlapping calls.
+        public TimeSpan ConsumeDelay { get; set; } = TimeSpan.Zero;
+
+        public int MaxObservedConcurrency { get; private set; }
+
+        public Type[] DataTypesConsumed => [typeof(BlockingData)];
+
+        public Type[] DataTypesProduced => [typeof(BlockingData)];
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            int concurrency = Interlocked.Increment(ref _currentConcurrency);
+            try
+            {
+                lock (ConsumedData)
+                {
+                    MaxObservedConcurrency = Math.Max(MaxObservedConcurrency, concurrency);
+                }
+
+                ConsumeStarted.TrySetResult(true);
+                await AllowConsumeToComplete.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+                if (ConsumeDelay > TimeSpan.Zero)
+                {
+                    await Task.Delay(ConsumeDelay, cancellationToken);
+                }
+
+                lock (ConsumedData)
+                {
+                    ConsumedData.Add(value);
+                }
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _currentConcurrency);
+            }
+        }
+    }
+
+    private sealed class ThrowingBlockingConsumer : IBlockingDataConsumer
+    {
+        public Type[] DataTypesConsumed => [typeof(BlockingData)];
+
+        public string Uid => nameof(ThrowingBlockingConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => throw new InvalidOperationException("Blocking consumer failure");
+    }
+#pragma warning restore TPEXP
+
+    private sealed class GatedData : IData
+    {
+        public string DisplayName => nameof(GatedData);
+
+        public string? Description => nameof(GatedData);
+    }
+
+    /// <summary>
+    /// An asynchronous consumer that parks inside <see cref="ConsumeAsync"/> until the test releases it. It
+    /// deliberately ignores the cancellation token so that a canceled run still leaves a consumption in flight,
+    /// which is exactly the situation where disposal must not overlap consumption.
+    /// </summary>
+    private sealed class GatedConsumer : IDataConsumer
+    {
+        private int _consumedCount;
+
+        public GatedConsumer(string id) => Uid = id;
+
+        public TaskCompletionSource<bool> ConsumeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> AllowConsumeToComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public int ConsumedCount => Volatile.Read(ref _consumedCount);
+
+        public bool ConsumeCompleted => ConsumedCount > 0;
+
+        public Type[] DataTypesConsumed => [typeof(GatedData)];
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            ConsumeStarted.TrySetResult(true);
+            await AllowConsumeToComplete.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            Interlocked.Increment(ref _consumedCount);
+        }
+    }
+
+    private sealed class TimeoutThrowingConsumer : IDataConsumer
+    {
+        public Type[] DataTypesConsumed => [typeof(GatedData)];
+
+        public string Uid => nameof(TimeoutThrowingConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => throw new TimeoutException("Consumer failure");
+    }
+
+    private sealed class ThrowingConsumer : IDataConsumer
+    {
+        public TaskCompletionSource<bool> ConsumeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Type[] DataTypesConsumed => [typeof(GatedData)];
+
+        public string Uid => nameof(ThrowingConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            ConsumeStarted.TrySetResult(true);
+            throw new InvalidOperationException("Async consumer failure");
+        }
+    }
+
     private sealed class DummyProducer : IDataProducer
     {
         public DummyProducer(string producerId, params Type[] dataTypesProduced)
@@ -464,5 +1555,93 @@ public sealed class AsynchronousMessageBusTests
 
             public string? Description => nameof(DataTypeB);
         }
+    }
+
+    [TestMethod]
+    public async Task Processor_DirectDefaultConstructorCountsAndDrainsExactPayloads()
+    {
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        consumer.Setup(c => c.ConsumeAsync(producer, data, CancellationToken.None)).Returns(Task.CompletedTask);
+        using AsyncConsumerDataProcessor processor = new(consumer.Object, new SystemTask(), CancellationToken.None);
+
+        await processor.PublishAsync(producer, data);
+        await processor.PublishAsync(new DummyProducer("consumer"), new GatedData());
+        await processor.DrainDataAsync();
+
+        Assert.AreEqual(2L, processor.ReceivedCount);
+        consumer.Verify(c => c.ConsumeAsync(producer, data, CancellationToken.None), Times.Once);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.IsTrue(processor.IsConsumerRunning);
+        await processor.CompleteAddingAsync();
+        Assert.IsFalse(processor.IsConsumerRunning);
+        await processor.DrainDataAsync();
+        Assert.AreEqual(2L, processor.ReceivedCount);
+    }
+
+    [TestMethod]
+    public async Task Processor_ClosedAndCanceledPublishingPreservesCountAndCancellationContract()
+    {
+        CancellationToken token = new(canceled: true);
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        using AsyncConsumerDataProcessor processor = new(consumer.Object, new SystemTask(), token);
+
+        OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => processor.PublishAsync(new DummyProducer("producer"), new GatedData()));
+
+        Assert.AreEqual(token, exception.CancellationToken);
+#if NETCOREAPP
+        Assert.AreEqual(1L, processor.ReceivedCount, "Modern channels increment before honoring cancellation.");
+#else
+        Assert.AreEqual(0L, processor.ReceivedCount, "The netstandard channel honors cancellation before incrementing.");
+#endif
+        await processor.CompleteAddingAsync();
+        await processor.DrainDataAsync();
+        Assert.IsFalse(processor.IsConsumerRunning);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task BlockingProcessor_DirectPublishingCountsSelfSkippedDataAndDoesNotLeaveWorkRunning()
+    {
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(c => c.Uid).Returns("consumer");
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        consumer.Setup(c => c.ConsumeAsync(producer, data, CancellationToken.None)).Returns(Task.CompletedTask);
+        using BlockingConsumerDataProcessor processor = new(consumer.Object, CancellationToken.None);
+
+        await processor.PublishAsync(producer, data);
+        await processor.PublishAsync(new DummyProducer("consumer"), new GatedData());
+        await processor.DrainDataAsync();
+        await processor.CompleteAddingAsync();
+
+        Assert.AreEqual(2L, processor.ReceivedCount);
+        Assert.IsFalse(processor.IsConsumerRunning);
+        consumer.Verify(c => c.ConsumeAsync(producer, data, CancellationToken.None), Times.Once);
+        consumer.Verify(c => c.ConsumeAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task Proxy_InitAndDefaultRunningConsumersDelegateToConcreteBus()
+    {
+        using MessageBusProxy proxy = new();
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(proxy.InitAsync);
+        Mock<BaseMessageBus> bus = new() { CallBase = true };
+        bus.Setup(b => b.InitAsync()).Returns(Task.CompletedTask);
+        DummyProducer producer = new("producer");
+        IData data = new GatedData();
+        bus.Setup(b => b.PublishAsync(producer, data)).Returns(Task.CompletedTask);
+        proxy.SetBuiltMessageBus(bus.Object);
+
+        await proxy.InitAsync();
+        await proxy.PublishAsync(producer, data);
+
+        Assert.IsEmpty(proxy.ConsumersStillRunning);
+        bus.Verify(b => b.InitAsync(), Times.Once);
+        bus.Verify(b => b.PublishAsync(producer, data), Times.Once);
     }
 }

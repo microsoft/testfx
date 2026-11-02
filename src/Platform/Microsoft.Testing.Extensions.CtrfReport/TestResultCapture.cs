@@ -1,10 +1,12 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Security;
+using System.Security.Cryptography;
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
@@ -13,6 +15,10 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 // stdout/stderr/stack traces) in memory for the whole session.
 internal static class TestResultCapture
 {
+    private const string DefaultAttachmentContentType = "application/octet-stream";
+    private const string EscapedTestIdPrefix = "uid:";
+    private const string HashedTestIdPrefix = "sha256:";
+
     public static CapturedTestResult? TryCapture(TestNode node)
     {
         CapturedTestResultCoreData? coreData = TestResultCaptureHelper.TryCaptureCore(node, includeLocation: true);
@@ -23,32 +29,68 @@ internal static class TestResultCapture
 
         CapturedTestResultCoreData core = coreData.GetValueOrDefault();
         (string status, string? rawStatus) = ClassifyStatus(core.State);
-        (string? ns, string? className, string? methodName) = GetClassAndMethodName(core.Properties.Identifier);
+        (string? ns, string? className, _) = GetClassAndMethodName(core.Properties.Identifier);
+        RetryAttemptProperty? retryAttempt = node.Properties.SingleOrDefault<RetryAttemptProperty>();
 
-        return new CapturedTestResult
+        var result = new CapturedTestResult
         {
-            // Identity fields are test-controlled and can be unbounded (e.g. very long
-            // UIDs/display names from generated data), so we also cap them to keep the
-            // session-wide result list and generated report within a predictable budget.
-            Uid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
-            DisplayName = TestResultCaptureHelper.Truncate(node.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+            TestId = CreateTestId(node.Uid.Value),
             Status = status,
             RawStatus = rawStatus,
-            Duration = core.Duration,
-            StartTime = core.Properties.Timing?.GlobalTiming.StartTime,
-            EndTime = core.Properties.Timing?.GlobalTiming.EndTime,
             Namespace = TestResultCaptureHelper.Truncate(ns, TestResultCaptureHelper.MaxIdentityFieldLength),
-            ClassName = TestResultCaptureHelper.Truncate(className, TestResultCaptureHelper.MaxIdentityFieldLength),
-            MethodName = TestResultCaptureHelper.Truncate(methodName, TestResultCaptureHelper.MaxIdentityFieldLength),
-            ErrorMessage = TestResultCaptureHelper.Truncate(core.ExceptionDetails.ErrorMessage, TestResultCaptureHelper.MaxMessageLength),
-            ExceptionType = core.ExceptionDetails.ExceptionType,
-            StackTrace = TestResultCaptureHelper.Truncate(core.ExceptionDetails.StackTrace, TestResultCaptureHelper.MaxStackTraceLength),
-            StandardOutput = TestResultCaptureHelper.Truncate(core.Properties.StandardOutput?.StandardOutput, TestResultCaptureHelper.MaxStandardStreamLength),
-            StandardError = TestResultCaptureHelper.Truncate(core.Properties.StandardError?.StandardError, TestResultCaptureHelper.MaxStandardStreamLength),
             FilePath = TestResultCaptureHelper.Truncate(core.Properties.Location?.FilePath, TestResultCaptureHelper.MaxIdentityFieldLength),
             Line = core.Properties.Location?.LineSpan.Start.Line,
-            Traits = core.Properties.Traits,
+            Attachments = CaptureAttachments(node.Properties),
+            RetryAttemptNumber = retryAttempt?.AttemptNumber,
+            IsSupersededRetryAttempt = retryAttempt?.IsSuperseded == true,
         };
+        result.PopulateBaseFields(node, core);
+
+        // CTRF decomposes the identifier into a separate Namespace plus a type-name-only
+        // ClassName, rather than the namespace-prefixed ClassName the shared base-field
+        // population produces, so override ClassName here (MethodName already matches the
+        // shared value).
+        result.ClassName = TestResultCaptureHelper.Truncate(className, TestResultCaptureHelper.MaxIdentityFieldLength);
+        return result;
+    }
+
+    private static string CreateTestId(string uid)
+    {
+        bool usesReservedPrefix = uid.StartsWith(EscapedTestIdPrefix, StringComparison.Ordinal)
+            || uid.StartsWith(HashedTestIdPrefix, StringComparison.Ordinal);
+        if (uid.Length <= TestResultCaptureHelper.MaxIdentityFieldLength
+            && (!usesReservedPrefix
+                || uid.Length <= TestResultCaptureHelper.MaxIdentityFieldLength - EscapedTestIdPrefix.Length))
+        {
+            return usesReservedPrefix ? EscapedTestIdPrefix + uid : uid;
+        }
+
+        using var sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        const int CharacterChunkLength = 1024;
+        byte[] buffer = new byte[CharacterChunkLength * sizeof(char)];
+        int offset = 0;
+        while (offset < uid.Length)
+        {
+            int characterCount = Math.Min(CharacterChunkLength, uid.Length - offset);
+            for (int i = 0; i < characterCount; i++)
+            {
+                char value = uid[offset + i];
+                buffer[i * 2] = (byte)value;
+                buffer[(i * 2) + 1] = (byte)(value >> 8);
+            }
+
+            sha256.AppendData(buffer, 0, characterCount * sizeof(char));
+            offset += characterCount;
+        }
+
+        byte[] hash = sha256.GetHashAndReset();
+        var builder = new StringBuilder(HashedTestIdPrefix, capacity: HashedTestIdPrefix.Length + (hash.Length * 2));
+        foreach (byte value in hash)
+        {
+            _ = builder.Append(value.ToString("x2", CultureInfo.InvariantCulture));
+        }
+
+        return builder.ToString();
     }
 
     // CTRF status enum: passed, failed, skipped, pending, other.
@@ -65,8 +107,6 @@ internal static class TestResultCapture
 #pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
             CancelledTestNodeStateProperty => ("other", "cancelled"),
 #pragma warning restore CS0618, MTP0001
-            _ when Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0
-                => ("failed", null),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
@@ -80,4 +120,64 @@ internal static class TestResultCapture
         string? ns = RoslynString.IsNullOrEmpty(identifier.Namespace) ? null : identifier.Namespace;
         return (ns, identifier.TypeName, identifier.MethodName);
     }
+
+    private static IReadOnlyList<CapturedAttachment>? CaptureAttachments(
+        PropertyBag properties,
+        Func<FileInfo, string>? resolveFullPath = null)
+    {
+        resolveFullPath ??= static fileInfo => fileInfo.FullName;
+        List<CapturedAttachment>? attachments = null;
+        PropertyBag.PropertyBagEnumerator enumerator = properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            if (enumerator.Current is not FileArtifactProperty artifact)
+            {
+                continue;
+            }
+
+            string fullPath;
+            try
+            {
+                fullPath = resolveFullPath(artifact.FileInfo);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+            {
+                continue;
+            }
+
+            string name = RoslynString.IsNullOrEmpty(artifact.DisplayName)
+                ? Path.GetFileName(fullPath)
+                : artifact.DisplayName;
+            attachments ??= [];
+            attachments.Add(new CapturedAttachment
+            {
+                Name = TestResultCaptureHelper.Truncate(name, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+                ContentType = GetAttachmentContentType(fullPath),
+                Path = TestResultCaptureHelper.Truncate(fullPath, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+                Description = TestResultCaptureHelper.Truncate(artifact.Description, TestResultCaptureHelper.MaxMessageLength),
+            });
+        }
+
+        return attachments;
+    }
+
+    private static string GetAttachmentContentType(string path)
+        => Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".bmp" => "image/bmp",
+            ".csv" => "text/csv",
+            ".gif" => "image/gif",
+            ".htm" or ".html" => "text/html",
+            ".jpeg" or ".jpg" => "image/jpeg",
+            ".json" => "application/json",
+            ".log" or ".txt" => "text/plain",
+            ".pdf" => "application/pdf",
+            ".png" => "image/png",
+            ".svg" => "image/svg+xml",
+            ".tif" or ".tiff" => "image/tiff",
+            ".webp" => "image/webp",
+            ".xml" => "application/xml",
+            ".zip" => "application/zip",
+            _ => DefaultAttachmentContentType,
+        };
 }

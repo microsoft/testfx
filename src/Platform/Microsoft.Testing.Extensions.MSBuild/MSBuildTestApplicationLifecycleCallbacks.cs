@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.IPC;
 namespace Microsoft.Testing.Extensions.MSBuild;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class MSBuildTestApplicationLifecycleCallbacks : MSBuildLifecycleCallbacksBase, ITestHostApplicationLifetime, IDisposable
 {
     public MSBuildTestApplicationLifecycleCallbacks(

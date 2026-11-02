@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace MSTest.Acceptance.IntegrationTests;
@@ -33,12 +33,19 @@ internal static class TrimAndAotAssertions
         "DataSerializationHelper.cs",
         "ManagedNameHelper.cs",
         "MethodInfoExtensions.cs",
+        "TestContextImplementation.AssertionFailureDiagnostics.cs",
         "TestMethodFilter.cs",
         "SynchronizedSingleSessionVSTestAndTestAnywhereAdapter.cs",
         "ReflectionTestMethodInfo.cs",
 
-        // MSTest.SourceGeneration emitted output (see Constants.GeneratedFileSuffix). Its presence
-        // would indicate the source generator emits IL-unsafe reflection calls.
-        "MSTestReflectionMetadata.g.cs",
+        // MSTest.SourceGeneration emitted output. Its presence in trim/AOT publish output would
+        // indicate the source generator emits IL-unsafe reflection calls. Both generator modes are
+        // covered: the rooting generator emits '<AssemblyName>.MSTestReflectionMetadata.g.cs' (matched
+        // via the '.MSTestReflectionMetadata.g.cs' suffix) and the reflection-free generator (the
+        // shipped default) emits the 'MSTestReflectionMetadata.*.g.cs' registry files.
+        ".MSTestReflectionMetadata.g.cs",
+        "MSTestReflectionMetadata.Registry.g.cs",
+        "MSTestReflectionMetadata.SupportTypes.g.cs",
+        "MSTestReflectionMetadata.Registration.g.cs",
     ];
 }

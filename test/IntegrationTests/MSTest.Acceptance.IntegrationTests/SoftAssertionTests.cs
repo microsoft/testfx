@@ -29,6 +29,10 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputMatchesRegex(
             $"""failed ScopeWithSingleFailure {AcceptanceAssert.DurationPattern}[\s\S]+Assertion failed\. Expected values to be equal\.[\s\S]+expected: 1[\s\S]+actual:\s+2[\s\S]+Assert\.AreEqual\(1, 2\)[\s\S]+at UnitTest1\.ScopeWithSingleFailure\(\)""");
+
+        // A scope that collected exactly one failure rethrows the original assertion exception, so the
+        // structured expected/actual block is unambiguous and is reported.
+        testHostResult.AssertOutputMatchesRegex(@"Expected\s+1\s+Actual\s+2");
     }
 
     [TestMethod]
@@ -42,6 +46,10 @@ public sealed class SoftAssertionTests : AcceptanceTestBase<SoftAssertionTests.T
         // point to the test method (assertion call site).
         testHostResult.AssertOutputMatchesRegex(
             $"""failed ScopeWithMultipleFailures {AcceptanceAssert.DurationPattern}[\s\S]+2 assertion\(s\) failed within the assert scope\.[\s\S]+at UnitTest1\.ScopeWithMultipleFailures\(\)""");
+
+        // With more than one assertion failure, no single expected/actual pair can be attributed to the
+        // result, so the structured block must not be rendered. The per-assertion values stay in the message.
+        testHostResult.AssertOutputDoesNotMatchRegex(@"Expected\s+1\s+Actual\s+2");
     }
 
     [TestMethod]

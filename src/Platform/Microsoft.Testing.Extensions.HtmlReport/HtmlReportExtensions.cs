@@ -4,15 +4,15 @@
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
 /// Provides extension methods for adding HTML report generation to a test application.
 /// </summary>
+/// <remarks>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class HtmlReportExtensions
 {
@@ -21,21 +21,22 @@ public static class HtmlReportExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddHtmlReportProvider(this ITestApplicationBuilder builder)
-        => ReportProviderRegistration.AddReportProvider(
+    {
+        if (builder is not IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
+        }
+
+        ReportProviderRegistration.AddReportProvider<HtmlReportGenerator, HtmlReport.CapturedTestResult>(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
+            HtmlReportGeneratorCommandLine.HtmlReportOptionName,
+            HtmlReportGenerator.JournalEnvironmentVariableName,
             () => new HtmlReportGeneratorCommandLine(),
-            serviceProvider =>
-                new HtmlReportGenerator(
-                    serviceProvider.GetConfiguration(),
-                    serviceProvider.GetCommandLineOptions(),
-                    serviceProvider.GetRequiredService<IFileSystem>(),
-                    serviceProvider.GetTestApplicationModuleInfo(),
-                    serviceProvider.GetMessageBus(),
-                    serviceProvider.GetSystemClock(),
-                    serviceProvider.GetEnvironment(),
-                    serviceProvider.GetOutputDevice(),
-                    serviceProvider.GetTestFramework(),
-                    serviceProvider.GetTestApplicationProcessExitCode(),
-                    serviceProvider.GetLoggerFactory().CreateLogger<HtmlReportGenerator>()));
+            serviceProvider => new HtmlReportGenerator(serviceProvider),
+            (serviceProvider, metadata) => new HtmlReportGenerator(serviceProvider, metadata),
+            HtmlReportGenerator.DeserializeJournalRecord);
+
+        artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new HtmlArtifactPostProcessor());
+    }
 }

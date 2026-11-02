@@ -5,24 +5,16 @@
 
 using System.Data.Odbc;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for ODBC.
 /// </summary>
-internal sealed class OdbcDataConnection : TestDataConnectionSql
+internal sealed class OdbcDataConnection : MSSqlCapableConnection
 {
-    private readonly bool _isMSSql;
-
     public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
-        // Need open connection to get Connection.Driver.
-        DebugEx.Assert(IsOpen(), "The connection must be open!");
-
-        _isMSSql = Connection != null && IsMSSql(GetProviderNameForMSSqlDetection());
     }
 
     public new OdbcCommandBuilder CommandBuilder => (OdbcCommandBuilder)base.CommandBuilder;
@@ -30,13 +22,6 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
     public new OdbcConnection Connection => (OdbcConnection)base.Connection;
 
     protected override string? GetProviderNameForMSSqlDetection() => Connection.Driver;
-
-    /// <summary>
-    /// This is overridden because we need manually get quote literals, ODBC does not fill those automatically.
-    /// </summary>
-    public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
-
-    public override string? GetDefaultSchema() => _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
 
     protected override SchemaMetaData[] GetSchemaMetaData()
     {

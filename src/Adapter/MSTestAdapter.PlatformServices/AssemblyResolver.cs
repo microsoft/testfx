@@ -85,8 +85,10 @@ internal
     private readonly object _syncLock = new();
 #endif
 
+    private static readonly Lazy<TextWriter> StandardErrorWriter = new(CreateStandardErrorWriter);
     private static List<string>? s_currentlyLoading;
     private bool _disposed;
+    private int _traceLoggingFailureReported;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyResolver"/> class.
@@ -169,7 +171,7 @@ internal
     void AddSearchDirectoriesFromRunSetting(List<RecursiveDirectoryPath> recursiveDirectoryPath)
     {
         // Enqueue elements from the list in Queue
-        if (recursiveDirectoryPath == null)
+        if (recursiveDirectoryPath is null)
         {
             return;
         }

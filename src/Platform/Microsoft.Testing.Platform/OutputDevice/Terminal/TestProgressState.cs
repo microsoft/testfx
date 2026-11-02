@@ -1,31 +1,68 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
-using TestNodeInfoEntry = (int Passed, int Skipped, int Failed, int LastAttemptNumber);
+using TestNodeInfoEntry = (int Passed, int Skipped, int Failed, int LastAttemptNumber, int LastRetryAttemptNumber, int Attempts);
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 [Embedded]
-internal sealed class TestProgressState
+internal sealed partial class TestProgressState
 {
-    // THREADING: this type is intentionally not internally synchronized. Each TestProgressState instance is owned by
-    // a single executionId; the reporter looks it up from a ConcurrentDictionary (_assemblies), but the Microsoft
-    // Testing Platform message pipeline delivers events for a given executionId on a single consumer, so the mutating
-    // members below (the dictionaries and the Passed/Skipped/Failed/Retried/TryCount counters) are only ever
-    // touched by one thread at a time for a given instance. Do not call these members concurrently for the same
-    // assembly without adding synchronization.
+    // Multiple test-host instances can report one attempt concurrently (for example, shards), so all per-execution
+    // result, attempt, duration, and discovery state is protected by this lock.
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     // Tracks the per-test-node tally and the attempt it belongs to, so retries (which re-report the same test node
-    // uid under a new instance id) replace rather than double-count the earlier attempt's result.
+    // uid, either under a new instance id for the out-of-process orchestrator or under a new in-process retry
+    // attempt number) replace rather than double-count the earlier attempt's result. An attempt is the pair
+    // (host attempt, in-process retry attempt), ordered lexicographically, so the two retry mechanisms compose.
     private readonly Dictionary<string, TestNodeInfoEntry> _testUidToResults = [];
 
-    // Maps each instance id seen for this assembly to its 1-based attempt number. Each new instance id is a retry
-    // attempt; the highest attempt number always equals TryCount. In most runs there is exactly one (no retry).
-    // This lookup is O(1) because GetAttemptNumberFromInstanceId is called for every reported test result.
+    // Maps each instance id seen for this assembly to its 1-based attempt number. New protocol peers report the
+    // attempt explicitly, allowing multiple instances (for example, shards) to belong to the same attempt. Legacy
+    // peers omit it, in which case each new instance is inferred to be the next retry attempt.
     private readonly Dictionary<string, int> _instanceIdToAttemptNumber = [];
+
+    // Records the last-seen (display name, duration) for every test node, keyed by test node uid, so the
+    // "slowest tests" summary section can rank them. Keyed by uid (not appended to a list) so a retried test
+    // replaces its earlier attempt's timing instead of appearing twice, mirroring the pass/fail tally above.
+    // Only populated when the slowest-tests feature is enabled (the reporter gates the RecordTestDuration call),
+    // so a run without the feature pays no memory cost here.
+    private readonly Dictionary<string, (string DisplayName, TimeSpan Duration)> _testUidToDuration = [];
+
+    // Test nodes whose result was superseded by a later attempt while the earlier attempt had at least one failure.
+    // Combined with the final tally in _testUidToResults this yields the "flaky" set (failed at least once, but the
+    // final attempt passed). Kept separate from the tally so a test that keeps failing is retried-but-not-flaky.
+    // The value is the last-seen display name so the summary can list the test by name.
+    private readonly Dictionary<string, string> _uidWithEarlierFailure = [];
+
+    // Distinct test nodes that produced results in more than one attempt. This is the "how many tests were retried"
+    // figure, as opposed to _retriedExecutions ("how many extra runs did that cost"). The default string comparer is
+    // already ordinal, matching the dictionaries above.
+    private readonly HashSet<string> _retriedUids = [];
+
+    private readonly List<string> _discoveredTestDisplayNames = [];
+    private int _discoveredTests;
+    private int _failedTests;
+    private int _passedTests;
+    private int _skippedTests;
+    private int _retriedFailedTests;
+
+    // Total number of extra executions caused by retries (every result that superseded an earlier attempt), so the
+    // summary can distinguish "2 tests were retried" from "those retries cost 4 extra runs".
+    private int _retriedExecutions;
+    private int _tryCount;
+    private TestNodeResultsState? _testNodeResultsState;
+#pragma warning disable IDE0032 // Use auto property - synchronized access requires a backing field.
+    private bool _success;
+#pragma warning restore IDE0032
 
     public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery)
     {
@@ -49,21 +86,147 @@ internal sealed class TestProgressState
 
     public IStopwatch Stopwatch { get; }
 
-    public int DiscoveredTests { get; internal set; }
+    public int DiscoveredTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _discoveredTests;
+            }
+        }
 
-    public int FailedTests { get; private set; }
+        internal set
+        {
+            lock (_lock)
+            {
+                _discoveredTests = value;
+            }
+        }
+    }
 
-    public int PassedTests { get; private set; }
+    public int FailedTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _failedTests;
+            }
+        }
+    }
 
-    public int SkippedTests { get; private set; }
+    public int PassedTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _passedTests;
+            }
+        }
+    }
+
+    public int SkippedTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _skippedTests;
+            }
+        }
+    }
 
     /// <summary>Gets the number of tests whose earlier-attempt failure was superseded by a later retry; rendered as the "/r{N}" segment.</summary>
-    public int RetriedFailedTests { get; private set; }
+    public int RetriedFailedTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _retriedFailedTests;
+            }
+        }
+    }
+
+    /// <summary>Gets the number of distinct tests that produced results in more than one attempt.</summary>
+    public int RetriedTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _retriedUids.Count;
+            }
+        }
+    }
+
+    /// <summary>Gets the number of extra executions caused by retries (results that superseded an earlier attempt).</summary>
+    public int RetriedExecutions
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _retriedExecutions;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of tests that failed at least once but whose final attempt passed.
+    /// </summary>
+    public int FlakyTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                int count = 0;
+                foreach (KeyValuePair<string, string> entry in _uidWithEarlierFailure)
+                {
+                    if (IsFlakyCore(entry.Key))
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
+    }
 
     /// <summary>Gets the total number of tests: the discovered count in discovery mode, otherwise the live passed/skipped/failed tally.</summary>
-    public int TotalTests => IsDiscovery ? DiscoveredTests : PassedTests + SkippedTests + FailedTests;
+    public int TotalTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return IsDiscovery ? _discoveredTests : _passedTests + _skippedTests + _failedTests;
+            }
+        }
+    }
 
-    public TestNodeResultsState? TestNodeResultsState { get; internal set; }
+    public TestNodeResultsState? TestNodeResultsState
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _testNodeResultsState;
+            }
+        }
+
+        internal set
+        {
+            lock (_lock)
+            {
+                _testNodeResultsState = value;
+            }
+        }
+    }
 
     public int SlotIndex { get; internal set; }
 
@@ -71,85 +234,65 @@ internal sealed class TestProgressState
 
     public long Version { get; internal set; }
 
-    public List<string> DiscoveredTestDisplayNames { get; internal set; } = [];
+    public List<string> DiscoveredTestDisplayNames
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _discoveredTestDisplayNames];
+            }
+        }
+
+        internal set
+        {
+            lock (_lock)
+            {
+                _discoveredTestDisplayNames.Clear();
+                _discoveredTestDisplayNames.AddRange(value);
+            }
+        }
+    }
 
     public bool IsDiscovery { get; }
 
     /// <summary>Gets or sets a value indicating whether the assembly run completed successfully (set by the orchestrator on completion).</summary>
-    public bool Success { get; internal set; }
-
-    /// <summary>Gets the number of attempts (handshakes) seen for this assembly; greater than 1 indicates retries.</summary>
-    public int TryCount { get; private set; }
-
-    public void ReportPassingTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Passed = entry.Passed + 1 }, static @this => @this.PassedTests++);
-
-    public void ReportSkippedTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Skipped = entry.Skipped + 1 }, static @this => @this.SkippedTests++);
-
-    public void ReportFailedTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this.FailedTests++);
-
-    /// <summary>
-    /// Registers a handshake for the given <paramref name="instanceId"/>. A previously unseen instance id is a new
-    /// retry attempt and bumps <see cref="TryCount"/>; re-seeing the current attempt is a no-op.
-    /// </summary>
-    internal void NotifyHandshake(string instanceId)
+    public bool Success
     {
-        if (!_instanceIdToAttemptNumber.TryGetValue(instanceId, out int attemptNumber))
+        get
         {
-            // A previously unseen instance id is a new attempt; attempt numbers are 1-based and the latest always
-            // equals TryCount.
-            TryCount++;
-            _instanceIdToAttemptNumber[instanceId] = TryCount;
+            lock (_lock)
+            {
+                return _success;
+            }
         }
-        else if (attemptNumber != TryCount)
+
+        internal set
         {
-            // We received a handshake for an instance id that is not the most recent one — unexpected ordering.
-            throw ApplicationStateGuard.Unreachable();
+            lock (_lock)
+            {
+                _success = value;
+            }
         }
     }
 
-    private void ReportGenericTestResult(
-        string testNodeUid,
-        string instanceId,
-        Func<TestNodeInfoEntry, TestNodeInfoEntry> incrementTestNodeInfoEntry,
-        Action<TestProgressState> incrementCountAction)
+    /// <summary>Gets the highest attempt number seen for this assembly; greater than 1 indicates retries.</summary>
+    public int TryCount
     {
-        int currentAttemptNumber = GetAttemptNumberFromInstanceId(instanceId);
-
-        if (_testUidToResults.TryGetValue(testNodeUid, out TestNodeInfoEntry value))
+        get
         {
-            if (value.LastAttemptNumber == currentAttemptNumber)
+            lock (_lock)
             {
-                // Another result for the same test node in the same attempt — just increment.
-                _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry(value);
-            }
-            else if (currentAttemptNumber > value.LastAttemptNumber)
-            {
-                // Retry: discard the previous attempt's contribution to the live tally and re-count this attempt.
-                RetriedFailedTests += value.Failed;
-                PassedTests -= value.Passed;
-                SkippedTests -= value.Skipped;
-                FailedTests -= value.Failed;
-                _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber));
-            }
-            else
-            {
-                // A result for an attempt older than the latest one we saw — unexpected ordering.
-                throw ApplicationStateGuard.Unreachable();
+                return _tryCount;
             }
         }
-        else
-        {
-            _testUidToResults.Add(testNodeUid, incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber)));
-        }
-
-        incrementCountAction(this);
     }
 
-    private int GetAttemptNumberFromInstanceId(string instanceId)
-        => _instanceIdToAttemptNumber.TryGetValue(instanceId, out int attemptNumber)
-            ? attemptNumber
-            : throw ApplicationStateGuard.Unreachable();
+    internal TestNodeResultsState GetOrCreateTestNodeResultsState(Func<TestNodeResultsState> factory)
+    {
+        lock (_lock)
+        {
+            return _testNodeResultsState ??= factory();
+        }
+    }
 }

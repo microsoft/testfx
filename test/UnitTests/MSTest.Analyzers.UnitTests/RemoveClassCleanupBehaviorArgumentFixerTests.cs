@@ -87,6 +87,78 @@ public sealed class RemoveClassCleanupBehaviorArgumentFixerTests
     }
 
     [TestMethod]
+    public async Task WhenClassCleanupBehaviorIsFirstArgument_RemovesBehaviorKeepsInheritance()
+    {
+        // Exercises the branch where ClassCleanupBehavior appears before InheritanceBehavior,
+        // ensuring the first argument is removed and the remaining one is preserved.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestProject;
+
+            [TestClass]
+            public class UnitTest1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [{|CS1729:ClassCleanup({|CS0103:ClassCleanupBehavior|}.EndOfClass, InheritanceBehavior.None)|}]
+                public void ClassClean()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestProject;
+
+            [TestClass]
+            public class UnitTest1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+
+                [ClassCleanup(InheritanceBehavior.None)]
+                public void ClassClean()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassCleanupBehaviorReferencedOutsideAttribute_NoFix()
+    {
+        // Exercises the guard: the fixer only applies when ClassCleanupBehavior appears
+        // inside an AttributeArgument. A reference in a regular method body should not be fixed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestProject;
+
+            [TestClass]
+            public class UnitTest1
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    _ = {|CS0103:ClassCleanupBehavior|}.EndOfClass;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenClassCleanupBehaviorWithMultiLineBody_PreservesIndentation()
     {
         string code = """

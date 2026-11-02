@@ -23,9 +23,7 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
-        string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? testHost.FullName
-            : testHost.FullName + ".dll";
+        string exeOrDllName = GetTestExecutablePath(testHost);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
             $"test {exeOrDllName}",
             workingDirectory: AssetFixture.AspireProjectPath,
@@ -58,6 +56,8 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
   <ItemGroup>
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <!-- Keep Aspire's transitive MessagePack dependency on the patched 2.5.x line. -->
+    <PackageReference Include="MessagePack" Version="2.5.303" />
   </ItemGroup>
 </Project>
 

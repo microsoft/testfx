@@ -538,4 +538,64 @@ public sealed class DuplicateDataRowAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenNaNIsDuplicated_Diagnostic()
+    {
+        // The analyzer uses BitConverter.DoubleToInt64Bits / BitConverter.GetBytes for float/double
+        // comparison, which makes NaN == NaN (same bit pattern) unlike IEEE 754 equality.
+        // Duplicate NaN rows should therefore be flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(double.NaN)]
+                [[|DataRow(double.NaN)|]]
+                public static void TestMethod1(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(float.NaN)]
+                [[|DataRow(float.NaN)|]]
+                public static void TestMethod2(float x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenNaNAndNumber_NoDiagnostic()
+    {
+        // NaN and a regular number have different bit patterns and are not duplicates.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(double.NaN)]
+                [DataRow(1.0d)]
+                public static void TestMethod1(double x)
+                {
+                }
+
+                [TestMethod]
+                [DataRow(float.NaN)]
+                [DataRow(1.0f)]
+                public static void TestMethod2(float x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

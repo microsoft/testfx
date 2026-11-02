@@ -35,7 +35,7 @@
       <trans-unit id="CannotExpandIDataSourceAttribute">
         <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
         <target state="translated">从“{0}.{1}”上的属性扩展 IDataSource 行时出现异常: {2}</target>
-        <note>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}{Locked="CannotExpandIDataSourceAttribute_DuplicateDisplayName"}{Locked="CannotExpandIDataSourceAttribute_CannotSerialize"}</note>
+        <note>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_CannotSerialize">
         <source>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</source>
@@ -101,6 +101,56 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">调试跟踪:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">'mstest:execution:dependencies' 配置部分声明了“{0}”的依赖项，它与此运行中的任何测试均不匹配。它们将被忽略。</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">'mstest:execution:dependencies:chains' 配置部分索引 {0} 处的链为空，并且未声明任何依赖项。移除它: 链需要至少两个测试才能表示顺序。</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">'mstest:execution:dependencies' 配置部分中的测试引用“{0}”无效。对类的每个测试使用 'Namespace.Class.Method' 或 'Namespace.Class.*'。</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">'mstest:execution:dependencies' 配置部分为“{0}”声明了没有 'dependsOn' 条目的节点，这是无效的节点。</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">无法使用类级并行化来调度以下测试类之间的依赖关系，因为这些类相互依赖: {0}。它们的测试按依赖项顺序串行运行，因此仍会遵守声明的顺序。使用 &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (或 [Parallelize(Scope = ExecutionScope.MethodLevel)])单独调度每个测试，并再次并行运行它们。</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">在测试之间检测到依赖循环: {0}。无法对循环中的测试进行排序，并将其报告为失败。移除依赖项声明其中之一以中断循环。</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">已跳过测试，因为它依赖于未通过的“{0}”。</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">测试“{0}”声明了对“{1}”的依赖项，它与此测试源中的任何测试均不匹配。依赖项是在单个源中解析的，因此不支持其他测试程序集中的目标。将忽略该依赖项。</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">测试运行部署问题：未能加载程序集或模块 "{0}"。原因: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">测试运行部署问题: 错误的部署项:“{0}”: 输出目录“{1}”指定将该项部署到部署根目录的外部，这是不允许的。</target>
@@ -117,9 +167,9 @@ but received {4} argument(s), with types '{5}'.</source>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">测试运行部署问题: 未能将文件“{0}”复制到“{1}”: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="translated">测试运行部署问题: 未能将文件 "{0}" 复制到 "{1}": {2}: {3}(HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -165,6 +215,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>deployment item '{0}' (output directory '{1}')</source>
         <target state="translated">部署项“{0}”(输出目录“{1}”)</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
+      </trans-unit>
+      <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
+        <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
+        <target state="translated">"mstest:orderTestsByNameInClass" 配置密钥已弃用，将在未来版本中移除。请改用 "mstest:execution:orderTestsByNameInClass"。</target>
+        <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
@@ -223,6 +278,31 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">发现泛型参数“{0}”有两种冲突类型。冲突类型为“{1}”和“{2}”。</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">全局测试清理方法“{0}.{1}”在 {2} 毫秒后超时</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="translated">全局测试清理方法“{0}.{1}”已取消</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">全局测试初始化方法“{0}.{1}”在 {2} 毫秒后超时</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="translated">全局测试初始化方法“{0}.{1}”已取消</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
+      <trans-unit id="HostedTestClassInjectionRequiresNoAppDomain">
+        <source>MSTest test-class injection from an application host cannot cross a .NET Framework AppDomain boundary. Set DisableAppDomain to true for this hosted test run.</source>
+        <target state="translated">来自应用程序主机的 MSTest 测试类注入无法跨越 .NET Framework AppDomain 边界。请针对此托管测试运行将 DisableAppDomain 设置为 true。</target>
+        <note>{Locked="MSTest"}{Locked=".NET Framework"}{Locked="AppDomain"}{Locked="DisableAppDomain"}</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">为 ‘Scope’ 指定的值 ‘{0}’ 无效。受支持的范围为 {1}。</target>
@@ -233,6 +313,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">为 ‘Workers’ 指定的值 ‘{0}’ 无效。该值应为非负整数。</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
       </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">MSTestAdapter 未能解析 runsettings XML。</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
+      </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
         <target state="translated">设置“{0}”无效。意外的 XmlAttribute:“{1}”。</target>
@@ -242,6 +327,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</source>
         <target state="translated">MSTestAdapter 在其设置“{1}”中遇到意外的元素“{0}”。删除此元素，然后再试一次。</target>
         <note>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidTimeoutValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</source>
+        <target state="translated">runsettings 条目“{1}”的值“{0}”无效。超时必须是严格的正整数(以毫秒为单位)；不允许 0 或更小的值。省略该条目以使用默认值(无超时)。将忽略该设置。</target>
+        <note>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
@@ -398,15 +488,25 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">单元测试适配器未能连接到数据源或读取数据。有关解决此错误的详细信息，请查看 MSDN 库中的“数据驱动单元测试疑难解答”(http://go.microsoft.com/fwlink/?LinkId=62412)。错误详细信息: {0}</target>
         <note>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
+        <target state="translated">UTA007: 在类 {0} 中定义的方法 {1} 没有正确的签名。'ValueTask&lt;T&gt;' 不是有效的测试方法返回类型；请改用非泛型 'ValueTask'。示例: public async ValueTask Test.Class1.Test()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
+      </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
         <target state="translated">UTA031: 类 {0} 没有有效的 TestContext 属性。TestContext 必须是 TestContext 类型，并且必须是 non-static 且 public。例如: public TestContext TestContext。</target>
         <note>{0} is the test class name. {Locked="UTA031"}{Locked="TestContext"}{Locked="non-static"}{Locked="public"}{Locked="public TestContext TestContext"}</note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorIncorrectFSharpTestMethodSignature">
+        <source>UTA007: Function {1} defined in F# module {0} does not have a correct signature. A test function marked with the [&lt;TestMethod&gt;] attribute must be static and public, and return void, Task, or non-generic ValueTask. Parameters require test data.</source>
+        <target state="translated">UTA007: 函数 {1} (定义于 F# 模块 {0})的签名不正确。使用 [&lt;TestMethod&gt;] 属性标记的测试函数必须是 static public 函数，并且必须返回 void、Task 或非泛型 ValueTask。参数需要测试数据。</target>
+        <note>{0} is the F# module full name. {1} is the test function name. {Locked="UTA007"}{Locked="F#"}{Locked="[&lt;TestMethod&gt;]"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
+      </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
         <target state="translated">UTA007: 在类 {0} 中定义的方法 {1} 没有正确的签名。用 [TestMethod] 特性标记的测试方法必须是返回类型为 void 的 non-static public 方法，并且不应采用任何参数。示例: public void Test.Class1.Test()。此外，如果在测试方法中使用 async-await，则返回类型必须为 "Task" 或 "ValueTask"。示例: public async Task Test.Class1.Test2()</target>
-        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</note>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="ValueTask"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
@@ -459,6 +559,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">“Execute”方法引发了未经处理的异常。请将此错误报告给属性“{0}”的作者。
 {1}</target>
         <note>{0} is the attribute type name. {1} is the exception details. {Locked="Execute"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_FSharpTestInitializeAndCleanupMethodHasWrongSignature">
+        <source>Function {0}.{1} has a wrong signature. An F# test initialize or cleanup function must be static and public, take no parameters, and return void, Task, or non-generic ValueTask.</source>
+        <target state="translated">函数 {0}.{1} 的签名错误。F# 测试初始化函数或清理函数必须是 static public 函数，不得接受任何参数，并且必须返回 void、Task 或非泛型 ValueTask。</target>
+        <note>{0} is the F# module full name. {1} is the function name. {Locked="F#"}{Locked="static"}{Locked="public"}{Locked="void"}{Locked="Task"}{Locked="ValueTask"}</note>
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">
         <source>Failed to obtain the exception thrown by test method {0}.{1}.</source>
@@ -514,6 +619,41 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>The {0}.TestContext has incorrect type.</source>
         <target state="translated">{0}.TestContext 的类型不正确。</target>
         <note>{0} is the test class name. {Locked="TestContext"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
+        <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
+        <target state="translated">UTA077: 未能实例化 [TestFilterProvider] 引用的类型“{0}”。该类型必须声明一个公共的无参数构造函数。{1}</target>
+        <note>{0} is the type name. {1} is the exception details. {Locked="UTA077"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderLoadFailed">
+        <source>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</source>
+        <target state="translated">UTA073: 未能从程序集“{0}”加载 [TestFilterProvider] 标记。{1}</target>
+        <note>{0} is the assembly path. {1} is the exception details. {Locked="UTA073"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderMultipleDeclared">
+        <source>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</source>
+        <target state="translated">UTA079: 程序集“{0}”声明了多个 [TestFilterProvider] 属性。每个测试程序集最多允许一个；请在单个 ITestFilter 实现中组合多个筛选策略。</target>
+        <note>{0} is the assembly path. {Locked="UTA079"}{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderThrew">
+        <source>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</source>
+        <target state="translated">UTA078: [TestFilterProvider] 筛选器“{0}”在评估测试“{1}”时引发异常。{2}</target>
+        <note>{0} is the filter type name. {1} is the test name. {2} is the exception details. {Locked="UTA078"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeDoesNotImplementInterface">
+        <source>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</source>
+        <target state="translated">UTA076: [TestFilterProvider] 引用的类型“{0}”必须实现“{1}”。</target>
+        <note>{0} is the type name. {1} is the required interface name. {Locked="UTA076"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsGeneric">
+        <source>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</source>
+        <target state="translated">UTA074: [TestFilterProvider] 引用的类型“{0}”不能是泛型。</target>
+        <note>{0} is the type name. {Locked="UTA074"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsNotInstantiable">
+        <source>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</source>
+        <target state="translated">UTA075: [TestFilterProvider] 引用的类型“{0}”必须是实际类别，不能是接口或抽象类。</target>
+        <note>{0} is the type name. {Locked="UTA075"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>

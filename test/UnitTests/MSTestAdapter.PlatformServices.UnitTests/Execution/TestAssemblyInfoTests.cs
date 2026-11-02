@@ -265,6 +265,22 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.PostAssemblyInitProperties.Should().ContainKey("UserKey");
     }
 
+    public async Task RunAssemblyInitializeShouldLeavePostAssemblyInitPropertiesNullWhenAssemblyInitSetsNoProperties()
+    {
+        // AssemblyInitialize exists and succeeds but sets no TestContext.Properties.
+        DummyTestClass.AssemblyInitializeMethodBody = _ => { };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod")!;
+
+        TestContextImplementation testContext = GetTestContext();
+        TestResult result = await _testAssemblyInfo.RunAssemblyInitializeAsync(testContext);
+
+        result.Outcome.Should().Be(UnitTestOutcome.Passed);
+
+        // CaptureLifecycleProperties returns null when no non-label properties were set,
+        // so MergeProperties can short-circuit without acquiring a lock on each test's context.
+        _testAssemblyInfo.PostAssemblyInitProperties.Should().BeNull();
+    }
+
     public async Task RunAssemblyInitializeShouldLeavePostAssemblyInitPropertiesNullWhenAssemblyInitMethodIsNull()
     {
         _testAssemblyInfo.AssemblyInitializeMethod = null;

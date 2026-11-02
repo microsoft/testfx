@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -28,6 +30,12 @@ internal static class AssertionValueRenderer
             : AssertionValueFormatterRegistry.HasFormatters
                 ? AssertionValueFormatterRegistry.Render(value, BuiltInRenderer)
                 : RenderBuiltIn(value);
+
+    /// <summary>
+    /// Determines whether a rendered string is exactly the representation produced by the built-in renderer.
+    /// </summary>
+    internal static bool IsBuiltInStringRendering(string value, string rendered)
+        => StringEscapeHelper.IsEscapedString(value, rendered);
 
     private static string RenderBuiltIn(object? value)
         => value switch
@@ -70,43 +78,7 @@ internal static class AssertionValueRenderer
     {
         StringBuilder sb = new(value.Length + 2);
         sb.Append('"');
-        foreach (char c in value)
-        {
-            switch (c)
-            {
-                case '"':
-                    sb.Append("\\\"");
-                    break;
-                case '\\':
-                    sb.Append("\\\\");
-                    break;
-                case '\n':
-                    sb.Append("\\n");
-                    break;
-                case '\r':
-                    sb.Append("\\r");
-                    break;
-                case '\t':
-                    sb.Append("\\t");
-                    break;
-                case '\0':
-                    sb.Append("\\0");
-                    break;
-                default:
-                    if (char.IsControl(c))
-                    {
-                        sb.Append("\\u");
-                        sb.Append(((int)c).ToString("X4", CultureInfo.InvariantCulture));
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-
-                    break;
-            }
-        }
-
+        StringEscapeHelper.AppendEscapedString(sb, value, 0, value.Length, escapeUnpairedSurrogates: false, useExtendedEscapes: false);
         sb.Append('"');
         return sb.ToString();
     }
@@ -114,16 +86,14 @@ internal static class AssertionValueRenderer
     /// <summary>
     /// Renders a char value with single quotes and escape sequences.
     /// </summary>
-    private static string RenderChar(char value) =>
-        value switch
-        {
-            '\n' => "'\\n'",
-            '\r' => "'\\r'",
-            '\t' => "'\\t'",
-            '\0' => "'\\0'",
-            _ when char.IsControl(value) => $"'\\u{(int)value:X4}'",
-            _ => $"'{value}'",
-        };
+    private static string RenderChar(char value)
+    {
+        StringBuilder sb = new(8);
+        sb.Append('\'');
+        StringEscapeHelper.AppendEscapedChar(sb, value, useExtendedEscapes: false);
+        sb.Append('\'');
+        return sb.ToString();
+    }
 
     /// <summary>
     /// Renders a collection in JSON-style array notation.

@@ -19,6 +19,22 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task RemovedEnvironmentVariable_DoesNotReachLaunchedHost(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        TestHostResult result = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["CHECK_ENVIRONMENT_REMOVAL"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        result.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task TestHostMessesUpExitCode(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
@@ -131,6 +147,11 @@ public class TestHostEnvironmentVariableProviderTestClass : ITestHostEnvironment
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
         environmentVariables.SetVariable(new("myVar", "myValue", false, false));
+        if (Environment.GetEnvironmentVariable("CHECK_ENVIRONMENT_REMOVAL") == "1")
+        {
+            environmentVariables.SetVariable(new("REMOVABLE_PROVIDER_VARIABLE", "temporary", false, false));
+            environmentVariables.RemoveVariable("REMOVABLE_PROVIDER_VARIABLE");
+        }
         return Task.CompletedTask;
     }
 
@@ -165,6 +186,12 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         if (Environment.GetEnvironmentVariable("myVar") != "myValue")
         {
             throw new InvalidOperationException();
+        }
+
+        if (Environment.GetEnvironmentVariable("CHECK_ENVIRONMENT_REMOVAL") == "1"
+            && Environment.GetEnvironmentVariable("REMOVABLE_PROVIDER_VARIABLE") is not null)
+        {
+            throw new InvalidOperationException("The controller forwarded a removed environment variable.");
         }
 
         if (Environment.GetEnvironmentVariable("ZERO_TESTS") == "1")

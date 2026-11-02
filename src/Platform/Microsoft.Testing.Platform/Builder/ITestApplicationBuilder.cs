@@ -31,6 +31,9 @@ public interface ITestApplicationBuilder
     /// <summary>
     /// Gets the test host orchestrator manager.
     /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ITestHostOrchestratorManager TestHostOrchestrator { get; }
 
@@ -42,18 +45,27 @@ public interface ITestApplicationBuilder
     /// <summary>
     /// Gets the configuration manager.
     /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     IConfigurationManager Configuration { get; }
 
     /// <summary>
     /// Gets the logging manager.
     /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ILoggingManager Logging { get; }
 
     /// <summary>
     /// Gets the output device manager that allows registering a custom output device.
     /// </summary>
+    /// <remarks>
+    /// This API is experimental. It may change, break, or be removed at any time without notice.
+    /// </remarks>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     IOutputDeviceManager OutputDevice { get; }
 

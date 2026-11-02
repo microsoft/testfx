@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -60,6 +62,39 @@ public sealed partial class Assert
         => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
 
 #if NETCOREAPP3_1_OR_GREATER
+
+    /// <summary>
+    /// Tests whether the array has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, T[] collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(HasCount), expected, (IEnumerable<T>)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the array has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the array items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The array.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void HasCount<T>(int expected, T[] collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
 
     /// <summary>
     /// Tests whether the span has the expected count/length.
@@ -204,7 +239,7 @@ public sealed partial class Assert
         // string instead of allocating "Assert." + assertionName on every call.
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
-        int actualCount = collection.Count();
+        int actualCount = CollectionCountHelper.GetCount(collection);
         if (actualCount == expected)
         {
             return;
@@ -214,13 +249,32 @@ public sealed partial class Assert
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
-        => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
+    {
+        // Cast<object>() previously validated null before entering the generic helper and tracking telemetry.
+        if (collection is null)
+        {
+            _ = collection!.Cast<object>();
+            return;
+        }
+
+        TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
+
+        int actualCount = collection is ICollection nonGenericCollection
+            ? nonGenericCollection.Count
+            : collection.Cast<object>().Count();
+        if (actualCount == expected)
+        {
+            return;
+        }
+
+        ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
+    }
 
 #if NETCOREAPP3_1_OR_GREATER
     private static void HasCount<T>(string assertionName, int expected, ReadOnlySpan<T> collection, string? message, string collectionExpression)
     {
-        // assertionName is always "HasCount" here (there are no span/memory IsEmpty overloads that call this);
-        // use a cached prefixed string instead of allocating "Assert." + assertionName on every call.
+        // assertionName is one of a small fixed set ("HasCount", "IsEmpty"); use a cached prefixed
+        // string instead of allocating "Assert." + assertionName on every call.
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
         int actualCount = collection.Length;

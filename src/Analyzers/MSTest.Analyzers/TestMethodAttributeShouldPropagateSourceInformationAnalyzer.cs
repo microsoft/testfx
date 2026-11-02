@@ -20,13 +20,14 @@ public sealed class TestMethodAttributeShouldPropagateSourceInformationAnalyzer 
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.TestMethodAttributeShouldPropagateSourceInformationTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestMethodAttributeShouldPropagateSourceInformationMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.TestMethodAttributeShouldPropagateSourceInformationDescription), Resources.ResourceManager, typeof(Resources));
 
     /// <inheritdoc cref="Resources.TestMethodAttributeShouldPropagateSourceInformationTitle" />
     public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestMethodAttributeShouldPropagateSourceInformationRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

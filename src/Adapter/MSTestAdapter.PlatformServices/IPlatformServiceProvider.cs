@@ -3,7 +3,6 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -67,7 +66,7 @@ internal interface IPlatformServiceProvider
     /// <param name="source">
     /// The source.
     /// </param>
-    /// <param name="runSettings">
+    /// <param name="settingsXml">
     /// The run Settings for the session.
     /// </param>
     /// <returns>
@@ -75,7 +74,7 @@ internal interface IPlatformServiceProvider
     /// </returns>
     ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings);
+        string? settingsXml);
 
     /// <summary>
     /// Gets the TestContext object for a platform.
@@ -97,5 +96,5 @@ internal interface IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
+    ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger messageLogger, UTF.UnitTestOutcome outcome);
 }

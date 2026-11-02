@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 
@@ -50,6 +49,7 @@ internal static class TrxTestResultExtractor
         TrxExceptionProperty? trxException = null;
         TrxMessagesProperty? trxMessages = null;
         TrxCategoriesProperty? trxCategories = null;
+        TrxWorkItemsProperty? trxWorkItems = null;
         List<TrxTestMetadata>? metadata = null;
         List<TrxTestFileArtifact>? artifacts = null;
 
@@ -65,6 +65,7 @@ internal static class TrxTestResultExtractor
                 case TrxExceptionProperty e: trxException = GetSingleOrDefaultValue(trxException, e); break;
                 case TrxMessagesProperty msg: trxMessages = GetSingleOrDefaultValue(trxMessages, msg); break;
                 case TrxCategoriesProperty c: trxCategories = GetSingleOrDefaultValue(trxCategories, c); break;
+                case TrxWorkItemsProperty w: trxWorkItems = GetSingleOrDefaultValue(trxWorkItems, w); break;
                 case TestMetadataProperty md: (metadata ??= []).Add(new TrxTestMetadata { Key = md.Key, Value = md.Value }); break;
                 case FileArtifactProperty fa: (artifacts ??= []).Add(new TrxTestFileArtifact { FullPath = fa.FileInfo.FullName }); break;
             }
@@ -120,6 +121,7 @@ internal static class TrxTestResultExtractor
             Messages = messages,
             // Copy the array so the producer's mutable array can't be observed (or mutated) downstream.
             Categories = trxCategories?.Categories is { Length: > 0 } cats ? [.. cats] : null,
+            WorkItemIds = trxWorkItems?.WorkItemIds is { Length: > 0 } workItemIds ? [.. workItemIds] : null,
             Metadata = metadata,
             FileArtifacts = artifacts,
         };
@@ -152,7 +154,9 @@ internal static class TrxTestResultExtractor
             SkippedTestNodeStateProperty => TrxTestOutcome.Skipped,
             PassedTestNodeStateProperty => TrxTestOutcome.Passed,
             TimeoutTestNodeStateProperty => TrxTestOutcome.Timeout,
-            _ when Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0 => TrxTestOutcome.Failed,
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            CancelledTestNodeStateProperty or ErrorTestNodeStateProperty or FailedTestNodeStateProperty => TrxTestOutcome.Failed,
+#pragma warning restore CS0618, MTP0001
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 }

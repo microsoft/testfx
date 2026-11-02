@@ -12,8 +12,14 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// to replace the default terminal output of Microsoft.Testing.Platform.
 /// </summary>
 /// <remarks>
+/// <para>
+/// This API is experimental. It may change, break, or be removed at any time without notice.
+/// </para>
+/// <para>
 /// When server mode (JSON-RPC) is active, the platform still routes server output through its
 /// built-in server output device in parallel with the custom output device.
+/// The custom output device is not used when the dotnet test pipe protocol owns the output.
+/// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ICustomOutputDevice : IExtension

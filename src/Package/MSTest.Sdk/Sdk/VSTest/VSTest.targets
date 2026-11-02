@@ -6,11 +6,13 @@
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != '' " Text="'EnableMicrosoftTestingExtensionsCodeCoverage' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != '' " Text="'EnableMicrosoftTestingExtensionsCrashDump' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' != '' " Text="'EnableMicrosoftTestingExtensionsCtrfReport' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != '' " Text="'EnableMicrosoftTestingExtensionsGitHubActionsReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != '' " Text="'EnableMicrosoftTestingExtensionsHangDump' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != '' " Text="'EnableMicrosoftTestingExtensionsHotReload' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != '' " Text="'EnableMicrosoftTestingExtensionsHtmlReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' != '' " Text="'EnableMicrosoftTestingExtensionsJUnitReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsOpenTelemetry)' != '' " Text="'EnableMicrosoftTestingExtensionsOpenTelemetry' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' != '' " Text="'EnableMicrosoftTestingExtensionsPackagedApp' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != '' " Text="'EnableMicrosoftTestingExtensionsRetry' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' != '' " Text="'EnableMicrosoftTestingExtensionsTrxReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMSTestRunner)' == 'true' " Text="'EnableMSTestRunner' cannot be combined with 'UseVSTest'." />
@@ -51,6 +53,7 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)../Features/WindowsUIAutomation.targets" Condition=" '$(EnableWindowsUIAutomation)' == 'true' " />
   <Import Project="$(MSBuildThisFileDirectory)../Features/Playwright.targets" Condition=" '$(EnablePlaywright)' == 'true' " />
 
 </Project>

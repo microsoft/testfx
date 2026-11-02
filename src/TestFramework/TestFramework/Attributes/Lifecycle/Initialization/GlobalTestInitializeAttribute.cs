@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The method to which this attribute is applied must be public, static, non-generic, has a single parameter of type TestContext, and either returns void or a Task.
 /// </summary>
 /// <remarks>
-/// Multiple methods with this attribute in the assembly is allowed, but there is no guarantee of the order in which they will be executed. In addition, TimeoutAttribute isn't supported on methods with this attribute.
+/// Multiple methods with this attribute in the assembly is allowed, but there is no guarantee of the order in which they will be executed.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
 public sealed class GlobalTestInitializeAttribute : Attribute;

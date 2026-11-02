@@ -1,21 +1,21 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
+#pragma warning disable RS0051 // Crash-recovery serialization is an implementation detail.
+
 internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGenerator, CapturedTestResult>
 {
+    internal const string JUnitArtifactKind = "microsoft.testing.junit";
+    internal const string JournalEnvironmentVariableName = "TESTINGPLATFORM_JUNITREPORT_JOURNAL";
+
     // Parent chain for ALL TestNodeUpdateMessages (including Discovered / InProgress).
     // Keyed by the TestNodeUid value after truncation to TestResultCaptureHelper.MaxIdentityFieldLength
     // so it matches the capped RawUid / ParentRawUid keys used everywhere else in capture
@@ -25,31 +25,13 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
     // for a given consumer instance, so Dictionary<TKey, TValue> is safe here without locking.
     private readonly Dictionary<string, TestResultCapture.ParentChainEntry> _parentChain = [];
 
-    public JUnitReportGenerator(
-        IConfiguration configuration,
-        ICommandLineOptions commandLineOptions,
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IMessageBus messageBus,
-        IClock clock,
-        IEnvironment environment,
-        IOutputDevice outputDevice,
-        ITestFramework testFramework,
-        ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILogger<JUnitReportGenerator> logger)
-        : base(
-            configuration,
-            commandLineOptions,
-            fileSystem,
-            testApplicationModuleInfo,
-            messageBus,
-            clock,
-            environment,
-            outputDevice,
-            testFramework,
-            testApplicationProcessExitCode,
-            logger,
-            JUnitReportGeneratorCommandLine.JUnitReportOptionName)
+    public JUnitReportGenerator(IServiceProvider serviceProvider)
+        : base(serviceProvider, JUnitReportGeneratorCommandLine.JUnitReportOptionName, JournalEnvironmentVariableName)
+    {
+    }
+
+    internal JUnitReportGenerator(IServiceProvider serviceProvider, RecoveredReportMetadata recoveredMetadata)
+        : base(serviceProvider, JUnitReportGeneratorCommandLine.JUnitReportOptionName, recoveredMetadata)
     {
     }
 
@@ -64,10 +46,21 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
 
     protected override string ArtifactDisplayName => ExtensionResources.JUnitReportArtifactDisplayName;
 
+    protected override string? ArtifactKind => JUnitArtifactKind;
+
     protected override string ArtifactDescription => ExtensionResources.JUnitReportArtifactDescription;
 
     protected override string GetGenerationLogMessage(int testResultCount)
         => $"Generating JUnit XML report for {testResultCount} test result(s).";
+
+    protected override string SerializeJournalRecord(ReportJournalRecord<CapturedTestResult> record)
+        => JsonSerializer.Serialize(record, typeof(ReportJournalRecord<CapturedTestResult>), ReportJournalJsonSerializerContext.Default);
+
+    internal static ReportJournalRecord<CapturedTestResult>? DeserializeJournalRecord(string json)
+        => (ReportJournalRecord<CapturedTestResult>?)JsonSerializer.Deserialize(
+            json,
+            typeof(ReportJournalRecord<CapturedTestResult>),
+            ReportJournalJsonSerializerContext.Default);
 
     protected override void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
@@ -85,26 +78,39 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         base.OnTestNodeUpdate(update);
     }
 
+    protected override ReportJournalParentEntry? CaptureParentEntry(TestNodeUpdateMessage update)
+    {
+        string rawUid = TestResultCaptureHelper.Truncate(update.TestNode.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!;
+        TestResultCapture.ParentChainEntry parent = TestResultCapture.GetParentChainEntry(update);
+        return new ReportJournalParentEntry
+        {
+            Uid = rawUid,
+            DisplayName = parent.DisplayName,
+            ParentUid = parent.ParentRawUid,
+        };
+    }
+
+    protected override void RestoreParentEntry(ReportJournalParentEntry parent)
+        => _parentChain[parent.Uid] = new TestResultCapture.ParentChainEntry(parent.DisplayName, parent.ParentUid);
+
     protected override CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
-        => TestResultCapture.TryCapture(update);
+        // A test framework that retries a test in-process reports every attempt under the same test node uid.
+        // JUnit has no notion of attempts: keeping the superseded ones would add extra <testcase> elements (renamed
+        // "[attempt N]" by JUnitSuiteBuilder) and inflate the suite totals, so only the final attempt is captured.
+        // CTRF and the HTML report deliberately do the opposite and keep the whole history.
+        => update.TestNode.IsSupersededRetryAttempt()
+            ? null
+            : TestResultCapture.TryCapture(update);
 
     protected override Task<(string FileName, string? Warning)> GenerateReportAsync(
         CapturedTestResult[] tests,
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-    {
-        var engine = new JUnitReportEngine(
-            FileSystem,
-            TestApplicationModuleInfo,
-            Environment,
-            CommandLineOptions,
-            Configuration,
-            Clock,
-            TestFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken);
-        return engine.GenerateReportAsync(tests, _parentChain);
-    }
+        => new JUnitReportEngine(CreateReportEngineContext(testStartTime, exitCode, cancellationToken)).GenerateReportAsync(tests, _parentChain);
 }
+
+[JsonSerializable(typeof(ReportJournalRecord<CapturedTestResult>))]
+internal sealed partial class ReportJournalJsonSerializerContext : JsonSerializerContext;
+
+#pragma warning restore RS0051

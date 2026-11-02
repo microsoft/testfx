@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -64,6 +65,7 @@ internal sealed partial class TestHostBuilder
         serviceProvider.TryAddService(_testApplicationModuleInfo);
         serviceProvider.TryAddService(testHostControllerInfo);
         serviceProvider.TryAddService(systemClock);
+        serviceProvider.TryAddService(new ArtifactNamingService(_testApplicationModuleInfo, systemEnvironment, systemClock));
 
         SystemMonitor systemMonitor = new();
         serviceProvider.TryAddService(systemMonitor);
@@ -77,8 +79,7 @@ internal sealed partial class TestHostBuilder
         if (loggingState.FileLoggerProvider is not null)
         {
             logger = loggingState.FileLoggerProvider.CreateLogger(GetType().ToString());
-            FileLoggerInformation fileLoggerInformation = new(loggingState.FileLoggerProvider.SyncFlush, new(loggingState.FileLoggerProvider.FileLogger.FileName), loggingState.LogLevel);
-            serviceProvider.TryAddService(fileLoggerInformation);
+            serviceProvider.TryAddService(new DiagnosticLoggingInformation(loggingState.FileLoggerProvider));
         }
 
         if (logger is not null)
@@ -118,10 +119,28 @@ internal sealed partial class TestHostBuilder
         }
 #pragma warning restore CA1416
 
-        if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
+        var telemetryManager = (TelemetryManager)Telemetry;
+        if (telemetryManager.BuildOTelService(serviceProvider) is { } platformOTelService)
         {
-            serviceProvider.AddService(otelService);
-            context.BuilderActivity = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>()?.StartActivity("TestHostBuilder", startTime: buildBuilderStart);
+            serviceProvider.AddService(platformOTelService);
+        }
+
+        if (telemetryManager.BuildOTelProvider(serviceProvider) is { } otelProvider)
+        {
+            serviceProvider.AddService(otelProvider);
+        }
+
+        // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
+        // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
+        if (serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>() is { } registeredPlatformOTelService)
+        {
+            // Set before creating any span so every span picks it up, including the ones created with an
+            // explicit parent id (which do not inherit tracestate).
+            registeredPlatformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+            context.BuilderActivity = registeredPlatformOTelService.StartActivity(
+                TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
+                startTime: buildBuilderStart);
         }
 
         _ = bool.TryParse(context.Configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);
@@ -151,6 +170,7 @@ internal sealed partial class TestHostBuilder
             systemConsole,
             loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
         serviceProvider.AddService(context.TestApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
+        testApplicationOptions.HostLifetimeBridge?.Connect(context.TestApplicationCancellationTokenSource.Cancel);
 
         CommandLineOptionsProxy commandLineOptionsProxy = new();
         serviceProvider.TryAddService(commandLineOptionsProxy);
@@ -171,6 +191,11 @@ internal sealed partial class TestHostBuilder
 
         // Reuse the shared helper so the pipe-protocol detection stays in one place.
         bool isPipeProtocol = context.CommandLineHandler.HasDotnetTestServerOption();
+
+        // Register the single coverage accumulator before the output device is built so the terminal
+        // output device can read from it (rather than buffering its own copy of the coverage messages).
+        serviceProvider.AddService(new TestCoverageCapabilities());
+        serviceProvider.AddService(new TestCoverageResult(loggerFactoryProxy));
 
         context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 
@@ -209,6 +234,7 @@ internal sealed partial class TestHostBuilder
         serviceProvider.AddService(context.TestFrameworkCapabilities);
 
         IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptions;
+        IReadOnlyList<JsonCommandLineOptionEntry> jsonCommandLineOptionDefaults;
         try
         {
             // Normalize JSON-sourced scalar option entries to the indexed shape for arg-bearing
@@ -220,8 +246,15 @@ internal sealed partial class TestHostBuilder
             // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Skip
             // duplicates here so the normalization step itself doesn't crash for that malformed setup.
             var optionByName = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
+            IEnumerable<ICommandLineOptionsProvider> extensionOptionsProviders =
+                loggingState.CommandLineParseResult.ToolName is string toolName
+                    ? context.CommandLineHandler.ExtensionsCommandLineOptionsProviders
+                        .OfType<IToolCommandLineOptionsProvider>()
+                        .Where(provider => provider.ToolName == toolName)
+                    : context.CommandLineHandler.ExtensionsCommandLineOptionsProviders
+                        .Where(provider => provider is not IToolCommandLineOptionsProvider);
             foreach (ICommandLineOptionsProvider optionsProvider in context.CommandLineHandler.SystemCommandLineOptionsProviders
-                .Concat(context.CommandLineHandler.ExtensionsCommandLineOptionsProviders))
+                .Concat(extensionOptionsProviders))
             {
                 foreach (CommandLineOption option in optionsProvider.GetCommandLineOptions())
                 {
@@ -235,6 +268,7 @@ internal sealed partial class TestHostBuilder
             context.Configuration.NormalizeJsonCommandLineOptionScalars(optionByName);
 
             jsonCommandLineOptions = context.Configuration.EnumerateJsonCommandLineOptions();
+            jsonCommandLineOptionDefaults = context.Configuration.EnumerateJsonCommandLineOptionDefaults();
         }
         catch (FormatException ex) when (!loggingState.CommandLineParseResult.HasTool)
         {
@@ -254,6 +288,7 @@ internal sealed partial class TestHostBuilder
             // A tool such as --info or --version is being invoked. Degrade gracefully by treating
             // the malformed testconfig.json as empty so the tool can still complete its job.
             jsonCommandLineOptions = [];
+            jsonCommandLineOptionDefaults = [];
         }
 
         ValidationResult commandLineValidationResult = await CommandLineOptionsValidator.ValidateAsync(
@@ -261,9 +296,10 @@ internal sealed partial class TestHostBuilder
             context.CommandLineHandler.SystemCommandLineOptionsProviders,
             context.CommandLineHandler.ExtensionsCommandLineOptionsProviders,
             context.CommandLineHandler,
-            jsonCommandLineOptions).ConfigureAwait(false);
+            jsonCommandLineOptions,
+            jsonCommandLineOptionDefaults).ConfigureAwait(false);
 
-        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
+        if (!commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await context.ProxyOutputDevice.DisplayAsync(context.CommandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
@@ -275,17 +311,6 @@ internal sealed partial class TestHostBuilder
         }
 
         serviceProvider.TryAddService(context.CommandLineHandler);
-
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.TimeoutOptionKey)
-            && commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.TimeoutOptionKey, out string[]? args))
-        {
-            if (!TimeSpanParser.TryParseRequireSuffix(args[0], out TimeSpan timeout))
-            {
-                throw ApplicationStateGuard.Unreachable();
-            }
-
-            context.TestApplicationCancellationTokenSource.CancelAfter(timeout);
-        }
 
         context.IsHelpCommand = context.CommandLineHandler.IsHelpInvoked();
         context.IsInfoCommand = context.CommandLineHandler.IsInfoInvoked();
@@ -309,6 +334,11 @@ internal sealed partial class TestHostBuilder
                 throw new PlatformNotSupportedException(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInBrowser);
             }
 
+            if (OperatingSystem.IsWasi())
+            {
+                throw new PlatformNotSupportedException(PlatformResources.PlatformCommandLineExitOnProcessExitNotSupportedInWasi);
+            }
+
             serviceProvider.AddService(new NonCooperativeParentProcessListener(commandLineOptions, _environment));
         }
 
@@ -317,7 +347,8 @@ internal sealed partial class TestHostBuilder
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
             context.PoliciesService,
-            serviceProvider.GetPlatformOTelService()));
+            serviceProvider.GetPlatformOTelService(),
+            serviceProvider.GetRequiredService<ITestCoverageResult>()));
 
         ChatClientManager.BuildChatClients(serviceProvider);
 

@@ -1,14 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.Emit;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -30,6 +35,128 @@ public sealed class UnitTestRunnerTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
+#pragma warning disable MSTESTEXP // Exercise the actual adapter programmatic test-filter bridge.
+    public void FilterContextPreservesHierarchyGenericsParametersAndDuplicateTraitOrder()
+    {
+        TestMethod method = new(
+            "Method`2(System.Int32,System.String[])",
+            ["assembly", "Actual.Namespace", "Outer+Inner`1", "Method"],
+            "Method",
+            "Actual.Namespace.Outer+Inner`1[[System.Int32, Framework]]",
+            "metadata.dll",
+            "display method",
+            null);
+        UnitTestElement element = new(method)
+        {
+            TestCategory = ["fast", "unit"],
+            Traits = [new TestTrait("case", "one"), new TestTrait("case", "two")],
+            Priority = 42,
+        };
+
+        TestFilterContext context = CreateActualFilterContext(element);
+
+        context.FullyQualifiedName.Should().Be("Actual.Namespace.Outer+Inner`1[[System.Int32, Framework]].Method");
+        context.DisplayName.Should().Be("display method");
+        context.MethodName.Should().Be("Method");
+        context.Source.Should().Be("metadata.dll");
+        context.Namespace.Should().Be("Actual.Namespace");
+        context.ClassName.Should().Be("Outer+Inner`1");
+        context.ManagedTypeName.Should().Be("Actual.Namespace.Outer+Inner`1");
+        context.ManagedMethodName.Should().Be("Method`2(System.Int32,System.String[])");
+        context.MethodArity.Should().Be(2);
+        context.ParameterTypeFullNames.Should().Equal("System.Int32", "System.String[]");
+        context.Categories.Should().Equal("fast", "unit");
+        context.Traits.Should().Equal(new KeyValuePair<string, string?>("case", "one"), new KeyValuePair<string, string?>("case", "two"));
+        context.Priority.Should().Be(42);
+    }
+
+    public void FilterContextMissingAndMalformedMetadataDoesNotInventStructuredNamesOrParameters()
+    {
+        foreach (string? managed in new[] { null, "Method`x()" })
+        {
+            foreach (string?[]? hierarchy in new string?[]?[] { null, [], ["short"] })
+            {
+                TestMethod method = new(managed, hierarchy, "Method", "Namespace.Class", "source.dll", null, null);
+                TestFilterContext context = CreateActualFilterContext(new UnitTestElement(method));
+                context.FullyQualifiedName.Should().Be("Namespace.Class.Method");
+                context.DisplayName.Should().Be("Method");
+                context.Namespace.Should().BeNull();
+                context.ClassName.Should().BeNull();
+                context.ManagedTypeName.Should().Be("Namespace.Class");
+                context.MethodArity.Should().BeNull();
+                context.ParameterTypeFullNames.Should().BeNull();
+                context.Categories.Should().BeEmpty();
+                context.Traits.Should().BeEmpty();
+                context.Priority.Should().BeNull();
+            }
+        }
+
+        TestFilterContext parameterless = CreateActualFilterContext(
+            new UnitTestElement(new TestMethod("Method", null, "Method", "Class", "source.dll", null, null)));
+        parameterless.MethodArity.Should().Be(0);
+        parameterless.ParameterTypeFullNames.Should().BeEmpty();
+    }
+
+    public void ApplyActualFilterDistinguishesRunDropSkipAndOriginalExceptionDiagnostics()
+    {
+        const string source = "scoped-filter.dll";
+        AssemblyName name = new("ScopedFilter" + Guid.NewGuid().ToString("N"));
+#if NETFRAMEWORK
+        AssemblyBuilder assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#else
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#endif
+        ConstructorInfo constructor = typeof(TestFilterProviderAttribute).GetConstructor([typeof(Type)])!;
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(constructor, [typeof(ObservedProgrammaticFilter)]));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly(source)).Returns(assembly);
+        var reflection = new Mock<IReflectionOperations>();
+        reflection.Setup(value => value.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)))
+            .Returns([new TestFilterProviderAttribute(typeof(ObservedProgrammaticFilter))]);
+        _testablePlatformServiceProvider.SetupMockReflectionOperations(reflection);
+        TestMethod method = CreateTestMethod("Method", "Namespace.Class", source, "display");
+        UnitTestElement element = new(method);
+        UnitTestRunner runner = CreateUnitTestRunner([element]);
+        var cache = (TypeCache)typeof(UnitTestRunner).GetField("_typeCache", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(runner)!;
+        var filter = (ObservedProgrammaticFilter)cache.GetOrLoadTestFilter(source)!;
+        MethodInfo apply = typeof(UnitTestRunner).GetMethod("ApplyTestFilter", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        TestResult[]? Invoke() => (TestResult[]?)apply.Invoke(runner, [element]);
+
+        filter.Result = TestFilterResult.Run;
+        Invoke().Should().BeNull();
+        filter.Result = TestFilterResult.Drop;
+        Invoke().Should().BeEmpty();
+        filter.Result = TestFilterResult.Skip("explicit skip");
+        TestResult skipped = Invoke()!.Should().ContainSingle().Subject;
+        skipped.Outcome.Should().Be(UnitTestOutcome.Ignored);
+        skipped.IgnoreReason.Should().Be("explicit skip");
+        filter.Error = new InvalidOperationException("filter sentinel");
+        TestResult failed = Invoke()!.Should().ContainSingle().Subject;
+        failed.Outcome.Should().Be(UnitTestOutcome.Error);
+        failed.TestFailureException!.Message.Should().Contain("filter sentinel").And.Contain("Namespace.Class.Method").And.Contain(nameof(ObservedProgrammaticFilter));
+        filter.Context!.FullyQualifiedName.Should().Be("Namespace.Class.Method");
+        filter.Context.DisplayName.Should().Be("display");
+        filter.Context.Source.Should().Be(source);
+    }
+
+    private static TestFilterContext CreateActualFilterContext(UnitTestElement element)
+        => (TestFilterContext)typeof(UnitTestRunner).GetMethod("CreateFilterContext", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [element])!;
+
+    public sealed class ObservedProgrammaticFilter : ITestFilter
+    {
+        public TestFilterResult Result { get; set; }
+
+        public Exception? Error { get; set; }
+
+        public TestFilterContext? Context { get; private set; }
+
+        public TestFilterResult Filter(TestFilterContext context)
+        {
+            Context = context;
+            return Error is null ? Result : throw Error;
+        }
+    }
+#pragma warning restore MSTESTEXP
+
     private TestMethod CreateTestMethod(string methodName, string typeFullName, string assemblyName, string? displayName)
         => new(methodName, null, methodName, typeFullName, assemblyName, displayName, null);
 
@@ -41,6 +168,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         if (!IsDisposed)
         {
             base.Dispose(disposing);
+            AssertionFailureSettings.CaptureDiagnosticsOnFailure = null;
             PlatformServiceProvider.Instance = null;
         }
     }
@@ -65,12 +193,41 @@ public sealed class UnitTestRunnerTests : TestContainer
                 actualReader.ReadInnerXml();
             });
 
-        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger());
         adapterSettings.Should().NotBeNull();
         var assemblyEnumerator = new UnitTestRunner(adapterSettings, []);
 
         MSTestSettings.CurrentSettings.TestTimeout.Should().Be(12);
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    public void ConstructorShouldConfigureAssertionFailureDiagnosticsCallback()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTest>
+                <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+              </MSTest>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        _ = new UnitTestRunner(adapterSettings, []);
+
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().NotBeNull();
+    }
+
+    public void ConstructorShouldClearAssertionFailureDiagnosticsCallbackWhenDisabled()
+    {
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure = static (_, _, _) => { };
+
+        _ = CreateUnitTestRunner([]);
+
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().BeNull();
+    }
+#endif
 
     #endregion
 
@@ -92,6 +249,50 @@ public sealed class UnitTestRunnerTests : TestContainer
         await func.Should().ThrowAsync<ArgumentNullException>();
     }
 
+    public void CombineRetryAttempts_WhenRetriesProduceResults_FlattensAndTagsAttempts()
+    {
+        var initialFailure = new TestResult { Outcome = UnitTestOutcome.Failed };
+        var firstRetryFailure = new TestResult { Outcome = UnitTestOutcome.Timeout };
+        var finalSuccess = new TestResult { Outcome = UnitTestOutcome.Passed };
+        var retryResult = new RetryResult();
+        retryResult.AddResult([firstRetryFailure]);
+        retryResult.AddResult([finalSuccess]);
+
+        TestResult[] combined = UnitTestRunner.CombineRetryAttempts([initialFailure], retryResult);
+
+        combined.Should().Equal(initialFailure, firstRetryFailure, finalSuccess);
+        combined.Select(result => result.RetryAttemptNumber).Should().Equal(1, 2, 3);
+        combined.Select(result => result.IsSupersededRetryAttempt).Should().Equal(true, true, false);
+    }
+
+    public void CombineRetryAttempts_WhenLastRetryProducesNoResults_ReturnsEmptyResult()
+    {
+        var initialFailure = new TestResult { Outcome = UnitTestOutcome.Failed };
+        var retryFailure = new TestResult { Outcome = UnitTestOutcome.Failed };
+        var retryResult = new RetryResult();
+        retryResult.AddResult([retryFailure]);
+        retryResult.AddResult([]);
+
+        TestResult[] combined = UnitTestRunner.CombineRetryAttempts([initialFailure], retryResult);
+
+        combined.Should().BeEmpty();
+        // The empty final attempt returns before tagging, so the supplied results must remain unchanged.
+        initialFailure.IsSupersededRetryAttempt.Should().BeFalse();
+        retryFailure.IsSupersededRetryAttempt.Should().BeFalse();
+    }
+
+    public void CombineRetryAttempts_WhenRetryProducesNoAttempts_ThrowsUnreachableException()
+    {
+        Action act = () => UnitTestRunner.CombineRetryAttempts(
+            [new TestResult { Outcome = UnitTestOutcome.Failed }],
+            new RetryResult());
+
+        Exception exception = act.Should().Throw<Exception>().Which;
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so a generic type
+        // assertion would compare the adapter's copy with this test assembly's copy and fail on type identity.
+        exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
+    }
+
     public async Task RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
     {
         TestMethod testMethod = CreateTestMethod("M", "C", "A", displayName: null);
@@ -108,6 +309,144 @@ public sealed class UnitTestRunnerTests : TestContainer
         results[0].Outcome.Should().Be(UnitTestOutcome.NotFound);
         results[0].IgnoreReason.Should().Be("Test method M was not found.");
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    public async Task RunSingleTestShouldAttachAssertionFailureDiagnostics()
+    {
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "MSTestAssertionFailureDiagnostics", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        _testRunParameters["TestResultsDirectory"] = resultsDirectory;
+
+        try
+        {
+            string runSettingsXml =
+                """
+                <RunSettings>
+                  <MSTest>
+                    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                  </MSTest>
+                </RunSettings>
+                """;
+            MSTestSettings settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+            Type type = typeof(DummyTestClassWithAssertionFailure);
+            MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassWithAssertionFailure.TestMethod))!;
+            TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var unitTestElement = new UnitTestElement(testMethod);
+            var unitTestRunner = new UnitTestRunner(settings, [unitTestElement]);
+
+            TestResult[] results = await unitTestRunner.RunSingleTestAsync(unitTestElement, _testRunParameters, null!);
+
+            results.Should().ContainSingle();
+            results[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+            string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
+            string json = File.ReadAllText(artifactPath);
+            json.Should().Contain($"\"fullyQualifiedName\":\"{type.FullName}.{methodInfo.Name}\"");
+            json.Should().Contain("\"expected\":\"42\"");
+            json.Should().Contain("\"actual\":\"41\"");
+            json.Should().Contain("\"activeTests\"");
+            json.Should().Contain("\"process\"");
+            json.Should().Contain("\"stackFrames\"");
+        }
+        finally
+        {
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+
+    public async Task RunSingleTestShouldAttachDiagnosticsForAssertionInCustomTestMethodAttribute()
+    {
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "MSTestAssertionFailureDiagnostics", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        _testRunParameters["TestResultsDirectory"] = resultsDirectory;
+
+        try
+        {
+            string runSettingsXml =
+                """
+                <RunSettings>
+                  <MSTest>
+                    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                  </MSTest>
+                </RunSettings>
+                """;
+            MSTestSettings settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+            Type type = typeof(DummyTestClassWithAttributeAssertionFailure);
+            MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassWithAttributeAssertionFailure.TestMethod))!;
+            TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var unitTestElement = new UnitTestElement(testMethod);
+            var unitTestRunner = new UnitTestRunner(settings, [unitTestElement]);
+
+            TestResult[] results = await unitTestRunner.RunSingleTestAsync(unitTestElement, _testRunParameters, null!);
+
+            results.Should().ContainSingle();
+            results[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+            string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
+            File.ReadAllText(artifactPath).Should().Contain("attribute failure");
+        }
+        finally
+        {
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+
+    public async Task RunSingleTestShouldAttachDiagnosticsWhenCustomAttributeReturnsNoResults()
+    {
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "MSTestAssertionFailureDiagnostics", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        _testRunParameters["TestResultsDirectory"] = resultsDirectory;
+
+        try
+        {
+            string runSettingsXml =
+                """
+                <RunSettings>
+                  <MSTest>
+                    <CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics>
+                  </MSTest>
+                </RunSettings>
+                """;
+            MSTestSettings settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+            Type type = typeof(DummyTestClassWithEmptyAttributeResult);
+            MethodInfo methodInfo = type.GetMethod(nameof(DummyTestClassWithEmptyAttributeResult.TestMethod))!;
+            TestMethod testMethod = CreateTestMethod(methodInfo.Name, type.FullName!, "A", displayName: null);
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var unitTestElement = new UnitTestElement(testMethod);
+            var unitTestRunner = new UnitTestRunner(settings, [unitTestElement]);
+
+            TestResult[] results = await unitTestRunner.RunSingleTestAsync(unitTestElement, _testRunParameters, null!);
+
+            results.Should().ContainSingle();
+            results[0].Outcome.Should().NotBe(UnitTestOutcome.Passed);
+            results[0].TestFailureException.Should().NotBeNull();
+            string artifactPath = results[0].ResultFiles.Should().ContainSingle().Which;
+            File.ReadAllText(artifactPath).Should().Contain("empty result failure");
+        }
+        finally
+        {
+            if (Directory.Exists(resultsDirectory))
+            {
+                Directory.Delete(resultsDirectory, recursive: true);
+            }
+        }
+    }
+#endif
 
     public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
     {
@@ -310,6 +649,123 @@ public sealed class UnitTestRunnerTests : TestContainer
         validator.Should().Be(1);
     }
 
+    public async Task RunSingleTestWhenAssemblyAndClassInitializeAlreadyPassedShouldTakeFastPathAndSkipContextAllocation()
+    {
+        var mockReflectHelper = new Mock<ReflectHelper>();
+
+        Type type = typeof(DummyTestClassWithInitializeMethods);
+        TestMethod testMethod1 = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod2 = CreateTestMethod("TestMethod2", type.FullName!, "A", displayName: null);
+        // A third (never executed) test keeps the class "incomplete" so that running the second
+        // test does not trigger class/assembly cleanup, isolating the init fast-path allocations.
+        TestMethod testMethod3 = CreateTestMethod("TestMethod3", type.FullName!, "A", displayName: null);
+        var unitTestElement1 = new UnitTestElement(testMethod1);
+        var unitTestElement2 = new UnitTestElement(testMethod2);
+        var unitTestElement3 = new UnitTestElement(testMethod3);
+        var unitTestRunner = new UnitTestRunner(new MSTestSettings(), [unitTestElement1, unitTestElement2, unitTestElement3], mockReflectHelper.Object);
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+            .Returns(Assembly.GetExecutingAssembly());
+        mockReflectHelper.Setup(
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!))
+            .Returns(true);
+
+        DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { };
+        DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { };
+
+        // First test in the assembly/class goes through the slow path, which allocates dedicated
+        // contexts for assembly initialize and class initialize.
+        TestResult[] firstResults = await unitTestRunner.RunSingleTestAsync(unitTestElement1, _testRunParameters, null!);
+        firstResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int contextsAllocatedForFirstRun = _testablePlatformServiceProvider.GetTestContextCallCount;
+
+        // Second test takes both the assembly-init and class-init fast paths, so neither an
+        // assembly-init nor a class-init context is allocated, and the test still passes.
+        TestResult[] secondResults = await unitTestRunner.RunSingleTestAsync(unitTestElement2, _testRunParameters, null!);
+        secondResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int contextsAllocatedForSecondRun = _testablePlatformServiceProvider.GetTestContextCallCount - contextsAllocatedForFirstRun;
+
+        // The fast-path run allocates strictly fewer TestContext instances than the slow-path run
+        // because it skips both the assembly-init and class-init contexts.
+        contextsAllocatedForSecondRun.Should().BeLessThan(contextsAllocatedForFirstRun);
+    }
+
+    public async Task RunSingleTestWhenClassInitializeAlreadyFailedShouldTakeFastPathAndReturnCachedFailure()
+    {
+        Type type = typeof(DummyTestClassWithFailingClassInitialize);
+        TestMethod testMethod1 = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod2 = CreateTestMethod("TestMethod2", type.FullName!, "A", displayName: null);
+        // A third (never executed) test keeps the class "incomplete" so that running the second
+        // test does not trigger class/assembly cleanup, isolating the init fast-path allocations.
+        TestMethod testMethod3 = CreateTestMethod("TestMethod3", type.FullName!, "A", displayName: null);
+        var unitTestElement1 = new UnitTestElement(testMethod1);
+        var unitTestElement2 = new UnitTestElement(testMethod2);
+        var unitTestElement3 = new UnitTestElement(testMethod3);
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+            .Returns(Assembly.GetExecutingAssembly());
+
+        UnitTestRunner unitTestRunner = CreateUnitTestRunner([unitTestElement1, unitTestElement2, unitTestElement3]);
+
+        // First test in the class runs class initialize through the slow path (allocating a
+        // dedicated class-init context) and it fails.
+        TestResult[] firstResults = await unitTestRunner.RunSingleTestAsync(unitTestElement1, _testRunParameters, null!);
+        firstResults[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+        int contextsAllocatedForFirstRun = _testablePlatformServiceProvider.GetTestContextCallCount;
+
+        // Second test takes the class-init fast path: it returns the cached failure clone without
+        // allocating a class-init context, while still reporting the cached failure outcome.
+        TestResult[] secondResults = await unitTestRunner.RunSingleTestAsync(unitTestElement2, _testRunParameters, null!);
+        secondResults[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+        int contextsAllocatedForSecondRun = _testablePlatformServiceProvider.GetTestContextCallCount - contextsAllocatedForFirstRun;
+
+        // The fast-path run allocates strictly fewer TestContext instances than the slow-path run
+        // because it skips the class-init context.
+        contextsAllocatedForSecondRun.Should().BeLessThan(contextsAllocatedForFirstRun);
+    }
+
+    public async Task RunSingleTestShouldDeferClassCleanupContextAllocationToLastTestInClass()
+    {
+        Type type = typeof(DummyTestClassWithCleanupMethods);
+        TestMethod testMethod1 = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod2 = CreateTestMethod("TestMethod2", type.FullName!, "A", displayName: null);
+        TestMethod testMethod3 = CreateTestMethod("TestMethod3", type.FullName!, "A", displayName: null);
+        var unitTestElement1 = new UnitTestElement(testMethod1);
+        var unitTestElement2 = new UnitTestElement(testMethod2);
+        var unitTestElement3 = new UnitTestElement(testMethod3);
+        UnitTestRunner unitTestRunner = CreateUnitTestRunner([unitTestElement1, unitTestElement2, unitTestElement3]);
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+            .Returns(Assembly.GetExecutingAssembly());
+
+        DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () => { };
+        DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = () => { };
+
+        // Run the first test to warm up assembly/class initialize (slow path, sets cached results).
+        TestResult[] firstResults = await unitTestRunner.RunSingleTestAsync(unitTestElement1, _testRunParameters, null!);
+        firstResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+
+        // Second test (non-last): both assembly-init and class-init take the fast path (no contexts),
+        // and the class-cleanup context is NOT allocated (deferred to the last test).
+        int countBeforeSecond = _testablePlatformServiceProvider.GetTestContextCallCount;
+        TestResult[] secondResults = await unitTestRunner.RunSingleTestAsync(unitTestElement2, _testRunParameters, null!);
+        secondResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int allocationsForSecond = _testablePlatformServiceProvider.GetTestContextCallCount - countBeforeSecond;
+
+        // Third test (last in class): takes fast paths for init, but allocates a class-cleanup context
+        // and an assembly-cleanup context. Allocation count must exceed the middle test's count.
+        int countBeforeThird = _testablePlatformServiceProvider.GetTestContextCallCount;
+        TestResult[] thirdResults = await unitTestRunner.RunSingleTestAsync(unitTestElement3, _testRunParameters, null!);
+        thirdResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int allocationsForThird = _testablePlatformServiceProvider.GetTestContextCallCount - countBeforeThird;
+
+        // The last-test run allocates exactly two more contexts than a non-last test: the class-cleanup
+        // context and the assembly-cleanup context, both of which are deferred from all non-last tests.
+        // Asserting the exact delta (rather than a loose "greater than") catches the regression this test
+        // guards against, where a non-last test mistakenly allocates the deferred class-cleanup context.
+        allocationsForThird.Should().Be(allocationsForSecond + 2);
+    }
+
     #endregion
 
     #region private helpers
@@ -332,7 +788,7 @@ public sealed class UnitTestRunnerTests : TestContainer
                 actualReader.ReadInnerXml();
             });
 
-        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object);
+        var settings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger());
         settings.Should().NotBeNull();
         return settings;
     }
@@ -352,6 +808,70 @@ public sealed class UnitTestRunnerTests : TestContainer
 #pragma warning restore RS0030 // Do not use banned APIs
     }
 
+#if !WINDOWS_UWP && !WIN_UI
+    [DummyTestClass]
+    private class DummyTestClassWithAssertionFailure
+    {
+        public TestContext TestContext { get; set; } = null!;
+
+        [TestMethod]
+#pragma warning disable RS0030 // Do not use banned APIs - exercising the framework assertion hook through the adapter.
+        public async Task TestMethod()
+        {
+            await Task.Yield();
+            Assert.AreEqual(42, 41);
+        }
+#pragma warning restore RS0030 // Do not use banned APIs
+    }
+
+    private sealed class AssertionBeforeInvokeTestMethodAttribute : TestMethodAttribute
+    {
+#pragma warning disable RS0030 // Do not use banned APIs - exercising assertion capture in custom attribute code.
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            Assert.Fail("attribute failure");
+            return Task.FromResult(Array.Empty<TestResult>());
+        }
+#pragma warning restore RS0030 // Do not use banned APIs
+    }
+
+    private sealed class AssertionThenEmptyResultsTestMethodAttribute : TestMethodAttribute
+    {
+#pragma warning disable RS0030 // Do not use banned APIs - exercising assertion capture before an empty result.
+        public override Task<TestResult[]> ExecuteAsync(ITestMethod testMethod)
+        {
+            try
+            {
+                Assert.Fail("empty result failure");
+            }
+            catch (AssertFailedException)
+            {
+            }
+
+            return Task.FromResult(Array.Empty<TestResult>());
+        }
+#pragma warning restore RS0030 // Do not use banned APIs
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithAttributeAssertionFailure
+    {
+        [AssertionBeforeInvokeTestMethod]
+        public void TestMethod()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithEmptyAttributeResult
+    {
+        [AssertionThenEmptyResultsTestMethod]
+        public void TestMethod()
+        {
+        }
+    }
+#endif
+
     [DummyTestClass]
     private class DummyTestClassWithInitializeMethods
     {
@@ -368,6 +888,38 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         [TestMethod]
         public void TestMethod()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod2()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod3()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithFailingClassInitialize
+    {
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext tc) => throw new InvalidOperationException("Class initialize failure.");
+
+        [TestMethod]
+        public void TestMethod()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod2()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod3()
         {
         }
     }
@@ -391,9 +943,177 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         [TestMethod]
         public void TestMethod() => TestMethodBody?.Invoke(TestContext);
+
+        [TestMethod]
+        public void TestMethod2() => TestMethodBody?.Invoke(TestContext);
+
+        [TestMethod]
+        public void TestMethod3() => TestMethodBody?.Invoke(TestContext);
     }
 
     private class DummyTestClassAttribute : TestClassAttribute;
 
     #endregion
+
+    public void LiveWriterEncodingPreservesCodecBoundariesWithoutEmittingPreamble()
+    {
+        using var stream = new MemoryStream();
+        using TextWriter writer = UnitTestRunner.CreateLiveOutputWriter(stream, new UTF8Encoding(true, true));
+        writer.Write("AΩ中");
+        writer.Flush();
+        byte[] expected = [0x41, 0xCE, 0xA9, 0xE4, 0xB8, 0xAD];
+        stream.ToArray().Should().Equal(expected);
+        Encoding codec = writer.Encoding;
+        char[] input = ['A', 'Ω', '中'];
+        codec.GetByteCount(input, 0, 3).Should().Be(6);
+        byte[] bytes = new byte[10];
+        codec.GetBytes(input, 0, 3, bytes, 2).Should().Be(6);
+        bytes.Should().Equal(0, 0, 0x41, 0xCE, 0xA9, 0xE4, 0xB8, 0xAD, 0, 0);
+        codec.GetCharCount(expected, 0, expected.Length).Should().Be(3);
+        char[] output = ['?', '?', '?', '?', '?'];
+        codec.GetChars(expected, 0, expected.Length, output, 1).Should().Be(3);
+        output.Should().Equal('?', 'A', 'Ω', '中', '?');
+        codec.GetMaxByteCount(3).Should().Be(12);
+        codec.GetMaxCharCount(6).Should().Be(7);
+        Decoder decoder = codec.GetDecoder();
+        char[] first = new char[3];
+        decoder.GetChars(expected, 0, 2, first, 0, false).Should().Be(1);
+        first[0].Should().Be('A');
+        char[] rest = new char[3];
+        decoder.GetChars(expected, 2, 4, rest, 0, true).Should().Be(2);
+        rest.Take(2).Should().Equal('Ω', '中');
+        Action malformed = () => codec.GetBytes(['\uD800'], 0, 1, bytes, 0);
+        malformed.Should().ThrowExactly<EncoderFallbackException>();
+    }
+
+    public async Task SynchronousAndNotRunEntryPointsPreserveCountdownAndValidation()
+    {
+        var element = new UnitTestElement(CreateTestMethod("Missing", "MissingType", "source", null));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("source")).Returns(typeof(UnitTestRunnerTests).Assembly);
+        UnitTestRunner synchronous = CreateUnitTestRunner([element]);
+        TestResult[] missing = synchronous.RunSingleTest(element, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+        missing.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.NotFound);
+        UnitTestRunner notify = CreateUnitTestRunner([element]);
+        notify.NotifyTestNotRun(element, _testRunParameters, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger()).Should().BeEmpty();
+        UnitTestRunner invalid = CreateUnitTestRunner([element]);
+        Func<Task> absentElement = () => invalid.NotifyTestNotRunAsync(null!, _testRunParameters, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+        Func<Task> absentLifecycle = () => invalid.RunSingleTestAsync(element, _testRunParameters, null!, _mockMessageLogger.Object.ToAdapterMessageLogger());
+
+        (await absentElement.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("unitTestElement");
+        (await absentLifecycle.Should().ThrowExactlyAsync<ArgumentNullException>()).WithParameterName("lifecycleContextProperties");
+    }
+
+    public async Task CleanupFailuresAfterIgnoredTailAreAttributedToTheLastRunnableTest()
+    {
+        Type type = typeof(DummyTestClassWithCleanupMethods);
+        MethodInfo ignored = type.GetMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod2))!;
+        _testablePlatformServiceProvider.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(
+            new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+            {
+                Assembly = type.Assembly,
+                AssemblyName = type.Assembly.GetName().Name!,
+                Types = [type],
+                TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]> { [ignored] = [new TestMethodAttribute(), new IgnoreAttribute("selected but ignored")] },
+            }));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("cleanup-source")).Returns(type.Assembly);
+        var first = new UnitTestElement(CreateTestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod), type.FullName!, "cleanup-source", null));
+        var last = new UnitTestElement(CreateTestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod2), type.FullName!, "cleanup-source", null));
+        Action oldAssembly = DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody;
+        Action oldClass = DummyTestClassWithCleanupMethods.ClassCleanupMethodBody;
+        Action<TestContext> oldBody = DummyTestClassWithCleanupMethods.TestMethodBody;
+        DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = () => throw new InvalidOperationException("assembly cleanup sentinel");
+        DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () => throw new InvalidOperationException("class cleanup sentinel");
+        DummyTestClassWithCleanupMethods.TestMethodBody = context => context.WriteLine("body executed");
+        try
+        {
+            UnitTestRunner runner = CreateUnitTestRunner([first, last]);
+            TestResult[] passed = await runner.RunSingleTestAsync(first, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+            passed.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Passed);
+
+            TestResult[] tail = await runner.RunSingleTestAsync(last, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+
+            tail.Select(result => result.Outcome).Should().Equal(UnitTestOutcome.Ignored, UnitTestOutcome.Failed, UnitTestOutcome.Failed);
+            tail[0].IgnoreReason.Should().Be("selected but ignored");
+            tail[1].AssociatedUnitTestElement.Should().BeSameAs(first);
+            tail[2].AssociatedUnitTestElement.Should().BeSameAs(first);
+            tail[1].TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException!.Message.Should().Be("class cleanup sentinel");
+            tail[2].TestFailureException.Should().BeOfType<TestFailedException>().Which.InnerException!.Message.Should().Be("assembly cleanup sentinel");
+        }
+        finally
+        {
+            DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = oldAssembly;
+            DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = oldClass;
+            DummyTestClassWithCleanupMethods.TestMethodBody = oldBody;
+        }
+    }
+
+    public async Task AssemblyContextFailureProducesTheOriginalInfrastructureDiagnostic()
+    {
+        Type type = typeof(DummyTestClassWithInitializeMethods);
+        _testablePlatformServiceProvider.SetReflectionOperations(new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionOperations(
+            new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider
+            {
+                Assembly = type.Assembly,
+                AssemblyName = type.Assembly.GetName().Name!,
+                Types = [type],
+            }));
+        _testablePlatformServiceProvider.MockFileOperations.Setup(value => value.LoadAssembly("context-source")).Returns(type.Assembly);
+        var proxy = new Mock<IPlatformServiceProvider>();
+        proxy.SetupGet(value => value.ReflectionOperations).Returns(_testablePlatformServiceProvider.ReflectionOperations);
+        proxy.SetupGet(value => value.FileOperations).Returns(_testablePlatformServiceProvider.FileOperations);
+        proxy.SetupGet(value => value.AdapterTraceLogger).Returns(_testablePlatformServiceProvider.AdapterTraceLogger);
+        proxy.SetupGet(value => value.ThreadOperations).Returns(_testablePlatformServiceProvider.ThreadOperations);
+        proxy.SetupProperty(value => value.TestRunCancellationToken, new TestRunCancellationToken());
+        bool injected = false;
+        proxy.Setup(value => value.GetTestContext(
+            It.IsAny<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod?>(),
+            It.IsAny<string?>(), It.IsAny<IDictionary<string, object?>>(), It.IsAny<IAdapterMessageLogger>(), It.IsAny<UnitTestOutcome>()))
+            .Returns<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod?, string?, IDictionary<string, object?>, IAdapterMessageLogger, UnitTestOutcome>(
+                (method, className, properties, logger, outcome) =>
+                {
+                    ITestContext context = _testablePlatformServiceProvider.GetTestContext(method, className, properties, logger, outcome);
+                    if (method is null && className is null && !injected)
+                    {
+                        injected = true;
+                        var failing = new Mock<ITestContext>();
+                        failing.SetupSequence(value => value.Context).Throws(new InvalidOperationException("assembly context unavailable")).Returns(context.Context);
+                        return failing.Object;
+                    }
+
+                    return context;
+                });
+        var element = new UnitTestElement(CreateTestMethod(nameof(DummyTestClassWithInitializeMethods.TestMethod), type.FullName!, "context-source", null));
+        PlatformServiceProvider.Instance = proxy.Object;
+        try
+        {
+            UnitTestRunner runner = CreateUnitTestRunner([element]);
+
+            TestResult[] result = await runner.RunSingleTestAsync(element, _testRunParameters, _mockMessageLogger.Object.ToAdapterMessageLogger());
+
+            result.Should().ContainSingle().Which.Outcome.Should().Be(UnitTestOutcome.Error);
+            result[0].TestFailureException.Should().BeOfType<TestFailedException>().Which.Message.Should().Be("assembly context unavailable");
+            injected.Should().BeTrue();
+        }
+        finally
+        {
+            PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
+        }
+    }
+
+#if WIN_UI || WINDOWS_UWP
+    public void UnsupportedDiagnosticsCaptureIsReportedAndDisabled()
+    {
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure = static (_, _, _) => { };
+        MSTestSettings settings = MSTestSettings.GetSettings(
+            "<RunSettings><MSTest><CaptureAssertionFailureDiagnostics>true</CaptureAssertionFailureDiagnostics></MSTest></RunSettings>",
+            MSTestSettings.SettingsName, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        _ = new UnitTestRunner(settings, []);
+
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            value => value.Warning(
+            "CaptureAssertionFailureDiagnostics is not supported on UWP or WinUI and will be ignored."), Times.Once);
+        AssertionFailureSettings.CaptureDiagnosticsOnFailure.Should().BeNull();
+    }
+#endif
 }

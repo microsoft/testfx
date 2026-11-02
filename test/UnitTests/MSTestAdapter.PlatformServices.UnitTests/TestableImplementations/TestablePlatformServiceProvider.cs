@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
@@ -41,7 +40,12 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IFileOperations FileOperations => MockFileOperations.Object;
 
-    public ITraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => throw new NotSupportedException(); }
+    // The getter always returns the mock so tests can verify trace logging. The setter is a no-op:
+    // MSTest.TestAdapter's [ModuleInitializer] (MSTestExecutor.SetPlatformLogger) legitimately assigns
+    // PlatformServiceProvider.Instance.AdapterTraceLogger when that module is first touched (e.g. via the
+    // ToAdapterMessageLogger bridge), so this double must tolerate the assignment exactly as the real
+    // PlatformServiceProvider does, rather than throwing.
+    public ITraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => _ = value; }
 
 #if !WINDOWS_UWP && !WIN_UI
     public ITestDeployment TestDeployment => MockTestDeployment.Object;
@@ -55,7 +59,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     [field: MaybeNull]
     public IReflectionOperations ReflectionOperations
     {
-        get => MockReflectionOperations != null
+        get => MockReflectionOperations is not null
             ? (_reflectionOperationsWrapper ?? MockReflectionOperations.Object)
             : field ??= new ReflectionOperations();
         private set;
@@ -67,14 +71,17 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public bool IsGracefulStopRequested { get; set; }
 
-    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
+    public int GetTestContextCallCount { get; private set; }
+
+    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger messageLogger, UnitTestOutcome outcome)
     {
+        GetTestContextCallCount++;
         var testContextImpl = new TestContextImplementation(testMethod, testClassFullName, properties, messageLogger, testRunCancellationToken: null);
         testContextImpl.SetOutcome(outcome);
         return testContextImpl;
     }
 
-    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings) => MockTestSourceHost.Object;
+    public ITestSourceHost CreateTestSourceHost(string source, string? settingsXml) => MockTestSourceHost.Object;
 
     public void SetupMockReflectionOperations()
     {
@@ -86,5 +93,12 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     {
         MockReflectionOperations = mock;
         _reflectionOperationsWrapper = MockableReflectionOperations.Create(mock);
+    }
+
+    public void SetReflectionOperations(IReflectionOperations reflectionOperations)
+    {
+        MockReflectionOperations = null!;
+        _reflectionOperationsWrapper = null;
+        ReflectionOperations = reflectionOperations;
     }
 }

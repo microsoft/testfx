@@ -5,6 +5,14 @@
     <!-- If the project targets .NET Standard, it's not supposed to be a test application. So, we default to false. -->
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' AND '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard' ">false</IsTestApplication>
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
+
+    <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
+    <!--
+      The desktop Visual Studio UWP imports set UseUwpTools after this SDK declares its package
+      references, but before NuGet buildTransitive targets select the specialized UWP assemblies.
+      Preserve the application-model and package decisions during this earlier evaluation.
+    -->
+    <_MSTestUwpApplicationModel Condition=" '$(UseUwpTools)' == 'true' OR ('$(UseUwp)' == 'true' AND '$(UseUwpTools)' == '') ">true</_MSTestUwpApplicationModel>
   </PropertyGroup>
 
   <!-- Import Runner.targets -->
@@ -13,6 +21,50 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
-  <!-- Implicit bottom import -->
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
+    <Error Condition=" '$(UseWinUI)' == 'true' AND '$(_MSTestUwpApplicationModel)' == 'true' "
+           Text="A test project cannot use both WinUI and UWP application models." />
+  </Target>
+
+  <Target Name="_MSTestSDKValidateSourceGeneration"
+          BeforeTargets="PrepareForBuild"
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard'
+                      and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                            or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
+    <Error Text="MSTest source generation is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable." />
+  </Target>
+
+  <!-- Source generation is automatic for NativeAOT and opt-in for all other configurations. -->
+  <ItemGroup Condition=" '$(EnableMSTestSourceGeneration)' == 'true'
+                         and ( '$(UseVSTest)' == 'true' or '$(PublishAot)' != 'true' )
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
+    <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'true'
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
+                         and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                               or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
+    <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
+  <!--
+    Implicit bottom import.
+
+    Only import the base .NET SDK targets when MSTest.Sdk was the SDK that imported the base .NET
+    SDK props (see the detailed comment in Sdk.props). When MSTest.Sdk is layered on top of another
+    base SDK, that outer SDK imports the base targets itself, so importing them here would emit
+    MSB4011 duplicate-import warnings.
+  -->
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(_MSTestSdkImportsMicrosoftNETSdk)' == 'true' " />
 </Project>

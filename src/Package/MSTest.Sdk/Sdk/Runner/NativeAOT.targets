@@ -18,13 +18,15 @@
 
   <Target Name="_MSTestSDKValidateFeatures" BeforeTargets="Build">
     <Error Condition=" '$(EnableAspireTesting)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
+    <Error Condition=" '$(EnableWindowsUIAutomation)' == 'true' " Text="Windows UI Automation MSTest currently doesn't support NativeAOT mode." />
     <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright MSTest currently doesn't support NativeAOT mode." />
 
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " Text="Crash dump extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " Text="Hang dump extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
-    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Text="Retry extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' " Text="Azure DevOps report extension is not supported in NativeAOT mode." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' == 'true' " Text="GitHub Actions report extension is not supported in NativeAOT mode." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' " Text="JUnit report extension is not supported in NativeAOT mode." />
   </Target>
 
@@ -43,9 +45,10 @@
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
 
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestSourceGenerationVersion)</Version>
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestSourceGenerationVersion)"
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 

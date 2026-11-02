@@ -1,0 +1,98 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Testing.Platform.ServerMode.Client;
+
+/// <summary>
+/// Configuration for an <c>MtpServerClient</c>: how it identifies itself in the initialize handshake, which
+/// optional capabilities it advertises, how long it waits for the test app to dial back, and where its own
+/// diagnostics go.
+/// </summary>
+internal sealed class MtpServerClientOptions
+{
+    /// <summary>
+    /// Gets or sets the client name reported to the server in the initialize handshake
+    /// (<c>clientInfo.name</c>). Defaults to the package's own identity.
+    /// </summary>
+    public string ClientName { get; set; } = "Microsoft.Testing.Platform.ServerMode.Client";
+
+    /// <summary>
+    /// Gets or sets the client compatibility version reported to the server (<c>clientInfo.version</c>).
+    /// This is separate from <see cref="SupportedProtocolVersions"/>.
+    /// </summary>
+    public string ClientVersion { get; set; } = "1.0.0";
+
+    /// <summary>
+    /// Gets or sets the server-mode protocol versions supported by the client. The server selects its most
+    /// preferred mutually supported version.
+    /// </summary>
+    public IReadOnlyCollection<string> SupportedProtocolVersions { get; set; } = JsonRpcProtocolVersions.Supported;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the client advertises the reserved debugger-provider
+    /// capability (<c>capabilities.testing.debuggerProvider</c>). Microsoft.Testing.Platform protocol 1.0
+    /// accepts this field for compatibility but does not currently send debugger requests.
+    /// </summary>
+    public bool DebuggerProvider { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the client persists an addressable set of test nodes for the
+    /// whole session and keeps each node in its last-known state until explicitly updated
+    /// (<c>capabilities.testing.isStateful</c>). <see langword="null"/> omits the capability from the initialize
+    /// handshake. Defaults to <see langword="null"/>.
+    /// </summary>
+    /// <remarks>
+    /// This capability describes how the client consumes test-node updates. It is independent of connection
+    /// lifetime and the server's <c>ServerCapabilities.MultiRequestSupport</c> capability.
+    /// </remarks>
+    public bool? IsStateful { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to request <c>client/showMessage</c> notifications (<c>capabilities.testing.showMessage</c>).
+    /// A null value omits the request. The client must check the server's applied acknowledgement.
+    /// </summary>
+    /// <remarks>
+    /// Both methods use <see cref="IMtpServerClient.LogReceived"/>. False or absent acknowledgment
+    /// retains <c>client/log</c>. Forwarding still activates at discovery/run, and local rendering
+    /// is unchanged. Both stdout and stderr must still be drained independently.
+    /// </remarks>
+    public bool? ShowMessage { get; set; }
+
+    /// <summary>
+    /// Gets or sets how long to wait for the launched test app to connect back to the client's loopback
+    /// listener. Overridable by callers per the <c>VSTEST_CONNECTION_TIMEOUT</c> convention (seconds).
+    /// Defaults to 90 seconds.
+    /// </summary>
+    public TimeSpan ConnectionTimeout { get; set; } = TimeSpan.FromSeconds(90);
+
+    /// <summary>
+    /// Gets or sets how long disposal waits for an in-process hosted application (see
+    /// <c>MtpServerClient.LaunchInProcessAsync</c>) to stop after the transport has been closed, before the
+    /// callback's cancellation token is canceled. Defaults to 30 seconds.
+    /// </summary>
+    /// <remarks>
+    /// Disposal waits at most <see cref="MtpServerClientOptions.ServerShutdownTimeout"/> after the transport
+    /// is closed, plus a further fixed 5 seconds after the callback's token is canceled. This option has no
+    /// effect on the external-process launch path, which kills the child process instead, and it does not
+    /// apply to a <em>failed</em> launch: nothing is connected there, so the callback is canceled immediately
+    /// and only the fixed 5-second grace applies.
+    /// </remarks>
+    public TimeSpan ServerShutdownTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Gets the environment variables injected into the launched test-app process (in addition to the
+    /// inherited environment). Useful for passing configuration such as diagnostics switches.
+    /// </summary>
+    /// <remarks>
+    /// Only applies to the external-process launch path. An application hosted in the caller's own process
+    /// shares the caller's environment, so <c>MtpServerClient.LaunchInProcessAsync</c> ignores this
+    /// collection (and logs a warning when it is non-empty).
+    /// </remarks>
+    public IDictionary<string, string?> EnvironmentVariables { get; } = new Dictionary<string, string?>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Gets or sets the sink for the client's own diagnostic messages. When <see langword="null"/> the client
+    /// uses <see cref="NullMtpClientLogger.Instance"/> (diagnostics are discarded).
+    /// </summary>
+    public IMtpClientLogger? Logger { get; set; }
+}

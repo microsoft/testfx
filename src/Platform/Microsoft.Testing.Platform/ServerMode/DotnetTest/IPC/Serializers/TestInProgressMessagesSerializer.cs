@@ -38,74 +38,52 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override TestInProgressMessages DeserializeCore(Stream stream)
     {
-        string? executionId = null;
-        string? instanceId = null;
-        TestInProgressMessage[]? inProgressMessages = [];
-
-        ushort fieldCount = ReadUShort(stream);
-
-        for (int i = 0; i < fieldCount; i++)
-        {
-            int fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
-            switch (fieldId)
+        TestInProgressMessagesFields fields = ReadFields(
+            stream,
+            new TestInProgressMessagesFields { InProgressMessages = [] },
+            static (stream, fieldId, fieldSize, fields) =>
             {
-                case TestInProgressMessagesFieldsId.ExecutionId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    break;
+                if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref fields.ExecutionId, ref fields.InstanceId))
+                {
+                    return fields;
+                }
 
-                case TestInProgressMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    break;
+                if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
+                {
+                    fields.InProgressMessages = ReadFieldPayload(stream, fieldSize, ReadInProgressMessagesPayload);
+                    return fields;
+                }
 
-                case TestInProgressMessagesFieldsId.TestInProgressMessageList:
-                    inProgressMessages = ReadInProgressMessagesPayload(stream);
-                    break;
+                return null;
+            });
 
-                default:
-                    // If we don't recognize the field id, skip the payload corresponding to that field
-                    SetPosition(stream, stream.Position + fieldSize);
-                    break;
-            }
-        }
-
-        return new(executionId, instanceId, inProgressMessages);
+        return new(fields.ExecutionId, fields.InstanceId, fields.InProgressMessages);
     }
 
     private static TestInProgressMessage[] ReadInProgressMessagesPayload(Stream stream)
     {
-        int length = ReadInt(stream);
+        int length = ReadCollectionLength(stream, sizeof(ushort));
         var inProgressMessages = new TestInProgressMessage[length];
         for (int i = 0; i < length; i++)
         {
-            string? uid = null;
-            string? displayName = null;
-
-            int fieldCount = ReadUShort(stream);
-
-            for (int j = 0; j < fieldCount; j++)
+            TestInProgressFields fields = ReadFields(stream, default(TestInProgressFields), static (stream, fieldId, fieldSize, fields) =>
             {
-                int fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case TestInProgressMessageFieldsId.Uid:
-                        uid = ReadStringValue(stream, fieldSize);
-                        break;
+                        fields.Uid = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     case TestInProgressMessageFieldsId.DisplayName:
-                        displayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        fields.DisplayName = ReadStringValue(stream, fieldSize);
+                        return fields;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return null;
                 }
-            }
+            });
 
-            inProgressMessages[i] = new TestInProgressMessage(uid, displayName);
+            inProgressMessages[i] = new TestInProgressMessage(fields.Uid, fields.DisplayName);
         }
 
         return inProgressMessages;
@@ -113,49 +91,41 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override void SerializeCore(TestInProgressMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        WriteExecutionScopedHeader(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)(IsNullOrEmpty(objectToSerialize.InProgressMessages) ? 0 : 1));
 
-        WriteUShort(stream, GetFieldCount(objectToSerialize));
-
-        WriteField(stream, TestInProgressMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
-        WriteField(stream, TestInProgressMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
         WriteInProgressMessagesPayload(stream, objectToSerialize.InProgressMessages);
     }
 
     private static void WriteInProgressMessagesPayload(Stream stream, TestInProgressMessage[]? inProgressMessageList)
-    {
-        if (inProgressMessageList is null || inProgressMessageList.Length == 0)
+        => WriteListPayload(stream, TestInProgressMessagesFieldsId.TestInProgressMessageList, inProgressMessageList, static (s, inProgressMessage) =>
         {
-            return;
-        }
+            WriteUShort(s, GetFieldCount(inProgressMessage));
 
-        WriteUShort(stream, TestInProgressMessagesFieldsId.TestInProgressMessageList);
-
-        // We will reserve an int (4 bytes)
-        // so that we fill the size later, once we write the payload
-        WriteInt(stream, 0);
-
-        long before = stream.Position;
-        WriteInt(stream, inProgressMessageList.Length);
-        foreach (TestInProgressMessage inProgressMessage in inProgressMessageList)
-        {
-            WriteUShort(stream, GetFieldCount(inProgressMessage));
-
-            WriteField(stream, TestInProgressMessageFieldsId.Uid, inProgressMessage.Uid);
-            WriteField(stream, TestInProgressMessageFieldsId.DisplayName, inProgressMessage.DisplayName);
-        }
-
-        // NOTE: We are able to seek only if we are using a MemoryStream
-        // thus, the seek operation is fast as we are only changing the value of a property
-        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
-    }
-
-    private static ushort GetFieldCount(TestInProgressMessages inProgressMessages) =>
-        (ushort)((inProgressMessages.ExecutionId is null ? 0 : 1) +
-        (inProgressMessages.InstanceId is null ? 0 : 1) +
-        (IsNullOrEmpty(inProgressMessages.InProgressMessages) ? 0 : 1));
+            WriteField(s, TestInProgressMessageFieldsId.Uid, inProgressMessage.Uid);
+            WriteField(s, TestInProgressMessageFieldsId.DisplayName, inProgressMessage.DisplayName);
+        });
 
     private static ushort GetFieldCount(TestInProgressMessage inProgressMessage) =>
         (ushort)((inProgressMessage.Uid is null ? 0 : 1) +
         (inProgressMessage.DisplayName is null ? 0 : 1));
+
+    private struct TestInProgressFields
+    {
+        public string? Uid { get; set; }
+
+        public string? DisplayName { get; set; }
+    }
+
+    private struct TestInProgressMessagesFields
+    {
+        public string? ExecutionId;
+
+        public string? InstanceId;
+
+        public TestInProgressMessage[] InProgressMessages { get; set; }
+    }
 }

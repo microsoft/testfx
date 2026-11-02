@@ -1,0 +1,113 @@
+#nullable enable
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+Microsoft.Testing.Platform.Hosts.ITestHostBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+Microsoft.Testing.Platform.Hosts.TestHostBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.CustomOutputDeviceAdapter(Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice! customOutputDevice) -> void
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.Description.get -> string!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayAfterSessionEndRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayBannerAsync(string? bannerMessage, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayBeforeSessionStartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.DisplayName.get -> string!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.HandleProcessRoleAsync(Microsoft.Testing.Platform.TestProcessRole processRole, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.Uid.get -> string!
+Microsoft.Testing.Platform.OutputDevice.CustomOutputDeviceAdapter.Version.get -> string!
+Microsoft.Testing.Platform.OutputDevice.PlatformOutputDeviceManager.SetOutputDevice(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice!>! outputDeviceFactory) -> void
+Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.GitHubActionsCommandOutputDeviceData.GitHubActionsCommandOutputDeviceData(string! text) -> void
+Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.get -> System.Func<bool>!
+Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TestSessionFailureProvider.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.get -> System.Func<bool>!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.HasTestSessionFailure.init -> void
+*REMOVED*static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped) -> string!
+static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped, bool hasTestSessionFailure = false) -> string!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunNotSelected(string! assembly, string? targetFramework, string? architecture) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.AllowZeroTests.get -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.AllowZeroTests.init -> void
+*REMOVED*static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.IsRunFailed(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped) -> bool
+static Microsoft.Testing.Platform.OutputDevice.TestRunSummaryHelper.IsRunFailed(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy zeroTestsPolicy = Microsoft.Testing.Platform.CommandLine.ZeroTestsPolicy.AllowSkipped, bool allowZeroTests = false) -> bool
+Microsoft.Testing.Platform.Services.ShutdownProgressReporter.ShutdownProgressReporter(Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.OutputDevice.IOutputDevice? outputDevice, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, System.TimeSpan quietWindow, System.TimeSpan pollInterval, Microsoft.Testing.Platform.Helpers.ITask! task) -> void
+Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler
+Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler.OnRunCompletedAsync(int exitCode, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>! artifacts, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler![]!
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllerConfiguration.RunCompletionHandlers.set -> void
+Microsoft.Testing.Platform.TestHostControllers.TestHostControllersManager.AddRunCompletionHandler(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerRunCompletionHandler!>! factory) -> void
+static Microsoft.Testing.Platform.Services.CoverageThresholdPolicy.IsDeferredToController(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> bool
+Microsoft.Testing.Platform.Services.TestCoverageResult.ControllerSummaryArtifacts.get -> Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]!
+Microsoft.Testing.Platform.Services.TestCoverageResult.DeferToController() -> void
+Microsoft.Testing.Platform.Hosts.TestHostControlledHost.SetCoverageResult(Microsoft.Testing.Platform.Services.TestCoverageResult! coverageResult) -> void
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.SummaryArtifacts.get -> Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]!
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.TestHostCompletedRequest(int returnCode, int unfilteredReturnCode, Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact![]! summaryArtifacts) -> void
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY = "TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY" -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ExactActualPercentage.get -> decimal?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ExactRequiredPercentage.get -> decimal?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.TestCoverageThresholdMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, decimal actualPercentage, decimal requiredPercentage, bool hasCoverableData, string! producerId, bool passed) -> void
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.CoverageThresholdBranchOptionKey = "coverage-threshold-branch" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.CoverageThresholdLineOptionKey = "coverage-threshold-line" -> string!
+Microsoft.Testing.Platform.Services.CoverageThresholdPolicy
+Microsoft.Testing.Platform.Services.TestCoverageResult.ConfigureThresholds(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.TestHost.SessionUid? sessionUid) -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.GetThresholdErrors() -> System.Collections.Generic.IReadOnlyList<string!>!
+static Microsoft.Testing.Platform.Services.CoverageThresholdPolicy.Evaluate(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>! scopes, Microsoft.Testing.Platform.TestHost.SessionUid? sessionUid) -> (System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! Thresholds, System.Collections.Generic.IReadOnlyList<string!>! Errors)
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.ShowMessage = "showMessage" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcMethods.ClientShowMessage = "client/showMessage" -> string!
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ShowMessage.init -> void
+Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.get -> bool?
+Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.ShowMessage.init -> void
+Microsoft.Testing.Platform.DotnetTestConnection.IsCoverageSummarySupported.get -> bool
+Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.IsCoverageSummarySupported.get -> bool
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind, out string![]? InputArtifactPaths) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? Kind, string![]? InputArtifactPaths = null) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.CoverageSummary.get -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]?
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.CoverageSummary.init -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind, out string![]? InputArtifactPaths, out Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? CoverageSummary) -> void
+Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? Kind, string![]? InputArtifactPaths = null, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? CoverageSummary = null) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage!
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoverableCount.get -> long?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoverableCount.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoverageSummaryMessage(string? SessionUid, string? ProducerId, int? ScopeLevel, string? ScopeName, int? Metric, string? CustomMetricName, long? CoveredCount, long? CoverableCount) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoveredCount.get -> long?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CoveredCount.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CustomMetricName.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.CustomMetricName.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Deconstruct(out string? SessionUid, out string? ProducerId, out int? ScopeLevel, out string? ScopeName, out int? Metric, out string? CustomMetricName, out long? CoveredCount, out long? CoverableCount) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Equals(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Metric.get -> int?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Metric.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ProducerId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ProducerId.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeLevel.get -> int?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeLevel.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeName.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ScopeName.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.SessionUid.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.SessionUid.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.<Clone>$() -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages!
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.CoverageSummaryMessages(string? ExecutionId, string? InstanceId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]! Summaries) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Deconstruct(out string? ExecutionId, out string? InstanceId, out Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]! Summaries) -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Equals(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? other) -> bool
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.ExecutionId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.ExecutionId.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.InstanceId.get -> string?
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.InstanceId.init -> void
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Summaries.get -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
+Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Summaries.init -> void
+Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer
+Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.CoverageSummaryMessagesSerializer() -> void
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.GetHashCode() -> int
+override Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.ToString() -> string!
+override Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.Id.get -> int
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.operator !=(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator !=(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
+static Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages.operator ==(Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? left, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessages? right) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.ReadSummariesPayload(System.IO.Stream! stream) -> Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]!
+static Microsoft.Testing.Platform.IPC.Serializers.CoverageSummaryMessagesSerializer.WriteSummariesPayload(System.IO.Stream! stream, ushort fieldId, Microsoft.Testing.Platform.IPC.Models.CoverageSummaryMessage![]? summaries) -> void

@@ -10,10 +10,10 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParametersTests.TestAssetFixture>
 {
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestRunParameters_WhenProvidingMultipleArgumentsToTheOption(string tfm)
+    [DynamicData(nameof(AllTfmsAndMetadataModes))]
+    public async Task TestRunParameters_WhenProvidingMultipleArgumentsToTheOption(string tfm, MetadataMode metadataMode)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm, metadataMode: metadataMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 MyParameter3=MyValue3", cancellationToken: TestContext.CancellationToken);
 
         // Assert
@@ -22,10 +22,10 @@ public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParameter
     }
 
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task TestRunParameters_WhenProvidingMultipleMultipleTimesTheOptionAndArgument(string tfm)
+    [DynamicData(nameof(AllTfmsAndMetadataModes))]
+    public async Task TestRunParameters_WhenProvidingMultipleMultipleTimesTheOptionAndArgument(string tfm, MetadataMode metadataMode)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm, metadataMode: metadataMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings --test-parameter MyParameter2=MyValue2 --test-parameter MyParameter3=MyValue3", cancellationToken: TestContext.CancellationToken);
 
         // Assert
@@ -38,6 +38,9 @@ public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParameter
         public const string ProjectName = "TestRunParameters";
 
         public string ProjectPath => GetAssetPath(ProjectName);
+
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes { get; }
+            = [MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode

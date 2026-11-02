@@ -17,6 +17,7 @@ trigger:
       # official pipeline for samples-only changes.
       - samples/**
       - eng/build-samples.ps1
+      - eng/test-samples.ps1
 
 parameters:
 - name: isRTM
@@ -88,6 +89,13 @@ extends:
         enabled: true
       tsa:
         enabled: true
+      componentgovernance:
+        # .dotnet/ is the repo-local .NET SDK bootstrapped by eng/common/tools.ps1 from global.json,
+        # plus the workloads installed by eng/restore-toolset.ps1. It is not checked in (see .gitignore)
+        # and nothing in it ships. Scanning it surfaces alerts for components we cannot service, such as
+        # the npm packages vendored inside Microsoft.NET.Runtime.Emscripten.*.Sdk/tools/emscripten/node_modules,
+        # which are owned by dotnet/runtime and pinned by the SDK pack.
+        ignoreDirectories: $(Build.SourcesDirectory)/.dotnet
     featureFlags:
       autoBaseline: true
     pool:
@@ -95,7 +103,7 @@ extends:
       image: windows.vs2026preview.scout.amd64
       os: windows
     settings:
-      networkIsolationPolicy: Permissive,CFSClean
+      networkIsolationPolicy: DefaultDeny,CFSClean
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
@@ -107,8 +115,7 @@ extends:
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:
           enableMicrobuild: true
-          enablePublishTestResults: true
-          testResultsFormat: 'vstest'
+          enablePublishTestResults: false
           publishingVersion: 4
           artifacts:
             publish:
@@ -118,13 +125,18 @@ extends:
           jobs:
           - job: Windows
             enablePublishing: true
-            timeoutInMinutes: 90
+            # Leave room for the expanded framework matrix and signing/artifact publication after tests.
+            timeoutInMinutes: 180
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2026preview.scout.amd64
               os: windows
             steps:
             - template: /eng/pipelines/steps/install-windows-prereqs.yml@self
+
+            - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
+              parameters:
+                enabled: false
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
@@ -141,6 +153,9 @@ extends:
                 DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: Test.cmd
                   -configuration $(_BuildConfig)
@@ -152,6 +167,42 @@ extends:
                 env:
                   TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
                   DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+                  # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
+                  # flaky-history injected by test/Directory.Build.targets) can query this pipeline's own
+                  # test-result history. Secret variables are not auto-exposed to scripts, so the explicit
+                  # mapping is required; the history service no-ops if the token or endpoints are unavailable.
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+              - template: /eng/pipelines/steps/finalize-azdo-live-test-publishing.yml@self
+
+              - task: PublishTestResults@2
+                displayName: Publish TRX Test Results (fallback)
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: '*.trx'
+                  searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  testRunTitle: '$(System.JobName)-trx'
+                continueOnError: true
+                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
+
+              # The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and
+              # CopyFiles@2 hard-fails when SourceFolder does not exist. A Test failure early enough to skip
+              # the suite therefore reported one real problem as three failed steps: Test, Copy binlogs, and
+              # Publish integration tests binlogs all failed in
+              # https://dev.azure.com/dnceng/internal/_build/results?buildId=3045544. Probe for the binlogs so
+              # both steps skip when there are none. When the suite did produce binlogs they are copied and
+              # published exactly as before, including on a failed run, which is why these use always().
+              - pwsh: |
+                  $testsuite = Join-Path '$(Build.SourcesDirectory)' 'artifacts/tmp/$(_BuildConfig)/testsuite'
+                  $hasBinlogs = 'false'
+                  if (Test-Path -LiteralPath $testsuite -PathType Container) {
+                    $binlog = Get-ChildItem -LiteralPath $testsuite -Filter '*.binlog' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($null -ne $binlog) { $hasBinlogs = 'true' }
+                  }
+                  Write-Host "Integration tests binlogs under '$testsuite': $hasBinlogs"
+                  Write-Host "##vso[task.setvariable variable=HasIntegrationTestBinlogs]$hasBinlogs"
+                displayName: 'Check for integration tests binlogs'
+                condition: always()
 
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
@@ -160,26 +211,43 @@ extends:
                   Contents: |
                     **/*.binlog
                   TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-                condition: always()
+                condition: and(always(), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish integration tests binlogs'
                 inputs:
                   PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
                   ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-                condition: always()
+                condition: and(always(), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
               # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
               - pwsh: |
                   Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
                 displayName: Remove artifacts/tmp
 
+              # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
+              # 1ES.PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies
+              # before the tests run therefore reported one real problem as two failed steps: an Azure
+              # Artifacts outage broke Install MicroBuild plugin, which skipped Build and Test, and this step
+              # then failed with "Not found PathtoPublish" in
+              # https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. Probe for the folder so
+              # the publish skips when there is nothing to publish. When the tests did write results they are
+              # published exactly as before, including on a failed run, which is why this uses always().
+              - pwsh: |
+                  $testResults = Join-Path '$(Build.SourcesDirectory)' 'artifacts/TestResults/$(_BuildConfig)'
+                  $hasTestResults = 'false'
+                  if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
+                  Write-Host "Test results under '$testResults': $hasTestResults"
+                  Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+                displayName: 'Check for Test Results folders'
+                condition: always()
+
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Windows_Attempt$(System.JobAttempt)
-                condition: always()
+                condition: and(always(), eq(variables.HasTestResults, 'true'))
 
             - task: NuGetAuthenticate@1
               displayName: 'NuGet Authenticate to test-tools feed'
@@ -225,9 +293,14 @@ extends:
               image: 1es-ubuntu-2204
               os: linux
             steps:
+            - template: /eng/pipelines/steps/configure-azdo-live-test-publishing.yml@self
+              parameters:
+                enabled: false
+
             - script: eng/common/build.sh
                 -configuration $(_BuildConfig)
                 -prepareMachine
+                --ci
                 --restore
                 --build
                 --pack
@@ -236,6 +309,9 @@ extends:
               displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: |
                   chmod +x ./test.sh
@@ -245,15 +321,62 @@ extends:
                 env:
                   TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
                   DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+                  # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
+                  # flaky-history injected by test/Directory.Build.targets) can query this pipeline's own
+                  # test-result history. Secret variables are not auto-exposed to scripts, so the explicit
+                  # mapping is required; the history service no-ops if the token or endpoints are unavailable.
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+              - template: /eng/pipelines/steps/finalize-azdo-live-test-publishing.yml@self
+
+              - task: PublishTestResults@2
+                displayName: Publish TRX Test Results (fallback)
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: '*.trx'
+                  searchFolder: '$(System.DefaultWorkingDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  testRunTitle: '$(System.JobName)-trx'
+                continueOnError: true
+                condition: and(always(), ne(variables.TESTFX_AZDO_LIVE_PUBLISHING_SUCCEEDED, 'true'))
+
+              # artifacts/TestResults/$(_BuildConfig) only exists once a test step has written into it, and
+              # 1ES.PublishBuildArtifacts@1 hard-fails when PathtoPublish does not exist. A job that dies
+              # before the tests run therefore reported one real problem as two failed steps, the way the
+              # Windows job did in
+              # https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. Probe for the folder so
+              # the publish skips when there is nothing to publish. When the tests did write results they are
+              # published exactly as before, including on a failed run, which is why this uses always().
+              - pwsh: |
+                  $testResults = Join-Path '$(Build.SourcesDirectory)' 'artifacts/TestResults/$(_BuildConfig)'
+                  $hasTestResults = 'false'
+                  if (Test-Path -LiteralPath $testResults -PathType Container) { $hasTestResults = 'true' }
+                  Write-Host "Test results under '$testResults': $hasTestResults"
+                  Write-Host "##vso[task.setvariable variable=HasTestResults]$hasTestResults"
+                displayName: 'Check for Test Results folders'
+                condition: always()
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
                   PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
                   ArtifactName: TestResults_Linux_Attempt$(System.JobAttempt)
-                condition: always()
+                condition: and(always(), eq(variables.HasTestResults, 'true'))
 
-      - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+    # Localization runs in its own stage rather than as a job of `build`.
+    # OneLocBuild hands the resource strings off to the loc service and then opens a PR back into
+    # microsoft/testfx using the shared dnceng `BotAccount-dotnet-bot-repo-PAT` secret. That check-in
+    # step can fail for reasons unrelated to the product (for example the "Microsoft Open Source"
+    # GitHub enterprise rejecting the shared classic PAT). While it was a job of `build`, such a
+    # failure failed the whole stage, which skipped the post-build `Validate Build Assets` and
+    # `Publish using Darc` stages (both depend on `build`) and silently stopped official publishing.
+    # Nothing that ships depends on the loc PR, so the stage stands alone: a break still turns the
+    # build red, but it no longer blocks publishing. Mirrors the dotnet/runtime layout.
+    # See https://github.com/microsoft/testfx/issues/10322 for the current PAT policy breakage.
+    - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+      - stage: Localization
+        # OneLocBuild only needs the sources, so it can run in parallel with `build`.
+        dependsOn: []
+        jobs:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self
           parameters:
             GitHubOrg: microsoft

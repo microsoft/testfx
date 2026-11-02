@@ -13,6 +13,8 @@ internal interface IFileSystem
 
     void MoveFile(string sourceFileName, string destFileName, bool overwrite = false);
 
+    void ReplaceFile(string sourceFileName, string destFileName);
+
     IFileStream NewFileStream(string path, FileMode mode);
 
     IFileStream NewFileStream(string path, FileMode mode, FileAccess access);

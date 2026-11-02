@@ -1,10 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -103,8 +102,9 @@ internal static class TestResultCaptureHelper
             TimeoutTestNodeStateProperty => "timedOut",
             ErrorTestNodeStateProperty => "errored",
             FailedTestNodeStateProperty => "failed",
-            _ when Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0
-                => "failed",
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            CancelledTestNodeStateProperty => "failed",
+#pragma warning restore CS0618, MTP0001
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 

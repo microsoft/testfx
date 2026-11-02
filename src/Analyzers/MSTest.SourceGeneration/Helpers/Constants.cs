@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
@@ -14,6 +14,9 @@ internal static class Constants
 
     public const string ReflectionMetadataHookFullName =
         "global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook";
+
+    public const string DynamicDataSourceResolverFullName =
+        "global::Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver";
 
     public const string GeneratedFileSuffix = ".MSTestReflectionMetadata.g.cs";
 }

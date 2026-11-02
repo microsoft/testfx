@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -42,6 +42,48 @@ public class AssertionValueRendererTests : TestContainer
 
     public void RenderValue_WhitespaceOnlyString_ReturnsQuotedWhitespace() =>
         AssertionValueRenderer.RenderValue("   ").Should().Be("\"   \"");
+
+    public void RenderValue_UnpairedSurrogates_PreservesCurrentRendering()
+    {
+        const string Value = "\uD800";
+        string rendered = AssertionValueRenderer.RenderValue(Value);
+
+        rendered.Should().Be("\"\uD800\"");
+        AssertionValueRenderer.RenderValue('\uD800').Should().Be("'\uD800'");
+        AssertionValueRenderer.IsBuiltInStringRendering(Value, rendered).Should().BeTrue();
+    }
+
+    public void RenderValue_QuoteAndBackslashCharacters_PreservesCurrentRendering()
+    {
+        AssertionValueRenderer.RenderValue('\'').Should().Be("'''");
+        AssertionValueRenderer.RenderValue('\\').Should().Be("'\\'");
+    }
+
+    public void IsBuiltInStringRendering_MatchesAllEscapes()
+    {
+        const string Value = "text \"quoted\"\\path\n\r\t\0\u0001🌍";
+        string rendered = AssertionValueRenderer.RenderValue(Value);
+
+        AssertionValueRenderer.IsBuiltInStringRendering(Value, rendered).Should().BeTrue();
+        AssertionValueRenderer.IsBuiltInStringRendering(Value, rendered + "changed").Should().BeFalse();
+        AssertionValueRenderer.IsBuiltInStringRendering(Value, "<redacted>").Should().BeFalse();
+    }
+
+#if NET8_0_OR_GREATER
+    public void IsBuiltInStringRendering_LongStringDoesNotAllocate()
+    {
+        string value = new('a', 100_000);
+        string rendered = AssertionValueRenderer.RenderValue(value);
+        _ = AssertionValueRenderer.IsBuiltInStringRendering(value, rendered);
+
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        bool result = AssertionValueRenderer.IsBuiltInStringRendering(value, rendered);
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        result.Should().BeTrue();
+        allocated.Should().Be(0);
+    }
+#endif
 
     public void RenderValue_Integer_ReturnsUnquoted() =>
         AssertionValueRenderer.RenderValue(42).Should().Be("42");

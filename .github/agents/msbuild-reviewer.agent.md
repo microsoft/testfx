@@ -44,7 +44,7 @@ The caller is the scheduled MSBuild quality review workflow. There is no PR; you
 2. Read every discovered file (prioritize NuGet `build/` and SDK files — they ship to customers).
 3. Evaluate every file against the [Rule Catalog](#rule-catalog).
 4. Group findings by severity (🔴 Error / 🟡 Warning / 🔵 Suggestion).
-5. Check for an existing open issue with labels `automation`, `msbuild`, `code-quality`. If one exists and the findings are unchanged, call `noop` with the message `MSBuild file quality review complete — no new findings since the last report.` and stop.
+5. Use `gh issue list --state open --label type/automation --label area/mtp-msbuild --label type/tech-debt` to check for an existing report. If one exists and the findings are unchanged, call `noop` with the message `MSBuild file quality review complete — no new findings since the last report.` and stop.
 6. Otherwise, **self-post** the report (the parent workflow `noop`s immediately and will not pick up your output if you don't post). Use:
    - `create_issue` for the findings report (preferred default).
    - `create_pull_request` for safe auto-fixes only when ALL of the following hold for every change in the PR: the fix is on the allow-list in [Safe Auto-Fixes](#safe-auto-fixes), `./build.sh` still succeeds after the change, and the change does not touch a file under `.github/`, `eng/common/`, or another protected path.

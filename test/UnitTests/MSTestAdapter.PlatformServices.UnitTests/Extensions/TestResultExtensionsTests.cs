@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -153,8 +154,8 @@ public class TestResultExtensionsTests : TestContainer
 
         var convertedResult = result.ToTestResult(new(), default, default, string.Empty, new());
 
-        ((Guid)convertedResult.GetPropertyValue(EngineConstants.ExecutionIdProperty)!).Should().Be(executionId);
-        ((Guid)convertedResult.GetPropertyValue(EngineConstants.ParentExecIdProperty)!).Should().Be(parentExecId);
+        ((Guid)convertedResult.GetPropertyValue(AdapterTestProperties.ExecutionIdProperty)!).Should().Be(executionId);
+        ((Guid)convertedResult.GetPropertyValue(AdapterTestProperties.ParentExecIdProperty)!).Should().Be(parentExecId);
     }
 
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()

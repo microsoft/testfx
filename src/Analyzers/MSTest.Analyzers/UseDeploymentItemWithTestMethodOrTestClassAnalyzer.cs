@@ -19,12 +19,13 @@ public sealed class UseDeploymentItemWithTestMethodOrTestClassAnalyzer : Diagnos
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.UseDeploymentItemWithTestMethodOrTestClassDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor UseDeploymentItemWithTestMethodOrTestClassRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseDeploymentItemWithTestMethodOrTestClassRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

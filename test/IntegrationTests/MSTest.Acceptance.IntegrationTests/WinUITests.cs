@@ -7,6 +7,12 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
+/// <summary>
+/// Smoke coverage that a <c>UseWinUI</c> project resolves and loads the WinUI-flavored MSTest
+/// assemblies and runs to completion. The asset deliberately does not reference
+/// <c>Microsoft.WindowsAppSDK</c>, which keeps it buildable by the dotnet muxer on every leg; the real
+/// WinUI end-to-end coverage lives in <see cref="UnpackagedWinUITests"/>.
+/// </summary>
 [TestClass]
 public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
 {
@@ -44,6 +50,13 @@ public sealed class WinUITests : AcceptanceTestBase<WinUITests.TestAssetFixture>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFramework>$TargetFramework$</TargetFramework>
     <UseWinUI>true</UseWinUI>
+    <!--
+      No package identity. Without a Microsoft.WindowsAppSDK reference this property does not change the
+      build; it records the intent, and the process genuinely runs without identity, which is what makes
+      this asset cover the unpackaged WIN_UI adapter paths (AppModel.IsPackagedProcess() returning false
+      and GetCurrentPackagePath() returning null).
+    -->
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
 
   <ItemGroup>

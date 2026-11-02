@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
@@ -19,7 +20,11 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     private readonly FakeCounter<int> _failedCounter = new();
     private readonly FakeCounter<int> _skippedCounter = new();
     private readonly FakeCounter<int> _unknownCounter = new();
+    private readonly FakeCounter<int> _testCaseResultCounter = new();
+    private readonly FakeUpDownCounter<int> _activeTestCases = new();
     private readonly FakeHistogram<double> _durationHistogram = new();
+    private readonly FakeHistogram<double> _testCaseDurationHistogram = new();
+    private readonly FakeHistogram<double> _testRunDurationHistogram = new();
     private readonly OpenTelemetryResultHandler _handler;
 
     public OpenTelemetryResultHandlerTests()
@@ -32,6 +37,11 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _otelService.Setup(s => s.CreateCounter<int>("tests.skipped", null, null, null)).Returns(_skippedCounter);
         _otelService.Setup(s => s.CreateCounter<int>("tests.unknown", null, null, null)).Returns(_unknownCounter);
         _otelService.Setup(s => s.CreateHistogram<double>("tests.duration", null, null, null)).Returns(_durationHistogram);
+
+        _otelService.Setup(s => s.CreateCounter<int>("test.case.result.count", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseResultCounter);
+        _otelService.Setup(s => s.CreateUpDownCounter<int>("test.case.active", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_activeTestCases);
+        _otelService.Setup(s => s.CreateHistogram<double>("test.case.duration", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseDurationHistogram);
+        _otelService.Setup(s => s.CreateHistogram<double>("test.run.duration", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testRunDurationHistogram);
 
         _handler = new OpenTelemetryResultHandler(_otelService.Object);
     }
@@ -111,6 +121,96 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifyInProgress_WithExecutionContext_UsesActivityLinkCapability()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> linkService = new();
+        using OpenTelemetryResultHandler handler = CreateLinkAwareHandler(linkService);
+        Mock<IPlatformActivity> activity = new();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        var executionContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: "vendor=value");
+        linkService.Setup(s => s.StartActivityWithLink(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            executionContext)).Returns(activity.Object);
+
+        TestNode testNode = CreateTestNode("linked-test");
+        handler.NotifyInProgress(testNode, null, executionContext);
+        handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        linkService.Verify(
+            s => s.StartActivityWithLink(
+                "Test",
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                executionContext),
+            Times.Once);
+        linkService.Verify(
+            s => s.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_WithExecutionContextAndOldService_FallsBackToStartActivity()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("compatibility-fallback");
+        var executionContext = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            isRecorded: false,
+            traceState: null);
+        TestNode testNode = CreateTestNode("compatibility-fallback");
+
+        _handler.NotifyInProgress(testNode, null, executionContext);
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        _otelService.Verify(
+            s => s.StartActivity(
+                "Test",
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_WithoutExecutionContext_DoesNotUseActivityLinkCapability()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> linkService = new();
+        using OpenTelemetryResultHandler handler = CreateLinkAwareHandler(linkService);
+        Mock<IPlatformActivity> activity = new();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        linkService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+
+        TestNode testNode = CreateTestNode("unlinked-test");
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        linkService.Verify(
+            s => s.StartActivityWithLink(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<PlatformActivityContext>()),
+            Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
     public void NotifyInProgress_WhenStartActivityReturnsNull_DoesNotTrackActivity()
     {
         _otelService.Setup(s => s.StartActivity(
@@ -122,8 +222,119 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         TestNode testNode = CreateTestNode();
         _handler.NotifyInProgress(testNode, null);
 
-        // Should not throw when completing the test (no activity tracked).
+        // Should not throw when completing the test (no activity tracked), and the result must still be counted
+        // so that a metrics-only configuration keeps working.
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void CanonicalActivity_IsEnrichedAndStoppedWithoutCreatingResultSpan()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> canonicalService = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        activity.Setup(a => a.SetStatus(It.IsAny<PlatformActivityStatusCode>(), It.IsAny<string?>())).Returns(activity.Object);
+        canonicalService.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using TestExecutionActivityBroker broker = new(canonicalService.Object, PlatformOpenTelemetryOptions.Default);
+
+        TestNode startNode = CreateTestNode("canonical");
+        TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
+        startNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
+        _handler.NotifyInProgress(startNode, null);
+        reservation.Activate();
+        DateTimeOffset executionEnd = DateTimeOffset.UtcNow;
+        reservation.RecordExecutionEnd(executionEnd);
+
+        TestNode resultNode = CreateTestNode("canonical");
+        resultNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        resultNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: true));
+        _handler.NotifyPassed(resultNode, PassedTestNodeStateProperty.CachedInstance);
+
+        _otelService.Verify(
+            s => s.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Never);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Ok, It.IsAny<string?>()), Times.Once);
+        activity.Verify(a => a.Stop(executionEnd), Times.Once);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void CanonicalActivity_MultipleResultsAggregateBeforeStopping()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithTestExecutionActivities> canonicalService = new();
+        Mock<IPlatformTestExecutionActivity> activity = new();
+        DateTimeOffset? exceptionEventTimestamp = null;
+        activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
+        activity.Setup(a => a.SetStatus(It.IsAny<PlatformActivityStatusCode>(), It.IsAny<string?>())).Returns(activity.Object);
+        activity.Setup(a => a.AddEvent(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, DateTimeOffset>((_, _, timestamp) => exceptionEventTimestamp = timestamp)
+            .Returns(activity.Object);
+        canonicalService.Setup(s => s.StartTestExecutionActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
+        using TestExecutionActivityBroker broker = new(canonicalService.Object, PlatformOpenTelemetryOptions.Default);
+
+        TestNode startNode = CreateTestNode("canonical-multiple");
+        TestExecutionActivityReservation reservation = broker.Reserve(startNode)!;
+        startNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
+        _handler.NotifyInProgress(startNode, null);
+        reservation.Activate();
+        DateTimeOffset executionEnd = DateTimeOffset.UtcNow;
+        reservation.RecordExecutionEnd(executionEnd);
+
+        TestNode failedNode = CreateTestNode("canonical-multiple");
+        var failedState = new FailedTestNodeStateProperty(new InvalidOperationException("row failed"));
+        failedNode.Properties.Add(failedState);
+        failedNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: false));
+        _handler.NotifyFailed(failedNode, failedState);
+        activity.Verify(a => a.Stop(It.IsAny<DateTimeOffset>()), Times.Never);
+        Assert.AreEqual(1, _activeTestCases.Value);
+
+        TestNode passedNode = CreateTestNode("canonical-multiple");
+        passedNode.Properties.Add(PassedTestNodeStateProperty.CachedInstance);
+        passedNode.Properties.Add(new TestExecutionActivityProperty(reservation, isFinalResult: true));
+        _handler.NotifyPassed(passedNode, PassedTestNodeStateProperty.CachedInstance);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Never);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, It.IsAny<string?>()), Times.Once);
+        activity.Verify(a => a.Stop(executionEnd), Times.Once);
+        Assert.AreEqual(executionEnd, exceptionEventTimestamp);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void NotifyExecutionCompleted_DisposesActivityWithoutRecordingOutcome()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("dropped-test");
+        TestNode testNode = CreateTestNode("dropped-test");
+        _handler.NotifyInProgress(testNode, null);
+
+        _handler.NotifyExecutionCompleted(testNode);
+
+        Assert.AreEqual(1, _completedCounter.Value);
+        Assert.AreEqual(0, _passedCounter.Value);
+        Assert.AreEqual(0, _failedCounter.Value);
+        Assert.AreEqual(0, _skippedCounter.Value);
+        activity.Verify(a => a.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
     }
 
     [TestMethod]
@@ -249,14 +460,25 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     [TestMethod]
     public void Dispose_DisposesOrphanedActivities()
     {
-        Mock<IPlatformActivity> activity1 = SetupActivityForTestNode("orphan-1");
-        Mock<IPlatformActivity> activity2 = SetupActivityForTestNode("orphan-2");
+        Mock<IPlatformActivity> activity1 = new();
+        Mock<IPlatformActivity> activity2 = new();
+        activity1.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity1.Object);
+        activity2.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity2.Object);
+        _otelService.SetupSequence(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Returns(activity1.Object)
+            .Returns(activity2.Object);
 
         _handler.NotifyInProgress(CreateTestNode("orphan-1"), null);
         _handler.NotifyInProgress(CreateTestNode("orphan-2"), null);
+        Assert.AreEqual(2, _activeTestCases.Value);
 
         _handler.Dispose();
 
+        Assert.AreEqual(0, _activeTestCases.Value);
         activity1.Verify(a => a.Dispose(), Times.Once);
         activity2.Verify(a => a.Dispose(), Times.Once);
     }
@@ -375,6 +597,92 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void HandleTestResult_WithRetryAttempt_PairsOutOfOrderResultsByAttempt()
+    {
+        Mock<IPlatformOpenTelemetryServiceWithActivityLinks> linkService = new();
+        using OpenTelemetryResultHandler handler = CreateLinkAwareHandler(linkService);
+        Mock<IPlatformActivity> attempt1Activity = new();
+        attempt1Activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(attempt1Activity.Object);
+        Mock<IPlatformActivity> attempt2Activity = new();
+        attempt2Activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(attempt2Activity.Object);
+        var attempt1Context = new PlatformActivityContext(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            isRecorded: true,
+            traceState: null);
+        var attempt2Context = new PlatformActivityContext(
+            "22222222222222222222222222222222",
+            "2222222222222222",
+            isRecorded: true,
+            traceState: null);
+        linkService.Setup(s => s.StartActivityWithLink(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            attempt1Context)).Returns(attempt1Activity.Object);
+        linkService.Setup(s => s.StartActivityWithLink(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            attempt2Context)).Returns(attempt2Activity.Object);
+
+        TestNode attempt1 = CreateRetryTestNode("retry-test", attemptNumber: 1);
+        TestNode attempt2 = CreateRetryTestNode("retry-test", attemptNumber: 2);
+        handler.NotifyInProgress(attempt1, null, attempt1Context);
+        handler.NotifyInProgress(attempt2, null, attempt2Context);
+
+        handler.NotifyFailed(attempt2, new FailedTestNodeStateProperty());
+        handler.NotifyPassed(attempt1, PassedTestNodeStateProperty.CachedInstance);
+
+        attempt1Activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        attempt1Activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        attempt2Activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        attempt2Activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Never);
+        attempt1Activity.Verify(a => a.Dispose(), Times.Once);
+        attempt2Activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifySupersededRetryAttempt_CompletesSpanWithoutRecordingAggregateMetrics()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("superseded-retry");
+        TestNode testNode = CreateRetryTestNode("superseded-retry", attemptNumber: 1);
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifySupersededRetryAttempt(testNode, new FailedTestNodeStateProperty());
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual(0, _testCaseResultCounter.Value);
+        Assert.AreEqual(0, _completedCounter.Value);
+        Assert.AreEqual(0, _activeTestCases.Value);
+        Assert.IsNull(_testCaseDurationHistogram.LastRecordedValue);
+        Assert.IsNull(_durationHistogram.LastRecordedValue);
+    }
+
+    [TestMethod]
+    public void NotifySupersededRetryAttempt_DoesNotConsumeUnnumberedSpan()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("single-span-retry");
+        TestNode unnumberedStart = CreateTestNode("single-span-retry");
+        TestNode supersededAttempt = CreateRetryTestNode("single-span-retry", attemptNumber: 1);
+        TestNode finalAttempt = CreateRetryTestNode("single-span-retry", attemptNumber: 2);
+
+        _handler.NotifyInProgress(unnumberedStart, null);
+        _handler.NotifySupersededRetryAttempt(supersededAttempt, new FailedTestNodeStateProperty());
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "fail"), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Never);
+        Assert.AreEqual(1, _activeTestCases.Value);
+
+        _handler.NotifyPassed(finalAttempt, PassedTestNodeStateProperty.CachedInstance);
+
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
     public void Dispose_WithMultipleActivitiesSharingUid_DisposesAllOfThem()
     {
         // Regression test for https://github.com/microsoft/testfx/issues/7442.
@@ -402,6 +710,328 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     public void Dispose()
         => _handler.Dispose();
 
+    [TestMethod]
+    public void HandleTestResult_WithPassedState_SetsSemanticConventionStatusAndCounts()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("semconv-passed");
+        TestNode testNode = CreateTestNode("semconv-passed");
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        // The upstream test.case.result.status enum is "pass"/"fail"; the legacy attribute keeps "passed"/"failed".
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Ok, It.IsAny<string?>()), Times.Once);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+        Assert.IsNotNull(_testCaseResultCounter.LastTags);
+        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "pass", _testCaseResultCounter.LastTags);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_WithFailedState_RecordsExceptionAndErrorAttributes()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("semconv-failed");
+        string? eventName = null;
+        IReadOnlyList<KeyValuePair<string, object?>>? exceptionEventTags = null;
+        activity.Setup(a => a.AddEvent(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, DateTimeOffset>((name, tags, _) =>
+            {
+                eventName = name;
+                exceptionEventTags = tags?.ToList();
+            })
+            .Returns(activity.Object);
+        TestNode testNode = CreateTestNode("semconv-failed");
+        InvalidOperationException exception = new("boom");
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyFailed(testNode, new FailedTestNodeStateProperty(exception, "test failed"));
+
+        activity.Verify(a => a.RecordException(exception, It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()), Times.Never);
+        Assert.AreEqual("exception", eventName);
+        Assert.IsNotNull(exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.type" && (string?)t.Value == typeof(InvalidOperationException).FullName, exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.message" && (string?)t.Value == "boom", exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.stacktrace" && (string?)t.Value == exception.ToString(), exceptionEventTags);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, "boom"), Times.Once);
+        activity.Verify(a => a.SetTag("error.type", typeof(InvalidOperationException).FullName), Times.Once);
+
+        // error.message is deprecated upstream and NOT RECOMMENDED on spans; the message travels on the
+        // exception event and on the legacy attribute instead.
+        activity.Verify(a => a.SetTag("error.message", It.IsAny<object?>()), Times.Never);
+        activity.Verify(a => a.SetTag("test.result.exception.message", "boom"), Times.Once);
+        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "fail", _testCaseResultCounter.LastTags!);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_WithTimingProperty_RecordsSecondsOnSemanticConventionHistogram()
+    {
+        SetupActivityForTestNode("semconv-duration");
+        TimingInfo timing = new(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddSeconds(2), TimeSpan.FromSeconds(2));
+        TestNode testNode = new()
+        {
+            Uid = new TestNodeUid("semconv-duration"),
+            DisplayName = "Test",
+            Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, new TimingProperty(timing)),
+        };
+
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        // OpenTelemetry requires durations in seconds, while the legacy instrument stays in milliseconds.
+        Assert.AreEqual(2d, _testCaseDurationHistogram.LastRecordedValue);
+        Assert.AreEqual(2000d, _durationHistogram.LastRecordedValue);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_WithoutTrackedActivity_StillRecordsDurationAndCount()
+    {
+        TimingInfo timing = new(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddSeconds(1), TimeSpan.FromSeconds(1));
+        TestNode testNode = new()
+        {
+            Uid = new TestNodeUid("no-activity"),
+            DisplayName = "Test",
+            Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance, new TimingProperty(timing)),
+        };
+
+        // No NotifyInProgress: frameworks that only publish final results must still produce latency data.
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.AreEqual(1d, _testCaseDurationHistogram.LastRecordedValue);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_EmitsSemanticConventionAttributes()
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = null;
+        _otelService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((_, tags, _, _) => capturedTags = tags?.ToList())
+            .Returns(new Mock<IPlatformActivity>().Object);
+
+        _handler.NotifyInProgress(CreateTestNode("semconv-tags"), new TestNodeUid("parent"));
+
+        Assert.IsNotNull(capturedTags);
+        var tagList = capturedTags.ToList();
+        Assert.IsTrue(tagList.Exists(t => t.Key == "test.case.name" && (string?)t.Value == "Test"));
+        Assert.IsTrue(tagList.Exists(t => t.Key == "test.case.id" && (string?)t.Value == "semconv-tags"));
+        Assert.IsTrue(tagList.Exists(t => t.Key == "test.case.parent.id" && (string?)t.Value == "parent"));
+    }
+
+    [TestMethod]
+    public void NotifyRunCompleted_RecordsRunDurationWithVerdict()
+    {
+        Mock<IPlatformActivity> runActivity = new();
+        _handler.NotifyRunCompleted(totalRanTests: 10, failedTests: 2, skippedTests: 1, exitCode: (int)ExitCode.AtLeastOneTestFailed, runActivity.Object);
+
+        Assert.IsNotNull(_testRunDurationHistogram.LastRecordedValue);
+        Assert.IsNotNull(_testRunDurationHistogram.LastTags);
+
+        // Only bounded dimensions belong on the histogram: the raw counts would create a new time series per
+        // distinct value.
+        Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "fail", _testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == (int)ExitCode.AtLeastOneTestFailed, _testRunDurationHistogram.LastTags);
+        Assert.DoesNotContain(t => t.Key == "test.run.total", _testRunDurationHistogram.LastTags);
+
+        // The unbounded counts go on the span instead, where cardinality is free.
+        runActivity.Verify(a => a.SetTag("test.run.total", 10), Times.Once);
+        runActivity.Verify(a => a.SetTag("test.run.failed", 2), Times.Once);
+        runActivity.Verify(a => a.SetTag("test.run.skipped", 1), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifyRunCompleted_WithNonSuccessExitCodeAndNoFailedTests_RecordsFailedVerdict()
+    {
+        _handler.NotifyRunCompleted(totalRanTests: 0, failedTests: 0, skippedTests: 0, exitCode: (int)ExitCode.ZeroTests);
+
+        Assert.IsNotNull(_testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "fail", _testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == (int)ExitCode.ZeroTests, _testRunDurationHistogram.LastTags);
+    }
+
+    [TestMethod]
+    public void ActiveTestCases_GoesBackToZeroWhenTestsComplete()
+    {
+        SetupActivityForTestNode("active");
+        TestNode testNode = CreateTestNode("active");
+
+        _handler.NotifyInProgress(testNode, null);
+        Assert.AreEqual(1, _activeTestCases.Value);
+
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void ActiveTestCases_GoesBackToZero_WhenNoTracerIsListening()
+    {
+        // StartActivity returns null whenever nothing subscribes to the activity source, which is the normal state
+        // for a metrics-only configuration. The in-flight bookkeeping must not depend on a span existing.
+        _otelService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns((IPlatformActivity?)null);
+
+        TestNode testNode = CreateTestNode("no-tracer");
+        _handler.NotifyInProgress(testNode, null);
+        Assert.AreEqual(1, _activeTestCases.Value);
+
+        _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.AreEqual(0, _activeTestCases.Value);
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+    }
+
+    [TestMethod]
+    public void ActiveTestCases_GoesBackToZero_WhenExecutionCompletesWithoutTracer()
+    {
+        _otelService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>())).Returns((IPlatformActivity?)null);
+
+        TestNode testNode = CreateTestNode("no-tracer-completed");
+        _handler.NotifyInProgress(testNode, null);
+        _handler.NotifyExecutionCompleted(testNode);
+
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_AfterDispose_ClosesTheSpanAndDoesNotTrackIt()
+    {
+        // A cancelled run skips the message-bus drain, so a consumer can still publish results while the host is
+        // disposing us. That must not throw or leave a span open.
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("late");
+        _handler.Dispose();
+
+        _handler.NotifyInProgress(CreateTestNode("late"), null);
+
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void Dispose_WhileResultsAreStillArriving_BalancesActiveCountAndDoesNotThrow()
+    {
+        SetupActivityForTestNode("racing");
+        for (int i = 0; i < 200; i++)
+        {
+            _handler.NotifyInProgress(CreateTestNode($"racing-{i}"), null);
+        }
+
+        // Concurrently completing results while disposing used to throw "collection was modified" out of the
+        // telemetry path during shutdown.
+        Task publisher = Task.Factory.StartNew(
+            () =>
+            {
+                for (int i = 0; i < 200; i++)
+                {
+                    _handler.NotifyPassed(CreateTestNode($"racing-{i}"), PassedTestNodeStateProperty.CachedInstance);
+                }
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
+        _handler.Dispose();
+        publisher.GetAwaiter().GetResult();
+
+        // Every in-flight entry is decremented exactly once, whether it was completed by the publisher or drained
+        // by Dispose, so the gauge must settle at zero no matter how the two interleave.
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void NotifyRunCompleted_CalledTwice_RecordsRunDurationOnce()
+    {
+        _handler.NotifyRunCompleted(totalRanTests: 1, failedTests: 0, skippedTests: 0, exitCode: 0);
+        _testRunDurationHistogram.Reset();
+
+        _handler.NotifyRunCompleted(totalRanTests: 1, failedTests: 0, skippedTests: 0, exitCode: 0);
+
+        Assert.IsNull(_testRunDurationHistogram.LastRecordedValue);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_EmitsFullyQualifiedCodeFunctionName()
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = CaptureInProgressTags(
+            new TestMethodIdentifierProperty("MyAssembly", "My.Namespace", "MyClass", "MyMethod", 0, [], "void"));
+
+        Assert.IsNotNull(capturedTags);
+        Assert.Contains(t => t.Key == "code.function.name" && (string?)t.Value == "My.Namespace.MyClass.MyMethod", capturedTags);
+
+        // code.namespace is deprecated upstream and must not be emitted.
+        Assert.DoesNotContain(t => t.Key == "code.namespace", capturedTags);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    // Roslyn's INamespaceSymbol.ToDisplayString() returns this for the global namespace, so a framework that
+    // does not first check IsGlobalNamespace hands us the sentinel rather than an empty string.
+    [DataRow("<global namespace>")]
+    public void NotifyInProgress_ForTheGlobalNamespace_DoesNotEmitALeadingDot(string @namespace)
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = CaptureInProgressTags(
+            new TestMethodIdentifierProperty("MyAssembly", @namespace, "MyClass", "MyMethod", 0, [], "void"));
+
+        Assert.IsNotNull(capturedTags);
+        Assert.Contains(t => t.Key == "code.function.name" && (string?)t.Value == "MyClass.MyMethod", capturedTags);
+    }
+
+    private IEnumerable<KeyValuePair<string, object?>>? CaptureInProgressTags(TestMethodIdentifierProperty identifierProperty)
+        => CaptureInProgressTags(new PropertyBag(identifierProperty));
+
+    [TestMethod]
+    public void NotifyInProgress_WithDuplicateIdentifierProperty_Throws()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => CaptureInProgressTags(new PropertyBag(
+            new TestMethodIdentifierProperty("MyAssembly", "My.Namespace", "MyClass", "MyMethod", 0, [], "void"),
+            new TestMethodIdentifierProperty("MyAssembly", "My.Namespace", "MyClass", "MyOtherMethod", 0, [], "void"))));
+
+        Assert.AreEqual($"Found multiple properties of type '{typeof(TestMethodIdentifierProperty)}'.", exception.Message);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_WithDuplicateFileLocationProperty_Throws()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => CaptureInProgressTags(new PropertyBag(
+            new TestFileLocationProperty("first.cs", new LinePositionSpan(new LinePosition(1, 0), new LinePosition(2, 0))),
+            new TestFileLocationProperty("second.cs", new LinePositionSpan(new LinePosition(3, 0), new LinePosition(4, 0))))));
+
+        Assert.AreEqual($"Found multiple properties of type '{typeof(TestFileLocationProperty)}'.", exception.Message);
+    }
+
+    private IEnumerable<KeyValuePair<string, object?>>? CaptureInProgressTags(PropertyBag properties)
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = null;
+        _otelService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((_, tags, _, _) => capturedTags = tags?.ToList())
+            .Returns(new Mock<IPlatformActivity>().Object);
+
+        _handler.NotifyInProgress(
+            new TestNode
+            {
+                Uid = new TestNodeUid("fqn"),
+                DisplayName = "Test",
+                Properties = properties,
+            },
+            null);
+
+        return capturedTags;
+    }
+
     private static TestNode CreateTestNode(string uid = "test-uid")
         => new()
         {
@@ -409,18 +1039,127 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             DisplayName = "Test",
         };
 
+    private static TestNode CreateRetryTestNode(string uid, int attemptNumber)
+        => new()
+        {
+            Uid = new TestNodeUid(uid),
+            DisplayName = "Test",
+            Properties = new PropertyBag(new RetryAttemptProperty(attemptNumber, isSuperseded: false)),
+        };
+
+    private static Exception CreateExceptionWithStackTrace(string message)
+    {
+        try
+        {
+            throw new InvalidOperationException(message);
+        }
+        catch (Exception exception)
+        {
+            return exception;
+        }
+    }
+
     private Mock<IPlatformActivity> SetupActivityForTestNode(string testNodeUid)
     {
         Mock<IPlatformActivity> activity = new();
         activity.SetupGet(a => a.Id).Returns($"activity-{testNodeUid}");
         activity.Setup(a => a.SetTag(It.IsAny<string>(), It.IsAny<object?>())).Returns(activity.Object);
         _otelService.Setup(s => s.StartActivity(
-            testNodeUid,
+            It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
             It.IsAny<DateTimeOffset>())).Returns(activity.Object);
 
         return activity;
+    }
+
+    private OpenTelemetryResultHandler CreateLinkAwareHandler(Mock<IPlatformOpenTelemetryServiceWithActivityLinks> service)
+    {
+        service.Setup(s => s.CreateCounter<int>(
+            "test.case.result.count",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseResultCounter);
+        service.Setup(s => s.CreateUpDownCounter<int>(
+            "test.case.active",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_activeTestCases);
+        service.Setup(s => s.CreateHistogram<double>(
+            "test.case.duration",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testCaseDurationHistogram);
+        service.Setup(s => s.CreateHistogram<double>(
+            "test.run.duration",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>())).Returns(_testRunDurationHistogram);
+
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES")).Returns("0");
+        return new OpenTelemetryResultHandler(service.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+    }
+
+    [TestMethod]
+    public void HandleTestResult_TruncatesExceptionEventAndStatus()
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT")).Returns("10");
+        using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("truncated-exception");
+        IReadOnlyList<KeyValuePair<string, object?>>? exceptionEventTags = null;
+        activity.Setup(a => a.AddEvent(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, DateTimeOffset>((_, tags, _) => exceptionEventTags = tags?.ToList())
+            .Returns(activity.Object);
+        Exception exception = CreateExceptionWithStackTrace(new string('m', 5000));
+        TestNode testNode = CreateTestNode("truncated-exception");
+
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyFailed(testNode, new FailedTestNodeStateProperty(exception));
+
+        string expectedMessage = new string('m', 10) + "…";
+        string expectedStackTrace = exception.ToString().Substring(0, 10) + "…";
+        Assert.IsNotNull(exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.message" && (string?)t.Value == expectedMessage, exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.stacktrace" && (string?)t.Value == expectedStackTrace, exceptionEventTags);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, expectedMessage), Times.Once);
+        activity.Verify(a => a.RecordException(exception, It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void HandleTestResult_TruncatesLegacyAttributesToo()
+    {
+        // Legacy attributes are on by default, so leaving them untruncated would defeat the size limit entirely.
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT")).Returns("10");
+        using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("truncation");
+        string longOutput = new('x', 5000);
+        TestNode testNode = new()
+        {
+            Uid = new TestNodeUid("truncation"),
+            DisplayName = "Test",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new StandardOutputProperty(longOutput),
+                new StandardErrorProperty(longOutput)),
+        };
+
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyPassed(testNode, new PassedTestNodeStateProperty(new string('e', 5000)));
+
+        string expected = new string('x', 10) + "…";
+        activity.Verify(a => a.SetTag("test.output.stdout", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.stdout", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.output.stderr", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.stderr", expected), Times.Once);
+
+        string expectedExplanation = new string('e', 10) + "…";
+        activity.Verify(a => a.SetTag("test.case.result.explanation", expectedExplanation), Times.Once);
+        activity.Verify(a => a.SetTag("test.result.explanation", expectedExplanation), Times.Once);
     }
 
     private sealed class FakeCounter<T> : ICounter<T>
@@ -430,6 +1169,23 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         public void Add(T delta)
             => Value = (T)(object)((int)(object)Value + (int)(object)delta);
+
+        public void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags)
+        {
+            LastTags = tags;
+            Add(delta);
+        }
+
+        public IEnumerable<KeyValuePair<string, object?>>? LastTags { get; private set; }
+    }
+
+    private sealed class FakeUpDownCounter<T> : IUpDownCounter<T>
+        where T : struct
+    {
+        public T Value { get; private set; }
+
+        public void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags = null)
+            => Value = (T)(object)((int)(object)Value + (int)(object)delta);
     }
 
     private sealed class FakeHistogram<T> : IHistogram<T>
@@ -437,7 +1193,21 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     {
         public T? LastRecordedValue { get; private set; }
 
+        public IEnumerable<KeyValuePair<string, object?>>? LastTags { get; private set; }
+
         public void Record(T value)
             => LastRecordedValue = value;
+
+        public void Record(T value, IEnumerable<KeyValuePair<string, object?>>? tags)
+        {
+            LastTags = tags;
+            LastRecordedValue = value;
+        }
+
+        public void Reset()
+        {
+            LastRecordedValue = null;
+            LastTags = null;
+        }
     }
 }

@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,6 +14,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal sealed class PlatformServiceProvider : IPlatformServiceProvider
 {
+    private int _isGracefulStopRequested;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
     /// </summary>
@@ -110,7 +111,11 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </summary>
     public TestRunCancellationToken? TestRunCancellationToken { get; set; }
 
-    public bool IsGracefulStopRequested { get; set; }
+    public bool IsGracefulStopRequested
+    {
+        get => Volatile.Read(ref _isGracefulStopRequested) != 0;
+        set => Volatile.Write(ref _isGracefulStopRequested, value ? 1 : 0);
+    }
 
     /// <summary>
     /// Gets or sets the instance for the platform service.
@@ -130,7 +135,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="source">
     /// The source.
     /// </param>
-    /// <param name="runSettings">
+    /// <param name="settingsXml">
     /// The run Settings for the session.
     /// </param>
     /// <returns>
@@ -138,9 +143,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </returns>
     public ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings)
+        string? settingsXml)
     {
-        var testSourceHost = new TestSourceHost(source, runSettings);
+        var testSourceHost = new TestSourceHost(source, settingsXml);
         testSourceHost.SetupHost();
 
         return testSourceHost;
@@ -166,7 +171,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
+    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger messageLogger, UTF.UnitTestOutcome outcome)
     {
         var testContextImplementation = new TestContextImplementation(testMethod, testClassFullName, properties, messageLogger, TestRunCancellationToken);
         testContextImplementation.SetOutcome(outcome);

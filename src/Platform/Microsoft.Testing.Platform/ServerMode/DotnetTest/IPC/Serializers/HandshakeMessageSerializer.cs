@@ -25,7 +25,7 @@ internal sealed class HandshakeMessageSerializer : NamedPipeSerializer<Handshake
 
     protected override void SerializeCore(HandshakeMessage objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         // Deserializer always expected fieldCount to be present.
         // We must write the count even if Properties is null or empty.

@@ -69,6 +69,14 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             return;
         }
 
+        // A test framework that retries in-process reports every attempt under the same test node uid. An attempt
+        // that a later one supersedes is not the test's outcome, so it must not count towards the failure budget:
+        // otherwise --maximum-failed-tests 1 would abort the run on a [Retry] test that goes on to pass.
+        if (node.TestNode.IsSupersededRetryAttempt())
+        {
+            return;
+        }
+
         if (testNodeStateProperty is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
                 or TimeoutTestNodeStateProperty
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete

@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -22,18 +23,14 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         AssemblyCleanup,
     }
 
+    // [CombinatorialData] cross-products every inconclusive lifecycle step (auto-expanded from the
+    // Lifecycle enum) with the metadata modes under test (reflection and, unless globally disabled,
+    // the two source-generation paths) so the same expectations validate every metadata path.
     [TestMethod]
-    [DataRow(Lifecycle.Constructor)]
-    [DataRow(Lifecycle.AssemblyInitialize)]
-    [DataRow(Lifecycle.ClassInitialize)]
-    [DataRow(Lifecycle.TestInitialize)]
-    [DataRow(Lifecycle.TestMethod)]
-    [DataRow(Lifecycle.TestCleanup)]
-    [DataRow(Lifecycle.ClassCleanup)]
-    [DataRow(Lifecycle.AssemblyCleanup)]
-    public async Task TestOutcomeShouldBeRespectedCorrectly(Lifecycle inconclusiveStep)
+    [CombinatorialData]
+    public async Task TestOutcomeShouldBeRespectedCorrectly(Lifecycle inconclusiveStep, [MetadataModeValues] MetadataMode metadataMode)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent, metadataMode: metadataMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
             environmentVariables: new Dictionary<string, string?>
@@ -49,7 +46,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         }
         else
         {
-            testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         }
 
@@ -117,6 +114,9 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         public const string ProjectName = "TestInconclusive";
 
         public string ProjectPath => GetAssetPath(ProjectName);
+
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes { get; }
+            = [MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode

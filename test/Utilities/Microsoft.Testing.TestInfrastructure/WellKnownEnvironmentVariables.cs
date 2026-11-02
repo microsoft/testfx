@@ -11,16 +11,27 @@ public static class WellKnownEnvironmentVariables
     /// </summary>
     public static readonly IReadOnlyList<string> LLMEnvironmentVariables =
     [
+        "CLAUDE_CODE_IS_COWORK",
         "CLAUDECODE",
+        "CLAUDE_CODE",
         "CLAUDE_CODE_ENTRYPOINT",
         "CURSOR_EDITOR",
         "CURSOR_AI",
+        "CURSOR_TRACE_ID",
+        "CURSOR_AGENT",
         "GEMINI_CLI",
         "GITHUB_COPILOT_CLI_MODE",
         "GH_COPILOT_WORKING_DIRECTORY",
         "COPILOT_CLI",
+        "COPILOT_MODEL",
+        "COPILOT_ALLOW_ALL",
+        "COPILOT_GITHUB_TOKEN",
+        "AI_AGENT",
+        "COPILOT_AGENT",
         "CODEX_CLI",
         "CODEX_SANDBOX",
+        "CODEX_CI",
+        "CODEX_THREAD_ID",
         "OR_APP_NAME",
         "AMP_HOME",
         "QWEN_CODE",
@@ -30,9 +41,13 @@ public static class WellKnownEnvironmentVariables
         "ZED_TERM",
         "KIMI_CLI",
         "GOOSE_TERMINAL",
+        "GOOSE_PROVIDER",
         "CLINE_TASK_ID",
         "ROO_CODE_TASK_ID",
         "WINDSURF_SESSION",
+        "REPL_ID",
+        "AUGMENT_AGENT",
+        "ANTIGRAVITY_AGENT",
         "AGENT_CLI",
     ];
 
@@ -82,6 +97,18 @@ public static class WellKnownEnvironmentVariables
         // dotnet test
         "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID",
         "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
+
+        // Affected-test selection and its per-module exit-code normalization are scoped to the outer repository
+        // test invocation. Acceptance tests launch nested test applications that must run the selected scenarios
+        // with their own filtering and exit-code policies.
+        "DOTNET_CLI_ENABLE_AFFECTED_TESTS",
+        "DOTNET_CLI_TEST_AFFECTED_TESTS_MODE",
+        "TESTINGPLATFORM_EXITCODE_IGNORE",
+
+        // Logical run correlation. A CI job may set this to tie several modules or machines into one
+        // logical run, so it must not bleed into child test hosts and make a test observe an id it did
+        // not choose. Tests that exercise run correlation inject it explicitly.
+        "TESTINGPLATFORM_LOGICAL_RUN_ID",
 
         // Isolate from the skip banner in case of parent, children tests
         "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER",

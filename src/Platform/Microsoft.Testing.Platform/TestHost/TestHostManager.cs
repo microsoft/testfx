@@ -21,6 +21,7 @@ internal sealed class TestHostManager : ITestHostManager
     private readonly List<Func<IServiceProvider, ITestHostApplicationLifetime>> _testApplicationLifecycleCallbacksFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
+    private readonly List<Func<IServiceProvider, ITestExecutionFilterProvider>> _testExecutionFilterProviderFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
     private readonly List<ICompositeExtensionFactory> _testSessionLifetimeHandlerCompositeFactories = [];
 
@@ -38,25 +39,8 @@ internal sealed class TestHostManager : ITestHostManager
         _testFrameworkInvokerFactory = testFrameworkInvokerFactory ?? throw new ArgumentNullException(nameof(testFrameworkInvokerFactory));
     }
 
-    internal async Task<ActionResult<ITestFrameworkInvoker>> TryBuildTestAdapterInvokerAsync(ServiceProvider serviceProvider)
-    {
-        if (_testFrameworkInvokerFactory is null)
-        {
-            return ActionResult.Fail<ITestFrameworkInvoker>();
-        }
-
-        ITestFrameworkInvoker testAdapterInvoke = _testFrameworkInvokerFactory(serviceProvider);
-
-        // We initialize only if enabled
-        if (await testAdapterInvoke.IsEnabledAsync().ConfigureAwait(false))
-        {
-            await testAdapterInvoke.TryInitializeAsync().ConfigureAwait(false);
-
-            return ActionResult.Ok(testAdapterInvoke);
-        }
-
-        return ActionResult.Fail<ITestFrameworkInvoker>();
-    }
+    internal Task<ActionResult<ITestFrameworkInvoker>> TryBuildTestAdapterInvokerAsync(ServiceProvider serviceProvider)
+        => TryBuildSingletonExtensionAsync(_testFrameworkInvokerFactory, serviceProvider);
 
     public void AddTestExecutionFilterFactory(Func<IServiceProvider, ITestExecutionFilterFactory> testExecutionFilterFactory)
     {
@@ -68,24 +52,42 @@ internal sealed class TestHostManager : ITestHostManager
         _testExecutionFilterFactory = testExecutionFilterFactory ?? throw new ArgumentNullException(nameof(testExecutionFilterFactory));
     }
 
-    internal async Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
+    internal Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
+        => TryBuildSingletonExtensionAsync(_testExecutionFilterFactory, serviceProvider);
+
+    internal void AddTestExecutionFilterProvider(Func<IServiceProvider, ITestExecutionFilterProvider> providerFactory)
+        => _testExecutionFilterProviderFactories.Add(providerFactory ?? throw new ArgumentNullException(nameof(providerFactory)));
+
+    internal async Task<ITestExecutionFilterProvider[]> BuildTestExecutionFilterProvidersAsync(ServiceProvider serviceProvider)
     {
-        if (_testExecutionFilterFactory is null)
+        List<ITestExecutionFilterProvider> providers = [];
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(
+            _testExecutionFilterProviderFactories,
+            serviceProvider,
+            providers).ConfigureAwait(false);
+
+        return [.. providers];
+    }
+
+    private static async Task<ActionResult<T>> TryBuildSingletonExtensionAsync<T>(Func<IServiceProvider, T>? factory, ServiceProvider serviceProvider)
+        where T : class, IExtension
+    {
+        if (factory is null)
         {
-            return ActionResult.Fail<ITestExecutionFilterFactory>();
+            return ActionResult.Fail<T>();
         }
 
-        ITestExecutionFilterFactory testExecutionFilterFactory = _testExecutionFilterFactory(serviceProvider);
+        T extension = factory(serviceProvider);
 
         // We initialize only if enabled
-        if (await testExecutionFilterFactory.IsEnabledAsync().ConfigureAwait(false))
+        if (await extension.IsEnabledAsync().ConfigureAwait(false))
         {
-            await testExecutionFilterFactory.TryInitializeAsync().ConfigureAwait(false);
+            await extension.TryInitializeAsync().ConfigureAwait(false);
 
-            return ActionResult.Ok(testExecutionFilterFactory);
+            return ActionResult.Ok(extension);
         }
 
-        return ActionResult.Fail<ITestExecutionFilterFactory>();
+        return ActionResult.Fail<T>();
     }
 
     public void AddTestHostApplicationLifetime(Func<IServiceProvider, ITestHostApplicationLifetime> testHostApplicationLifetime)
@@ -94,22 +96,7 @@ internal sealed class TestHostManager : ITestHostManager
     internal async Task<ITestHostApplicationLifetime[]> BuildTestApplicationLifecycleCallbackAsync(ServiceProvider serviceProvider)
     {
         List<ITestHostApplicationLifetime> testApplicationLifecycleCallbacks = [];
-        foreach (Func<IServiceProvider, ITestHostApplicationLifetime> testApplicationLifecycleCallbacksFactory in _testApplicationLifecycleCallbacksFactories)
-        {
-            ITestHostApplicationLifetime service = testApplicationLifecycleCallbacksFactory(serviceProvider);
-
-            // Check if we have already extensions of the same type with same id registered
-            testApplicationLifecycleCallbacks.ValidateUniqueExtension(service);
-
-            // We initialize only if enabled
-            if (await service.IsEnabledAsync().ConfigureAwait(false))
-            {
-                await service.TryInitializeAsync().ConfigureAwait(false);
-
-                // Register the extension for usage
-                testApplicationLifecycleCallbacks.Add(service);
-            }
-        }
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_testApplicationLifecycleCallbacksFactories, serviceProvider, testApplicationLifecycleCallbacks).ConfigureAwait(false);
 
         return [.. testApplicationLifecycleCallbacks];
     }
@@ -135,65 +122,8 @@ internal sealed class TestHostManager : ITestHostManager
     internal async Task<(IExtension Consumer, int RegistrationOrder)[]> BuildDataConsumersAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
         List<(IExtension Consumer, int RegistrationOrder)> dataConsumers = [];
-        foreach (Func<IServiceProvider, IDataConsumer> dataConsumerFactory in _dataConsumerFactories)
-        {
-            IDataConsumer service = dataConsumerFactory(serviceProvider);
-
-            // Check if we have already extensions of the same type with same id registered
-            dataConsumers.ValidateUniqueExtension(service, x => x.Consumer);
-
-            // We initialize only if enabled
-            if (await service.IsEnabledAsync().ConfigureAwait(false))
-            {
-                await service.TryInitializeAsync().ConfigureAwait(false);
-
-                // Register the extension for usage
-                dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
-            }
-        }
-
-        foreach (ICompositeExtensionFactory compositeServiceFactory in _dataConsumersCompositeServiceFactories)
-        {
-            ICompositeExtensionFactory? compositeFactoryInstance;
-
-            // We check if the same service is already built in some other build phase
-            if ((compositeFactoryInstance = alreadyBuiltServices.SingleOrDefault(x => x.GetType() == compositeServiceFactory.GetType())) is null)
-            {
-                // We clone the instance because we want to have fresh instance per BuildTestApplicationLifecycleCallbackAsync call
-                compositeFactoryInstance = (ICompositeExtensionFactory)compositeServiceFactory.Clone();
-
-                // Create the new fresh instance
-                var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
-
-                // Check if we have already extensions of the same type with same id registered
-                dataConsumers.ValidateUniqueExtension(instance, x => x.Consumer);
-
-                // We initialize only if enabled
-                if (await instance.IsEnabledAsync().ConfigureAwait(false))
-                {
-                    await instance.TryInitializeAsync().ConfigureAwait(false);
-                }
-
-                // Add to the list of shared singletons
-                alreadyBuiltServices.Add(compositeFactoryInstance);
-            }
-
-            // Get the singleton
-            var extension = (IExtension)compositeFactoryInstance.GetInstance();
-
-            // We register the extension only if enabled
-            if (await extension.IsEnabledAsync().ConfigureAwait(false))
-            {
-                if (extension is IDataConsumer consumer)
-                {
-                    // Register the extension for usage
-                    dataConsumers.Add((consumer, _factoryOrdering.IndexOf(compositeServiceFactory)));
-                    continue;
-                }
-
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(IDataConsumer)));
-            }
-        }
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_dataConsumerFactories, serviceProvider, dataConsumers, _factoryOrdering).ConfigureAwait(false);
+        await ExtensionBuilderHelper.BuildAndRegisterCompositeExtensionsAsync<IDataConsumer>(_dataConsumersCompositeServiceFactories, serviceProvider, dataConsumers, alreadyBuiltServices, _factoryOrdering).ConfigureAwait(false);
 
         return [.. dataConsumers];
     }
@@ -230,66 +160,8 @@ internal sealed class TestHostManager : ITestHostManager
     internal async Task<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)[]> BuildTestSessionLifetimeHandleAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
         List<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)> testSessionLifetimeHandlers = [];
-        foreach (Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandlerFactory in _testSessionLifetimeHandlerFactories)
-        {
-            ITestSessionLifetimeHandler service = testSessionLifetimeHandlerFactory(serviceProvider);
-
-            // Check if we have already extensions of the same type with same id registered
-            testSessionLifetimeHandlers.ValidateUniqueExtension(service, x => x.TestSessionLifetimeHandler);
-
-            // We initialize only if enabled
-            if (await service.IsEnabledAsync().ConfigureAwait(false))
-            {
-                await service.TryInitializeAsync().ConfigureAwait(false);
-
-                // Register the extension for usage
-                testSessionLifetimeHandlers.Add((service, _factoryOrdering.IndexOf(testSessionLifetimeHandlerFactory)));
-            }
-        }
-
-        foreach (ICompositeExtensionFactory compositeServiceFactory in _testSessionLifetimeHandlerCompositeFactories)
-        {
-            ICompositeExtensionFactory? compositeFactoryInstance;
-
-            // We check if the same service is already built in some other build phase
-            if ((compositeFactoryInstance = alreadyBuiltServices.SingleOrDefault(x => x.GetType() == compositeServiceFactory.GetType())) is null)
-            {
-                // We clone the instance because we want to have fresh instance per BuildTestApplicationLifecycleCallbackAsync call
-                compositeFactoryInstance = (ICompositeExtensionFactory)compositeServiceFactory.Clone();
-
-                // Create the new fresh instance
-                var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
-
-                // Check if we have already extensions of the same type with same id registered
-                testSessionLifetimeHandlers.ValidateUniqueExtension(instance, x => x.TestSessionLifetimeHandler);
-
-                // We initialize only if enabled
-                if (await instance.IsEnabledAsync().ConfigureAwait(false))
-                {
-                    await instance.TryInitializeAsync().ConfigureAwait(false);
-                }
-
-                // Add to the list of shared singletons
-                alreadyBuiltServices.Add(compositeFactoryInstance);
-            }
-
-            // Get the singleton
-            var extension = (IExtension)compositeFactoryInstance.GetInstance();
-
-            // We register the extension only if enabled
-            if (await extension.IsEnabledAsync().ConfigureAwait(false))
-            {
-                if (extension is ITestSessionLifetimeHandler testSessionLifetimeHandler)
-                {
-                    // Register the extension for usage
-                    testSessionLifetimeHandlers.Add((testSessionLifetimeHandler, _factoryOrdering.IndexOf(compositeServiceFactory)));
-                }
-                else
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(ITestSessionLifetimeHandler)));
-                }
-            }
-        }
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_testSessionLifetimeHandlerFactories, serviceProvider, testSessionLifetimeHandlers, _factoryOrdering).ConfigureAwait(false);
+        await ExtensionBuilderHelper.BuildAndRegisterCompositeExtensionsAsync<ITestSessionLifetimeHandler>(_testSessionLifetimeHandlerCompositeFactories, serviceProvider, testSessionLifetimeHandlers, alreadyBuiltServices, _factoryOrdering).ConfigureAwait(false);
 
         return [.. testSessionLifetimeHandlers];
     }

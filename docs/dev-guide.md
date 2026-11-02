@@ -162,11 +162,127 @@ For Linux and macOS:
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
+### Code coverage
+
+Code coverage is enabled by default for repository tests. Each test project's generated `coverage.config` includes only its directly referenced production assemblies, excluding shared test-host infrastructure, NuGet package sources, and generated artifacts. `Microsoft.Testing.TestInfrastructure` is explicitly excluded at both the assembly and source levels.
+
+Compatibility shims in `Polyfills` directories are excluded from coverage. `Ensure.cs` and `ProcessExtensions.cs` remain included because their argument validation and process-lifetime behavior are repository-owned logic worth testing. Coverage exclusions do not change which tests execute.
+
+### Mutation testing
+
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) for mutation testing. The checked-in `MutationTesting.slnx` provides a focused local run for the server-mode client sources, while the weekly workflow generates isolated solutions for every enabled module in `eng/mutation-testing/modules.json`. Unsupported targets are explicitly listed with a reason rather than silently omitted. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
+
+On Windows PowerShell:
+
+```powershell
+$strykerVersion = (Get-Content .config/stryker/dotnet-tools.json | ConvertFrom-Json).tools.'dotnet-stryker'.version
+$toolCommand = if (Test-Path artifacts/tools/stryker/dotnet-stryker.exe) { "update" } else { "install" }
+$previousMutationTesting = $env:MutationTesting
+$previousDotnetRoot = $env:DOTNET_ROOT
+$previousTelemetryOptOut = $env:DOTNET_CLI_TELEMETRY_OPTOUT
+$previousPath = $env:PATH
+try {
+    $env:DOTNET_ROOT = (Resolve-Path .dotnet).Path
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
+    $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+    if ($toolCommand -eq "update") {
+        & ./.dotnet/dotnet tool update dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config --allow-downgrade
+    }
+    else {
+        & ./.dotnet/dotnet tool install dotnet-stryker --tool-path artifacts/tools/stryker --version $strykerVersion --configfile .config/stryker/NuGet.config
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to install the pinned Stryker.NET tool."
+    }
+    $env:MutationTesting = "true"
+    ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+    if ($LASTEXITCODE -ne 0) {
+        throw "Stryker.NET mutation testing failed."
+    }
+}
+finally {
+    $env:MutationTesting = $previousMutationTesting
+    $env:DOTNET_ROOT = $previousDotnetRoot
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = $previousTelemetryOptOut
+    $env:PATH = $previousPath
+}
+```
+
+On Linux and macOS:
+
+```shell
+(
+  set -e
+  export DOTNET_ROOT="$PWD/.dotnet"
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export PATH="$DOTNET_ROOT:$PATH"
+  stryker_version=$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' .config/stryker/dotnet-tools.json)
+  test -n "$stryker_version"
+  if [ -x artifacts/tools/stryker/dotnet-stryker ]; then
+    "$DOTNET_ROOT/dotnet" tool update dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config --allow-downgrade
+  else
+    "$DOTNET_ROOT/dotnet" tool install dotnet-stryker --tool-path artifacts/tools/stryker --version "$stryker_version" --configfile .config/stryker/NuGet.config
+  fi
+  MutationTesting=true ./artifacts/tools/stryker/dotnet-stryker --config-file stryker-config.json --solution MutationTesting.slnx --output artifacts/mutation-testing
+)
+```
+
+The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing. Native MSTest hosts also consume the adapter/framework from source in this mode; a shipped Microsoft-key adapter cannot access the open-key friend declarations in the locally built platform and would fail before test discovery.
+
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It reads the enabled modules from [`eng/mutation-testing/modules.json`](../eng/mutation-testing/modules.json), runs each production/test-project mapping on an isolated runner, and uploads its detailed Stryker report. Every `Microsoft.Testing.Extensions.*` project must have an enabled module or an explicit `excludedProjects` entry with a reason, so newly added extensions cannot silently skip mutation testing. The Windows-only PackagedApp controller and build-only PackagedApp.MSBuild package are excluded from the Ubuntu/net8.0 Stryker shards, not from their acceptance tests.
+
+Generated shard solutions must be passed to Arcade's `--projects` option using an absolute path; relative paths resolve under Arcade's toolset directory, not the repository root. Shards retain module failure metadata and build-console logs even when the build fails before Stryker starts. An aggregate job verifies that every enabled module used the same source revision, computes the weighted enabled-module score from the mutant counts, reports onboarding coverage and exclusion reasons against the known mutation targets, and uploads the `mutation-testing-full-report` artifact with a Markdown summary, an HTML index, aggregate JSON, logs, and all module reports. If any expected module is missing or failed, the aggregate is explicitly marked partial and the workflow fails after publishing the available diagnostics.
+
+The [Mutation Test Improver](../.github/workflows/mutation-test-improver.md) remains scoped to the ServerMode client report. Its trusted pre-agent step resolves the upstream run and downloads the binary artifact before the sandbox's text-only CLI proxy starts. It stages validated report data and run identity under `/tmp/gh-aw/mutation-input`; missing/expired reports and download/validation failures still reach monthly reporting as unavailable evidence, never a fresh zero score. Failed aggregates are usable only when their ServerMode module metadata proves success at the upstream source commit.
+
 ## Working with Visual Studio
 
 If you are working with Visual Studio, we recommend opening it through the `open-vs.cmd` script at the repo root. This script will set all the required environment variables required so that Visual Studio picks up the locally downloaded version of the .NET SDK. If you prefer to use your machine-wide configuration, you can open Visual Studio directly.
 
 Inside Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
+
+## Developing MSTest.Sdk
+
+Do not use `IsImplicitlyDefined="true"` on `PackageReference` items in the MSTest.Sdk `.targets` files. The package would be defined twice, which can produce `NU1009` warnings that are commonly treated as errors.
+
+Do not use `VersionOverride` on those `PackageReference` items. Although it can override a version under Central Package Management (CPM), it is forbidden when `CentralPackageVersionOverrideEnabled` is `false` and causes `NU1013`.
+
+Instead, split version specification based on CPM:
+
+- When `ManagePackageVersionsCentrally` is not `true`, set `Version` directly on the `PackageReference`.
+- When `ManagePackageVersionsCentrally` is `true`, leave the `PackageReference` unversioned and add a matching `PackageVersion` item.
+
+This supports both values of `CentralPackageVersionOverrideEnabled` without producing `NU1009`.
+
+### Layering MSTest.Sdk on another base SDK
+
+`MSTest.Sdk` implicitly imports `Microsoft.NET.Sdk`. To combine it with another base SDK, such as `Microsoft.NET.Sdk.Web`, import both SDKs manually and list the other SDK first:
+
+```xml
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
+</Project>
+```
+
+Because an `<Import>` cannot specify the SDK version in the same way as `<Project Sdk="MSTest.Sdk/x.y.z">`, pin it in `global.json`:
+
+```json
+{
+  "msbuild-sdks": {
+    "MSTest.Sdk": "x.y.z"
+  }
+}
+```
+
+`Sdk.props` and `Sdk.targets` guard their `Microsoft.NET.Sdk` imports with `_MSTestSdkImportsMicrosoftNETSdk`. MSTest.Sdk imports the base SDK only when another SDK has not already set `UsingMicrosoftNETSdk`, avoiding `MSB4011` duplicate-import warnings.
 
 ## Visual Studio version requirement
 

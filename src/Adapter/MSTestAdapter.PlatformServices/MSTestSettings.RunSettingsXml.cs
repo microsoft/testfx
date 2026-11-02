@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using DebuggerLaunchMode = Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode;
+using MessageLevel = Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel;
 using StringEx = Microsoft.VisualStudio.TestTools.UnitTesting.StringEx;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -15,7 +16,6 @@ internal sealed partial class MSTestSettings
     {
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
-        CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
@@ -24,15 +24,19 @@ internal sealed partial class MSTestSettings
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
+        CurrentSettings.OutputCaptureMode = settings.OutputCaptureMode;
         CurrentSettings.RandomizeTestOrder = settings.RandomizeTestOrder;
         CurrentSettings.RandomTestOrderSeed = settings.RandomTestOrderSeed;
         CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
+        CurrentSettings.GlobalTestCleanupTimeout = settings.GlobalTestCleanupTimeout;
+        CurrentSettings.GlobalTestInitializeTimeout = settings.GlobalTestInitializeTimeout;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
+        CurrentSettings.CaptureAssertionFailureDiagnostics = settings.CaptureAssertionFailureDiagnostics;
     }
 
 #if !WINDOWS_UWP
@@ -44,7 +48,7 @@ internal sealed partial class MSTestSettings
         }
 
         using var stringReader = new StringReader(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
 
         XmlReaderUtilities.ReadToRootNode(reader);
         reader.ReadToNextElement();
@@ -60,7 +64,7 @@ internal sealed partial class MSTestSettings
     }
 #endif
 
-    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName, IMessageLogger? logger)
+    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName, IAdapterMessageLogger? logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -68,7 +72,7 @@ internal sealed partial class MSTestSettings
         }
 
         using var stringReader = new StringReader(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
 
         XmlReaderUtilities.ReadToRootNode(reader);
         reader.ReadToNextElement();
@@ -81,7 +85,7 @@ internal sealed partial class MSTestSettings
         return !reader.EOF ? ToSettings(reader.ReadSubtree(), logger) : null;
     }
 
-    private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
+    private static MSTestSettings ToSettings(XmlReader reader, IAdapterMessageLogger? logger)
     {
         if (reader is null)
         {
@@ -96,193 +100,63 @@ internal sealed partial class MSTestSettings
             reader.Read();
             while (reader.NodeType == XmlNodeType.Element)
             {
-                bool result;
                 string elementName = reader.Name.ToUpperInvariant();
                 switch (elementName)
                 {
                     case "CAPTURETRACEOUTPUT":
-                        string captureTraceOutput = reader.ReadInnerXml();
-                        if (bool.TryParse(captureTraceOutput, out result))
-                        {
-                            settings.CaptureDebugTraces = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, captureTraceOutput, "CaptureTraceOutput"));
-                        }
-
+                        ParseCaptureTraceOutputSetting(reader.ReadInnerXml(), "CaptureTraceOutput", logger, v => settings.OutputCaptureMode = v);
                         break;
                     case "MAPINCONCLUSIVETOFAILED":
-                        string mapInconclusiveToFailed = reader.ReadInnerXml();
-                        if (bool.TryParse(mapInconclusiveToFailed, out result))
-                        {
-                            settings.MapInconclusiveToFailed = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapInconclusiveToFailed, "MapInconclusiveToFailed"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "MapInconclusiveToFailed", logger, v => settings.MapInconclusiveToFailed = v);
                         break;
                     case "MAPNOTRUNNABLETOFAILED":
-                        string mapNotRunnableToFailed = reader.ReadInnerXml();
-                        if (bool.TryParse(mapNotRunnableToFailed, out result))
-                        {
-                            settings.MapNotRunnableToFailed = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapNotRunnableToFailed, "MapNotRunnableToFailed"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "MapNotRunnableToFailed", logger, v => settings.MapNotRunnableToFailed = v);
                         break;
                     case "TREATDISCOVERYWARNINGSASERRORS":
-                        string treatDiscoveryWarningsAsErrors = reader.ReadInnerXml();
-                        if (bool.TryParse(treatDiscoveryWarningsAsErrors, out result))
-                        {
-                            settings.TreatDiscoveryWarningsAsErrors = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, treatDiscoveryWarningsAsErrors, "TreatDiscoveryWarningsAsErrors"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "TreatDiscoveryWarningsAsErrors", logger, v => settings.TreatDiscoveryWarningsAsErrors = v);
                         break;
                     case "PARALLELIZE":
                         SetParallelSettings(reader.ReadSubtree(), settings);
                         reader.SkipToNextElement();
                         break;
                     case "TESTTIMEOUT":
-                        string testTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(testTimeout, out int parsedTestTimeout) && parsedTestTimeout > 0)
-                        {
-                            settings.TestTimeout = parsedTestTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, testTimeout, "TestTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "TestTimeout", logger, v => settings.TestTimeout = v);
                         break;
                     case "ASSEMBLYCLEANUPTIMEOUT":
-                        string assemblyCleanupTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(assemblyCleanupTimeout, out int parsedAssemblyCleanupTimeout) && parsedAssemblyCleanupTimeout > 0)
-                        {
-                            settings.AssemblyCleanupTimeout = parsedAssemblyCleanupTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, assemblyCleanupTimeout, "AssemblyCleanupTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "AssemblyCleanupTimeout", logger, v => settings.AssemblyCleanupTimeout = v);
                         break;
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
-                        string considerEmptyDataSourceAsInconclusive = reader.ReadInnerXml();
-                        if (bool.TryParse(considerEmptyDataSourceAsInconclusive, out bool parsedConsiderEmptyDataSourceAsInconclusive))
-                        {
-                            settings.ConsiderEmptyDataSourceAsInconclusive = parsedConsiderEmptyDataSourceAsInconclusive;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, considerEmptyDataSourceAsInconclusive, "ConsiderEmptyDataSourceAsInconclusive"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "ConsiderEmptyDataSourceAsInconclusive", logger, v => settings.ConsiderEmptyDataSourceAsInconclusive = v);
                         break;
                     case "ASSEMBLYINITIALIZETIMEOUT":
-                        string assemblyInitializeTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(assemblyInitializeTimeout, out int parsedAssemblyInitializeTimeout) && parsedAssemblyInitializeTimeout > 0)
-                        {
-                            settings.AssemblyInitializeTimeout = parsedAssemblyInitializeTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, assemblyInitializeTimeout, "AssemblyInitializeTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "AssemblyInitializeTimeout", logger, v => settings.AssemblyInitializeTimeout = v);
                         break;
                     case "CLASSINITIALIZETIMEOUT":
-                        string classInitializeTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(classInitializeTimeout, out int parsedClassInitializeTimeout) && parsedClassInitializeTimeout > 0)
-                        {
-                            settings.ClassInitializeTimeout = parsedClassInitializeTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, classInitializeTimeout, "ClassInitializeTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "ClassInitializeTimeout", logger, v => settings.ClassInitializeTimeout = v);
                         break;
                     case "CLASSCLEANUPTIMEOUT":
-                        string classCleanupTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(classCleanupTimeout, out int parsedClassCleanupTimeout) && parsedClassCleanupTimeout > 0)
-                        {
-                            settings.ClassCleanupTimeout = parsedClassCleanupTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, classCleanupTimeout, "ClassCleanupTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "ClassCleanupTimeout", logger, v => settings.ClassCleanupTimeout = v);
                         break;
                     case "TESTINITIALIZETIMEOUT":
-                        string testInitializeTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(testInitializeTimeout, out int parsedTestInitializeTimeout) && parsedTestInitializeTimeout > 0)
-                        {
-                            settings.TestInitializeTimeout = parsedTestInitializeTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, testInitializeTimeout, "TestInitializeTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "TestInitializeTimeout", logger, v => settings.TestInitializeTimeout = v);
                         break;
                     case "TESTCLEANUPTIMEOUT":
-                        string testCleanupTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(testCleanupTimeout, out int parsedTestCleanupTimeout) && parsedTestCleanupTimeout > 0)
-                        {
-                            settings.TestCleanupTimeout = parsedTestCleanupTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, testCleanupTimeout, "TestCleanupTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "TestCleanupTimeout", logger, v => settings.TestCleanupTimeout = v);
+                        break;
+                    case "GLOBALTESTINITIALIZETIMEOUT":
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "GlobalTestInitializeTimeout", logger, v => settings.GlobalTestInitializeTimeout = v);
+                        break;
+                    case "GLOBALTESTCLEANUPTIMEOUT":
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "GlobalTestCleanupTimeout", logger, v => settings.GlobalTestCleanupTimeout = v);
                         break;
                     case "COOPERATIVECANCELLATIONTIMEOUT":
-                        string cooperativeCancellationTimeout = reader.ReadInnerXml();
-                        if (bool.TryParse(cooperativeCancellationTimeout, out result))
-                        {
-                            settings.CooperativeCancellationTimeout = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, cooperativeCancellationTimeout, "CooperativeCancellationTimeout"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "CooperativeCancellationTimeout", logger, v => settings.CooperativeCancellationTimeout = v);
                         break;
                     case "ORDERTESTSBYNAMEINCLASS":
-                        string orderTestsByNameInClass = reader.ReadInnerXml();
-                        if (bool.TryParse(orderTestsByNameInClass, out result))
-                        {
-                            settings.OrderTestsByNameInClass = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, orderTestsByNameInClass, "OrderTestsByNameInClass"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "OrderTestsByNameInClass", logger, v => settings.OrderTestsByNameInClass = v);
                         break;
                     case "RANDOMIZETESTORDER":
-                        string randomizeTestOrder = reader.ReadInnerXml();
-                        if (bool.TryParse(randomizeTestOrder, out result))
-                        {
-                            settings.RandomizeTestOrder = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomizeTestOrder, "RandomizeTestOrder"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "RandomizeTestOrder", logger, v => settings.RandomizeTestOrder = v);
                         break;
                     case "RANDOMTESTORDERSEED":
                         string randomTestOrderSeed = reader.ReadInnerXml();
@@ -292,7 +166,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomTestOrderSeed, "RandomTestOrderSeed"));
+                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomTestOrderSeed, "RandomTestOrderSeed"));
                         }
 
                         break;
@@ -304,9 +178,12 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, launchDebuggerOnAssertionFailure, "LaunchDebuggerOnAssertionFailure"));
+                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, launchDebuggerOnAssertionFailure, "LaunchDebuggerOnAssertionFailure"));
                         }
 
+                        break;
+                    case "CAPTUREASSERTIONFAILUREDIAGNOSTICS":
+                        ParseBoolSetting(reader.ReadInnerXml(), "CaptureAssertionFailureDiagnostics", logger, v => settings.CaptureAssertionFailureDiagnostics = v);
                         break;
                     default:
                         PlatformServiceProvider.Instance.SettingsProvider.Load(reader.ReadSubtree());
@@ -317,6 +194,62 @@ internal sealed partial class MSTestSettings
         }
 
         return settings;
+    }
+
+    private static void ParseBoolSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<bool> setSetting)
+    {
+        if (bool.TryParse(rawValue, out bool result))
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawValue, settingName));
+        }
+    }
+
+    private static void ParseCaptureTraceOutputSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<TestOutputCaptureMode> setSetting)
+    {
+        // Accept the legacy boolean spelling (true -> Result, false -> None) as well as the
+        // TestOutputCaptureMode enum names (None/Result/Live) so existing runsettings keep working.
+        if (bool.TryParse(rawValue, out bool boolResult))
+        {
+            setSetting(boolResult ? TestOutputCaptureMode.Result : TestOutputCaptureMode.None);
+        }
+        else if (TryParseCaptureMode(rawValue, out TestOutputCaptureMode mode))
+        {
+            setSetting(mode);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawValue, settingName));
+        }
+    }
+
+    private static bool TryParseCaptureMode(string value, out TestOutputCaptureMode mode)
+    {
+        // Enum.TryParse (used by TryParseEnum) also accepts numeric strings such as "2", which would
+        // silently enable an unexpected mode. Reject purely numeric input so only the documented values
+        // (the legacy booleans and the TestOutputCaptureMode names) are honored.
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+        {
+            mode = default;
+            return false;
+        }
+
+        return TryParseEnum(value, out mode);
+    }
+
+    private static void ParseTimeoutSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<int> setSetting)
+    {
+        if (int.TryParse(rawValue, out int result) && result > 0)
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, rawValue, settingName));
+        }
     }
 
     private static bool TryParseEnum<T>(string value, out T result)

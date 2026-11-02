@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
@@ -13,10 +13,11 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 #if NETCOREAPP
-Console.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
+Console.Error.WriteLine("Dynamic code supported: " + System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported);
 #endif
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddAffectedTestsProvider();
 
 builder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
 
@@ -34,9 +35,9 @@ builder.AddHangDumpProvider();
 builder.AddOpenTelemetryProvider(
     tracing => tracing.AddTestingPlatformInstrumentation(),
     metrics => metrics.AddTestingPlatformInstrumentation());
-Console.WriteLine("NATIVE_AOT disabled");
+Console.Error.WriteLine("NATIVE_AOT disabled");
 #else
-Console.WriteLine("NATIVE_AOT enabled");
+Console.Error.WriteLine("NATIVE_AOT enabled");
 #endif
 
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);

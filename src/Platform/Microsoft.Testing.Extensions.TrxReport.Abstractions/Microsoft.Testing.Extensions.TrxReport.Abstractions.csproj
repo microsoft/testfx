@@ -4,6 +4,13 @@
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
   </PropertyGroup>
 
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription><![CDATA[This package provides the abstractions used by extensions that contribute data to, or read data from, TRX test reports. Install Microsoft.Testing.Extensions.TrxReport to generate the reports themselves.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
@@ -13,6 +20,8 @@
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>

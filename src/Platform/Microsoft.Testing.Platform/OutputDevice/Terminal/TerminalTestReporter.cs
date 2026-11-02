@@ -3,12 +3,23 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
+/// <remarks>
+/// The implementation is split across partials named for what they render or track: <c>Lifecycle</c> (run and
+/// assembly start/stop), <c>Messaging</c> (progress messages and in-progress tests), <c>TestCompletion</c> and
+/// <c>TestDiscovery</c> (per-test execution and discovery output), <c>Handshake</c> and <c>ErroredAssemblies</c>
+/// (orchestrator-only failure recaps, each owning its own record list), <c>Summary</c> (the post-run verdict and
+/// counter lines), <c>FlakyTests</c>, <c>SlowestTests</c> and <c>Coverage</c> (the sections appended below that
+/// summary), and <c>Formatting</c> plus <c>Formatting.ControlCharacters</c> (exceptions, stack traces, assembly
+/// links, durations and control-character escaping). This file holds the core shared state, the constants,
+/// construction and the collected artifacts.
+/// </remarks>
 [UnsupportedOSPlatform("browser")]
 [Embedded]
 internal sealed partial class TerminalTestReporter : IDisposable
@@ -42,6 +53,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private readonly TerminalTestReporterOptions _options;
 
+    private readonly bool _useCompactSummary;
+
     private readonly TestProgressStateAwareTerminal _terminalWithProgress;
 
 #if NET9_0_OR_GREATER
@@ -73,8 +86,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         set;
     }
 
-    private bool? _shouldShowPassedTests;
-
     private int _counter;
 
     /// <summary>
@@ -93,6 +104,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
         IConsole console,
         Func<bool> isCancellationRequested,
         TerminalTestReporterOptions options)
+        : this(console, isCancellationRequested, options, new NopLogger())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with cancellation state, reporter options,
+    /// and a logger for low-noise diagnostics of unexpected progress rendering/erase failures.
+    /// </summary>
+    public TerminalTestReporter(
+        IConsole console,
+        Func<bool> isCancellationRequested,
+        TerminalTestReporterOptions options,
+        ILogger logger)
     {
         _isCancellationRequested = isCancellationRequested;
         _options = options;
@@ -128,11 +152,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
             useCursorRenderer = useAnsi;
         }
 
+        _useCompactSummary = !useCursorRenderer;
         IProgressRenderer renderer = useCursorRenderer
             ? new CursorProgressRenderer()
-            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch());
+            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch(), () => _assemblies.Values);
 
-        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer);
+        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer, logger);
     }
 
     public void PrintOutOfProcessArtifacts()

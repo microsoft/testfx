@@ -2,9 +2,19 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="MSBuildCommandLineProviderDisplayName">
+        <source>MSBuild integration</source>
+        <target state="translated">Intégration de MSBuild</target>
+        <note>Do not localize {Locked="MSBuild"}.</note>
+      </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
-        <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">Extension utilisée pour passer des paramètres entre le nœud MSBuild et les hôtes</target>
+        <source>Extension used to pass parameters from MSBuild node and the hosts.</source>
+        <target state="translated">Extension utilisée pour passer des paramètres entre le nœud MSBuild et les hôtes.</target>
+        <note>Do not localize {Locked="MSBuild"}.</note>
+      </trans-unit>
+      <trans-unit id="MSBuildNodeOptionDescription">
+        <source>Used to pass the MSBuild node handle.</source>
+        <target state="translated">Utilisé pour transmettre le descripteur de nœud MSBuild.</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>

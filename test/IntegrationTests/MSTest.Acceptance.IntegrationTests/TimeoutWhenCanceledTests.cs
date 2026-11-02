@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -14,8 +14,8 @@ public sealed class TimeoutWhenCanceledTests : AcceptanceTestBase<TimeoutWhenCan
         ["assemblyInit"] = ("TestClass.AssemblyInit", "Assembly initialize", "ASSEMBLYINIT", "AssemblyInitializeTimeout"),
         ["classInit"] = ("TestClass.ClassInit", "Class initialize", "CLASSINIT", "ClassInitializeTimeout"),
         ["baseClassInit"] = ("TestClassBase.ClassInitBase", "Class initialize", "BASE_CLASSINIT", "ClassInitializeTimeout"),
-        ["globalTestInit"] = ("TestClass.GlobalTestInit", "Test initialize", "GLOBALTESTINIT", "TestInitializeTimeout"),
-        ["globalTestCleanup"] = ("TestClass.GlobalTestCleanupMethod", "Test cleanup", "GLOBALTESTCLEANUP", "TestCleanupTimeout"),
+        ["globalTestInit"] = ("TestClass.GlobalTestInit", "Global test initialize", "GLOBALTESTINIT", "TestInitializeTimeout"),
+        ["globalTestCleanup"] = ("TestClass.GlobalTestCleanupMethod", "Global test cleanup", "GLOBALTESTCLEANUP", "TestCleanupTimeout"),
     };
 
     [TestMethod]

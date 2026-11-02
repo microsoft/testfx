@@ -54,7 +54,7 @@ public sealed class TestRunInfoTests : TestContainer
         var element = new UnitTestElement(testMethod)
         {
             TestCategory = ["Smoke", "Compatibility"],
-            Traits = [new Trait("Owner", "alice"), new Trait("Owner", "bob"), new Trait("Priority", "1")],
+            Traits = [new TestTrait("Owner", "alice"), new TestTrait("Owner", "bob"), new TestTrait("Priority", "1")],
         };
 
         var info = TestRunInfo.CreateFrom([element]);

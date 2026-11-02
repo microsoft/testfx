@@ -68,13 +68,37 @@ internal sealed class TestMethod : ITestMethod
     /// <inheritdoc />
     public string FullClassName { get; }
 
+    /// <summary>
+    /// Gets the <c>FullClassName.Name</c> pair used as the test's fully qualified name by both the VSTest and the
+    /// Microsoft.Testing.Platform paths (discovery, test id hashing and filtering).
+    /// </summary>
+    /// <remarks>
+    /// Computed on first access and cached, as <see cref="FullClassName"/> and <see cref="Name"/> are immutable for
+    /// the lifetime of the instance. Concurrent first accesses may each compute the string, but they all produce an
+    /// equal value, so the race is benign. The cache is a pure function of two already-serialized fields, so it is
+    /// excluded from serialization on .NET Framework and simply re-derived after deserialization.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    public string FullyQualifiedName => field ??= $"{FullClassName}.{Name}";
+
     public string? ParameterTypes { get; }
 
     /// <inheritdoc />
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public string? ManagedTypeName => GetManagedTypeName(FullClassName);
+    /// <remarks>
+    /// Computed on first access and cached, as <see cref="FullClassName"/> is immutable for the lifetime of the
+    /// instance. Concurrent first accesses may each compute the string, but they all produce an equal value, so the
+    /// race is benign. The cache is a pure function of an already-serialized field, so it is excluded from
+    /// serialization on .NET Framework and simply re-derived after deserialization.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    public string? ManagedTypeName => field ??= GetManagedTypeName(FullClassName);
 
     /// <inheritdoc />
     public string? ManagedMethodName { get; }
@@ -135,11 +159,27 @@ internal sealed class TestMethod : ITestMethod
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 
+    // NOTE: This method has a latent bug (it assigns AssemblyName/MethodInfo on `this` instead of on the
+    // returned clone), tracked by https://github.com/microsoft/testfx/issues/9573. It is intentionally left
+    // untouched here so the existing ToTestCase / test-case filter bridge callers keep their exact current
+    // behavior; the execution engine uses the correct CloneWithSource below instead. The two are unified once
+    // #9573 is addressed.
     internal TestMethod CloneWithUpdatedSource(string source)
     {
         var clone = (TestMethod)MemberwiseClone();
-        AssemblyName = source;
-        MethodInfo = null;
+        clone.AssemblyName = source;
+        clone.MethodInfo = null;
+        return clone;
+    }
+
+    // Correct counterpart of CloneWithUpdatedSource: assigns the updated source and clears the cached
+    // MethodInfo on the returned clone (leaving `this` untouched). Used by the execution engine's source
+    // resolution. See https://github.com/microsoft/testfx/issues/9573.
+    internal TestMethod CloneWithSource(string source)
+    {
+        var clone = (TestMethod)MemberwiseClone();
+        clone.AssemblyName = source;
+        clone.MethodInfo = null;
         return clone;
     }
 }

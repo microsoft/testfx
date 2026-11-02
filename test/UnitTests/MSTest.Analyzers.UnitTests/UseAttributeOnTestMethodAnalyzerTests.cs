@@ -238,4 +238,64 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
             VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.ConditionBaseRule).WithLocation(0).WithArguments("IgnoreAttribute"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenMethodIsMarkedWithDataTestMethodAndOwnerAttribute_NoDiagnosticAsync()
+    {
+        // DataTestMethod inherits TestMethodAttribute — the analyzer exits early on any
+        // method decorated with a TestMethod subclass, including the standard DataTestMethod.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [Owner("owner")]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsMarkedWithOSConditionAttributeButNotWithTestMethod_DiagnosticAsync()
+    {
+        // OSConditionAttribute inherits ConditionBaseAttribute — the analyzer fires
+        // ConditionBaseRule and includes the concrete attribute class name in the message.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:OSCondition(OperatingSystems.Windows)|}]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [OSCondition(OperatingSystems.Windows)]
+                [TestMethod]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UseAttributeOnTestMethodAnalyzer.ConditionBaseRule).WithLocation(0).WithArguments("OSConditionAttribute"),
+            fixedCode);
+    }
 }

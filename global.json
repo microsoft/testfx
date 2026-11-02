@@ -1,19 +1,22 @@
 {
   "tools": {
-    "dotnet": "11.0.100-preview.5.26227.104",
+    "dotnet": "12.0.100-alpha.1.26509.101",
     "runtimes": {
       "dotnet": [
-        "8.0.28",
-        "9.0.17",
-        "10.0.9"
+        "8.0.32",
+        "9.0.21",
+        "10.0.13",
+        "11.0.0-rc.2.26504.105"
       ],
       "dotnet/x86": [
-        "9.0.17",
-        "10.0.9"
+        "9.0.21",
+        "10.0.13",
+        "11.0.0-rc.2.26504.105"
       ],
       "aspnetcore": [
-        "9.0.17",
-        "10.0.9"
+        "9.0.21",
+        "10.0.13",
+        "11.0.0-rc.2.26504.105"
       ]
     },
     "vs": {
@@ -24,7 +27,7 @@
     }
   },
   "sdk": {
-    "version": "11.0.100-preview.5.26227.104",
+    "version": "12.0.100-alpha.1.26509.101",
     "paths": [
       ".dotnet",
       "$host$"
@@ -34,10 +37,40 @@
     "rollForward": "latestFeature"
   },
   "test": {
-    "runner": "Microsoft.Testing.Platform"
+    "runner": "Microsoft.Testing.Platform",
+    "affectedTests": {
+      "changes": {
+        "ignore": [
+          ".github/**",
+          "docs/**",
+          "**/*.md"
+        ],
+        "forceAllTests": [
+          "global.json",
+          "Directory.Build.*",
+          "Directory.Packages.props",
+          "NuGet.config",
+          "TestFx.slnx",
+          "*.slnf",
+          "Build.cmd",
+          "Test.cmd",
+          "build.sh",
+          "test.sh",
+          "eng/**",
+          "src/**/Directory.Build.*",
+          "test/**/Directory.Build.*"
+        ]
+      },
+      "storage": {
+        "type": "azureDevOpsArtifact",
+        "project": "public",
+        "buildDefinitionId": 209,
+        "artifactName": "TestFx_AffectedTestsMaps"
+      }
+    }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.26310.1",
+    "Microsoft.DotNet.Arcade.Sdk": "12.0.0-beta.26530.2",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

@@ -59,6 +59,7 @@ internal sealed partial class Json
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using Utf8JsonWriter writer = new(stream);
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+            // Stryker disable once Boolean: Recursive serializers currently complete synchronously, so context capture is unobservable.
             await SerializeAsync(obj, writer).ConfigureAwait(false);
             await writer.FlushAsync().ConfigureAwait(false);
             return Encoding.UTF8.GetString(stream.GetBuffer().AsMemory().Span[..(int)stream.Position]);
@@ -69,7 +70,19 @@ internal sealed partial class Json
         }
     }
 
-    public T Deserialize<T>(ReadOnlyMemory<char> utf8Json)
+    /// <summary>
+    /// Deserializes a UTF-8 encoded JSON payload.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to deserialize.</typeparam>
+    /// <param name="utf8Json">The UTF-8 encoded JSON payload.</param>
+    /// <returns>The deserialized object.</returns>
+    /// <remarks>
+    /// <see cref="JsonDocument.Parse(ReadOnlyMemory{byte}, JsonDocumentOptions)"/> reads directly out of
+    /// <paramref name="utf8Json"/> rather than copying it, so the payload must stay valid until the document
+    /// is disposed. <see cref="Bind{T}"/> materializes the whole object graph before that happens, which is
+    /// what lets callers hand in a pooled buffer and reuse it as soon as this returns.
+    /// </remarks>
+    public T Deserialize<T>(ReadOnlyMemory<byte> utf8Json)
     {
         using var document = JsonDocument.Parse(utf8Json);
         return Bind<T>(document.RootElement, null);
@@ -94,7 +107,8 @@ internal sealed partial class Json
 
     internal bool TryArrayBind<T>(JsonElement element, out T[]? value, string? property = null)
     {
-        if (property is not null && !element.TryGetProperty(property, out element))
+        if (property is not null
+            && (!element.TryGetProperty(property, out element) || element.ValueKind == JsonValueKind.Null))
         {
             value = default;
             return false;
@@ -135,7 +149,7 @@ internal sealed partial class Json
     private async Task SerializeAsync(object? obj, Utf8JsonWriter writer)
     {
         // Serialize null
-        if (obj == null)
+        if (obj is null)
         {
             writer.WriteNullValue();
             return;
@@ -153,6 +167,7 @@ internal sealed partial class Json
                     foreach ((string property, object? value) in properties)
                     {
                         writer.WritePropertyName(property);
+                        // Stryker disable once Boolean: Recursive serializers currently complete synchronously, so context capture is unobservable.
                         await SerializeAsync(value, writer).ConfigureAwait(false);
                     }
                 }
@@ -174,12 +189,13 @@ internal sealed partial class Json
             writer.WriteStartArray();
             foreach (object? o in e)
             {
-                if (o == null)
+                if (o is null)
                 {
                     writer.WriteNullValue();
                 }
                 else
                 {
+                    // Stryker disable once Boolean: Recursive serializers currently complete synchronously, so context capture is unobservable.
                     await SerializeAsync(o, writer).ConfigureAwait(false);
                 }
             }
@@ -191,7 +207,7 @@ internal sealed partial class Json
         }
 
         // We could not find a converter so throw.
-        if (converter == null)
+        if (converter is null)
         {
             throw new InvalidOperationException($"Flattener missing {obj.GetType()}.");
         }

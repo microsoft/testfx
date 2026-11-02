@@ -6,6 +6,7 @@ using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -18,11 +19,81 @@ public class RunSettingsPatcherTests
     private readonly Mock<ICommandLineOptions> _commandLineOptions = new();
 
     [TestMethod]
+    public void Patch_StatefulNonVisualStudioClient_SetsDesignMode()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: true)),
+            _commandLineOptions.Object);
+
+        Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_StatelessNonVisualStudioClient_DoesNotSetDesignMode()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false)),
+            _commandLineOptions.Object);
+
+        Assert.IsFalse(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_UndeclaredNonVisualStudioClient_DoesNotSetDesignMode()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: null)),
+            _commandLineOptions.Object);
+
+        Assert.IsFalse(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_UndeclaredVisualStudioClient_SetsDesignModeForBackwardCompatibility()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: null)),
+            _commandLineOptions.Object);
+
+        Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_StatelessVisualStudioClient_DoesNotSetDesignMode()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            null,
+            _configuration.Object,
+            new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false)),
+            _commandLineOptions.Object);
+
+        Assert.IsFalse(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/DesignMode")!.Value));
+    }
+
+    [TestMethod]
     public void Patch_WhenNoRunSettingsProvided_CreateRunSettingsWithResultsDirectoryElement()
     {
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
         XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object,
-            new ClientInfoService(string.Empty, string.Empty), _commandLineOptions.Object);
+            new ClientInfoService(string.Empty, string.Empty, new ClientCapabilitiesService(DeclaredIsStateful: false)), _commandLineOptions.Object);
         Assert.AreEqual(
             "/PlatformResultDirectory",
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
@@ -41,11 +112,34 @@ public class RunSettingsPatcherTests
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
 
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty), _commandLineOptions.Object);
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty, new ClientCapabilitiesService(DeclaredIsStateful: false)), _commandLineOptions.Object);
         Assert.AreEqual(
             "/PlatformResultDirectory",
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
         Assert.IsTrue(bool.Parse(runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/Canary")!.Value));
+    }
+
+    [TestMethod]
+    public void Patch_WhenMultipleDefaultsAreAdded_AddsOneDelimitedPatchingComment()
+    {
+        _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
+
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(
+            "<RunSettings />",
+            _configuration.Object,
+            new ClientInfoService("custom-client", "1.0.0", new ClientCapabilitiesService(DeclaredIsStateful: false)),
+            _commandLineOptions.Object);
+
+        XElement runConfiguration = runSettingsDocument.Root!.Element("RunConfiguration")!;
+        XNode[] nodes = [.. runConfiguration.Nodes()];
+        Assert.HasCount(5, nodes);
+        XComment startComment = Assert.IsInstanceOfType<XComment>(nodes[0]);
+        Assert.AreEqual("Default configuration added by Microsoft Testing Platform", startComment.Value);
+        Assert.AreEqual("DesignMode", Assert.IsInstanceOfType<XElement>(nodes[1]).Name.LocalName);
+        Assert.AreEqual("CollectSourceInformation", Assert.IsInstanceOfType<XElement>(nodes[2]).Name.LocalName);
+        Assert.AreEqual("ResultsDirectory", Assert.IsInstanceOfType<XElement>(nodes[3]).Name.LocalName);
+        XComment endComment = Assert.IsInstanceOfType<XComment>(nodes[4]);
+        Assert.AreEqual("End", endComment.Value);
     }
 
     [TestMethod]
@@ -62,7 +156,7 @@ public class RunSettingsPatcherTests
 """;
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty), _commandLineOptions.Object);
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty, new ClientCapabilitiesService(DeclaredIsStateful: false)), _commandLineOptions.Object);
         Assert.AreEqual(
             "/PlatformResultDirectoryFromFile",
             runSettingsDocument.XPathSelectElement("RunSettings/RunConfiguration/ResultsDirectory")!.Value);
@@ -91,7 +185,7 @@ public class RunSettingsPatcherTests
             });
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty),
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(runSettings, _configuration.Object, new ClientInfoService(string.Empty, string.Empty, new ClientCapabilitiesService(DeclaredIsStateful: false)),
             _commandLineOptions.Object);
 
         XElement[] testRunParameters = [.. runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter")];
@@ -115,7 +209,7 @@ public class RunSettingsPatcherTests
             });
 
         _configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns("/PlatformResultDirectory");
-        XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object, new ClientInfoService(string.Empty, string.Empty),
+        XDocument runSettingsDocument = RunSettingsPatcher.Patch(null, _configuration.Object, new ClientInfoService(string.Empty, string.Empty, new ClientCapabilitiesService(DeclaredIsStateful: false)),
             _commandLineOptions.Object);
 
         XElement[] testRunParameters = [.. runSettingsDocument.XPathSelectElements("RunSettings/TestRunParameters/Parameter")];
