@@ -237,14 +237,14 @@
     {
       "id": "platform-llm-environment-detector",
       "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs",
-      "notes": "Adapted from dotnet CLI telemetry LLM/agent environment detection. All environment reads already use the injected IEnvironment, so the upstream environment-provider injection requires no port. Detection rules are unchanged.",
+      "notes": "Adapted from dotnet CLI telemetry LLM/agent environment detection. All environment reads already use the injected IEnvironment, so the upstream environment-provider injection requires no port. OpenCode is detected through OPENCODE.",
       "sources": [
         {
           "repo": "dotnet/sdk",
           "ref": "main",
           "path": "src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs",
-          "baseline_ref_sha": "082c56168c1654f1311bbc3cbc4b0548b45ed529",
-          "baseline_blob_sha": "9d258b7843c990bd4014973aaf7dfb54e5ffb152",
+          "baseline_ref_sha": "7fcbcb9ad2d7004f04f330f2c586f38e411eb35b",
+          "baseline_blob_sha": "3b9afc4ad11da70b1e0a7e66e7415ef7eff257af",
           "scope": "LLM/agent detection rules"
         }
       ]
@@ -267,14 +267,14 @@
     {
       "id": "platform-terminal-native-methods",
       "local_path": "src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/NativeMethods.cs",
-      "notes": "Only QueryIsScreenAndTryEnableAnsiColorCodes and its console-mode P/Invokes are copied from msbuild's Framework NativeMethods. Upstream CodeQL annotations in GetLastWriteFileUtcTime are outside the copied scope and require no port.",
+      "notes": "Only QueryIsScreenAndTryEnableAnsiColorCodes and its console-mode P/Invokes are copied from msbuild's Framework NativeMethods. Upstream OpenHarmony detection and CodeQL annotations in GetLastWriteFileUtcTime are outside the copied scope and require no port.",
       "sources": [
         {
           "repo": "dotnet/msbuild",
           "ref": "main",
           "path": "src/Framework/NativeMethods.cs",
-          "baseline_ref_sha": "ad616f42ced6d62a1926a19641bd0c4353d185c3",
-          "baseline_blob_sha": "cc47aa5f90d7b88184ee6f5b6dc684258aacc77f",
+          "baseline_ref_sha": "86743d0545fba3d043d4e7aaa12891edb3fd56e6",
+          "baseline_blob_sha": "724a2e387da9a7295f4d519ce598e0c545910e3f",
           "scope": "QueryIsScreenAndTryEnableAnsiColorCodes and supporting console-mode P/Invokes"
         }
       ]

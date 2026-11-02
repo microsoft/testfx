@@ -25,11 +25,20 @@ public sealed class LLMEnvironmentDetectorTests
     public void IsLLMEnvironment_WhenAIAgentDoesNotHoldAKnownAgentValue_ReturnsFalse(string? aiAgentValue)
         => Assert.IsFalse(CreateDetector(aiAgentValue).IsLLMEnvironment());
 
-    private static LLMEnvironmentDetector CreateDetector(string? aiAgentValue)
+    [TestMethod]
+    [DataRow("OPENCODE", "1", true)]
+    [DataRow("OPENCODE", "false", true)]
+    [DataRow("OPENCODE", "", false)]
+    [DataRow("OPENCODE", null, false)]
+    [DataRow("OPENCODE_AI", "1", false)]
+    public void IsLLMEnvironment_WhenCheckingOpenCode_ReturnsExpectedResult(string variableName, string? value, bool expected)
+        => Assert.AreEqual(expected, CreateDetector(value, variableName).IsLLMEnvironment());
+
+    private static LLMEnvironmentDetector CreateDetector(string? value, string variableName = "AI_AGENT")
     {
         Mock<IEnvironment> environment = new();
         _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
-        _ = environment.Setup(x => x.GetEnvironmentVariable("AI_AGENT")).Returns(aiAgentValue);
+        _ = environment.Setup(x => x.GetEnvironmentVariable(variableName)).Returns(value);
         return new LLMEnvironmentDetector(environment.Object);
     }
 }
