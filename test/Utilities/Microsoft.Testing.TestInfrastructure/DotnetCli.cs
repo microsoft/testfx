@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Polly;
+using Polly.Retry;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -67,8 +68,6 @@ public static class DotnetCli
         "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
         "MicrosoftInstrumentationEngine_FileLogPath"
     ];
-
-    private static int s_binlogCounter;
 
     [SuppressMessage("Style", "IDE0032:Use auto property", Justification = "It's causing some runtime bug")]
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
@@ -281,9 +280,22 @@ public static class DotnetCli
     }
 
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
-        => await Policy
-            .Handle<InvalidOperationException>(IsRetriableBuildFailure)
-            .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
+        => await new ResiliencePipelineBuilder<DotnetMuxerResult>()
+            .AddRetry(new RetryStrategyOptions<DotnetMuxerResult>
+            {
+                ShouldHandle = new PredicateBuilder<DotnetMuxerResult>()
+                    .Handle<InvalidOperationException>(ex => IsRetriableBuildFailure(ex)
+                        || (IsCommand(args, "build") && IsCopyTaskInitializationFailure(ex.Message)))
+                    .HandleResult(result => IsCommand(args, "build")
+                        && result.ExitCode != 0
+                        && (IsCopyTaskInitializationFailure(result.StandardOutput)
+                            || IsCopyTaskInitializationFailure(result.StandardError))),
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.FromSeconds(2),
+                BackoffType = DelayBackoffType.Constant,
+                UseJitter = false,
+            })
+            .Build()
             .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
 
     // Some build failures are transient tooling/environment issues rather than real product failures, so retrying
@@ -296,6 +308,13 @@ public static class DotnetCli
         => ex.Message.Contains("MSB4236")
             || ex.Message.Contains("exited prematurely. Shutting down.");
 
+    // Copy's unsynchronized static message cache can be partially initialized under -mt. Retry the
+    // build in a fresh process, including when its caller requests a nonzero result instead of an exception.
+    private static bool IsCopyTaskInitializationFailure(string output)
+        => output.Contains("error MSB4018: The \"Copy\" task failed unexpectedly.", StringComparison.Ordinal)
+            && output.Contains("System.ArgumentNullException: Value cannot be null. (Parameter 'message')", StringComparison.Ordinal)
+            && output.Contains("Microsoft.Build.Tasks.Copy.CopyFileWithLogging(", StringComparison.Ordinal);
+
     private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
@@ -306,8 +325,8 @@ public static class DotnetCli
         string? binlogFullPath = null;
         if (!args.Contains("-bl:") && !IsDirectDotNetTestInvocation(args))
         {
-            // We do this here rather than in the caller so that different retries produce different binlog file names.
-            binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Interlocked.Increment(ref s_binlogCounter)}.binlog");
+            // Collection batches run in separate processes sharing this directory; retries need unique names too.
+            binlogFullPath = Path.Combine(TempDirectory.TestSuiteDirectory, $"{binlogBaseFileName}-{Guid.NewGuid():N}.binlog");
             string binlogArg = $" -bl:\"{binlogFullPath}\"";
             if (args.IndexOf("-- ", StringComparison.Ordinal) is int platformArgsIndex && platformArgsIndex > 0)
             {

@@ -199,7 +199,10 @@ internal static class WindowsApplicationModelTestTools
         return new(result.ExitCode, result.StandardOutput, result.ErrorOutput, trxPath);
     }
 
-    public static void AssertResolvedMSTestAssets(string reportPath, WindowsApplicationModelAssetKind assetKind)
+    public static void AssertResolvedMSTestAssets(
+        string reportPath,
+        WindowsApplicationModelAssetKind assetKind,
+        string targetFramework = "net9.0")
     {
         Assert.IsTrue(File.Exists(reportPath), $"The resolved MSTest asset report '{reportPath}' does not exist.");
         string report = File.ReadAllText(reportPath).Replace('\\', '/');
@@ -221,7 +224,7 @@ internal static class WindowsApplicationModelTestTools
             WindowsApplicationModelAssetKind.ModernUwp =>
             (
                 [
-                    "/lib/net9.0/MSTest.TestFramework.dll",
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
                     "/buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll",
                     "/buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll",
                     "/buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll",
@@ -250,6 +253,10 @@ internal static class WindowsApplicationModelTestTools
         string[] rejected = assetPaths.Rejected;
         if (assetKind == WindowsApplicationModelAssetKind.ModernUwp)
         {
+            Assert.Contains(
+                $"TargetFramework={targetFramework}",
+                report,
+                $"The resolved MSTest report '{reportPath}' does not prove the Modern UWP consumer targeted {targetFramework}.");
             Assert.Contains(
                 "UseUwpTools=true",
                 report,
@@ -292,10 +299,17 @@ internal static class WindowsApplicationModelTestTools
         }
     }
 
-    public static async Task ExecuteWithPackageCleanupAsync(
+    public static Task ExecuteWithPackageCleanupAsync(
         TestAsset testAsset,
         string packageIdentityName,
         Func<Task> testAction)
+        => ExecuteWithPackageCleanupAsync(testAsset, packageIdentityName, testAction, () => RemoveAndVerifyPackageRegistrationAsync(packageIdentityName));
+
+    internal static async Task ExecuteWithPackageCleanupAsync(
+        TestAsset testAsset,
+        string packageIdentityName,
+        Func<Task> testAction,
+        Func<Task> removeAndVerifyPackage)
     {
         Exception? testFailure = null;
         Exception? cleanupFailure = null;
@@ -311,7 +325,7 @@ internal static class WindowsApplicationModelTestTools
 
         try
         {
-            await RemoveAndVerifyPackageRegistrationAsync(packageIdentityName);
+            await removeAndVerifyPackage();
         }
         catch (Exception ex)
         {
@@ -326,7 +340,7 @@ internal static class WindowsApplicationModelTestTools
         if (testFailure is not null && cleanupFailure is not null)
         {
             throw new AggregateException(
-                $"The UWP acceptance test failed and cleanup also failed for identity '{packageIdentityName}'. The package layout was retained.",
+                $"The application-model acceptance test failed and cleanup also failed for identity '{packageIdentityName}'. The package layout was retained.",
                 testFailure,
                 cleanupFailure);
         }
@@ -334,7 +348,7 @@ internal static class WindowsApplicationModelTestTools
         if (cleanupFailure is not null)
         {
             throw new AggregateException(
-                $"Cleanup failed for UWP identity '{packageIdentityName}'. The package layout was retained.",
+                $"Cleanup failed for package identity '{packageIdentityName}'. The package layout was retained.",
                 cleanupFailure);
         }
 

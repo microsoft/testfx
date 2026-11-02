@@ -10,7 +10,6 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
     <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
-    <DefineConstants>$(DefineConstants);USE_EXTERNAL_COMBINATORIAL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Combinatorial.MSTest" />
     <PackageReference Include="MSBuild.StructuredLogger" />
     <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
     <PackageReference Include="Nerdbank.MessagePack" />

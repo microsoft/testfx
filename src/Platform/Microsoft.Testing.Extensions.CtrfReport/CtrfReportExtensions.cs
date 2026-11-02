@@ -10,10 +10,6 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Provides extension methods for adding CTRF (Common Test Report Format) report generation to a test application.
 /// </summary>
-/// <remarks>
-/// This API is experimental. It may change, break, or be removed at any time without notice.
-/// </remarks>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class CtrfReportExtensions
 {
     /// <summary>

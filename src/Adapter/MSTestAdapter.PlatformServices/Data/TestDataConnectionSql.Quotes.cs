@@ -51,7 +51,7 @@ internal partial class TestDataConnectionSql
     {
         get
         {
-            if (CommandBuilder != null)
+            if (CommandBuilder is not null)
             {
                 string catalogSeparator = CommandBuilder.CatalogSeparator;
                 if (!StringEx.IsNullOrEmpty(catalogSeparator))
@@ -69,7 +69,7 @@ internal partial class TestDataConnectionSql
     {
         get
         {
-            if (CommandBuilder != null)
+            if (CommandBuilder is not null)
             {
                 string schemaSeparator = CommandBuilder.SchemaSeparator;
                 if (!StringEx.IsNullOrEmpty(schemaSeparator))

@@ -1,5 +1,11 @@
 # RFC 015 - Command-line option mappings
 
+> **Current implementation note (2026-10-09):** The rejection decision below remains relevant.
+> [Unknown-option validation](../../src/Platform/Microsoft.Testing.Platform/CommandLine/CommandLineOptionsValidator.UnknownAndBootstrapValidation.cs)
+> emits value-aware migration diagnostics; it does not implement the proposed mapping API.
+> See [MTP-005](../specifications/mtp.md#mtp-005--configuration-and-cli-validation).
+> The remaining proposed API/examples are retained as rejected design history.
+
 - [ ] Approved in principle
 - [ ] Under discussion
 - [ ] Implementation

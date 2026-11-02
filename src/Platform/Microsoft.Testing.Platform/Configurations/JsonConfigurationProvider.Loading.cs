@@ -93,7 +93,7 @@ internal sealed partial class JsonConfigurationSource
         public bool TryGet(string key, out string? value)
         {
             value = null;
-            return (_singleValueData != null && _singleValueData.TryGetValue(key, out value)) || (_propertyToAllChildren != null && _propertyToAllChildren.TryGetValue(key, out value));
+            return (_singleValueData is not null && _singleValueData.TryGetValue(key, out value)) || (_propertyToAllChildren is not null && _propertyToAllChildren.TryGetValue(key, out value));
         }
 
         public IEnumerable<string> GetChildKeys(string? parentPath)

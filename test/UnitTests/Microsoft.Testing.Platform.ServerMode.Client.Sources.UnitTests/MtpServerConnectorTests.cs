@@ -547,7 +547,7 @@ public sealed class MtpServerConnectorTests
 
     private async Task AssertDoesNotCaptureSynchronizationContextAsync(Func<Task> startOperation, Action releaseOperation)
     {
-        var context = new QueuedSynchronizationContext();
+        var context = new RecordingSynchronizationContext();
         SynchronizationContext? previous = SynchronizationContext.Current;
         Task operation;
         try
@@ -561,12 +561,13 @@ public sealed class MtpServerConnectorTests
         }
 
         releaseOperation();
-        Task completed = await Task.WhenAny(operation, Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken)).ConfigureAwait(false);
-        context.RunAll();
+        // This is only a deadlock watchdog; PostCount detects capture independently of scheduling speed.
+        var completionLimit = TimeSpan.FromMinutes(1);
+        Task completed = await Task.WhenAny(operation, Task.Delay(completionLimit, TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.AreSame(operation, completed, "The operation captured and posted back to the caller's synchronization context.");
+        Assert.AreSame(operation, completed, "The operation did not complete before the deadlock watchdog expired.");
         await operation.ConfigureAwait(false);
-        Assert.AreEqual(0, context.PostCount);
+        Assert.AreEqual(0, context.PostCount, "The operation captured and posted back to the caller's synchronization context.");
     }
 
     private Task<TcpClient> AcceptTcpClientAsync(TcpListener listener) =>
@@ -605,38 +606,16 @@ public sealed class MtpServerConnectorTests
         return new WeakReference(acceptTask);
     }
 
-    private sealed class QueuedSynchronizationContext : SynchronizationContext
+    private sealed class RecordingSynchronizationContext : SynchronizationContext
     {
-        private readonly Queue<(SendOrPostCallback Callback, object? State)> _callbacks = new();
+        private int _postCount;
 
-        public int PostCount { get; private set; }
+        public int PostCount => Volatile.Read(ref _postCount);
 
         public override void Post(SendOrPostCallback d, object? state)
         {
-            lock (_callbacks)
-            {
-                PostCount++;
-                _callbacks.Enqueue((d, state));
-            }
-        }
-
-        public void RunAll()
-        {
-            while (true)
-            {
-                (SendOrPostCallback Callback, object? State) work;
-                lock (_callbacks)
-                {
-                    if (_callbacks.Count == 0)
-                    {
-                        return;
-                    }
-
-                    work = _callbacks.Dequeue();
-                }
-
-                work.Callback(work.State);
-            }
+            Interlocked.Increment(ref _postCount);
+            ThreadPool.QueueUserWorkItem(_ => d(state));
         }
     }
 }

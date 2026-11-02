@@ -98,7 +98,7 @@ internal sealed class GitHubActionsReporter :
 
             string name = _testApplicationModuleInfo.TryGetAssemblyName() ?? _testApplicationModuleInfo.GetDisplayName();
             string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.GroupTitle, name, _targetFrameworkMoniker);
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"::group::{GitHubActionsEscaper.EscapeData(title)}"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData($"::group::{GitHubActionsEscaper.EscapeData(title)}"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = true;
         }
         catch (OperationCanceledException)
@@ -123,7 +123,7 @@ internal sealed class GitHubActionsReporter :
                 return;
             }
 
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData("::endgroup::"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData("::endgroup::"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = false;
         }
         catch (OperationCanceledException)

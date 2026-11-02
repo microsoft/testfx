@@ -56,11 +56,14 @@
        CopyNuGetPackagesForTestAssets below) but that we don't want to reference. -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Extensions.CodeCoverage" Version="[$(MicrosoftTestingExtensionsCodeCoverageVersion)]" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <MicrosoftTestingExtensionsCodeCoveragePackage Include="$(PkgMicrosoft_Testing_Extensions_CodeCoverage)\microsoft.testing.extensions.codecoverage.*.nupkg" />
+      <MicrosoftTestingExtensionsCodeCoveragePackage Include="$(NuGetPackageRoot)microsoft.testing.extensions.codecoverage\$(MicrosoftTestingExtensionsCodeCoverageVersion)\microsoft.testing.extensions.codecoverage.$(MicrosoftTestingExtensionsCodeCoverageVersion).nupkg"
+                                                    Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' != '$(MicrosoftTestingExtensionsAffectedTestsVersion)' " />
     </ItemGroup>
 
     <Copy SkipUnchangedFiles="true" SourceFiles="@(MicrosoftTestingExtensionsCodeCoveragePackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />

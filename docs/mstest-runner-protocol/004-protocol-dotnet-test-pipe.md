@@ -1,5 +1,12 @@
 # 004 - `dotnet test` Binary Protocol
 
+> **Current implementation note (2026-10-09):** [Host handshake/capability parsing](../../src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/DotnetTestConnection.cs),
+> pipe/HTTP transport and local fake-SDK fixtures support the host-side protocol topics.
+> See [MTP-011](../specifications/mtp.md#mtp-011--native-binary-channel-versus-legacy-msbuild) and
+> [MTP-016](../specifications/mtp.md#mtp-016--no-handshake-and-undeclared-capability-fallback).
+> The external SDK comparisons, gateway/browser deployment requirements, vendored-file alignment
+> and full wire-field catalog below were not independently validated in this scoped audit.
+
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
 `dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy
@@ -601,13 +608,17 @@ write to its reporter (and thus the pipeline log).
 
 ### 9.8 `DisplayMessage` (ID 12, ≥ 1.3.0)
 
-`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A generic host diagnostic forwarded so
-warning/error messages produced **outside** test results (hang/crash dump diagnostics, retry summaries,
-generic extension/framework warnings and errors) are not swallowed. `Level` is `DisplayMessageLevels`:
+`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A host message forwarded so durable session
+messages, marked GitHub Actions workflow commands, and warning/error messages produced **outside** test
+results (hang/crash dump diagnostics, retry summaries, generic extension/framework warnings and errors)
+are not swallowed. `Level` is `DisplayMessageLevels`:
 `0` Information, `1` Warning, `2` Error. The SDK maps them to `WriteMessage` / `WriteWarningMessage` /
-`WriteErrorMessage`. Regular (informational) host output is still discarded by the forwarding device;
-only warning/error levels are relayed. Unlike the Azure DevOps path, this is **not** gated on an ADO
-agent.
+`WriteErrorMessage`. GitHub Actions commands use Information regardless of the command's own severity:
+`::error`, `::warning`, `::notice`, `::group::`, and `::endgroup::` must reach the runner unchanged, without
+warning/error decoration. The GitHub Actions extension gates their production on `GITHUB_ACTIONS=true`
+and `--report-gh`; regular (informational) host output remains discarded. Unlike the Azure DevOps path,
+the display-message transport is **not** gated on an ADO agent. An SDK that negotiates a version below
+1.3.0 receives none of these messages; job-summary file writing is independent of this transport.
 
 ---
 

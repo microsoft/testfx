@@ -81,6 +81,8 @@ internal sealed class EnvironmentVariables(ILoggerFactory loggerFactory) : IEnvi
         {
             _logger.LogTrace($"{CurrentProvider.Uid} removed environment variable '{variable}' with value '{existingVariable.Value}'.");
         }
+
+        _environmentVariables.Remove(variable);
     }
 
     public IReadOnlyCollection<EnvironmentVariable> GetAll() => _environmentVariables.Values;

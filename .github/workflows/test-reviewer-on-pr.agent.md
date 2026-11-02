@@ -1,22 +1,21 @@
 ---
 name: "Test Quality Review on PR (on open / sync)"
 description: >-
-  Automatically reviews changed tests and parallelization configuration when a
-  non-draft PR is opened, reopened, marked ready-for-review, or pushed to.
-  Grades new and modified test methods, audits cross-test parallel-safety, and
-  publishes one consolidated COMMENT review with apply-ready inline suggestions
-  when findings exist. Clean automatic runs are silent.
+  Reports revision-bound test-value evidence when a non-draft PR is opened,
+  reopened, marked ready-for-review, or pushed to, including source-only changes.
+  Grades changed tests, audits cross-test parallel-safety, and publishes one
+  consolidated advisory COMMENT review with inline suggestions for verified
+  findings. Static predictions are distinguished from executed proof.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial
 #   review on the PR's first appearance as a non-draft.
 # - pull_request `synchronize` — re-review when new commits are pushed so the
-#   result stays current. Combined with `paths` and
-#   `concurrency.cancel-in-progress` so superseded runs are cancelled.
+#   result stays current. `concurrency.cancel-in-progress` cancels superseded
+#   runs; the review records the exact head SHA.
 #
-# The repository-root Directory.Build files are included because
-# test/Directory.Build.props imports them. A change there can enable or widen
-# parallel execution for every test assembly without touching a test method.
+# Do not filter to test paths: source-only changes need evidence too, and
+# non-behavioral PRs receive an explicit not-applicable assessment.
 #
 # The companion `/review-tests` slash command lives in `test-reviewer.agent.md`.
 # They must remain separate workflows because mixing `slash_command` with
@@ -26,11 +25,6 @@ description: >-
 on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
-    paths:
-      - "test/**"
-      - "Directory.Build.props"
-      - "Directory.Build.targets"
-      - "Directory.Packages.props"
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by
 # dotnet-bot) — only run for human-authored PRs in a reviewable state.
@@ -51,7 +45,7 @@ imports:
 
 # The combined review includes a bounded parallel-safety specialist task in
 # addition to per-test grading, so retain the same per-run headroom as the broad
-# expert review while keeping this workflow scoped to test/configuration changes.
+# expert review. Source-only changes do not launch the parallel-safety specialist.
 max-ai-credits: 2000
 
 # This replaces two automatic workflows that each carried a 20K daily allowance.

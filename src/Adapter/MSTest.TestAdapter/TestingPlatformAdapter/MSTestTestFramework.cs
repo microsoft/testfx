@@ -14,6 +14,7 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -73,6 +74,8 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     }
 
     internal ITestClassInstanceFactory? TestClassInstanceFactory { get; set; }
+
+    internal MSTestDiscoveryCache? DiscoveryCache { get; set; }
 
     public string Uid => _extension.Uid;
 
@@ -184,7 +187,8 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         }
 
         SessionUid sessionUid = _sessionUid!.Value;
-        string[] assemblyPaths = GetAssemblyPaths();
+        Assembly[] assemblies = [.. _getTestAssemblies()];
+        string[] assemblyPaths = [.. assemblies.Select(GetAssemblyPath)];
         var handle = new MSTestFrameworkHandle(_serviceProvider.GetOutputDevice(), _extension, cancellationToken);
         MSTestRunSettings runSettings = CreateRunSettings(handle);
         var runContext = new MSTestRunContext(_serviceProvider.GetCommandLineOptions(), runSettings, request.Filter);
@@ -196,7 +200,26 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _gracefulStopCapability.NotifyTestExecutionStarting();
         try
         {
-            var engine = new MSTestEngine(cancellationToken, CreateTelemetrySender())
+            var executionManager = new TestExecutionManager();
+            string? enableCache = Environment.GetEnvironmentVariable(MSTestDiscoveryCache.EnableEnvironmentVariable);
+            string? disableCache = Environment.GetEnvironmentVariable(MSTestDiscoveryCache.DisableEnvironmentVariable);
+            if (enableCache is "1" or "true"
+                && disableCache is not ("1" or "true")
+                && DiscoveryCache is { } cache
+                && TestClassInstanceFactory is null
+                // Match MTP's JSON-RPC protocol resolution, not its one-shot dotnet-test pipe.
+                && _serviceProvider.GetCommandLineOptions().TryGetOptionArgumentList("server", out string[]? protocolName)
+                && (protocolName is null || protocolName.Length == 0
+                    || protocolName[0].Equals("jsonrpc", StringComparison.OrdinalIgnoreCase))
+                && request.Filter is TestNodeUidListFilter uidFilter
+                && uidFilter.TestNodeUids.All(uid => Guid.TryParse(uid.Value, out _)))
+            {
+                cache.SetSources(assemblyPaths);
+                executionManager.UnitTestDiscovererFactory = sourceHandler
+                    => cache.CreateDiscoverer(sourceHandler, assemblies, uidFilter.TestNodeUids, cancellationToken);
+            }
+
+            var engine = new MSTestEngine(cancellationToken, CreateTelemetrySender(), executionManager)
             {
                 TestClassInstanceFactory = TestClassInstanceFactory,
             };

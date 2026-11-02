@@ -74,7 +74,7 @@ internal sealed class TestDeployment : ITestDeployment
     public void Cleanup()
     {
         // Delete the deployment directory
-        if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
+        if (RunDirectories is not null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
             {
@@ -106,7 +106,7 @@ internal sealed class TestDeployment : ITestDeployment
     /// <returns> Return true if deployment is done. </returns>
     public bool Deploy(IEnumerable<UnitTestElement> testElements, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger)
     {
-        DebugEx.Assert(testElements != null, "tests");
+        DebugEx.Assert(testElements is not null, "tests");
 
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
         // even if test host is kept alive.
@@ -174,7 +174,7 @@ internal sealed class TestDeployment : ITestDeployment
         string applicationBaseDirectory = string.Empty;
 
         // Run directories can be null in win8.
-        if (RunDirectories == null && !StringEx.IsNullOrEmpty(source))
+        if (RunDirectories is null && !StringEx.IsNullOrEmpty(source))
         {
             // applicationBaseDirectory is set at source level
             applicationBaseDirectory = Path.GetDirectoryName(source)!;

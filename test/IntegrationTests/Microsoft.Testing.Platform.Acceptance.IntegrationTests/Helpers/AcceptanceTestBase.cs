@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if USE_EXTERNAL_COMBINATORIAL
-using Combinatorial.MSTest;
-#else
-using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
-#endif
-
 using System.Text.Json;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -281,6 +277,24 @@ public abstract class AcceptanceTestBase
             cancellationToken);
     }
 
+    internal static void ConfigureDotnetSdkEnvironment(
+        IDictionary<string, string?> environment, string dotnetPath, string sdkVersion)
+    {
+        string dotnetRoot = Path.GetDirectoryName(dotnetPath)
+            ?? throw new ArgumentException("The dotnet executable must include its installation directory.", nameof(dotnetPath));
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk", sdkVersion);
+
+        // dotnet test exports its own SDK paths to the test host. A nested CLI's global.json
+        // does not override those paths, so its targets and tasks must match the selected SDK.
+        environment["MSBuildSDKsPath"] = Path.Combine(sdkDirectory, "Sdks");
+        environment["MSBuildExtensionsPath"] = sdkDirectory;
+        environment["DOTNET_ROOT"] = dotnetRoot;
+        environment["DOTNET_ROOT_X64"] = dotnetRoot;
+        environment["DOTNET_INSTALL_DIR"] = dotnetRoot;
+        environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+        environment["MSBUILDUSESERVER"] = "0";
+    }
+
     internal static async Task<BoundedCommandLineResult> RunWindowsApplicationModelCommandAsync(
         string command,
         string? workingDirectory,
@@ -340,9 +354,9 @@ public abstract class AcceptanceTestBase
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) is not null)
             {
-                if (path != null)
+                if (path is not null)
                 {
                     throw new InvalidOperationException(
                         $"vswhere.exe returned more than one path while locating {requiredCapability}:{Environment.NewLine}{commandLine.StandardOutput}");

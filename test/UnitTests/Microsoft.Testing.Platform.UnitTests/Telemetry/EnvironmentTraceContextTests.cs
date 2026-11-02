@@ -97,4 +97,59 @@ public sealed class EnvironmentTraceContextTests
 
         Assert.AreEqual("vendor=value", EnvironmentTraceContext.TryGetTraceState(environment.Object));
     }
+
+    [TestMethod]
+    [DataRow(null, true, DisplayName = "Absent primary uses fallback")]
+    [DataRow(" \t ", true, DisplayName = "Whitespace primary uses fallback")]
+    [DataRow("malformed", false, DisplayName = "Invalid primary does not silently use fallback")]
+    public void TryGetParentId_FallbackHonorsPresenceAndValidationRatherThanHostEnvironment(string? primary, bool expectedFallback)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable("TRACEPARENT")).Returns(primary);
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRACEPARENT")).Returns($"  {ValidTraceParent}  ");
+
+        Assert.AreEqual(expectedFallback ? ValidTraceParent : null, EnvironmentTraceContext.TryGetParentId(environment.Object));
+    }
+
+    [TestMethod]
+    public void TryGetTraceState_WhitespacePrimaryUsesTrimmedPlatformFallback()
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable("TRACESTATE")).Returns(" \t ");
+        environment.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_TRACESTATE")).Returns("  vendor=fallback  ");
+
+        Assert.AreEqual("vendor=fallback", EnvironmentTraceContext.TryGetTraceState(environment.Object));
+    }
+
+    [TestMethod]
+    [DataRow(0, DisplayName = "First version digit")]
+    [DataRow(1, DisplayName = "Last version digit")]
+    [DataRow(3, DisplayName = "First trace digit")]
+    [DataRow(34, DisplayName = "Last trace digit")]
+    [DataRow(36, DisplayName = "First span digit")]
+    [DataRow(51, DisplayName = "Last span digit")]
+    [DataRow(53, DisplayName = "First flag digit")]
+    [DataRow(54, DisplayName = "Last flag digit")]
+    public void IsValidTraceParent_EveryFieldBoundaryRejectsNonHexAndAcceptsLowercaseHex(int position)
+    {
+        char[] malformed = ValidTraceParent.ToCharArray();
+        malformed[position] = 'g';
+        Assert.IsFalse(EnvironmentTraceContext.IsValidTraceParent(new string(malformed)));
+        malformed[position] = 'A';
+        Assert.IsFalse(EnvironmentTraceContext.IsValidTraceParent(new string(malformed)));
+        malformed[position] = 'f';
+        Assert.IsTrue(EnvironmentTraceContext.IsValidTraceParent(new string(malformed)));
+    }
+
+    [TestMethod]
+    [DataRow(2, DisplayName = "Version separator")]
+    [DataRow(35, DisplayName = "Trace separator")]
+    [DataRow(52, DisplayName = "Span separator")]
+    public void IsValidTraceParent_SeparatorPositionsCannotContainHexDigits(int position)
+    {
+        char[] malformed = ValidTraceParent.ToCharArray();
+        malformed[position] = '0';
+
+        Assert.IsFalse(EnvironmentTraceContext.IsValidTraceParent(new string(malformed)));
+    }
 }

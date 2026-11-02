@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.TestHost;
 
 using static Microsoft.Testing.Platform.UnitTests.ProtocolSerializerTestHelper;
 
@@ -50,6 +52,27 @@ public sealed class ProtocolTests
 
         Assert.AreEqual(0, actual.ExitCode);
         Assert.AreEqual(2, actual.UnfilteredExitCode);
+        Assert.IsEmpty(actual.SummaryArtifacts);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("summary description")]
+    public void TestHostCompletedRequestSerializeDeserialize_PreservesSummaryArtifact(string? description)
+    {
+        SessionFileArtifact artifact = new(new SessionUid("session"), new FileInfo("summary.json"), "CI summary", description, "microsoft.testing.github-actions-summary-fragment");
+        TestHostCompletedRequest message = new(0, 2, [artifact]);
+
+        TestHostCompletedRequest actual = RoundTrip(new TestHostCompletedRequestSerializer(), message);
+
+        Assert.AreEqual(0, actual.ExitCode);
+        Assert.AreEqual(2, actual.UnfilteredExitCode);
+        SessionFileArtifact restored = Assert.ContainsSingle(actual.SummaryArtifacts);
+        Assert.AreEqual(artifact.SessionUid, restored.SessionUid);
+        Assert.AreEqual(artifact.FileInfo.FullName, restored.FileInfo.FullName);
+        Assert.AreEqual(artifact.DisplayName, restored.DisplayName);
+        Assert.AreEqual(description, restored.Description);
+        Assert.AreEqual(artifact.Kind, restored.Kind);
     }
 
     [TestMethod]
@@ -276,6 +299,77 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void CoverageSummaryFieldIds_AreStable()
+    {
+        ushort[] envelope = [CoverageSummaryMessagesFieldsId.ExecutionId, CoverageSummaryMessagesFieldsId.InstanceId, CoverageSummaryMessagesFieldsId.Summaries];
+        ushort[] entry =
+        [
+            CoverageSummaryMessageFieldsId.SessionUid, CoverageSummaryMessageFieldsId.ProducerId,
+            CoverageSummaryMessageFieldsId.ScopeLevel, CoverageSummaryMessageFieldsId.ScopeName,
+            CoverageSummaryMessageFieldsId.Metric, CoverageSummaryMessageFieldsId.CustomMetricName,
+            CoverageSummaryMessageFieldsId.CoveredCount, CoverageSummaryMessageFieldsId.CoverableCount,
+        ];
+        ushort[] artifact = [FileArtifactMessageFieldsId.InputArtifactPaths, FileArtifactMessageFieldsId.CoverageSummary];
+
+        Assert.AreSequenceEqual<ushort>([1, 2, 3], envelope);
+        Assert.AreSequenceEqual<ushort>([1, 2, 3, 4, 5, 6, 7, 8], entry);
+        Assert.AreSequenceEqual<ushort>([8, 9], artifact);
+        Assert.AreEqual(15, new CoverageSummaryMessagesSerializer().Id);
+    }
+
+    [TestMethod]
+    public void CoverageSummaryMessagesSerializeDeserialize_PreservesNullableFieldsAndInt64Counts()
+    {
+        CoverageSummaryMessage[] summaries =
+        [
+            new("session", "producer", 0, null, 0, null, 0, 0),
+            new("second-session", "second-producer", 1, "module with space.dll", 255, "MC/DC", 3_000_000_000L, long.MaxValue),
+            new(null, null, null, null, null, null, null, null),
+            new("partial", "future-producer", 99, string.Empty, 123, string.Empty, null, 37),
+        ];
+        var message = new CoverageSummaryMessages("execution", "instance", summaries);
+
+        CoverageSummaryMessages actual = RoundTrip(new CoverageSummaryMessagesSerializer(), message);
+
+        Assert.AreEqual("execution", actual.ExecutionId);
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.AreSequenceEqual(summaries, actual.Summaries);
+    }
+
+    [TestMethod]
+    public void FileArtifactMessagesSerializeDeserialize_CoveragePreservesInputProvenance()
+    {
+        CoverageSummaryMessage[] summaries =
+        [
+            new(null, "merged-producer", 0, null, 0, null, 3_000_000_000L, long.MaxValue),
+            new(null, "other-producer", 0, null, 255, "empty-metric", 0, 0),
+        ];
+        var message = new FileArtifactMessages(
+            "execution",
+            "instance",
+            [
+                new("merged.fixture", "merged", "description", null, null, null, "fixture.kind",
+                    ["first input.fixture", "second/input.fixture"], summaries),
+                new("legacy.fixture", "legacy", null, null, null, "legacy-session", "legacy.kind", ["legacy-input.fixture"]),
+            ]);
+
+        FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
+
+        Assert.AreEqual("execution", actual.ExecutionId);
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(2, actual.FileArtifacts);
+        Assert.AreEqual("merged.fixture", actual.FileArtifacts[0].FullPath);
+        Assert.AreEqual("description", actual.FileArtifacts[0].Description);
+        Assert.AreEqual("fixture.kind", actual.FileArtifacts[0].Kind);
+        Assert.AreSequenceEqual(["first input.fixture", "second/input.fixture"], actual.FileArtifacts[0].InputArtifactPaths);
+        Assert.AreSequenceEqual(summaries, actual.FileArtifacts[0].CoverageSummary);
+        Assert.AreEqual("legacy.fixture", actual.FileArtifacts[1].FullPath);
+        Assert.AreEqual("legacy-session", actual.FileArtifacts[1].SessionUid);
+        Assert.AreSequenceEqual(["legacy-input.fixture"], actual.FileArtifacts[1].InputArtifactPaths);
+        Assert.IsNull(actual.FileArtifacts[1].CoverageSummary);
+    }
+
+    [TestMethod]
     public void HandshakeMessageWithProperties()
     {
         object serializer = new HandshakeMessageSerializer();
@@ -373,6 +467,7 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy) },
             { HandshakeMessagePropertyNames.RequiredPostProcessorKinds, nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds) },
             { HandshakeMessagePropertyNames.RequiredPostProcessingSupported, nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported) },
+            { HandshakeMessagePropertyNames.CoverageSummaryVersion, nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -395,6 +490,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion), properties[20]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -591,6 +687,7 @@ public sealed class ProtocolTests
             [DisplayMessageFieldsId.MessagesSerializerId] = nameof(DisplayMessageFieldsId),
             [WaitForServerControlRequestFieldsId.MessagesSerializerId] = nameof(WaitForServerControlRequestFieldsId),
             [ServerControlMessageFieldsId.MessagesSerializerId] = nameof(ServerControlMessageFieldsId),
+            [CoverageSummaryMessagesFieldsId.MessagesSerializerId] = nameof(CoverageSummaryMessagesFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -609,6 +706,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(DisplayMessageFieldsId), serializerIds[12]);
         Assert.AreEqual(nameof(WaitForServerControlRequestFieldsId), serializerIds[13]);
         Assert.AreEqual(nameof(ServerControlMessageFieldsId), serializerIds[14]);
+        Assert.AreEqual(nameof(CoverageSummaryMessagesFieldsId), serializerIds[15]);
     }
 
     // The SessionEventTypes byte values flow over IPC to dotnet test in the dotnet/sdk repository.
@@ -663,7 +761,8 @@ public sealed class ProtocolTests
     {
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
-        string[] versions = [ProtocolConstants.SupportedVersions];
+        string[] versions = [ProtocolConstants.SupportedVersions, ProtocolConstants.CoverageSummaryVersion];
         Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1", versions[1]);
     }
 }

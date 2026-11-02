@@ -84,7 +84,7 @@ internal sealed class TestMethodFilter
     internal TestProperty PropertyProvider(string propertyName)
     {
         _supportedProperties.TryGetValue(propertyName, out TestProperty? testProperty);
-        DebugEx.Assert(testProperty != null, "Invalid property queried");
+        DebugEx.Assert(testProperty is not null, "Invalid property queried");
         return testProperty;
     }
 

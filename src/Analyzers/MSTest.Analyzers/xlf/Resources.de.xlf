@@ -167,6 +167,21 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Verwenden Sie "Assert.AreSame" oder "Assert.AreNotSame" nicht mit Werttypen.</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
+        <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
+        <target state="translated">Sammlungsassertionen listen ein IQueryable auf, anstatt ein Skalarergebnis vom Anbieter anzufordern. Verwenden Sie Queryable.Count für Kardinalität oder Queryable.Any zur Leerung. Materialisieren Sie Ergebnisse explizit, wenn Sie deren Inhalt testen oder eine Momentaufnahme wiederverwenden, anstatt alle übereinstimmenden Zeilen abzurufen, nur um deren Anzahl oder Vorhandensein zu überprüfen.</target>
+        <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
+      </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
+        <source>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</source>
+        <target state="translated">Verwenden Sie „Queryable.{1}“ anstelle von „{0}“, um das Aufzählen von Abfrageergebnissen für die Überprüfung der Anzahl oder des Vorhandenseins zu vermeiden</target>
+        <note>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</note>
+      </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
+        <source>Avoid enumerating queries for count or existence assertions</source>
+        <target state="translated">Auflisten von Abfragen für Anzahl- oder Vorhandenseinassertionen vermeiden</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
         <target state="translated">Seit MSTest 3.8 ist „DynamicDataSourceType.AutoDetect“ die Standardeinstellung und identifiziert automatisch Eigenschaften, Methoden und Felder, wodurch die Ausführlichkeit und die Kopplung an die Memberart reduziert werden.</target>
@@ -327,17 +342,17 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesDescription">
         <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
-        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <target state="translated">Geben Sie entweder „DisplayName“ für einen vollständigen Testfallnamen oder „ArgumentsDisplayName“ für eine Argumentbezeichnung an, die den Anzeigenamen der Methode beibehält, aber nicht beides. Entfernen Sie den ignorierten „ArgumentsDisplayName“, um den aktuellen Namen beizubehalten, oder entfernen Sie „DisplayName“, um die Argumentbezeichnung zu verwenden.</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
         <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
-        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <target state="translated">„ArgumentsDisplayName“ wird ignoriert, weil „DisplayName“ den gesamten Testfallnamen überschreibt.</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesTitle">
         <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
-        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <target state="translated">„DisplayName“ und „ArgumentsDisplayName“ nicht kombinieren</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
@@ -807,7 +822,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
         <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
-        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <target state="translated">MSTest initialisiert die schreibbare TestContext-Eigenschaft einer Testklasse, sodass sie nicht im Konstruktor initialisiert werden muss.</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">

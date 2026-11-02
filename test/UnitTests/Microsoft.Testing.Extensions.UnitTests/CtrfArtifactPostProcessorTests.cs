@@ -91,6 +91,18 @@ public sealed class CtrfArtifactPostProcessorTests
             Assert.AreEqual("CTRF", (string?)merged["reportFormat"]);
             Assert.AreEqual(2, merged["results"]!["tests"]!.AsArray().Count);
             Assert.IsTrue(Guid.TryParse((string?)merged["reportId"], out _));
+            JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+            Assert.AreEqual("merged", (string?)metadata["documentRole"]);
+            Assert.AreEqual("concatenate", (string?)metadata["mergeMode"]);
+            Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
+            Assert.AreEqual(2, metadata["inputCount"]!.GetValue<int>());
+            string[] expectedInputIds =
+            [
+                .. new[] { firstPath, secondPath }.Select(path => (string)JsonNode.Parse(File.ReadAllText(path))!["reportId"]!),
+            ];
+            Assert.AreSequenceEqual(
+                expectedInputIds,
+                metadata["inputs"]!.AsArray().Select(input => (string)input!["reportId"]!).ToArray());
         }
         finally
         {

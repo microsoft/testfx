@@ -10,7 +10,7 @@
 | Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | [`WinUIMtpUnpackagedApp`](../samples/public/WinUIMtpUnpackagedApp) | MTP direct executable launch |
 | WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | [`WinUIMtpAppContainerApp`](../samples/public/WinUIMtpAppContainerApp) | MTP sidecar controller with exact package-SID pipe authorization |
 
-`MSTest.Sdk` uses Microsoft.Testing.Platform for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved.
+`MSTest.Sdk` uses Microsoft.Testing.Platform by default for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved in this default configuration.
 
 ### Packaging and sandboxing are separate choices
 
@@ -103,7 +103,7 @@ For the normal full-trust WinUI 3 model, test apps come in two packaging flavors
 Both flavors are supported when you use `MSTest.Sdk`, whose default runner is [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP). Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so VSTest's appx runtime provider is never involved. `MSTest.Sdk` adds the packaged-app launcher automatically for a packaged WinUI project; an unpackaged app stays on the direct executable launch path.
 
 > [!NOTE]
-> Unpackaged WinUI is not supported under VSTest. VSTest routes every `UseWinUI` project through its `UwpTestHostRuntimeProvider`, which unconditionally reads an `AppxManifest.xml` from the build output and fails with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784).
+> Microsoft.Testing.Platform is recommended for unpackaged WinUI. `MSTest.Sdk` also allows `<UseVSTest>true</UseVSTest>` so projects can apply their own VSTest workarounds, but does not configure those workarounds automatically. Visual Studio's `UwpTestHostRuntimeProvider` expects an `AppxManifest.xml` in the build output and can fail with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784) and the [community workaround discussion](https://github.com/microsoft/testfx/issues/1127#issuecomment-1196088592).
 
 ## Unpackaged WinUI
 
@@ -162,6 +162,30 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 With either setup, `dotnet run` (or `dotnet test`) starts the executable directly and the run finishes in a single process.
 
+### Asynchronous UI tests and timeouts
+
+`[UITestMethod]` supports asynchronous `Task` methods, including methods marked with `[Timeout]`.
+The timeout must not move the test to another STA or thread-pool thread: WinUI controls belong to
+the application's actual dispatcher. The test and its ordinary asynchronous continuations run on
+that dispatcher, and timeout cleanup is dispatched there too.
+
+Preserving the dispatcher does not change the default scheduler used by nested
+`Task.Factory.StartNew` calls. Non-cooperative timeouts cannot interrupt synchronous code that blocks
+the dispatcher. If cleanup has already started, the timeout is reported without waiting for it.
+If the dispatcher cannot start cleanup within one second, cleanup is deferred to the original
+invocation once it can continue; it is never moved to a worker thread. Cleanup is also deferred
+while the constructor or `TestContext` setter is still running. Cleanup that starts on the dispatcher
+retains its own timeout settings.
+
+See `UITestMethodWithTimeoutLoadsUI` in the
+[unpackaged sample](../samples/public/WinUIMtpUnpackagedApp/UnitTests.cs) for a test that assigns a
+red `Grid` to the window and awaits `Loaded`. The sample uses cooperative cancellation to remain
+compatible with its existing SDK pin; the default timeout regression is covered by the real WinUI
+acceptance tests. Always detach event handlers and restore window content when the test finishes.
+For cooperative cancellation, use
+`[Timeout(10000, CooperativeCancellation = true)]` and observe `TestContext.CancellationToken`;
+unlike the default non-cooperative timeout, that mode waits for the test itself to finish.
+
 ### Building unpackaged WinUI projects
 
 Build with `dotnet build` as usual. Note that older Windows App SDK releases required the MrtCore PRI generation
@@ -189,12 +213,42 @@ Requirements and limitations:
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
 - The controller named pipe additionally authorizes the exact package SID of an AppContainer host, which a restricted AppContainer token needs in order to connect at all; see [Controller pipe access for AppContainer hosts](#controller-pipe-access-for-appcontainer-hosts).
 - Native .NET SDK 10 project-based `dotnet test` (including `--no-build`) starts the sidecar for packaged full-trust WinUI. Only the activated host connects to the SDK pipe, reporting its actual runtime, architecture, execution ID and test results. Controller-generated TRX and other reports remain on disk in the requested results directory; they are not advertised to the native SDK.
-- Native `--help` and `--list-tests` activate the selected host to report its own options and tests, not the sidecar's dummy framework. Both require Developer Mode and register the package. SDK 10 can hide a help launch failure behind its built-in help and exit zero; use `--list-tests` to surface that failure. Help lists host options (including MSTest's `--filter`), while registration of those options for controller-backed execution is separate from routing.
+- Native `--help` and `--list-tests` activate the selected host to report its own options and tests, not the sidecar's dummy framework. Both require Developer Mode and register the package. SDK 10 can hide a help launch failure behind its built-in help and exit zero; use `--list-tests` to surface that failure. With `EnableMSTestRunner=true`, MSTest's `--filter` is also accepted for controller-backed execution and evaluated only by the activated host.
 - Native AppContainer execution is explicitly rejected. Use the `InvokeTestingPlatform` MSBuild target for AppContainer-hosted WinUI and UWP projects so the sidecar can recover sandbox-owned result artifacts. Ctrl+C tears down the owned informational host, but externally hard-killing the sidecar can leave an AUMID-activated help/discovery host running.
 - Project-based `dotnet run` uses the same SDK launch properties and therefore also starts the sidecar for packaged applications. Startup metadata lives beside a project-local controller in the intermediate output directory, leaving application arguments empty when needed so SDK launch-profile arguments and explicit-argument precedence are preserved. The staged files are incremental and cleaned by `dotnet clean`. Customized `RunCommand` and `TestingPlatformExecutablePath` values are not replaced. A relative `TestingPlatformPackagedAppTargetPath` is resolved against the project directory; `UseAppHost=false` requires a staged packaged executable override.
 - `dotnet run -- --help` and `dotnet run -- --list-tests` activate the actual full-trust host and relay its options or test names to the caller. An incomplete informational response is an error rather than successful empty output. AppContainer informational launches still require the `InvokeTestingPlatform` path.
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
+
+### Filtering packaged MSTest tests
+
+Use a single quoted filter expression with the native .NET SDK 10 MTP runner:
+
+```powershell
+dotnet test --project MyTests.csproj --no-build --filter "TestCategory=Fast Lane&(Name=Identity|Name=Outcome)" --report-trx
+```
+
+The MSBuild target accepts the same option through `TestingPlatformCommandLineArguments`:
+
+```powershell
+dotnet msbuild MyTests.csproj -t:InvokeTestingPlatform '-p:TestingPlatformCommandLineArguments=--filter FullyQualifiedName~Identity --report-trx'
+```
+
+For an expression containing spaces, put the quoted value in the project rather
+than relying on MSBuild command-line property quoting:
+
+```xml
+<TestingPlatformCommandLineArguments>--filter &quot;TestCategory=Fast Lane&amp;(Name=Identity|Name=Outcome)&quot; --report-trx</TestingPlatformCommandLineArguments>
+```
+
+The sidecar preserves the logical arguments, including boolean expressions and
+literal quotes; the selected MSTest host owns grammar and selection. Missing or
+repeated filter arguments and unknown options fail before activation. Invalid
+syntax, no matches under the default zero-tests policy, and selected test failures
+remain non-successful runs; reports contain only selected tests. This registration
+does not enable arbitrary framework options or native AppContainer execution.
+The legacy VSTest-mode `dotnet test --filter` is not forwarded to the sidecar;
+use the MSBuild target or native MTP mode above.
 
 ### Launch activation
 

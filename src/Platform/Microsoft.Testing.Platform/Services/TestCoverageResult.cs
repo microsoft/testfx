@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -15,7 +17,7 @@ namespace Microsoft.Testing.Platform.Services;
 /// the single source of truth for coverage; the terminal output device and the exit-code policy both
 /// read from it rather than buffering their own copies.
 /// </summary>
-internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
+internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer, IOutputDeviceDataProducer
 {
     private readonly ILoggerFactory? _loggerFactory;
 #if NET9_0_OR_GREATER
@@ -36,7 +38,11 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
 
     private readonly Dictionary<ReportKey, CoverageReportReference> _reports = [];
     private readonly List<ReportKey> _reportOrder = [];
+    private readonly List<SessionFileArtifact> _controllerSummaryArtifacts = [];
     private ILogger? _logger;
+    private ICommandLineOptions? _thresholdOptions;
+    private SessionUid? _thresholdSessionUid;
+    private bool _deferToController;
 
     public TestCoverageResult()
     {
@@ -54,7 +60,21 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     public string Description => "Consumes and correlates test coverage data, threshold results, and report references.";
 
     public Type[] DataTypesConsumed { get; } =
-        [typeof(TestCoverageMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageReportMessage)];
+        [typeof(TestCoverageMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageReportMessage), typeof(SessionFileArtifact)];
+
+    internal SessionFileArtifact[] ControllerSummaryArtifacts
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _controllerSummaryArtifacts];
+            }
+        }
+    }
+
+    internal void DeferToController()
+        => _deferToController = true;
 
     public IReadOnlyList<TestCoverageThresholdMessage> Thresholds
     {
@@ -66,6 +86,11 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                 foreach (ThresholdKey key in _thresholdOrder)
                 {
                     result.Add(_thresholds[key]);
+                }
+
+                if (_thresholdOptions is not null)
+                {
+                    result.AddRange(CoverageThresholdPolicy.Evaluate(_thresholdOptions, Scopes, _thresholdSessionUid).Thresholds);
                 }
 
                 return result;
@@ -164,6 +189,25 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
+    internal void ConfigureThresholds(ICommandLineOptions commandLineOptions, SessionUid? sessionUid)
+    {
+        lock (_lock)
+        {
+            _thresholdOptions = commandLineOptions;
+            _thresholdSessionUid = sessionUid;
+        }
+    }
+
+    internal IReadOnlyList<string> GetThresholdErrors()
+    {
+        lock (_lock)
+        {
+            return _thresholdOptions is null
+                ? []
+                : CoverageThresholdPolicy.Evaluate(_thresholdOptions, Scopes, _thresholdSessionUid).Errors;
+        }
+    }
+
     /// <summary>
     /// Clears all accumulated coverage data. Used to reset the per-session state between hot-reload
     /// cycles, which reuse the same application-scoped instance.
@@ -178,6 +222,10 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
             _thresholdOrder.Clear();
             _reports.Clear();
             _reportOrder.Clear();
+            _thresholdOptions = null;
+            _thresholdSessionUid = null;
+            _controllerSummaryArtifacts.Clear();
+            _deferToController = false;
         }
     }
 
@@ -185,6 +233,16 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     {
         switch (value)
         {
+            case SessionFileArtifact artifact when _deferToController
+                && artifact.Kind is string kind
+                && kind.EndsWith("-summary-fragment", StringComparison.Ordinal):
+                lock (_lock)
+                {
+                    _controllerSummaryArtifacts.Add(artifact);
+                }
+
+                return Task.CompletedTask;
+
             case TestCoverageMessage coverage:
                 var measurementKey = new MeasurementKey(
                     coverage.SessionUid.Value,

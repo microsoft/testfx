@@ -43,7 +43,7 @@ internal sealed class PooledHashSet<T> : HashSet<T>, IDisposable
 
     public static PooledHashSet<T> GetInstance(IEqualityComparer<T>? comparer = null)
     {
-        ObjectPool<PooledHashSet<T>> pool = comparer == null ?
+        ObjectPool<PooledHashSet<T>> pool = comparer is null ?
             s_poolInstance :
             s_poolInstancesByComparer.GetOrAdd(comparer, CreatePool);
         PooledHashSet<T> instance = pool.Allocate();

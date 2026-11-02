@@ -382,6 +382,26 @@
         <target state="translated">{0} 디렉터리를 찾을 수 없음</target>
         <note>{0} is the directory path.</note>
       </trans-unit>
+      <trans-unit id="CoverageThresholdAmbiguous">
+        <source>'--{0}' cannot be evaluated because multiple coverage producers or sessions reported overall measurements for the requested metric. Ensure that the requested metric has exactly one overall measurement.</source>
+        <target state="translated">여러 검사 생산자 또는 세션이 요청된 메트릭에 대한 전체 측정값을 보고했기 때문에 '--{0}'을(를) 평가할 수 없습니다. 요청된 메트릭에 정확히 하나의 전체 측정값이 있는지 확인합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdEmptyMeasurement">
+        <source>'--{0}' requires non-empty overall coverage data for the requested metric.</source>
+        <target state="translated">'--{0}'에는 요청된 메트릭에 대한 비어 있지 않은 전체 코드 검사 데이터가 필요합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdMissingMeasurement">
+        <source>'--{0}' requires an overall coverage measurement for the requested metric. Enable a compatible coverage collector.</source>
+        <target state="translated">'--{0}'을(를) 사용하려면 요청된 메트릭에 대한 전체 검사 측정값이 필요합니다. 호환되는 검사 수집기를 사용하도록 설정합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNotMet">
+        <source>Coverage threshold for '--{0}' failed: {1}% &lt; {2}%.</source>
+        <target state="translated">'--{0}'에 대한 적용 범위 임계값이 실패했습니다. {1}% &lt; {2}%.</target>
+        <note>{0} is the command-line option name. {1} is the actual coverage percentage. {2} is the required coverage percentage.</note>
+      </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
         <target state="translated">경고: 환경 변수 '{0}'은(는) 더 이상 사용되지 않으며 향후 주 버전에서 제거됩니다. 대신 '{1}'을(를) 사용합니다.</target>
@@ -641,7 +661,7 @@
       </trans-unit>
       <trans-unit id="IncompleteInformationalResponse">
         <source>The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</source>
-        <target state="new">The test host exited without completing the expected help or discovery protocol. No complete informational result was received.</target>
+        <target state="translated">테스트 호스트가 예상된 도움말 또는 검색 프로토콜을 완료하지 않은 채 종료되었습니다. 완전한 정보 결과를 받지 못했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -799,6 +819,31 @@
         <target state="translated">testconfig.json 파일을 지정합니다.</target>
         <note>{Locked="testconfig.json"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdBranchDescription">
+        <source>Specifies the minimum overall branch coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="translated">전체 분기 코드 검사율의 최솟값을 0에서 100 사이의 백분율로 지정하세요. 호환되는 수집기에서 비어 있지 않은 코드 검사 데이터가 필요합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests">
+        <source>Coverage thresholds cannot be combined with '--list-tests'.</source>
+        <target state="translated">코드 검사 임계값은 '--list-tests'와 함께 사용할 수 없습니다.</target>
+        <note>{Locked="--list-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdIncompatibleRetries">
+        <source>Coverage thresholds cannot be combined with '--retry-failed-tests'. Coverage from separate process attempts must be merged before evaluating an overall threshold.</source>
+        <target state="translated">검사 임계값은 '--retry-failed-tests'와 결합할 수 없습니다. 전체 임계값을 평가하기 전에 별도의 프로세스 시도에서 적용 범위를 병합해야 합니다.</target>
+        <note>{Locked="--retry-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdInvalid">
+        <source>'--{0}' expects a percentage from 0 to 100, using a dot as the decimal separator.</source>
+        <target state="translated">'--{0}'은(는) 소수 구분 기호로 점을 사용하여 0에서 100까지의 백분율을 예상합니다.</target>
+        <note>{0} is the command-line option name.</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCoverageThresholdLineDescription">
+        <source>Specifies the minimum overall line coverage percentage, from 0 to 100. Requires non-empty coverage data from a compatible collector.</source>
+        <target state="translated">전체 줄 코드 검사율의 최솟값을 0에서 100 사이의 백분율로 지정하세요. 호환되는 수집기에서 비어 있지 않은 코드 검사 데이터가 필요합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
         <source>Allows to pause execution in order to attach to the process for debug purposes.</source>
         <target state="translated">디버그 목적으로 프로세스에 연결하기 위해 실행을 일시 중지할 수 있습니다.</target>
@@ -937,6 +982,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
         <target state="translated">브라우저 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
         <note>{Locked="--exit-on-process-exit"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInWasi">
+        <source>The '--exit-on-process-exit' option is not supported in WASI environments.</source>
+        <target state="translated">WASI 환경에서는 '--exit-on-process-exit' 옵션을 지원하지 않습니다.</target>
+        <note>{Locked="--exit-on-process-exit"} {Locked="WASI"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>

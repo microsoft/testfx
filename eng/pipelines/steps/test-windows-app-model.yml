@@ -37,7 +37,7 @@ steps:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - script: dotnet test test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj -c $(_BuildConfig) --no-build --filter "TestCategory=WindowsApplicationModel|FullyQualifiedName~PackagedAppNativeDotnetTestTests" -p:UsingDotNetTest=true --show-test-results failed
-  displayName: 'Test real Modern and classic UWP applications'
+  displayName: 'Test real UWP applications and packaged-host filtering'
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
     TESTFX_RUN_WINDOWS_APP_MODEL_TESTS: 1

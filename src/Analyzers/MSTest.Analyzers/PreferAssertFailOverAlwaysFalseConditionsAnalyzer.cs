@@ -62,7 +62,11 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         if (assertSymbol.Equals(operation.TargetMethod.ContainingType, SymbolEqualityComparer.Default) &&
             IsAlwaysFalse(operation))
         {
-            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties: null, operation.TargetMethod.Name));
+            // Assert.Fail returns void, so it cannot replace a result used by another expression.
+            ImmutableDictionary<string, string?>? properties = operation.TargetMethod.ReturnsVoid || operation.Parent is IExpressionStatementOperation
+                ? null
+                : DiagnosticDescriptorHelper.CannotFixProperties;
+            context.ReportDiagnostic(operation.CreateDiagnostic(Rule, GetAdditionalLocations(operation), properties, operation.TargetMethod.Name));
         }
     }
 
@@ -87,6 +91,17 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "AreNotSame" => AssertConditionAnalyzerHelper.HasIdenticalExpectedAndActual(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName),
             "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
+            "IsExactInstanceOfType" => operation.TargetMethod.TypeArguments is [{ IsAbstract: true }]
+                || IsAbstractTypeOf(operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == "expectedType")?.Value),
+            _ => false,
+        };
+
+    private static bool IsAbstractTypeOf(IOperation? operation)
+        => operation switch
+        {
+            ITypeOfOperation { TypeOperand.IsAbstract: true } => true,
+            IParenthesizedOperation parenthesized => IsAbstractTypeOf(parenthesized.Operand),
+            IConversionOperation { Conversion.IsUserDefined: false } conversion => IsAbstractTypeOf(conversion.Operand),
             _ => false,
         };
 }

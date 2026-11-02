@@ -8,6 +8,71 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 [SuppressMessage("Usage", "CA2263:Prefer generic overload when type is known", Justification = "We want to test also the non-generic API")]
 public partial class AssertTests
 {
+    public void IsInstanceGenericInterpolated_ReturnsDerivedInstanceAndSkipsSuccessfulMessageEvaluation()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        using MemoryStream value = new([1, 2, 3]);
+        Stream actual = Assert.IsInstanceOfType<Stream>(value, $"unused {message}");
+        actual.Should().BeSameAs(value);
+        actual.Length.Should().Be(3);
+        message.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsInstanceGenericInterpolated_ReportsMismatchAndEvaluatesMessage()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        Action assert = () => Assert.IsInstanceOfType<string>(42, $"mismatch {message}");
+        AssertFailedException error = assert.Should().Throw<AssertFailedException>().Which;
+        error.ExpectedText.Should().Be("System.String (or derived)");
+        error.ActualText.Should().Be("System.Int32");
+        error.Message.Should().Contain("mismatch DummyClassTrackingToStringCalls");
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotInstanceInterpolated_RejectsDerivedTypesButAcceptsOtherTypesAndNull()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        Assert.IsNotInstanceOfType(42, typeof(Stream), $"unused {message}");
+        Assert.IsNotInstanceOfType(null, typeof(Stream), $"unused {message}");
+        message.WasToStringCalled.Should().BeFalse();
+        using MemoryStream value = new();
+        Action assert = () => Assert.IsNotInstanceOfType(value, typeof(Stream), $"derived {message}");
+        AssertFailedException error = assert.Should().Throw<AssertFailedException>().Which;
+        error.ExpectedText.Should().Be("System.IO.Stream (or derived)");
+        error.ActualText.Should().Be("System.IO.MemoryStream");
+        error.Message.Should().Contain("derived DummyClassTrackingToStringCalls");
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotInstanceGenericInterpolated_RejectsDerivedTypesButAcceptsOtherTypesAndNull()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        Assert.IsNotInstanceOfType<Stream>(42, $"unused {message}");
+        Assert.IsNotInstanceOfType<Stream>(null, $"unused {message}");
+        message.WasToStringCalled.Should().BeFalse();
+        using MemoryStream value = new();
+        Action assert = () => Assert.IsNotInstanceOfType<Stream>(value, $"derived {message}");
+        AssertFailedException error = assert.Should().Throw<AssertFailedException>().Which;
+        error.ExpectedText.Should().Be("System.IO.Stream (or derived)");
+        error.ActualText.Should().Be("System.IO.MemoryStream");
+        error.Message.Should().Contain("derived DummyClassTrackingToStringCalls");
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotInstanceInterpolated_NullTypeReportsDedicatedError()
+    {
+        DummyClassTrackingToStringCalls message = new();
+        Action assert = () => Assert.IsNotInstanceOfType(42, null, $"missing type {message}");
+        assert.Should().Throw<AssertFailedException>().WithMessage(
+            """
+            Assertion failed. Cannot check type because the not-expected type argument is null.
+            missing type DummyClassTrackingToStringCalls
+
+            Assert.IsNotInstanceOfType(42)
+            """);
+        message.WasToStringCalled.Should().BeTrue();
+    }
+
     public void InstanceOfTypeShouldFailWhenValueIsNull()
     {
         Action action = () => Assert.IsInstanceOfType(null, typeof(AssertTests));

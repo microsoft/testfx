@@ -344,7 +344,7 @@ internal sealed class GitHubActionsAnnotationReporter :
     // begins with '::', so the dangling reset would silently drop the annotation. The leading newline pushes
     // the reset onto its own (ignored) line and keeps the annotation parseable.
     private Task DisplayAnnotationLineAsync(string line, CancellationToken cancellationToken)
-        => _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"\n{line}"), cancellationToken);
+        => _outputDisplay.DisplayAsync(this, new GitHubActionsCommandOutputDeviceData($"\n{line}"), cancellationToken);
 
     internal static /* for testing */ string GetSkippedAnnotation(string testName, string? explanation, GitHubActionsSourceLocation? declaredLocation = null)
     {

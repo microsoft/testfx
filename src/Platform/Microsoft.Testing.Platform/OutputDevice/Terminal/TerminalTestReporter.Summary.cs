@@ -1,12 +1,65 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter
 {
     private void AppendTestRunSummary(ITerminal terminal)
+    {
+        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
+        if (!_useCompactSummary)
+        {
+            AppendTestRunArtifacts(terminal);
+        }
+
+        terminal.AppendLine();
+
+        // Retry attempts leave their subset verdict/counts to the reconciled orchestrator summary.
+        if (_options.ShowRunSummary)
+        {
+            AppendTestRunResult(terminal, assemblies);
+        }
+
+        if (_useCompactSummary)
+        {
+            if (_options.ShowRunSummary && _options.ShowAssembly && assemblies.Count > 1)
+            {
+                AppendAssemblySummaries(terminal, assemblies.Where(static assembly => !assembly.Success));
+            }
+
+            AppendHandshakeFailureRecap(terminal);
+            AppendErroredAssemblyRecap(terminal);
+
+            // Keep successful module details when they were not already printed at completion.
+            if (_options.ShowRunSummary && _options.ShowAssembly && !_options.ShowAssemblyStartAndComplete && assemblies.Count > 1)
+            {
+                AppendAssemblySummaries(terminal, assemblies.Where(static assembly => assembly.Success));
+            }
+        }
+
+        if (_options.ShowRunSummary)
+        {
+            AppendFlakyTests(terminal, assemblies);
+        }
+
+        AppendSlowestTests(terminal, assemblies);
+
+        if (_useCompactSummary)
+        {
+            AppendTestRunArtifacts(terminal);
+        }
+        else
+        {
+            AppendHandshakeFailureRecap(terminal);
+            AppendErroredAssemblyRecap(terminal);
+        }
+    }
+
+    private void AppendTestRunArtifacts(ITerminal terminal)
     {
         IEnumerable<IGrouping<bool, TestRunArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
         if (_artifacts.Count > 0)
@@ -35,22 +88,10 @@ internal sealed partial class TerminalTestReporter
                 terminal.AppendLine();
             }
         }
+    }
 
-        terminal.AppendLine();
-
-        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
-
-        // Retry attempt (second or later): skip straight to the sections the orchestrator does not restate. The
-        // verdict and counts below would describe the filtered subset this attempt re-ran rather than the run, so
-        // the reconciled retry summary owns them instead.
-        if (!_options.ShowRunSummary)
-        {
-            AppendSlowestTests(terminal, assemblies);
-            AppendHandshakeFailureRecap(terminal);
-            AppendErroredAssemblyRecap(terminal);
-            return;
-        }
-
+    private void AppendTestRunResult(ITerminal terminal, List<TestProgressState> assemblies)
+    {
         // Single-pass aggregation: compute all summary counters in one foreach instead of
         // 7 separate LINQ calls (Sum×5, Any×1, Count×1), saving 6 extra O(N) passes and
         // 7 LINQ enumerator allocations per test run.
@@ -93,13 +134,15 @@ internal sealed partial class TerminalTestReporter
         // tests is still a run failure. Gated on ShowAssembly (the orchestrator marker): the in-process host leaves
         // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
         bool hasFailedAssemblies = _options.ShowAssembly && anyAssemblyFailed;
+        bool hasTestSessionFailure = _options.HasTestSessionFailure();
 
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy) || HasHandshakeFailure || hasFailedAssemblies;
-        terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy, _options.AllowZeroTests) || HasHandshakeFailure || hasFailedAssemblies || hasTestSessionFailure;
+        bool ranZeroTests = totalTests == 0 || (totalTests == totalSkippedTests && _options.ZeroTestsPolicy == ZeroTestsPolicy.Strict);
+        terminal.SetColor(runFailed ? TerminalColor.DarkRed : ranZeroTests ? TerminalColor.Default : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy));
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy, hasTestSessionFailure));
 
         // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
         // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
@@ -114,18 +157,10 @@ internal sealed partial class TerminalTestReporter
 
         terminal.AppendLine();
 
-        // For the dotnet test orchestrator (ShowAssembly) running more than one assembly, list each assembly with
-        // its own result + compact counts under the run-level verdict. Additive: the in-process host leaves
-        // ShowAssembly off, so this block never runs and its summary stays byte-identical.
-        if (_options.ShowAssembly && assemblies.Count > 1)
+        // Preserve the interactive module recap above the counts. Non-cursor summaries put failures first below.
+        if (!_useCompactSummary && _options.ShowAssembly && assemblies.Count > 1)
         {
-            foreach (TestProgressState assemblyRun in assemblies)
-            {
-                terminal.Append(SingleIndentation);
-                AppendAssemblySummary(assemblyRun, terminal);
-            }
-
-            terminal.AppendLine();
+            AppendAssemblySummaries(terminal, assemblies);
         }
 
         int total = totalTests;
@@ -137,7 +172,7 @@ internal sealed partial class TerminalTestReporter
         // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
         // failed-test count. In-process leaves ShowAssembly off and never has handshake failures, so error is 0.
         int error = (_options.ShowAssembly ? failedAssembliesWithoutFailedTests : 0) + HandshakeFailureCount;
-        TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
+        TimeSpan runDuration = _testExecutionStartTime is not null && _testExecutionEndTime is not null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;
@@ -202,22 +237,27 @@ internal sealed partial class TerminalTestReporter
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
+    }
 
-        // Optional "Flaky tests" section (on by default, suppressed by --show-flaky-tests off). No-op when nothing
-        // was retried, so the summary stays byte-identical for a run without retries.
-        AppendFlakyTests(terminal, assemblies);
+    private void AppendAssemblySummaries(ITerminal terminal, IEnumerable<TestProgressState> assemblies)
+    {
+        bool wroteAssembly = false;
+        foreach (TestProgressState assembly in assemblies)
+        {
+            if (_useCompactSummary && !wroteAssembly)
+            {
+                terminal.AppendLine();
+            }
 
-        // Optional "Slowest tests" section (opt-in via --show-slowest-tests). Additive: no-op when the feature is
-        // off, so the summary stays byte-identical for the default run.
-        AppendSlowestTests(terminal, assemblies);
+            terminal.Append(SingleIndentation);
+            AppendAssemblySummary(assembly, terminal);
+            wroteAssembly = true;
+        }
 
-        // Re-print any handshake failures (orchestrator-only) at the very end so they aren't lost above the summary.
-        // No-op for the in-process host, which never reports handshake failures.
-        AppendHandshakeFailureRecap(terminal);
-
-        // Re-print any assemblies that errored (non-zero exit with no failed test) for the same reason: the inline
-        // process output is otherwise buried in the middle of a large run. No-op for the in-process host.
-        AppendErroredAssemblyRecap(terminal);
+        if (wroteAssembly)
+        {
+            terminal.AppendLine();
+        }
     }
 
     /// <summary>

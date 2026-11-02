@@ -195,6 +195,7 @@ public partial class InvokeTestingPlatformTask
                     if (_moduleInfo is null)
                     {
                         _moduleInfo = moduleInfo;
+                        _fileSystem.CreateDirectory(_moduleInfo.TestResultFolder);
                         _outputFileName = $"{Path.GetFileNameWithoutExtension(TargetPath.ItemSpec.Trim())}_{TargetFramework.ItemSpec}_{TestArchitecture.ItemSpec}.log";
                         _outputFileName = Path.Combine(_moduleInfo.TestResultFolder, _outputFileName);
                         Log.LogMessage(MessageImportance.Low, $"Initializing module info and output file '{_outputFileName}'");

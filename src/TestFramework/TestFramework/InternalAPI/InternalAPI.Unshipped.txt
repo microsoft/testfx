@@ -1,1 +1,3 @@
 #nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.GetDataParameterCount(System.Reflection.ParameterInfo![]! parameters) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.IsDataWithExplicitCancellationToken(object?[]! data, System.Reflection.ParameterInfo![]! parameters) -> bool

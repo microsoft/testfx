@@ -1,5 +1,13 @@
 # RFC 004 - In-assembly Parallel Execution
 
+> **Current implementation note (2026-10-09):** The class/method scopes and sequential
+> `DoNotParallelize` tail are implemented. `ExecutionScope.Custom` is not an enum value;
+> it remains proposal intent. The no-row-parallelization note below is no longer general:
+> unfolded data rows are separate scheduling elements under `MethodLevel`, while folded
+> rows execute within one element. See [MSTEST-007](../specifications/mstest.md#mstest-007--data-source-folding-controls-discovery-granularity)
+> and [MSTEST-010](../specifications/mstest.md#mstest-010--in-assembly-parallelism-is-chunk-based).
+> This source/test audit does not verify release status or every lifecycle interaction.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

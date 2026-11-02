@@ -41,7 +41,14 @@ permissions:
   statuses: read
   vulnerability-alerts: read
 
-network: defaults
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+network:
+  allowed:
+    - defaults
+    - dotnet
+    - github.com
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced

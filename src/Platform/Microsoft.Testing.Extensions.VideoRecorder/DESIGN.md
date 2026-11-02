@@ -1,5 +1,12 @@
 # Video Recorder extension — design notes
 
+> **Current implementation note (2026-10-09):** [VideoRecorderSessionHandler](VideoRecorderSessionHandler.cs)
+> and [FfmpegVideoRecorder](FfmpegVideoRecorder.cs) implement continuous segments and session-end
+> slicing; mapped unit tests use recorder substitutes and do not establish desktop/codec availability.
+> See [MTP-004](../../../docs/specifications/mtp.md#mtp-004--message-delivery-and-session-finishing) for
+> asynchronous delivery and teardown. Capture timing, real OS/ffmpeg integration, release status
+> and the external licensing/backend comparisons below are not verified by this audit.
+
 Status: **preview / experimental** — shipped as the `Microsoft.Testing.Extensions.VideoRecorder`
 NuGet package (early-preview `1.0.0-alpha`), with the public API marked `[Experimental("TPEXP")]`.
 This document records the design decisions and the alternatives we considered, so we can

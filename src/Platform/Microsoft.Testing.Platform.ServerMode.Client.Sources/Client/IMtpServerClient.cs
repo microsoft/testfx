@@ -27,7 +27,7 @@ internal interface IMtpServerClient : IDisposable
     event EventHandler<MtpTestNodeUpdateEventArgs>? TestNodesUpdated;
 
     /// <summary>
-    /// Raised when the server sends a log message (<c>client/log</c>).
+    /// Raised when the server sends a log message (<c>client/log</c> or <c>client/showMessage</c>).
     /// </summary>
     /// <remarks>
     /// Handlers run synchronously on the ordered read loop and must not block or synchronously call back
@@ -219,6 +219,9 @@ internal sealed class MtpServerCapabilities
 
     /// <summary>Gets the independently negotiated server-mode protocol version.</summary>
     public string? ProtocolVersion { get; }
+
+    /// <summary>Gets the <c>capabilities.testing.showMessage</c> routing acknowledgment; null means no acknowledgment.</summary>
+    public bool? ShowMessage { get; init; }
 
     /// <summary>Gets a value indicating whether the server supports discovery.</summary>
     public bool SupportsDiscovery { get; }

@@ -6,12 +6,16 @@ using System.Net.Sockets;
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -30,6 +34,20 @@ public sealed class ServerTests
     private static bool IsHotReloadEnabled(SystemEnvironment environment)
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+
+    private static async Task RunOutsideAzureAgentAsync(Func<Task> test)
+    {
+        string? original = Environment.GetEnvironmentVariable("TF_BUILD");
+        try
+        {
+            Environment.SetEnvironmentVariable("TF_BUILD", null);
+            await test();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TF_BUILD", original);
+        }
+    }
 
     [TestMethod]
     public async Task ServerCanBeStartedAndAborted_TcpIp()
@@ -53,7 +71,14 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    public async Task ServerCanInitialize()
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public Task ServerCanInitialize(bool? showMessage)
+        => RunOutsideAzureAgentAsync(() => ServerCanInitializeCoreAsync(showMessage));
+
+    private static async Task ServerCanInitializeCoreAsync(bool? showMessage)
     {
         using var server = TcpServer.Create();
 
@@ -80,6 +105,10 @@ public sealed class ServerTests
             });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        await testApplication.ServiceProvider.GetOutputDevice().DisplayAsync(
+            Mock.Of<IOutputDeviceDataProducer>(value => value.Uid == "routing-test"),
+            new TextOutputDeviceData("wait for discovery μ"),
+            CancellationToken.None);
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
@@ -92,7 +121,8 @@ public sealed class ServerTests
                 serverToClientStream: client.GetStream(),
                 FormatterUtilities.CreateFormatter());
 
-        const string initializeMessage = """
+        string capability = showMessage is { } requested ? $"\"showMessage\":{requested.ToString().ToLowerInvariant()}," : string.Empty;
+        string initializeMessage = $$"""
             {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -102,6 +132,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
                         "testing": {
+                            {{capability}}
                             "debuggerProvider": true,
                             "isStateful": true
                         }
@@ -134,7 +165,10 @@ public sealed class ServerTests
         InitializeResponseArgs expectedResponse = new(
                    1,
                    new ServerInfo("test-anywhere", "this is dynamic"),
-                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false)))
+                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false, SupportsAttachments: true, MultiConnectionProvider: false)
+                   {
+                       ShowMessage = showMessage,
+                   }))
         {
             ProtocolVersion = JsonRpcProtocolVersions.Current,
         };
@@ -143,6 +177,12 @@ public sealed class ServerTests
         Assert.AreEqual(expectedResponse.ServerInfo.Name, resultJson.ServerInfo.Name);
         Assert.AreEqual(JsonRpcProtocolVersions.Current, resultJson.ProtocolVersion);
         Assert.IsNotEmpty(resultJson.ServerInfo.Version);
+
+        // A response barrier must not release buffered output before discovery/run.
+        await WriteMessageAsync(writer, """{"jsonrpc":"2.0","id":99,"method":"testing/unknown","params":{}}""");
+        ErrorMessage barrier = Assert.IsInstanceOfType<ErrorMessage>(await messageHandler.ReadAsync(cancellationToken));
+        Assert.AreEqual(99, barrier.Id);
+        Assert.AreEqual(ErrorCodes.MethodNotFound, barrier.ErrorCode);
 
         await WriteMessageAsync(
             writer,
@@ -367,9 +407,17 @@ public sealed class ServerTests
     }
 
     [TestMethod]
-    public async Task PipelinedRequestWaitsForInitializeResponse()
+    [DataRow(null)]
+    [DataRow(false)]
+    [DataRow(true)]
+    [ResourceLock(WellKnownResources.EnvironmentVariables)]
+    public Task PipelinedRequestWaitsForInitializeResponse(bool? showMessage)
+        => RunOutsideAzureAgentAsync(() => PipelinedRequestWaitsForInitializeResponseCoreAsync(showMessage));
+
+    private static async Task PipelinedRequestWaitsForInitializeResponseCoreAsync(bool? showMessage)
     {
         using var server = TcpServer.Create();
+        const string bufferedOutput = "buffered output μ";
 
         string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
@@ -383,6 +431,10 @@ public sealed class ServerTests
         });
         var testApplication = (TestApplication)await builder.BuildAsync();
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        await testApplication.ServiceProvider.GetOutputDevice().DisplayAsync(
+            Mock.Of<IOutputDeviceDataProducer>(value => value.Uid == "routing-test"),
+            new TextOutputDeviceData(bufferedOutput),
+            CancellationToken.None);
         Task<int> serverTask = Task.Run(testApplication.RunAsync);
 
         using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
@@ -395,9 +447,10 @@ public sealed class ServerTests
             serverToClientStream: client.GetStream(),
             FormatterUtilities.CreateFormatter());
 
+        string capability = showMessage is { } requested ? $"\"showMessage\":{requested.ToString().ToLowerInvariant()}," : string.Empty;
         await WriteMessageAsync(
             writer,
-            """
+            $$"""
             {
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -407,6 +460,7 @@ public sealed class ServerTests
                     "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
                     "capabilities": {
                         "testing": {
+                            {{capability}}
                             "debuggerProvider": false
                         }
                     }
@@ -426,17 +480,37 @@ public sealed class ServerTests
             }
             """);
 
-        _ = await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ResponseMessage { Id: 1 },
-            "Wait initialize response",
-            timeout.Token);
-        RpcMessage? discoveryResponse = await WaitForMessage(
-            messageHandler,
-            rpcMessage => rpcMessage is ResponseMessage { Id: 2 } or ErrorMessage { Id: 2 },
-            "Wait pipelined discovery response",
-            timeout.Token);
-        Assert.IsInstanceOfType<ResponseMessage>(discoveryResponse);
+        ResponseMessage initializeResponse = Assert.IsInstanceOfType<ResponseMessage>(
+            await messageHandler.ReadAsync(timeout.Token));
+        Assert.AreEqual(1, initializeResponse.Id);
+        InitializeResponseArgs acknowledgment = SerializerUtilities.Deserialize<InitializeResponseArgs>(
+            (IDictionary<string, object?>)initializeResponse.Result!);
+        Assert.AreEqual(showMessage, acknowledgment.Capabilities.TestingCapabilities.ShowMessage);
+        string expectedMethod = showMessage == true ? JsonRpcMethods.ClientShowMessage : JsonRpcMethods.ClientLog;
+        int bufferedOutputNotifications = 0;
+        while (true)
+        {
+            RpcMessage? message = await messageHandler.ReadAsync(timeout.Token);
+            if (message is ResponseMessage { Id: 2 })
+            {
+                break;
+            }
+
+            Assert.IsFalse(message is ErrorMessage, "Pipelined discovery must not fail.");
+            if (message is NotificationMessage notification
+                && notification.Method is JsonRpcMethods.ClientLog or JsonRpcMethods.ClientShowMessage)
+            {
+                Assert.AreEqual(expectedMethod, notification.Method);
+                IDictionary<string, object?> parameters = Assert.IsInstanceOfType<IDictionary<string, object?>>(notification.Params);
+                if (parameters[JsonRpcStrings.Message] is string output && output == bufferedOutput)
+                {
+                    Assert.AreEqual("Information", parameters[JsonRpcStrings.Level]);
+                    bufferedOutputNotifications++;
+                }
+            }
+        }
+
+        Assert.AreEqual(1, bufferedOutputNotifications);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
         Assert.AreEqual(0, await serverTask);

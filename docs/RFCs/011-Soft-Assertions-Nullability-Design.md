@@ -1,5 +1,13 @@
 # RFC 011 - Soft Assertions and Nullability Annotation Design
 
+> **Current implementation note (2026-10-09):** Soft collection, hard `Fail`/`Inconclusive`,
+> retained nullable annotations and rejection of nested scopes match the implementation.
+> The debugger timing description below differs: `Assert.ReportAssertFailed` invokes the
+> configured debugger hook when each failure is collected; `AssertScope.Dispose` does not invoke it again.
+> Single-failure disposal preserves captured dispatch information. `Assert.Scope()` remains marked experimental.
+> See [MSTEST-018](../specifications/mstest.md#mstest-018--soft-scopes-defer-reportable-failures-not-postconditions)
+> for sources/tests; debugger behavior was source-inspected, not interactively exercised.
+
 - [x] Approved in principle
 - [x] Under discussion
 - [x] Implementation

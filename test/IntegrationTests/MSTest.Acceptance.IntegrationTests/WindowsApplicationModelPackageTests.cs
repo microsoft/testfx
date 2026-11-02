@@ -13,6 +13,94 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class WindowsApplicationModelPackageTests
 {
+    [TestMethod]
+    [DataRow("net9.0-windows10.0.26100.0", "net9.0", "net10.0")]
+    [DataRow("net10.0-windows10.0.26100.0", "net10.0", "net9.0")]
+    public void ModernUwp_ResolvedAssetsRequireMatchingFrameworkAndSpecializedPayloads(
+        string targetFramework,
+        string frameworkAsset,
+        string wrongFrameworkAsset)
+    {
+        using var directory = new TempDirectory();
+        string reportPath = Path.Combine(directory.Path, "resolved-mstest-assets.txt");
+        string report = $$"""
+            TargetFramework={{targetFramework}}
+            UseUwpTools=true
+            /lib/{{frameworkAsset}}/MSTest.TestFramework.dll
+            /buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll
+            /buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll
+            /buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll
+            """;
+        File.WriteAllText(reportPath, report);
+
+        WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+            reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework);
+
+        File.WriteAllText(
+            reportPath,
+            report.Replace($"/lib/{frameworkAsset}/", $"/lib/{wrongFrameworkAsset}/", StringComparison.Ordinal));
+        AssertFailedException wrongFramework = Assert.ThrowsExactly<AssertFailedException>(() =>
+            WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+                reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
+        Assert.Contains($"/lib/{frameworkAsset}/MSTest.TestFramework.dll", wrongFramework.Message);
+
+        File.WriteAllText(reportPath, report.Replace("/uwp/", "/", StringComparison.Ordinal));
+        AssertFailedException ordinaryPayload = Assert.ThrowsExactly<AssertFailedException>(() =>
+            WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+                reportPath, WindowsApplicationModelAssetKind.ModernUwp, targetFramework));
+        Assert.Contains("/buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll", ordinaryPayload.Message);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void NativeSdkEnvironment_AlignsSdkPathsAndPreservesSharedTooling(bool inheritedSdk)
+    {
+        string dotnetRoot = Path.Combine(Path.GetTempPath(), "native-dotnet");
+        string sdkDirectory = Path.Combine(dotnetRoot, "sdk", "10.0.401");
+        var expected = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["NUGET_PACKAGES"] = "acceptance-package-cache",
+            ["MSBUILDLOGIMPORTS"] = "1",
+            ["MSBuildSDKsPath"] = Path.Combine(sdkDirectory, "Sdks"),
+            ["MSBuildExtensionsPath"] = sdkDirectory,
+            ["DOTNET_ROOT"] = dotnetRoot,
+            ["DOTNET_ROOT_X64"] = dotnetRoot,
+            ["DOTNET_INSTALL_DIR"] = dotnetRoot,
+            ["DOTNET_MULTILEVEL_LOOKUP"] = "0",
+            ["MSBUILDUSESERVER"] = "0",
+        };
+        var environment = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["NUGET_PACKAGES"] = "acceptance-package-cache",
+            ["MSBUILDLOGIMPORTS"] = "1",
+        };
+        if (inheritedSdk)
+        {
+            foreach (string name in expected.Keys.Except(environment.Keys))
+            {
+                environment[name] = "outer-sdk-value";
+            }
+        }
+
+        AcceptanceTestBase.ConfigureDotnetSdkEnvironment(environment, Path.Combine(dotnetRoot, "dotnet.exe"), "10.0.401");
+
+        Assert.AreSequenceEqual(expected.OrderBy(pair => pair.Key), environment.OrderBy(pair => pair.Key));
+    }
+
+    [TestMethod]
+    public void PackagedHostFilterTests_AreSelectedByApplicationModelJob()
+    {
+        string[] categories = typeof(PackagedAppNativeDotnetTestTests)
+            .GetCustomAttributes(typeof(TestCategoryAttribute), inherit: false)
+            .Cast<TestCategoryAttribute>()
+            .SelectMany(attribute => attribute.TestCategories)
+            .ToArray();
+
+        Assert.AreSequenceEqual(["WindowsApplicationModel"], categories);
+        Assert.ContainsSingle(typeof(PackagedAppNativeDotnetTestTests).GetCustomAttributes(typeof(MemberConditionAttribute), inherit: false));
+    }
+
     private static readonly string[] RequiredTestAdapterEntries =
     [
         // Classic UWP.

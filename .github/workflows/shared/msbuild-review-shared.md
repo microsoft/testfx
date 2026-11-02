@@ -68,7 +68,7 @@ Review the MSBuild authoring quality of this repository using the
 ## Instructions
 
 1. Launch the `msbuild-reviewer` agent in **`scan` mode** as a **background** task
-   (`task` tool, `agent_type: "general-purpose"`, `model: "claude-opus-4.6"`,
+   (`task` tool, `agent_type: "general-purpose"`, `model: "gpt-5.6-sol"`,
    `mode: "background"`). In the sub-agent prompt include:
    - The string `MODE: scan` on the first line so the agent picks the correct
      operating mode.
@@ -76,6 +76,9 @@ Review the MSBuild authoring quality of this repository using the
    - A reminder that the parent workflow `noop`s immediately and therefore the
      sub-agent itself is responsible for calling `create_issue` (or
      `create_pull_request` for safe auto-fixes only).
+   - A reminder to prepare the final title and complete body before calling
+     `create_issue`; its budget is one, so never submit a placeholder title or
+     make a second request with corrected metadata.
 2. **Immediately after launching the background task** — do NOT wait for it to
    finish and do NOT read its result — call `noop` with a brief status message
    such as `"MSBuild reviewer launched in background. It will post the report directly."`.

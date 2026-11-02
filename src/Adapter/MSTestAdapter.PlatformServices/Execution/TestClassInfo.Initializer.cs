@@ -70,7 +70,7 @@ internal sealed partial class TestClassInfo
         }
 
         // If classInitialization was successful, then don't do anything
-        if (ClassInitializationException == null)
+        if (ClassInitializationException is null)
         {
             return;
         }

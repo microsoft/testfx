@@ -60,6 +60,7 @@ network:
   allowed:
     - defaults
     - dotnet
+    - github.com
 
 safe-outputs:
   # Use gh-aw's maintained `detection` alias; the concrete gpt-5-mini pin produced

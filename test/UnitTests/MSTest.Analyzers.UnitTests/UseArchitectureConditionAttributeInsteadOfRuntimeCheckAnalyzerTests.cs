@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 
 using Microsoft.Testing.TestInfrastructure;
@@ -403,9 +404,9 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
     [TestMethod]
     public async Task WhenTestArchitecturesLacksTheComparedArchitecture_NoDiagnostic()
     {
-        // The verified compilation targets net9.0, so 'Architecture.RiscV64' resolves, while the referenced MSTest
-        // build is the net8.0 asset whose 'TestArchitectures' has no matching member. Reporting here would offer a
-        // fix that generates uncompilable 'TestArchitectures.RiscV64', so the analyzer must stay silent.
+        // Compile the net8-era MSTest surface separately so this mixed-version scenario is independent of the host.
+        // The net9 consumer resolves 'Architecture.RiscV64', but the legacy 'TestArchitectures' has no such member.
+        // Reporting here would offer an uncompilable fix, so the analyzer must stay silent.
         string code = """
             using System.Runtime.InteropServices;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -424,15 +425,98 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
             }
             """;
 
+        await CreateTestWithNet8MSTest(code, code).RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenNet8TestArchitecturesContainsComparedArchitecture_Diagnostic()
+    {
+        // The same legacy fixture must activate the analyzer, not bail out because a required symbol is absent.
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (RuntimeInformation.ProcessArchitecture != Architecture.X64)
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ArchitectureCondition(TestArchitectures.X64)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await CreateTestWithNet8MSTest(code, fixedCode).RunAsync();
+    }
+
+    private static VerifyCS.Test CreateTestWithNet8MSTest(string code, string fixedCode)
+    {
+        string nuGetConfigFilePath = Path.Combine(RootFinder.Find(), "NuGet.config");
         var test = new VerifyCS.Test
         {
             TestCode = code,
-            FixedCode = code,
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net90
-                .WithNuGetConfigFilePath(Path.Combine(RootFinder.Find(), "NuGet.config")),
+            FixedCode = fixedCode,
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net90.WithNuGetConfigFilePath(nuGetConfigFilePath),
         };
+        test.TestState.AdditionalReferences.Clear();
 
-        await test.RunAsync();
+        var frameworkProject = new ProjectState("Net8MSTest", LanguageNames.CSharp, "/Net8MSTest/", "cs")
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfigFilePath),
+        };
+        frameworkProject.Sources.Add("""
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestClassAttribute : System.Attribute { }
+                public class TestMethodAttribute : System.Attribute { }
+                public static class Assert
+                {
+                    public static void Inconclusive() { }
+                }
+
+                public abstract class ConditionBaseAttribute : System.Attribute { }
+                public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
+                {
+                    public ArchitectureConditionAttribute(TestArchitectures architectures) { }
+                }
+
+                [System.Flags]
+                public enum TestArchitectures
+                {
+                    X86 = 1 << 0,
+                    X64 = 1 << 1,
+                    Arm = 1 << 2,
+                    Arm64 = 1 << 3,
+                    Wasm = 1 << 4,
+                    S390x = 1 << 5,
+                    LoongArch64 = 1 << 6,
+                    Armv6 = 1 << 7,
+                    Ppc64le = 1 << 8,
+                }
+            }
+            """);
+        test.TestState.AdditionalProjects.Add("Net8MSTest", frameworkProject);
+        test.TestState.AdditionalProjectReferences.Add("Net8MSTest");
+        return test;
     }
 
     [TestMethod]

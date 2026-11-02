@@ -124,7 +124,7 @@ steps:
 
       if [ ! -s /tmp/gh-aw/agent/unique-links.txt ]; then
         echo "No HTTP(S) links found"
-        echo "no_links=true" >> $GITHUB_OUTPUT
+        echo "no_links=true" >> "$GITHUB_OUTPUT"
         exit 0
       fi
 
@@ -304,10 +304,10 @@ steps:
       echo "**Summary:** $WORKING_COUNT working, $BROKEN_COUNT confirmed broken, $TRANSIENT_COUNT inconclusive after retries" >> /tmp/gh-aw/agent/link-check-results.md
       echo "**Candidates included:** $SELECTED_COUNT (maximum 20 per run; $CACHED_UNFIXABLE_COUNT cached as unfixable)" >> /tmp/gh-aw/agent/link-check-results.md
 
-      echo "broken_count=$BROKEN_COUNT" >> $GITHUB_OUTPUT
-      echo "working_count=$WORKING_COUNT" >> $GITHUB_OUTPUT
-      echo "transient_count=$TRANSIENT_COUNT" >> $GITHUB_OUTPUT
-      echo "selected_count=$SELECTED_COUNT" >> $GITHUB_OUTPUT
+      echo "broken_count=$BROKEN_COUNT" >> "$GITHUB_OUTPUT"
+      echo "working_count=$WORKING_COUNT" >> "$GITHUB_OUTPUT"
+      echo "transient_count=$TRANSIENT_COUNT" >> "$GITHUB_OUTPUT"
+      echo "selected_count=$SELECTED_COUNT" >> "$GITHUB_OUTPUT"
 
       cat /tmp/gh-aw/agent/link-check-results.md
     shell: bash

@@ -162,9 +162,15 @@ For Linux and macOS:
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
+### Code coverage
+
+Code coverage is enabled by default for repository tests. Each test project's generated `coverage.config` includes only its directly referenced production assemblies, excluding shared test-host infrastructure, NuGet package sources, and generated artifacts. `Microsoft.Testing.TestInfrastructure` is explicitly excluded at both the assembly and source levels.
+
+Compatibility shims in `Polyfills` directories are excluded from coverage. `Ensure.cs` and `ProcessExtensions.cs` remain included because their argument validation and process-lifetime behavior are repository-owned logic worth testing. Coverage exclusions do not change which tests execute.
+
 ### Mutation testing
 
-The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) for mutation testing. The checked-in `MutationTesting.slnx` provides a focused local run for the server-mode client sources, while the weekly workflow generates isolated solutions for every module in `eng/mutation-testing/modules.json`, including all Microsoft.Testing.Platform extensions. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) for mutation testing. The checked-in `MutationTesting.slnx` provides a focused local run for the server-mode client sources, while the weekly workflow generates isolated solutions for every enabled module in `eng/mutation-testing/modules.json`. Unsupported targets are explicitly listed with a reason rather than silently omitted. First run `.\build.cmd` on Windows or `./build.sh` on Linux and macOS to provision the repository-local `.dotnet` SDK. Then install the pinned tool to a dedicated path and run it from the repository root:
 
 On Windows PowerShell:
 
@@ -221,9 +227,13 @@ On Linux and macOS:
 )
 ```
 
-The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing.
+The opt-in property runs unit-test projects on `net8.0` and selects Arcade's open strong-name key for mutated assemblies and their friend assemblies because Stryker's in-memory compiler cannot complete Microsoft delay signing. Native MSTest hosts also consume the adapter/framework from source in this mode; a shipped Microsoft-key adapter cannot access the open-key friend declarations in the locally built platform and would fail before test discovery.
 
-The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It reads the enabled modules from [`eng/mutation-testing/modules.json`](../eng/mutation-testing/modules.json), runs each production/test-project mapping on an isolated runner, and uploads its detailed Stryker report. Every `Microsoft.Testing.Extensions.*` project must have a module so newly added extensions cannot silently skip mutation testing. An aggregate job verifies that every enabled module used the same source revision, computes the weighted enabled-module score from the mutant counts, reports onboarding coverage against the known mutation targets, and uploads the `mutation-testing-full-report` artifact with a Markdown summary, an HTML index, aggregate JSON, logs, and all module reports. If any expected module is missing or failed, the aggregate is explicitly marked partial and the workflow fails after publishing the available diagnostics.
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) runs weekly and can be started manually. It reads the enabled modules from [`eng/mutation-testing/modules.json`](../eng/mutation-testing/modules.json), runs each production/test-project mapping on an isolated runner, and uploads its detailed Stryker report. Every `Microsoft.Testing.Extensions.*` project must have an enabled module or an explicit `excludedProjects` entry with a reason, so newly added extensions cannot silently skip mutation testing. The Windows-only PackagedApp controller and build-only PackagedApp.MSBuild package are excluded from the Ubuntu/net8.0 Stryker shards, not from their acceptance tests.
+
+Generated shard solutions must be passed to Arcade's `--projects` option using an absolute path; relative paths resolve under Arcade's toolset directory, not the repository root. Shards retain module failure metadata and build-console logs even when the build fails before Stryker starts. An aggregate job verifies that every enabled module used the same source revision, computes the weighted enabled-module score from the mutant counts, reports onboarding coverage and exclusion reasons against the known mutation targets, and uploads the `mutation-testing-full-report` artifact with a Markdown summary, an HTML index, aggregate JSON, logs, and all module reports. If any expected module is missing or failed, the aggregate is explicitly marked partial and the workflow fails after publishing the available diagnostics.
+
+The [Mutation Test Improver](../.github/workflows/mutation-test-improver.md) remains scoped to the ServerMode client report. Its trusted pre-agent step resolves the upstream run and downloads the binary artifact before the sandbox's text-only CLI proxy starts. It stages validated report data and run identity under `/tmp/gh-aw/mutation-input`; missing/expired reports and download/validation failures still reach monthly reporting as unavailable evidence, never a fresh zero score. Failed aggregates are usable only when their ServerMode module metadata proves success at the upstream source commit.
 
 ## Working with Visual Studio
 

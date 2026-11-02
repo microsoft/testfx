@@ -95,6 +95,17 @@ internal sealed class MSTestTelemetryDataCollector
         set => _configurationSource = value;
     }
 
+    internal Dictionary<string, long> GetDiscoveryAttributeCounts()
+        => _attributeCounts.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+
+    internal void AddDiscoveryAttributeCounts(IReadOnlyDictionary<string, long> counts)
+    {
+        foreach (KeyValuePair<string, long> count in counts)
+        {
+            _attributeCounts.AddOrUpdate(count.Key, count.Value, (_, existing) => existing + count.Value);
+        }
+    }
+
     /// <summary>
     /// Records the attributes found on a test method during discovery. Safe to call concurrently
     /// from multiple discovery threads — counters use a <see cref="ConcurrentDictionary{TKey,TValue}"/>

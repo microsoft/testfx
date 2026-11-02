@@ -8,6 +8,10 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 An experimental, Microsoft.Testing.Platform-only CI workflow (from [dotnet/sdk#55574](https://github.com/dotnet/sdk/pull/55574), building on the composable filter-provider support added in [testfx#10235](https://github.com/microsoft/testfx/pull/10235)) that narrows a test run to only the tests affected by a given change, using the `Microsoft.Testing.Extensions.AffectedTests` package and a provider-specific storage package (this repository uses `Microsoft.Testing.Extensions.AffectedTests.Storage.AzureDevOps`). A trusted main-branch build runs `--collect-test-map` to publish a per-module test-to-source mapping shard to build-artifact storage; a PR build runs `--affected-tests` to select and execute only the tests whose mapped sources changed since the newest compatible baseline shard. A missing, stale, incompatible, or inaccessible map artifact is treated as an expected fallback state — the extension conservatively runs the full test suite rather than under-selecting — and `eng/validate-affected-tests.ps1` validates the package versions, hook registration, and fallback wiring. See [docs/affected-test-selection.md](affected-test-selection.md). Introduced in [PR #11364](https://github.com/microsoft/testfx/pull/11364).
 
+### AOT reflection source generator
+
+The `MSTest.SourceGeneration` generator emits test metadata and invokers for trimming and Native AOT scenarios. Its `AOTSG0001`–`AOTSG0005` warnings describe test class or member shapes that cannot be included in the generated registry. See [AOT source-generator diagnostics](source-generator/diagnostics.md).
+
 ### ArchitectureConditionAttribute
 
 An MSTest attribute (`[ArchitectureConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current process architecture. Available only on .NET (not .NET Framework). Accepts a [ConditionMode](#conditionmode) argument and a [TestArchitectures](#testarchitectures) flags value; the single-argument overload defaults to `ConditionMode.Include`. Detection uses `RuntimeInformation.ProcessArchitecture`. The attribute is not inherited — applying it to a base class does not affect derived classes. Because its `GroupName` (`"ArchitectureCondition"`) differs from that of [OSConditionAttribute](#osconditionattribute) (`"OSCondition"`), the two compose with logical AND, making it easy to gate a test on both OS and architecture:
@@ -68,6 +72,10 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [
 
 ## C
 
+### CancellationToken parameter (test method)
+
+MSTest test methods may declare one additional, trailing, by-value `CancellationToken` parameter. A parameterless test can take the token alone; a data-driven test can take its data parameters followed by the token as the last parameter. The adapter binds the current `TestContext.CancellationToken` immediately before the test body runs — after initialization and inside the existing timeout/cancellation scope — without requiring a new attribute, capability handshake, or opt-in. Only a trailing, non-nullable, by-value `CancellationToken` is recognized; nullable tokens, token sources, and by-reference tokens are not injected. An explicit trailing token already supplied by a custom data source is left untouched rather than overwritten. Ordinary `params` arrays (including `params CancellationToken[]`) remain data, since C# requires `params` to be last. Discovery, display names, `TestContext.TestData`, serialization, `CombinatorialDataAttribute`, and `DataRowShouldBeValidAnalyzer` all exclude the injected token from the declared data arity. See `docs/decisions/test-method-cancellation-token.md` for the full design record. Introduced in [PR #11991](https://github.com/microsoft/testfx/pull/11991).
+
 ### CIConditionAttribute
 
 An MSTest attribute (`[CIConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on whether the test is executing in a CI environment. Accepts a `ConditionMode` argument: `Include` (run only in CI) or `Exclude` (skip in CI). Detection is delegated to `CIEnvironmentDetector`, which checks well-known CI environment variables (e.g., `CI`, `TF_BUILD`). The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
@@ -87,6 +95,10 @@ An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.Uni
 ### ConditionMode
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [ConditionBaseAttribute](#conditionbaseattribute)-derived attributes to control whether the condition is reversed. `Include` (default): run the test only when the condition is met. `Exclude`: skip (ignore) the test when the condition is met, reversing the condition.
+
+### Coverage threshold options (`--coverage-threshold-line` / `--coverage-threshold-branch`)
+
+Two independent MTP command-line options that each accept an inclusive percentage (0–100, invariant-culture decimals) and make an otherwise-successful run fail with exit code `CoverageThresholdFailed` (14) when the collector's authoritative overall [CoverageMetric](#coveragemetric) measurement for the run falls below the requested value. Both requirements must pass when both options are supplied. Evaluation reads only the platform's existing coverage read model ([ITestCoverageResult](#itestcoverageresult)) — it does not average per-module percentages, parse report files, or merge collectors — so terminal output, CI summaries, and the run verdict always agree. Missing, unsupported, empty, or ambiguous required measurements fail explicitly, even for a threshold of zero. An enabled controller-side coverage producer owns evaluation after collection; a controller's child process defers evaluation until out-of-process data is available. Combining these options with process-level retries is rejected with an explicit configuration error, because retries need merged coverage and an independent full-run verdict. Collection enablement, instrumentation filters, and report formats remain owned by the collector (e.g. [CodeCoverage](#codecoverage)). Introduced in [PR #11814](https://github.com/microsoft/testfx/pull/11814).
 
 ### CoverageAggregation
 
@@ -126,7 +138,7 @@ An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically c
 
 ### CtrfReport
 
-An MTP extension (`Microsoft.Testing.Extensions.CtrfReport`) that generates a [CTRF](https://github.com/ctrf-io/ctrf) (Common Test Report Format) JSON report at the end of a test run. CTRF is a vendor-neutral open standard for structured test results, consumed by GitHub Actions test-summary tools, Slack/Teams notifiers, dashboards, and other CI tooling. The reporter emits `specVersion: 0.1.0`, the first internally consistent CTRF schema release (the `v0.0.4` and `v0.1.0` schema files share the same content hash, so this is a metadata-accuracy fix rather than a report-shape change). Enable via `--report-ctrf`; override the output filename with `--report-ctrf-filename`. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>`. Currently **experimental** — the CLI options and output format may change without notice. Aligned with the `v0.1.0` specification in [PR #11731](https://github.com/microsoft/testfx/pull/11731).
+An MTP extension (`Microsoft.Testing.Extensions.CtrfReport`) that generates a [CTRF](https://github.com/ctrf-io/ctrf) (Common Test Report Format) JSON report at the end of a test run. CTRF is a vendor-neutral open standard for structured test results, consumed by GitHub Actions test-summary tools, Slack/Teams notifiers, dashboards, and other CI tooling. The reporter emits `specVersion: 0.2.0`, including native final-attempt identities in `tests[].attemptId`, and preserves legacy attempt identities when merging older reports. Enable via `--report-ctrf`; override the output filename with `--report-ctrf-filename`. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>`. The stable producer uses the same package version as MTP and preserves its API, CLI, and documented 0.2.0 semantics within that major version; this does not guarantee framework UID stability or make producer-specific diagnostic metadata a stable protocol. See the [package compatibility policy](../src/Platform/Microsoft.Testing.Extensions.CtrfReport/PACKAGE.md#compatibility).
 
 ## D
 
@@ -161,6 +173,10 @@ The practice of using formal mathematical proofs to establish correctness proper
 ### FV Target
 
 A specific code component (function, struct, or class) selected for formal verification. Each FV target progresses through defined phases: (1) identified, (2) informal spec extracted, (3) Lean 4 formal spec written, (4) implementation model extracted, (5) proofs completed. Current targets are listed in `formal-verification/TARGETS.md`.
+
+### F# test containers
+
+Support for discovering `[<TestMethod>]` functions declared directly in F# modules, without requiring the module to carry `[<TestClass>]` (previously mandatory, which conflicted with F#'s idiomatic module-based style). The shared MSTest adapter recognizes F# compiler-generated module metadata without taking an `FSharp.Core` dependency, and runs the static test and lifecycle functions through the existing execution pipeline. Module declarations honor existing class-level attributes (categories, properties, ignore, retry, parallelization controls); nested modules are independent containers, and module-level mutable state is shared across tests and retries within that module. Supported return types are `void`, `Task`, and non-generic `ValueTask`; F# `Async<unit>` and source-generator/AOT support are not covered. C#, VB, and ordinary F# classes keep their existing attribute and instance-method requirements. Introduced in [PR #11830](https://github.com/microsoft/testfx/pull/11830).
 
 ## G
 
@@ -335,7 +351,7 @@ In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework`
 | `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, GitHubActionsReport, HtmlReport, and Fakes |
 | `None` | No extensions |
 
-Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and JUnitReport are experimental opt-ins; OpenTelemetry is also opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for packaged WinUI and UWP test applications because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
+Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport and OpenTelemetry are opt-in; JUnitReport remains an experimental opt-in. None are enabled by any profile. `EnableMicrosoftTestingExtensionsPackagedApp` is independent of profiles and defaults to `true` for packaged WinUI and UWP test applications because it is required to register and activate the test host; set it to `false` only when a custom launcher owns activation. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
 
 | Property | `Default` | `AllMicrosoft` | `None` | NativeAOT | VSTest |
 | --- | --- | --- | --- | --- | --- |
@@ -482,15 +498,28 @@ A sealed class (`Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest`, curr
 
 ### --progress
 
-An MTP terminal-reporter command-line option that controls whether animated progress output is shown during a test run. Accepts three values:
+An MTP terminal-reporter command-line option that controls progress output during a test run. Accepts three values:
 
 | Value | Behavior |
 | --- | --- |
-| `auto` (default) | Show progress unless the terminal cannot update in place (non-ANSI/simple terminal), or the session is a test-host controller, `--list-tests`, or server mode |
-| `on` | Same as `auto` (a dedicated heartbeat renderer for non-cursor modes is tracked separately) |
+| `auto` (default) | Update progress in place on cursor-capable terminals; emit bounded durable progress on non-cursor terminals. Test-host controllers, `--list-tests`, and server mode do not render progress. |
+| `on` | Same as `auto` |
 | `off` | Suppress all progress output |
 
 Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a replacement for the former `--no-progress` flag. `--no-progress` continues to work as a deprecated alias that routes to `--progress off`; outside of CI it emits a one-per-process deprecation warning on stderr. The warning is suppressed in CI environments, where it would be invisible noise and where build infrastructure (such as the Arcade SDK test runner) passes `--no-progress` unconditionally. `--progress` always wins when both are supplied.
+
+On CI, piped, and redirected non-cursor terminals, a progress line is emitted after
+60 seconds without visible reporter output. Hidden passing results do not postpone
+it. The line reports cumulative completed/failed counts, active modules, and the
+age of the last test completion (or that no test has completed yet); a heartbeat
+does not imply that work completed. `MTP_PROGRESS_SILENCE_SECONDS` overrides this
+interval and `0` disables it. Slow-test notices retain their independent
+`MTP_PROGRESS_SLOW_TEST_SECONDS` threshold and exponential backoff.
+
+Non-cursor run summaries place the verdict, aggregate counts, and failures before
+artifact paths. Successful module results already printed at completion are not
+repeated in the final summary. Artifact paths and failure diagnostics remain
+available in full; cursor-capable interactive output is unchanged.
 
 ### PropertyBag
 
@@ -535,6 +564,10 @@ A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that controls wh
 ### Server Mode
 
 An MTP execution mode in which the test host process runs as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
+
+### showMessage negotiation
+
+An optional [Server Mode](#server-mode) capability (`capabilities.testing.showMessage`) that lets a client request the `client/showMessage` JSON-RPC method instead of the legacy `client/log` for user-facing output. The server only switches methods after the client requests support and the server acknowledges it in the initialization response; missing or `false` support retains `client/log`. Both methods carry the same `{level, message}` payload, so acknowledgment selects the transport method only — it is not exclusive rendering, and a client displaying both console and RPC output may see duplicates. Introduced in [PR #11712](https://github.com/microsoft/testfx/pull/11712).
 
 ## T
 

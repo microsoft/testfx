@@ -35,6 +35,51 @@ running. It shares MTP's existing cancellation path with Ctrl+C, timeouts, contr
 and test framework stop policies. A canceled run completes cleanup and returns the
 test-session-aborted exit code (`3`).
 
+## Coverage thresholds
+
+With a compatible coverage collector enabled, require minimum overall coverage for the current test
+application:
+
+```text
+--coverage-threshold-line 80 --coverage-threshold-branch 70
+```
+
+Each option is independently optional and accepts a percentage from 0 to 100, including decimals with
+a dot separator. Both requirements must pass when both options are supplied. Thresholds use the
+collector's overall covered/coverable counts, not rounded display percentages or averages of module
+percentages. They do not enable collection or change instrumentation filters.
+
+Missing, unsupported, empty, or ambiguous overall coverage data fails the requirement, including for
+a threshold of 0. Each requested metric must have exactly one overall measurement published through
+MTP's coverage-message contract. Collectors reporting different metrics can coexist; measurements
+for the same metric are not silently chosen or combined. A report file alone is not sufficient.
+Branch coverage is not inferred from line or block coverage.
+
+Violations return exit code 14 when the run would otherwise succeed, without changing individual test
+outcomes. Existing test failures, cancellation, and minimum-test policies retain precedence.
+`--ignore-exit-code 14` can explicitly suppress a coverage failure. Thresholds cannot be combined with
+`--list-tests` or `--retry-failed-tests`. Process-level retries need coverage merging across attempts
+before an overall gate can be evaluated reliably; framework-managed in-process retries remain supported.
+Each test application is evaluated separately; solution-wide coverage merging is not performed.
+
+## Coverage summaries under dotnet test
+
+When both the test application and `dotnet test` negotiate coverage-summary support, MTP forwards
+collector-provided overall and module measurements as covered/coverable counts. The SDK owns
+rendering; applications running against an older SDK retain their existing artifact and exit-code
+behavior without sending an unsupported coverage message.
+
+Artifact post-processors can return a `ProcessedArtifact` with a `CoverageSummary` containing
+`CoverageMetricResult` measurements computed from the complete processed artifact. The platform
+transports these measurements together with the validated artifact and its input provenance, not as
+a separate authoritative total. Failed or truncated post-processing omits summary metadata while
+preserving the existing artifact behavior. Counts of `0/0` mean no coverable data; absent metadata
+means the measurements are unavailable.
+
+Coverage from overlapping test applications must be genuinely merged by the collector. Neither the
+platform nor the SDK can obtain a correct solution-wide total by summing or averaging application
+summaries. Coverage transport does not change application-owned threshold enforcement or test exits.
+
 ## About
 
 This package provides the core platform and the .NET implementation of the testing protocol. It includes:

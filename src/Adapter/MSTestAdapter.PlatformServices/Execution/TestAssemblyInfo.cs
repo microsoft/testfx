@@ -43,7 +43,7 @@ internal sealed class TestAssemblyInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 DebugEx.Assert(field.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, field.DeclaringType.FullName);
@@ -72,7 +72,7 @@ internal sealed class TestAssemblyInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 DebugEx.Assert(field.DeclaringType?.FullName is not null, "AssemblyCleanupMethod.DeclaringType.FullName is null");
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, field.DeclaringType.FullName);
@@ -148,7 +148,7 @@ internal sealed class TestAssemblyInfo
     /// </summary>
     public bool HasExecutableCleanupMethod =>
             // If no assembly cleanup, then continue with the next one.
-            AssemblyCleanupMethod != null;
+            AssemblyCleanupMethod is not null;
 
     /// <summary>
     /// Gets the <see cref="Assembly"/> this class represents.
@@ -169,7 +169,7 @@ internal sealed class TestAssemblyInfo
     public async Task<TestResult> RunAssemblyInitializeAsync(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
-        if (AssemblyInitializeMethod == null)
+        if (AssemblyInitializeMethod is null)
         {
             IsAssemblyInitializeExecuted = true;
             return new TestResult { Outcome = UnitTestOutcome.Passed };
@@ -282,7 +282,7 @@ internal sealed class TestAssemblyInfo
     /// </summary>
     internal async Task<TestFailedException?> ExecuteAssemblyCleanupAsync(TestContext testContext)
     {
-        if (AssemblyCleanupMethod == null)
+        if (AssemblyCleanupMethod is null)
         {
             return null;
         }

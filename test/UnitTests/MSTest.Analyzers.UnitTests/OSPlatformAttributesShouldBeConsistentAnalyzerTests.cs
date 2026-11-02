@@ -525,8 +525,8 @@ public sealed class OSPlatformAttributesShouldBeConsistentAnalyzerTests
 
         var test = new VerifyCS.Test
         {
-            ReferenceAssemblies = ReferenceAssemblies.Net.Net100
-                .WithNuGetConfigFilePath(Path.Combine(RootFinder.Find(), "NuGet.config")),
+            // The message overload requires net10, but the source-built MSTest reference may require net11.
+            ReferenceAssemblies = AnalyzerTestReferenceAssemblies.Net100OrLater,
             TestCode = code,
             FixedCode = fixedCode,
         };

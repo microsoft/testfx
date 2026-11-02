@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
         <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
-        <target state="new">Azure DevOps live publishing could not read attachment '{0}': {1}</target>
+        <target state="translated">Azure DevOps canlı yayımlama ek '{0}' okuyamadı: {1}</target>
         <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
         <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
-        <target state="new">Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</target>
+        <target state="translated">Azure DevOps canlı yayımlama, {1} baytlık boyutu {2} bayt sınırını aştığı için ek '{0}' karşıya yükleyemedi.</target>
         <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
@@ -62,6 +62,11 @@
         <target state="translated">Azure DevOps REST API kimlik doğrulaması başarısız oldu veya oturum açma bilgilerine yönlendirildi (durum: {0}); bu, SYSTEM_ACCESSTOKEN'in geçersiz veya kullanılamaz olduğunu gösterir. Çatal çekme isteği doğrulama derlemeleri için, güvenilmeyen çatal koduna gizli bilgileri kullanıma sunmayın; sonuçları ayrı bir güvenilir işlem hattı bağlamından yayımlayın veya Azure DevOps canlı yayımlamayı devre dışı bırakın.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Azure DevOps canlı yayımlama test çalıştırmasını tamamlayamadı.</target>
@@ -69,7 +74,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
         <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
-        <target state="new">Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</target>
+        <target state="translated">Azure DevOps canlı yayımlama, {1} koordinasyon kilidi '{0}' bekledikten sonra zaman aşımına uğradı.</target>
         <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
@@ -240,6 +245,86 @@
       <trans-unit id="DisplayName">
         <source>Azure DevOps report generator</source>
         <target state="translated">Azure DevOps rapor oluşturucusu</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">En az bir test başarısız oldu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Bir veya birden fazla kod kapsamı eşiği karşılanmadı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Bağımlı bir işlemden beklenmedik bir şekilde çıkıldı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">Test çalıştırması başarısız oldu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Uyumsuz bir protokol sürümü üzerinde anlaşıldı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Komut satırı bağımsız değişkenleri geçersiz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">Test platformu kurulumu geçersiz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">--minimum-expected-tests tarafından gerekenden daha az test çalıştırıldı.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">Test çalıştırması başarılı oldu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">Test bağdaştırıcısı bir test oturumu hatası bildirdi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">CI tarafından belirlenen son tarih yaklaştığından test yürütmesi erken durduruldu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">--maximum-failed-tests tarafından belirlenen sınıra ulaşıldıktan sonra test yürütme durduruldu.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">Test ana bilgisayarı işlemi düzgün olmayan bir şekilde sonlandı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">Test oturumu iptal edildi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">Test çalıştırması başarılı olmayan bir çıkış kodu bildirdi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Çalıştırılacak test bulunamadı. Bu genellikle bir test filtresinin hiçbir şeyle eşleşmediği anlamına gelir.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">

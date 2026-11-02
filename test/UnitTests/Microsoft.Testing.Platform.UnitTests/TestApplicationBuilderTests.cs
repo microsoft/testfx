@@ -1,9 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
@@ -11,6 +15,7 @@ using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -35,6 +40,304 @@ public sealed class TestApplicationBuilderTests
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, "capabilitiesFactory", DisplayName = "Null capabilities factory")]
+    [DataRow(false, true, "frameworkFactory", DisplayName = "Null framework factory")]
+    [DataRow(true, true, "frameworkFactory", DisplayName = "Both factories null")]
+    public void RegisterTestFramework_InvalidFactories_DoNotPoisonSubsequentRegistration(bool nullCapabilities, bool nullFramework, string expectedParameter)
+    {
+        TestApplicationBuilder builder = CreateRegistrationBuilder();
+        bool factoryInvoked = false;
+        Func<IServiceProvider, ITestFrameworkCapabilities> capabilities = _ =>
+        {
+            factoryInvoked = true;
+            return Mock.Of<ITestFrameworkCapabilities>();
+        };
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> framework = (_, _) =>
+        {
+            factoryInvoked = true;
+            return Mock.Of<ITestFramework>();
+        };
+
+        ArgumentNullException exception = Assert.ThrowsExactly<ArgumentNullException>(
+            () => builder.RegisterTestFramework(nullCapabilities ? null! : capabilities, nullFramework ? null! : framework));
+        ITestApplicationBuilder registered = builder.RegisterTestFramework(capabilities, framework);
+
+        Assert.AreEqual(expectedParameter, exception.ParamName);
+        Assert.AreSame(builder, registered);
+        Assert.IsFalse(factoryInvoked, "Registration is lazy, even after rejected invalid input.");
+        Assert.ThrowsExactly<InvalidOperationException>(() => builder.RegisterTestFramework(capabilities, framework));
+    }
+
+    [TestMethod]
+    public async Task BuildAsync_WithoutRegisteredFramework_RejectsBeforeBuildingHost()
+    {
+        TestApplicationBuilder builder = CreateRegistrationBuilder();
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(builder.BuildAsync);
+
+        Assert.Contains("test framework", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("registered", exception.Message, StringComparison.OrdinalIgnoreCase);
+        await ((IAsyncCleanableExtension)builder).CleanupAsync();
+    }
+
+    private static TestApplicationBuilder CreateRegistrationBuilder()
+        => new(
+            new ApplicationLoggingState(LogLevel.None, CommandLineParseResult.Empty),
+            DateTimeOffset.MinValue,
+            new TestApplicationOptions(),
+            Mock.Of<IUnhandledExceptionsHandler>(),
+            []);
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Prepared ordinary process")]
+    [DataRow(true, DisplayName = "Prepared custom launcher")]
+    public async Task ControllerHost_RunAsync_PreparesEnvironmentAndCompletesRealIpcLifecycleWithoutLaunchingAProcess(bool customLauncher)
+    {
+        ControllerHostFixture fixture = new(customLauncher: customLauncher);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(0, await run);
+            Assert.AreSequenceEqual(
+                new[] { "before-process", "update-environment", "validate-environment", "launch", "process-started", "process-exited", "output-finalized", "run-completed" },
+                fixture.Events.Where(value => !value.StartsWith("dispose-", StringComparison.Ordinal)));
+            Assert.AreEqual(606, fixture.StartedInformation!.PID);
+            Assert.ThrowsExactly<InvalidOperationException>(() => fixture.StartedInformation.ExitCode);
+            Assert.AreEqual(606, fixture.ExitedInformation!.PID);
+            Assert.AreEqual(0, fixture.ExitedInformation.ExitCode);
+            Assert.IsTrue(fixture.ExitedInformation.HasExitedGracefully);
+            Assert.AreEqual(0, fixture.CompletionExitCode);
+            SessionFileArtifact artifact = Assert.ContainsSingle(fixture.CompletionArtifacts);
+            Assert.AreEqual("child summary", artifact.DisplayName);
+            Assert.AreEqual("child artifact", artifact.Description);
+            Assert.AreEqual("microsoft.testing.trx", artifact.Kind);
+            Assert.AreEqual("controller-session", artifact.SessionUid.Value);
+            Assert.AreSequenceEqual(
+                new[] { "dispose-lifetime", "dispose-environment" },
+                fixture.Events.Where(value => value is "dispose-lifetime" or "dispose-environment"));
+            fixture.Environment.Verify(x => x.Exit(It.IsAny<int>()), Times.Never);
+            fixture.Environment.Verify(x => x.FailFast(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
+            if (customLauncher)
+            {
+                Assert.IsNotNull(fixture.LaunchContext);
+                Assert.AreEqual("fake-host", fixture.LaunchContext.FileName);
+                Assert.AreEqual("controller-workspace", fixture.LaunchContext.WorkingDirectory);
+                Assert.AreSequenceEqual(new[] { "--filter", "name with spaces", "--internal-testhostcontroller-pid", "42" }, fixture.LaunchContext.Arguments);
+                Assert.AreEqual("false", fixture.LaunchContext.EnvironmentVariables["TF_BUILD"]);
+                Assert.AreEqual("provider-value", fixture.LaunchContext.EnvironmentVariables["CUSTOM"]);
+                Assert.AreEqual("03:04:05.000", fixture.LaunchContext.EnvironmentVariables["TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME_42"]);
+                fixture.ProcessHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
+                fixture.Handle.Verify(x => x.Dispose(), Times.Once);
+            }
+            else
+            {
+                Assert.IsNotNull(fixture.StartInfo);
+                Assert.AreEqual("fake-host", fixture.StartInfo.FileName);
+                Assert.AreEqual(string.Empty, fixture.StartInfo.WorkingDirectory);
+                Assert.IsFalse(fixture.StartInfo.UseShellExecute);
+                Assert.AreEqual("false", fixture.StartInfo.EnvironmentVariables["TF_BUILD"]);
+                Assert.AreEqual("provider-value", fixture.StartInfo.EnvironmentVariables["CUSTOM"]);
+#if NETCOREAPP
+                Assert.AreSequenceEqual(new[] { "--filter", "name with spaces", "--internal-testhostcontroller-pid", "42" }, fixture.StartInfo.ArgumentList);
+#else
+                Assert.AreEqual("--filter \"name with spaces\" --internal-testhostcontroller-pid 42", fixture.StartInfo.Arguments);
+#endif
+                fixture.Process.Verify(x => x.Dispose(), Times.Once);
+            }
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerHost_RunAsync_EnvironmentValidationFailurePreventsLaunchAndStillDisposesExtensions()
+    {
+        ControllerHostFixture fixture = new(validEnvironment: false);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(4, await run);
+            fixture.ProcessHandler.Verify(x => x.Start(It.IsAny<ProcessStartInfo>()), Times.Never);
+            fixture.Launcher.Verify(x => x.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()), Times.Never);
+            string error = Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.OutputMessages)).Message;
+            Assert.Contains("provider rejected", error);
+            Assert.Contains("environment", error);
+            Assert.AreSequenceEqual(
+                new[] { "before-process", "update-environment", "validate-environment", "dispose-lifetime", "dispose-environment" },
+                fixture.Events);
+            Assert.IsNull(fixture.CompletionExitCode);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(90L, 0, DisplayName = "Passing controller-owned coverage")]
+    [DataRow(79L, 14, DisplayName = "Failing controller-owned coverage")]
+    public async Task ControllerHost_RunAsync_ControllerCoverageIsCollectedAfterChildExitAndSetsFinalVerdict(long coveredLines, int expectedExit)
+    {
+        ControllerHostFixture fixture = new(ownsCoverage: true, lineThreshold: "80", coveredLines: coveredLines);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(expectedExit, await run);
+            Assert.AreEqual(expectedExit, fixture.CompletionExitCode);
+            Assert.AreEqual("1", fixture.StartInfo!.EnvironmentVariables["TESTINGPLATFORM_TESTHOSTCONTROLLER_COVERAGEPOLICY_42"]);
+            TestCoverageResult coverage = fixture.Services.GetRequiredService<TestCoverageResult>();
+            Assert.AreEqual(coveredLines < 80, coverage.HasThresholdFailure);
+            if (expectedExit == 14)
+            {
+                Assert.Contains("80", Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.OutputMessages)).Message);
+            }
+            else
+            {
+                Assert.IsEmpty(fixture.OutputMessages);
+            }
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, DisplayName = "Authoritative process exit mismatch")]
+    [DataRow(true, DisplayName = "Nonauthoritative custom handle exit")]
+    public async Task ControllerHost_RunAsync_ExitAuthorityAndCompletionHandshakeDeterminePublicVerdict(bool nonauthoritative)
+    {
+        ControllerHostFixture fixture = new(
+            customLauncher: nonauthoritative, osExitCode: 17, reportedExitCode: 0, authoritativeExitCode: !nonauthoritative);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(nonauthoritative ? 0 : 7, await run);
+            Assert.AreEqual(nonauthoritative ? 0 : 7, fixture.CompletionExitCode);
+            Assert.IsTrue(fixture.ExitedInformation!.HasExitedGracefully);
+            if (nonauthoritative)
+            {
+                Assert.IsEmpty(fixture.OutputMessages);
+            }
+            else
+            {
+                Assert.Contains("17", Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(fixture.OutputMessages)).Message);
+            }
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerHost_RunAsync_MissingCompletionMessageRejectsZeroOsExitAndReportsNonGracefulVerdict()
+    {
+        ControllerHostFixture fixture = new(sendCompletion: false);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(7, await run);
+            Assert.IsFalse(fixture.ExitedInformation!.HasExitedGracefully);
+            Assert.AreEqual(7, fixture.CompletionExitCode);
+            Assert.HasCount(1, fixture.OutputMessages);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerHost_RunAsync_TelemetryRecordsTheActualControllerVerdictAndExtensionIdentity()
+    {
+        ControllerHostFixture fixture = new(telemetry: true, osExitCode: 2, reportedExitCode: 2);
+        try
+        {
+            Task<int> run = fixture.RunAsync();
+            await run.TimeoutAfterAsync(ControllerHostFixture.OperationLimit);
+            Assert.AreEqual(2, await run);
+            (string name, IDictionary<string, object> values) = Assert.ContainsSingle(fixture.TelemetryEvents);
+            Assert.AreEqual(TelemetryEvents.TestHostControllersTestHostExitEventName, name);
+            Assert.AreEqual("2", values[TelemetryProperties.HostProperties.ExitCodePropertyName]);
+            Assert.AreEqual("true", values[TelemetryProperties.HostProperties.HasExitedGracefullyPropertyName]);
+            string extensions = (string)values[TelemetryProperties.HostProperties.ExtensionsPropertyName];
+            Assert.Contains("1.2.3", extensions);
+            Assert.AreEqual(2, fixture.CompletionExitCode);
+            Assert.IsEmpty(fixture.OutputMessages);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerRegistration_InitializationFailureStopsBeforeRegisteringOrBuildingLaterProviders()
+    {
+        TestHostControllersManager manager = new();
+        InvalidOperationException expectedFailure = new("controller initialization failed");
+        Mock<ITestHostEnvironmentVariableProvider> broken = new();
+        broken.SetupGet(x => x.Uid).Returns("broken");
+        broken.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
+        broken.As<IAsyncInitializableExtension>().Setup(x => x.InitializeAsync()).ThrowsAsync(expectedFailure);
+        bool laterProviderBuilt = false;
+        bool observerBuilt = false;
+        manager.AddEnvironmentVariableProvider(_ => broken.Object);
+        manager.AddEnvironmentVariableProvider(_ =>
+        {
+            laterProviderBuilt = true;
+            return new TestHostEnvironmentVariableProvider("later");
+        });
+        manager.AddRunCompletionHandler(_ =>
+        {
+            observerBuilt = true;
+            return Mock.Of<ITestHostControllerRunCompletionHandler>();
+        });
+
+        InvalidOperationException actualFailure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => manager.BuildAsync(_serviceProvider));
+
+        Assert.AreSame(expectedFailure, actualFailure);
+        Assert.IsFalse(laterProviderBuilt);
+        Assert.IsFalse(observerBuilt);
+        Assert.IsEmpty(_serviceProvider.GetServicesInternal(typeof(ITestHostEnvironmentVariableProvider)));
+    }
+
+    [TestMethod]
+    public async Task ControllerRegistration_DisabledCompositeConsumerDoesNotInitializeOrIntroduceAController()
+    {
+        TestHostControllersManager manager = new();
+        Mock<IDataConsumer> consumer = new();
+        consumer.SetupGet(x => x.Uid).Returns("disabled-consumer");
+        consumer.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
+        Mock<IAsyncInitializableExtension> initialization = consumer.As<IAsyncInitializableExtension>();
+        initialization.Setup(x => x.InitializeAsync()).Returns(Task.CompletedTask);
+        manager.AddDataConsumer(new CompositeExtensionFactory<IDataConsumer>(() => consumer.Object));
+        bool observerBuilt = false;
+        manager.AddRunCompletionHandler(_ =>
+        {
+            observerBuilt = true;
+            return Mock.Of<ITestHostControllerRunCompletionHandler>();
+        });
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.IsFalse(configuration.RequireProcessRestart);
+        Assert.IsEmpty(configuration.DataConsumer);
+        Assert.IsEmpty(configuration.RunCompletionHandlers);
+        Assert.IsFalse(observerBuilt);
+        initialization.Verify(x => x.InitializeAsync(), Times.Never);
     }
 
     [TestMethod]
@@ -212,12 +515,24 @@ public sealed class TestApplicationBuilderTests
         Mock<IProcess> process = new();
         TaskCompletionSource<bool> neverExits = new(TaskCreationOptions.RunContinuationsAsynchronously);
         process.Setup(x => x.WaitForExitAsync(It.IsAny<CancellationToken>())).Returns(neverExits.Task);
-        var stopwatch = Stopwatch.StartNew();
-
-        bool exited = await WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
-
-        Assert.IsFalse(exited);
-        Assert.IsLessThan(5, stopwatch.Elapsed.TotalSeconds);
+        // This watchdog allows JIT and loaded CI scheduling; the production deadline remains 100ms.
+        var completionLimit = TimeSpan.FromSeconds(30);
+        using var watchdogCancellation = new CancellationTokenSource();
+        var watchdog = Task.Delay(completionLimit, watchdogCancellation.Token);
+        Task<bool> exitWait = WaitForExitAfterTerminationAsync(process.Object, TimeSpan.FromMilliseconds(100), new NopLogger());
+        try
+        {
+            Assert.AreSame(exitWait, await Task.WhenAny(exitWait, watchdog), "The bounded wait must complete without the process exiting.");
+            Assert.IsFalse(await exitWait);
+            Assert.IsFalse(neverExits.Task.IsCompleted);
+            process.Verify(x => x.WaitForExitAsync(CancellationToken.None), Times.Once);
+        }
+        finally
+        {
+            watchdogCancellation.Cancel();
+            neverExits.TrySetResult(true);
+            await exitWait.WaitAsync(completionLimit, CancellationToken.None);
+        }
     }
 
     [TestMethod]
@@ -251,6 +566,76 @@ public sealed class TestApplicationBuilderTests
                 timeoutSeconds: 1,
                 cancellationTokenSource.Token,
                 () => throw new AssertFailedException("The connection timeout handler should not run for application cancellation.")));
+    }
+
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task ControllerProcessEarlyExitPreservesActualDiagnosticAndDoesNotStartWaitOrTermination(bool pidUnavailable, bool telemetry)
+    {
+        var process = new Mock<IProcess>();
+        process.SetupGet(value => value.HasExited).Returns(true);
+        process.SetupGet(value => value.ExitCode).Returns(17);
+        if (pidUnavailable)
+        {
+            process.SetupGet(value => value.Id).Throws(new InvalidOperationException("No process associated."));
+        }
+        else
+        {
+            process.SetupGet(value => value.Id).Returns(37);
+        }
+
+        var launcher = new Mock<IProcessHandler>();
+        launcher.Setup(value => value.Start(It.IsAny<ProcessStartInfo>())).Returns(process.Object);
+        ServiceProvider services = new();
+        using var cancellation = new CTRLPlusCCancellationTokenSource(environment: Mock.Of<IEnvironment>());
+        services.AddService(cancellation);
+        services.AddService(new SystemTask());
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(value => value.CreateLogger(It.IsAny<string>())).Returns(new NopLogger());
+        var clock = new Mock<IClock>();
+        clock.SetupGet(value => value.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 3, 4, 5, TimeSpan.Zero).AddMilliseconds(123));
+        using var host = new TestHostControllersTestHost(
+            new([], [], [], testHostLauncher: null, requireProcessRestart: true),
+            services,
+            passiveNode: null,
+            Mock.Of<IEnvironment>(),
+            loggerFactory.Object,
+            clock.Object);
+        var output = new Mock<IPlatformOutputDevice>();
+        var messages = new List<IOutputDeviceData>();
+        var tokens = new List<CancellationToken>();
+        output.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, message, token) =>
+            {
+                messages.Add(message);
+                tokens.Add(token);
+            }).Returns(Task.CompletedTask);
+        var telemetryInfo = new Mock<ITelemetryInformation>();
+        telemetryInfo.SetupGet(value => value.IsEnabled).Returns(telemetry);
+        ProcessStartInfo startInfo = new("not-launched");
+
+        (int exit, TestHostProcessInformation info, string? extensions) = await RunTestHostProcessAsync(
+            host, startInfo, [], 42, launcher.Object, Mock.Of<IConfiguration>(),
+            testHostControllerIpc: null!, testHostControllerCancellationServer: null!,
+            new ProxyOutputDevice(output.Object, serverModeOutputDevice: null), telemetryInfo.Object, CancellationToken.None);
+
+        Assert.AreEqual(1, exit);
+        Assert.AreEqual(pidUnavailable ? 0 : 37, info.PID);
+        Assert.AreEqual(1, info.ExitCode);
+        Assert.IsFalse(info.HasExitedGracefully);
+        Assert.AreEqual(telemetry ? "[]" : null, extensions);
+        Assert.AreEqual(
+            "The test host process did not connect to the controller's named pipe after '0' seconds. The test host process exited with code '17'.",
+            Assert.IsInstanceOfType<ErrorMessageOutputDeviceData>(Assert.ContainsSingle(messages)).Message);
+        Assert.AreEqual(CancellationToken.None, Assert.ContainsSingle(tokens));
+        Assert.AreEqual("03:04:05.123", startInfo.EnvironmentVariables[EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME + "_42"]);
+        process.Verify(value => value.Kill(), Times.Never);
+        process.Verify(value => value.WaitForExitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        process.Verify(value => value.Dispose(), Times.Once);
+        launcher.Verify(value => value.Start(startInfo), Times.Once);
     }
 
     [TestMethod]
@@ -336,6 +721,20 @@ public sealed class TestApplicationBuilderTests
     }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    [TestMethod]
+    public void ControllerRegistration_NullOrdinaryFactoriesAreRejectedWithExactParameterNames()
+    {
+        TestHostControllersManager manager = new();
+        Assert.AreEqual("environmentVariableProviderFactory", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddEnvironmentVariableProvider(null!)).ParamName);
+        Assert.AreEqual("environmentVariableProviderFactory", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddEnvironmentVariableProviderFirst(null!)).ParamName);
+        Assert.AreEqual("lifetimeHandler", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddProcessLifetimeHandler(null!)).ParamName);
+        Assert.AreEqual("testHostLauncherFactory", Assert.ThrowsExactly<ArgumentNullException>(
+            () => manager.AddTestHostLauncher(null!)).ParamName);
+    }
+
     [TestMethod]
     public void TestHostControllerProcessExit_NonAuthoritativeAbortedExitCodePreservesSuccessfulIpcResult()
     {
@@ -693,6 +1092,179 @@ public sealed class TestApplicationBuilderTests
     }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    [TestMethod]
+    [DataRow("environment")]
+    [DataRow("lifetime")]
+    [DataRow("launcher")]
+    [DataRow("consumer")]
+    public void ControllerRegistration_NullCompositeFactoryIsRejectedBeforeBuild(string kind)
+    {
+        TestHostControllersManager manager = new();
+        Action register = kind switch
+        {
+            "environment" => () => manager.AddEnvironmentVariableProvider((CompositeExtensionFactory<TestHostEnvironmentVariableProvider>)null!),
+            "lifetime" => () => manager.AddProcessLifetimeHandler((CompositeExtensionFactory<TestHostProcessLifetimeHandler>)null!),
+            "launcher" => () => manager.AddTestHostLauncher((CompositeExtensionFactory<TestHostLauncher>)null!),
+            _ => () => manager.AddDataConsumer((CompositeExtensionFactory<Consumer>)null!),
+        };
+        ArgumentNullException error = Assert.ThrowsExactly<ArgumentNullException>(register);
+        Assert.AreEqual("compositeServiceFactory", error.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow("environment")]
+    [DataRow("lifetime")]
+    [DataRow("launcher")]
+    [DataRow("consumer")]
+    public void ControllerRegistration_SameCompositeFactoryCannotBeRegisteredTwiceInOneCategory(string kind)
+    {
+        TestHostControllersManager manager = new();
+        Action register;
+        if (kind == "environment")
+        {
+            CompositeExtensionFactory<TestHostEnvironmentVariableProvider> factory = new(() => new TestHostEnvironmentVariableProvider("environment"));
+            register = () => manager.AddEnvironmentVariableProvider(factory);
+        }
+        else if (kind == "lifetime")
+        {
+            CompositeExtensionFactory<TestHostProcessLifetimeHandler> factory = new(() => new TestHostProcessLifetimeHandler("lifetime"));
+            register = () => manager.AddProcessLifetimeHandler(factory);
+        }
+        else if (kind == "launcher")
+        {
+            CompositeExtensionFactory<TestHostLauncher> factory = new(() => new TestHostLauncher("launcher"));
+            register = () => manager.AddTestHostLauncher(factory);
+        }
+        else
+        {
+            CompositeExtensionFactory<Consumer> factory = new(() => new Consumer("consumer"));
+            register = () => manager.AddDataConsumer(factory);
+        }
+
+        register();
+        ArgumentException error = Assert.ThrowsExactly<ArgumentException>(register);
+        Assert.Contains("already", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("registered", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerRegistration_CompositeLauncherIsInitializedAndStoredOnlyWhenEnabled(bool enabled)
+    {
+        TestHostControllersManager manager = new();
+        var launcher = new Mock<ITestHostLauncher>();
+        launcher.SetupGet(value => value.Uid).Returns("composite.launcher");
+        launcher.Setup(value => value.IsEnabledAsync()).ReturnsAsync(enabled);
+        Mock<IAsyncInitializableExtension> initialization = launcher.As<IAsyncInitializableExtension>();
+        initialization.Setup(value => value.InitializeAsync()).Returns(Task.CompletedTask);
+        int constructions = 0;
+        CompositeExtensionFactory<ITestHostLauncher> factory = new(serviceProvider =>
+        {
+            Assert.AreSame(_serviceProvider, serviceProvider);
+            constructions++;
+            return launcher.Object;
+        });
+        manager.AddTestHostLauncher(factory);
+
+        TestHostControllerConfiguration first = await manager.BuildAsync(_serviceProvider);
+        TestHostControllerConfiguration second = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual(enabled, first.RequireProcessRestart);
+        Assert.AreEqual(enabled, second.RequireProcessRestart);
+        Assert.AreSame(enabled ? launcher.Object : null, first.TestHostLauncher);
+        Assert.AreSame(first.TestHostLauncher, second.TestHostLauncher);
+        Assert.AreEqual(1, constructions);
+        initialization.Verify(value => value.InitializeAsync(), enabled ? Times.Once : Times.Never);
+        Assert.HasCount(enabled ? 1 : 0, _serviceProvider.Services.Where(value => ReferenceEquals(value, launcher.Object)));
+        launcher.Verify(value => value.LaunchTestHostAsync(It.IsAny<TestHostLaunchContext>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerRegistration_CompositeLaunchersRejectDuplicateIdentityAndMultipleEnabledInstances(bool sameIdentity)
+    {
+        TestHostControllersManager manager = new();
+        CompositeExtensionFactory<TestHostLauncher> first = new(() => new TestHostLauncher("first"));
+        CompositeExtensionFactory<TestHostLauncher> second = new(() => new TestHostLauncher(sameIdentity ? "first" : "second"));
+        manager.AddTestHostLauncher(first);
+        manager.AddTestHostLauncher(second);
+
+        InvalidOperationException error = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(_serviceProvider));
+
+        if (sameIdentity)
+        {
+            Assert.Contains("first", error.Message);
+            Assert.Contains(typeof(TestHostLauncher).ToString(), error.Message);
+        }
+        else
+        {
+            Assert.Contains("one", error.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("launcher", error.Message, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerRegistration_CompositeAndOrdinaryFactoriesPreserveRelativeOrderAndFirstProviderPriority()
+    {
+        TestHostControllersManager manager = new();
+        manager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("ordinary.first"));
+        CompositeExtensionFactory<TestHostEnvironmentVariableProvider> composite = new(() => new TestHostEnvironmentVariableProvider("composite"));
+        manager.AddEnvironmentVariableProvider(composite);
+        manager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("ordinary.last"));
+        manager.AddEnvironmentVariableProviderFirst(_ => new TestHostEnvironmentVariableProvider("priority"));
+        manager.AddProcessLifetimeHandler(_ => new TestHostProcessLifetimeHandler("ordinary.handler"));
+        CompositeExtensionFactory<TestHostProcessLifetimeHandler> handler = new(() => new TestHostProcessLifetimeHandler("composite.handler"));
+        manager.AddProcessLifetimeHandler(handler);
+        Consumer? createdConsumer = null;
+        CompositeExtensionFactory<Consumer> consumer = new(() => createdConsumer = new Consumer("controller.consumer"));
+        manager.AddDataConsumer(consumer);
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreSequenceEqual(
+            ["priority", "ordinary.first", "composite", "ordinary.last"],
+            configuration.EnvironmentVariableProviders.Select(value => value.Uid));
+        Assert.AreSequenceEqual(["ordinary.handler", "composite.handler"], configuration.LifetimeHandlers.Select(value => value.Uid));
+        Assert.AreEqual("controller.consumer", Assert.ContainsSingle(configuration.DataConsumer).Uid);
+        Assert.AreSame(createdConsumer, configuration.DataConsumer[0], "Data consumer registration clones its composite factory but must register the actual produced instance.");
+        Assert.IsTrue(configuration.RequireProcessRestart);
+        Assert.IsNull(configuration.TestHostLauncher);
+    }
+
+    [TestMethod]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public async Task ControllerRegistration_CompletionObserversDoNotIntroduceControllerAndHonorEnabledState(bool controller, bool enabled)
+    {
+        TestHostControllersManager manager = new();
+        var observer = new Mock<ITestHostControllerRunCompletionHandler>();
+        observer.SetupGet(value => value.Uid).Returns("completion.observer");
+        observer.Setup(value => value.IsEnabledAsync()).ReturnsAsync(enabled);
+        int constructions = 0;
+        manager.AddRunCompletionHandler(_ =>
+        {
+            constructions++;
+            return observer.Object;
+        });
+        if (controller)
+        {
+            manager.AddEnvironmentVariableProvider(_ => new TestHostEnvironmentVariableProvider("existing.controller"));
+        }
+
+        TestHostControllerConfiguration configuration = await manager.BuildAsync(_serviceProvider);
+
+        Assert.AreEqual(controller, configuration.RequireProcessRestart);
+        Assert.AreEqual(controller ? 1 : 0, constructions);
+        Assert.HasCount(controller && enabled ? 1 : 0, configuration.RunCompletionHandlers);
+        if (controller && enabled)
+        {
+            Assert.AreSame(observer.Object, configuration.RunCompletionHandlers[0]);
+        }
+    }
+
     [TestMethod]
     public async Task TestHostLauncher_WhenRegistered_ForcesProcessRestartAndIsStored()
     {
@@ -1082,5 +1654,297 @@ public sealed class TestApplicationBuilderTests
         public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task SingletonExtensions_EnforceRegistrationAndInitializeOnlyEnabledInstance(bool enabled)
+    {
+        TestHostManager manager = new();
+        ArgumentNullException invokerNull = Assert.ThrowsExactly<ArgumentNullException>(() => manager.AddTestFrameworkInvoker(null!));
+        ArgumentNullException filterNull = Assert.ThrowsExactly<ArgumentNullException>(() => manager.AddTestExecutionFilterFactory(null!));
+        Assert.AreEqual("testFrameworkInvokerFactory", invokerNull.ParamName);
+        Assert.AreEqual("testExecutionFilterFactory", filterNull.ParamName);
+        Mock<Microsoft.Testing.Platform.Requests.ITestFrameworkInvoker> invoker = new();
+        invoker.Setup(i => i.IsEnabledAsync()).ReturnsAsync(enabled);
+        Mock<IAsyncInitializableExtension> invokerInitialization = invoker.As<IAsyncInitializableExtension>();
+        invokerInitialization.Setup(i => i.InitializeAsync()).Returns(Task.CompletedTask);
+        Mock<Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory> filter = new();
+        filter.Setup(f => f.IsEnabledAsync()).ReturnsAsync(enabled);
+        Mock<IAsyncInitializableExtension> filterInitialization = filter.As<IAsyncInitializableExtension>();
+        filterInitialization.Setup(i => i.InitializeAsync()).Returns(Task.CompletedTask);
+        int factoryCalls = 0;
+        manager.AddTestFrameworkInvoker(_ =>
+        {
+            factoryCalls++;
+            return invoker.Object;
+        });
+        manager.AddTestExecutionFilterFactory(_ =>
+        {
+            factoryCalls++;
+            return filter.Object;
+        });
+        Assert.ThrowsExactly<InvalidOperationException>(() => manager.AddTestFrameworkInvoker(_ => invoker.Object));
+        Assert.ThrowsExactly<InvalidOperationException>(() => manager.AddTestExecutionFilterFactory(_ => filter.Object));
+        Assert.AreEqual(0, factoryCalls);
+
+        ActionResult<Microsoft.Testing.Platform.Requests.ITestFrameworkInvoker> builtInvoker = await manager.TryBuildTestAdapterInvokerAsync(_serviceProvider);
+        ActionResult<Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory> builtFilter = await manager.TryBuildTestExecutionFilterFactoryAsync(_serviceProvider);
+
+        Assert.AreEqual(2, factoryCalls);
+        Assert.AreEqual(enabled, builtInvoker.IsSuccess);
+        Assert.AreEqual(enabled, builtFilter.IsSuccess);
+        Assert.AreSame(enabled ? invoker.Object : null, builtInvoker.Result);
+        Assert.AreSame(enabled ? filter.Object : null, builtFilter.Result);
+        invokerInitialization.Verify(i => i.InitializeAsync(), enabled ? Times.Once() : Times.Never());
+        filterInitialization.Verify(i => i.InitializeAsync(), enabled ? Times.Once() : Times.Never());
+    }
+
+    [TestMethod]
+    public void ActionResult_FactoryAndImplicitSuccessPreserveIdentityAndFailureHasNoResult()
+    {
+        object item = new();
+        var explicitSuccess = ActionResult.Ok(item);
+        ActionResult<object> implicitSuccess = item;
+        var failure = ActionResult.Fail<object>();
+
+        Assert.IsTrue(explicitSuccess.IsSuccess);
+        Assert.AreSame(item, explicitSuccess.Result);
+        Assert.IsTrue(implicitSuccess.IsSuccess);
+        Assert.AreSame(item, implicitSuccess.Result);
+        Assert.IsFalse(failure.IsSuccess);
+        Assert.IsNull(failure.Result);
+    }
+
+    [TestMethod]
+    public async Task BuilderHelpers_RegisterDistinctTreeAndFailureProvidersLazily()
+    {
+        Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>? tree = null;
+        Func<IServiceProvider, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>? failure = null;
+        Mock<ICommandLineManager> manager = new();
+        manager.Setup(m => m.AddProvider(It.IsAny<Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>()))
+            .Callback<Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>(factory => tree = factory);
+        manager.Setup(m => m.AddProvider(It.IsAny<Func<IServiceProvider, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>()))
+            .Callback<Func<IServiceProvider, Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider>>(factory => failure = factory);
+        Mock<ITestApplicationBuilder> builder = new();
+        builder.SetupGet(b => b.CommandLine).Returns(manager.Object);
+        int identityReads = 0;
+        Mock<IExtension> owner = new();
+        owner.SetupGet(o => o.Uid).Returns(() =>
+        {
+            identityReads++;
+            return "owner";
+        });
+        owner.SetupGet(o => o.Version).Returns("1.2.3");
+        owner.SetupGet(o => o.DisplayName).Returns("Owner display");
+        owner.SetupGet(o => o.Description).Returns("Owner description");
+
+        builder.Object.AddTreeNodeFilterService(owner.Object);
+        builder.Object.AddMaximumFailedTestsService(owner.Object);
+        Assert.AreEqual(0, identityReads);
+        Assert.IsNotNull(tree);
+        Assert.IsNotNull(failure);
+        ServiceProvider services = new();
+        services.AddService(new TestFrameworkCapabilities(new Mock<IGracefulStopTestExecutionCapability>().Object));
+        Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider treeProvider = tree();
+        Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider failureProvider = failure(services);
+
+        Assert.AreEqual(2, identityReads);
+        Assert.AreEqual("owner", treeProvider.Uid);
+        Assert.AreEqual("Owner display", failureProvider.DisplayName);
+        Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption treeOption = Assert.ContainsSingle(treeProvider.GetCommandLineOptions());
+        Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption failureOption = Assert.ContainsSingle(failureProvider.GetCommandLineOptions());
+        Assert.AreEqual("treenode-filter", treeOption.Name);
+        Assert.AreEqual("maximum-failed-tests", failureOption.Name);
+        Assert.AreEqual(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.ExactlyOne, treeOption.Arity);
+        Assert.AreEqual(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.ExactlyOne, failureOption.Arity);
+        Assert.IsTrue((await failureProvider.ValidateOptionArgumentsAsync(failureOption, ["3"])).IsValid);
+        ValidationResult rejected = await failureProvider.ValidateOptionArgumentsAsync(failureOption, ["0"]);
+        Assert.IsFalse(rejected.IsValid);
+        Assert.Contains("0", rejected.ErrorMessage!);
+    }
+
+    [TestMethod]
+    public async Task BuilderHelper_FilterProviderRegistrationIsLazyAndBuildsOriginalEnabledOwner()
+    {
+        Microsoft.Testing.Platform.TestHost.TestHostManager manager = new();
+        Mock<ITestApplicationBuilder> builder = new();
+        builder.SetupGet(b => b.TestHost).Returns(manager);
+        Mock<ITestExecutionFilterProvider> provider = new();
+        provider.SetupGet(p => p.Uid).Returns("registered-filter-owner");
+        provider.Setup(p => p.IsEnabledAsync()).ReturnsAsync(true);
+        ServiceProvider services = new();
+        int created = 0;
+        builder.Object.AddTestExecutionFilterProvider(serviceProvider =>
+        {
+            Assert.AreSame(services, serviceProvider);
+            created++;
+            return provider.Object;
+        });
+        Assert.AreEqual(0, created);
+        Assert.AreEqual(
+            "providerFactory",
+            Assert.ThrowsExactly<ArgumentNullException>(() => builder.Object.AddTestExecutionFilterProvider(null!)).ParamName);
+
+        ITestExecutionFilterProvider[] built = await manager.BuildTestExecutionFilterProvidersAsync(services);
+
+        Assert.AreSame(provider.Object, Assert.ContainsSingle(built));
+        Assert.AreEqual(1, created);
+        provider.Verify(p => p.IsEnabledAsync(), Times.Once);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerConnection_PeerExitCallbackDoesNotBecomeApplicationCancellation(bool withCallback)
+    {
+        using CancellationTokenSource peerExit = new();
+        peerExit.Cancel();
+        int exited = 0;
+        int timedOut = 0;
+        CancellationToken observed = default;
+        Func<Task>? onExit = null;
+        if (withCallback)
+        {
+            onExit = () =>
+            {
+                exited++;
+                return Task.CompletedTask;
+            };
+        }
+
+        bool connected = await TestHostControllersTestHost.WaitForTestHostControllerConnectionOrProcessExitAsync(
+            token =>
+            {
+                observed = token;
+                return Task.FromCanceled(token);
+            },
+            600,
+            CancellationToken.None,
+            () =>
+            {
+                timedOut++;
+                return Task.CompletedTask;
+            },
+            peerExit.Token,
+            onExit);
+
+        Assert.IsFalse(connected);
+        Assert.IsTrue(observed.IsCancellationRequested);
+        Assert.AreEqual(withCallback ? 1 : 0, exited);
+        Assert.AreEqual(0, timedOut);
+    }
+
+    [TestMethod]
+    public async Task ControllerConnection_ApplicationCancellationIsNotSwallowedAsPeerExit()
+    {
+        using CancellationTokenSource application = new();
+        using CancellationTokenSource peerExit = new();
+        application.Cancel();
+        peerExit.Cancel();
+        CancellationToken observed = default;
+        int sideEffects = 0;
+
+        OperationCanceledException failure = await Assert.ThrowsExactlyAsync<TaskCanceledException>(
+            () => TestHostControllersTestHost.WaitForTestHostControllerConnectionOrProcessExitAsync(
+                token =>
+                {
+                    observed = token;
+                    return Task.FromCanceled(token);
+                },
+                600,
+                application.Token,
+                () =>
+                {
+                    sideEffects++;
+                    return Task.CompletedTask;
+                },
+                peerExit.Token,
+                () =>
+                {
+                    sideEffects++;
+                    return Task.CompletedTask;
+                }));
+
+        Assert.AreEqual(observed, failure.CancellationToken);
+        Assert.AreEqual(0, sideEffects);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ControllerTermination_CooperativeAndPostKillCompletionAvoidFalseWarnings(bool needsKill)
+    {
+        Mock<IProcess> process = new();
+        if (needsKill)
+        {
+            process.SetupSequence(p => p.WaitForExitAsync(CancellationToken.None))
+                .ThrowsAsync(new IOException("first wait sentinel"))
+                .Returns(Task.CompletedTask);
+            process.Setup(p => p.Kill()).Throws(new NotSupportedException("kill sentinel"));
+        }
+        else
+        {
+            process.Setup(p => p.WaitForExitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
+        }
+
+        Mock<ILogger> logger = new();
+        List<(LogLevel Level, string Text)> logs = [];
+        logger.Setup(l => l.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((level, text, _, _) => logs.Add((level, text)))
+            .Returns(Task.CompletedTask);
+        int canceled = 0;
+
+        await TestHostControllersTestHost.HandleCanceledTestHostAsync(
+            process.Object, () => canceled++, logger.Object, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+
+        Assert.AreEqual(1, canceled);
+        process.Verify(p => p.Kill(), needsKill ? Times.Once() : Times.Never());
+        process.Verify(p => p.WaitForExitAsync(CancellationToken.None), Times.Exactly(needsKill ? 2 : 1));
+        Assert.IsEmpty(logs.Where(l => l.Level == LogLevel.Warning));
+        if (needsKill)
+        {
+            Assert.HasCount(3, logs);
+            Assert.StartsWith("Waiting for the test host to exit during cancellation teardown failed; continuing cleanup.", logs[0].Text);
+            Assert.Contains("first wait sentinel", logs[0].Text);
+            Assert.AreEqual("Test host did not exit within '00:00:30' after cooperative cancellation; terminating it.", logs[1].Text);
+            Assert.StartsWith("Test host termination during cancellation failed; continuing cleanup.", logs[2].Text);
+            Assert.Contains("kill sentinel", logs[2].Text);
+        }
+        else
+        {
+            Assert.IsEmpty(logs);
+        }
+    }
+
+    [TestMethod]
+    public async Task ControllerConnectionTermination_ExitedAndThrowingKillPartitionsAreSafe()
+    {
+        Mock<IProcess> process = new();
+        process.SetupGet(p => p.HasExited).Returns(false);
+        process.Setup(p => p.Kill()).Throws(new NotSupportedException("connection kill sentinel"));
+        process.Setup(p => p.WaitForExitAsync(CancellationToken.None)).Returns(Task.CompletedTask);
+        List<string> logs = [];
+        Mock<ILogger> logger = new();
+        logger.Setup(l => l.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>((_, text, _, _) => logs.Add(text))
+            .Returns(Task.CompletedTask);
+
+        await TestHostControllersTestHost.TerminateTestHostAfterConnectionFailureAsync(process.Object, logger.Object, TimeSpan.FromSeconds(30));
+
+        string diagnostic = Assert.ContainsSingle(logs);
+        Assert.StartsWith("Test host termination after a connection failure failed; continuing cleanup.", diagnostic);
+        Assert.Contains("connection kill sentinel", diagnostic);
+        process.Verify(p => p.Kill(), Times.Once);
+        process.Verify(p => p.WaitForExitAsync(CancellationToken.None), Times.Once);
+        process.SetupGet(p => p.HasExited).Returns(true);
+        process.Invocations.Clear();
+
+        await TestHostControllersTestHost.TerminateTestHostAfterConnectionFailureAsync(process.Object, logger.Object, TimeSpan.FromSeconds(30));
+
+        process.Verify(p => p.Kill(), Times.Never);
+        process.Verify(p => p.WaitForExitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        Assert.HasCount(1, logs);
     }
 }

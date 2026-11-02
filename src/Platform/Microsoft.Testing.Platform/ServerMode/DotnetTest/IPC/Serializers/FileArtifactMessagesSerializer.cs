@@ -57,6 +57,11 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
             |---InputArtifactPaths Length---| (4 bytes)
             |---InputArtifactPaths[0] Size---| (4 bytes)
             |---InputArtifactPaths[0] Value---| (n bytes)
+
+        |---FileArtifactMessageList[0].CoverageSummary Id---| (2 bytes)
+        |---FileArtifactMessageList[0].CoverageSummary Size---| (4 bytes)
+        |---FileArtifactMessageList[0].CoverageSummary Value---| (n bytes)
+            |---CoverageSummaryMessagesSerializer counted entries---|
     */
 
 internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileArtifactMessages>, INamedPipeSerializer
@@ -97,6 +102,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
         {
             string? fullPath = null, displayName = null, description = null, testUid = null, testDisplayName = null, sessionUid = null, kind = null;
             string[]? inputArtifactPaths = null;
+            CoverageSummaryMessage[]? coverageSummary = null;
 
             ReadFields(stream, (fieldId, fieldSize) =>
             {
@@ -134,6 +140,10 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
                         inputArtifactPaths = ReadFieldPayload(stream, fieldSize, ReadInputArtifactPathsPayload);
                         return true;
 
+                    case FileArtifactMessageFieldsId.CoverageSummary:
+                        coverageSummary = ReadFieldPayload(stream, fieldSize, CoverageSummaryMessagesSerializer.ReadSummariesPayload);
+                        return true;
+
                     default:
                         return false;
                 }
@@ -147,7 +157,8 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
                 testDisplayName,
                 sessionUid,
                 kind,
-                inputArtifactPaths);
+                inputArtifactPaths,
+                coverageSummary);
         }
 
         return fileArtifactMessages;
@@ -189,6 +200,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
             WriteField(s, FileArtifactMessageFieldsId.SessionUid, fileArtifactMessage.SessionUid);
             WriteField(s, FileArtifactMessageFieldsId.Kind, fileArtifactMessage.Kind);
             WriteInputArtifactPathsPayload(s, fileArtifactMessage.InputArtifactPaths);
+            CoverageSummaryMessagesSerializer.WriteSummariesPayload(s, FileArtifactMessageFieldsId.CoverageSummary, fileArtifactMessage.CoverageSummary);
         });
 
     private static void WriteInputArtifactPathsPayload(Stream stream, string[]? inputArtifactPaths)
@@ -206,5 +218,6 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
         (fileArtifactMessage.TestDisplayName is null ? 0 : 1) +
         (fileArtifactMessage.SessionUid is null ? 0 : 1) +
         (fileArtifactMessage.Kind is null ? 0 : 1) +
-        (IsNullOrEmpty(fileArtifactMessage.InputArtifactPaths) ? 0 : 1));
+        (IsNullOrEmpty(fileArtifactMessage.InputArtifactPaths) ? 0 : 1) +
+        (IsNullOrEmpty(fileArtifactMessage.CoverageSummary) ? 0 : 1));
 }

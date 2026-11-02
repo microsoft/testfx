@@ -22,8 +22,8 @@ internal sealed partial class TypeCache
     /// </returns>
     private static TestMethodInfo ResolveTestMethodInfo(TestMethod testMethod, TestClassInfo testClassInfo)
     {
-        DebugEx.Assert(testMethod != null, "testMethod is Null");
-        DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
+        DebugEx.Assert(testMethod is not null, "testMethod is Null");
+        DebugEx.Assert(testClassInfo is not null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
 
@@ -50,7 +50,7 @@ internal sealed partial class TypeCache
 
         // if correct method is not found, throw appropriate
         // exception about what is wrong.
-        if (testMethodInfo == null)
+        if (testMethodInfo is null)
         {
             string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_MethodDoesNotExists, testMethod.FullClassName, testMethod.Name);
             throw new TypeInspectionException(errorMessage);

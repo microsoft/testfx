@@ -17,6 +17,155 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class JUnitReportEngineApiTests
 {
     [TestMethod]
+    public void BuildSuites_PreservesInterleavedOrderAttemptsOutcomesDurationsAndEarliestTimestamp()
+    {
+        DateTimeOffset start = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var module = new Mock<ITestApplicationModuleInfo>();
+        module.Setup(value => value.GetCurrentTestApplicationFullPath()).Returns("My.Module.dll");
+        JUnitSuiteBuilder builder = new(module.Object, start);
+        CapturedTestResult Result(string uid, string suite, string name, string outcome, int seconds, int? minute) => new()
+        {
+            RawUid = uid,
+            Uid = uid,
+            ClassName = suite,
+            DisplayName = name,
+            Outcome = outcome,
+            Duration = TimeSpan.FromSeconds(seconds),
+            StartTime = minute is int value ? start.AddMinutes(value) : null,
+        };
+
+        SuiteSet actual = builder.BuildSuites(
+            [
+                Result("1", "A", "duplicate", "passed", 1, 4),
+                Result("2", "B", "unique", "timedOut", 2, null),
+                Result("3", "A", "duplicate", "failed", 3, 2),
+                Result("4", "A", "error", "errored", 4, 5),
+                Result("5", "A", "cancel", "cancelled", 5, null),
+                Result("6", "A", "skip", "skipped", 6, null),
+            ],
+            new Dictionary<string, TestResultCapture.ParentChainEntry>(),
+            start.AddMinutes(10));
+
+        Assert.AreEqual("My.Module", actual.Name);
+        Assert.AreSequenceEqual(["A", "B"], actual.Suites.Select(value => value.Name));
+        Assert.AreEqual(6L, actual.TotalTests);
+        Assert.AreEqual(1L, actual.TotalFailures);
+        Assert.AreEqual(3L, actual.TotalErrors);
+        Assert.AreEqual(1L, actual.TotalSkipped);
+        Assert.AreEqual(TimeSpan.FromSeconds(21), actual.TotalDuration);
+        Assert.AreEqual(start, actual.Timestamp);
+        Suite first = actual.Suites[0];
+        Assert.AreEqual(start.AddMinutes(2), first.Timestamp);
+        Assert.AreEqual(start, actual.Suites[1].Timestamp);
+        Assert.AreEqual(TimeSpan.FromSeconds(19), first.TotalDuration);
+        Assert.AreEqual(1, first.Failures);
+        Assert.AreEqual(2, first.Errors);
+        Assert.AreEqual(1, first.Skipped);
+        Assert.AreSequenceEqual(["duplicate [attempt 1]", "duplicate [attempt 2]", "error", "cancel", "skip"], first.Tests.Select(value => value.Name));
+        Assert.AreEqual(1, first.Tests[0].DuplicateIndex);
+        Assert.AreEqual(2, first.Tests[1].DuplicateIndex);
+        Assert.AreEqual(2, first.Tests[0].DuplicateOf);
+        Assert.AreEqual(2, first.Tests[1].DuplicateOf);
+        Assert.AreEqual("duplicate", first.Tests[0].OriginalName);
+        Assert.AreEqual(0, first.Tests[2].DuplicateOf);
+    }
+
+    [TestMethod]
+    public void BuildSuites_ParentFallbackMissingParentsAndCyclesProduceExactRootFirstPaths()
+    {
+        var module = new Mock<ITestApplicationModuleInfo>();
+        module.Setup(value => value.GetCurrentTestApplicationFullPath()).Returns("My.Module.dll");
+        DateTimeOffset start = new(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        JUnitSuiteBuilder builder = new(module.Object, start);
+        var parents = new Dictionary<string, TestResultCapture.ParentChainEntry>
+        {
+            ["root"] = new("Root", null),
+            ["parent"] = new("Parent", "root"),
+            ["empty"] = new(string.Empty, null),
+            ["a"] = new("A", "b"),
+            ["b"] = new("B", "a"),
+        };
+        static CapturedTestResult Result(string uid, string? parent, string? type = null) => new()
+        {
+            RawUid = uid,
+            Uid = uid,
+            DisplayName = "leaf",
+            ParentRawUid = parent,
+            ClassName = type,
+            MethodName = "method",
+            Outcome = "passed",
+        };
+
+        SuiteSet actual = builder.BuildSuites(
+            [Result("1", "parent"), Result("2", "missing"), Result("3", "empty"), Result("4", "a"), Result("5", "parent", "Explicit")],
+            parents,
+            start);
+
+        Assert.AreSequenceEqual(["Parent", "My.Module", "A", "Explicit"], actual.Suites.Select(value => value.Name));
+        Assert.AreEqual("Root/Parent/leaf", Assert.ContainsSingle(actual.Suites[0].Tests).TestPath);
+        Assert.AreSequenceEqual(["leaf", "/leaf"], actual.Suites[1].Tests.Select(value => value.TestPath));
+        Assert.AreEqual("B/A/leaf", Assert.ContainsSingle(actual.Suites[2].Tests).TestPath);
+        Assert.AreEqual("Root/Parent/leaf", Assert.ContainsSingle(actual.Suites[3].Tests).TestPath);
+        Assert.AreEqual("method", Assert.ContainsSingle(actual.Suites[3].Tests).Name);
+    }
+
+    [TestMethod]
+    [DataRow(-1)]
+    [DataRow(0)]
+    [DataRow(1)]
+    public void BuildSuites_PathCapDistinguishesImmediatelyBeforeAtAndAfterBoundary(int delta)
+    {
+        string name = new('x', JUnitReportEngine.MaxTestPathLength + delta);
+        string actual = BuildSinglePath(name, null, new Dictionary<string, TestResultCapture.ParentChainEntry>());
+        string expected = delta <= 0
+            ? name
+            : new string('x', JUnitReportEngine.MaxTestPathLength) + "\n…[truncated, original length: 65537]";
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod]
+    public void BuildSuites_PathTruncationNeverSplitsSurrogateAndCountsUnwrittenRemainingSegments()
+    {
+        string prefix = new('x', JUnitReportEngine.MaxTestPathLength - 1);
+        string name = prefix + "\uD83D\uDE00tail";
+        Assert.AreEqual(prefix + "\n…[truncated, original length: 65541]", BuildSinglePath(name, null, new Dictionary<string, TestResultCapture.ParentChainEntry>()));
+
+        var parents = new Dictionary<string, TestResultCapture.ParentChainEntry>
+        {
+            ["parent"] = new(new string('p', JUnitReportEngine.MaxTestPathLength + 1), null),
+        };
+        Assert.AreEqual(
+            new string('p', JUnitReportEngine.MaxTestPathLength) + "\n…[truncated, original length: 65542]",
+            BuildSinglePath("leaf", "parent", parents));
+    }
+
+    [TestMethod]
+    public void BuildSuites_ParentWalkHasExactDepthBudgetWithoutDroppingTheLeaf()
+    {
+        var parents = new Dictionary<string, TestResultCapture.ParentChainEntry>();
+        for (int i = 0; i < 1100; i++)
+        {
+            parents[i.ToString(CultureInfo.InvariantCulture)] = new("p" + i.ToString(CultureInfo.InvariantCulture), (i + 1).ToString(CultureInfo.InvariantCulture));
+        }
+
+        string expected = string.Join("/", Enumerable.Range(0, 1024).Reverse().Select(value => "p" + value.ToString(CultureInfo.InvariantCulture))) + "/leaf";
+        Assert.AreEqual(expected, BuildSinglePath("leaf", "0", parents));
+    }
+
+    private static string BuildSinglePath(string name, string? parent, IReadOnlyDictionary<string, TestResultCapture.ParentChainEntry> parents)
+    {
+        var module = new Mock<ITestApplicationModuleInfo>();
+        module.Setup(value => value.GetCurrentTestApplicationFullPath()).Returns("My.Module.dll");
+        DateTimeOffset start = new(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        JUnitSuiteBuilder builder = new(module.Object, start);
+        SuiteSet result = builder.BuildSuites(
+            [new CapturedTestResult { RawUid = "test", Uid = "test", DisplayName = name, ParentRawUid = parent, Outcome = "passed" }],
+            parents,
+            start);
+        return Assert.ContainsSingle(Assert.ContainsSingle(result.Suites).Tests).TestPath;
+    }
+
+    [TestMethod]
     public void XmlSafeText_RemainsInternalAndSanitizesInvalidCharacters()
         => Assert.AreEqual("a\uFFFDb", JUnitReportEngine.XmlSafeText("a\u0001b"));
 

@@ -50,7 +50,8 @@ public sealed class ModernUwpTests : AcceptanceTestBase
         Assert.IsTrue(Directory.Exists(build.PackageLayoutPath), build.BinlogPath);
         WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
             Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt"),
-            WindowsApplicationModelAssetKind.ModernUwp);
+            WindowsApplicationModelAssetKind.ModernUwp,
+            Net10TargetFramework);
     }
 
     [DataRow(Net9TargetFramework)]
@@ -92,7 +93,8 @@ public sealed class ModernUwpTests : AcceptanceTestBase
                     string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
                     WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
                         resolvedAssetsReport,
-                        WindowsApplicationModelAssetKind.ModernUwp);
+                        WindowsApplicationModelAssetKind.ModernUwp,
+                        targetFramework);
                     Assert.IsTrue(
                         Directory.Exists(build.PackageLayoutPath),
                         $"The Modern UWP package layout '{build.PackageLayoutPath}' does not exist. Binlog: '{build.BinlogPath}'.");
@@ -242,7 +244,7 @@ public sealed class ModernUwpTests : AcceptanceTestBase
   <Target Name="WriteResolvedMSTestAssets" AfterTargets="ResolveReferences">
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
-      Lines="UseUwpTools=$(UseUwpTools)"
+      Lines="TargetFramework=$(TargetFramework);UseUwpTools=$(UseUwpTools)"
       Overwrite="true" />
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"

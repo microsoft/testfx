@@ -363,6 +363,44 @@ public sealed class DynamicExtensionManifestParserTests
         Assert.Contains("typeFullName", ex.Message);
     }
 
+    [TestMethod]
+    public void Parse_BlankOptionalIdentityAndDisplayName_UsesResolvedPathAndTypeWithoutLosingAuthoredPath()
+    {
+        const string Content = """
+            {
+              "extensions": [
+                { "assemblyPath": "nested/Contoso.dll", "typeFullName": "Contoso.Hook", "id": " ", "displayName": "\t", "enabled": true }
+              ]
+            }
+            """;
+        string expectedPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ManifestPath)!, "nested/Contoso.dll"));
+
+        DynamicExtensionEntry entry = Assert.ContainsSingle(DynamicExtensionManifestParser.Parse(ManifestPath, Content).Extensions);
+
+        Assert.AreEqual($"{expectedPath}|Contoso.Hook", entry.Id);
+        Assert.IsFalse(entry.HasExplicitId);
+        Assert.AreEqual("Contoso.Hook", entry.DisplayName);
+        Assert.AreEqual("nested/Contoso.dll", entry.AssemblyPath);
+        Assert.AreEqual(expectedPath, entry.ResolvedAssemblyPath);
+        Assert.IsTrue(entry.IsEnabled);
+    }
+
+    [TestMethod]
+    public void Parse_AssemblyPathContainingNull_WrapsPathFailureWithManifestAndEntryIdentity()
+    {
+        const string Content = """
+            { "extensions": [ { "assemblyPath": "bad\u0000.dll", "typeFullName": "Contoso.Hook" } ] }
+            """;
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => DynamicExtensionManifestParser.Parse(ManifestPath, Content));
+
+        Assert.IsInstanceOfType<ArgumentException>(exception.InnerException);
+        Assert.Contains(ManifestPath, exception.Message);
+        Assert.Contains("bad", exception.Message);
+        Assert.Contains("0", exception.Message);
+    }
+
     private static string ToJsonString(string value)
         => "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 }

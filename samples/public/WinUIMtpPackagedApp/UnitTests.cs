@@ -38,4 +38,13 @@ public partial class UnitTest1
         Assert.IsNotNull(grid.DispatcherQueue);
         Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess);
     }
+
+    [TestMethod]
+    public void RetryFailsFirstAttempt()
+    {
+        Assert.AreNotEqual(
+            "1",
+            Environment.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"),
+            "This probe deliberately fails the first retry attempt and passes the next one.");
+    }
 }

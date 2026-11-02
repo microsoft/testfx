@@ -22,6 +22,7 @@ public sealed class TestHostLauncherTests : AcceptanceTestBase<TestHostLauncherT
         // Marker proves the platform delegated the launch to our ITestHostLauncher rather than
         // doing the default Process.Start itself.
         Assert.AreEqual("TestHostLauncher.LaunchTestHostAsync", File.ReadAllText(Path.Combine(testHost.DirectoryName, "LaunchTestHostAsync.txt")));
+        Assert.AreEqual(testHost.DirectoryName, File.ReadAllText(Path.Combine(testHost.DirectoryName, "WorkingDirectory.txt")));
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -90,6 +91,7 @@ public sealed class TestHostLauncher : ITestHostLauncher
         // reads it from testHost.DirectoryName, which is the same folder.
         string markerPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(context.FileName)!, "LaunchTestHostAsync.txt");
         System.IO.File.WriteAllText(markerPath, "TestHostLauncher.LaunchTestHostAsync");
+        System.IO.File.WriteAllText(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(context.FileName)!, "WorkingDirectory.txt"), context.WorkingDirectory);
 
         var startInfo = new ProcessStartInfo(context.FileName)
         {

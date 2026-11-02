@@ -87,7 +87,7 @@ internal sealed partial class TestClassInfo
         }
 
         // If ClassCleanup was successful, then don't do anything
-        if (ClassCleanupException == null)
+        if (ClassCleanupException is null)
         {
             return null;
         }

@@ -13,6 +13,77 @@ namespace MSTest.Analyzers.Test;
 [TestClass]
 public sealed class UseProperAssertMethodsAnalyzerTests
 {
+    [TestMethod]
+    public async Task StaticAssertionFixesPreserveMessagesAndDistinctArgumentRewrites()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using static Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void ExampleMethod()
+                {
+                    object value = new object();
+                    string left = "left";
+                    string right = "right";
+                    int[] items = new int[] { 1, 2 };
+                    var comparer = EqualityComparer<int>.Default;
+                    object boxed = true;
+                    {|#0:IsTrue(value == null, "null detail")|};
+                    {|#1:IsTrue(left == right, "equal detail")|};
+                    {|#2:IsTrue(items.Contains(2, comparer), "contains detail")|};
+                    {|#3:AreEqual(0, items.Length, "empty detail")|};
+                    {|#4:AreEqual(1, items.Count(item => item > 0), "single detail")|};
+                    {|#5:AreEqual(true, boxed, "boolean detail")|};
+                }
+            }
+            """;
+        string fixedCode = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using static Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+
+            [TestClass]
+            public class Example
+            {
+                [TestMethod]
+                public void ExampleMethod()
+                {
+                    object value = new object();
+                    string left = "left";
+                    string right = "right";
+                    int[] items = new int[] { 1, 2 };
+                    var comparer = EqualityComparer<int>.Default;
+                    object boxed = true;
+                    IsNull(value, "null detail");
+                    AreEqual(right, left, "equal detail");
+                    Contains(2, items, comparer, "contains detail");
+                    IsEmpty(items, "empty detail");
+                    ContainsSingle(item => item > 0, items, "single detail");
+                    IsTrue((bool?)boxed, "boolean detail");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNull", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreEqual", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(2).WithArguments("Contains", "IsTrue"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(3).WithArguments("IsEmpty", "AreEqual"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(4).WithArguments("ContainsSingle", "AreEqual"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(5).WithArguments("IsTrue", "AreEqual"),
+            ],
+            fixedCode);
+    }
+
     private const string SomeClassWithUserDefinedEqualityOperators = """
         public class SomeClass
         {

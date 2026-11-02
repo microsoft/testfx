@@ -144,6 +144,7 @@ internal sealed partial class ServerTestHost
                     stringId: request.StringId).ConfigureAwait(false);
                 if (isInitializeRequest)
                 {
+                    _showMessage = response is InitializeResponseArgs { Capabilities.TestingCapabilities.ShowMessage: true };
                     CompleteInitialization();
                 }
 

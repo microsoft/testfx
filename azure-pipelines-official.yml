@@ -103,7 +103,7 @@ extends:
       image: windows.vs2026preview.scout.amd64
       os: windows
     settings:
-      networkIsolationPolicy: Permissive,CFSClean
+      networkIsolationPolicy: DefaultDeny,CFSClean
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
@@ -125,7 +125,8 @@ extends:
           jobs:
           - job: Windows
             enablePublishing: true
-            timeoutInMinutes: 90
+            # Leave room for the expanded framework matrix and signing/artifact publication after tests.
+            timeoutInMinutes: 180
             pool:
               name: $(DncEngInternalBuildPool)
               image: windows.vs2026preview.scout.amd64
@@ -152,6 +153,9 @@ extends:
                 DOTNET_HOST_PATH: '$(Build.SourcesDirectory)/.dotnet/dotnet.exe'
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: Test.cmd
                   -configuration $(_BuildConfig)
@@ -305,6 +309,9 @@ extends:
               displayName: Build
 
             - ${{ if eq(parameters.SkipTests, False) }}:
+              - pwsh: ./eng/validate-code-coverage-settings.ps1 -Configuration $(_BuildConfig)
+                displayName: Validate generated coverage settings
+
               # -ci is allowing to import some environment variables and some required configurations
               - script: |
                   chmod +x ./test.sh

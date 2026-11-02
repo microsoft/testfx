@@ -135,6 +135,12 @@ Identify:
 - Areas with distinct purposes that could become separate files
 - Shared utilities that are scattered among unrelated code
 
+This bounded inspection is for issue generation, not implementation preflight.
+Label proposed splits as provisional where the sample cannot establish their
+safety; do not read additional source to prove equivalence in this run or claim
+that consumers and tests have been checked. Include the implementation recipe
+below for the later implementer.
+
 ### 4. Generate Issue Description
 
 If the file exceeds 500 lines, create an issue using the following structure:
@@ -161,7 +167,8 @@ The file `[FILE_PATH]` has grown to [LINE_COUNT] lines, making it harder to navi
 
 #### Proposed File Splits
 
-Based on the file's structure, split it into the following modules:
+Based on the bounded structural sample, investigate these proposed splits.
+Confirm their safety during implementation preflight before moving code:
 
 1. **`[new_file_1]`**
    - Contents: [list key functions/classes]
@@ -177,19 +184,21 @@ Based on the file's structure, split it into the following modules:
 
 ### Implementation Guidelines
 
-1. **Preserve Behavior**: All existing functionality must work identically after the split
-2. **Maintain Public API**: Keep exported/public symbols accessible with the same names
-3. **Update Imports**: Fix all import paths throughout the codebase
-4. **Test After Each Split**: Run the test suite after each incremental change
-5. **One File at a Time**: Split one module at a time to make review easier
+1. **Establish Equivalence**: Follow `.github/skills/behavior-preserving-refactor/SKILL.md`. Before editing, read the complete affected bodies, inventory baseline behavior and relevant tests, and identify distinguishing cases.
+2. **Preserve Selection and Evaluation**: Keep iteration order, short-circuit evaluation, exact type selection, first/last-match semantics, defaults, exceptions, and side effects. Cover reachable duplicate and malformed inputs; similar-looking helpers are not automatically interchangeable.
+3. **Trace All Consumers**: Check partial declarations, source-linked consumers, owning/consuming project includes, target-framework guards, and tracked public/internal API surfaces. Keep names, accessibility, attributes, and native interop contracts unchanged.
+4. **Move Before Modernizing**: Move bodies unchanged first, one coherent responsibility at a time. Preserve allocation and performance behavior on hot paths; do not mix adjacent modernization or bug fixes into the split.
+5. **Use Focused Checks**: Run the smallest affected project/TFM builds and relevant tests before and after each coherent split. Add distinguishing equivalence cases where coverage is missing; a pure file move does not require the full solution. Report exact checks and outcomes, including unavailable checks.
+6. **Surface Constraints**: Measure resulting line counts. If a safe structural split cannot meet the size goal without changing semantics, report the remaining size and blocker rather than forcing behavior changes.
 
 ### Acceptance Criteria
 
 - [ ] Original file is split into focused modules
-- [ ] Each new file is under 300 lines
-- [ ] All tests pass after refactoring
-- [ ] No breaking changes to public API
-- [ ] All import paths updated correctly
+- [ ] Each new file is under 300 lines, or a concrete behavior-preservation blocker and remaining size are reported
+- [ ] Baseline semantics, including reachable duplicate/malformed cases and evaluation order, are preserved by focused equivalence checks
+- [ ] Relevant builds and tests pass for affected consumers/TFMs; exact checks and any validation gaps are reported
+- [ ] Public and tracked internal API contracts, attributes, and conditional compilation are preserved
+- [ ] Project includes, source links, and package layout still include the moved code for every affected consumer
 
 ---
 

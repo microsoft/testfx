@@ -64,7 +64,7 @@
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsSection">
         <source>Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</source>
-        <target state="new">Runsettings section '{0}' is not supported by MSTest on Microsoft.Testing.Platform and will be ignored. VSTest ISettingsProvider extensions are not invoked.</target>
+        <target state="translated">Microsoft.Testing.Platform 上的 MSTest 不支援 Runsettings 區段 '{0}'，將予以忽略。不會叫用  VSTest ISettingsProvider 延伸模組。</target>
         <note>{0} is the unsupported section name. Do not localize {Locked="Runsettings"}, {Locked="MSTest"}, {Locked="Microsoft.Testing.Platform"}, {Locked="VSTest"}, or {Locked="ISettingsProvider"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilter">

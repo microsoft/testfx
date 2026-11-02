@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
         <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
-        <target state="new">Azure DevOps live publishing could not read attachment '{0}': {1}</target>
+        <target state="translated">A publicação ao vivo do Azure DevOps não pôde ler o anexo '{0}': {1}</target>
         <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
         <source>Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</source>
-        <target state="new">Azure DevOps live publishing could not upload attachment '{0}' because its size of {1} bytes exceeds the limit of {2} bytes.</target>
+        <target state="translated">Azure publicação ao vivo do DevOps não pôde carregar o anexo '{0}' porque seu tamanho de {1} bytes excede o limite de {2} bytes.</target>
         <note>{0} is the attachment filename. {1} is its size in bytes. {2} is the maximum size in bytes.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
@@ -62,6 +62,11 @@
         <target state="translated">A autenticação da REST API do Azure DevOps falhou ou foi redirecionada para a página de entrada (status: {0}), o que indica que o SYSTEM_ACCESSTOKEN é inválido ou não está disponível. Para compilações de validação de pull request de fork, não exponha segredos a código de bifurcação não confiável; publique os resultados de um contexto de pipeline confiável separado ou desabilite a publicação ao vivo do Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">A publicação ao vivo do Azure DevOps falhou ao concluir a execução de teste.</target>
@@ -69,7 +74,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
         <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
-        <target state="new">Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</target>
+        <target state="translated">Azure publicação ao vivo do DevOps atingiu o tempo limite após {1} aguardando o bloqueio de coordenação '{0}'.</target>
         <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
@@ -240,6 +245,86 @@
       <trans-unit id="DisplayName">
         <source>Azure DevOps report generator</source>
         <target state="translated">Gerador de relatórios do Azure DevOps</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Pelo menos um teste falhou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Um ou mais limites de cobertura de código não foram atingidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Um processo dependente foi encerrado inesperadamente.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">A execução de teste falhou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Foi negociada uma versão de protocolo incompatível.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Os argumentos da linha de comando são inválidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">A configuração da plataforma de teste é inválida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Menos testes foram executados do que o exigido por --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">A execução de teste foi concluída com êxito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">O adaptador de teste relatou uma falha na sessão de teste.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">A execução do teste foi interrompida antecipadamente porque uma data limite imposta pela CI estava se aproximando.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">A execução de teste foi interrompida após atingir o limite definido por --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">O processo de host de teste foi encerrado de forma não normal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">A sessão de teste foi anulada.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">A execução de teste relatou um código de saída diferente de êxito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Nenhum teste foi encontrado para execução. Isso geralmente significa que um filtro de teste não encontrou correspondências.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">

@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Platform.AI;
 /// <remarks>
 /// This API is experimental. It may change, break, or be removed at any time without notice.
 /// </remarks>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/experimental")]
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IChatClientProvider
 {
     /// <summary>

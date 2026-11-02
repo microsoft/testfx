@@ -45,8 +45,8 @@ internal sealed partial class TypeCache
         {
             try
             {
-                // Only examine classes which are TestClass or derives from TestClass attribute
-                if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t))
+                // F# modules can contain fixtures without an explicit TestClass attribute.
+                if (!@this._reflectionHelper.IsAttributeDefined<TestClassAttribute>(t) && !t.IsFSharpModule())
                 {
                     continue;
                 }

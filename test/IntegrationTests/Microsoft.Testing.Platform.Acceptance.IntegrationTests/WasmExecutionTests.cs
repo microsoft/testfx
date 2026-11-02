@@ -55,8 +55,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class WasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
-    // wasi-wasm is only supported on the current .NET TFM in this repo.
-    private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
+    private const string TargetFramework = WasmRuntime.TargetFramework;
 
     // Minimal project hosting Microsoft.Testing.Platform directly (no MSTest adapter): a user-authored
     // async Main registers a DummyFramework that publishes a single passing test. This mirrors the

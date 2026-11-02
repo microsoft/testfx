@@ -45,6 +45,8 @@ internal static partial class TerminalResources
 
     internal static string @CoverageThresholdFailed => GetResourceString("CoverageThresholdFailed");
 
+    internal static string @CoverageThresholdFailedRoundedValues => GetResourceString("CoverageThresholdFailedRoundedValues");
+
     internal static string @CoverageThresholdNoDataFailed => GetResourceString("CoverageThresholdNoDataFailed");
 
     internal static string @CoverageThresholdNoDataPassed => GetResourceString("CoverageThresholdNoDataPassed");
@@ -215,6 +217,10 @@ internal static partial class TerminalResources
 
     internal static string @TerminalProgressHeartbeatActiveSuffix => GetResourceString("TerminalProgressHeartbeatActiveSuffix");
 
+    internal static string @TerminalProgressHeartbeatLastCompletionSuffix => GetResourceString("TerminalProgressHeartbeatLastCompletionSuffix");
+
+    internal static string @TerminalProgressHeartbeatNoCompletionSuffix => GetResourceString("TerminalProgressHeartbeatNoCompletionSuffix");
+
     internal static string @TerminalProgressOptionDescription => GetResourceString("TerminalProgressOptionDescription");
 
     internal static string @TerminalProgressOptionInvalidArgument => GetResourceString("TerminalProgressOptionInvalidArgument");
@@ -260,6 +266,8 @@ internal static partial class TerminalResources
     internal static string @Try => GetResourceString("Try");
 
     internal static string @ZeroTestsRan => GetResourceString("ZeroTestsRan");
+
+    internal static string @NoAffectedTestsSelected => GetResourceString("NoAffectedTestsSelected");
 
 #endif
 }

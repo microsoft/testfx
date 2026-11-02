@@ -13,6 +13,74 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
 {
     public TestContext TestContext { get; set; }
 
+    [TestMethod]
+    [DataRow("--help", false)]
+    [DataRow("--help", true)]
+    [DataRow("--info", false)]
+    [DataRow("--info", true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task ShippingController_FilterHelpAndInfoRequireMSTestToken(string option, bool mstest)
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", "<UseWinUI>true</UseWinUI>");
+        DotnetMuxerResult restore = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteContract",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, restore.ExitCode, restore.ToString());
+        string controller = Path.Combine(
+            Environment.GetEnvironmentVariable("NUGET_PACKAGES")!,
+            "microsoft.testing.extensions.packagedapp.msbuild", MicrosoftTestingPlatformVersion,
+            "tools", "AppModelController", "net8.0", "mstest-appmodel-controller.exe");
+        Dictionary<string, string?> environment = new()
+        {
+            ["MSTEST_APPMODEL_CONTROLLER_EXTENSIONS"] = mstest ? "msbuild;packagedapp;mstest" : "msbuild;packagedapp",
+            ["TESTINGPLATFORM_UI_LANGUAGE"] = "en-US",
+        };
+        BoundedCommandLineResult result = await RunWindowsApplicationModelCommandAsync(
+            $"\"{controller}\" {option}", asset.TargetAssetPath, TestContext.CancellationToken, environment);
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+        string output = result.StandardOutput.ReplaceLineEndings();
+        if (!mstest)
+        {
+            Assert.DoesNotContain(
+                option == "--help"
+                    ? """
+                          --filter
+
+                      """.ReplaceLineEndings()
+                    : """
+                            --filter
+                              Arity: 1
+                      """.ReplaceLineEndings(),
+                output);
+            result = await RunWindowsApplicationModelCommandAsync(
+                $"\"{controller}\" --filter Name=Identity", asset.TargetAssetPath, TestContext.CancellationToken, environment);
+            Assert.AreEqual(5, result.ExitCode, result.StandardOutput + result.ErrorOutput);
+            Assert.Contains("Unknown option '--filter'", result.StandardOutput + result.ErrorOutput);
+        }
+        else
+        {
+            Assert.Contains(
+                option == "--help"
+                    ? """
+                          --filter
+                              Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+                      """.ReplaceLineEndings()
+                    : """
+                      Registered command line providers:
+                        ControllerTestFramework
+                          Name: Windows application-model controller
+                          Version: 1.0.0
+                          Description: Controller-only test framework for packaged Windows application test hosts.
+                          Options:
+                            --filter
+                              Arity: 1
+                              Hidden: False
+                              Description: Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.
+                      """.ReplaceLineEndings(),
+                output);
+        }
+    }
+
     public static IEnumerable<(string Package, string Properties, bool Controller, bool Helper)> ConsumerContracts()
     {
         foreach (string package in new[] { "MSTest", "MSTest.TestAdapter" })
@@ -49,7 +117,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             new[]
             {
                 $"Controller={(selectsController ? "mstest-appmodel-controller.exe" : string.Empty)}",
-                $"Extensions={(selectsController ? "msbuild;packagedapp;trx" : string.Empty)}",
+                $"Extensions={(selectsController ? "msbuild;packagedapp;trx;mstest" : string.Empty)}",
                 $"Helper={helper.ToString().ToLowerInvariant()}",
             },
             lines);
@@ -93,12 +161,16 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
             : OperatingSystem.IsWindows() ? "PackagedConsumer.exe" : "PackagedConsumer";
         Assert.AreEqual($"Command={(selectsController ? "mstest-appmodel-controller.exe" : expectedCommand)}", lines[0]);
         Assert.AreEqual("Arguments=", lines[1]);
+        Assert.AreEqual(
+            selectsController,
+            File.Exists(Path.ChangeExtension(executable, ".launcher.config.json")),
+            "Only the automatic packaged MTP controller should generate a Test Explorer launcher.");
         if (selectsController)
         {
             string bootstrapFile = (await File.ReadAllTextAsync(
                 Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
             Assert.AreSequenceEqual(
-                ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx"],
+                ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx;mstest"],
                 await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
         }
     }
@@ -118,6 +190,10 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string[] lines = await File.ReadAllLinesAsync(Path.Combine(asset.TargetAssetPath, "run-contract.txt"), TestContext.CancellationToken);
         Assert.AreEqual($"Command={expectedCommand}", lines[0]);
         Assert.DoesNotContain("--internal-packagedapp-controller", string.Join(Environment.NewLine, lines));
+        Assert.AreEqual(
+            properties.Contains("<RunCommand>", StringComparison.Ordinal),
+            File.Exists(Path.ChangeExtension(executable, ".launcher.config.json")),
+            "A native RunCommand override must not disable Test Explorer's automatic controller.");
     }
 
     [TestMethod]
@@ -147,7 +223,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         string bootstrapFile = (await File.ReadAllTextAsync(
             Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
         Assert.AreSequenceEqual(
-            ["--internal-packagedapp-controller-v1", Path.Combine(asset.TargetAssetPath, "staged", "host.exe"), "msbuild;packagedapp;trx"],
+            ["--internal-packagedapp-controller-v1", Path.Combine(asset.TargetAssetPath, "staged", "host.exe"), "msbuild;packagedapp;trx;mstest"],
             await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
     }
 
@@ -187,6 +263,186 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
         Assert.AreEqual(0, clean.ExitCode, clean.ToString());
         Assert.IsFalse(File.Exists(bootstrapFile));
         Assert.IsFalse(File.Exists(controller));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_GeneratesIncrementalExecutableAndRecipeLaunchers(bool specialPath)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """ + (specialPath ? """<IntermediateOutputPath>obj\controller's &amp; special path\</IntermediateOutputPath>""" : string.Empty));
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
+        DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, first.ExitCode, first.ToString());
+        string bootstrapFile = (await File.ReadAllTextAsync(
+            Path.Combine(asset.TargetAssetPath, "bootstrap-file-path.txt"), TestContext.CancellationToken)).Trim();
+        string controller = Path.Combine(Path.GetDirectoryName(bootstrapFile)!, "mstest-appmodel-controller.exe");
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        string[] launchers =
+        [
+            Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
+            Path.Combine(directory, "PackagedConsumer.build.launcher.config.json"),
+        ];
+        foreach (string launcher in launchers)
+        {
+            using var json = JsonDocument.Parse(await File.ReadAllTextAsync(launcher, TestContext.CancellationToken));
+            Assert.AreEqual(controller, json.RootElement.GetProperty("program").GetString());
+            Assert.AreSequenceEqual(["--server"], json.RootElement.GetProperty("args").EnumerateArray().Select(value => value.GetString()));
+        }
+
+        Assert.AreSequenceEqual(
+            ["--internal-packagedapp-controller-v1", executable, "msbuild;packagedapp;trx;mstest"],
+            await File.ReadAllLinesAsync(bootstrapFile, TestContext.CancellationToken));
+        DateTime[] timestamps = [.. launchers.Select(File.GetLastWriteTimeUtc)];
+        DotnetMuxerResult second = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, second.ExitCode, second.ToString());
+        Assert.AreSequenceEqual(timestamps, launchers.Select(File.GetLastWriteTimeUtc));
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        Assert.IsFalse(launchers.Any(File.Exists));
+        Assert.IsFalse(File.Exists(bootstrapFile));
+    }
+
+    [TestMethod]
+    [DataRow(false, "clean")]
+    [DataRow(false, "rebuild")]
+    [DataRow(true, "clean")]
+    [DataRow(true, "rebuild")]
+    [DataRow(true, "build-clean")]
+    [DataRow(true, "build-rebuild")]
+    [DataRow(true, "optout-clean")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_PreservesCallerLauncherIncludingAnEditedGeneratedFile(bool generateFirst, string operation)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        string command = $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"";
+        if (generateFirst)
+        {
+            DotnetMuxerResult first = await DotnetCli.RunAsync(command, cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, first.ExitCode, first.ToString());
+        }
+
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        string[] launchers =
+        [
+            Path.Combine(directory, "PackagedConsumer.launcher.config.json"),
+            Path.Combine(directory, "PackagedConsumer.build.launcher.config.json"),
+        ];
+        Directory.CreateDirectory(directory);
+        const string CallerConfiguration = """{"program":"custom-controller.exe","args":["--server","jsonrpc"]}""";
+        foreach (string launcher in launchers)
+        {
+            await File.WriteAllTextAsync(launcher, CallerConfiguration, TestContext.CancellationToken);
+        }
+
+        if (!generateFirst || operation.StartsWith("build-", StringComparison.Ordinal) || operation == "optout-clean")
+        {
+            string buildCommand = operation == "optout-clean"
+                ? $"{command} -p:GenerateTestingPlatformPackagedAppTestExplorerLauncher=false"
+                : command;
+            DotnetMuxerResult build = await DotnetCli.RunAsync(buildCommand, cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, build.ExitCode, build.ToString());
+            await AssertPreservedAsync();
+        }
+
+        string lifecycleCommand = operation.EndsWith("rebuild", StringComparison.Ordinal)
+            ? $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\""
+            : $"clean \"{asset.TargetAssetPath}\"";
+        DotnetMuxerResult result = await DotnetCli.RunAsync(lifecycleCommand, cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        await AssertPreservedAsync();
+        DotnetMuxerResult clean = await DotnetCli.RunAsync(
+            $"clean \"{asset.TargetAssetPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, clean.ExitCode, clean.ToString());
+        await AssertPreservedAsync();
+
+        async Task AssertPreservedAsync()
+        {
+            foreach (string launcher in launchers)
+            {
+                Assert.IsTrue(File.Exists(launcher), $"Caller launcher was deleted: {launcher}");
+                Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(launcher, TestContext.CancellationToken));
+            }
+
+            foreach (string manifest in Directory.GetFiles(asset.TargetAssetPath, "*.FileListAbsolute.txt", SearchOption.AllDirectories))
+            {
+                string[] entries = await File.ReadAllLinesAsync(manifest, TestContext.CancellationToken);
+                foreach (string launcher in launchers)
+                {
+                    Assert.IsFalse(entries.Contains(launcher, StringComparer.OrdinalIgnoreCase), $"Caller launcher entered clean tracking: {launcher}");
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_RebuildPreservesSourceCopiedCallerLaunchers(bool generateFirst)
+    {
+        using TestAsset asset = await GenerateConsumerAsync(
+            "MSTest.TestAdapter",
+            """
+            <UseWinUI>true</UseWinUI>
+            <AppxPackageRecipe>$(MSBuildProjectDirectory)\bin\Debug\net8.0\PackagedConsumer.build.appxrecipe</AppxPackageRecipe>
+            """,
+            extraReferences: """
+                <None Include="CallerExecutable.json" TargetPath="PackagedConsumer.launcher.config.json" CopyToOutputDirectory="Always" />
+                <None Include="CallerRecipe.json" TargetPath="PackagedConsumer.build.launcher.config.json" CopyToOutputDirectory="Always" />
+                """);
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        if (generateFirst)
+        {
+            DotnetMuxerResult first = await DotnetCli.RunAsync(
+                $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+                cancellationToken: TestContext.CancellationToken);
+            Assert.AreEqual(0, first.ExitCode, first.ToString());
+        }
+
+        const string CallerConfiguration = """{"program":"custom-controller.exe","args":["--server","jsonrpc"]}""";
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "CallerExecutable.json"), CallerConfiguration, TestContext.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(asset.TargetAssetPath, "CallerRecipe.json"), CallerConfiguration, TestContext.CancellationToken);
+
+        DotnetMuxerResult rebuild = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:Rebuild -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, rebuild.ExitCode, rebuild.ToString());
+        string directory = Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0");
+        foreach (string launcher in new[] { "PackagedConsumer.launcher.config.json", "PackagedConsumer.build.launcher.config.json" })
+        {
+            Assert.AreEqual(CallerConfiguration, await File.ReadAllTextAsync(Path.Combine(directory, launcher), TestContext.CancellationToken), launcher);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("<GenerateTestingPlatformPackagedAppTestExplorerLauncher>false</GenerateTestingPlatformPackagedAppTestExplorerLauncher>")]
+    [DataRow("<TestingPlatformExecutablePath>custom-controller.exe</TestingPlatformExecutablePath>")]
+    [DataRow("<DesignTimeBuild>true</DesignTimeBuild>")]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task TestExplorer_PreservesExplicitLauncherOptOuts(string properties)
+    {
+        using TestAsset asset = await GenerateConsumerAsync("MSTest.TestAdapter", $"<UseWinUI>true</UseWinUI>{properties}");
+        string executable = Path.Combine(asset.TargetAssetPath, "staged", "host.exe");
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            $"build \"{asset.TargetAssetPath}\" -t:WriteRunContract -p:TestingPlatformPackagedAppTargetPath=\"{executable}\"",
+            cancellationToken: TestContext.CancellationToken);
+        Assert.AreEqual(0, result.ExitCode, result.ToString());
+        Assert.IsFalse(File.Exists(Path.Combine(asset.TargetAssetPath, "bin", "Debug", "net8.0", "PackagedConsumer.launcher.config.json")));
     }
 
     [TestMethod]
@@ -439,6 +695,7 @@ public sealed class PackagedAppIntegrationTests : AcceptanceTestBase<NopAssetFix
                 {{(multiTarget ? "<TargetFrameworks>net8.0;net9.0</TargetFrameworks>" : "<TargetFramework>net8.0</TargetFramework>")}}
                 <OutputType>Exe</OutputType>
                 <EnableMSTestRunner>true</EnableMSTestRunner>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
                 <EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>
                 <NoWarn>$(NoWarn);NU1507</NoWarn>
                 {{properties}}

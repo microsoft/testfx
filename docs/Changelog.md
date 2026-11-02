@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.5.2" />[4.5.2] - 2026-10-27
+
+See full log [of v4.5.1...v4.5.2](https://github.com/microsoft/testfx/compare/v4.5.1...v4.5.2)
+
+For the Microsoft.Testing.Platform fixes included with this release, see [2.5.2](Changelog-Platform.md#2.5.2).
+
+### Changed
+
+* Add documentation links to the MSTest source generator's `AOTSG0001` through `AOTSG0005` diagnostics, by @Evangelink in [#11972](https://github.com/microsoft/testfx/pull/11972)
+* Update localized MSTest adapter and analyzer messages, by @Evangelink and @nohwnd-bot in [#11898](https://github.com/microsoft/testfx/pull/11898), [#11899](https://github.com/microsoft/testfx/pull/11899), [#11900](https://github.com/microsoft/testfx/pull/11900), [#11973](https://github.com/microsoft/testfx/pull/11973), [#12024](https://github.com/microsoft/testfx/pull/12024) and [#12090](https://github.com/microsoft/testfx/pull/12090)
+
+### Fixed
+
+* Materialize array `Type` arguments such as `[DataRow(typeof(int[]))]` in Native AOT tests, while checking the accessibility of array elements and enclosing generic type arguments, by @Evangelink and @Sergio0694 in [#12030](https://github.com/microsoft/testfx/pull/12030)
+* Keep timed UI test initialization, execution and cleanup on their original synchronization context, avoiding WinUI dispatcher deadlocks while preserving timeout and cancellation handling, by @Evangelink in [#12029](https://github.com/microsoft/testfx/pull/12029)
+* Allow `MSTEST0032` assertions that intentionally compare a literal with a constant from another assembly to pin a dependency's contract, by @drognanar in [#12087](https://github.com/microsoft/testfx/pull/12087)
+* Report `MSTEST0025` for exact-type assertions against abstract classes, and avoid offering an `Assert.Fail` replacement when the assertion's return value is used, by @Evangelink in [#12099](https://github.com/microsoft/testfx/pull/12099)
+* Register copied MSTest adapter satellite assemblies in MSBuild's clean manifest so incremental cleanup and `Clean` can remove stale generated localized outputs, by @Copilot in [#12107](https://github.com/microsoft/testfx/pull/12107)
+
 ## <a name="4.5.1" />[4.5.1] - 2026-10-07
 
 See full log [of v4.5.0...v4.5.1](https://github.com/microsoft/testfx/compare/v4.5.0...v4.5.1)

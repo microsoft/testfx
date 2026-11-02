@@ -31,6 +31,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
     // Mutate only while holding _flushSemaphore.
     private readonly Stack<AzureDevOpsTestCaseResultWithAttachments> _retryResults = new();
+    // Mutate only while holding _flushSemaphore; retained updates never replay accepted results.
+    private readonly Dictionary<int, string> _pendingResultMetadata = [];
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
     private readonly ConcurrentQueue<(int TestCaseResultId, AzureDevOpsTestResultAttachment Attachment)> _pendingResultAttachments = new();
     private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();

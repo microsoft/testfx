@@ -101,14 +101,23 @@ internal static partial class SerializerUtilities
             [JsonRpcStrings.Testing] = Serialize(capabilities.TestingCapabilities),
         });
 
-        Serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities => new Dictionary<string, object?>
+        Serializers[typeof(ServerTestingCapabilities)] = new ObjectSerializer<ServerTestingCapabilities>(capabilities =>
         {
-            [JsonRpcStrings.SupportsDiscovery] = capabilities.SupportsDiscovery,
-            [JsonRpcStrings.MultiRequestSupport] = capabilities.MultiRequestSupport,
-            [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
-            [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
-            [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
-            [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
+            Dictionary<string, object?> properties = new()
+            {
+                [JsonRpcStrings.SupportsDiscovery] = capabilities.SupportsDiscovery,
+                [JsonRpcStrings.MultiRequestSupport] = capabilities.MultiRequestSupport,
+                [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
+                [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
+                [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
+                [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
+            };
+            if (capabilities.ShowMessage is { } showMessage)
+            {
+                properties[JsonRpcStrings.ShowMessage] = showMessage;
+            }
+
+            return properties;
         });
 
         Serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>

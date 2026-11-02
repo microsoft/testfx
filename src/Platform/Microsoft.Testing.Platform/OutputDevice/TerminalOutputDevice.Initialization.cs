@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -87,7 +88,7 @@ internal sealed partial class TerminalOutputDevice
             AnsiOverride.ForceOn => AnsiMode.ForceAnsi,
 
             // User explicitly disabled ANSI (`--ansi off`).
-            // Note that NoAnsi also implies no progress.
+            // Non-cursor progress is rendered as durable lines instead of in-place updates.
             AnsiOverride.ForceOff => AnsiMode.NoAnsi,
 
             // No --ansi argument was provided, or `--ansi auto` was provided.
@@ -107,9 +108,8 @@ internal sealed partial class TerminalOutputDevice
             out string[]? progressArguments)
             && progressArguments is { Length: > 0 };
 
-        // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
-        // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
-        // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
+        // 'on' and 'auto' use the renderer appropriate for the terminal. Test-host controllers,
+        // --list-tests and server mode do not render progress.
         bool noProgress = !TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(_commandLineOptions);
         if (!progressOptionSet
             && _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
@@ -149,13 +149,15 @@ internal sealed partial class TerminalOutputDevice
             ShowTestResults = showTestResults,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),
             ZeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions),
+            AllowZeroTests = ExitCodeIgnorePolicy.Apply((int)ExitCode.ZeroTests, _commandLineOptions, _environment) == 0,
+            HasTestSessionFailure = TestSessionFailureProvider,
             AnsiMode = ansiMode,
             ShowActiveTests = true,
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
             ShowStderr = showStderr,
             HeartbeatSilenceThreshold = ProgressReportingConfiguration.GetThreshold(
-                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 60),
             SlowTestThreshold = ProgressReportingConfiguration.GetThreshold(
                 _environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
             SlowestTestsCount = slowestTestsCount,

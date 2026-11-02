@@ -37,6 +37,18 @@ internal static partial class PlatformResources
     internal static string @NamedPipeDirectoryNotWritableErrorMessage => GetResourceString("NamedPipeDirectoryNotWritableErrorMessage");
 
 #if IS_MTP_UNIT_TESTS
+    internal static string @PlatformCommandLineCoverageThresholdInvalid => GetResourceString("PlatformCommandLineCoverageThresholdInvalid");
+
+    internal static string @PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineCoverageThresholdIncompatibleDiscoverTests");
+
+    internal static string @PlatformCommandLineCoverageThresholdIncompatibleRetries => GetResourceString("PlatformCommandLineCoverageThresholdIncompatibleRetries");
+
+    internal static string @CoverageThresholdMissingMeasurement => GetResourceString("CoverageThresholdMissingMeasurement");
+
+    internal static string @CoverageThresholdEmptyMeasurement => GetResourceString("CoverageThresholdEmptyMeasurement");
+
+    internal static string @CoverageThresholdAmbiguous => GetResourceString("CoverageThresholdAmbiguous");
+
     internal static string @ArtifactPostProcessingManifestInvalid => GetResourceString("ArtifactPostProcessingManifestInvalid");
 
     internal static string @ArtifactPostProcessingManifestRunSummaryInvalid => GetResourceString("ArtifactPostProcessingManifestRunSummaryInvalid");

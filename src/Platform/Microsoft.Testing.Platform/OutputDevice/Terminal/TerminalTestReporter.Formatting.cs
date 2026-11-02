@@ -129,22 +129,22 @@ internal sealed partial class TerminalTestReporter
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
     {
         terminal.AppendLink(assembly, lineNumber: null);
-        if (targetFramework == null && architecture == null)
+        if (targetFramework is null && architecture is null)
         {
             return;
         }
 
         terminal.Append(" (");
-        if (targetFramework != null)
+        if (targetFramework is not null)
         {
             terminal.Append(targetFramework);
-            if (architecture != null)
+            if (architecture is not null)
             {
                 terminal.Append('|');
             }
         }
 
-        if (architecture != null)
+        if (architecture is not null)
         {
             terminal.Append(architecture);
         }

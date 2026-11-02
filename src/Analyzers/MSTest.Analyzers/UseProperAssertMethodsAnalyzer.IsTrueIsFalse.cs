@@ -62,7 +62,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
 
         // For Any() and Where().Any() patterns
         if (linqStatus is LinqPredicateCheckStatus.Any or LinqPredicateCheckStatus.WhereAny &&
-            linqCollectionExpr != null && predicateExpr != null)
+            linqCollectionExpr is not null && predicateExpr is not null)
         {
             string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 
@@ -182,8 +182,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
                 out _);
 
             if ((countLinqStatus is LinqPredicateCheckStatus.Count or LinqPredicateCheckStatus.WhereCount) &&
-                countCollectionExpr != null &&
-                countPredicateExpr != null)
+                countCollectionExpr is not null &&
+                countPredicateExpr is not null)
             {
                 string properAssertMethod = isTrueInvocation ? "Contains" : "DoesNotContain";
 

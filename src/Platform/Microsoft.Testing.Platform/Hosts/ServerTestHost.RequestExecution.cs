@@ -49,7 +49,10 @@ internal sealed partial class ServerTestHost
                             MultiRequestSupport: false,
                             VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true,
                             SupportsAttachments: true,
-                            MultiConnectionProvider: false)))
+                            MultiConnectionProvider: false)
+                        {
+                            ShowMessage = args.Capabilities.ShowMessage,
+                        }))
                 {
                     ProtocolVersion = negotiatedProtocolVersion,
                 };
@@ -231,7 +234,7 @@ internal sealed partial class ServerTestHost
         }
 
         DateTimeOffset requestStop = _clock.UtcNow;
-        RoslynDebug.Assert(requestExecuteStop != null);
+        RoslynDebug.Assert(requestExecuteStop is not null);
         RoslynDebug.Assert(testNodeUpdateProcessor is not null);
 
         bool isRunRequest = method switch

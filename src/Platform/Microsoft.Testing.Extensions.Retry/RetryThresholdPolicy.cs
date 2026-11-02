@@ -13,6 +13,7 @@ namespace Microsoft.Testing.Extensions.Policy;
 /// against the first attempt's result and reports an explanation when the policy disables retrying.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal static class RetryThresholdPolicy
 {
     /// <summary>

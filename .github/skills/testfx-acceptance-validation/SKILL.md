@@ -9,10 +9,38 @@ Produce evidence that the changed product ships correctly **and that the intende
 regressions execute**. A successful build, discovered tests, published TRX, or green
 job alone is not proof. Keep the work bounded to the changed contract.
 
+## Runtime choice
+
+The Python execution gate is a measured exception to the repository's conditional
+PowerShell preference. A native PowerShell candidate did not meet the
+no-performance-regression condition for the documented standalone CLI path.
+On Windows with Python 3.12.10 and PowerShell 7.6.6, three warmups followed by
+15 interleaved fresh-process samples per workload produced these medians,
+including process startup:
+
+| Workload | Python median, ms | PowerShell candidate median, ms |
+| --- | ---: | ---: |
+| Empty runtime startup | 76 | 528 |
+| One passed case | 208 | 898 |
+| 29 skipped cases | 200 | 819 |
+| 1,000 passed cases | 222 | 1,330 |
+| 10,000 passed cases | 222 | 3,882 |
+| 10,000 failed cases | 305 | 3,983 |
+
+Retain the existing gate and all 16 regression scenarios rather than accepting
+that slowdown or weakening validation. This feasibility assessment does not
+establish complete feature/security parity, compare a warmed persistent host,
+or prove that every PowerShell implementation or other OS is slower.
+A future port must preserve the same input-validation and failure contracts,
+demonstrate feature/security parity, and avoid a performance regression on the
+supported invocation paths, including startup where applicable.
+
 ## 1. Choose the smallest shipping contract
 
-Before implementation, record the following in the session or existing PR evidence,
-not a new repository planning file:
+Before implementation, record the following in the maintained feature decision
+record required by [feature-delivery](../feature-delivery/SKILL.md). For non-feature
+fixes, use the session or existing issue/PR evidence rather than creating an
+additional planning file:
 
 | Decision | Required detail |
 | --- | --- |
@@ -41,6 +69,25 @@ Use this risk table to choose cases, not to impose a full matrix on every change
 | Handshake/capability | Normal handshake, intentionally suppressed/no-handshake path, and one old/incompatible consumer when relevant. A successful no-work child must not become a false parent failure; a missing required handshake must not become false success. |
 | Failure/fallback | Nonzero child exit, zero-result selection, partial/missing input, and missing/stale/incompatible data where fallback is supported. Assert which work actually runs, not only a message saying fallback ran. |
 | Orchestration | Cancellation with bounded teardown and one mixed-success multi-module/TFM run. Verify every module's artifacts and the aggregate parent exit; do not let one passed module conceal a missing or failed module. |
+| Reporter/result mapping | Real packed runner with multiple distinguishable results; parse the final artifact or captured publishing request and assert each name, external identity/grouping key, outcome, and relevant metadata association. One correct reporter does not prove another. |
+| UI/layout | Inspect the actual rendered affected surface at representative normal/constrained dimensions, with relevant long-content and interaction states. HTML/JSON source checks are not rendering proof; record unavailable hosted/IDE UI checks explicitly. |
+
+For display-name changes, choose multiple rows of one method and, when relevant,
+different methods with the same row label. Assert distinct rows remain distinct
+through the consumer's identity/grouping rules, not merely that the title field
+contains the right string. Cover the affected default, full-name override,
+arguments-only override, and method-display-name paths without multiplying
+equivalent cases. Folded rows sharing a UID and reflection/source-generated
+execution need separate cases when the changed mapping treats them differently.
+Preserve expected per-row counts and associations even if ordering is variable.
+
+Pair automated content/identity checks with
+[rendered-surface validation](../feature-delivery/SKILL.md#4-demonstrate-the-feature-and-prepare-the-pr).
+A captured Azure DevOps publishing request is useful E2E evidence for the
+publisher boundary, but does not establish how the live Tests tab renders or
+groups it. Record that limitation rather than broadening execution into an
+unauthorized external publish. Apply the same distinction to IDE discovery and
+HTML source versus their rendered UI.
 
 ## 2. Pack and establish provenance
 
@@ -89,6 +136,22 @@ cache and explicit feeds; do not clear shared/global caches. The existing accept
 fixture already isolates generated-consumer restores. CI's outer runner uses
 `eng\pipelines\variables\test-env-vars.yml` (`DOTNET_ROOT=.dotnet`,
 `NUGET_PACKAGES=.packages`); distinguish that cache from the inner fixture's cache.
+
+When a consumer uses a different SDK, invoke the outer acceptance project through
+`dotnet test`, not only its apphost. The CLI exports `MSBuildSDKsPath`,
+`MSBuildExtensionsPath`, and `DOTNET_ROOT_X64` to the test host. A child `global.json`
+and a successful `dotnet --version` do not prevent mixed-SDK targets/task loading.
+Use `AcceptanceTestBase.ConfigureDotnetSdkEnvironment` for the isolated native
+SDK, preserving shared cache/tooling settings. Verify actual build provenance
+(`NETCoreSdkVersion`, `MSBuildToolsPath`, extensions and SDK paths) alongside the
+real packaged-host results.
+
+Keep CI's `DOTNET_CLI_CONTEXT_VERBOSE=1` enabled during native CLI validation.
+SDK tracing can name the sidecar executable even when help/discovery correctly
+comes from the activated host, and ANSI color/reset-only lines can interrupt an
+otherwise deterministic block. Normalize presentation only, preserve the
+diagnostics, and assert host usage or the delimited JSON payload rather than
+requiring the entire mixed CLI output to be a payload.
 
 ## 3. Run a focused regression and verify execution
 
@@ -158,6 +221,24 @@ module's expected names; aggregate success only after every gate passes. Legitim
 unrelated skips belong in a separate selection/report, not a lowered proof bar.
 For negative/discovery/help-only product commands, assert their contractual exits
 and output inside passing acceptance cases; do not pass their child TRX to this gate.
+
+### Regression sensitivity across production states
+
+Apply [feature-delivery](../feature-delivery/SKILL.md)'s red/green evidence contract
+to new behavioral regressions. Retain the same outer acceptance tests and their
+assertions while removing the relevant production behavior in an isolated
+comparison. Rebuild/repack **each** state and establish separate package/cache/
+consumer provenance before execution. An outer test can pass while its child
+fails intentionally; the red phase must fail the intended **outer assertion**,
+not merely observe that expected child failure.
+
+The execution verifier above is a **green-phase** gate: it requires all planned
+outer cases to pass and exit zero. Do not use it as a red-phase validator or
+weaken it to accept failures. Preserve red-phase reports/logs separately and
+verify the planned tests actually executed and failed at the intended assertions.
+Compilation, restore/launch failures, skips, zero tests, and stale packages are
+not regression proof. Record labeled behavior-removal/mutation comparisons for
+new APIs, or an explicit sensitivity gap when no safe comparison is feasible.
 
 ## 4. Prove the capable CI job will run the cases
 

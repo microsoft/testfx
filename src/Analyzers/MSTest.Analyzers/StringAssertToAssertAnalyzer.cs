@@ -94,7 +94,7 @@ public sealed class StringAssertToAssertAnalyzer : DiagnosticAnalyzer
             _ => null,
         };
 
-        if (assertMethodName == null)
+        if (assertMethodName is null)
         {
             return;
         }

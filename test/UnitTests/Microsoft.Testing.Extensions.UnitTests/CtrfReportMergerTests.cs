@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -53,6 +54,257 @@ public sealed class CtrfReportMergerTests
         List<string> names = [.. testArray.Select(t => t!["name"]!.GetValue<string>())];
         Assert.Contains("TestA", names);
         Assert.Contains("TestC", names);
+    }
+
+    [TestMethod]
+    [DataRow("0.0.0", false, false)]
+    [DataRow("0.0.0", true, false)]
+    [DataRow("0.0.0", false, true)]
+    [DataRow("0.0.0", true, true)]
+    [DataRow("0.0.4", false, false)]
+    [DataRow("0.0.4", true, false)]
+    [DataRow("0.0.4", false, true)]
+    [DataRow("0.0.4", true, true)]
+    [DataRow("0.1.0", false, false)]
+    [DataRow("0.1.0", true, false)]
+    [DataRow("0.1.0", false, true)]
+    [DataRow("0.1.0", true, true)]
+    [DataRow("0.2.0", false, false)]
+    [DataRow("0.2.0", false, true)]
+    public void Merge_CompatibleSpecVersions_UsesVersion02(string legacyVersion, bool currentFirst, bool collapseRetries)
+    {
+        JsonObject legacyTest = Attempt("Case", "failed", uid: "case");
+        legacyTest["executionId"] = "shared-execution";
+        ((JsonObject)legacyTest["extra"]!)["mtpAttemptId"] = "legacy-attempt";
+        JsonObject currentTest = Attempt("Case", "passed", uid: "case");
+        currentTest["executionId"] = "shared-execution";
+        currentTest["attemptId"] = "native-attempt";
+        string legacy = BuildReport(specVersion: legacyVersion, testEntries: [legacyTest]);
+        string current = BuildReport(specVersion: "0.2.0", testEntries: [currentTest]);
+        CtrfMergeMode mode = collapseRetries ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge(currentFirst ? [current, legacy] : [legacy, current], mode))!;
+
+        Assert.AreEqual("0.2.0", (string?)merged["specVersion"]);
+        JsonArray tests = merged["results"]!["tests"]!.AsArray();
+        Assert.HasCount(collapseRetries ? 1 : 2, tests);
+        if (collapseRetries)
+        {
+            JsonNode final = tests[0]!;
+            Assert.AreEqual("shared-execution", (string?)final["executionId"]);
+            Assert.AreEqual(
+                currentFirst ? "legacy-attempt" : "native-attempt",
+                (string?)(currentFirst ? final["extra"]!["mtpAttemptId"] : final["attemptId"]));
+            Assert.AreEqual(
+                currentFirst ? "native-attempt" : "legacy-attempt",
+                (string?)final["retryAttempts"]![0]!["attemptId"]);
+        }
+        else
+        {
+            JsonNode native = tests[currentFirst ? 0 : 1]!;
+            JsonNode old = tests[currentFirst ? 1 : 0]!;
+            Assert.AreEqual("native-attempt", (string?)native["attemptId"]);
+            Assert.AreEqual("legacy-attempt", (string?)old["extra"]!["mtpAttemptId"]);
+            Assert.IsNull(old["attemptId"]);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("0.0.0")]
+    [DataRow("0.0.4")]
+    [DataRow("0.1.0")]
+    public void Merge_WithoutVersion02_PreservesFirstSpecVersion(string firstVersion)
+    {
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(specVersion: firstVersion), BuildReport(specVersion: "0.1.0")]))!;
+
+        Assert.AreEqual(firstVersion, (string?)merged["specVersion"]);
+    }
+
+    [TestMethod]
+    [DataRow(null, false)]
+    [DataRow(null, true)]
+    [DataRow("", false)]
+    [DataRow("", true)]
+    [DataRow("0.0.3", false)]
+    [DataRow("0.0.3", true)]
+    [DataRow("0.3.0", false)]
+    [DataRow("0.3.0", true)]
+    [DataRow("1.0.0", false)]
+    [DataRow("1.0.0", true)]
+    public void Merge_Version02WithUnreviewedSpecVersion_Throws(string? otherVersion, bool currentFirst)
+    {
+        string current = BuildReport(specVersion: "0.2.0");
+        string other = BuildReport(specVersion: otherVersion);
+
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => CtrfReportMerger.Merge(currentFirst ? [current, other] : [other, current]));
+
+        Assert.AreEqual("inputReports", exception.ParamName);
+        Assert.Contains("0.2.0", exception.Message);
+    }
+
+    [TestMethod]
+    public void Merge_SkippedInputs_DoNotAffectSpecVersion()
+    {
+        const string foreign = """{"reportFormat":"JUnit","specVersion":"0.3.0","results":{"tests":[]}}""";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge(
+            [BuildReport(specVersion: "0.1.0"), foreign, BuildReport(specVersion: "0.2.0")]))!;
+
+        Assert.AreEqual("0.2.0", (string?)merged["specVersion"]);
+        Assert.AreEqual(2, (long)merged["results"]!["summary"]!["tests"]!);
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_IncompatibleSpecVersions_PreservesInputsAndExistingOutput()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-version-merge-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(tempDirectory);
+            string currentPath = Path.Combine(tempDirectory, "current.json");
+            string unsupportedPath = Path.Combine(tempDirectory, "unsupported.json");
+            string outputPath = Path.Combine(tempDirectory, "merged.json");
+            string current = BuildReport(specVersion: "0.2.0");
+            string unsupported = BuildReport(specVersion: "0.3.0");
+            File.WriteAllText(currentPath, current);
+            File.WriteAllText(unsupportedPath, unsupported);
+            File.WriteAllText(outputPath, "previous output");
+
+            ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeAllToFileAsync([currentPath, unsupportedPath], outputPath, CancellationToken.None));
+
+            Assert.AreEqual("inputPaths", exception.ParamName);
+            Assert.AreEqual(current, File.ReadAllText(currentPath));
+            Assert.AreEqual(unsupported, File.ReadAllText(unsupportedPath));
+            Assert.AreEqual("previous output", File.ReadAllText(outputPath));
+            Assert.HasCount(3, Directory.GetFiles(tempDirectory));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_RecordsImmediateInputLineageWithoutClaimingCompleteness(bool collapseRetryAttempts)
+    {
+        JsonObject identified = JsonNode.Parse(BuildReport())!.AsObject();
+        identified["reportId"] = "12345678-1234-4234-8234-123456789abc";
+        JsonObject legacy = JsonNode.Parse(BuildReport())!.AsObject();
+        legacy.Remove("reportId");
+        CtrfMergeMode mode = collapseRetryAttempts ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([identified.ToJsonString(), legacy.ToJsonString()], mode))!;
+        JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+
+        string mergeMode = collapseRetryAttempts ? "collapseRetryAttempts" : "concatenate";
+        string expected = $$"""
+{
+  "documentRole": "merged",
+  "mergeMode": "{{mergeMode}}",
+  "inputCount": 2,
+  "inputs": [
+    {
+      "reportId": "12345678-1234-4234-8234-123456789abc"
+    },
+    {}
+  ],
+  "inputCompleteness": "unknown"
+}
+""";
+        Assert.AreEqual(
+            expected.Replace("\r\n", "\n"),
+            metadata.ToJsonString(new JsonSerializerOptions { WriteIndented = true }).Replace("\r\n", "\n"));
+    }
+
+    [TestMethod]
+    public void Merge_NestedMerge_RecordsImmediateParentRatherThanFlatteningItsInputs()
+    {
+        string first = BuildReport();
+        string second = BuildReport();
+        string parent = CtrfReportMerger.Merge([first, second], CtrfMergeMode.CollapseRetryAttempts);
+        string parentReportId = (string)JsonNode.Parse(parent)!["reportId"]!;
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([parent]))!;
+        JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+
+        Assert.AreEqual(1, metadata["inputCount"]!.GetValue<int>());
+        JsonNode input = Assert.ContainsSingle(metadata["inputs"]!.AsArray())!;
+        Assert.AreEqual(parentReportId, (string?)input["reportId"]);
+        Assert.IsNull(input["inputs"]);
+        Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
+    }
+
+    [TestMethod]
+    public void Merge_DuplicateInputs_CountsDocumentsWithoutClaimingCompleteness()
+    {
+        string first = BuildReport(testEntries: [Test("TestA", "passed")]);
+        string second = BuildReport(testEntries: [Test("TestB", "passed")]);
+        string firstReportId = JsonNode.Parse(first)!["reportId"]!.GetValue<string>();
+        string secondReportId = JsonNode.Parse(second)!["reportId"]!.GetValue<string>();
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([first, """{"not":"ctrf"}""", second, first]))!;
+        JsonNode metadata = merged["extra"]!["microsoft.testingplatform"]!;
+
+        Assert.AreEqual(3, metadata["inputCount"]!.GetValue<int>());
+        JsonArray inputs = metadata["inputs"]!.AsArray();
+        Assert.AreNotEqual(firstReportId, secondReportId);
+        Assert.AreSequenceEqual(
+            [firstReportId, secondReportId, firstReportId],
+            inputs.Select(input => input!["reportId"]!.GetValue<string>()).ToArray());
+        Assert.AreEqual("unknown", (string?)metadata["inputCompleteness"]);
+    }
+
+    [TestMethod]
+    public void Merge_LineageMetadata_DoesNotReuseThePreLineageReportId()
+    {
+        const string input = """{"reportFormat":"CTRF","specVersion":"0.1.0","results":{"tests":[]}}""";
+        // The pre-lineage merger produced this id for the same input and concatenate mode.
+        const string legacyReportId = "f3702ec6-010f-93d3-5845-540fb2abe69a";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([input]))!;
+        JsonNode mergedAgain = JsonNode.Parse(CtrfReportMerger.Merge([input]))!;
+        string reportId = merged["reportId"]!.GetValue<string>();
+
+        Assert.AreNotEqual(legacyReportId, reportId);
+        Assert.AreEqual(reportId, mergedAgain["reportId"]!.GetValue<string>());
+    }
+
+    [TestMethod]
+    public void Merge_PromotedSpecVersion_DoesNotReuseThePreviousReportId()
+    {
+        const string legacy = """{"reportFormat":"CTRF","specVersion":"0.1.0","results":{"tests":[]}}""";
+        const string current = """{"reportFormat":"CTRF","specVersion":"0.2.0","results":{"tests":[]}}""";
+        // The old merger emitted 0.1.0 with this id for these exact inputs and mode.
+        const string previousReportId = "21ab26fc-87e8-35ee-96b9-f1774469577c";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([legacy, current], CtrfMergeMode.CollapseRetryAttempts))!;
+        JsonNode mergedAgain = JsonNode.Parse(CtrfReportMerger.Merge([legacy, current], CtrfMergeMode.CollapseRetryAttempts))!;
+        string reportId = merged["reportId"]!.GetValue<string>();
+
+        Assert.AreNotEqual(previousReportId, reportId);
+        Assert.AreEqual(reportId, mergedAgain["reportId"]!.GetValue<string>());
+        Assert.AreEqual("0.2.0", (string?)merged["specVersion"]);
+    }
+
+    [TestMethod]
+    public void Merge_FirstInputAlreadyVersion02_PreservesThePreviousReportId()
+    {
+        const string current = """{"reportFormat":"CTRF","specVersion":"0.2.0","results":{"tests":[]}}""";
+        const string legacy = """{"reportFormat":"CTRF","specVersion":"0.1.0","results":{"tests":[]}}""";
+        const string previousReportId = "1d9248b6-50da-f3be-f0df-3cbe734ea138";
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([current, legacy], CtrfMergeMode.CollapseRetryAttempts))!;
+
+        Assert.AreEqual(previousReportId, (string?)merged["reportId"]);
+        Assert.AreEqual("0.2.0", (string?)merged["specVersion"]);
     }
 
     [TestMethod]
@@ -604,7 +856,8 @@ public sealed class CtrfReportMergerTests
         string? toolVersion = null,
         string osPlatform = "test",
         string? runId = null,
-        IEnumerable<JsonObject>? testEntries = null)
+        IEnumerable<JsonObject>? testEntries = null,
+        string? specVersion = "0.0.0")
     {
         var testArray = new JsonArray();
         foreach (JsonObject test in testEntries ?? [Test("DefaultTest", "passed")])
@@ -621,7 +874,7 @@ public sealed class CtrfReportMergerTests
         var report = new JsonObject
         {
             ["reportFormat"] = "CTRF",
-            ["specVersion"] = "0.0.0",
+            ["specVersion"] = specVersion,
             ["reportId"] = Guid.NewGuid().ToString("D"),
             ["timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(stop).ToString("O", CultureInfo.InvariantCulture),
             ["generatedBy"] = "Microsoft.Testing.Extensions.CtrfReport",

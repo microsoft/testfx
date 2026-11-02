@@ -79,11 +79,14 @@ public sealed class AzureDevOpsTestNodeIdentityTests
     }
 
     [TestMethod]
-    public void GetDisplayLabel_WhenDataDriven_AppendsOnlyTheDistinguishingSuffix()
+    [DataRow("MyMethod (net8.0)", DisplayName = "Method-only display name")]
+    [DataRow("My.Namespace.MyType.MyMethod (net8.0)", DisplayName = "Qualified display name")]
+    [DataRow("My.Namespace.MyType.MyMethod(net8.0)", DisplayName = "Qualified display name without a space")]
+    public void GetDisplayLabel_WhenDataDriven_AppendsOnlyTheDistinguishingSuffix(string displayName)
     {
-        // Default data-driven display name is 'MethodName (args)'; only '(args)' should be appended.
+        // Only '(args)' should be appended, whether the display name is simple or fully-qualified.
         TestNode testNode = CreateNode(
-            displayName: "MyMethod (net8.0)",
+            displayName,
             new TestMethodIdentifierProperty("Assembly", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void"));
 
         Assert.AreEqual("My.Namespace.MyType.MyMethod (net8.0)", TestNodeIdentity.GetDisplayLabel(testNode));
@@ -111,15 +114,17 @@ public sealed class AzureDevOpsTestNodeIdentityTests
     }
 
     [TestMethod]
-    public void GetDisplayLabel_WhenCustomNameSharesMethodPrefix_IsNotMangled()
+    [DataRow("MyMethodology", "My.Namespace.MyType.MyMethod (MyMethodology)", DisplayName = "Simple custom prefix")]
+    [DataRow("My.Namespace.MyType.MyMethodology", "My.Namespace.MyType.MyMethod (My.Namespace.MyType.MyMethodology)", DisplayName = "Qualified custom prefix")]
+    public void GetDisplayLabel_WhenCustomNameSharesMethodPrefix_IsNotMangled(string displayName, string expected)
     {
         // 'MyMethodology' starts with the method name 'MyMethod' but is not the default '(args)' format,
         // so it must be preserved as a custom label rather than split into 'MyMethod ology'.
         TestNode testNode = CreateNode(
-            displayName: "MyMethodology",
+            displayName,
             new TestMethodIdentifierProperty("Assembly", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void"));
 
-        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethodology)", TestNodeIdentity.GetDisplayLabel(testNode));
+        Assert.AreEqual(expected, TestNodeIdentity.GetDisplayLabel(testNode));
     }
 
     private static TestNode CreateNode(string displayName, params IProperty[] properties)

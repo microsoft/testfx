@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.Emit;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -140,6 +142,140 @@ public class ReflectionUtilityTests : TestContainer
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
+    public void GetCustomAttributesOnMSTestMethodShouldReturnAllAttributes()
+    {
+        MethodInfo method = typeof(MSTestAttributeBaseClass).GetMethod(nameof(MSTestAttributeBaseClass.AttributeMethod))!;
+
+        object[] attributes = _reflectionOperations.GetCustomAttributes(method);
+
+        GetMSTestAttributeValuePairs(attributes).Should().Equal("Owner : base", "TestCategory : base");
+    }
+
+    public void GetCustomAttributesOnMSTestOverrideShouldHonorAttributeUsage()
+    {
+        MethodInfo method = typeof(MSTestAttributeDerivedClass).GetMethod(nameof(MSTestAttributeDerivedClass.AttributeMethod))!;
+
+        object[] attributes = _reflectionOperations.GetCustomAttributes(method);
+
+        // Owner allows only one value; categories from both the override and base method are retained.
+        GetMSTestAttributeValuePairs(attributes).Should().Equal("Owner : derived", "TestCategory : derived", "TestCategory : base");
+    }
+
+    public void GetCustomAttributesOnMSTestTypeShouldReturnAllAttributes()
+    {
+        object[] attributes = _reflectionOperations.GetCustomAttributes(typeof(MSTestAttributeBaseClass));
+
+        GetMSTestAttributeValuePairs(attributes).Should().Equal("TestCategory : ba");
+    }
+
+    public void GetCustomAttributesOnMSTestDerivedTypeShouldIncludeInheritedAttributes()
+    {
+        object[] attributes = _reflectionOperations.GetCustomAttributes(typeof(MSTestAttributeDerivedClass));
+
+        GetMSTestAttributeValuePairs(attributes).Should().Equal("TestCategory : a", "TestCategory : ba");
+    }
+
+    public void GetMSTestCategoriesOnMethodShouldReturnDeclaredAttribute()
+    {
+        MethodInfo method = typeof(MSTestAttributeBaseClass).GetMethod(nameof(MSTestAttributeBaseClass.AttributeMethod))!;
+
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(method).ToArray();
+
+        attributes.SelectMany(attribute => attribute.TestCategories).Should().Equal("base");
+    }
+
+    public void GetMSTestCategoriesOnOverrideShouldIncludeInheritedAttributes()
+    {
+        MethodInfo method = typeof(MSTestAttributeDerivedClass).GetMethod(nameof(MSTestAttributeDerivedClass.AttributeMethod))!;
+
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(method).ToArray();
+
+        attributes.SelectMany(attribute => attribute.TestCategories).Should().Equal("derived", "base");
+    }
+
+    public void GetCustomAttributesShouldIncludeUserDefinedMSTestAttributes()
+    {
+        MethodInfo method = typeof(MSTestCustomAttributeClass).GetMethod(nameof(MSTestCustomAttributeClass.AttributeMethod))!;
+
+        object[] attributes = _reflectionOperations.GetCustomAttributes(method);
+
+        GetMSTestAttributeValuePairs(attributes).Should().Equal("Duration : superfast", "Owner : base", "TestCategory : base");
+    }
+
+    public void GetMSTestPropertiesShouldIncludeUserDefinedAndInheritedAttributes()
+    {
+        MethodInfo method = typeof(MSTestCustomAttributeClass).GetMethod(nameof(MSTestCustomAttributeClass.AttributeMethod))!;
+
+        TestPropertyAttribute[] attributes = _reflectionOperations.GetAttributes<TestPropertyAttribute>(method).ToArray();
+
+        attributes.Select(attribute => (attribute.GetType(), attribute.Name, attribute.Value)).Should().Equal(
+            (typeof(DurationAttribute), "Duration", "superfast"),
+            (typeof(OwnerAttribute), "Owner", "base"));
+        attributes[0].Should().BeOfType<DurationAttribute>().Which.Duration.Should().Be("superfast");
+    }
+
+    public void GetCustomArrayAttributesShouldPreserveAllValues()
+    {
+        MethodInfo method = typeof(MSTestCustomAttributeClass).GetMethod(nameof(MSTestCustomAttributeClass.ArrayAttributeMethod))!;
+
+        CategoryArrayAttribute[] attributes = _reflectionOperations.GetAttributes<CategoryArrayAttribute>(method).ToArray();
+
+        attributes.Should().ContainSingle().Which.Value.Should().Equal("foo", "foo2");
+    }
+
+    public void GetMSTestCategoriesOnTypeShouldReturnDeclaredAttribute()
+    {
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(typeof(MSTestAttributeBaseClass)).ToArray();
+
+        attributes.SelectMany(attribute => attribute.TestCategories).Should().Equal("ba");
+    }
+
+    public void GetMSTestCategoriesOnDerivedTypeShouldIncludeInheritedAttributes()
+    {
+        TestCategoryAttribute[] attributes = _reflectionOperations.GetAttributes<TestCategoryAttribute>(typeof(MSTestAttributeDerivedClass)).ToArray();
+
+        attributes.SelectMany(attribute => attribute.TestCategories).Should().Equal("a", "ba");
+    }
+
+    public void GetMSTestAssemblyCategoriesShouldPreserveValuesAndTypeIdentity()
+    {
+        // Keep these attributes off the test suite itself: they belong only to the assembly under inspection.
+        AssemblyName name = new($"ReflectionUtilityTests_{Guid.NewGuid():N}");
+#if NETFRAMEWORK
+        AssemblyBuilder assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#else
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Run);
+#endif
+        ConstructorInfo constructor = typeof(TestCategoryAttribute).GetConstructor([typeof(string)])!;
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(constructor, ["a1"]));
+        assembly.SetCustomAttribute(new CustomAttributeBuilder(constructor, ["a2"]));
+
+        object[] attributes = _reflectionOperations.GetCustomAttributes(assembly, typeof(TestCategoryAttribute));
+
+        attributes.Should().AllBeOfType<TestCategoryAttribute>();
+        attributes.Cast<TestCategoryAttribute>().SelectMany(attribute => attribute.TestCategories).Should().Equal("a1", "a2");
+    }
+
+    private static IEnumerable<string> GetMSTestAttributeValuePairs(IEnumerable<object> attributes)
+    {
+        foreach (object attribute in attributes)
+        {
+            // Ignore unrelated compiler-generated metadata, but retain the order and concrete runtime types.
+            switch (attribute)
+            {
+                case OwnerAttribute owner:
+                    yield return "Owner : " + owner.Owner;
+                    break;
+                case TestCategoryAttribute category:
+                    yield return "TestCategory : " + string.Join(",", category.TestCategories);
+                    break;
+                case DurationAttribute duration:
+                    yield return "Duration : " + duration.Duration;
+                    break;
+            }
+        }
+    }
+
     internal static List<string> GetAttributeValuePairs(IEnumerable attributes)
     {
         var attribValuePairs = new List<string>();
@@ -201,5 +337,49 @@ public class ReflectionUtilityTests : TestContainer
         public DummySingleAAttribute(string foo) => Value = foo;
 
         public string Value { get; set; }
+    }
+
+    [TestCategory("ba")]
+    public class MSTestAttributeBaseClass
+    {
+        [Owner("base")]
+        [TestCategory("base")]
+        public virtual void AttributeMethod()
+        {
+        }
+    }
+
+    [TestCategory("a")]
+    public class MSTestAttributeDerivedClass : MSTestAttributeBaseClass
+    {
+        [Owner("derived")]
+        [TestCategory("derived")]
+        public override void AttributeMethod()
+        {
+        }
+    }
+
+    public class MSTestCustomAttributeClass : MSTestAttributeBaseClass
+    {
+        [Duration("superfast")]
+        public override void AttributeMethod()
+        {
+        }
+
+        [CategoryArray("foo", "foo2")]
+        public void ArrayAttributeMethod()
+        {
+        }
+    }
+
+    public sealed class DurationAttribute(string duration) : TestPropertyAttribute("Duration", duration)
+    {
+        public string Duration { get; } = duration;
+    }
+
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class CategoryArrayAttribute(params string[] value) : Attribute
+    {
+        public string[] Value { get; } = value;
     }
 }

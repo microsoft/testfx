@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport;
+using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -96,6 +99,15 @@ public static class GitHubActionsExtensions
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
 
+        CiCoverageSummaryControllerHandlerRegistration.Register(
+            builder.TestHostControllers,
+            GitHubActionsSummaryArtifactPostProcessor.Provider,
+            GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind,
+            serviceProvider => serviceProvider.GetLoggerFactory().CreateLogger<GitHubActionsSummaryArtifactPostProcessor>(),
+            serviceProvider => serviceProvider.GetServicesInternal<IArtifactPostProcessor>().OfType<GitHubActionsSummaryArtifactPostProcessor>().Single(),
+            ShouldDeferToArtifactPostProcessing,
+            (path, exception) => string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, exception.Message));
+
         if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
             artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
@@ -130,6 +142,7 @@ public static class GitHubActionsExtensions
             serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection connection
             && connection.IsRequiredArtifactPostProcessingSupported;
         return dotnetTestRequiresPostProcessing
-            || serviceProvider.GetCommandLineOptions().IsOptionSet(RetryPipeOptionName);
+            || serviceProvider.GetCommandLineOptions().IsOptionSet(RetryPipeOptionName)
+            || CoverageThresholdPolicy.IsDeferredToController(serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment());
     }
 }

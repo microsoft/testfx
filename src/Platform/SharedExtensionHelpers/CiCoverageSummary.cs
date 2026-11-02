@@ -12,12 +12,12 @@ namespace Microsoft.Testing.Extensions;
 
 internal static class CiCoverageSummary
 {
-    public static CiCoverageSummaryData Create(ITestCoverageResult coverageResult, SessionUid sessionUid)
+    public static CiCoverageSummaryData Create(ITestCoverageResult coverageResult, SessionUid? sessionUid)
     {
         CoverageScopeSummary[] scopes =
         [
             .. coverageResult.Scopes.Where(scope =>
-                string.Equals(scope.SessionUid.Value, sessionUid.Value, StringComparison.Ordinal)),
+                sessionUid is null || string.Equals(scope.SessionUid.Value, sessionUid.Value.Value, StringComparison.Ordinal)),
         ];
         HashSet<(string ProducerId, CoverageMetric Metric, string? CustomMetricName)> overallMetricKeys =
         [
@@ -48,7 +48,7 @@ internal static class CiCoverageSummary
         CiCoverageThreshold[] thresholds =
         [
             .. coverageResult.Thresholds
-                .Where(threshold => string.Equals(threshold.SessionUid.Value, sessionUid.Value, StringComparison.Ordinal))
+                .Where(threshold => sessionUid is null || string.Equals(threshold.SessionUid.Value, sessionUid.Value.Value, StringComparison.Ordinal))
                 .Select(threshold => new CiCoverageThreshold
                 {
                     ScopeLevel = threshold.Scope.Level,
@@ -62,6 +62,8 @@ internal static class CiCoverageSummary
                     RequiredPercentage = threshold.RequiredPercentage,
                     HasCoverableData = threshold.HasCoverableData,
                     Passed = threshold.Passed,
+                    ExactActualPercentage = threshold.ExactActualPercentage?.ToString(CultureInfo.InvariantCulture),
+                    ExactRequiredPercentage = threshold.ExactRequiredPercentage?.ToString(CultureInfo.InvariantCulture),
                 }),
         ];
 
@@ -118,6 +120,8 @@ internal static class CiCoverageSummary
                     RequiredPercentage = threshold.RequiredPercentage,
                     HasCoverableData = threshold.HasCoverableData,
                     Passed = threshold.Passed,
+                    ExactActualPercentage = threshold.ExactActualPercentage,
+                    ExactRequiredPercentage = threshold.ExactRequiredPercentage,
                 });
             }
         }
@@ -216,9 +220,19 @@ internal static class CiCoverageSummary
                     scope = $"{threshold.Source} — {scope}";
                 }
 
+                bool needsExactPercentages = !threshold.Passed
+                    && string.Equals(
+                        threshold.ActualPercentage.ToString("F1", CultureInfo.InvariantCulture),
+                        threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture),
+                        StringComparison.Ordinal);
                 string actual = threshold.HasCoverableData
-                    ? FormatPercentage(threshold.ActualPercentage, threshold.RequiredPercentage, threshold.Passed)
+                    ? needsExactPercentages && threshold.ExactActualPercentage is { } exactActual
+                        ? exactActual + "%"
+                        : FormatPercentage(threshold.ActualPercentage, threshold.RequiredPercentage, threshold.Passed)
                     : "No data";
+                string required = needsExactPercentages && threshold.ExactRequiredPercentage is { } exactRequired
+                    ? exactRequired
+                    : threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture);
                 string thresholdLabel = GetThresholdLabel(threshold);
                 if (thresholdCounts[(threshold.Source, threshold.ScopeLevel, threshold.ScopeName, threshold.Metric, threshold.CustomMetricName, threshold.Aggregation, threshold.AggregatedOver)] > 1)
                 {
@@ -227,8 +241,8 @@ internal static class CiCoverageSummary
 
                 builder.Append("| ").Append(EscapeCell(scope))
                     .Append(" | ").Append(EscapeCell(thresholdLabel))
-                    .Append(" | ").Append(actual)
-                    .Append(" | ").Append(threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture)).Append("%")
+                    .Append(" | ").Append(EscapeCell(actual))
+                    .Append(" | ").Append(EscapeCell(required)).Append("%")
                     .Append(" | ").Append(threshold.Passed ? "✅ Passed" : "❌ Failed")
                     .Append(" |\n");
             }

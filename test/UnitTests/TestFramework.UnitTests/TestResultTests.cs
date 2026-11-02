@@ -189,4 +189,24 @@ public sealed class TestResultTests : TestContainer
             ExpectedText = expectedText,
             ActualText = actualText,
         };
+
+    public void IgnoreAttribute_ProducesIgnoredResultsWithDefaultCustomAndNullReasons()
+    {
+        (IgnoreAttribute Policy, string? Reason)[] cases =
+        [
+            (new IgnoreAttribute(), string.Empty),
+            (new IgnoreAttribute("requires explicit opt-in"), "requires explicit opt-in"),
+            (new IgnoreAttribute(null), null),
+        ];
+        foreach ((IgnoreAttribute policy, string? reason) in cases)
+        {
+            policy.IsConditionMet.Should().BeFalse();
+            policy.Mode.Should().Be(ConditionMode.Include);
+            policy.GroupName.Should().Be("Ignore");
+            var result = TestResult.CreateIgnoredResult(policy.IgnoreMessage);
+            result.Outcome.Should().Be(UnitTestOutcome.Ignored);
+            result.IgnoreReason.Should().Be(reason);
+            result.TestFailureException.Should().BeNull();
+        }
+    }
 }

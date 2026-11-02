@@ -5,6 +5,9 @@ using AwesomeAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -242,6 +245,99 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
 
         tracker.Events.Should().Equal("scope-async-only");
         tracker.ScopeDisposeCount.Should().Be(1);
+    }
+
+    public async Task DisposeAsyncSyncScopeFallbackPreservesInstanceAndRequiresCleanup()
+    {
+        List<string> events = [];
+        var instance = new Mock<IDisposable>();
+        instance.Setup(value => value.Dispose()).Callback(() => events.Add("instance"));
+        var scope = new Mock<IServiceScope>();
+        scope.Setup(value => value.Dispose()).Callback(() => events.Add("scope"));
+        var lease = new MicrosoftExtensionsTestClassInstanceLease(instance.Object, scope.Object);
+
+        lease.Instance.Should().BeSameAs(instance.Object);
+        lease.RequiresCleanup.Should().BeTrue();
+        await lease.DisposeAsync();
+        events.Should().Equal("instance", "scope");
+    }
+
+    public async Task DisposeAsyncSingleFailurePreservesExceptionAndStillDisposesScope()
+    {
+        var failure = new InvalidOperationException("instance disposal failure");
+        var instance = new Mock<IDisposable>();
+        instance.Setup(value => value.Dispose()).Throws(failure);
+        var scope = new Mock<IServiceScope>();
+        var lease = new MicrosoftExtensionsTestClassInstanceLease(instance.Object, scope.Object);
+
+        Func<Task> dispose = () => lease.DisposeAsync();
+        (await dispose.Should().ThrowAsync<InvalidOperationException>()).Which.Should().BeSameAs(failure);
+        scope.Verify(value => value.Dispose(), Times.Once);
+    }
+
+    public async Task DisposeAsyncAggregatesEveryFailureInDisposalOrder()
+    {
+        var asynchronous = new InvalidOperationException("async instance");
+        var synchronous = new InvalidOperationException("sync instance");
+        var scopeFailure = new InvalidOperationException("async scope");
+        var instance = new Mock<IDisposable>();
+        instance.Setup(value => value.Dispose()).Throws(synchronous);
+        instance.As<IAsyncDisposable>().Setup(value => value.DisposeAsync()).Throws(asynchronous);
+        var scope = new Mock<IServiceScope>();
+        scope.As<IAsyncDisposable>().Setup(value => value.DisposeAsync()).Throws(scopeFailure);
+        var lease = new MicrosoftExtensionsTestClassInstanceLease(instance.Object, scope.Object);
+
+        Func<Task> dispose = () => lease.DisposeAsync();
+        AggregateException aggregate = (await dispose.Should().ThrowAsync<AggregateException>()).Which;
+#if NET6_0_OR_GREATER
+        aggregate.InnerExceptions.Should().Equal(asynchronous, synchronous, scopeFailure);
+        instance.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Once);
+#else
+        aggregate.InnerExceptions.Should().Equal(synchronous, scopeFailure);
+        instance.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Never);
+#endif
+        instance.Verify(value => value.Dispose(), Times.Once);
+        scope.As<IAsyncDisposable>().Verify(value => value.DisposeAsync(), Times.Once);
+        scope.Verify(value => value.Dispose(), Times.Never);
+    }
+
+    public void CreateInstanceSelectionAndScopeFailuresAreBothRetained()
+    {
+        var disposalFailure = new InvalidOperationException("scope failure");
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(value => value.ServiceProvider).Returns(Mock.Of<IServiceProvider>());
+        scope.Setup(value => value.Dispose()).Throws(disposalFailure);
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        scopeFactory.Setup(value => value.CreateScope()).Returns(scope.Object);
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(scopeFactory.Object);
+
+        Action create = () => factory.CreateInstance(typeof(MultiplePreferredConstructorsTestClass), CreateTestContext());
+        AggregateException aggregate = create.Should().Throw<AggregateException>().Which;
+        aggregate.InnerExceptions.Count.Should().Be(2);
+        aggregate.InnerExceptions[0].Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain("multiple public constructors");
+        aggregate.InnerExceptions[1].Should().BeSameAs(disposalFailure);
+        scope.Verify(value => value.Dispose(), Times.Once);
+    }
+
+    public void CreateInstanceActivationAndScopeFailuresAreBothRetained()
+    {
+        var disposalFailure = new InvalidOperationException("scope failure");
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(value => value.ServiceProvider).Returns(new StubServiceProvider(new ScopedService()));
+        scope.Setup(value => value.Dispose()).Throws(disposalFailure);
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        scopeFactory.Setup(value => value.CreateScope()).Returns(scope.Object);
+        var factory = new MicrosoftExtensionsTestClassInstanceFactory(scopeFactory.Object);
+
+        Action create = () => factory.CreateInstance(typeof(ThrowingServiceConstructorTestClass), CreateTestContext());
+        AggregateException aggregate = create.Should().Throw<AggregateException>().Which;
+        aggregate.InnerExceptions.Count.Should().Be(2);
+        aggregate.InnerExceptions[0].Should().BeOfType<InvalidOperationException>()
+            .Which.Message.Should().Contain(typeof(ThrowingServiceConstructorTestClass).FullName);
+        aggregate.InnerExceptions[0].GetBaseException().Message.Should().Be("activation failure");
+        aggregate.InnerExceptions[1].Should().BeSameAs(disposalFailure);
+        scope.Verify(value => value.Dispose(), Times.Once);
     }
 
     public void FactoryProviderRestoresPreviousFactory()
@@ -532,5 +628,74 @@ public sealed class MSTestHostingServiceCollectionExtensionsTests : TestContaine
             await Task.Yield();
             Disposed = true;
         }
+    }
+
+    public async Task ConfiguratorSuppliesScopedFactoryToTheRegisteredFramework()
+    {
+        ServiceCollection services = [];
+        services.AddScoped<ScopedService>();
+        services.AddMSTestTestClassInjection();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        var builder = new Mock<ITestApplicationBuilder> { DefaultValue = DefaultValue.Mock };
+        Func<IServiceProvider, ITestFrameworkCapabilities>? createCapabilities = null;
+        Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? createFramework = null;
+        builder.Setup(value => value.RegisterTestFramework(
+            It.IsAny<Func<IServiceProvider, ITestFrameworkCapabilities>>(),
+            It.IsAny<Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>>()))
+            .Callback<Func<IServiceProvider, ITestFrameworkCapabilities>, Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>>(
+                (capabilities, framework) =>
+                {
+                    createCapabilities = capabilities;
+                    createFramework = framework;
+                })
+            .Returns(builder.Object);
+        provider.GetRequiredService<ITestingPlatformBuilderConfigurator>().Configure(builder.Object);
+        TestingPlatformBuilderHook.AddExtensions(builder.Object, []);
+        Testing.Platform.Services.ServiceProvider nativeServices = MSTestTestFrameworkContinuationTests.CreateServices(
+            Path.GetTempPath(),
+            Mock.Of<Microsoft.Testing.Platform.CommandLine.ICommandLineOptions>(),
+            Mock.Of<Microsoft.Testing.Platform.Helpers.IFileSystem>());
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+
+        try
+        {
+            ITestFrameworkCapabilities capabilities = createCapabilities!(nativeServices);
+            using var framework = (MSTestTestFramework)createFramework!(capabilities, nativeServices);
+            TestContext firstContext = CreateTestContext();
+            TestContext secondContext = CreateTestContext();
+            ITestClassInstanceLease first = framework.TestClassInstanceFactory!.CreateInstance(typeof(TestContextAndServiceTestClass), firstContext);
+            ITestClassInstanceLease second = framework.TestClassInstanceFactory.CreateInstance(typeof(TestContextAndServiceTestClass), secondContext);
+            try
+            {
+                var firstInstance = (TestContextAndServiceTestClass)first.Instance;
+                var secondInstance = (TestContextAndServiceTestClass)second.Instance;
+                firstInstance.TestContext.Should().BeSameAs(firstContext);
+                secondInstance.TestContext.Should().BeSameAs(secondContext);
+                firstInstance.Service.Should().NotBeSameAs(secondInstance.Service);
+                firstInstance.Should().NotBeSameAs(secondInstance);
+            }
+            finally
+            {
+                await first.DisposeAsync();
+                await second.DisposeAsync();
+            }
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.SetActivityFactory(null);
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public void BuilderFactoryValidationDoesNotAcceptNullDependencies()
+    {
+        var builder = new Mock<ITestApplicationBuilder>();
+        var factory = new StubFactory();
+        Action missingBuilder = () => Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.SetTestClassInstanceFactory(null!, factory);
+        Action missingFactory = () => Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.SetTestClassInstanceFactory(builder.Object, null!);
+
+        missingBuilder.Should().ThrowExactly<ArgumentNullException>().WithParameterName("testApplicationBuilder");
+        missingFactory.Should().ThrowExactly<ArgumentNullException>().WithParameterName("testClassInstanceFactory");
     }
 }
