@@ -39,6 +39,49 @@ public sealed class BrowserSdkSelectionTests
                 "2222222222222222222222222222222222222222"));
     }
 
+    [TestMethod]
+    public async Task DotnetMuxer_ExplicitPathWithSpacesStartsSelectedExecutable()
+    {
+        using TempDirectory directory = new();
+        string sdkDirectory = directory.CreateDirectory("sdk with spaces").FullName;
+        string source = OperatingSystem.IsWindows()
+            ? Path.Combine(Environment.SystemDirectory, "sort.exe")
+            : "/usr/bin/sort";
+        string executable = Path.Combine(sdkDirectory, $"dotnet{Constants.ExecutableExtension}");
+
+        // Keep the misparsed executable launchable so a missing quote fails the behavior assertion.
+        string unquotedExecutable = Path.Combine(directory.Path, $"sdk{Constants.ExecutableExtension}");
+        File.Copy(source, executable);
+        File.Copy(source, unquotedExecutable);
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(executable, File.GetUnixFileMode(source));
+            File.SetUnixFileMode(unquotedExecutable, File.GetUnixFileMode(source));
+        }
+
+        string input = Path.Combine(directory.Path, "input.txt");
+        File.WriteAllText(
+            input,
+            """
+            second
+            first
+            """);
+
+        using DotnetMuxer muxer = new(executable, new Dictionary<string, string?>());
+        int exitCode = await muxer.ExecuteAsync(
+            $"\"{input}\"",
+            workingDirectory: directory.Path,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, exitCode, muxer.StandardError);
+        Assert.AreEqual(
+            """
+            first
+            second
+            """.ReplaceLineEndings(),
+            muxer.StandardOutput.ReplaceLineEndings());
+    }
+
     private string CreateSdkLayout(params (string Version, string Commit)[] sdks)
     {
         string root = Path.Combine(

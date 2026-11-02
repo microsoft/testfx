@@ -107,7 +107,8 @@ only; this experiment does not claim runtime support for those hosts.
 - The default package is self-contained for the private Playwright transport:
   it includes the managed Playwright assembly, required JavaScript modules,
   Node.js license/notice data, and the host-specific Node.js payloads listed
-  above. The browser executable remains an explicit external prerequisite; the
+  above. Localized launcher satellite assemblies retain their culture directories.
+  The browser executable remains an explicit external prerequisite; the
   package never downloads a browser.
 - A distribution can omit bundled Node.js and use an approved system Node.js
   executable. A full source-build policy still needs an approved source or

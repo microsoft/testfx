@@ -117,7 +117,7 @@ public class DotnetMuxer : IDisposable
         IDictionary<string, string?> environmentVariables,
         CancellationToken cancellationToken)
         => await _commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"{_dotnet} {arguments}",
+            $"\"{_dotnet}\" {arguments}",
             environmentVariables,
             workingDirectory: workingDirectory,
             cleanDefaultEnvironmentVariableIfCustomAreProvided: true,

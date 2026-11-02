@@ -26,7 +26,8 @@ public sealed class BrowserWorkerProcessContainmentTests
             $$"""
             $null = [Console]::In.ReadLine()
             $child = Start-Process -FilePath (Get-Process -Id $PID).Path -ArgumentList '-NoProfile', '-Command', 'Start-Sleep -Seconds 300' -PassThru
-            "$PID`n$($child.Id)" | Set-Content -LiteralPath '{{marker}}'
+            "$PID`n$($child.Id)" | Set-Content -LiteralPath '{{marker}}.tmp'
+            Move-Item -LiteralPath '{{marker}}.tmp' -Destination '{{marker}}'
             Start-Sleep -Seconds 300
             """);
 

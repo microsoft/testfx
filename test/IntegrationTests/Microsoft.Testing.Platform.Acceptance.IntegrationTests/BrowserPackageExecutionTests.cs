@@ -538,6 +538,11 @@ public sealed class BrowserPackageDesktopTests
 
         Assert.Contains("tools/net8.0/any/Microsoft.Playwright.dll", entries);
         Assert.Contains("tools/net8.0/any/Microsoft.Bcl.AsyncInterfaces.dll", entries);
+        string[] cultures = ["cs", "de", "es", "fr", "it", "ja", "ko", "pl", "pt-BR", "ru", "tr", "zh-Hans", "zh-Hant"];
+        Assert.AreSequenceEqual(
+            cultures.Select(static culture => $"tools/net8.0/any/{culture}/Microsoft.Testing.Platform.Browser.resources.dll"),
+            entries.Where(static entry => entry.EndsWith("/Microsoft.Testing.Platform.Browser.resources.dll", StringComparison.Ordinal))
+                .Order(StringComparer.Ordinal));
         Assert.Contains("tools/net8.0/any/.playwright/node/win32_x64/node.exe", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/linux-x64/node", entries);
         Assert.Contains("tools/net8.0/any/.playwright/node/linux-arm64/node", entries);
@@ -641,6 +646,7 @@ public sealed class BrowserPackageDesktopTests
         using ZipArchive archive = ZipFile.OpenRead(package);
         Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/Microsoft.Playwright.dll"));
         Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/cli.js"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/tr/Microsoft.Testing.Platform.Browser.resources.dll"));
     }
 
     [TestMethod]
@@ -669,6 +675,7 @@ public sealed class BrowserPackageDesktopTests
         Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/NOTICE"));
         Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/package/ThirdPartyNotices.txt"));
         Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/.playwright/node/LICENSE"));
+        Assert.IsNotNull(archive.GetEntry("tools/net8.0/any/tr/Microsoft.Testing.Platform.Browser.resources.dll"));
         Assert.DoesNotContain(
             static entry =>
                 entry.FullName.StartsWith("tools/net8.0/any/.playwright/node/", StringComparison.Ordinal)

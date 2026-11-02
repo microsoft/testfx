@@ -61,6 +61,8 @@ $(CommonProductDescription)]]></PackageDescription>
       <TfmSpecificPackageFile Include="$(TargetDir)*.dll"
                               Exclude="$(TargetDir)$(AssemblyName).dll"
                               PackagePath="tools\net8.0\any" />
+      <TfmSpecificPackageFile Include="$(TargetDir)**\$(AssemblyName).resources.dll"
+                              PackagePath="tools\net8.0\any\%(RecursiveDir)" />
       <TfmSpecificPackageFile Include="@(_BrowserPlaywrightPackageFile)"
                               PackagePath="tools/net8.0/any/.playwright/%(_BrowserPlaywrightPackageFile.PackageSubdirectory)" />
     </ItemGroup>
