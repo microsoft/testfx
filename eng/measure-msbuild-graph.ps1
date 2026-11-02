@@ -24,8 +24,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$sdkRoot = (Get-Content -LiteralPath (Join-Path $repoRoot 'artifacts\toolset\sdk.txt') -Raw).Trim()
+$sdkRoot = if ($env:DOTNET_GLOBAL_INSTALL_DIR) { $env:DOTNET_GLOBAL_INSTALL_DIR } else { Join-Path $repoRoot '.dotnet' }
 $dotnet = Join-Path $sdkRoot $(if ($IsWindows) { 'dotnet.exe' } else { 'dotnet' })
+if (-not (Test-Path -LiteralPath $dotnet)) {
+    throw 'The repository-local SDK is unavailable. Bootstrap with the repository build scripts first.'
+}
 $env:DOTNET_ROOT = $sdkRoot
 $env:DOTNET_INSTALL_DIR = $sdkRoot
 $env:PATH = $sdkRoot + [IO.Path]::PathSeparator + $env:PATH
@@ -63,6 +66,8 @@ $report = [ordered]@{
     continuousIntegrationBuild = ($env:GITHUB_ACTIONS -eq 'true')
     cacheState = 'Fresh outputs per mode/iteration; package, SDK and filesystem caches warmed by bootstrap.'
     sourceChange = 'Timestamp-only touch of src\TestFramework\TestFramework\Assertions\Assert.cs; bytes unchanged.'
+    sourceTimestampUtc = $sourceTimestamp.ToString('O')
+    sourceSha256 = (Get-FileHash -LiteralPath $sourceFile -Algorithm SHA256).Hash
     skipLegacyUap = $IsWindows
     startedUtc = [DateTime]::UtcNow.ToString('O')
     completedUtc = $null
