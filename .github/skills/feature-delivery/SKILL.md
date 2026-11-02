@@ -1,6 +1,6 @@
 ---
 name: feature-delivery
-description: Keep TestFx feature research and decision records, challenge material design choices, demonstrate user-visible behavior, and prove regression-test sensitivity with red/green comparisons. Use before new features or material design decisions, when adding regression coverage, and when preparing feature PR evidence.
+description: Keep TestFx feature research and decision records, challenge material design choices, plan consumer E2E coverage, inspect rendered UI/layout, and prove regression-test sensitivity. Use before new features or material design decisions, when adding regression coverage, and when preparing feature PR evidence.
 ---
 
 # Feature delivery evidence
@@ -73,6 +73,36 @@ clarification when required. In unattended work, proceed only with a safe,
 reversible assumption and label unresolved decisions rather than claiming them
 confirmed. Do not require a separate agent or multi-model review for routine work.
 
+### Plan coverage through the consuming surface
+
+Before coding a new feature or changed consumer boundary, map the user journey
+from input/configuration through execution to the final consumed result. List
+affected supported surfaces, such as terminal output, TRX/HTML reports, CI
+publishing, and IDE discovery. Scope by the changed mappings and failure modes;
+do not require every reporter, IDE, or state for every change.
+
+Maintain a compact matrix in the decision record or existing fix evidence:
+
+| Requirement / risk | Automated E2E evidence | Rendered check / gap |
+| --- | --- | --- |
+| Real consumer observes the feature | Exact existing or planned test/case, shipping entry point, input, and independent expected outcome. | Affected surface and how it will be inspected, or why it is nonvisual. |
+| Defaults, opt-in behavior, and compatibility | Relevant default/disabled and configured paths, plus a representative boundary or failure case. | Relevant empty/error/long-content state, not just the happy-path screenshot. |
+| Result identity and presentation survive the boundary | Final consumed names, identities/grouping, counts, and associated outcomes/metadata. | Verify distinct entries stay distinct and labels/details belong to the right result. |
+
+Credit existing tests when their assertions protect the contract. Add missing
+automated E2E checks for changed boundaries using the existing harness and real
+shipping packages; unit tests support but do not replace that proof. Inspect
+each affected consumer's mapping separately: a formatter test, correct HTML
+report, or correct `testCaseTitle` does not prove Azure DevOps groups results
+correctly by `automatedTestName`.
+
+For data-driven naming, use multiple distinguishable rows, not a single row.
+Cover default names, full-name overrides, arguments-only overrides, and method
+display names where affected. Check per-row identity and metadata association;
+include folded/unfolded or reflection/source-generated variants when their
+different paths matter. Do not substitute a count or unordered text-presence
+check for the association that can be lost.
+
 ## 3. Prove the tests are sensitive to the change
 
 Establish the focused existing-test baseline before implementation when possible.
@@ -122,6 +152,33 @@ alone is not accessible reviewer evidence. Publish evidence only when authorized
 using approved artifact storage or concise text excerpts if logs cannot be shared.
 
 ## 4. Demonstrate the feature and prepare the PR
+
+For user-visible output or layout changes, open the actual built product's
+rendered surface and exercise the changed interaction before claiming it works.
+Generated HTML/JSON, string assertions, and successful commands establish
+different contracts; none alone proves browser, terminal, IDE, or hosted-service
+layout. Use the existing browser/terminal/IDE harness when available, adding
+deterministic DOM, accessibility, or layout assertions where practical instead
+of introducing a new visual-test stack or brittle whole-screen pixel snapshots.
+
+Choose representative normal and constrained viewport/terminal widths. Exercise
+the states affected by the change: long labels and details, quotes/markup and
+Unicode, empty/single/multiple results, failure/skip output, or filtered and
+expanded/collapsed views as applicable. Check text remains readable or available
+through its intended disclosure, names/outcomes/durations stay on the correct
+rows, columns align, and clipping, wrapping, overlap, or overflow does not hide
+controls. Exercise relevant sorting/filtering/detail interactions rather than
+only loading the page. For terminal changes, include ANSI/non-ANSI output when
+the changed path differs.
+
+Record the inspected surface, dimensions, states/interactions, observed result,
+and artifact/source provenance in the coverage matrix. A loopback publisher
+proves its payload, not the live Azure DevOps Tests tab; the same distinction
+applies to discovery payloads versus an IDE's Test Explorer. If an external UI
+or required tooling is unavailable, state the exact unverified contract and
+required follow-up. Do not call an applicable but inaccessible surface
+inapplicable, invent visual proof, or write to an external service without
+authorization.
 
 Whenever practical, show new or changed user-visible behavior in screenshots or
 a short GIF/video, including terminal/CLI output, analyzer UX, and reports.

@@ -19,7 +19,7 @@ internal sealed partial class TypeCache
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo? GetClassInfo(TestMethod testMethod)
     {
-        DebugEx.Assert(testMethod != null, "test method is null");
+        DebugEx.Assert(testMethod is not null, "test method is null");
 
         string typeName = testMethod.FullClassName;
 
@@ -48,7 +48,7 @@ internal sealed partial class TypeCache
         // Load the class type
         Type? type = LoadType(typeName, testMethod.AssemblyName);
 
-        if (type == null)
+        if (type is null)
         {
             // This means the class containing the test method could not be found.
             // Return null so we return a not found result.
@@ -77,7 +77,7 @@ internal sealed partial class TypeCache
             // location in the Out directory.
             Type? t = PlatformServiceProvider.Instance.ReflectionOperations.GetType(typeName);
 
-            if (t == null)
+            if (t is null)
             {
                 Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName);
 
@@ -204,7 +204,7 @@ internal sealed partial class TypeCache
 
         Type? baseType = classType.BaseType;
         // PERF: Don't inspect object, no test methods or setups can be defined on it.
-        while (baseType != null && baseType != typeof(object))
+        while (baseType is not null && baseType != typeof(object))
         {
             foreach (MethodInfo methodInfo in PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredMethods(baseType))
             {
@@ -230,7 +230,7 @@ internal sealed partial class TypeCache
     private TimeoutInfo? TryGetTimeoutInfo(MethodInfo methodInfo, FixtureKind fixtureKind)
     {
         TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstAttributeOrDefault<TimeoutAttribute>(methodInfo);
-        if (timeoutAttribute != null)
+        if (timeoutAttribute is not null)
         {
             if (!timeoutAttribute.HasCorrectTimeout)
             {

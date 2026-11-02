@@ -87,7 +87,11 @@ public sealed class PackagedAppControllerArgumentsTests
     }
 
     [TestMethod]
-    [DataRow(new[] { "--server" })]
+    [DataRow(new[] { "--server", "unknown" })]
+    [DataRow(new[] { "--server", "--server" })]
+    [DataRow(new[] { "--server", "--dotnet-test-pipe", "pipe" })]
+    [DataRow(new[] { "--server", "jsonrpc", "--server", "jsonrpc" })]
+    [DataRow(new[] { "--server", "jsonrpc", "--server", "dotnettestcli", "--dotnet-test-pipe", "pipe" })]
     [DataRow(new[] { "--server", "dotnettestcli", "--dotnet-test-pipe" })]
     [DataRow(new[] { "--server", "dotnettestcli", "--dotnet-test-pipe", "" })]
     [DataRow(new[] { "--server", "dotnettestcli", "--dotnet-test-pipe", "--diagnostic" })]
@@ -106,6 +110,37 @@ public sealed class PackagedAppControllerArgumentsTests
         _ = Assert.ThrowsExactly<FormatException>(
             () => Configure([PackagedAppControllerArguments.Prefix, Target, "packagedapp", .. tail], environment));
         Assert.IsEmpty(environment);
+    }
+
+    [TestMethod]
+    [DataRow(new[] { "--server", "--client-port", "12345" }, false)]
+    [DataRow(new[] { "--server", "--client-port", "12345" }, true)]
+    [DataRow(new[] { "--server", "jsonrpc", "--client-port", "12345" }, false)]
+    [DataRow(new[] { "--server", "jsonrpc", "--client-port", "12345" }, true)]
+    [DataRow(new[] { "--server", "JSONRPC", "--client-port", "12345" }, true)]
+    [DataRow(new[] { "--server", "--client-port", "12345", "--list-tests" }, false)]
+    [DataRow(new[] { "--server", "--client-port", "12345", "--list-tests" }, true)]
+    [DataRow(new[] { "--server" }, false)]
+    [DataRow(new[] { "--server" }, true)]
+    public void Configure_TestExplorerPreservesServerArgumentsWithoutNativeTransport(string[] tail, bool bootstrapFile)
+    {
+        Dictionary<string, string?> environment = new()
+        {
+            [PackagedAppControllerArguments.NativePipeEnvironmentVariable] = "stale-sdk-pipe",
+        };
+        string[] bootstrap = [PackagedAppControllerArguments.Prefix, Target, "msbuild;packagedapp;mstest"];
+        (string[] arguments, bool informational) = PackagedAppControllerArguments.Configure(
+            bootstrapFile ? tail : [.. bootstrap, .. tail],
+            name => environment.GetValueOrDefault(name),
+            (name, value) => environment[name] = value,
+            bootstrapFile ? bootstrap : null);
+
+        Assert.AreSequenceEqual(tail, arguments);
+        Assert.IsFalse(informational);
+        Assert.AreEqual(Target, environment[PackagedAppControllerArguments.TargetEnvironmentVariable]);
+        Assert.AreEqual("msbuild;packagedapp;mstest", environment[PackagedAppControllerArguments.ExtensionsEnvironmentVariable]);
+        Assert.IsNull(environment[PackagedAppControllerArguments.NativePipeEnvironmentVariable]);
+        Assert.IsFalse(environment.ContainsKey(PackagedAppControllerArguments.ExecutionIdEnvironmentVariable));
     }
 
     [TestMethod]

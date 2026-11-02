@@ -12,7 +12,7 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
-    private readonly DotnetTestConnection? _dotnetTestConnection;
+    private readonly DotnetTestConnection _dotnetTestConnection;
     private readonly string? _executionId;
 
     public DotnetTestDataConsumer(DotnetTestConnection dotnetTestConnection, IEnvironment environment)
@@ -26,6 +26,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
         typeof(FileArtifact),
+        typeof(TestCoverageMessage),
     ];
 
     public string Uid => nameof(DotnetTestDataConsumer);
@@ -38,8 +39,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         switch (value)
         {
             case TestNodeUpdateMessage testNodeUpdateMessage:
@@ -187,6 +186,24 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 fileArtifactMessages = CreateFileArtifactMessages(_executionId, fileArtifact);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
+                break;
+
+            case TestCoverageMessage coverage when _dotnetTestConnection.IsCoverageSummarySupported
+                && coverage.Scope.Level is CoverageScopeLevel.Overall or CoverageScopeLevel.Module:
+                await _dotnetTestConnection.SendMessageAsync(new CoverageSummaryMessages(
+                    _executionId,
+                    DotnetTestConnection.InstanceId,
+                    [
+                        new CoverageSummaryMessage(
+                            coverage.SessionUid.Value,
+                            coverage.ProducerId,
+                            (int)coverage.Scope.Level,
+                            coverage.Scope.Name,
+                            (int)coverage.Metric,
+                            coverage.CustomMetricName,
+                            coverage.CoveredCount,
+                            coverage.CoverableCount),
+                    ])).ConfigureAwait(false);
                 break;
         }
     }
@@ -419,8 +436,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         TestSessionEvent sessionStartEvent = new(
             SessionEventTypes.TestSessionStart,
             testSessionContext.SessionUid.Value,
@@ -431,8 +446,6 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        RoslynDebug.Assert(_dotnetTestConnection is not null);
-
         TestSessionEvent sessionEndEvent = new(
             SessionEventTypes.TestSessionEnd,
             testSessionContext.SessionUid.Value,

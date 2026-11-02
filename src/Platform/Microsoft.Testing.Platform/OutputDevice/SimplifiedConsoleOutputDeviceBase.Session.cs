@@ -45,20 +45,20 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
     {
         var builder = new StringBuilder();
         builder.Append(assembly);
-        if (targetFramework == null && architecture == null)
+        if (targetFramework is null && architecture is null)
         {
             console.WriteLine(builder.ToString());
             return;
         }
 
         builder.Append(" (");
-        if (targetFramework != null)
+        if (targetFramework is not null)
         {
             builder.Append(targetFramework);
             builder.Append('|');
         }
 
-        if (architecture != null)
+        if (architecture is not null)
         {
             builder.Append(architecture);
         }

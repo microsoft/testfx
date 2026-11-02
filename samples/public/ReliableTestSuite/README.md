@@ -27,7 +27,7 @@ resource locks, and only then contain whatever residual nondeterminism you could
 ## `[ResourceLock]` note
 
 `[ResourceLock]` and `WellKnownResources` ship in the **MSTest 4.4 framework packages**. This sample
-uses `MSTest.Sdk` and framework packages **4.4.1**. `EnvironmentPricingTests.cs` deliberately keeps
+uses `MSTest.Sdk` and framework packages **4.5.2**. `EnvironmentPricingTests.cs` deliberately keeps
 `[DoNotParallelize]` to demonstrate blanket serialization and shows `[ResourceLock]` as the precise
 alternative in its comments. Switching between them is a one-for-one attribute replacement.
 
@@ -52,7 +52,7 @@ alternative in its comments. Switching between them is a one-for-one attribute r
   same seed. To reproduce a race deterministically, reduce parallelism (or serialize the suspects)
   first, then use the seed to pin the order. In CI you should **rotate the seed** (or leave it unset)
   so runs keep exploring new orderings instead of freezing on one.
-- With the framework packages pinned to **MSTest 4.4.1**, a retried-then-passed test surfaces as
+- With the framework packages pinned to **MSTest 4.5.2**, a retried-then-passed test surfaces as
   *flaky* instead of reporting as an ordinary pass.
 
 ## Run it

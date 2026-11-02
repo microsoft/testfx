@@ -105,6 +105,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private NamedPipeClient CreateNamedPipeClient()
     {
         ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments));
@@ -169,6 +170,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public bool IsRequiredArtifactPostProcessingSupported { get; private set; }
 
+    public bool IsCoverageSummarySupported { get; private set; }
+
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
         IClient transportClient = _transportClient
@@ -187,6 +190,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
+            { HandshakeMessagePropertyNames.CoverageSummaryVersion, ProtocolConstants.CoverageSummaryVersion },
         };
 
         if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost)
@@ -204,6 +208,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         HandshakeMessage handshakeMessage = new(properties);
 
+        IsCoverageSummarySupported = false;
         HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
@@ -257,6 +262,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             bool versionParsed = Version.TryParse(protocolVersion, out Version? negotiatedVersion);
             IsLogForwardingSupported = isCompatible && versionParsed && negotiatedVersion >= new Version(1, 2, 0);
             IsDisplayMessageForwardingSupported = isCompatible && versionParsed && negotiatedVersion >= new Version(1, 3, 0);
+            IsCoverageSummarySupported = isCompatible
+                && properties.TryGetValue(HandshakeMessagePropertyNames.CoverageSummaryVersion, out string? advertisedCoverageVersion)
+                && advertisedCoverageVersion == ProtocolConstants.CoverageSummaryVersion
+                && response.Properties.TryGetValue(HandshakeMessagePropertyNames.CoverageSummaryVersion, out string? coverageVersion)
+                && coverageVersion == ProtocolConstants.CoverageSummaryVersion;
             return isCompatible;
         }
 
@@ -300,6 +310,14 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 break;
 
             case FileArtifactMessages fileArtifactMessages:
+                if (!IsCoverageSummarySupported && fileArtifactMessages.FileArtifacts.Any(artifact => artifact.CoverageSummary is not null))
+                {
+                    fileArtifactMessages = fileArtifactMessages with
+                    {
+                        FileArtifacts = [.. fileArtifactMessages.FileArtifacts.Select(artifact => artifact with { CoverageSummary = null })],
+                    };
+                }
+
                 FileArtifactMessages? messageToSend = await PrepareFileArtifactsAsync(
                     transportClient,
                     fileArtifactMessages,
@@ -309,6 +327,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                     await transportClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(messageToSend, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 }
 
+                break;
+
+            case CoverageSummaryMessages coverageSummaryMessages when IsCoverageSummarySupported:
+                await transportClient.RequestReplyAsync<CoverageSummaryMessages, VoidResponse>(coverageSummaryMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestSessionEvent testSessionEvent:
@@ -353,11 +375,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             return Task.CompletedTask;
         }
 
-        _serverControlListenerCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
-
         if (_transportKind == DotnetTestTransportKind.Http
             && _serverControlTransport == ServerControlTransports.Http)
         {
+            _serverControlListenerCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
             DotnetTestHttpClient controlClient = CreateHttpClient();
             controlClient.RegisterAllSerializers();
             _serverControlHttpClient = controlClient;
@@ -372,6 +393,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             && !OperatingSystem.IsWasi()
             && !RoslynString.IsNullOrEmpty(_serverControlPipeName))
         {
+            _serverControlListenerCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
+
             // exitProcessOnConnectionLoss: false - a dropped control pipe must not kill the test host; the listener
             // turns it into a cooperative cancel instead.
             var controlClient = new NamedPipeClient(_serverControlPipeName, _environment, exitProcessOnConnectionLoss: false);
@@ -438,6 +461,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task ConnectAndListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -462,6 +486,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task ListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -530,7 +555,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         // Framework cancellation of an already-parked overlapped read is not reliable - disposing the stream is
         // what forces it to unblock. We cancelled first (above) so the listener treats the resulting failure as
         // shutdown rather than "host gone => cancel".
-        if (!OperatingSystem.IsBrowser())
+        if (!OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi())
         {
             _serverControlPipeClient?.Dispose();
         }
@@ -553,7 +578,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         _serverControlListenerCts?.Cancel();
 
         // Disposing the pipe client forces a parked read to abort even where token cancellation alone would not.
-        if (!OperatingSystem.IsBrowser())
+        if (!OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi())
         {
             _serverControlPipeClient?.Dispose();
         }

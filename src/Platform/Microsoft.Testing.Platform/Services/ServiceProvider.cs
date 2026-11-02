@@ -22,7 +22,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     public bool AllowTestAdapterFrameworkRegistration { get; set; }
 
 #pragma warning disable CS0618 // Type or member is obsolete
-    private static Type[] InternalOnlyExtensions =>
+    private static readonly Type[] InternalOnlyExtensions =
     [
         // TestHost
         typeof(ITestHostApplicationLifetime),
@@ -126,7 +126,22 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     }
 
     public object? GetServiceInternal(Type serviceType, bool skipInternalOnlyExtensions = false)
-        => GetServicesInternal(serviceType, stopAtFirst: true, skipInternalOnlyExtensions).FirstOrDefault();
+    {
+        if (skipInternalOnlyExtensions && InternalOnlyExtensions.Contains(serviceType))
+        {
+            return null;
+        }
+
+        foreach (object serviceInstance in _services)
+        {
+            if (serviceType.IsInstanceOfType(serviceInstance))
+            {
+                return serviceInstance;
+            }
+        }
+
+        return null;
+    }
 
     private void RegisterCoverageProducer(object service)
     {

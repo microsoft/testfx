@@ -43,11 +43,23 @@ internal sealed class FakeMtpServer : IDisposable
     private readonly IMessageFormatter _formatter;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly List<NotificationMessage> _receivedNotifications = [];
+#if NET9_0_OR_GREATER
+    private readonly Lock _receivedNotificationsLock = new();
+#else
     private readonly object _receivedNotificationsLock = new();
+#endif
     private readonly List<RequestMessage> _receivedRequests = [];
+#if NET9_0_OR_GREATER
+    private readonly Lock _receivedRequestsLock = new();
+#else
     private readonly object _receivedRequestsLock = new();
+#endif
     private readonly Dictionary<int, TaskCompletionSource<ResponseMessage>> _pendingServerRequests = [];
+#if NET9_0_OR_GREATER
+    private readonly Lock _pendingServerRequestsLock = new();
+#else
     private readonly object _pendingServerRequestsLock = new();
+#endif
     private readonly TaskCompletionSource<TcpMessageHandler> _handlerReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<object?> _disconnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
 

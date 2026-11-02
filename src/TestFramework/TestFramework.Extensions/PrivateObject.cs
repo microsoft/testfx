@@ -100,7 +100,7 @@ public partial class PrivateObject
     {
         _ = type ?? throw new ArgumentNullException(nameof(type));
         object? o;
-        if (parameterTypes != null)
+        if (parameterTypes is not null)
         {
             ConstructorInfo ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null)
                                  ?? throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
@@ -110,8 +110,8 @@ public partial class PrivateObject
             }
             catch (TargetInvocationException e)
             {
-                DebugEx.Assert(e.InnerException != null, "Inner exception should not be null.");
-                if (e.InnerException != null)
+                DebugEx.Assert(e.InnerException is not null, "Inner exception should not be null.");
+                if (e.InnerException is not null)
                 {
                     throw e.InnerException;
                 }
@@ -180,12 +180,12 @@ public partial class PrivateObject
     {
         get
         {
-            if (field == null)
+            if (field is null)
             {
                 BuildGenericMethodCacheForType(RealType);
             }
 
-            DebugEx.Assert(field != null, "Invalid method cache for type.");
+            DebugEx.Assert(field is not null, "Invalid method cache for type.");
 
             return field;
         }
@@ -198,7 +198,7 @@ public partial class PrivateObject
     /// <returns>int representing hashcode of the target object.</returns>
     public override int GetHashCode()
     {
-        DebugEx.Assert(_target != null, "target should not be null.");
+        DebugEx.Assert(_target is not null, "target should not be null.");
         return _target.GetHashCode();
     }
 
@@ -211,7 +211,7 @@ public partial class PrivateObject
     {
         if (this != obj)
         {
-            DebugEx.Assert(_target != null, "target should not be null.");
+            DebugEx.Assert(_target is not null, "target should not be null.");
             return typeof(PrivateObject) == obj?.GetType()
                 && _target.Equals(((PrivateObject)obj)._target);
         }

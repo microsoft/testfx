@@ -63,7 +63,7 @@ public sealed class UseCooperativeCancellationForTimeoutFixer : CodeFixProvider
 
         AttributeSyntax newAttributeSyntax;
 
-        if (attributeSyntax.ArgumentList == null)
+        if (attributeSyntax.ArgumentList is null)
         {
             // No argument list exists, create one with CooperativeCancellation = true
             AttributeArgumentSyntax cooperativeCancellationArg = SyntaxFactory.AttributeArgument(

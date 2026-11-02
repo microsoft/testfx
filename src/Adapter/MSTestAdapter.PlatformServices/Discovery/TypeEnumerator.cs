@@ -141,7 +141,7 @@ internal class TypeEnumerator
         Type? currentType = _type;
         int currentDepth = 0;
 
-        while (currentType != null)
+        while (currentType is not null)
         {
             inheritanceDepths[currentType.FullName!] = currentDepth;
             ++currentDepth;
@@ -181,7 +181,7 @@ internal class TypeEnumerator
     internal UnitTestElement GetTestFromMethod(MethodInfo method, bool classDisablesParallelization, ICollection<string> warnings, bool isFromGeneratedDescriptor)
     {
         // null if the current instance represents a generic type parameter.
-        DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
+        DebugEx.Assert(_type.AssemblyQualifiedName is not null, "AssemblyQualifiedName for method is null.");
 
         // Note: We pass _type.FullName (the closed-generic CLR name) as FullClassName because TypeCache.LoadType
         // calls assembly.GetType(FullClassName) which requires the closed-generic form to instantiate the type.

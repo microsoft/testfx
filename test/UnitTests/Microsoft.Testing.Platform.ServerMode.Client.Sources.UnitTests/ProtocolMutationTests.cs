@@ -23,6 +23,8 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 #endif
 public sealed class ProtocolMutationTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
 #if NETCOREAPP
     [TestMethod]
     public void PlatformResourceLabels_AreStable()
@@ -428,8 +430,10 @@ public sealed class ProtocolMutationTests
     }
 
     [TestMethod]
-    public async Task TcpRead_ConnectionReset_WaitsForInProgressDiagnostic()
+    public async Task TcpRead_ConnectionReset_CompletesWhileDiagnosticIsBlocked()
     {
+        // Allow for CI scheduling delays beyond the transport's one-second diagnostic wait.
+        var timeout = TimeSpan.FromSeconds(30);
         var logger = new GatedLogger();
         using var handler = new TcpMessageHandler(
             new TcpClient(),
@@ -439,12 +443,18 @@ public sealed class ProtocolMutationTests
             logger);
 
         Task<RpcMessage?> readTask = handler.ReadAsync(CancellationToken.None);
-        await logger.Started.Task.ConfigureAwait(false);
-
-        Assert.IsFalse(readTask.IsCompleted);
-
-        logger.Release();
-        Assert.IsNull(await readTask.ConfigureAwait(false));
+        try
+        {
+            await logger.Started.Task.WaitAsync(timeout, TestContext.CancellationToken).ConfigureAwait(false);
+            Task completedTask = await Task.WhenAny(readTask, Task.Delay(timeout, TestContext.CancellationToken)).ConfigureAwait(false);
+            Assert.AreSame(readTask, completedTask, "A blocked diagnostic must not prevent graceful disconnect handling.");
+            Assert.IsNull(await readTask.ConfigureAwait(false));
+        }
+        finally
+        {
+            logger.Release();
+            await readTask.WaitAsync(timeout, CancellationToken.None).ConfigureAwait(false);
+        }
     }
 
     [TestMethod]

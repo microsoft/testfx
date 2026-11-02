@@ -159,6 +159,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         await UploadPendingResultAttachmentsAsync(CancellationToken.None).ConfigureAwait(false);
 
+        if (_pendingResultMetadata.Count > 0)
+        {
+            await WarnAsync(AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed, CancellationToken.None).ConfigureAwait(false);
+        }
+
         try
         {
             await UploadPendingRunAttachmentsAsync(testSessionContext.CancellationToken).ConfigureAwait(false);

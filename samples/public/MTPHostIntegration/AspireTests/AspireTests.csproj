@@ -12,11 +12,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MessagePack" Version="3.1.11" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="Microsoft.Testing.Extensions.Hosting" Version="$(MicrosoftTestingExtensionsHostingVersion)" />
     <PackageReference Update="Microsoft.Testing.Platform" Version="$(MTPVersion)" />
     <PackageReference Update="Microsoft.Testing.Platform.MSBuild" Version="$(MTPVersion)" />
     <PackageReference Include="MSTest.Extensions.Hosting" Version="$(MSTestExtensionsHostingVersion)" />
+    <PackageReference Include="Nerdbank.MessagePack" Version="1.3.88" />
   </ItemGroup>
 
   <ItemGroup>

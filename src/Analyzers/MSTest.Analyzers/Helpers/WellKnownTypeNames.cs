@@ -61,6 +61,7 @@ internal static class WellKnownTypeNames
     public const string System = "System";
     public const string SystemCollectionsGenericEqualityComparer1 = "System.Collections.Generic.EqualityComparer`1";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
+    public const string SystemCollectionsICollection = "System.Collections.ICollection";
     public const string SystemCollectionsIDictionary = "System.Collections.IDictionary";
     public const string SystemConsole = "System.Console";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
@@ -77,6 +78,7 @@ internal static class WellKnownTypeNames
     public const string SystemIOPath = "System.IO.Path";
     public const string SystemLinqEnumerable = "System.Linq.Enumerable";
     public const string SystemLinqExpressionsExpression1 = "System.Linq.Expressions.Expression`1";
+    public const string SystemLinqIQueryable = "System.Linq.IQueryable";
     public const string SystemOperatingSystem = "System.OperatingSystem";
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesCallerFilePathAttribute = "System.Runtime.CompilerServices.CallerFilePathAttribute";

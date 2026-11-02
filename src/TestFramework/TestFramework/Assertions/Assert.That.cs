@@ -60,7 +60,7 @@ public static partial class AssertExtensions
         {
             TelemetryCollector.TrackAssertionCall("Assert.That");
 
-            if (condition == null)
+            if (condition is null)
             {
                 throw new ArgumentNullException(nameof(condition));
             }

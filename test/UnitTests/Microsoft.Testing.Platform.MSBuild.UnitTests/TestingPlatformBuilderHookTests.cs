@@ -23,23 +23,15 @@ public sealed class TestingPlatformBuilderHookTests
     [DataRow(0)]
     [DataRow(1)]
     [DataRow(2)]
-    public void AddExtensions_ControllerPidOptionAtAnyPosition_RegistersOnlyCommandLineProvider(int position)
+    public void AddExtensions_ControllerPidOptionAtAnyPosition_RegistersFullMSBuildIntegration(int position)
     {
-        var providers = new List<Func<ICommandLineOptionsProvider>>();
-        Mock<ICommandLineManager> commandLine = new(MockBehavior.Strict);
-        commandLine.Setup(x => x.AddProvider(It.IsAny<Func<ICommandLineOptionsProvider>>()))
-            .Callback<Func<ICommandLineOptionsProvider>>(providers.Add);
-        Mock<ITestApplicationBuilder> builder = new(MockBehavior.Strict);
-        builder.SetupGet(x => x.CommandLine).Returns(commandLine.Object);
+        RegistrationRecorder registrations = new();
         string[] arguments = ["other", "123", "last"];
         arguments[position] = "--internal-testhostcontroller-pid";
 
-        TestingPlatformBuilderHook.AddExtensions(builder.Object, arguments);
+        TestingPlatformBuilderHook.AddExtensions(registrations.Builder.Object, arguments);
 
-        Assert.IsInstanceOfType<MSBuildCommandLineProvider>(Assert.ContainsSingle(providers)());
-        builder.VerifyGet(x => x.TestHost, Times.Never);
-        builder.VerifyGet(x => x.TestHostOrchestrator, Times.Never);
-        commandLine.VerifyAll();
+        AssertFullRegistration(registrations);
     }
 
     [TestMethod]
@@ -86,6 +78,16 @@ public sealed class TestingPlatformBuilderHookTests
         Assert.IsTrue(await hostLifetime.IsEnabledAsync());
         Assert.IsTrue(await orchestratorLifetime.IsEnabledAsync());
         Assert.IsTrue(await consumer.IsEnabledAsync());
+        // Consumers group lifecycle diagnostics by extension identity. The two roles and shared
+        // consumer must remain distinct, even though they use the same MSBuild option/dependencies.
+        Assert.AreSequenceEqual(
+            new[]
+            {
+                ("MSBuildTestApplicationLifecycleCallbacks", "MSBuildTestApplicationLifecycleCallbacks"),
+                ("MSBuildOrchestratorLifetime", "MSBuildOrchestratorLifetime"),
+                ("MSBuildConsumer", "MSBuildConsumer"),
+            },
+            new[] { (hostLifetime.Uid, hostLifetime.DisplayName), (orchestratorLifetime.Uid, orchestratorLifetime.DisplayName), (consumer.Uid, consumer.DisplayName) });
         Assert.AreSame(consumer, GetConsumer(Assert.ContainsSingle(registrations.SessionLifetimes), services.Object));
         Assert.IsNull(hostLifetime.PipeClient);
         services.VerifyAll();

@@ -47,7 +47,7 @@ public sealed class GitHubActionsReporterTests
     [TestMethod]
     public async Task SessionLifetime_EmitsGroupAndEndGroupAsync()
     {
-        List<string> output = [];
+        List<IOutputDeviceData> output = [];
         GitHubActionsReporter reporter = CreateReporter(githubActions: true, options: [], output, assemblyName: "MSTest.UnitTests");
 
         var context = new Mock<ITestSessionContext>();
@@ -57,11 +57,14 @@ public sealed class GitHubActionsReporterTests
         await reporter.OnTestSessionFinishingAsync(context.Object).ConfigureAwait(false);
 
         Assert.HasCount(2, output);
-        Assert.IsTrue(output[0].StartsWith("::group::Tests: MSTest.UnitTests", StringComparison.Ordinal), output[0]);
-        Assert.AreEqual("::endgroup::", output[1]);
+        GitHubActionsCommandOutputDeviceData group = Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(output[0]);
+        GitHubActionsCommandOutputDeviceData endGroup = Assert.IsInstanceOfType<GitHubActionsCommandOutputDeviceData>(output[1]);
+        string framework = ghactions::Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
+        Assert.AreEqual($"::group::Tests: MSTest.UnitTests ({framework})", group.Text);
+        Assert.AreEqual("::endgroup::", endGroup.Text);
     }
 
-    private static GitHubActionsReporter CreateReporter(bool githubActions, Dictionary<string, string[]> options, List<string>? output = null, string assemblyName = "Some.UnitTests")
+    private static GitHubActionsReporter CreateReporter(bool githubActions, Dictionary<string, string[]> options, List<IOutputDeviceData>? output = null, string assemblyName = "Some.UnitTests")
     {
         var environment = new Mock<IEnvironment>();
         environment.Setup(e => e.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
@@ -76,7 +79,7 @@ public sealed class GitHubActionsReporterTests
         var outputDevice = new Mock<IOutputDevice>();
         outputDevice
             .Setup(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
-            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) => output?.Add(((FormattedTextOutputDeviceData)data).Text))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) => output?.Add(data))
             .Returns(Task.CompletedTask);
 
         var moduleInfo = new Mock<ITestApplicationModuleInfo>();

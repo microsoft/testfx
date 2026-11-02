@@ -66,10 +66,10 @@ public sealed class LegacyDataRowBehaviorTests : AcceptanceTestBase<LegacyDataRo
             "AllOptional (123)",
             "AllOptional (123,\"fourth\")",
             "AllOptional (123,\"fifth\",\"sixth\")",
-            "ParamsArray (2)",
-            "ParamsArray (2,\"one\")",
+            "ParamsArray (0)",
+            "ParamsArray (1,\"one\")",
             "ParamsArray (2,\"one\",\"two\")",
-            "ParamsArray (2,\"one\",\"two\",\"three\")");
+            "ParamsArray (3,\"one\",\"two\",\"three\")");
         LegacyAcceptanceAssert.Failed(
             result,
             "InvalidArguments ()",
@@ -284,12 +284,19 @@ public class ParameterBindingCases
         => Assert.IsGreaterThanOrEqualTo(0, value);
 
     [TestMethod]
-    [DataRow(2)]
-    [DataRow(2, "one")]
+    [DataRow(0)]
+    [DataRow(1, "one")]
     [DataRow(2, "one", "two")]
-    [DataRow(2, "one", "two", "three")]
-    public void ParamsArray(int value, params string[] values)
-        => Assert.AreEqual(2, value);
+    [DataRow(3, "one", "two", "three")]
+    public void ParamsArray(int expectedCount, params string[] values)
+    {
+        string[] expected = { "one", "two", "three" };
+        Assert.HasCount(expectedCount, values);
+        for (int index = 0; index < expectedCount; index++)
+        {
+            Assert.AreEqual(expected[index], values[index]);
+        }
+    }
 
     [TestMethod]
     [DataRow]

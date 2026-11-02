@@ -52,6 +52,20 @@ plugins:
     - id: dotnet-msbuild
       source: dotnet/skills
       ref: main
+      include:
+        - agents
+        - skills/build-parallelism
+        - skills/check-bin-obj-clash
+        - skills/directory-build-organization
+        - skills/eliminate-redundant-restores
+        - skills/including-generated-files
+        - skills/item-management
+        - skills/msbuild-antipatterns/references
+        - skills/msbuild-modernization
+        - skills/property-patterns
+        - skills/resolve-project-references
+        - skills/target-authoring
+        - skills/troubleshoot-binlog-mcp
       install:
         mode: summary
     - id: dotnet

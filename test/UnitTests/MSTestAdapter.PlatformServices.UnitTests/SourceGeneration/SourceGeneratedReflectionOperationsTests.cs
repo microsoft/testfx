@@ -428,4 +428,276 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Verifies async-void rejection.")]
         public async void AsyncVoidMethod() => await Task.Yield();
     }
+
+    public void ConstructorRegistrationRejectsNullContractParts()
+    {
+        Action missingTypes = () => _ = new ConstructorInvokerInfo(null!, _ => new Sample());
+        Action missingInvoker = () => _ = new ConstructorInvokerInfo([], null!);
+
+        missingTypes.Should().ThrowExactly<ArgumentNullException>().WithParameterName("parameterTypes");
+        missingInvoker.Should().ThrowExactly<ArgumentNullException>().WithParameterName("invoker");
+    }
+
+    public void RegistrationRejectsEachNullCollectionBeforePublishing()
+    {
+        string[] names =
+        [
+            "assembly", "types", "testMethods", "typeAttributes", "assemblyAttributes", "methodAttributes",
+            "methodInvokers", "constructorInvokers", "propertySetters", "descriptorTestMethods", "descriptorCompleteTypes",
+        ];
+        for (int missing = 0; missing < names.Length; missing++)
+        {
+            Action register = () => ReflectionMetadataHook.Register(
+                missing == 0 ? null! : typeof(Sample).Assembly,
+                missing == 1 ? null! : [],
+                missing == 2 ? null! : new Dictionary<Type, MethodInfo[]>(),
+                missing == 3 ? null! : new Dictionary<Type, Attribute[]>(),
+                missing == 4 ? null! : [],
+                missing == 5 ? null! : new Dictionary<MethodInfo, Attribute[]>(),
+                missing == 6 ? null! : new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(),
+                missing == 7 ? null! : new Dictionary<Type, ConstructorInvokerInfo[]>(),
+                missing == 8 ? null! : new Dictionary<PropertyInfo, Action<object?, object?>>(),
+                missing == 9 ? null! : new Dictionary<Type, MethodInfo[]>(),
+                missing == 10 ? null! : []);
+
+            register.Should().ThrowExactly<ArgumentNullException>().WithParameterName(names[missing]);
+        }
+    }
+
+    public async Task RichRegistrationExecutesConstructorMethodAndPropertySetter()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = null!;
+            MethodInfo method = typeof(RegisteredCoverageSample).GetMethod(nameof(RegisteredCoverageSample.Add))!;
+            PropertyInfo property = typeof(RegisteredCoverageSample).GetProperty(nameof(RegisteredCoverageSample.Text))!;
+            ReflectionMetadataHook.Register(
+                typeof(RegisteredCoverageSample).Assembly,
+                [typeof(RegisteredCoverageSample)],
+                new Dictionary<Type, MethodInfo[]> { [typeof(RegisteredCoverageSample)] = [method] },
+                new Dictionary<Type, Attribute[]> { [typeof(RegisteredCoverageSample)] = [new MarkerAttribute("generated")] },
+                [],
+                new Dictionary<MethodInfo, Attribute[]> { [method] = [new TestMethodAttribute()] },
+                new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>
+                {
+                    [method] = (instance, args) =>
+                    {
+                        ((RegisteredCoverageSample)instance!).Add((int)args![0]!);
+                        return Task.CompletedTask;
+                    },
+                },
+                new Dictionary<Type, ConstructorInvokerInfo[]>
+                {
+                    [typeof(RegisteredCoverageSample)] =
+                    [
+                        new([typeof(string)], args => new RegisteredCoverageSample("generated:" + (string)args![0]!)),
+                    ],
+                },
+                new Dictionary<PropertyInfo, Action<object?, object?>>
+                {
+                    [property] = (instance, value) => ((RegisteredCoverageSample)instance!).Text = "setter:" + (string?)value,
+                },
+                new Dictionary<Type, MethodInfo[]> { [typeof(RegisteredCoverageSample)] = [method] },
+                [typeof(RegisteredCoverageSample)]);
+            var operations = (SourceGeneratedReflectionOperations)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance.ReflectionOperations;
+
+            var instance = (RegisteredCoverageSample)operations.CreateInstance(typeof(RegisteredCoverageSample), ["input"])!;
+            instance.Text.Should().Be("generated:input");
+            await (Task)operations.GetTestMethodInvoker(method)!(instance, [7])!;
+            instance.Total.Should().Be(17);
+            operations.GetPropertySetter(property)!(instance, "value");
+            instance.Text.Should().Be("setter:value");
+            operations.TryGetTestMethodDescriptors(typeof(RegisteredCoverageSample), out MethodInfo[]? descriptors, out bool complete).Should().BeTrue();
+            descriptors.Should().Equal(method);
+            complete.Should().BeTrue();
+            operations.GetType(typeof(RegisteredCoverageSample).Assembly, typeof(RegisteredCoverageSample).FullName!).Should().Be(typeof(RegisteredCoverageSample));
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public void CompatibilityRegistrationsRetainRuntimeDiscovery()
+    {
+        Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IPlatformServiceProvider previous =
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance;
+        try
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = null!;
+            MethodInfo method = typeof(CompatibilityCoverageSample).GetMethod(nameof(CompatibilityCoverageSample.Method))!;
+            Dictionary<Type, MethodInfo[]> methods = new() { [typeof(CompatibilityCoverageSample)] = [method] };
+            ReflectionMetadataHook.Register(typeof(CompatibilityCoverageSample).Assembly, [typeof(CompatibilityCoverageSample)], methods);
+            ReflectionMetadataHook.Register(
+                typeof(CompatibilityCoverageSample).Assembly, [typeof(CompatibilityCoverageSample)], methods,
+                new Dictionary<Type, Attribute[]> { [typeof(CompatibilityCoverageSample)] = [] }, [new MarkerAttribute("assembly")]);
+            var operations = (SourceGeneratedReflectionOperations)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance.ReflectionOperations;
+
+            operations.GetDeclaredMethods(typeof(CompatibilityCoverageSample)).Should().Contain(method);
+            operations.GetCustomAttributes(typeof(CompatibilityCoverageSample)).Should().BeEmpty();
+            operations.GetTestMethodInvoker(method).Should().BeNull();
+            operations.GetCustomAttributes(typeof(RegisteredCoverageSample).Assembly, typeof(MarkerAttribute))
+                .Cast<MarkerAttribute>().Select(attribute => attribute.Value).Should().Contain("assembly");
+        }
+        finally
+        {
+            Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.PlatformServiceProvider.Instance = previous;
+        }
+    }
+
+    public void ProviderRoutesAssemblyTypesAndNavigationWithoutCrossAssemblyLeaks()
+    {
+        Assembly assembly = typeof(Sample).Assembly;
+        string name = assembly.GetName().Name!;
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            Assembly = assembly,
+            AssemblyName = name,
+            TypesByName = new Dictionary<string, Type> { ["generated.Sample"] = typeof(Sample) },
+            TypeMethodLocations = new Dictionary<string, SourceGeneratedReflectionDataProvider.TypeLocation>
+            {
+                ["generated.Sample"] = new() { FileName = "generated.cs", MethodLocations = new() { ["Add"] = 42 } },
+                ["null"] = null!,
+            },
+        };
+
+        provider.TryGetAssembly(name.ToUpperInvariant() + ".dll", out Assembly? found).Should().BeTrue();
+        found.Should().BeSameAs(assembly);
+        provider.TryGetAssembly("missing.dll", out found).Should().BeFalse();
+        found.Should().BeNull();
+        provider.TryGetTypeByName(assembly, "generated.Sample", out Type? type).Should().BeTrue();
+        type.Should().Be(typeof(Sample));
+        provider.TryGetTypeByName(typeof(string).Assembly, "generated.Sample", out type).Should().BeFalse();
+        type.Should().BeNull();
+        provider.TryGetTypeByName(assembly, "missing", out type).Should().BeFalse();
+        type.Should().BeNull();
+        foreach ((string Class, string Method) item in new[] { ("missing", "Add"), ("null", "Add"), ("generated.Sample", "Missing") })
+        {
+            provider.GetNavigationData(item.Class, item.Method, out int line, out string? file);
+            line.Should().Be(0);
+            file.Should().BeNull();
+        }
+
+        provider.GetNavigationData("generated.Sample", "Add", out int actualLine, out string? actualFile);
+        actualLine.Should().Be(42);
+        actualFile.Should().Be("generated.cs");
+    }
+
+    public void CompositeRegistrationRetainsAttributeUnionAndSnapshotIsolation()
+    {
+        Assembly assembly = typeof(Sample).Assembly;
+        var composite = new CompositeSourceGeneratedReflectionDataProvider();
+        var first = new MarkerAttribute("first");
+        var second = new MarkerAttribute("second");
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            Assembly = assembly,
+            AssemblyName = "sample",
+            Types = [typeof(Sample)],
+            AssemblyAttributes = [first],
+        });
+        SourceGeneratedReflectionDataProvider oldSnapshot = composite.GetSnapshot();
+        composite.Add(new SourceGeneratedReflectionDataProvider
+        {
+            Assembly = assembly,
+            AssemblyName = "sample",
+            Types = [typeof(AttributedSample)],
+            AssemblyAttributes = [second],
+            TypesByName = new Dictionary<string, Type> { ["chosen"] = typeof(AttributedSample) },
+            TypeMethodLocations = new Dictionary<string, SourceGeneratedReflectionDataProvider.TypeLocation>
+            {
+                ["chosen"] = new() { FileName = "chosen.cs", MethodLocations = new() { ["Method"] = 17 } },
+            },
+        });
+        composite.Add(new SourceGeneratedReflectionDataProvider { Assembly = assembly, AssemblyName = "sample" });
+
+        oldSnapshot.Types.Should().Equal(typeof(Sample));
+        composite.GetSnapshot().Types.Should().Equal(typeof(Sample), typeof(AttributedSample));
+        composite.GetAssemblyAttributes(assembly).Should().Equal(first, second);
+        composite.GetAssemblyAttributes(typeof(string).Assembly).Should().BeEmpty();
+        composite.TryGetAssembly("SAMPLE.dll", out Assembly? resolved).Should().BeTrue();
+        resolved.Should().BeSameAs(assembly);
+        composite.TryGetAssembly("missing.dll", out resolved).Should().BeFalse();
+        resolved.Should().BeNull();
+        composite.TryGetTypeByName(assembly, "chosen", out Type? type).Should().BeFalse();
+        type.Should().BeNull();
+        composite.TryGetTypeByName(typeof(string).Assembly, "chosen", out type).Should().BeFalse();
+        type.Should().BeNull();
+        composite.GetNavigationData("chosen", "Method", out int line, out string? file);
+        line.Should().Be(17);
+        file.Should().Be("chosen.cs");
+        composite.GetNavigationData("chosen", "missing", out line, out file);
+        line.Should().Be(0);
+        file.Should().BeNull();
+    }
+
+    public void GeneratedConstructorMatchingRespectsNullabilityAndFallsBack()
+    {
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            TypeConstructorsInvoker = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>
+            {
+                [typeof(Sample)] =
+                [
+                    new() { Parameters = [typeof(int)], Invoker = _ => new Sample("integer") },
+                    new() { Parameters = [typeof(string)], Invoker = _ => new Sample("nullable reference") },
+                ],
+            },
+        };
+        var operations = new SourceGeneratedReflectionOperations(provider);
+
+        ((Sample)operations.CreateInstance(typeof(Sample), [7])!).Value.Should().Be("integer");
+        ((Sample)operations.CreateInstance(typeof(Sample), [null])!).Value.Should().Be("nullable reference");
+        ((Sample)operations.CreateInstance(typeof(Sample), ["value"])!).Value.Should().Be("nullable reference");
+        ((Sample)operations.GetConstructorInvoker(typeof(Sample))!(null)).Value.Should().BeNull();
+        Action mismatch = () => operations.CreateInstance(typeof(Sample), [new object()]);
+        mismatch.Should().ThrowExactly<MissingMethodException>();
+    }
+
+    public void RegisteredPropertiesHonorVisibilityAndAttributeProviderValidation()
+    {
+        PropertyInfo hidden = typeof(RegisteredCoverageSample).GetProperty("Hidden", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var operations = new SourceGeneratedReflectionOperations(new SourceGeneratedReflectionDataProvider
+        {
+            TypePropertiesByName = new Dictionary<Type, Dictionary<string, PropertyInfo>>
+            {
+                [typeof(RegisteredCoverageSample)] = new() { ["Hidden"] = hidden },
+            },
+        });
+
+        operations.GetRuntimeProperty(typeof(RegisteredCoverageSample), "Hidden", includeNonPublic: false).Should().BeNull();
+        PropertyInfo selected = operations.GetRuntimeProperty(typeof(RegisteredCoverageSample), "Hidden", includeNonPublic: true)!;
+        var sample = new RegisteredCoverageSample("original");
+        selected.SetValue(sample, "changed", null);
+        sample.ReadHidden().Should().Be("changed");
+
+        Action nullProvider = () => operations.GetCustomAttributesCached(null!);
+        nullProvider.Should().ThrowExactly<ArgumentNullException>().WithParameterName("attributeProvider");
+        ICustomAttributeProvider unsupported = typeof(Sample).GetMethod(nameof(Sample.Add))!.GetParameters()[0];
+        Action invalidProvider = () => operations.GetCustomAttributesCached(unsupported);
+        invalidProvider.Should().ThrowExactly<ArgumentException>().WithParameterName("attributeProvider")
+            .Which.Message.Should().StartWith("Unsupported attribute provider type:");
+    }
+
+    private sealed class RegisteredCoverageSample(string text)
+    {
+        public string Text { get; set; } = text;
+
+        public int Total { get; private set; } = 10;
+
+        private string Hidden { get; set; } = "initial";
+
+        public void Add(int value) => Total += value;
+
+        public string ReadHidden() => Hidden;
+    }
+
+    private sealed class CompatibilityCoverageSample
+    {
+        public void Method()
+        {
+        }
+    }
 }

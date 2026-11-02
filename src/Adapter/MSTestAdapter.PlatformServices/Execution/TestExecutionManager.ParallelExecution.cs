@@ -44,7 +44,7 @@ internal partial class TestExecutionManager
             }
         }
 
-        if (parallelizableTestSet != null)
+        if (parallelizableTestSet is not null)
         {
             ConcurrentQueue<IEnumerable<UnitTestElement>>? queue = null;
 
@@ -146,7 +146,7 @@ internal partial class TestExecutionManager
         }
 
         // Queue the non parallel set
-        if (nonParallelizableTestSet != null)
+        if (nonParallelizableTestSet is not null)
         {
             await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
         }

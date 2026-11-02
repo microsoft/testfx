@@ -90,7 +90,7 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IHierarchicalC
 
         // Add the key-value pair for connection string, and optionally provider name
         AddIfNormalizedKeyMatchesPrefix(data, $"ConnectionStrings:{normalizedKeyWithoutConnectionStringPrefix}", value);
-        if (provider != null)
+        if (provider is not null)
         {
             AddIfNormalizedKeyMatchesPrefix(data, $"ConnectionStrings:{normalizedKeyWithoutConnectionStringPrefix}_ProviderName", provider);
         }

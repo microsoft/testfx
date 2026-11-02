@@ -45,6 +45,29 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (_pendingResultMetadata.Count > 0)
+            {
+                if (_coordinatedRun is not null && _runIdCoordinator is not null)
+                {
+                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                }
+
+                try
+                {
+                    await _client.UpdateTestResultMetadataAsync(
+                        _publishConfiguration,
+                        CurrentRunId.Value,
+                        _pendingResultMetadata,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+                {
+                    TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCanonicalMetadataFailed} {ex.Message}");
+                }
+
+                _pendingResultMetadata.Clear();
+            }
+
             // _publishConfiguration and CurrentRunId are validated once above; the batch loop exits
             // via ShouldFlushUnsafe or when there is no more work to publish.
             while (true)

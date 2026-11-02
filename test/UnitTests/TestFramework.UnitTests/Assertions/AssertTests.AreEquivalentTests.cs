@@ -424,6 +424,93 @@ public partial class AssertTests : TestContainer
             .And.Message.Should().Contain("enumerating the actual collection threw").And.Contain("InvalidOperationException");
     }
 
+    public void AreEquivalent_EnumerableFailurePartitionsPreserveSideCauseAndDisposeCreatedEnumerators()
+    {
+        foreach (bool expectedSide in new[] { false, true })
+        {
+            foreach (bool reflected in new[] { false, true })
+            {
+                foreach (string stage in new[] { "GetEnumerator", "MoveNext", "Current", "CountMoveNext", "CountCurrent" })
+                {
+                    InvalidOperationException cause = new("controlled " + stage);
+                    Exception thrown = reflected ? new TargetInvocationException(cause) : cause;
+                    EnumerationProbe failing = new([1, 2, 3], stage, thrown);
+                    EnumerationProbe ordinary = new([1]);
+                    IEnumerable expected = expectedSide ? failing : ordinary;
+                    IEnumerable actual = expectedSide ? ordinary : failing;
+                    Action compare = () => Assert.AreEquivalent(expected, actual);
+
+                    AssertFailedException error = compare.Should().ThrowExactly<AssertFailedException>().Which;
+
+                    error.Message.Should().Contain(expectedSide ? "enumerating the expected collection threw" : "enumerating the actual collection threw");
+                    error.Message.Should().Contain(nameof(InvalidOperationException));
+                    error.Message.Should().NotContain(nameof(TargetInvocationException));
+                    failing.DisposeCount.Should().Be(stage == "GetEnumerator" ? 0 : 1);
+                    ordinary.DisposeCount.Should().Be(expectedSide && stage == "GetEnumerator" ? 0 : 1);
+                }
+            }
+        }
+    }
+
+    public void AreEquivalent_EnumerableAssertionsAndFatalFailuresPropagateOriginalInstance()
+    {
+        foreach (string stage in new[] { "GetEnumerator", "MoveNext", "Current" })
+        {
+            foreach (Exception cause in new Exception[] { new AssertFailedException("assert sentinel"), new AssertInconclusiveException("inconclusive sentinel"), new OutOfMemoryException("fatal sentinel") })
+            {
+                // Reflection-unwrapping applies to assertion exceptions; fatal direct exceptions
+                // bypass the ordinary user-enumeration mismatch catch.
+                foreach (bool reflected in cause is OutOfMemoryException ? new[] { false } : new[] { false, true })
+                {
+                    EnumerationProbe expected = new([1]);
+                    EnumerationProbe actual = new([1], stage, reflected ? new TargetInvocationException(cause) : cause);
+                    Action compare = () => Assert.AreEquivalent<IEnumerable>(expected, actual);
+
+                    Exception error = compare.Should().Throw<Exception>().Which;
+
+                    error.Should().BeSameAs(cause);
+                    // Propagated GetEnumerator exceptions precede the comparer ownership try/finally.
+                    // These probes own no resources; assert the actual scope, not a promised cleanup
+                    // guarantee that the production contract does not make for fatal/assert failures.
+                    expected.DisposeCount.Should().Be(stage == "GetEnumerator" ? 0 : 1);
+                    actual.DisposeCount.Should().Be(stage == "GetEnumerator" ? 0 : 1);
+                }
+            }
+        }
+    }
+
+    public void AreEquivalent_EnumerableLengthCountsBothSidesAndStopsAtConcreteValueMismatch()
+    {
+        foreach (bool expectedLonger in new[] { false, true })
+        {
+            EnumerationProbe shorter = new([7]);
+            EnumerationProbe longer = new([7, 9, 11]);
+            Action compare = () => Assert.AreEquivalent<IEnumerable>(expectedLonger ? longer : shorter, expectedLonger ? shorter : longer);
+
+            AssertFailedException error = compare.Should().ThrowExactly<AssertFailedException>().Which;
+
+            error.ExpectedText.Should().Be(expectedLonger ? "3" : "1");
+            error.ActualText.Should().Be(expectedLonger ? "1" : "3");
+            shorter.DisposeCount.Should().Be(1);
+            longer.DisposeCount.Should().Be(1);
+        }
+
+        EnumerationProbe expected = new([7, 9]);
+        EnumerationProbe actual = new([7, 17], "CountMoveNext", new InvalidOperationException("must not enumerate past mismatch"));
+        Action mismatch = () => Assert.AreEquivalent<IEnumerable>(expected, actual);
+        AssertFailedException result = mismatch.Should().ThrowExactly<AssertFailedException>().Which;
+        result.Message.Should().Contain("Mismatch at '[1]'");
+        result.ExpectedText.Should().Be("9");
+        result.ActualText.Should().Be("17");
+        actual.DisposeCount.Should().Be(1);
+
+        EnumerationProbe sameValues = new([7, 9]);
+        EnumerationProbe otherValues = new([7, 9]);
+        Assert.AreEquivalent<IEnumerable>(sameValues, otherValues);
+        sameValues.DisposeCount.Should().Be(1);
+        otherValues.DisposeCount.Should().Be(1);
+    }
+
     public void AreEquivalent_EnumerableMismatch_FailsFastWithoutEnumeratingPastMismatch()
     {
         IEnumerable<int> expected = [1, 2, 3];
@@ -1092,6 +1179,36 @@ public partial class AssertTests : TestContainer
         IEnumerator IEnumerable.GetEnumerator() => throw new InvalidOperationException("enumeration boom");
     }
 
+    private sealed class EnumerationProbe(int[] values, string? failingStage = null, Exception? error = null) : IEnumerable
+    {
+        private readonly int[] _values = values;
+        private readonly string? _failingStage = failingStage;
+        private readonly Exception? _error = error;
+
+        public int DisposeCount { get; private set; }
+
+        public IEnumerator GetEnumerator() => _failingStage == "GetEnumerator"
+            ? throw _error!
+            : new ProbeEnumerator(this);
+
+        private sealed class ProbeEnumerator(EnumerationProbe owner) : IEnumerator, IDisposable
+        {
+            private int _index = -1;
+
+            public object Current => owner._failingStage == "Current" || (owner._failingStage == "CountCurrent" && _index >= 1)
+                ? throw owner._error!
+                : owner._values[_index];
+
+            public bool MoveNext() => owner._failingStage == "MoveNext" || (owner._failingStage == "CountMoveNext" && _index >= 1)
+                ? throw owner._error!
+                : ++_index < owner._values.Length;
+
+            public void Reset() => _index = -1;
+
+            public void Dispose() => owner.DisposeCount++;
+        }
+    }
+
     private sealed class FailIfEnumeratedPastIndexEnumerable : IEnumerable<int>
     {
         private readonly int[] _items;
@@ -1159,4 +1276,100 @@ public partial class AssertTests : TestContainer
     }
 
     #endregion
+
+    public void AreEquivalent_DictionaryEnumerationFailure_ReportsOriginalExceptionAndSide()
+    {
+        foreach (bool wrapped in new[] { false, true })
+        {
+            foreach (bool expectedSide in new[] { false, true })
+            {
+                Exception original = new InvalidOperationException("dictionary enumeration boom");
+                Exception error = wrapped ? new TargetInvocationException(original) : original;
+                IDictionary faulting = new FaultingHashtable("enumeration", error) { ["key"] = 7 };
+                IDictionary healthy = new Hashtable { ["key"] = 7 };
+                IDictionary expected = expectedSide ? faulting : healthy;
+                IDictionary actual = expectedSide ? healthy : faulting;
+                string side = expectedSide ? "expected" : "actual";
+                foreach (bool inverse in new[] { false, true })
+                {
+                    Action action = () =>
+                    {
+                        if (inverse)
+                        {
+                            Assert.AreNotEquivalent(expected, actual, strict: true, "dictionary context");
+                        }
+                        else
+                        {
+                            Assert.AreEquivalent(expected, actual, strict: true, "dictionary context");
+                        }
+                    };
+                    string summary = inverse
+                        ? "Could not complete structural comparison (strict mode)."
+                        : "Expected values to be structurally equivalent (strict mode).";
+                    string assertion = inverse ? "Assert.AreNotEquivalent" : "Assert.AreEquivalent";
+                    string message = $"""
+                        Assertion failed. {summary}
+                        Mismatch at '<root>': reading the {side} dictionary threw InvalidOperationException: dictionary enumeration boom.
+                        dictionary context
+
+                        {assertion}(expected, actual)
+                        """;
+                    AssertFailedException failure = action.Should().ThrowExactly<AssertFailedException>().Which;
+                    failure.Message.Replace("\r\n", "\n").Should().Be(message.Replace("\r\n", "\n"));
+                    failure.ExpectedText.Should().BeNull();
+                    failure.ActualText.Should().BeNull();
+                }
+            }
+        }
+    }
+
+    public void AreEquivalent_DictionaryLookupFailure_ReportsOriginalExceptionAndKey()
+    {
+        foreach (bool wrapped in new[] { false, true })
+        {
+            Exception original = new InvalidOperationException("dictionary lookup boom");
+            Exception error = wrapped ? new TargetInvocationException(original) : original;
+            IDictionary expected = new Hashtable { ["key"] = 7 };
+            IDictionary actual = new FaultingHashtable("lookup", error) { ["key"] = 7 };
+            Action action = () => Assert.AreEquivalent(expected, actual, "lookup context");
+            action.Should().ThrowExactly<AssertFailedException>().WithMessage(
+                """
+                Assertion failed. Expected values to be structurally equivalent.
+                Mismatch at '["key"]': reading the actual dictionary threw InvalidOperationException: dictionary lookup boom.
+                lookup context
+
+                Assert.AreEquivalent(expected, actual)
+                """);
+        }
+    }
+
+    public void AreEquivalent_DictionaryAssertionFailure_IsNotConvertedToMismatch()
+    {
+        foreach (string stage in new[] { "enumeration", "lookup" })
+        {
+            UnitTestAssertException[] errors = [new AssertFailedException("nested failure"), new AssertInconclusiveException("nested inconclusive")];
+            foreach (UnitTestAssertException original in errors)
+            {
+                foreach (bool wrapped in new[] { false, true })
+                {
+                    Exception error = wrapped ? new TargetInvocationException(original) : original;
+                    IDictionary expected = new Hashtable { ["key"] = 7 };
+                    IDictionary actual = new FaultingHashtable(stage, error) { ["key"] = 7 };
+                    Action equal = () => Assert.AreEquivalent(expected, actual, strict: true);
+                    Action notEqual = () => Assert.AreNotEquivalent(expected, actual, strict: true);
+                    equal.Should().Throw<UnitTestAssertException>().Which.Should().BeSameAs(original);
+                    notEqual.Should().Throw<UnitTestAssertException>().Which.Should().BeSameAs(original);
+                }
+            }
+        }
+    }
+
+    private sealed class FaultingHashtable(string stage, Exception error) : Hashtable
+    {
+        public override IDictionaryEnumerator GetEnumerator()
+            => stage == "enumeration" ? throw error : base.GetEnumerator();
+
+        public override bool Contains(object key)
+            => stage == "lookup" ? throw error : base.Contains(key);
+    }
 }

@@ -163,12 +163,14 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             requireProcessRestart = true;
         }
 
-        List<(IExtension Extension, int RegistrationOrder)> runCompletionHandlers = [];
-        if (requireProcessRestart)
+        if (!requireProcessRestart)
         {
-            // Observers of an existing controller must not introduce an extra process themselves.
-            await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_runCompletionHandlerFactories, serviceProvider, runCompletionHandlers, _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
+            return new TestHostControllerConfiguration([], [], [], testHostLauncher, requireProcessRestart: false);
         }
+
+        // Observers of an existing controller must not introduce an extra process themselves.
+        List<(IExtension Extension, int RegistrationOrder)> runCompletionHandlers = [];
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(_runCompletionHandlerFactories, serviceProvider, runCompletionHandlers, _factoryOrdering, registerInServiceProvider: true).ConfigureAwait(false);
 
         return new TestHostControllerConfiguration(
             [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => (ITestHostEnvironmentVariableProvider)x.Extension)],

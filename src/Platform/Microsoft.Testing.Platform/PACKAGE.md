@@ -62,6 +62,24 @@ outcomes. Existing test failures, cancellation, and minimum-test policies retain
 before an overall gate can be evaluated reliably; framework-managed in-process retries remain supported.
 Each test application is evaluated separately; solution-wide coverage merging is not performed.
 
+## Coverage summaries under dotnet test
+
+When both the test application and `dotnet test` negotiate coverage-summary support, MTP forwards
+collector-provided overall and module measurements as covered/coverable counts. The SDK owns
+rendering; applications running against an older SDK retain their existing artifact and exit-code
+behavior without sending an unsupported coverage message.
+
+Artifact post-processors can return a `ProcessedArtifact` with a `CoverageSummary` containing
+`CoverageMetricResult` measurements computed from the complete processed artifact. The platform
+transports these measurements together with the validated artifact and its input provenance, not as
+a separate authoritative total. Failed or truncated post-processing omits summary metadata while
+preserving the existing artifact behavior. Counts of `0/0` mean no coverable data; absent metadata
+means the measurements are unavailable.
+
+Coverage from overlapping test applications must be genuinely merged by the collector. Neither the
+platform nor the SDK can obtain a correct solution-wide total by summing or averaging application
+summaries. Coverage transport does not change application-owned threshold enforcement or test exits.
+
 ## About
 
 This package provides the core platform and the .NET implementation of the testing protocol. It includes:

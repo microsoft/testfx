@@ -167,6 +167,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">不要在值類型中使用 'Assert.AreSame' 或 'Assert.AreNotSame'</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
+        <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
+        <target state="translated">集合判斷會列舉 IQueryable，而不是向其提供者要求純量結果。請使用 Queryable.Count 來表示基數，或使用 Queryable.Any 來表示清空。在測試其內容或重複使用快照時，請明確具現化結果；不要只是為了檢查數量或是否存在，就擷取所有符合條件的資料列。</target>
+        <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
+      </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
+        <source>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</source>
+        <target state="translated">請使用 'Queryable.{1}'，而不要使用 '{0}'，以避免列舉查詢結果來進行計數或存在性檢查</target>
+        <note>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</note>
+      </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
+        <source>Avoid enumerating queries for count or existence assertions</source>
+        <target state="translated">避免列舉查詢來進行計數或存在性檢查</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
         <target state="translated">自 MSTest 3.8 起，'DynamicDataSourceType.AutoDetect' 為預設值，會自動識別屬性、方法和欄位，減少冗長性，並降低與成員類型的耦合。</target>
@@ -327,17 +342,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesDescription">
         <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
-        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <target state="translated">請指定 'DisplayName' 作為完整的測試案例名稱，或指定 'ArgumentsDisplayName' 作為保留方法顯示名稱的引數標籤，但不可同時指定兩者。若要保留目前名稱，請移除遭忽略的 'ArgumentsDisplayName'；若要使用引數標籤，請移除 'DisplayName'。</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
         <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
-        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <target state="translated">系統會忽略 'ArgumentsDisplayName'，因為 'DisplayName' 會覆寫完整的測試案例名稱</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesTitle">
         <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
-        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <target state="translated">請勿同時使用 'DisplayName' 和 'ArgumentsDisplayName'</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
@@ -807,7 +822,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
         <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
-        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <target state="translated">MSTest 會初始化測試類別的可寫入 TestContext 屬性，因此您不需要在建構函式中初始化該屬性。</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">

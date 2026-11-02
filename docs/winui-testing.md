@@ -10,7 +10,7 @@
 | Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | [`WinUIMtpUnpackagedApp`](../samples/public/WinUIMtpUnpackagedApp) | MTP direct executable launch |
 | WinUI 3 `packagedClassicApp` with `TrustLevel="appContainer"` | [`WinUIMtpAppContainerApp`](../samples/public/WinUIMtpAppContainerApp) | MTP sidecar controller with exact package-SID pipe authorization |
 
-`MSTest.Sdk` uses Microsoft.Testing.Platform for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved.
+`MSTest.Sdk` uses Microsoft.Testing.Platform by default for all of these models. Packaged and AppContainer applications are not executed as the initial tool process: MSBuild starts an ordinary full-trust sidecar controller, which keeps ownership of command-line preparation, cancellation, reports, retries, and exit-code reconciliation while `Microsoft.Testing.Extensions.PackagedApp` registers and activates the selected manifest application. No `Microsoft.NET.Test.Sdk`, `vstest.console`, `UwpTestHostRuntimeProvider`, or Visual Studio deployment runtime is involved in this default configuration.
 
 ### Packaging and sandboxing are separate choices
 
@@ -103,7 +103,7 @@ For the normal full-trust WinUI 3 model, test apps come in two packaging flavors
 Both flavors are supported when you use `MSTest.Sdk`, whose default runner is [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP). Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so VSTest's appx runtime provider is never involved. `MSTest.Sdk` adds the packaged-app launcher automatically for a packaged WinUI project; an unpackaged app stays on the direct executable launch path.
 
 > [!NOTE]
-> Unpackaged WinUI is not supported under VSTest. VSTest routes every `UseWinUI` project through its `UwpTestHostRuntimeProvider`, which unconditionally reads an `AppxManifest.xml` from the build output and fails with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784).
+> Microsoft.Testing.Platform is recommended for unpackaged WinUI. `MSTest.Sdk` also allows `<UseVSTest>true</UseVSTest>` so projects can apply their own VSTest workarounds, but does not configure those workarounds automatically. Visual Studio's `UwpTestHostRuntimeProvider` expects an `AppxManifest.xml` in the build output and can fail with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784) and the [community workaround discussion](https://github.com/microsoft/testfx/issues/1127#issuecomment-1196088592).
 
 ## Unpackaged WinUI
 
@@ -161,6 +161,30 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 ```
 
 With either setup, `dotnet run` (or `dotnet test`) starts the executable directly and the run finishes in a single process.
+
+### Asynchronous UI tests and timeouts
+
+`[UITestMethod]` supports asynchronous `Task` methods, including methods marked with `[Timeout]`.
+The timeout must not move the test to another STA or thread-pool thread: WinUI controls belong to
+the application's actual dispatcher. The test and its ordinary asynchronous continuations run on
+that dispatcher, and timeout cleanup is dispatched there too.
+
+Preserving the dispatcher does not change the default scheduler used by nested
+`Task.Factory.StartNew` calls. Non-cooperative timeouts cannot interrupt synchronous code that blocks
+the dispatcher. If cleanup has already started, the timeout is reported without waiting for it.
+If the dispatcher cannot start cleanup within one second, cleanup is deferred to the original
+invocation once it can continue; it is never moved to a worker thread. Cleanup is also deferred
+while the constructor or `TestContext` setter is still running. Cleanup that starts on the dispatcher
+retains its own timeout settings.
+
+See `UITestMethodWithTimeoutLoadsUI` in the
+[unpackaged sample](../samples/public/WinUIMtpUnpackagedApp/UnitTests.cs) for a test that assigns a
+red `Grid` to the window and awaits `Loaded`. The sample uses cooperative cancellation to remain
+compatible with its existing SDK pin; the default timeout regression is covered by the real WinUI
+acceptance tests. Always detach event handlers and restore window content when the test finishes.
+For cooperative cancellation, use
+`[Timeout(10000, CooperativeCancellation = true)]` and observe `TestContext.CancellationToken`;
+unlike the default non-cooperative timeout, that mode waits for the test itself to finish.
 
 ### Building unpackaged WinUI projects
 

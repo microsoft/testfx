@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions.Policy;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;

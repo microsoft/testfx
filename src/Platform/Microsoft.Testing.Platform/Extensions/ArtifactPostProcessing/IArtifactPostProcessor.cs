@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Services;
+
 namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
 /// <summary>
@@ -370,6 +372,25 @@ public sealed class ProcessedArtifact
     /// Initializes a new instance of the <see cref="ProcessedArtifact"/> class.
     /// </summary>
     public ProcessedArtifact(string path, string kind, string displayName, string? description)
+        : this(path, kind, displayName, description, coverageSummary: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProcessedArtifact"/> class with coverage
+    /// measurements computed from the complete processed artifact.
+    /// </summary>
+    /// <param name="path">The processed artifact path.</param>
+    /// <param name="kind">The producer-asserted artifact kind.</param>
+    /// <param name="displayName">The artifact display name.</param>
+    /// <param name="description">The artifact description.</param>
+    /// <param name="coverageSummary">The coverage measurements for the complete artifact, or <see langword="null"/> when unavailable.</param>
+    public ProcessedArtifact(
+        string path,
+        string kind,
+        string displayName,
+        string? description,
+        IReadOnlyList<CoverageMetricResult>? coverageSummary)
     {
         Path = path ?? throw new ArgumentNullException(nameof(path));
         Kind = kind is null
@@ -379,6 +400,7 @@ public sealed class ProcessedArtifact
                 : kind;
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
         Description = description;
+        CoverageSummary = coverageSummary is null ? null : Array.AsReadOnly(coverageSummary.ToArray());
     }
 
     /// <summary>
@@ -400,4 +422,12 @@ public sealed class ProcessedArtifact
     /// Gets the artifact description.
     /// </summary>
     public string? Description { get; }
+
+    /// <summary>
+    /// Gets the snapshotted coverage measurements for the complete processed artifact, or
+    /// <see langword="null"/> when unavailable. Counts must come from the actual processed data,
+    /// not sums or averages of the input artifacts' summaries. A zero coverable count explicitly
+    /// represents no coverable data. Duplicate producer/metric keys are last-write-wins updates.
+    /// </summary>
+    public IReadOnlyList<CoverageMetricResult>? CoverageSummary { get; }
 }

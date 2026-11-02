@@ -9,8 +9,11 @@ using System.Reflection;
 
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
+using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -18,6 +21,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
 
 using Moq;
@@ -29,6 +33,210 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class RetryTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_ZeroRetriesPreservesFirstFailureWithoutLaunchingAgain()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["0"] },
+            [new(2, [RetryUpdate("failed", new FailedTestNodeStateProperty("first failure"))])]);
+
+        Assert.AreEqual(2, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.ContainsSingle(fixture.Launcher.Contexts);
+        Assert.Contains("  total: 1", fixture.Output);
+        Assert.Contains("  failed: 1", fixture.Output);
+        Assert.Contains("  succeeded: 0", fixture.Output);
+        Assert.DoesNotContain(value => value.StartsWith("  retried:", StringComparison.Ordinal), fixture.Output);
+        Assert.DoesNotContain(value => value.Contains("stopped early", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_ProgressiveRecoveryCountsEachObservedExtraExecution()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["2"] },
+            [
+                new(2, [RetryUpdate("a", new FailedTestNodeStateProperty("first")), RetryUpdate("b", new FailedTestNodeStateProperty("first")), RetryUpdate("stable", PassedTestNodeStateProperty.CachedInstance)]),
+                new(2, [RetryUpdate("a", PassedTestNodeStateProperty.CachedInstance), RetryUpdate("b", new FailedTestNodeStateProperty("second"))]),
+                new(0, [RetryUpdate("b", PassedTestNodeStateProperty.CachedInstance)]),
+            ]);
+
+        Assert.AreEqual(0, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.AreSequenceEqual(["1", "2", "3"], fixture.Launcher.Contexts.Select(context => context.EnvironmentVariables["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]));
+        Assert.Contains("  total: 3", fixture.Output);
+        Assert.Contains("  failed: 0", fixture.Output);
+        Assert.Contains("  succeeded: 3", fixture.Output);
+        Assert.Contains("  skipped: 0", fixture.Output);
+        Assert.Contains("  retried: 2 test(s), 3 extra run(s)", fixture.Output);
+        Assert.Contains("  flaky: 2 (passed after retry)", fixture.Output);
+        Assert.Contains("  a (failed -> passed)", fixture.Output);
+        Assert.Contains("  b (failed -> passed)", fixture.Output);
+        Assert.Contains(value => value.StartsWith("Retry summary: Passed!", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_UnreportedFirstCountsDoNotInventZeroSuiteTotals()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["3"] },
+            [new(9, [RetryUpdate("observed", new FailedTestNodeStateProperty("observed failure"))], ReportCounts: false)]);
+
+        Assert.AreEqual(9, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.ContainsSingle(fixture.Launcher.Contexts);
+        Assert.Contains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)", fixture.Output);
+        // Failure UIDs are streamed separately from result counts; without the finishing callback,
+        // no authoritative per-result count was reported, including the failed count.
+        Assert.DoesNotContain(value => value.StartsWith("  failed:", StringComparison.Ordinal), fixture.Output);
+        Assert.DoesNotContain(value => value.StartsWith("  total:", StringComparison.Ordinal), fixture.Output);
+        Assert.DoesNotContain(value => value.StartsWith("  succeeded:", StringComparison.Ordinal), fixture.Output);
+        Assert.DoesNotContain(value => value.StartsWith("  skipped:", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task OrchestrateTestHostExecutionAsync_ResponseFileCleanupFailuresDoNotReplaceSuccessfulExit(bool unauthorized)
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["0"] },
+            [new(0, [RetryUpdate("passed", PassedTestNodeStateProperty.CachedInstance)])]);
+        fixture.FileSystem.Setup(value => value.ExistFile(It.Is<string>(path => path.EndsWith(".rsp", StringComparison.Ordinal)))).Returns(true);
+        fixture.FileSystem.Setup(value => value.DeleteFile(It.Is<string>(path => path.EndsWith(".rsp", StringComparison.Ordinal))))
+            .Throws(unauthorized ? new UnauthorizedAccessException("cleanup denied") : new IOException("cleanup denied"));
+
+        Assert.AreEqual(0, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.ContainsSingle(fixture.Launcher.Contexts);
+        string[] warnings = fixture.Logger.Invocations
+            .Where(invocation => invocation.Method.Name == nameof(ILogger.LogAsync) && (LogLevel)invocation.Arguments[0] == LogLevel.Warning)
+            .Select(invocation => invocation.Arguments[1].ToString()!)
+            .ToArray();
+        Assert.Contains(value => value.Contains("Failed to delete generated retry response file", StringComparison.Ordinal) && value.Contains("cleanup denied", StringComparison.Ordinal), warnings);
+        fixture.FileSystem.Verify(value => value.DeleteFile(It.Is<string>(path => path.EndsWith(".rsp", StringComparison.Ordinal))), Times.Exactly(2));
+        Assert.Contains("  succeeded: 1", fixture.Output);
+    }
+
+    [TestMethod]
+    [DataRow("recovered", 0, 0, 2, true, true)]
+    [DataRow("permanent", 2, 1, 1, true, false)]
+    [DataRow("empty", 2, 1, 1, false, false)]
+    [DataRow("unreported", 9, 1, 1, false, false)]
+    public async Task OrchestrateTestHostExecutionAsync_ReconcilesOnlyObservedRetryResults(
+        string partition, int expectedExit, int expectedFailed, int expectedSucceeded, bool expectedRetry, bool expectedFlaky)
+    {
+        ScriptedRetryAttempt first = new(
+            2,
+            [
+                RetryUpdate("failed", new FailedTestNodeStateProperty("failed first")),
+                RetryUpdate("passed", PassedTestNodeStateProperty.CachedInstance),
+                RetryUpdate("skipped", SkippedTestNodeStateProperty.CachedInstance),
+            ]);
+        ScriptedRetryAttempt second = partition switch
+        {
+            "recovered" => new(0, [RetryUpdate("failed", PassedTestNodeStateProperty.CachedInstance)]),
+            "permanent" => new(2, [RetryUpdate("failed", new FailedTestNodeStateProperty("failed again"))]),
+            "empty" => new(2, []),
+            _ => new(9, [], ReportCounts: false),
+        };
+        Dictionary<string, string[]> options = new()
+        {
+            [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = [partition == "unreported" ? "3" : "1"],
+            [RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName] = ["0"],
+        };
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(options, [first, second]);
+
+        int exit = await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(expectedExit, exit);
+        Assert.HasCount(2, fixture.Launcher.Contexts);
+        Assert.AreSequenceEqual(
+            ["1", "2"],
+            fixture.Launcher.Contexts.Select(context => context.EnvironmentVariables["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]));
+        Assert.Contains("  total: 3", fixture.Output);
+        Assert.Contains($"  failed: {expectedFailed}", fixture.Output);
+        Assert.Contains($"  succeeded: {expectedSucceeded}", fixture.Output);
+        Assert.Contains("  skipped: 1", fixture.Output);
+        Assert.AreEqual(expectedRetry, fixture.Output.Contains("  retried: 1 test(s), 1 extra run(s)"));
+        Assert.AreEqual(expectedFlaky, fixture.Output.Contains("  flaky: 1 (passed after retry)"));
+        Assert.AreEqual(expectedFlaky, fixture.Output.Contains("  failed (failed -> passed)"));
+        if (partition == "unreported")
+        {
+            Assert.Contains("Retry summary: Failed! after 2 attempt(s) (retrying stopped early)", fixture.Output);
+        }
+
+        foreach (TestHostLaunchContext context in fixture.Launcher.Contexts)
+        {
+            Assert.DoesNotContain($"--{RetryCommandLineOptionsProvider.RetryFailedTestsOptionName}", context.Arguments);
+            Assert.AreEqual("mock-testhost.exe", context.FileName);
+        }
+
+        Assert.IsTrue(fixture.CreatedDirectories.All(path => path.StartsWith(fixture.ResultsDirectory, StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_FirstSuccessDoesNotLaunchUnusedRetries()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["5"] },
+            [new(0, [RetryUpdate("pass", PassedTestNodeStateProperty.CachedInstance), RetryUpdate("skip", SkippedTestNodeStateProperty.CachedInstance)])]);
+
+        Assert.AreEqual(0, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.ContainsSingle(fixture.Launcher.Contexts);
+        Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", fixture.Output);
+        Assert.Contains("  total: 2", fixture.Output);
+        Assert.Contains("  failed: 0", fixture.Output);
+        Assert.Contains("  succeeded: 1", fixture.Output);
+        Assert.Contains("  skipped: 1", fixture.Output);
+        Assert.DoesNotContain(value => value.StartsWith("  retried:", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
+    public async Task OrchestrateTestHostExecutionAsync_ThresholdStopsBeforeAnotherLaunch()
+    {
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(
+            new()
+            {
+                [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["3"],
+                [RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName] = ["0"],
+            },
+            [new(2, [RetryUpdate("failed", new FailedTestNodeStateProperty("failure"))])]);
+
+        Assert.AreEqual(2, await fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.ContainsSingle(fixture.Launcher.Contexts);
+        Assert.Contains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)", fixture.Output);
+        Assert.Contains("  failed: 1", fixture.Output);
+        Assert.Contains(value => value.Contains("Maximum failed tests threshold is 0 and 1 tests failed", StringComparison.Ordinal), fixture.Output);
+        Assert.DoesNotContain(value => value.Contains("retrying", StringComparison.Ordinal) && value.StartsWith("Retry: attempt", StringComparison.Ordinal), fixture.Output);
+    }
+
+    [TestMethod]
+    [DataRow("server")]
+    [DataRow("watch")]
+    [DataRow("hot-reload")]
+    public async Task OrchestrateTestHostExecutionAsync_UnsupportedModesRejectBeforeEnvironmentMutationOrLaunch(string mode)
+    {
+        Dictionary<string, string[]> options = new() { [RetryCommandLineOptionsProvider.RetryFailedTestsOptionName] = ["1"] };
+        if (mode == "server")
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = ["custom-server"];
+        }
+
+        using RetryOrchestrationFixture fixture = CreateOrchestrationFixture(options, []);
+        if (mode != "server")
+        {
+            fixture.Environment.Setup(value => value.GetEnvironmentVariable(mode == "watch" ? "DOTNET_WATCH" : "TESTINGPLATFORM_HOTRELOAD_ENABLED")).Returns("1");
+        }
+
+        InvalidOperationException error = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => fixture.Orchestrator.OrchestrateTestHostExecutionAsync(TestContext.CancellationToken));
+        Assert.AreEqual(
+            mode == "server" ? "Retry failed tests feature is not supported in server mode" : "Retry failed tests feature is not supported in hot reload mode",
+            error.Message);
+        Assert.IsEmpty(fixture.Launcher.Contexts);
+        Assert.IsEmpty(fixture.CreatedDirectories);
+        fixture.Environment.Verify(value => value.SetEnvironmentVariable(It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
+    }
+
     private const string ContosoPackageSid = "S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-409282942";
 
     [TestMethod]
@@ -2173,6 +2381,162 @@ public class RetryTests
         loggerFactory.Setup(factory => factory.CreateLogger(It.IsAny<string>())).Returns(logger ?? Mock.Of<ILogger>());
         serviceProvider.AddService(loggerFactory.Object);
         return serviceProvider;
+    }
+
+    private static RetryOrchestrationFixture CreateOrchestrationFixture(Dictionary<string, string[]> options, ScriptedRetryAttempt[] attempts)
+    {
+        Mock<ILogger> logger = CreateRecordingLogger();
+        ServiceProvider services = CreateRetryServiceProvider(new TestCommandLineOptions(options), logger.Object);
+        string directory = Path.Combine(Path.GetTempPath(), "mock-retry-" + Guid.NewGuid().ToString("N"));
+        var fileSystem = Mock.Get(services.GetFileSystem());
+        List<string> created = [];
+        fileSystem.Setup(value => value.CreateDirectory(It.IsAny<string>())).Callback<string>(created.Add);
+        fileSystem.Setup(value => value.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>())).Returns([]);
+        var configuration = new Mock<IConfiguration>();
+        configuration.Setup(value => value[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(directory);
+        services.AddService(configuration.Object);
+        var module = new Mock<ITestApplicationModuleInfo>();
+        string[] arguments = options.SelectMany(option => new[] { "--" + option.Key }.Concat(option.Value)).ToArray();
+        module.Setup(value => value.GetCurrentExecutableInfo()).Returns(new ExecutableInfo("mock-testhost.exe", arguments, string.Empty));
+        services.AddService(module.Object);
+        List<string> output = [];
+        var device = new Mock<IOutputDevice>();
+        device.Setup(value => value.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) =>
+            {
+                if (data is TextOutputDeviceData text)
+                {
+                    output.Add(text.Text);
+                }
+                else if (data is FormattedTextOutputDeviceData formatted)
+                {
+                    output.Add(formatted.Text);
+                }
+                else if (data is ErrorMessageOutputDeviceData error)
+                {
+                    output.Add(error.Message);
+                }
+            })
+            .Returns(Task.CompletedTask);
+        services.AddService(device.Object);
+        var launcher = new ScriptedRetryLauncher(attempts);
+        services.AddService(launcher);
+        return new RetryOrchestrationFixture(new RetryOrchestrator(services), launcher, Mock.Get(services.GetEnvironment()), fileSystem, logger, directory, created, output);
+    }
+
+    private static TestNodeUpdateMessage RetryUpdate(string uid, TestNodeStateProperty state)
+        => new(new SessionUid("retry-session"), new TestNode { Uid = uid, DisplayName = uid, Properties = new PropertyBag(state) });
+
+    private sealed record ScriptedRetryAttempt(int ExitCode, TestNodeUpdateMessage[] Results, bool ReportCounts = true);
+
+    private sealed class RetryOrchestrationFixture(
+        RetryOrchestrator orchestrator, ScriptedRetryLauncher launcher, Mock<IEnvironment> environment, Mock<IFileSystem> fileSystem, Mock<ILogger> logger,
+        string resultsDirectory, List<string> createdDirectories, List<string> output) : IDisposable
+    {
+        public RetryOrchestrator Orchestrator { get; } = orchestrator;
+
+        public ScriptedRetryLauncher Launcher { get; } = launcher;
+
+        public Mock<IEnvironment> Environment { get; } = environment;
+
+        public Mock<IFileSystem> FileSystem { get; } = fileSystem;
+
+        public Mock<ILogger> Logger { get; } = logger;
+
+        public string ResultsDirectory { get; } = resultsDirectory;
+
+        public List<string> CreatedDirectories { get; } = createdDirectories;
+
+        public List<string> Output { get; } = output;
+
+        public void Dispose() => Launcher.Dispose();
+    }
+
+    private sealed class ScriptedRetryLauncher(ScriptedRetryAttempt[] attempts) : ITestHostLauncher, IDisposable
+    {
+        private readonly List<ScriptedRetryHandle> _handles = [];
+
+        public List<TestHostLaunchContext> Contexts { get; } = [];
+
+        public string Uid => nameof(ScriptedRetryLauncher);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
+        {
+            ScriptedRetryAttempt attempt = attempts[Contexts.Count];
+            Contexts.Add(context);
+            int index = context.Arguments.ToList().IndexOf("--" + RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName);
+            var handle = new ScriptedRetryHandle(context.Arguments[index + 1], attempt, cancellationToken);
+            _handles.Add(handle);
+            return Task.FromResult<ITestHostHandle>(handle);
+        }
+
+        public void Dispose()
+        {
+            foreach (ScriptedRetryHandle handle in _handles)
+            {
+                handle.Dispose();
+            }
+        }
+    }
+
+    private sealed class ScriptedRetryHandle : ITestHostHandle
+    {
+        private readonly RetryLifecycleCallbacks _lifecycle;
+        private readonly Task _completion;
+
+        public ScriptedRetryHandle(string pipe, ScriptedRetryAttempt attempt, CancellationToken token)
+        {
+            ExitCode = attempt.ExitCode;
+            ServiceProvider child = CreateRetryServiceProvider(new TestCommandLineOptions(new()
+            {
+                [RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName] = [pipe],
+            }));
+            _lifecycle = new RetryLifecycleCallbacks(child);
+            child.AddService(_lifecycle);
+            _completion = CompleteAsync(child, attempt, token);
+        }
+
+        public string Identifier => nameof(ScriptedRetryHandle);
+
+        public int ExitCode { get; }
+
+        public bool HasExited => _completion.IsCompleted;
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken) => _completion.WithCancellationAsync(cancellationToken);
+
+        public void Terminate()
+        {
+        }
+
+        public void Dispose() => _lifecycle.Dispose();
+
+        private async Task CompleteAsync(ServiceProvider child, ScriptedRetryAttempt attempt, CancellationToken token)
+        {
+            var consumer = new RetryDataConsumer(child);
+            await consumer.InitializeAsync();
+            await _lifecycle.BeforeRunAsync(token);
+            var session = new Mock<ITestSessionContext>();
+            session.SetupGet(value => value.SessionUid).Returns(new SessionUid("retry-session"));
+            session.SetupGet(value => value.CancellationToken).Returns(token);
+            await consumer.OnTestSessionStartingAsync(session.Object);
+            foreach (TestNodeUpdateMessage result in attempt.Results)
+            {
+                await consumer.ConsumeAsync(null!, result, token);
+            }
+
+            if (attempt.ReportCounts)
+            {
+                await consumer.OnTestSessionFinishingAsync(session.Object);
+            }
+        }
     }
 
     private static Dictionary<string, string?> InitializeRetryEnvironment(string? logicalRunId, string? executionId)

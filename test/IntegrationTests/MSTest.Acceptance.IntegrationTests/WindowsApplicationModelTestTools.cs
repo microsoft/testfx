@@ -199,7 +199,10 @@ internal static class WindowsApplicationModelTestTools
         return new(result.ExitCode, result.StandardOutput, result.ErrorOutput, trxPath);
     }
 
-    public static void AssertResolvedMSTestAssets(string reportPath, WindowsApplicationModelAssetKind assetKind)
+    public static void AssertResolvedMSTestAssets(
+        string reportPath,
+        WindowsApplicationModelAssetKind assetKind,
+        string targetFramework = "net9.0")
     {
         Assert.IsTrue(File.Exists(reportPath), $"The resolved MSTest asset report '{reportPath}' does not exist.");
         string report = File.ReadAllText(reportPath).Replace('\\', '/');
@@ -221,7 +224,7 @@ internal static class WindowsApplicationModelTestTools
             WindowsApplicationModelAssetKind.ModernUwp =>
             (
                 [
-                    "/lib/net9.0/MSTest.TestFramework.dll",
+                    $"/lib/{targetFramework.Split('-')[0]}/MSTest.TestFramework.dll",
                     "/buildTransitive/net9.0/uwp/MSTest.TestAdapter.dll",
                     "/buildTransitive/net9.0/uwp/MSTestAdapter.PlatformServices.dll",
                     "/buildTransitive/net9.0/uwp/MSTest.TestFramework.Extensions.dll",
@@ -250,6 +253,10 @@ internal static class WindowsApplicationModelTestTools
         string[] rejected = assetPaths.Rejected;
         if (assetKind == WindowsApplicationModelAssetKind.ModernUwp)
         {
+            Assert.Contains(
+                $"TargetFramework={targetFramework}",
+                report,
+                $"The resolved MSTest report '{reportPath}' does not prove the Modern UWP consumer targeted {targetFramework}.");
             Assert.Contains(
                 "UseUwpTools=true",
                 report,

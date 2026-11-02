@@ -136,12 +136,6 @@ internal sealed class JsonStringWriter
                 case '\t':
                     _builder.Append("\\t");
                     break;
-                case '\u2028':
-                case '\u2029':
-                    // Valid JSON but invalid in JavaScript string literals (legacy eval() concern);
-                    // System.Text.Json escapes these by default so we mirror that.
-                    AppendUnicodeEscape(c);
-                    break;
                 default:
                     if (c < 0x20)
                     {
@@ -151,18 +145,24 @@ internal sealed class JsonStringWriter
                     {
                         if (i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
                         {
-                            _builder.Append(c);
-                            _builder.Append(value[++i]);
+                            AppendUnicodeEscape(c);
+                            AppendUnicodeEscape(value[++i]);
                         }
                         else
                         {
-                            _builder.Append('\uFFFD');
+                            AppendUnicodeEscape('\uFFFD');
                         }
                     }
                     else if (char.IsLowSurrogate(c))
                     {
                         // Unpaired low surrogate.
-                        _builder.Append('\uFFFD');
+                        AppendUnicodeEscape('\uFFFD');
+                    }
+                    else if (c >= 0x7F)
+                    {
+                        // Headless Windows processes can use a legacy console encoding whose best-fit
+                        // fallback corrupts Unicode or even turns it into unescaped JSON control characters.
+                        AppendUnicodeEscape(c);
                     }
                     else
                     {

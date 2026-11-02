@@ -105,7 +105,7 @@ internal class TypeValidator
     /// <returns>Returns true if type has a valid TestContext property definition.</returns>
     internal static bool HasCorrectTestContextSignature(Type type)
     {
-        DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
+        DebugEx.Assert(type is not null, "HasCorrectTestContextSignature type is null");
 
         PropertyInfo[] propertyInfoEnumerable = PlatformServiceProvider.Instance.ReflectionOperations.GetDeclaredProperties(type);
         var propertyInfo = new List<PropertyInfo>();
@@ -130,7 +130,7 @@ internal class TypeValidator
         foreach (PropertyInfo pinfo in propertyInfo)
         {
             MethodInfo? getInfo = pinfo.GetMethod;
-            if (getInfo == null)
+            if (getInfo is null)
             {
                 // we don't have a getter.
                 return false;
@@ -189,7 +189,7 @@ internal class TypeValidator
         // is not Visible, so we need to check all the parents and make sure they are all either public or internal.
         bool parentsArePublicOrInternal = true;
         Type? declaringType = type.DeclaringType;
-        while (declaringType != null && parentsArePublicOrInternal)
+        while (declaringType is not null && parentsArePublicOrInternal)
         {
             bool declaringTypeIsPublicOrInternal =
 

@@ -109,7 +109,7 @@ namespace Jsonite
 
             public void Write(object? value)
             {
-                if (value == null)
+                if (value is null)
                 {
                     writer.Write("null");
                     return;

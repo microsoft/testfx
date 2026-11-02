@@ -27,13 +27,21 @@ public sealed class CombinatorialDataAttribute : Attribute, ITestDataSource
         }
 
         ParameterInfo[] parameters = methodInfo.GetParameters();
-        if (parameters.Length == 0)
+        int parameterCount = TestDataSourceUtilities.GetDataParameterCount(parameters);
+        if (parameterCount < parameters.Length
+            && parameters[parameters.Length - 1].GetCustomAttributesData()
+                .Any(attribute => typeof(ICombinatorialValuesProvider).IsAssignableFrom(attribute.AttributeType)))
         {
-            return [];
+            parameterCount++;
         }
 
-        object?[][] values = new object?[parameters.Length][];
-        for (int i = 0; i < parameters.Length; i++)
+        if (parameterCount == 0)
+        {
+            return parameters.Length == 0 ? [] : [[]];
+        }
+
+        object?[][] values = new object?[parameterCount][];
+        for (int i = 0; i < parameterCount; i++)
         {
             values[i] = CombinatorialValuesUtilities.GetValuesFor(parameters[i]).ToArray();
         }

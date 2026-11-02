@@ -59,7 +59,7 @@ internal partial class TestDataConnectionSql
     private string GetColumnsSQL(IEnumerable? columns)
     {
         string? result = null;
-        if (columns != null)
+        if (columns is not null)
         {
             StringBuilder builder = new();
             foreach (string columnName in columns)

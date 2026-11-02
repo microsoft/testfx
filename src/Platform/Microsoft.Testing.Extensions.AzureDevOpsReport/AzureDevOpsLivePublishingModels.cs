@@ -10,6 +10,8 @@ internal static class AzureDevOpsLivePublishingConstants
     public const string AbortedTestOutcome = "Aborted";
     public const string AbortedTestRunState = "Aborted";
     public const string CompletedTestRunState = "Completed";
+    public const string CanonicalTestNameMetadataFamily = "MTP.CanonicalTestName/";
+    public const string CanonicalTestNameMetadataPrefix = CanonicalTestNameMetadataFamily + "1:";
     public const string FailedTestOutcome = "Failed";
     public const string InProgressTestRunState = "InProgress";
     public const int MaxRunNameLength = 256;
@@ -35,7 +37,8 @@ internal static class AzureDevOpsLivePublishingConstants
     public const int MaxSubResultsPerResult = 1000;
 
     /// <summary>Maximum size (in bytes) of a single attachment uploaded to Azure DevOps. Files larger than this are skipped.</summary>
-    public const long MaxAttachmentSizeBytes = 16L * 1024 * 1024;
+    /// <remarks>75 MiB of raw content becomes 100 MiB of base64, matching the Azure Pipelines agent's attachment guards.</remarks>
+    public const long MaxAttachmentSizeBytes = 75L * 1024 * 1024;
 
     /// <summary>Maximum size (in bytes) of an inline (string-based) attachment such as stdout/stderr. Content beyond this is truncated.</summary>
     public const int MaxInlineAttachmentBytes = 256 * 1024;
@@ -116,6 +119,10 @@ internal sealed record AzureDevOpsTestCaseResult(
     /// </remarks>
     [JsonPropertyName("id")]
     public int? Id { get; init; }
+
+    [JsonPropertyName("comment")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Comment { get; init; }
 
     /// <summary>
     /// Gets the hierarchy type of the result; <see cref="AzureDevOpsLivePublishingConstants.RerunResultGroupType"/>

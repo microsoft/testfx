@@ -159,7 +159,7 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdFailedRoundedValues">
         <source>Coverage is below the required threshold (the percentages round to the same value).</source>
-        <target state="new">Coverage is below the required threshold (the percentages round to the same value).</target>
+        <target state="translated">La cobertura está por debajo del umbral requerido (los porcentajes se redondean al mismo valor).</target>
         <note />
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">
@@ -367,6 +367,11 @@
         <target state="translated">{0} pruebas en ejecución</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NoAffectedTestsSelected">
+        <source>No affected tests selected</source>
+        <target state="translated">No se seleccionó ninguna prueba afectada</target>
+        <note>Neutral module status when affected-test selection succeeds without starting a test host. This is not the skipped test outcome and no test count is known.</note>
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">Artefactos de archivo fuera de proceso producidos:</target>
@@ -476,14 +481,24 @@ Los valores válidos son 'Minimal', 'Normal', 'Detailed'. El valor predeterminad
         <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
-        <source>running... {0} completed, {1} failed</source>
-        <target state="translated">ejecutando... {0} completado, {1} error</target>
-        <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
+        <source>running... {0} completed, {1} failed, active modules: {2}</source>
+        <target state="translated">En ejecución... {0} completadas, {1} fallidas, módulos activos: {2}</target>
+        <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
         <source> | active: {0}</source>
         <target state="translated"> | activo: {0}</target>
         <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatLastCompletionSuffix">
+        <source> | last completion: {0} ago</source>
+        <target state="translated"> | última finalización: {0} hace</target>
+        <note>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatNoCompletionSuffix">
+        <source> | no tests completed yet</source>
+        <target state="translated"> | aún no se ha completado ninguna prueba</target>
+        <note />
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
         <source>Control whether progress is reported to screen.

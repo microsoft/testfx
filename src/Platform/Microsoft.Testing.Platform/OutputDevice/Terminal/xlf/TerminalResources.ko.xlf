@@ -159,7 +159,7 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdFailedRoundedValues">
         <source>Coverage is below the required threshold (the percentages round to the same value).</source>
-        <target state="new">Coverage is below the required threshold (the percentages round to the same value).</target>
+        <target state="translated">적용 범위가 필요한 임계값(백분율이 동일한 값으로 반올림됨)보다 낮습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">
@@ -367,6 +367,11 @@
         <target state="translated">실행 중인 테스트 {0}개</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NoAffectedTestsSelected">
+        <source>No affected tests selected</source>
+        <target state="translated">영향받는 테스트가 선택되지 않음</target>
+        <note>Neutral module status when affected-test selection succeeds without starting a test host. This is not the skipped test outcome and no test count is known.</note>
+      </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">생성된 Out of process 파일 아티팩트:</target>
@@ -476,14 +481,24 @@ Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--sh
         <note>{Locked="--output"}{Locked="Minimal"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
-        <source>running... {0} completed, {1} failed</source>
-        <target state="translated">실행 중... {0} 완료, {1} 실패</target>
-        <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
+        <source>running... {0} completed, {1} failed, active modules: {2}</source>
+        <target state="translated">실행 중... {0}개 완료, {1}개 실패, 활성 테스트 모듈: {2}</target>
+        <note>Progress line emitted after visible-output silence on non-cursor terminals. {0} is the cumulative number of completed tests, {1} is the number of failed tests, {2} is the number of active test modules.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
         <source> | active: {0}</source>
         <target state="translated"> | 활성: {0}</target>
         <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatLastCompletionSuffix">
+        <source> | last completion: {0} ago</source>
+        <target state="translated"> | 마지막 완료: {0} 전</target>
+        <note>Suffix for a progress line. {0} is the elapsed duration since the last test completion, not since the last progress line.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatNoCompletionSuffix">
+        <source> | no tests completed yet</source>
+        <target state="translated"> | 아직 완료된 테스트 없음</target>
+        <note />
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
         <source>Control whether progress is reported to screen.

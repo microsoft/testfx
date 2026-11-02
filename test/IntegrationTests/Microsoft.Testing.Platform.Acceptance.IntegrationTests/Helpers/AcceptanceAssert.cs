@@ -151,7 +151,7 @@ internal static class AcceptanceAssert
     public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, bool allSkippedIsZeroTests = false, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
     {
         int totalTests = failed + passed + skipped;
-        string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
+        string result = minimumNumberOfTests is not null && totalTests < minimumNumberOfTests
             ? $"Minimum expected tests policy violation, tests ran {totalTests}, minimum expected {minimumNumberOfTests}"
             : aborted is true
                 ? "Aborted"

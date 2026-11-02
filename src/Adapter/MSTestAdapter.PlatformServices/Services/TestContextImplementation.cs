@@ -81,7 +81,7 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         Func<TestOutputCaptureMode> outputCaptureModeProvider)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
-        DebugEx.Assert(properties != null, "properties is not null");
+        DebugEx.Assert(properties is not null, "properties is not null");
 
         testClassFullName ??= testMethod?.FullClassName;
         if (testClassFullName is null && testMethod is null)

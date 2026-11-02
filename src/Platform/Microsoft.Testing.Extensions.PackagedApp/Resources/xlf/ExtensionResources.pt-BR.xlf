@@ -74,12 +74,12 @@
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidBootstrap">
         <source>The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</source>
-        <target state="new">The packaged-app controller startup arguments are invalid. Restore matching Microsoft.Testing.Extensions.PackagedApp.MSBuild and Microsoft.Testing.Extensions.PackagedApp packages.</target>
+        <target state="translated">Os argumentos de inicialização do controlador de aplicativo empacotado são inválidos. Restaure as versões correspondentes dos pacotes Microsoft.Testing.Extensions.PackagedApp.MSBuild e Microsoft.Testing.Extensions.PackagedApp.</target>
         <note>{Locked="Microsoft.Testing.Extensions.PackagedApp.MSBuild"}{Locked="Microsoft.Testing.Extensions.PackagedApp"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerInvalidTransport">
         <source>The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</source>
-        <target state="new">The packaged-app controller requires exactly one native SDK named-pipe transport. Duplicate, incomplete, or other --server and --dotnet-test-* arguments are not supported.</target>
+        <target state="translated">O controlador de aplicativo empacotado requer exatamente um transporte de pipe nomeado do SDK nativo. Argumentos duplicados, incompletos ou outros argumentos do tipo --server e --dotnet-test-* não têm suporte.</target>
         <note>{Locked="--server"}{Locked="--dotnet-test-*"}</note>
       </trans-unit>
       <trans-unit id="PackagedAppControllerNativeAppContainerNotSupported">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
-        <target state="new">Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
+        <target state="translated">Filtra testes usando a expressão fornecida. Para obter mais informações, consulte a seção detalhes da opção Filtro. Para obter mais informações e exemplos sobre como usar a filtragem de teste de unidade seletiva, consulte https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
         <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
       </trans-unit>
     </body>

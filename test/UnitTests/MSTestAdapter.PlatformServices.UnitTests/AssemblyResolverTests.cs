@@ -241,10 +241,10 @@ internal class TestableAssemblyResolver : AssemblyResolver
         => DoesDirectoryExistSetter?.Invoke(path) ?? base.DoesDirectoryExist(path);
 
     protected override string[] GetDirectories(string path)
-        => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
+        => GetDirectoriesSetter is null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
     protected override Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
-        => SearchAssemblySetter == null
+        => SearchAssemblySetter is null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
 
@@ -252,10 +252,10 @@ internal class TestableAssemblyResolver : AssemblyResolver
         => DoesFileExistSetter?.Invoke(filePath) ?? base.DoesFileExist(filePath);
 
     protected override Assembly LoadAssemblyFrom(string path)
-        => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
+        => LoadAssemblyFromSetter is null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 
     protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
-        => ReflectionOnlyLoadAssemblyFromSetter == null
+        => ReflectionOnlyLoadAssemblyFromSetter is null
             ? base.ReflectionOnlyLoadAssemblyFrom(path)
             : ReflectionOnlyLoadAssemblyFromSetter(path);
 }

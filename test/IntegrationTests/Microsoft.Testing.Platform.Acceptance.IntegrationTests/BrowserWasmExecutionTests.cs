@@ -78,8 +78,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class BrowserWasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 {
-    // browser-wasm is only supported on the current .NET TFM in this repo (see samples/BrowserPlayground).
-    private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
+    private const string TargetFramework = WasmRuntime.TargetFramework;
 
     // Minimal MSTest project targeting browser-wasm, running on Microsoft.Testing.Platform via the
     // generated entry point. The bundled main.js is the WasmMainJSPath boot module (needed for a

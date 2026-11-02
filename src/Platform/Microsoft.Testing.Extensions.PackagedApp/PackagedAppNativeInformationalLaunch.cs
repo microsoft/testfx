@@ -25,7 +25,7 @@ internal static class PackagedAppNativeInformationalLaunch
             cancellationToken.ThrowIfCancellationRequested();
             if (!isPackagedAppEnabled || !await launcher.IsEnabledAsync().ConfigureAwait(false))
             {
-                await errorOutput.WriteLineAsync(ExtensionResources.PackagedAppControllerNativeLauncherDisabled).ConfigureAwait(false);
+                await errorOutput.WriteLineAsync(ExtensionResources.PackagedAppControllerNativeLauncherDisabled.AsMemory(), CancellationToken.None).ConfigureAwait(false);
                 return InvalidPlatformSetupExitCode;
             }
 
@@ -49,7 +49,7 @@ internal static class PackagedAppNativeInformationalLaunch
                 {
                     if (exception is not TimeoutException)
                     {
-                        await errorOutput.WriteLineAsync(exception.Message).ConfigureAwait(false);
+                        await errorOutput.WriteLineAsync(exception.Message.AsMemory(), CancellationToken.None).ConfigureAwait(false);
                     }
                 }
 
@@ -62,7 +62,7 @@ internal static class PackagedAppNativeInformationalLaunch
                     }
                     catch (Exception exception)
                     {
-                        await errorOutput.WriteLineAsync(exception.Message).ConfigureAwait(false);
+                        await errorOutput.WriteLineAsync(exception.Message.AsMemory(), CancellationToken.None).ConfigureAwait(false);
                     }
                 }
 
@@ -75,7 +75,7 @@ internal static class PackagedAppNativeInformationalLaunch
         }
         catch (Exception exception)
         {
-            await errorOutput.WriteLineAsync(exception.Message).ConfigureAwait(false);
+            await errorOutput.WriteLineAsync(exception.Message.AsMemory(), CancellationToken.None).ConfigureAwait(false);
             return InvalidPlatformSetupExitCode;
         }
     }

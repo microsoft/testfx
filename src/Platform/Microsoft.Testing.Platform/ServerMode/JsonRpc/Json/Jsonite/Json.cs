@@ -65,7 +65,7 @@ namespace Jsonite
         /// <exception cref="System.ArgumentNullException">if text is null</exception>
         public static object Deserialize(string text, JsonSettings settings = null)
         {
-            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text is null) throw new ArgumentNullException(nameof(text));
             return Deserialize(new StringReader(text), settings);
         }
 
@@ -78,7 +78,7 @@ namespace Jsonite
         /// <exception cref="System.ArgumentNullException">if reader is null</exception>
         public static object Deserialize(TextReader reader, JsonSettings settings = null)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader is null) throw new ArgumentNullException(nameof(reader));
 
             var parser = new JsonReader(reader, settings ?? DefaultSettings);
 #if MTP_MSBUILD_TASKS

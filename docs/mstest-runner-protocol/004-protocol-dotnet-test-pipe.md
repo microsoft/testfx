@@ -9,8 +9,27 @@
 
 **Experimental 1.5.0 contract.** The HTTP control and artifact-transfer entries below describe this
 browser-launcher prototype, not support in a released SDK. Its source-matched SDK counterpart is pinned
-in [`eng/browser-testing/sdk.json`](../../eng/browser-testing/sdk.json). These experimental allocations
-must be reconciled with independently allocated wire IDs in `main` and the matching SDK before integration.
+in [`eng/browser-testing/sdk.json`](../../eng/browser-testing/sdk.json). The coordinated allocation
+reserves serializers 17/18 and handshake properties 26-31 for the experiment, preserving upstream
+coverage serializer 15 and handshake property 20. Both repositories must use this allocation before
+the pin is advanced; negotiating 1.5.0 alone does not establish support.
+
+**Alignment decision (2026-11-02).** The owners of this experiment and
+[dotnet/sdk#56305](https://github.com/dotnet/sdk/pull/56305) compared TestFx `main`
+`6075756d0590f3d1643d4fdf4bc03f79684660fd`, SDK `main`
+`652269386d3c0702de4e6c9a6b8495e7eef5cfbc`, and the prior paired experiment.
+Fresh allocations avoid reinterpreting retired experimental serializer 16 and properties 21-25.
+Keeping the old browser IDs would collide with upstream coverage; moving only one peer would break
+the composed product. Older experiment peers therefore follow the existing undeclared-capability
+fallback rather than receiving aliased messages. Real composed validation with newly packed TestFx
+and the aligned built SDK is required before updating the counterpart pin.
+
+Local source checks on Windows x64 with SDK `12.0.100-alpha.1.26509.101` compiled both protocol test
+projects across their normal target frameworks. The independent contract suite passed 33/33; the
+platform protocol/connection selection passed 183/183, including four explicit mixed-capability cases.
+The existing no-control-pipe test first failed because the browser change allocated a listener token
+source without a usable channel, then passed after allocation was moved inside the selected transport
+branch. These source-local checks do not replace the required aligned browser-product run.
 
 This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
 versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
@@ -372,8 +391,10 @@ change or reuse an ID.
 | 12 | `DisplayMessage` | host → SDK | Request | 1.3.0 |
 | 13 | `WaitForServerControlRequest` | host → SDK (on auxiliary control transport) | Request | 1.4.0; HTTP in experimental 1.5.0 |
 | 14 | `ServerControlMessage` | SDK → host reply (on auxiliary control transport) | Response | 1.4.0; HTTP in experimental 1.5.0 |
-| 15 | `FileArtifactTransferRequest` | host → SDK (HTTP primary channel) | Request | Experimental 1.5.0 |
-| 16 | `FileArtifactTransferResponse` | SDK → host reply (HTTP primary channel) | Response | Experimental 1.5.0 |
+| 15 | `CoverageSummaryMessages` | host → SDK | Request | `CoverageSummaryVersion=1` capability |
+| 16 | *(reserved — retired experimental artifact response)* | — | — | — |
+| 17 | `FileArtifactTransferRequest` | host → SDK (HTTP primary channel) | Request | Experimental 1.5.0 |
+| 18 | `FileArtifactTransferResponse` | SDK → host reply (HTTP primary channel) | Response | Experimental 1.5.0 |
 
 > IDs 1 and 2 belong to the sibling **test host controller** pipe (a monitoring channel between a test
 > host controller process and the test host). They share the same framing and registry but are not part
@@ -454,12 +475,14 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 17 | `SupportedTruncatedRunPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 15 whose processors can consume artifacts observed before a policy-truncated run stopped. |
 | 18 | `RequiredPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 containing internal coordination kinds that must be post-processed even when only one matching artifact exists. |
 | 19 | `RequiredPostProcessingSupported` | SDK handshake response only | Boolean capability. `true` means the SDK honors ID 18 and supplies the authoritative `runSummary` manifest block before producers defer their standalone output. |
-| 20 | `ServerControlTransport` | SDK handshake response only | Experimental capability. Exactly `http` enables authenticated HTTP control on a second client; it does not activate a named pipe. |
-| 21 | `FileArtifactTransfer` | SDK handshake response only | Experimental capability. Exactly `chunked-v1`, with valid limits at IDs 22-24, enables HTTP artifact export. |
-| 22 | `FileArtifactTransferMaxChunkBytes` | SDK handshake response only | Positive decimal `Int32` chunk limit; the host additionally caps each chunk at 1 MiB. |
-| 23 | `FileArtifactTransferMaxFileBytes` | SDK handshake response only | Positive decimal `Int64` per-file byte limit. |
-| 24 | `FileArtifactTransferMaxModuleBytes` | SDK handshake response only | Positive decimal `Int64` aggregate byte limit for exported files in the module. |
-| 25 | `FileArtifactTransferMaxFileCount` | SDK handshake response only | Optional positive decimal `Int32` aggregate file-count limit. Missing or invalid values use the host ceiling of 10,000; a valid value is capped at that ceiling. |
+| 20 | `CoverageSummaryVersion` | Both peers | Exactly `1` on both sides enables coverage summaries and artifact coverage metadata, independently of the base protocol version and control transport. |
+| 21-25 | *(reserved — retired experimental browser properties)* | — | Must not be reassigned or interpreted as the new browser capabilities. |
+| 26 | `ServerControlTransport` | SDK handshake response only | Experimental capability. Exactly `http` enables authenticated HTTP control on a second client; it does not activate a named pipe. |
+| 27 | `FileArtifactTransfer` | SDK handshake response only | Experimental capability. Exactly `chunked-v1`, with valid limits at IDs 28-30, enables HTTP artifact export. |
+| 28 | `FileArtifactTransferMaxChunkBytes` | SDK handshake response only | Positive decimal `Int32` chunk limit; the host additionally caps each chunk at 1 MiB. |
+| 29 | `FileArtifactTransferMaxFileBytes` | SDK handshake response only | Positive decimal `Int64` per-file byte limit. |
+| 30 | `FileArtifactTransferMaxModuleBytes` | SDK handshake response only | Positive decimal `Int64` aggregate byte limit for exported files in the module. |
+| 31 | `FileArtifactTransferMaxFileCount` | SDK handshake response only | Optional positive decimal `Int32` aggregate file-count limit. Missing or invalid values use the host ceiling of 10,000; a valid value is capped at that ceiling. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
@@ -473,9 +496,11 @@ The SDK replies with its own `HandshakeMessage`. The host reads these properties
 - `ServerControlPipeName` (ID 12): when non-empty, enables the reverse control channel (§12). This is a
   **capability signal gated on the property's presence**, independent of the version string, and is
   used only with the named-pipe primary transport.
-- `ServerControlTransport` (ID 20): exactly `http` enables the auxiliary HTTP control client only when
+- `CoverageSummaryVersion` (ID 20): exactly `1` enables coverage only if the host also advertised `1`.
+  Missing, unknown, or older experimental `http` values do not enable coverage.
+- `ServerControlTransport` (ID 26): exactly `http` enables the auxiliary HTTP control client only when
   the primary transport is HTTP (§12). An absent or unknown value leaves this capability disabled.
-- `FileArtifactTransfer` and limits (IDs 21-25): `chunked-v1` plus positive limits at IDs 22-24 enable
+- `FileArtifactTransfer` and limits (IDs 27-31): `chunked-v1` plus positive limits at IDs 28-30 enable
   HTTP artifact export (§9.9). Missing or unsupported capability data does not make browser-local paths
   usable on the SDK's filesystem.
 
@@ -637,15 +662,19 @@ write to its reporter (and thus the pipeline log).
 
 ### 9.8 `DisplayMessage` (ID 12, ≥ 1.3.0)
 
-`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A generic host diagnostic forwarded so
-warning/error messages produced **outside** test results (hang/crash dump diagnostics, retry summaries,
-generic extension/framework warnings and errors) are not swallowed. `Level` is `DisplayMessageLevels`:
+`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A host message forwarded so durable session
+messages, marked GitHub Actions workflow commands, and warning/error messages produced **outside** test
+results (hang/crash dump diagnostics, retry summaries, generic extension/framework warnings and errors)
+are not swallowed. `Level` is `DisplayMessageLevels`:
 `0` Information, `1` Warning, `2` Error. The SDK maps them to `WriteMessage` / `WriteWarningMessage` /
-`WriteErrorMessage`. Regular (informational) host output is still discarded by the forwarding device;
-only warning/error levels are relayed. Unlike the Azure DevOps path, this is **not** gated on an ADO
-agent.
+`WriteErrorMessage`. GitHub Actions commands use Information regardless of the command's own severity:
+`::error`, `::warning`, `::notice`, `::group::`, and `::endgroup::` must reach the runner unchanged, without
+warning/error decoration. The GitHub Actions extension gates their production on `GITHUB_ACTIONS=true`
+and `--report-gh`; regular (informational) host output remains discarded. Unlike the Azure DevOps path,
+the display-message transport is **not** gated on an ADO agent. An SDK that negotiates a version below
+1.3.0 receives none of these messages; job-summary file writing is independent of this transport.
 
-### 9.9 Chunked file-artifact transfer (experimental IDs 15/16)
+### 9.9 Chunked file-artifact transfer (experimental IDs 17/18)
 
 This exchange is enabled only on HTTP when the SDK advertises `FileArtifactTransfer=chunked-v1` and
 positive chunk, file, and module byte limits. The SDK owns destination paths, quotas, authentication,
@@ -683,6 +712,20 @@ it must not degrade to a successful metadata-only report. Cancellation propagate
 This differs deliberately from an older peer with no transfer capability, which follows the warning
 and suppressed-artifact compatibility path in §9.5.
 
+### 9.10 Coverage summaries (ID 15)
+
+Both peers must advertise `CoverageSummaryVersion=1` at handshake property 20 before the host sends
+`CoverageSummaryMessages` or populates `FileArtifactMessage.CoverageSummary` (field 9). This capability
+is independent of the base protocol version, HTTP control, and artifact transfer. Missing or unknown
+coverage support means unavailable, not zero coverage.
+
+The message envelope carries `ExecutionId` (1), `InstanceId` (2), and a `Summaries` list (3). Each entry
+contains optional `SessionUid` (1), `ProducerId` (2), `ScopeLevel` (3, `Int32`), `ScopeName` (4),
+`Metric` (5, `Int32`), `CustomMetricName` (6), `CoveredCount` (7, `Int64`), and `CoverableCount`
+(8, `Int64`). Artifact field 9 carries the same entries. An HTTP artifact export preserves negotiated
+coverage metadata while replacing only paths; without coverage support, metadata is omitted before
+the existing export flow.
+
 ---
 
 ## 10. Versioning & compatibility
@@ -696,7 +739,7 @@ and suppressed-artifact compatibility path in §9.5.
 | 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
 | 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but named-pipe control is gated on `ServerControlPipeName`, not on the version alone. SDK support must be verified for the specific counterpart (see §12). |
-| 1.5.0 (experimental) | Reuses IDs 13/14 on a second authenticated HTTP client, gated by `ServerControlTransport=http`, and adds bounded chunked artifact-transfer IDs 15/16, gated by `FileArtifactTransfer=chunked-v1` and the advertised limits. Neither capability follows from the version string alone. |
+| 1.5.0 (experimental) | Reuses IDs 13/14 on a second authenticated HTTP client, gated by `ServerControlTransport=http` at property 26, and adds bounded chunked artifact-transfer IDs 17/18, gated by `FileArtifactTransfer=chunked-v1` at property 27 and the advertised limits. Neither capability follows from the version string alone. |
 
 Additive fields on known messages do not require a protocol-version bump:
 
@@ -720,6 +763,10 @@ Compatibility rules / assumptions:
   peer must advertise `ServerControlTransport=http`. An older peer that advertises neither leaves it disabled.
 - Chunked artifact transfer is separately capability-gated. Absent or unsupported capability data
   suppresses HTTP artifact reporting with a warning; failure after negotiation is terminal (§9.9).
+- A peer using the retired experimental browser properties 20-25 cannot enable HTTP control or
+  artifact transfer on the aligned peer. Conversely, an aligned peer does not advertise those old
+  browser properties. Mixed experiment revisions retain the undeclared-capability fallback; serializer
+  15 is never aliased to an artifact transfer.
 
 ---
 

@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 namespace Microsoft.Testing.Extensions.MSBuild;
 
 [UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("wasi")]
 internal abstract class MSBuildLifecycleCallbacksBase
 {
     private readonly IConfiguration _configuration;

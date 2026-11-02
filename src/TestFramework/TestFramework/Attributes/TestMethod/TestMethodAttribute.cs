@@ -24,6 +24,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <item><description>not generic</description></item>
 /// <item><description>not abstract</description></item>
 /// <item><description>return type is either <see langword="void"/>, <see cref="Task"/>, or <see cref="ValueTask"/>. If <see langword="void"/>, then it shouldn't be <see langword="async"/>.</description></item>
+/// <item><description>may declare a trailing <see cref="CancellationToken"/> parameter. When test data does not supply it, MSTest passes <see cref="TestContext.CancellationToken"/>.</description></item>
 /// </list>
 /// </description>
 /// </item>

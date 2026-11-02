@@ -21,6 +21,108 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public sealed class AssertionFailureDiagnosticsTests : TestContainer
 {
+    public void PassingExecutionRemovesCompletedDiagnosticsFromEveryResultButKeepsOrdinaryAttachmentBytes()
+    {
+        EnableCapture();
+        using TempDirectoryScope directory = new();
+        using TestContextImplementation context = CreateContext("Tests.Completed", "Passed", null, directory.Path);
+        using (TestContextImplementation.SetCurrentTestContext(context))
+        {
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("first caught failure", "one", "two");
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("second caught failure", "three", "four");
+        }
+
+        string[] diagnostics = Directory.GetFiles(context.TestTempDirectory!, "*.json").OrderBy(path => path, StringComparer.Ordinal).ToArray();
+        diagnostics.Should().HaveCount(2);
+        string ordinary = Path.Combine(directory.Path, "ordinary.txt");
+        File.WriteAllText(ordinary, "ordinary attachment bytes");
+        string alias = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? diagnostics[0].ToUpperInvariant() : diagnostics[0];
+        TestResult[] results =
+        [
+            new() { Outcome = UnitTestOutcome.Passed, ResultFiles = new[] { diagnostics[0] } },
+            new() { Outcome = UnitTestOutcome.Passed, ResultFiles = new[] { ordinary, diagnostics[1], alias } },
+        ];
+
+        context.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+
+        results[0].ResultFiles.Should().BeNull();
+        results[1].ResultFiles.Should().Equal(ordinary);
+        diagnostics.Any(File.Exists).Should().BeFalse();
+        File.ReadAllText(ordinary).Should().Be("ordinary attachment bytes");
+        context.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+        results[1].ResultFiles.Should().Equal(ordinary);
+    }
+
+    public void TransferredDiagnosticsAttachOnlyNewPathsToFirstNonpassingResultAndCannotReplay()
+    {
+        EnableCapture();
+        using TempDirectoryScope directory = new();
+        using TestContextImplementation outer = CreateContext("Tests.Completed", "Mixed", null, directory.Path);
+        using TestContextImplementation iteration = outer.CloneForDataDrivenIteration();
+        using (TestContextImplementation.SetCurrentTestContext(iteration))
+        {
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("first transferable", "one", "two");
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("second transferable", "three", "four");
+        }
+
+        string[] captured = Directory.GetFiles(iteration.TestTempDirectory!, "*.json");
+        captured.Should().HaveCount(2);
+        string[] diagnostics =
+        [
+            captured.Single(path => File.ReadAllText(path).Contains("first transferable", StringComparison.Ordinal)),
+            captured.Single(path => File.ReadAllText(path).Contains("second transferable", StringComparison.Ordinal)),
+        ];
+        string existing = Path.Combine(directory.Path, "existing.txt");
+        TestResult[] results =
+        [
+            new() { Outcome = UnitTestOutcome.Passed, ResultFiles = new[] { diagnostics[0] } },
+            new() { Outcome = UnitTestOutcome.Failed, ResultFiles = new[] { existing } },
+            new() { Outcome = UnitTestOutcome.Error },
+        ];
+        iteration.TransferAssertionFailureDiagnosticsTo(outer);
+        iteration.TransferAssertionFailureDiagnosticsTo(outer);
+        iteration.FinalizeAssertionFailureDiagnosticsExecution([], resetCaptureBudget: false);
+        outer.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: false);
+
+        results[0].ResultFiles.Should().Equal(diagnostics[0]);
+        results[1].ResultFiles.Should().Equal(existing, diagnostics[1]);
+        results[2].ResultFiles.Should().BeNull();
+        diagnostics.All(File.Exists).Should().BeTrue();
+        File.ReadAllText(diagnostics[1]).Should().Contain("second transferable");
+        outer.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+        results[1].ResultFiles.Should().Equal(existing, diagnostics[1]);
+    }
+
+    public void EmptySourceFinalizationAfterTransferResetsCaptureBudgetForNextExecution()
+    {
+        EnableCapture();
+        using TempDirectoryScope directory = new();
+        using TestContextImplementation context = CreateContext("Tests.Completed", "Budget", null, directory.Path);
+        using TestContextImplementation destination = context.CloneForDataDrivenIteration();
+        using (TestContextImplementation.SetCurrentTestContext(context))
+        {
+            foreach (string message in new[] { "first", "second", "third", "blocked fourth" })
+            {
+                TestContextImplementation.CaptureAssertionFailureDiagnostics(message, null, null);
+            }
+        }
+
+        Directory.GetFiles(context.TestTempDirectory!, "*.json").Should().HaveCount(3);
+        context.TransferAssertionFailureDiagnosticsTo(destination);
+        context.FinalizeAssertionFailureDiagnosticsExecution([], resetCaptureBudget: true);
+        using (TestContextImplementation.SetCurrentTestContext(context))
+        {
+            TestContextImplementation.CaptureAssertionFailureDiagnostics("fresh after reset", null, null);
+        }
+
+        context.TransferAssertionFailureDiagnosticsTo(destination);
+        TestResult[] results = [new() { Outcome = UnitTestOutcome.Failed }];
+        destination.FinalizeAssertionFailureDiagnosticsExecution(results, resetCaptureBudget: true);
+        results[0].ResultFiles.Should().HaveCount(4);
+        string payloads = string.Join(Environment.NewLine, results[0].ResultFiles!.Select(File.ReadAllText));
+        payloads.Should().Contain("fresh after reset").And.NotContain("blocked fourth");
+    }
+
     public void CaptureShouldAttachBoundedContextForFailedTest()
     {
         EnableCapture();

@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if USE_EXTERNAL_COMBINATORIAL
-using Combinatorial.MSTest;
-#else
-using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
-#endif
-
 using System.Text.Json;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -361,9 +357,9 @@ public abstract class AcceptanceTestBase
         using (var stringReader = new StringReader(commandLine.StandardOutput))
         {
             string? line;
-            while ((line = await stringReader.ReadLineAsync(cancellationToken)) != null)
+            while ((line = await stringReader.ReadLineAsync(cancellationToken)) is not null)
             {
-                if (path != null)
+                if (path is not null)
                 {
                     throw new InvalidOperationException(
                         $"vswhere.exe returned more than one path while locating {requiredCapability}:{Environment.NewLine}{commandLine.StandardOutput}");

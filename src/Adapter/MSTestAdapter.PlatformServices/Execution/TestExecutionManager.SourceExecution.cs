@@ -124,7 +124,7 @@ internal partial class TestExecutionManager
             }
         }
 
-        TestAssemblySettings sourceSettings = (sourceSettingsProvider != null)
+        TestAssemblySettings sourceSettings = (sourceSettingsProvider is not null)
             ? sourceSettingsProvider.GetSettings(source)
             : new TestAssemblySettings();
 

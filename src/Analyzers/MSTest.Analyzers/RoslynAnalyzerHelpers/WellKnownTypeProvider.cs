@@ -101,7 +101,7 @@ internal sealed class WellKnownTypeProvider
 
                 INamedTypeSymbol? type = null;
 
-                ImmutableArray<string> namespaceNames = string.IsInterned(fullTypeName) != null
+                ImmutableArray<string> namespaceNames = string.IsInterned(fullTypeName) is not null
                     ? _fullTypeNameToNamespaceNames.GetOrAdd(
                         fullTypeName,
                         GetNamespaceNamesFromFullTypeName)
@@ -115,7 +115,9 @@ internal sealed class WellKnownTypeProvider
 
                 if (type is null)
                 {
+#pragma warning disable CSIsNull002 // Preserve ImmutableArray's overloaded comparison with null.
                     RoslynDebug.Assert(namespaceNames != null);
+#pragma warning restore CSIsNull002 // Use an is expression for non-null checks
 
                     foreach (IAssemblySymbol? referencedAssembly in _referencedAssemblies.Value)
                     {
@@ -153,7 +155,7 @@ internal sealed class WellKnownTypeProvider
                 return type;
             });
 
-        return namedTypeSymbol != null;
+        return namedTypeSymbol is not null;
     }
 
     /// <summary>
@@ -176,8 +178,8 @@ internal sealed class WellKnownTypeProvider
     /// <returns>True if <paramref name="typeSymbol"/> is a <see cref="Task{TResult}"/> with its
     /// type argument satisfying <paramref name="typeArgumentPredicate"/>, false otherwise.</returns>
     internal bool IsTaskOfType([NotNullWhen(returnValue: true)] ITypeSymbol? typeSymbol, Func<ITypeSymbol, bool> typeArgumentPredicate)
-        => typeSymbol != null
-            && typeSymbol.OriginalDefinition != null
+        => typeSymbol is not null
+            && typeSymbol.OriginalDefinition is not null
             && SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition,
                 GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1))
             && typeSymbol is INamedTypeSymbol namedTypeSymbol
@@ -187,7 +189,7 @@ internal sealed class WellKnownTypeProvider
     private static ImmutableArray<string> GetNamespaceNamesFromFullTypeName(string fullTypeName)
     {
         using var namespaceNamesBuilder = ArrayBuilder<string>.GetInstance();
-        RoslynDebug.Assert(namespaceNamesBuilder != null);
+        RoslynDebug.Assert(namespaceNamesBuilder is not null);
 
         int prevStartIndex = 0;
         for (int i = 0; i < fullTypeName.Length; i++)

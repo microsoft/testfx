@@ -79,7 +79,7 @@ internal sealed partial class TypeCache
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
 
-        if (testClassInfo == null)
+        if (testClassInfo is null)
         {
             // This means the class containing the test method could not be found.
             // Return null so we return a not found result.
@@ -99,7 +99,7 @@ internal sealed partial class TypeCache
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         TestClassInfo? testClassInfo = GetClassInfo(testMethod);
 
-        if (testClassInfo == null)
+        if (testClassInfo is null)
         {
             // This means the class containing the test method could not be found.
             // Return null so we return a not found result.

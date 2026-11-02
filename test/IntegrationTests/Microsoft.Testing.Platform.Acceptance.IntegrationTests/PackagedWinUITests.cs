@@ -516,6 +516,8 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         manifestIdentity.SetAttributeValue("Name", identity);
         var project = XDocument.Load(Path.Combine(sampleDirectory, $"{projectName}.csproj"));
         project.Root!.SetAttributeValue("Sdk", $"MSTest.Sdk/{MSTestVersion}");
+        // Pin the locally packed platform instead of CodeCoverage's transitive preview dependency.
+        project.Root.Element("PropertyGroup")!.Add(new XElement("EnableMicrosoftTestingPlatform", true));
         StringBuilder source = new();
         foreach (string relativePath in new[]
         {
@@ -656,7 +658,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                 .Replace("MSTest.Sdk/$MSTestVersion$", "Microsoft.NET.Sdk", StringComparison.Ordinal)
                 .Replace(
                     "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>",
-                    "<EnableMSTestRunner>true</EnableMSTestRunner><EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp><EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>",
+                    "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform><EnableMSTestRunner>true</EnableMSTestRunner><EnableMicrosoftTestingExtensionsPackagedApp>true</EnableMicrosoftTestingExtensionsPackagedApp><EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>",
                     StringComparison.Ordinal)
                 .Replace(
                     "<PackageReference Include=\"Microsoft.Windows.SDK.BuildTools\"",

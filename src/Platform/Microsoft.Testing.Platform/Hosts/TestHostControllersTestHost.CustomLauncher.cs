@@ -10,6 +10,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed partial class TestHostControllersTestHost
 {
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task<IProcess> LaunchUsingCustomLauncherAsync(
         ITestHostLauncher testHostLauncher,
         ProcessStartInfo processStartInfo,

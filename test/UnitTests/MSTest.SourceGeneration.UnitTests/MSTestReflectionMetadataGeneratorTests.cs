@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.UnitTests;
@@ -18,6 +19,88 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 [TestClass]
 public sealed class MSTestReflectionMetadataGeneratorTests
 {
+    [TestMethod]
+    public void AotSourceGeneratorDiagnostics_HaveDocumentationLinks() =>
+        new[]
+        {
+            DiagnosticDescriptors.StaticTestClass,
+            DiagnosticDescriptors.GenericTestClass,
+            DiagnosticDescriptors.InaccessibleTestClass,
+            DiagnosticDescriptors.GenericTestMethod,
+            DiagnosticDescriptors.ByRefParameter,
+        }
+            .Select(descriptor => descriptor.HelpLinkUri)
+            .Should()
+            .Equal(
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0001",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0002",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0003",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0004",
+                "https://github.com/microsoft/testfx/blob/main/docs/source-generator/diagnostics.md#aotsg0005");
+
+    [TestMethod]
+    public void CollectInheritedPropertyAttributes_PreservesOrderMultipleAndNearestSingleApplications()
+    {
+        CSharpCompilation compilation = CreateCompilation(
+            """
+            using System;
+            [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+            public sealed class MultiAttribute(string value) : Attribute { }
+            [AttributeUsage(AttributeTargets.All)]
+            public sealed class SingleAttribute(string value) : Attribute { }
+            [AttributeUsage(AttributeTargets.All, Inherited = false)]
+            public class LocalAttribute : Attribute { }
+            public sealed class DerivedLocalAttribute : LocalAttribute { }
+            public class Grand
+            {
+                [Multi("grand"), Single("grand"), DerivedLocal]
+                public virtual int Value { get; set; }
+            }
+            public class Middle : Grand
+            {
+                [Multi("middle"), Single("middle")]
+                public override int Value { get; set; }
+            }
+            public sealed class Leaf : Middle
+            {
+                [Multi("leaf")]
+                public override int Value { get; set; }
+            }
+            """);
+        compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        IPropertySymbol property = compilation.GetTypeByMetadataName("Leaf")!.GetMembers("Value").OfType<IPropertySymbol>().Single();
+
+        System.Collections.Immutable.ImmutableArray<AttributeData> attributes = AttributeMaterializationHelper.CollectInheritedAttributes(property);
+
+        attributes.Select(attribute => (attribute.AttributeClass!.Name, (string)attribute.ConstructorArguments[0].Value!))
+            .Should().Equal(("MultiAttribute", "leaf"), ("MultiAttribute", "middle"), ("SingleAttribute", "middle"), ("MultiAttribute", "grand"));
+    }
+
+    [TestMethod]
+    public void CollectInheritedPropertyAttributes_NoOverrideKeepsOwnNonInheritedAttributeAndEmptyIsEmpty()
+    {
+        CSharpCompilation compilation = CreateCompilation(
+            """
+            using System;
+            [AttributeUsage(AttributeTargets.All, Inherited = false)]
+            public sealed class LocalAttribute : Attribute { }
+            public sealed class Sample
+            {
+                [Local]
+                public int Own { get; set; }
+                public int Empty { get; set; }
+            }
+            """);
+        compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        INamedTypeSymbol type = compilation.GetTypeByMetadataName("Sample")!;
+        IPropertySymbol own = type.GetMembers("Own").OfType<IPropertySymbol>().Single();
+        IPropertySymbol empty = type.GetMembers("Empty").OfType<IPropertySymbol>().Single();
+
+        AttributeMaterializationHelper.CollectInheritedAttributes(own).Select(attribute => attribute.AttributeClass!.Name)
+            .Should().Equal("LocalAttribute");
+        AttributeMaterializationHelper.CollectInheritedAttributes(empty).Should().BeEmpty();
+    }
+
     /// <summary>
     /// Minimal MSTest attribute stubs so the generator can locate <c>[TestClass]</c> /
     /// <c>[TestMethod]</c> in test fixtures without dragging the real TestFramework
@@ -2391,6 +2474,124 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(result);
         registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(new object[] { 1, 2, 3, 4 })");
         registry.Should().NotContain("DataRows");
+    }
+
+    [TestMethod]
+    public void Generator_MaterializesDataRowArrayTypeArguments()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(typeof(int), "Int32", "kind")]
+                    [DataRow(typeof(int[]), "Int32[]", "kind")]
+                    [DataRow(typeof(int[][]), "Int32[][]", "kind")]
+                    [DataRow(typeof(int[,]), "Int32[,]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.List<int[]>[]), "List`1[]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.Dictionary<int[], string>.KeyCollection[]), "KeyCollection[]", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.List<>), "List`1", "kind")]
+                    [DataRow(typeof(System.Collections.Generic.Dictionary<,>.KeyCollection), "KeyCollection", "kind")]
+                    public void Test(Type type, string name, string kind) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("AreAttributesComplete = false");
+
+        object[][] rows = GetMaterializedDataRows(outputCompilation);
+        rows.Should().HaveCount(8);
+        rows[0].Should().Equal(typeof(int), "Int32", "kind");
+        rows[1].Should().Equal(typeof(int[]), "Int32[]", "kind");
+        rows[2].Should().Equal(typeof(int[][]), "Int32[][]", "kind");
+        rows[3].Should().Equal(typeof(int[,]), "Int32[,]", "kind");
+        rows[4].Should().Equal(typeof(List<int[]>[]), "List`1[]", "kind");
+        rows[5].Should().Equal(typeof(Dictionary<int[], string>.KeyCollection[]), "KeyCollection[]", "kind");
+        rows[6].Should().Equal(typeof(List<>), "List`1", "kind");
+        rows[7].Should().Equal(typeof(Dictionary<,>.KeyCollection), "KeyCollection", "kind");
+    }
+
+    [TestMethod]
+    public void Generator_MaterializesArrayTypeNamedArgument()
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public sealed class MarkerAttribute : Attribute
+                {
+                    public Type Type { get; set; }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [Marker(Type = typeof(int[][]))]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().Contain("new global::Sample.MarkerAttribute() { Type = typeof(int[][]) }");
+        registry.Should().NotContain("AreAttributesComplete = false");
+    }
+
+    [TestMethod]
+    [DataRow("Hidden[][]")]
+    [DataRow("System.Collections.Generic.List<Hidden[]>[]")]
+    [DataRow("System.Collections.Generic.Dictionary<Hidden[], int>.KeyCollection[]")]
+    [DataRow("System.Collections.Generic.Dictionary<Hidden, int>.KeyCollection[]")]
+    public void Generator_OmitsArrayTypeArgument_WhenElementTypeIsInaccessible(string typeName)
+    {
+        const string userCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class Hidden { }
+
+                    [TestClass]
+                    public class Tests
+                    {
+                        [TestMethod]
+                        [DataRow(typeof($Type$))]
+                        public void Test(Type type) { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode.Replace("$Type$", typeName, StringComparison.Ordinal));
+
+        outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(tree => tree.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("DataRowAttribute");
+        registry.Should().Contain("AreAttributesComplete = false");
     }
 
     [TestMethod]

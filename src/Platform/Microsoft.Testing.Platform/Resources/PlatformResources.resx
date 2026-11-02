@@ -845,6 +845,10 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
     <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
     <comment>{Locked="--exit-on-process-exit"}</comment>
   </data>
+  <data name="PlatformCommandLineExitOnProcessExitNotSupportedInWasi" xml:space="preserve">
+    <value>The '--exit-on-process-exit' option is not supported in WASI environments.</value>
+    <comment>{Locked="--exit-on-process-exit"} {Locked="WASI"}</comment>
+  </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
   </data>

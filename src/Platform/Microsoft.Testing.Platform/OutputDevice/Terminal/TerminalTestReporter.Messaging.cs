@@ -44,7 +44,7 @@ internal sealed partial class TerminalTestReporter
                 terminal.SetColor(color.Value);
             }
 
-            if (padding == null)
+            if (padding is null)
             {
                 terminal.AppendLine(text);
             }

@@ -168,12 +168,12 @@ public static class ProcessFactory
         ProcessHandleInfo processHandleInfo = new();
         ProcessHandle processHandle = new(process, processHandleInfo);
 
-        if (config.OnExit != null)
+        if (config.OnExit is not null)
         {
             process.Exited += (_, _) => config.OnExit.Invoke(processHandle, process.ExitCode);
         }
 
-        if (config.OnStandardOutput != null)
+        if (config.OnStandardOutput is not null)
         {
             process.OutputDataReceived += (s, e) =>
             {
@@ -184,7 +184,7 @@ public static class ProcessFactory
             };
         }
 
-        if (config.OnErrorOutput != null)
+        if (config.OnErrorOutput is not null)
         {
             process.ErrorDataReceived += (s, e) =>
             {
@@ -212,12 +212,12 @@ public static class ProcessFactory
 
         processHandleInfo.Id = process.Id;
 
-        if (config.OnStandardOutput != null)
+        if (config.OnStandardOutput is not null)
         {
             process.BeginOutputReadLine();
         }
 
-        if (config.OnErrorOutput != null)
+        if (config.OnErrorOutput is not null)
         {
             process.BeginErrorReadLine();
         }

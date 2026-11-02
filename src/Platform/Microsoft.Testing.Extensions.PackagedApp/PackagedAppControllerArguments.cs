@@ -45,6 +45,7 @@ internal static class PackagedAppControllerArguments
         }
 
         string[] remaining = arguments[3..];
+        bool hasServer = false;
         int transportIndex = -1;
         for (int i = 0; i < remaining.Length; i++)
         {
@@ -52,7 +53,25 @@ internal static class PackagedAppControllerArguments
             string option = argument.StartsWith("-", StringComparison.Ordinal) ? argument.TrimStart('-') : string.Empty;
             if (option == "server")
             {
-                if (argument != "--server" || transportIndex != -1 || i + 3 >= remaining.Length
+                if (argument != "--server" || hasServer)
+                {
+                    throw new FormatException(ExtensionResources.PackagedAppControllerInvalidTransport);
+                }
+
+                hasServer = true;
+                if (i + 1 == remaining.Length || remaining[i + 1].StartsWith("-", StringComparison.Ordinal))
+                {
+                    // Test Explorer uses JSON-RPC by default and supplies its client port separately.
+                    continue;
+                }
+
+                if (PlatformCommandLineProvider.JsonRpcProtocolName.Equals(remaining[i + 1], StringComparison.OrdinalIgnoreCase))
+                {
+                    i++;
+                    continue;
+                }
+
+                if (i + 3 >= remaining.Length
                     || remaining[i + 1] != "dotnettestcli"
                     || remaining[i + 2] != "--dotnet-test-pipe"
                     || remaining[i + 3].Trim().Length == 0
@@ -91,9 +110,9 @@ internal static class PackagedAppControllerArguments
             ? remaining
             : [.. remaining[..transportIndex], .. remaining[(transportIndex + 4)..]];
         CommandLineParseResult parseResult = CommandLineParser.Parse(controllerArguments, new SystemEnvironment());
-        bool informationalRequest = parseResult.IsOptionSet("help")
+        bool informationalRequest = (!hasServer || transportIndex >= 0) && (parseResult.IsOptionSet("help")
             || parseResult.IsOptionSet("?")
-            || parseResult.IsOptionSet("list-tests");
+            || parseResult.IsOptionSet("list-tests"));
         return (controllerArguments, informationalRequest);
     }
 

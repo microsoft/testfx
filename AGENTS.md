@@ -1,83 +1,8 @@
-## Repository-owned test guidance
+Excluded-from-upstream skills and helpers are repository-owned and are NOT checked by `gh copilot-curate verify`; compare them explicitly on refresh. Details: .agents/skills/CURATION.md
 
-The curated `dotnet-test` installation uses the upstream grading rubric,
-including its result states, concrete improvement suggestions, and read-only
-per-test pseudo-mutation assessment. TestFx-specific review conventions live
-in `.github/workflows/shared/test-reviewer-shared.md`, not a fork of the skill.
+Use [msbuild](.agents/skills/msbuild/SKILL.md) as the MSBuild entry point; nine legacy SKILL.md files are excluded from upstream curation. The grading rubric is not forked.
 
-The installation deliberately excludes the repository-owned review corrections
-below so a refresh cannot silently overwrite them:
-
-- [Code testing reference helper](.agents/skills/code-testing-extensions/SKILL.md),
-  [test analysis reference helper](.agents/skills/test-analysis-extensions/SKILL.md),
-  and [filter syntax reference](.agents/skills/filter-syntax/SKILL.md)
-  keep internal language guidance callable by the model while hidden from the
-  user menu.
-- [Python generation guidance](.agents/skills/code-testing-extensions/extensions/python.md)
-  preserves requested regression tests and reports production or tooling blockers.
-- [Ruby generation guidance](.agents/skills/code-testing-extensions/extensions/ruby.md)
-  preserves the selected runner's exit status and uses real test counts rather
-  than counting Rake tasks or falling back after a failure.
-- [.NET generation guidance](.agents/skills/code-testing-extensions/extensions/dotnet.md)
-  distinguishes VSTest command mode from native MTP command mode.
-- [Coverage setup discovery](.agents/skills/coverage-analysis/references/setup-discovery.md)
-  recognizes `.slnx`, preserves the selected repository/user entry point, and
-  bounds test-project discovery to that root and its containing Git repository.
-- [Test project scaffolding](.agents/skills/scaffold-dotnet-test-project/SKILL.md)
-  adds bridge properties only for VSTest command mode.
-- [PowerShell pipeline example](.agents/skills/code-testing-extensions/extensions/powershell-examples.md)
-  loads module-defined types at parse time, uses valid Pester identity checks,
-  and covers the planned missing-invoice path.
-- [C++ pipeline example](.agents/skills/code-testing-extensions/extensions/cpp-examples.md)
-  includes the planned missing-invoice case and its required Catch2 header.
-- [Kotlin](.agents/skills/code-testing-extensions/extensions/kotlin-examples.md),
-  [Ruby](.agents/skills/code-testing-extensions/extensions/ruby-examples.md), and
-  [Rust](.agents/skills/code-testing-extensions/extensions/rust-examples.md)
-  examples include the planned missing-invoice case and align their reports
-  with the actual test counts.
-
-These corrections are relative to upstream commit
-`e468462d8a0900f5278331c1ae12f45e015bb656`. Compare each excluded file explicitly
-on refresh and remove its exception once upstream carries the correction.
-These excluded files are not checked by `gh copilot-curate verify`; that check
-still verifies the remaining imported files. They do not fork the grading rubric.
-
-The installation also excludes
-[Find-UntestedSources.cs](.agents/skills/find-untested-sources/scripts/Find-UntestedSources.cs).
-It matches upstream commit `0608d8924cd3173411e36650a7a01b4063e1f55a` except
-for the UTF-8 BOM required by `.editorconfig`.
-
-This helper is repository-owned, not checked by `gh copilot-curate verify`.
-Compare it explicitly when refreshing upstream and preserve its C# encoding.
-The manifest's include list keeps updates from overwriting it.
-
-[Test generation guidance](.github/skills/code-testing/unit-test-generation.prompt.md)
-adapts upstream agents' relative links to the `.agents/skills` installation
-layout. The legacy [code-testing-generator](.github/agents/code-testing-generator.agent.md)
-agent remains available for existing workflows; new upstream guidance uses
-[test-engineer](.github/agents/test-engineer.agent.md). The retained generator
-resolves one absolute non-stageable state directory for phased work and passes
-its canonical artifact paths through each worker, retry, and iteration.
-
-## Repository-maintained testing skills
-
-These skills retain their testing functionality without referrals to removed
-framework/platform migration skills. They are excluded from upstream curation
-updates to preserve that routing.
-
-The [test-engineer agent](.github/agents/test-engineer.agent.md) is also
-repository-maintained so its routing cannot restore the removed migration
-dispatcher. Framework/platform migration plugins remain intentionally absent.
-
-- [MTP hot reload](.agents/skills/mtp-hot-reload/SKILL.md) - Iterate on test fixes without rebuilding.
-- [Running .NET tests](.agents/skills/run-tests/SKILL.md) - Detect the current runner and select compatible commands.
-- [Test filter syntax](.agents/skills/filter-syntax/SKILL.md) - Reference filter syntax by platform and framework.
-- [Test platform detection](.agents/skills/platform-detection/SKILL.md) - Reference runner and framework detection.
-- [Writing MSTest tests](.agents/skills/writing-mstest-tests/SKILL.md) - Write and modernize MSTest tests without major-version migrations.
-- [Code testing](.agents/skills/code-testing/SKILL.md) - Generate and repair tests without referrals to removed framework/platform migration workflows.
-- [Test anti-patterns](.agents/skills/test-anti-patterns/SKILL.md) - Diagnose test quality without offering an unavailable framework/version migration workflow.
-- [Test tagging](.agents/skills/test-tagging/SKILL.md) - Classify/tag tests while keeping framework/platform migrations out of scope.
-- [Static dependency migration](.agents/skills/migrate-static-to-wrapper/SKILL.md) - Replace static dependencies with testable abstractions, not test frameworks.
+Use [curation-exceptions](.agents/skills/curation-exceptions/SKILL.md) for `gh copilot-curate update`/`verify` and repository-owned skill edits.
 
 <!-- BEGIN gh-copilot-curate managed -->
 ## Available skills (managed by gh-copilot-curate — do not edit by hand)
@@ -93,24 +18,17 @@ Run `gh copilot-curate list` to see installed plugins; run `gh copilot-curate up
 
 ### dotnet-msbuild
 
-- [Analyzing MSBuild Failures with Binary Logs](.agents/skills/binlog-failure-analysis/SKILL.md) — _skill_ — This skill diagnoses MSBuild build failures from a `.binlog` file. The preferred path uses the **binlog MCP server** (`Microsoft.AITools.BinlogMcp`, exposed under the `binlog` MCP namespace) which is bundled with this plugin. If the MCP server is not available, fall back to the **binlog replay** workflow at the bottom.
-- [Build Performance Baseline & Optimization](.agents/skills/build-perf-baseline/SKILL.md) — _skill_ — Before optimizing a build, you need a **baseline**. Without measurements, optimization is guesswork. This skill covers how to establish baselines and apply systematic optimization techniques.
 - [Custom Target Authoring Patterns](.agents/skills/target-authoring/SKILL.md) — _skill_ — Canonical patterns from `Microsoft.Common.CurrentVersion.targets` in the MSBuild repository.
 - [Detecting OutputPath and IntermediateOutputPath Clashes](.agents/skills/check-bin-obj-clash/SKILL.md) — _skill_ — This skill helps identify when multiple MSBuild project evaluations share the same `OutputPath` or `IntermediateOutputPath`. This is a common source of build failures including:
-- [Generate Binary Logs](.agents/skills/binlog-generation/SKILL.md) — _skill_ — **Pass the `/bl` switch when running any MSBuild-based command.** This is a non-negotiable requirement for all .NET builds.
+- [Eliminate Redundant Restores](.agents/skills/eliminate-redundant-restores/SKILL.md) — _skill_ — A no-op restore still evaluates every project and checks restore state, so each extra restore in a multi-step build costs seconds to tens of seconds in a large repo. The cure is easy to get wrong: `--no-restore` on a step that no earlier restore actually covered turns a slow build into a failed one. This skill finds which invocations restore, proves which are already covered, and changes only those.
 - [Including Generated Files Into Your Build](.agents/skills/including-generated-files/SKILL.md) — _skill_ — Files generated during the build are generally ignored by the build process. This leads to confusing results such as: - Generated files not being included in the output directory - Generated source files not being compiled - Globs not capturing files created during the build
-- [MSBuild Anti-Pattern Catalog](.agents/skills/msbuild-antipatterns/SKILL.md) — _skill_ — A numbered catalog of common MSBuild anti-patterns. Each entry follows the format:
-- [MSBuild Extension Points](.agents/skills/extension-points/SKILL.md) — _skill_ — How the MSBuild pipeline provides hooks for SDKs, NuGet packages, repos, and users to inject custom logic.
 - [MSBuild Item Management Patterns](.agents/skills/item-management/SKILL.md) — _skill_ — Canonical patterns for working with item groups, from `Microsoft.Common.CurrentVersion.targets`.
 - [MSBuild Modernization: Legacy to SDK-style Migration](.agents/skills/msbuild-modernization/SKILL.md) — _skill_ — **Legacy indicators:**
 - [MSBuild Property Patterns](.agents/skills/property-patterns/SKILL.md) — _skill_ — Canonical property definition and manipulation patterns from the MSBuild repository.
-- [MSBuild Server for CLI Caching](.agents/skills/msbuild-server/SKILL.md) — _skill_ — Use the MSBuild Server to cache evaluation results across CLI builds, matching the performance advantage Visual Studio gets from its long-lived MSBuild process.
 - [Misleading ResolveProjectReferences Time](.agents/skills/resolve-project-references/SKILL.md) — _skill_ — Prevent misguided optimization of `ResolveProjectReferences` by explaining that its reported time is wall-clock wait time, not CPU work.
-- [Organizing Build Infrastructure with Directory.Build Files](.agents/skills/directory-build-organization/SKILL.md) — _skill_ — Understanding which file to use is critical. They differ in **when** they are imported during evaluation:
-- [SKILL](.agents/skills/build-parallelism/SKILL.md) — _skill_ — - `/maxcpucount` (or `-m`): number of worker nodes (processes) - Default: 1 node (sequential!). Always use `-m` for parallel builds - Recommended: `-m` without a number = use all logical processors - Each node builds one project at a time - Projects are scheduled based on dependency graph
-- [SKILL](.agents/skills/build-perf-diagnostics/SKILL.md) — _skill_ — 1. **Generate a binlog**: `dotnet build /bl:{} -m` 2. Use the **binlog MCP server** (`Microsoft.AITools.BinlogMcp`, exposed under the `binlog` MCP namespace) which is bundled with this plugin
-- [SKILL](.agents/skills/eval-performance/SKILL.md) — _skill_ — For a comprehensive overview of MSBuild's evaluation and execution model, see [Build process overview](https://learn.microsoft.com/en-us/visualstudio/msbuild/build-process-overview).
-- [SKILL](.agents/skills/incremental-build/SKILL.md) — _skill_ — MSBuild's incremental build mechanism allows targets to be skipped when their outputs are already up to date, dramatically reducing build times on subsequent runs.
+- [Organizing Build Infrastructure with Directory.Build Files](.agents/skills/directory-build-organization/SKILL.md) — _skill_ — - For "should we", "how should we organize", "recommend", "advise", or review requests, inspect the actual project files and return a proposed layout only. Do not create or edit files unless the user explicitly asks to apply, move, centralize, or clean up the configuration. - Before summarizing, verify which project retains each project-specific property, item, or target. Name the actual file; do not infer it from sibling names. - Recommend a verification command only after discovering a real `.sln`, `.slnx`, `.proj`, or project file at that path. If no repo-root entry point exists, give commands for the discovered projects or state that the entry point was not found. - Every advice response must explain that `Microsoft.Common.props` searches upward from each project and automatically imports the nearest `Directory.Build.props` early; project values can then override shared defaults. Explain the equivalent late `Microsoft.Common.targets` import when recommending `Directory.Build.targets`.
+- [SKILL](.agents/skills/build-parallelism/SKILL.md) — _skill_ — Work this checklist in order — it targets the usual root cause (a serial dependency chain that no number of cores can parallelize):
+- [Troubleshoot Binlog MCP Startup](.agents/skills/troubleshoot-binlog-mcp/SKILL.md) — _skill_ — Explain why the plugin's binlog MCP server cannot connect and give an evidence-based, policy-safe recovery. This diagnoses the **server launch**, not failures recorded in a build. No binlog file or project build is needed.
 - [Build Performance Agent](.github/agents/build-perf.agent.md) — _agent_ — You are a specialized agent for diagnosing and optimizing MSBuild build performance. You actively run builds, analyze binlogs, and provide data-driven optimization recommendations.
 - [MSBuild Code Review Agent](.github/agents/msbuild-code-review.agent.md) — _agent_ — You are a specialized agent that reviews MSBuild project files for quality, correctness, and adherence to modern best practices. You actively scan files and produce actionable recommendations.
 - [MSBuild Expert Agent](.github/agents/msbuild.agent.md) — _agent_ — You are an expert in MSBuild, the Microsoft Build Engine used by .NET and Visual Studio. You help developers run builds, diagnose build failures, optimize build performance, and resolve common MSBuild issues.

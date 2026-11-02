@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Extensions.MSBuild;
 using Microsoft.Testing.Platform.CommandLine;
@@ -116,6 +117,25 @@ public sealed class MSBuildLifecycleCallbacksTests
     }
 
     [TestMethod]
+    public async Task PipeFixture_UsesUniqueNamesWithinMacOSSocketPathLimit()
+    {
+        await using MSBuildPipeFixture first = new();
+        await using MSBuildPipeFixture second = new();
+        const string macOSTemporaryDirectory = "/var/folders/xx/0123456789012345678901234567890/T/";
+        const int maximumSocketPathLength = 103;
+
+        Assert.AreNotEqual(first.PipeName, second.PipeName);
+
+        // .NET adds CoreFxPipe_ beneath the temporary directory for relative pipe names on Unix.
+        Assert.IsLessThanOrEqualTo(
+            maximumSocketPathLength,
+            Encoding.UTF8.GetByteCount($"{macOSTemporaryDirectory}CoreFxPipe_{first.PipeName}"));
+        Assert.IsLessThanOrEqualTo(
+            maximumSocketPathLength,
+            Encoding.UTF8.GetByteCount($"{macOSTemporaryDirectory}CoreFxPipe_{second.PipeName}"));
+    }
+
+    [TestMethod]
     [DataRow(true, true)]
     [DataRow(true, false)]
     [DataRow(false, true)]
@@ -215,6 +235,71 @@ public sealed class MSBuildLifecycleCallbacksTests
         lifecycle.Dispose();
 
         Assert.IsNull(lifecycle.PipeClient);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifecycle_BeforeRunAsync_SendsModuleInfoAndClosesItsConnection()
+    {
+        await using MSBuildPipeFixture peer = new();
+        using CancellationTokenSource operation = new(MSBuildPipeFixture.OperationLimit);
+        Mock<IConfiguration> configuration = new(MockBehavior.Strict);
+        configuration.Setup(x => x["platformOptions:resultDirectory"]).Returns("orchestrator-results");
+        MSBuildOrchestratorLifetime lifecycle = new(configuration.Object, CreateOptions([peer.PipeName]));
+
+        await lifecycle.BeforeRunAsync(operation.Token);
+        await peer.WaitForDisconnectAsync();
+
+        MSBuildModuleInfo module = Assert.ContainsSingle(peer.Received<MSBuildModuleInfo>());
+        Assert.AreEqual(RuntimeInformation.FrameworkDescription, module.FrameworkDescription);
+        Assert.AreEqual(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(), module.ProcessArchitecture);
+        Assert.AreEqual("orchestrator-results", module.TestResultFolder);
+        Assert.IsEmpty(peer.Received<MSBuildFailureInfo>());
+        Assert.IsEmpty(peer.Received<MSBuildSummaryInfo>());
+        configuration.VerifyAll();
+    }
+
+    [TestMethod]
+    public async Task TestApplicationLifecycle_BeforeRunAsync_SendsModuleInfoAndRetainsConnectionUntilDisposed()
+    {
+        await using MSBuildPipeFixture peer = new();
+        using CancellationTokenSource operation = new(MSBuildPipeFixture.OperationLimit);
+        Mock<IConfiguration> configuration = new(MockBehavior.Strict);
+        configuration.Setup(x => x["platformOptions:resultDirectory"]).Returns("application-results");
+        using MSBuildTestApplicationLifecycleCallbacks lifecycle = new(configuration.Object, CreateOptions([peer.PipeName]));
+
+        await lifecycle.BeforeRunAsync(operation.Token);
+
+        MSBuildModuleInfo module = Assert.ContainsSingle(peer.Received<MSBuildModuleInfo>());
+        Assert.AreEqual(RuntimeInformation.FrameworkDescription, module.FrameworkDescription);
+        Assert.AreEqual(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(), module.ProcessArchitecture);
+        Assert.AreEqual("application-results", module.TestResultFolder);
+        object client = typeof(MSBuildTestApplicationLifecycleCallbacks).GetProperty(nameof(lifecycle.PipeClient))!.GetValue(lifecycle)!;
+        Assert.IsTrue((bool)client.GetType().GetProperty("IsConnected")!.GetValue(client)!);
+
+        lifecycle.Dispose();
+        lifecycle.Dispose();
+        await peer.WaitForDisconnectAsync();
+        configuration.VerifyAll();
+    }
+
+    [TestMethod]
+    [DataRow(true, DisplayName = "Canceled application connection")]
+    [DataRow(false, DisplayName = "Canceled orchestrator connection")]
+    public async Task Lifecycle_BeforeRunAsync_CanceledConnection_DoesNotSendModuleInfo(bool testApplication)
+    {
+        await using MSBuildPipeFixture peer = new();
+        using CancellationTokenSource operation = new();
+        operation.Cancel();
+        Mock<IConfiguration> configuration = new(MockBehavior.Strict);
+        using MSBuildTestApplicationLifecycleCallbacks host = new(configuration.Object, CreateOptions([peer.PipeName]));
+        Task beforeRun = testApplication
+            ? host.BeforeRunAsync(operation.Token)
+            : new MSBuildOrchestratorLifetime(configuration.Object, CreateOptions([peer.PipeName])).BeforeRunAsync(operation.Token);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => beforeRun);
+
+        Assert.IsEmpty(peer.Received<MSBuildModuleInfo>());
+        configuration.VerifyNoOtherCalls();
     }
 
     private static IConfiguration CreateConfiguration() => Mock.Of<IConfiguration>();

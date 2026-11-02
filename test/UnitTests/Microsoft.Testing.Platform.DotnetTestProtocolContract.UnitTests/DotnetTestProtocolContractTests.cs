@@ -43,6 +43,7 @@ public sealed class DotnetTestProtocolContractTests
             [DisplayMessageFieldsId.MessagesSerializerId] = nameof(DisplayMessageFieldsId),
             [WaitForServerControlRequestFieldsId.MessagesSerializerId] = nameof(WaitForServerControlRequestFieldsId),
             [ServerControlMessageFieldsId.MessagesSerializerId] = nameof(ServerControlMessageFieldsId),
+            [CoverageSummaryMessagesFieldsId.MessagesSerializerId] = nameof(CoverageSummaryMessagesFieldsId),
             [FileArtifactTransferRequestFieldsId.MessagesSerializerId] = nameof(FileArtifactTransferRequestFieldsId),
             [FileArtifactTransferResponseFieldsId.MessagesSerializerId] = nameof(FileArtifactTransferResponseFieldsId),
         };
@@ -63,8 +64,10 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(DisplayMessageFieldsId), serializerIds[12]);
         Assert.AreEqual(nameof(WaitForServerControlRequestFieldsId), serializerIds[13]);
         Assert.AreEqual(nameof(ServerControlMessageFieldsId), serializerIds[14]);
-        Assert.AreEqual(nameof(FileArtifactTransferRequestFieldsId), serializerIds[15]);
-        Assert.AreEqual(nameof(FileArtifactTransferResponseFieldsId), serializerIds[16]);
+        Assert.AreEqual(nameof(CoverageSummaryMessagesFieldsId), serializerIds[15]);
+        Assert.IsFalse(serializerIds.ContainsKey(16), "Serializer id 16 is retired and must not be reassigned.");
+        Assert.AreEqual(nameof(FileArtifactTransferRequestFieldsId), serializerIds[17]);
+        Assert.AreEqual(nameof(FileArtifactTransferResponseFieldsId), serializerIds[18]);
     }
 
     [TestMethod]
@@ -92,6 +95,7 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy),
             [HandshakeMessagePropertyNames.RequiredPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds),
             [HandshakeMessagePropertyNames.RequiredPostProcessingSupported] = nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported),
+            [HandshakeMessagePropertyNames.CoverageSummaryVersion] = nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion),
             [HandshakeMessagePropertyNames.ServerControlTransport] = nameof(HandshakeMessagePropertyNames.ServerControlTransport),
             [HandshakeMessagePropertyNames.FileArtifactTransfer] = nameof(HandshakeMessagePropertyNames.FileArtifactTransfer),
             [HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes] = nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes),
@@ -120,12 +124,18 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy), properties[17]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessorKinds), properties[18]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.RequiredPostProcessingSupported), properties[19]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlTransport), properties[20]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransfer), properties[21]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes), properties[22]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes), properties[23]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes), properties[24]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount), properties[25]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.CoverageSummaryVersion), properties[20]);
+        for (byte retiredId = 21; retiredId <= 25; retiredId++)
+        {
+            Assert.IsFalse(properties.ContainsKey(retiredId), $"Handshake property {retiredId} is retired.");
+        }
+
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlTransport), properties[26]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransfer), properties[27]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxChunkBytes), properties[28]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileBytes), properties[29]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxModuleBytes), properties[30]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.FileArtifactTransferMaxFileCount), properties[31]);
     }
 
     [TestMethod]

@@ -32,7 +32,7 @@ public class DesktopTestDataSourceTests : TestContainer
     {
         System.Reflection.MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
         DataSourceAttribute dataSourceAttribute = new(
-            "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
+            "Microsoft.VisualStudio.TestTools.DataSource.XML", Path.Combine(AppContext.BaseDirectory, "DataTestSourceFile.xml"), "settings", DataAccessMethod.Sequential);
 
         _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>())
             .Returns([dataSourceAttribute]);
@@ -41,6 +41,7 @@ public class DesktopTestDataSourceTests : TestContainer
         TestDataSource testDataSource = new();
         IEnumerable<object>? dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
+        dataRows.Should().HaveCount(4);
         foreach (DataRow dataRow in dataRows.Cast<DataRow>())
         {
             dataRow[3].Should().Be("v1");
@@ -51,7 +52,7 @@ public class DesktopTestDataSourceTests : TestContainer
     {
         System.Reflection.MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
         DataSourceAttribute dataSourceAttribute = new(
-            "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
+            "Microsoft.VisualStudio.TestTools.DataSource.XML", Path.Combine(AppContext.BaseDirectory, "DataTestSourceFile.xml"), "settings", DataAccessMethod.Sequential);
 
         _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>())
             .Returns([dataSourceAttribute]);

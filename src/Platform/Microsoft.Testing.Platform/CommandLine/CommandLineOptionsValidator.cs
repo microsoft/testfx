@@ -91,9 +91,14 @@ internal static partial class CommandLineOptionsValidator
         // (testconfig.json is case-insensitive everywhere else). Use OrdinalIgnoreCase so a JSON
         // entry such as "Timeout": "30s" resolves to the same provider/option metadata as
         // "--timeout 30s" on the command line.
-        var providerAndOptionByOptionName = extensionOptionsByProvider.Concat(systemOptionsByProvider)
-            .SelectMany(tuple => tuple.Value.Select(option => (provider: tuple.Key, option)))
-            .ToDictionary(tuple => tuple.option.Name, StringComparer.OrdinalIgnoreCase);
+        var providerAndOptionByOptionName = new Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)>(StringComparer.OrdinalIgnoreCase);
+        foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> provider in extensionOptionsByProvider.Concat(systemOptionsByProvider))
+        {
+            foreach (CommandLineOption option in provider.Value)
+            {
+                providerAndOptionByOptionName.Add(option.Name, (provider.Key, option));
+            }
+        }
 
         if (ValidateOptionsArgumentArity(commandLineParseResult, jsonCommandLineOptions, jsonCommandLineOptionDefaults, providerAndOptionByOptionName) is { IsValid: false } result5)
         {

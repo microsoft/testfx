@@ -740,6 +740,36 @@ public sealed class TestApplicationResultTests : IDisposable
         }
     }
 
+    [TestMethod]
+    [DataRow(null, 0, DisplayName = "Absent environment falls back to CLI")]
+    [DataRow("", 0, DisplayName = "Empty environment falls back to CLI")]
+    [DataRow("8", 0, DisplayName = "Matching environment ignore list")]
+    [DataRow("16", 8, DisplayName = "Nonmatching environment overrides CLI")]
+    [DataRow("invalid", 8, DisplayName = "Invalid environment does not fall back")]
+    [DataRow(" ", 8, DisplayName = "Whitespace environment is not absent")]
+    public void ExitCodeIgnorePolicy_EnvironmentPrecedenceIsPreservedEvenWhenValueDoesNotMatch(string? environmentValue, int expectedExitCode)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE)).Returns(environmentValue);
+        ICommandLineOptions options = new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, ["8"]);
+
+        Assert.AreEqual(expectedExitCode, ExitCodeIgnorePolicy.Apply(8, options, environment.Object));
+    }
+
+    [TestMethod]
+    [DataRow(int.MinValue, "-2147483648", 0, DisplayName = "Exact minimum integer")]
+    [DataRow(int.MinValue, "-2147483649", int.MinValue, DisplayName = "Immediately below minimum")]
+    [DataRow(int.MaxValue, "2147483647", 0, DisplayName = "Exact maximum integer")]
+    [DataRow(int.MaxValue, "2147483648", int.MaxValue, DisplayName = "Immediately above maximum")]
+    [DataRow(8, ";not-a-number;+8;", 0, DisplayName = "Valid interior signed segment")]
+    [DataRow(8, "-+8;8x;999999999999999999999999", 8, DisplayName = "Invalid signs characters and overflow")]
+    public void ExitCodeIgnorePolicy_ExactIntegerLimitsAndInvalidAdjacentValuesDoNotWrap(int inputExitCode, string ignoreList, int expectedExitCode)
+    {
+        ICommandLineOptions options = new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, [ignoreList]);
+
+        Assert.AreEqual(expectedExitCode, ExitCodeIgnorePolicy.Apply(inputExitCode, options, Mock.Of<IEnvironment>()));
+    }
+
     private static TestApplicationResult CreateTestApplicationResult(
         IStopPoliciesService policiesService,
         ICommandLineOptions? commandLineOptions = null,

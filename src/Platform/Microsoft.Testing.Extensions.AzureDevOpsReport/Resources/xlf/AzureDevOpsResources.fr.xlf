@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentReadFailed">
         <source>Azure DevOps live publishing could not read attachment '{0}': {1}</source>
-        <target state="new">Azure DevOps live publishing could not read attachment '{0}': {1}</target>
+        <target state="translated">La publication en direct Azure DevOps n’a pas pu lire la pièce jointe « {0} » : {1}</target>
         <note>{0} is the attachment filename. {1} is the reason it could not be read.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentTooLarge">
@@ -62,6 +62,11 @@
         <target state="translated">Nous n’avons pas pu effectuer l’authentification de REST API Azure DevOps ou elle a été redirigée vers la connexion (état : {0}), ce qui indique que SYSTEM_ACCESSTOKEN n’est pas valide ou disponible. Pour les builds de validation d’une demande de tirage (pull request) issues d’une duplication (fork), n’exposez pas les secrets au code d’une duplication (fork) non approuvé, publiez les résultats depuis un contexte de pipeline distinct et approuvé, ou désactivez la publication en direct Azure DevOps.</target>
         <note>{0} is the HTTP status code or browser redirect reason. {Locked="REST API"}{Locked="SYSTEM_ACCESSTOKEN"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingCanonicalMetadataFailed">
+        <source>Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</source>
+        <target state="new">Azure DevOps accepted the test results, but their canonical test identity metadata could not be saved. History for data-driven results may be unavailable.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Nous n’avons pas pu effectuer la publication en direct d’Azure DevOps pour effectuer l’exécution de tests.</target>
@@ -69,7 +74,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCoordinationLockTimedOut">
         <source>Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</source>
-        <target state="new">Azure DevOps live publishing timed out after {1} waiting for the coordination lock '{0}'.</target>
+        <target state="translated">La publication en direct Azure DevOps a expiré après {1} l’attente du verrou de coordination « {0} ».</target>
         <note>{0} is the coordination lock path. {1} is the timeout.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCreateRunFailed">
@@ -240,6 +245,86 @@
       <trans-unit id="DisplayName">
         <source>Azure DevOps report generator</source>
         <target state="translated">Générateur de rapports Azure DevOps</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Au moins un test a échoué.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Un ou plusieurs seuils de couverture du code n’ont pas été atteints.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Fin inattendue du processus dépendant.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">Nous n’avons pas pu effectuer la série de tests.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Une version de protocole non compatible a été négociée.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Les arguments de ligne de commande ne sont pas valides.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">La configuration de la plateforme de test n’est pas valide.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Moins de tests ont été exécutés que le minimum attendu par --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">La série de tests est réussie.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">L’adaptateur de test a signalé l’échec d’une session de test.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedAtDeadline">
+        <source>Test execution was stopped early because a CI-imposed deadline was approaching.</source>
+        <target state="translated">L’exécution des tests a été arrêtée de manière anticipée, car une échéance imposée par l’intégration continue approchait.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">L’exécution de tests s’est arrêtée après avoir atteint la limite définie par --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">Le processus hôte de test s’est arrêté de manière incorrecte.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">La session de test a été interrompue.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">L’exécution de tests a renvoyé un code de sortie sans réussite.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Aucun test à exécuter n’a été détecté. Cela signifie généralement qu’un filtre de test n’a détecté aucune correspondance.</target>
         <note />
       </trans-unit>
       <trans-unit id="FlakyHistoryFailureAnnotation">

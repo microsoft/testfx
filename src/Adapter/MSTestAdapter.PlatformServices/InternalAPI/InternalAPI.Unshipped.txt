@@ -1,4 +1,5 @@
 #nullable enable
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.TestDataSourceHelpers.GetDataParameterCount(System.Reflection.ParameterInfo![]! parameters) -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerator.EnumerateAssembly(string! assemblyFileName, bool mustSerialize, bool useGeneratedDescriptors, System.Type![]? types, System.Action<System.Type!, System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>?>? typeObserver) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery.AssemblyEnumerationResult!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.UnitTestDiscovererFactory.get -> System.Func<Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHandler!, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.UnitTestDiscoverer!>?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestExecutionManager.UnitTestDiscovererFactory.set -> void

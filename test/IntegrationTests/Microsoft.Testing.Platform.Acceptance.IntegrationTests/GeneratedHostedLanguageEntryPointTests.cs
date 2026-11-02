@@ -19,6 +19,7 @@ public sealed class GeneratedHostedLanguageEntryPointTests : AcceptanceTestBase<
     private async Task BuildAndRunAsync(string assetName, string asset)
     {
         string source = asset
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsHostingVersion$", MicrosoftTestingExtensionsHostingVersion)
@@ -46,7 +47,7 @@ public sealed class GeneratedHostedLanguageEntryPointTests : AcceptanceTestBase<
 #file GeneratedHostedVB.vbproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>$TargetFramework$</TargetFramework>
     <RootNamespace>GeneratedHostedVB</RootNamespace>
     <MicrosoftTestingPlatformVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingPlatformVersion>
     <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
@@ -103,7 +104,7 @@ End Class
 #file GeneratedHostedFS.fsproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>$TargetFramework$</TargetFramework>
     <RootNamespace>GeneratedHostedFS</RootNamespace>
     <MicrosoftTestingPlatformVersion>$MicrosoftTestingPlatformVersion$</MicrosoftTestingPlatformVersion>
     <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>

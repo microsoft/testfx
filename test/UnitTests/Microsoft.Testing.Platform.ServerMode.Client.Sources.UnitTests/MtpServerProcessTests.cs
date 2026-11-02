@@ -19,17 +19,55 @@ namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 /// executable, and a zip round trip does not carry POSIX permission bits, so the real extensionless apphost
 /// can arrive without its execute bit. Launching either one aborts the run with <c>Permission denied</c>, so
 /// the launcher has to reject both and fall back to <c>dotnet &lt;dll&gt;</c>.
+/// <para>
+/// Only <see cref="FailedLaunchDisposesProcessHandles"/> carries a method-level
+/// <see cref="DoNotParallelizeAttribute"/>: it measures this ambient, process-wide
+/// <see cref="Process.HandleCount"/> delta on the current test-host process, a resource no other test in this
+/// class or project reads or writes, so no shared <see cref="ResourceLockAttribute"/> key can coordinate it with
+/// another declared observer. Isolating only that method keeps the remaining tests in the parallel set instead of
+/// deferring the whole class to the serial tail.
+/// </para>
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class MtpServerProcessTests
 {
     internal const string StandardOutputFloodEnvironmentVariable = "TESTFX_FLOOD_SERVER_STDOUT";
+    internal const string StartupStandardErrorEnvironmentVariable = "TESTFX_SERVER_STARTUP_STDERR";
+    internal const string NaturalExitReleaseFileEnvironmentVariable = "TESTFX_SERVER_NATURAL_EXIT_RELEASE_FILE";
+    internal const string StartupStandardError = "expected-startup-error";
 
     // Any value works: BuildLaunch only formats the port into the argument string, it never binds it.
     private const int Port = 12345;
 
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task StartAsync_NullSource_RejectsBeforeLaunching()
+    {
+        ArgumentNullException asynchronous = await Assert.ThrowsExactlyAsync<ArgumentNullException>(
+            () => MtpServerProcess.StartAsync(null!, cancellationToken: TestContext.CancellationToken));
+        ArgumentNullException synchronous = Assert.ThrowsExactly<ArgumentNullException>(() => MtpServerProcess.Start(null!));
+
+        Assert.AreEqual("source", asynchronous.ParamName);
+        Assert.AreEqual("source", synchronous.ParamName);
+    }
+
+    [TestMethod]
+    public void ProcessState_WhenUnderlyingProcessHasNoReadableState_ReturnsSafeDefaults()
+    {
+        using Process process = new();
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        using MtpJsonRpcConnection connection = new(new EmptyMessageHandler());
+        ConstructorInfo constructor = typeof(MtpServerProcess).GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).Single();
+        using var owner = (MtpServerProcess)constructor.Invoke(
+            [listener, process, connection, new StringBuilder(), NullMtpClientLogger.Instance]);
+
+        Assert.AreEqual(0, owner.ProcessId);
+        Assert.IsNull(owner.ExitCode);
+        owner.Dispose();
+        Assert.AreEqual(0, owner.ProcessId);
+        Assert.IsNull(owner.ExitCode);
+    }
 
     [TestMethod]
     public async Task StartAsyncWithCustomOptionsUsesLoggerAndPreservesLaunchDetails()
@@ -131,20 +169,22 @@ public sealed class MtpServerProcessTests
     }
 
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file as the server process.")]
     public async Task StartAsyncDoesNotCaptureSynchronizationContext()
     {
-        using var temp = TempDirectory.Create();
-        string source = CreateConnectingBatchFile(temp, "Connects.cmd");
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
-        MtpServerProcess? process = null;
-
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromMinutes(1),
+            EnvironmentVariables = { [StandardOutputFloodEnvironmentVariable] = "1" },
+        };
         await AssertDoesNotCaptureSynchronizationContextAsync(
-            async () => process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken).ConfigureAwait(false),
+            async () =>
+            {
+                using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken).ConfigureAwait(false);
+                Assert.IsGreaterThan(0, process.ProcessId);
+                await process.ShutdownAsync().ConfigureAwait(false);
+            },
             static () => { });
-
-        Assert.IsNotNull(process);
-        await process.ShutdownAsync();
     }
 
     [TestMethod]
@@ -162,7 +202,7 @@ public sealed class MtpServerProcessTests
     }
 
     [TestMethod]
-    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExitAndStandardError()
+    public async Task StartAsyncWhenManagedAssemblyIsMissingReportsEarlyExit()
     {
         using var temp = TempDirectory.Create();
         string source = Path.Combine(temp.Path, "Missing.dll");
@@ -179,11 +219,32 @@ public sealed class MtpServerProcessTests
 
         Assert.Contains("exited with code", exception.Message);
         Assert.Contains("before connecting back", exception.Message);
-        Assert.Contains("Standard error:", exception.Message);
         Assert.IsLessThan(
             maximumExpectedDuration,
             stopwatch.Elapsed,
             "A process that exits during startup must be reported immediately instead of waiting for the connection timeout.");
+    }
+
+    [TestMethod]
+    public async Task StartAsyncWhenProcessExitsReportsStandardError()
+    {
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = TimeSpan.FromMinutes(1),
+            EnvironmentVariables =
+            {
+                [StartupStandardErrorEnvironmentVariable] = "1",
+                [StandardOutputFloodEnvironmentVariable] = null,
+            },
+        };
+
+        MtpServerConnectionClosedException exception = await Assert.ThrowsExactlyAsync<MtpServerConnectionClosedException>(
+            () => MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken));
+
+        Assert.Contains("exited with code 17 before connecting back", exception.Message);
+        Assert.Contains("Standard error:", exception.Message);
+        Assert.EndsWith(StartupStandardError, exception.Message);
     }
 
     [TestMethod]
@@ -352,20 +413,19 @@ public sealed class MtpServerProcessTests
     [OSCondition(
         ConditionMode.Exclude,
         OperatingSystems.Windows,
-        IgnoreMessage = "Unix execute permission classes do not apply on Windows.")]
+        IgnoreMessage = "Unix script interpreter permissions do not apply on Windows.")]
     [UnsupportedOSPlatform("windows")]
-    public async Task StartAsyncOnUnixWhenOnlyNonApplicableExecuteBitIsSetRetriesThroughDotnet()
+    public async Task StartAsyncOnUnixRetriesThroughDotnetWhenApphostInterpreterIsNotExecutable()
     {
         using var temp = TempDirectory.Create();
         string dll = temp.CreateFile("App.dll");
-        string apphost = temp.CreateFile("App");
+        string interpreter = temp.CreateFile("interpreter");
+        string apphost = temp.CreateFile("App", "#" + $"!{interpreter}\n");
 
-        // The owner class applies to this process, so GroupExecute does not grant execution even when the
-        // process is also a member of the file's group. The coarse mode-bit preflight accepts this candidate,
-        // and Process.Start must recover from the resulting EACCES by retrying through dotnet.
-        File.SetUnixFileMode(
-            apphost,
-            UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupExecute);
+        // A non-executable interpreter produces EACCES on both Linux and macOS, even for a privileged process.
+        // A group-only execute bit on the apphost does not reliably deny execution on those systems.
+        File.SetUnixFileMode(interpreter, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        MakeExecutable(apphost);
 
         var log = new StringBuilder();
         var options = new MtpServerClientOptions
@@ -735,72 +795,85 @@ public sealed class MtpServerProcessTests
     public async Task SafeKillTerminatesEntireProcessTree()
     {
         using var temp = TempDirectory.Create();
-        string readyFile = Path.Combine(temp.Path, "child-ready.txt");
+        string childIdFile = Path.Combine(temp.Path, "child-id.txt");
         string survivedFile = Path.Combine(temp.Path, "child-survived.txt");
-        string escapedReadyFile = readyFile.Replace("'", "''");
+        string readyEventName = $"TestFx-ready-{Guid.NewGuid():N}";
+        string releaseEventName = $"TestFx-release-{Guid.NewGuid():N}";
+        using var readyEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readyEventName);
+        using var releaseEvent = new EventWaitHandle(false, EventResetMode.ManualReset, releaseEventName);
+        string escapedChildIdFile = childIdFile.Replace("'", "''");
         string escapedSurvivedFile = survivedFile.Replace("'", "''");
         string source = temp.CreateFile(
             "ProcessTree.cmd",
             "@echo off\r\n"
-            + $"start \"\" /min powershell.exe -NoProfile -Command \"Set-Content -LiteralPath '{escapedReadyFile}' -Value ready; Start-Sleep -Seconds 2; Set-Content -LiteralPath '{escapedSurvivedFile}' -Value survived\"\r\n"
-            + "ping 127.0.0.1 -n 31 > nul\r\n");
+            + $"start \"\" /min powershell.exe -NoProfile -NonInteractive -Command \"[IO.File]::WriteAllText('{escapedChildIdFile}', $PID.ToString()); $ready = [Threading.EventWaitHandle]::OpenExisting('{readyEventName}'); $release = [Threading.EventWaitHandle]::OpenExisting('{releaseEventName}'); $null = $ready.Set(); $null = $release.WaitOne(); [IO.File]::WriteAllText('{escapedSurvivedFile}', 'survived')\"\r\n"
+            + ":wait\r\n"
+            + "ping 127.0.0.1 -n 2 > nul\r\n"
+            + "goto wait\r\n");
         using Process process = Process.Start(new ProcessStartInfo
         {
             FileName = source,
             UseShellExecute = false,
             CreateNoWindow = true,
         })!;
+        Process? child = null;
 
         try
         {
+            // Allow profiled PowerShell startup, but synchronize termination with an explicit rendezvous.
+            var readinessLimit = TimeSpan.FromMinutes(1);
             Assert.IsTrue(
-                SpinWait.SpinUntil(() => File.Exists(readyFile), TimeSpan.FromSeconds(10)),
+                readyEvent.WaitOne(readinessLimit),
                 "The child process did not start before whole-tree termination was exercised.");
+            child = Process.GetProcessById(int.Parse(File.ReadAllText(childIdFile), CultureInfo.InvariantCulture));
 
             bool killed = InvokePrivateStatic<bool>("SafeKill", process, NullMtpClientLogger.Instance);
 
             Assert.IsTrue(killed);
-            await Task.Delay(TimeSpan.FromSeconds(4), TestContext.CancellationToken);
+            releaseEvent.Set();
+            using var completionTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+            completionTimeout.CancelAfter(TimeSpan.FromSeconds(30));
+            await child.WaitForExitAsync(completionTimeout.Token);
             Assert.IsFalse(File.Exists(survivedFile), "Whole-tree termination must not leave the child process running.");
         }
         finally
         {
+            releaseEvent.Set();
+            if (child is not null)
+            {
+                KillProcessIfRunning(child);
+                child.Dispose();
+            }
+
             KillProcessIfRunning(process);
         }
     }
 #endif
 
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses a Windows batch file as the server process.")]
     public async Task ShutdownPreservesNaturalExitCodeAfterDisposingProcess()
     {
         using var temp = TempDirectory.Create();
         string releaseFile = Path.Combine(temp.Path, "release.txt");
-        string escapedReleaseFile = releaseFile.Replace("'", "''");
-        string source = temp.CreateFile(
-            "ConnectsThenExits.cmd",
-            "@echo off\r\n"
-            + "set port=\r\n"
-            + ":parse\r\n"
-            + "if \"%~1\"==\"\" exit /b 2\r\n"
-            + "if \"%~1\"==\"--client-port\" (\r\n"
-            + "  set port=%~2\r\n"
-            + "  goto found\r\n"
-            + ")\r\n"
-            + "shift\r\n"
-            + "goto parse\r\n"
-            + ":found\r\n"
-            + $"powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); while (-not (Test-Path -LiteralPath '{escapedReleaseFile}')) {{ Start-Sleep -Milliseconds 10 }}; $client.Dispose(); exit 23\"\r\n"
-            + "exit /b %errorlevel%\r\n");
-        var options = new MtpServerClientOptions { ConnectionTimeout = TimeSpan.FromSeconds(10) };
+        // Program.cs runs this assembly as a child fixture that returns 23 when releaseFile is created.
+        string source = typeof(MtpServerProcessTests).Assembly.Location;
+        // Match the existing self-host fixture's allowance for profiled startup, not a product timeout.
+        var readinessLimit = TimeSpan.FromMinutes(1);
+        var options = new MtpServerClientOptions
+        {
+            ConnectionTimeout = readinessLimit,
+            EnvironmentVariables = { [NaturalExitReleaseFileEnvironmentVariable] = releaseFile },
+        };
 
         using MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, TestContext.CancellationToken);
+        Process launchedProcess = GetPrivateInstanceField<Process>(process, "_process");
         Assert.IsGreaterThan(0, process.ProcessId);
         Assert.IsNull(process.ExitCode);
         File.WriteAllText(releaseFile, string.Empty);
-        Assert.IsTrue(
-            SpinWait.SpinUntil(() => process.ExitCode == 23, TimeSpan.FromSeconds(10)),
-            "The server process did not exit naturally with the expected code.");
+        using var completionTimeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        completionTimeout.CancelAfter(readinessLimit);
+        await launchedProcess.WaitForExitAsync(completionTimeout.Token);
+        Assert.AreEqual(23, process.ExitCode);
         Assert.AreEqual(0, process.ProcessId);
 
         await process.ShutdownAsync();
@@ -811,6 +884,11 @@ public sealed class MtpServerProcessTests
 #if NET
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Uses repeated Windows process launches and handle counts.")]
+    // Measures the ambient, process-wide Process.HandleCount delta on the current test-host process. No other
+    // test in this project opens/reads that same OS handle count, so isolation (not a shared ResourceLock key)
+    // is the correct declaration: concurrent handle-opening activity from any other test could otherwise widen
+    // the observed delta and make this assertion flaky.
+    [DoNotParallelize]
     public async Task FailedLaunchDisposesProcessHandles()
     {
         using var temp = TempDirectory.Create();
@@ -893,6 +971,15 @@ public sealed class MtpServerProcessTests
         => File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 #endif
 
+    private sealed class EmptyMessageHandler : Microsoft.Testing.Platform.ServerMode.IMessageHandler
+    {
+        public Task<Microsoft.Testing.Platform.ServerMode.RpcMessage?> ReadAsync(CancellationToken cancellationToken)
+            => Task.FromResult<Microsoft.Testing.Platform.ServerMode.RpcMessage?>(null);
+
+        public Task WriteRequestAsync(Microsoft.Testing.Platform.ServerMode.RpcMessage message, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
+
     private sealed class TempDirectory : IDisposable
     {
         private TempDirectory(string path) => Path = path;
@@ -929,22 +1016,6 @@ public sealed class MtpServerProcessTests
             }
         }
     }
-
-    private static string CreateConnectingBatchFile(TempDirectory temp, string fileName)
-        => temp.CreateFile(
-            fileName,
-            "@echo off\r\n"
-            + "set port=\r\n"
-            + ":parse\r\n"
-            + "if \"%~1\"==\"\" exit /b 2\r\n"
-            + "if \"%~1\"==\"--client-port\" (\r\n"
-            + "  set port=%~2\r\n"
-            + "  goto found\r\n"
-            + ")\r\n"
-            + "shift\r\n"
-            + "goto parse\r\n"
-            + ":found\r\n"
-            + "powershell.exe -NoProfile -Command \"$client = [Net.Sockets.TcpClient]::new('127.0.0.1', %port%); try { Start-Sleep -Seconds 30 } finally { $client.Dispose() }\"\r\n");
 
     private static void KillProcessIfRunning(Process process)
     {
@@ -987,15 +1058,16 @@ public sealed class MtpServerProcessTests
     private static Process StartLongRunningProcess() => Environment.OSVersion.Platform == PlatformID.Win32NT
             ? Process.Start(new ProcessStartInfo
             {
-                FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
-                Arguments = "/d /c ping 127.0.0.1 -n 31 > nul",
+                FileName = Path.Combine(Environment.SystemDirectory, "ping.exe"),
+                Arguments = "127.0.0.1 -n 31",
                 UseShellExecute = false,
                 CreateNoWindow = true,
+                RedirectStandardOutput = true,
             })!
             : Process.Start(new ProcessStartInfo
             {
-                FileName = "/bin/sh",
-                Arguments = "-c \"sleep 30\"",
+                FileName = "/bin/sleep",
+                Arguments = "30",
                 UseShellExecute = false,
             })!;
 
@@ -1090,13 +1162,14 @@ public sealed class MtpServerProcessTests
         }
 
         releaseOperation();
-        Task completed = await Task.WhenAny(
-            operation,
-            Task.Delay(TimeSpan.FromSeconds(20), TestContext.CancellationToken)).ConfigureAwait(false);
+        // This is a deadlock watchdog, not a startup benchmark: the profiled child has one minute to connect
+        // and still needs time for teardown. PostCount detects context capture independently of scheduling speed.
+        var completionLimit = TimeSpan.FromMinutes(2);
+        Task completed = await Task.WhenAny(operation, Task.Delay(completionLimit, TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.AreSame(operation, completed, "The operation did not complete within the expected timeout.");
+        Assert.AreSame(operation, completed, "The operation did not complete before the deadlock watchdog expired.");
         await operation.ConfigureAwait(false);
-        Assert.AreEqual(0, context.PostCount);
+        Assert.AreEqual(0, context.PostCount, "The operation captured and posted back to the caller's synchronization context.");
     }
 
     private sealed class RecordingSynchronizationContext : SynchronizationContext

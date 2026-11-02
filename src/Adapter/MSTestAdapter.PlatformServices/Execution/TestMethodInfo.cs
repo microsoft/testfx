@@ -28,8 +28,8 @@ internal partial class TestMethodInfo : ITestMethod
 
     internal TestMethodInfo(MethodInfo testMethod, TestClassInfo parent)
     {
-        DebugEx.Assert(testMethod != null, "TestMethod should not be null");
-        DebugEx.Assert(parent != null, "Parent should not be null");
+        DebugEx.Assert(testMethod is not null, "TestMethod should not be null");
+        DebugEx.Assert(parent is not null, "Parent should not be null");
 
         MethodInfo = testMethod;
         Parent = parent;
@@ -220,7 +220,7 @@ internal partial class TestMethodInfo : ITestMethod
             // Handle logs & debug traces.
             watch.Stop();
 
-            if (result != null)
+            if (result is not null)
             {
                 result.SetOutputAndTraces(testContextImpl, TestContext);
                 testContextImpl?.FinalizeAssertionFailureDiagnostics(result.Outcome);

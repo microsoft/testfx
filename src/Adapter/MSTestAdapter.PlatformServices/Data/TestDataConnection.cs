@@ -43,7 +43,7 @@ internal abstract class TestDataConnection : IDisposable
                 try
                 {
                     string? value = Environment.GetEnvironmentVariable("VSTS_DIAGNOSTICS");
-                    s_extendedDiagnosticsEnabled = value != null && value.Contains("TestDataConnection");
+                    s_extendedDiagnosticsEnabled = value is not null && value.Contains("TestDataConnection");
                 }
                 catch (SecurityException)
                 {
@@ -123,7 +123,7 @@ internal abstract class TestDataConnection : IDisposable
         }
 
         // Second bet, any on our folders foldersToCheck list
-        if (foldersToCheck != null)
+        if (foldersToCheck is not null)
         {
             foreach (string folder in foldersToCheck)
             {

@@ -149,7 +149,7 @@ internal sealed partial class Json
     private async Task SerializeAsync(object? obj, Utf8JsonWriter writer)
     {
         // Serialize null
-        if (obj == null)
+        if (obj is null)
         {
             writer.WriteNullValue();
             return;
@@ -189,7 +189,7 @@ internal sealed partial class Json
             writer.WriteStartArray();
             foreach (object? o in e)
             {
-                if (o == null)
+                if (o is null)
                 {
                     writer.WriteNullValue();
                 }
@@ -207,7 +207,7 @@ internal sealed partial class Json
         }
 
         // We could not find a converter so throw.
-        if (converter == null)
+        if (converter is null)
         {
             throw new InvalidOperationException($"Flattener missing {obj.GetType()}.");
         }

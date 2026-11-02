@@ -25,7 +25,7 @@ internal sealed partial class TestClassInfo
         try
         {
             PropertyInfo? testContextProperty = PlatformServiceProvider.Instance.ReflectionOperations.GetRuntimeProperty(classType, TestContextPropertyName, includeNonPublic: false);
-            if (testContextProperty == null)
+            if (testContextProperty is null)
             {
                 // that's okay may be the property was not defined
                 return null;

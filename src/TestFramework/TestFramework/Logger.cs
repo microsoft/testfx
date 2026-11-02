@@ -28,7 +28,7 @@ public class Logger
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public static void LogMessage(string format, params object?[] args)
     {
-        if (OnLogMessage == null)
+        if (OnLogMessage is null)
         {
             return;
         }

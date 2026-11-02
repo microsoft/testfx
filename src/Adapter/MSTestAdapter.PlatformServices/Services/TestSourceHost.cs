@@ -237,7 +237,7 @@ internal class TestSourceHost : ITestSourceHost
         _childDomainAssemblyResolver?.Dispose();
         _childDomainAssemblyResolver = null;
 
-        if (AppDomain != null)
+        if (AppDomain is not null)
         {
             try
             {
@@ -310,7 +310,7 @@ internal class TestSourceHost : ITestSourceHost
             setWorkingDirectoryException = ex;
         }
 
-        if (setWorkingDirectoryException != null)
+        if (setWorkingDirectoryException is not null)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.Error("MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
         }

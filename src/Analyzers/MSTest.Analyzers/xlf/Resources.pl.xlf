@@ -167,6 +167,21 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
         <target state="translated">Nie używaj elementu "Assert.AreSame" ani "Assert.AreNotSame" z typami wartości</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableDescription">
+        <source>Collection assertions enumerate an IQueryable instead of requesting a scalar result from its provider. Use Queryable.Count for cardinality or Queryable.Any for emptiness. Materialize results explicitly when testing their contents or reusing a snapshot, rather than fetching all matching rows just to check their count or existence.</source>
+        <target state="translated">Asercje kolekcji wyliczają element IQueryable zamiast żądania wyniku skalarnego od dostawcy. Użyj elementu Queryable.Count dla kardynalności lub Queryable.Any dla pustki. Zmaterializuj wyniki e sposób jawny podczas testowania ich zawartości lub ponownego użycia migawki, zamiast pobierać wszystkie pasujące wiersze tylko w celu sprawdzenia ich liczby lub istnienia.</target>
+        <note>{Locked="IQueryable"}{Locked="Queryable.Count"}{Locked="Queryable.Any"}</note>
+      </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableMessageFormat">
+        <source>Use 'Queryable.{1}' instead of '{0}' to avoid enumerating query results for a count or existence check</source>
+        <target state="translated">Użyj elementu „Queryable.{1}” zamiast „{0}”, aby uniknąć wyliczania wyników zapytania na potrzeby sprawdzania liczby lub istnienia</target>
+        <note>{0} is the assertion method name, for example Assert.HasCount. {1} is the query operation name, either Count or Any. {Locked="Queryable."}</note>
+      </trans-unit>
+      <trans-unit id="AvoidEnumerableAssertionsOnQueryableTitle">
+        <source>Avoid enumerating queries for count or existence assertions</source>
+        <target state="translated">Unikanie wyliczania zapytań dotyczących asercji liczby lub istnienia</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
         <target state="translated">Od MSTest 3.8 „DynamicDataSourceType.AutoDetect” jest wartością domyślną i automatycznie rozpoznaje właściwości, metody i pola, zmniejszając szczegółowość oraz zależność od rodzaju składowej.</target>
@@ -327,17 +342,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesDescription">
         <source>Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</source>
-        <target state="new">Specify either 'DisplayName' for a full test case name or 'ArgumentsDisplayName' for an argument label that retains the method display name, but not both. Remove the ignored 'ArgumentsDisplayName' to preserve the current name, or remove 'DisplayName' to use the argument label.</target>
+        <target state="translated">Określ wartość „DisplayName” dla pełnej nazwy przypadku testowego lub „ArgumentsDisplayName” dla etykiety argumentu, która zachowuje nazwę wyświetlaną metody, ale nie obie. Usuń zignorowany element „ArgumentsDisplayName”, aby zachować bieżącą nazwę, lub usuń element „DisplayName”, aby użyć etykiety argumentu.</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesMessageFormat">
         <source>'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</source>
-        <target state="new">'ArgumentsDisplayName' is ignored because 'DisplayName' overrides the entire test case name</target>
+        <target state="translated">Element „ArgumentsDisplayName” jest ignorowany, ponieważ element „DisplayName” przesłania całą nazwę przypadku testowego</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="ConflictingDataRowDisplayNamesTitle">
         <source>Do not combine 'DisplayName' and 'ArgumentsDisplayName'</source>
-        <target state="new">Do not combine 'DisplayName' and 'ArgumentsDisplayName'</target>
+        <target state="translated">Nie łącz „DisplayName” i „ArgumentsDisplayName”</target>
         <note>{Locked="DisplayName"}{Locked="ArgumentsDisplayName"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
@@ -807,7 +822,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="NonNullableReferenceNotInitializedSuppressorJustification">
         <source>MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</source>
-        <target state="new">MSTest initializes the writable TestContext property of a test class, so it does not need to be initialized in the constructor.</target>
+        <target state="translated">Narzędzie MSTest inicjuje zapisywalną właściwość TestContext klasy testowej, więc nie trzeba jej inicjować w konstruktorze.</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="OSPlatformAttributesShouldBeConsistentDescription">
@@ -1077,7 +1092,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="new">Test class '{0}' should be valid</target>
+        <target state="translated">Testowa class „{0}” powinna być prawidłowa</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -1132,12 +1147,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <target state="translated">Pochodna class atrybutu TestMethodAttribute „{0}” powinna dodać parametry CallerFilePath i CallerLineNumber do swojego konstruktora</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <target state="translated">Pochodna class atrybutu TestMethodAttribute powinna propagować informacje źródłowe</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription">
@@ -1243,17 +1258,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">Testowa class powinna mieć co najmniej jedną metodę testową lub być „static” z metodami oznaczonymi jako „[AssemblyInitialize]” i/lub „[AssemblyCleanup]”.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">Testowa class „{0}” powinna mieć co najmniej jedną metodę testową lub być „static” z metodami oznaczonymi jako „[AssemblyInitialize]” i/lub „[AssemblyCleanup]”.</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">Testowa class powinna mieć metodę testową</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -1654,7 +1669,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">Testowa class „{0}” nie ma prawidłowego konstruktora. Prawidłowe konstruktory są „public” i albo bez parametrów, albo z jednym parametrem typu „TestContext”.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">

@@ -26,6 +26,39 @@ namespace UnitTestFramework.Tests;
 [ResourceLock(WellKnownResources.EnvironmentVariables)]
 public class ExecutableConditionAttributeTests : TestContainer
 {
+    public void ConstructorNullInputPartitionsPreserveExactParameterNames()
+    {
+        Action missingExecutable = () => _ = new ExecutableConditionAttribute(ConditionMode.Exclude, null!, []);
+        Action missingArguments = () => _ = new ExecutableConditionAttribute(ConditionMode.Include, "tool", null!);
+        missingExecutable.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be("executable");
+        missingArguments.Should().ThrowExactly<ArgumentNullException>().Which.ParamName.Should().Be("arguments");
+    }
+
+#if NETFRAMEWORK
+    public void FrameworkArgumentQuotingPreservesWhitespaceQuotesAndBackslashRuns()
+    {
+        MethodInfo method = typeof(ExecutableConditionAttribute).GetMethod("PasteArguments", BindingFlags.NonPublic | BindingFlags.Static)!;
+        foreach ((string[] arguments, string expected) in new (string[], string)[]
+        {
+            ([], string.Empty),
+            ([string.Empty], "\"\""),
+            (["word", @"p\q"], @"word p\q"),
+            (["with space"], "\"with space\""),
+            (["\""], "\"\\\"\""),
+            (["a\\\"b"], "\"a\\\\\\\"b\""),
+            (["a\\\\\"b"], "\"a\\\\\\\\\\\"b\""),
+            (["tail \\"], "\"tail \\\\\""),
+            (["tail \\\\"], "\"tail \\\\\\\\\""),
+            (["with \\\\ space"], "\"with \\\\ space\""),
+            (["\t", "\n", "\v", "\r"], "\"\t\" \"\n\" \"\v\" \r"),
+        })
+        {
+            string actual = (string)method.Invoke(null, [arguments])!;
+            actual.Should().Be(expected);
+        }
+    }
+#endif
+
     public void Constructor_SetsCorrectMode()
     {
         var includeAttribute = new ExecutableConditionAttribute(ConditionMode.Include, "docker");

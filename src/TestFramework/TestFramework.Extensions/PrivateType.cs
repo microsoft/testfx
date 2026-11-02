@@ -143,7 +143,7 @@ public class PrivateType
     public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture, Type[]? typeArguments)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        if (parameterTypes == null)
+        if (parameterTypes is null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
         }
@@ -164,8 +164,8 @@ public class PrivateType
         }
         catch (TargetInvocationException e)
         {
-            DebugEx.Assert(e.InnerException != null, "Inner Exception should not be null.");
-            if (e.InnerException != null)
+            DebugEx.Assert(e.InnerException is not null, "Inner Exception should not be null.");
+            if (e.InnerException is not null)
             {
                 throw e.InnerException;
             }
@@ -375,7 +375,7 @@ public class PrivateType
     public object GetStaticProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        if (parameterTypes == null)
+        if (parameterTypes is null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
@@ -406,7 +406,7 @@ public class PrivateType
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
 
-        if (parameterTypes != null)
+        if (parameterTypes is not null)
         {
             PropertyInfo pi = ReferencedType.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null)
                 ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
@@ -438,8 +438,8 @@ public class PrivateType
         }
         catch (TargetInvocationException e)
         {
-            DebugEx.Assert(e.InnerException != null, "Inner Exception should not be null.");
-            if (e.InnerException != null)
+            DebugEx.Assert(e.InnerException is not null, "Inner Exception should not be null.");
+            if (e.InnerException is not null)
             {
                 throw e.InnerException;
             }

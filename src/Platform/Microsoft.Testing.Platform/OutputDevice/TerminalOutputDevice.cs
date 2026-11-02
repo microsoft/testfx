@@ -77,6 +77,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private void ClearJsonProgressMessages()
         => _jsonProgressMessages.Clear();
 
+    internal Func<bool> TestSessionFailureProvider { get; init; } = static () => false;
+
     public TerminalOutputDevice(
         IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,

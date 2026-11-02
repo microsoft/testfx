@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
@@ -102,7 +103,18 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
                         TestDisplayName: null,
                         SessionUid: null,
                         validatedOutput.Kind,
-                        [.. matchingInputs.Select(input => input.Path)]));
+                        [.. matchingInputs.Select(input => input.Path)],
+                        _protocol.IsCoverageSummarySupported && !manifest.Context.IsTruncated && validatedOutput.CoverageSummary is { } coverageSummary
+                            ? [.. coverageSummary.Select(metric => new CoverageSummaryMessage(
+                                SessionUid: null,
+                                metric.ProducerId,
+                                (int)CoverageScopeLevel.Overall,
+                                ScopeName: null,
+                                (int)metric.Metric,
+                                metric.CustomMetricName,
+                                metric.CoveredCount,
+                                metric.CoverableCount))]
+                            : null));
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -118,12 +130,13 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             }
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         if (outputs.Count > 0)
         {
             await _protocol.SendMessageAsync(new FileArtifactMessages(
                 _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
                 _protocol.InstanceId,
-                [.. outputs])).ConfigureAwait(false);
+                [.. outputs.Select(output => failed ? output with { CoverageSummary = null } : output)])).ConfigureAwait(false);
         }
 
         return failed ? (int)ExitCode.GenericFailure : (int)ExitCode.Success;
@@ -145,7 +158,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
         return outputPath.StartsWith(outputDirectoryPrefix, pathComparison)
             && File.Exists(outputPath)
             && !inputs.Any(input => string.Equals(Path.GetFullPath(input.Path), outputPath, pathComparison))
-                ? new ProcessedArtifact(outputPath, output.Kind, output.DisplayName, output.Description)
+                ? new ProcessedArtifact(outputPath, output.Kind, output.DisplayName, output.Description, output.CoverageSummary)
                 : throw new InvalidOperationException(PlatformResources.ArtifactPostProcessingDispatcherInvalidProcessorOutput);
     }
 

@@ -78,7 +78,7 @@ internal sealed partial class TestClassInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
@@ -177,7 +177,7 @@ internal sealed partial class TestClassInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
@@ -213,7 +213,7 @@ internal sealed partial class TestClassInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
@@ -231,7 +231,7 @@ internal sealed partial class TestClassInfo
         get;
         internal set
         {
-            if (field != null)
+            if (field is not null)
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);

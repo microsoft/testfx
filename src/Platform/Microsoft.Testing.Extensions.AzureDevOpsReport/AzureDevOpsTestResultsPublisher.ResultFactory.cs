@@ -20,7 +20,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        string automatedTestName = TestNodeIdentity.GetTestName(testNode);
+        string canonicalName = TestNodeIdentity.GetTestName(testNode);
+        TestMethodIdentifierProperty? identifier = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        string methodName = identifier?.MethodName ?? canonicalName.Substring(canonicalName.LastIndexOf('.') + 1);
+        bool isDefaultTitle = identifier?.ParameterTypeFullNames.Length is null or 0
+            && (RoslynString.IsNullOrEmpty(testNode.DisplayName)
+                || string.Equals(testNode.DisplayName, canonicalName, StringComparison.Ordinal)
+                || string.Equals(testNode.DisplayName, methodName, StringComparison.Ordinal));
+        // Display-label normalization is lossy. Keep the complete original title in row identities.
+        string automatedTestName = isDefaultTitle ? canonicalName : $"{canonicalName} ({testNode.DisplayName})";
 
         AzureDevOpsTestCaseResult? result = state switch
         {
@@ -38,6 +46,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         if (result is null)
         {
             return null;
+        }
+
+        if (canonicalName.Length > 0 && !string.Equals(canonicalName, automatedTestName, StringComparison.Ordinal))
+        {
+            result = result with
+            {
+                Comment = AzureDevOpsLivePublishingConstants.CanonicalTestNameMetadataPrefix
+                    + canonicalName.Length.ToString(CultureInfo.InvariantCulture),
+            };
         }
 
         // Only attach artifacts for non-passing outcomes to avoid uploading large dumps/logs for every

@@ -48,12 +48,17 @@ public sealed class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAss
         Assert.Contains("Assert.AreEqual", ctrfContent, ctrfContent);
 
         using var document = JsonDocument.Parse(ctrfContent);
+        Assert.AreEqual("0.2.0", document.RootElement.GetProperty("specVersion").GetString());
         JsonElement[] tests = [.. document.RootElement.GetProperty("results").GetProperty("tests").EnumerateArray()];
         Assert.HasCount(2, tests);
         Assert.IsTrue(tests.All(test => !string.IsNullOrEmpty(test.GetProperty("testId").GetString())));
         string[] executionIds = [.. tests.Select(test => test.GetProperty("executionId").GetString()!)];
         Assert.IsTrue(executionIds.All(executionId => Guid.TryParse(executionId, out _)));
         Assert.HasCount(2, executionIds.Distinct());
+        string[] attemptIds = [.. tests.Select(test => test.GetProperty("attemptId").GetString()!)];
+        Assert.IsTrue(attemptIds.All(attemptId => Guid.TryParse(attemptId, out _)));
+        Assert.HasCount(2, attemptIds.Distinct());
+        Assert.IsEmpty(attemptIds.Intersect(executionIds, StringComparer.Ordinal));
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -150,9 +155,13 @@ public sealed class CtrfReportRetryAttributeTests : AcceptanceTestBase<CtrfRepor
         Assert.IsFalse(string.IsNullOrEmpty(test.GetProperty("testId").GetString()));
         string executionId = test.GetProperty("executionId").GetString()!;
         string attemptId = test.GetProperty("retryAttempts")[0].GetProperty("attemptId").GetString()!;
+        string finalAttemptId = test.GetProperty("attemptId").GetString()!;
         Assert.IsTrue(Guid.TryParse(executionId, out _));
         Assert.IsTrue(Guid.TryParse(attemptId, out _));
+        Assert.IsTrue(Guid.TryParse(finalAttemptId, out _));
         Assert.AreNotEqual(executionId, attemptId);
+        Assert.AreNotEqual(executionId, finalAttemptId);
+        Assert.AreNotEqual(attemptId, finalAttemptId);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

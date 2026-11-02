@@ -24,7 +24,7 @@ internal readonly struct OSPlatform : IEquatable<OSPlatform>
         => obj is OSPlatform osPlatform && Equals(osPlatform);
 
     public override int GetHashCode()
-        => Name == null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
+        => Name is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
 
     public override string ToString()
         => Name ?? string.Empty;

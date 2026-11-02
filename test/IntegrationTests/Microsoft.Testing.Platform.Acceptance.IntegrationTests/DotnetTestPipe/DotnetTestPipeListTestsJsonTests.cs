@@ -23,6 +23,28 @@ public class DotnetTestPipeListTestsJsonTests : AcceptanceTestBase<DotnetTestPip
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public async Task ListTestsJson_HeadlessProcess_PreservesUnicode()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            "--list-tests json",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreEqual(string.Empty, result.StandardError);
+
+        using var document = System.Text.Json.JsonDocument.Parse(result.StandardOutput);
+        Assert.AreEqual(1, document.RootElement.GetProperty("schemaVersion").GetInt32());
+        System.Text.Json.JsonElement tests = document.RootElement.GetProperty("tests");
+        Assert.AreEqual(3, tests.GetArrayLength());
+        System.Text.Json.JsonElement unicodeTest = tests.EnumerateArray()
+            .Single(test => test.GetProperty("uid").GetString() == "unicode-\u20DD");
+        Assert.AreEqual("Unicode \u00C5 \u20DD \uD83D\uDE00", unicodeTest.GetProperty("displayName").GetString());
+    }
+
+    [TestMethod]
     public async Task DotnetTestPipe_ListTestsJson_StreamsDiscoveredTestsOverPipeAndKeepsStdoutClean()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
@@ -163,6 +185,13 @@ public class DiscoveringTestFramework : ITestFramework, IDataProducer
                     new TestFileLocationProperty("MyTests.cs", new LinePositionSpan(new LinePosition(20, 1), new LinePosition(20, 5))),
                     new TestMethodIdentifierProperty("MyTestAssembly", "MyNamespace", "MyTestClass", "Test2", 0, [], "System.Void"),
                     new TestMetadataProperty("Category", "Integration")),
+            }));
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+            new TestNode()
+            {
+                Uid = "unicode-\u20DD",
+                DisplayName = "Unicode \u00C5 \u20DD \uD83D\uDE00",
+                Properties = new(DiscoveredTestNodeStateProperty.CachedInstance),
             }));
 
         context.Complete();

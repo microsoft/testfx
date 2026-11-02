@@ -938,6 +938,12 @@ public sealed class NamedPipeServerSecurityTests
         [SupportedOSPlatform("windows")]
         public static bool TryConnectManagedClientAs(SafeHandle impersonationToken, string pipeName)
         {
+#if NET
+            // CurrentUserOnly loads these assemblies lazily; the AppContainer token cannot read the
+            // desktop runtime installation when collection runs this test in a fresh process.
+            _ = typeof(System.Security.AccessControl.GenericSecurityDescriptor).Assembly;
+            _ = typeof(System.Security.Principal.WindowsIdentity).Assembly;
+#endif
             if (!ImpersonateLoggedOnUser(impersonationToken))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -1198,5 +1204,24 @@ public sealed class NamedPipeServerSecurityTests
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr LocalFree(IntPtr memory);
+    }
+
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void CreateServerStream_MalformedDescriptorAndInvalidPackageSidPreserveWin32Error()
+    {
+        string pipe = "testingplatform.coverage.bad-descriptor." + Guid.NewGuid().ToString("N");
+        Win32Exception descriptor = Assert.ThrowsExactly<Win32Exception>(() =>
+        {
+            using NamedPipeServerStream stream = NamedPipeServerSecurity.CreateServerStreamWithExplicitSecurityDescriptor(pipe, 1, "not-sddl");
+        });
+        Assert.AreEqual($"Failed to build the security descriptor for the named pipe '\\\\.\\pipe\\{pipe}'.", descriptor.Message);
+        Assert.AreNotEqual(0, descriptor.NativeErrorCode);
+
+        Win32Exception sid = Assert.ThrowsExactly<Win32Exception>(
+            () => NamedPipeServerSecurity.GetNativePipePath(@"LOCAL\owned-invalid-package", ["not-a-sid"]));
+        Assert.AreEqual("Failed to parse the AppContainer SID 'not-a-sid'.", sid.Message);
+        Assert.AreEqual(1337, sid.NativeErrorCode);
     }
 }

@@ -20,6 +20,9 @@ internal sealed class CiRunSummaryModule
 
     public string Architecture { get; set; } = string.Empty;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? OperatingSystem { get; set; }
+
     public string ExecutionId { get; set; } = string.Empty;
 
     public string SessionUid { get; set; } = string.Empty;
@@ -56,6 +59,9 @@ internal sealed class CiRunSummaryModule
 
     public CiRunSummaryTest[] SlowestTests { get; set; } = [];
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CiRunSummarySkipReason[]? SkipReasons { get; set; }
+
     public CiRunSummaryHistoryTest[] HistoryTests { get; set; } = [];
 
     public CiRunSummaryDependency[] Dependencies { get; set; } = [];
@@ -68,6 +74,43 @@ internal sealed class CiRunSummaryModule
     public string[]? GitHubActionsStepSummarySections { get; set; }
 }
 
+internal static class CiRunSummaryModuleIdentity
+{
+    // Markdown builders call HasDuplicateModuleIdentity once per rendered module row and once per historical/dependency
+    // test row (both proportional to the module count), so a naive per-call linear scan over 'modules' makes the whole
+    // render O(modules^2) for a run with many test projects. A ConditionalWeakTable memoizes the duplicate-identity set
+    // for a given 'modules' list, turning the repeated-scan cost into a single O(modules) pass the first time any
+    // module in that list is queried.
+#pragma warning disable IDE0028 // ConditionalWeakTable is not constructible via a collection expression on netstandard2.0; keep explicit construction for all TFMs.
+    private static readonly ConditionalWeakTable<IReadOnlyList<CiRunSummaryModule>, HashSet<(string AssemblyName, string TargetFramework, string Architecture)>> DuplicateIdentitiesByModuleList = new ConditionalWeakTable<IReadOnlyList<CiRunSummaryModule>, HashSet<(string AssemblyName, string TargetFramework, string Architecture)>>();
+#pragma warning restore IDE0028
+
+    internal static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => GetDuplicateIdentities(modules).Contains((module.AssemblyName, module.TargetFramework, module.Architecture.ToUpperInvariant()));
+
+    private static HashSet<(string AssemblyName, string TargetFramework, string Architecture)> GetDuplicateIdentities(IReadOnlyList<CiRunSummaryModule> modules)
+        => DuplicateIdentitiesByModuleList.GetValue(modules, static list =>
+        {
+            Dictionary<(string AssemblyName, string TargetFramework, string Architecture), int> counts = [];
+            foreach (CiRunSummaryModule candidate in list)
+            {
+                (string AssemblyName, string TargetFramework, string Architecture) key = (candidate.AssemblyName, candidate.TargetFramework, candidate.Architecture.ToUpperInvariant());
+                counts[key] = counts.TryGetValue(key, out int count) ? count + 1 : 1;
+            }
+
+            HashSet<(string AssemblyName, string TargetFramework, string Architecture)> duplicates = [];
+            foreach (KeyValuePair<(string AssemblyName, string TargetFramework, string Architecture), int> entry in counts)
+            {
+                if (entry.Value > 1)
+                {
+                    duplicates.Add(entry.Key);
+                }
+            }
+
+            return duplicates;
+        });
+}
+
 internal sealed class CiRunSummaryTest
 {
     public string DisplayName { get; set; } = string.Empty;
@@ -75,6 +118,9 @@ internal sealed class CiRunSummaryTest
     public string FullyQualifiedName { get; set; } = string.Empty;
 
     public long DurationTicks { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Outcome { get; set; }
 
     /// <summary>
     /// Gets or sets the failure explanation (or exception message) of a failing test. Only populated for failures,
@@ -94,6 +140,13 @@ internal sealed class CiRunSummaryTest
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LineNumber { get; set; }
+}
+
+internal sealed class CiRunSummarySkipReason
+{
+    public string Reason { get; set; } = string.Empty;
+
+    public long Count { get; set; }
 }
 
 internal sealed class CiRunSummaryHistoryTest

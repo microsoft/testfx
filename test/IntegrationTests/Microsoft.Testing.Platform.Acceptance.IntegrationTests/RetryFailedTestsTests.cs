@@ -738,6 +738,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         foreach (string file in ctrfFiles)
         {
             using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(file));
+            Assert.AreEqual("0.2.0", report.RootElement.GetProperty("specVersion").GetString());
             if (seededVariable == EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID)
             {
                 Assert.IsFalse(report.RootElement.TryGetProperty("runId", out _));
@@ -797,8 +798,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 attemptTest.GetProperty("status").GetString()!,
                 attemptTest.GetProperty("testId").GetString()!,
                 attemptTest.GetProperty("executionId").GetString()!,
-                attemptTest.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!));
-            Assert.IsFalse(attemptTest.TryGetProperty("attemptId", out _), "The pinned 0.1.0 schema forbids this field on Test.");
+                attemptTest.GetProperty("attemptId").GetString()!));
+            Assert.IsFalse(attemptTest.GetProperty("extra").TryGetProperty("mtpAttemptId", out _));
         }
 
         Assert.HasCount(2, physicalExecutions);
@@ -818,7 +819,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             flakyTest.GetProperty("executionId").GetString());
         Assert.AreEqual(
             physicalExecutions.Single(execution => execution.Status == "passed").AttemptId,
-            flakyTest.GetProperty("extra").GetProperty("mtpAttemptId").GetString());
+            flakyTest.GetProperty("attemptId").GetString());
         Assert.AreEqual(1, flakyTest.GetProperty("retries").GetInt32());
         System.Text.Json.JsonElement retryAttempt = flakyTest.GetProperty("retryAttempts")[0];
         Assert.AreEqual("failed", retryAttempt.GetProperty("status").GetString());
@@ -890,14 +891,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
                 .EnumerateArray()
                 .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
             Assert.AreEqual(executionId, attempt.GetProperty("executionId").GetString());
-            attemptIds.Add(attempt.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!);
+            attemptIds.Add(attempt.GetProperty("attemptId").GetString()!);
         }
 
         Assert.HasCount(3, attemptIds);
         Assert.HasCount(3, attemptIds.Distinct(StringComparer.Ordinal));
         string[] mergedAttemptIds =
         [
-            failedCase.GetProperty("extra").GetProperty("mtpAttemptId").GetString()!,
+            failedCase.GetProperty("attemptId").GetString()!,
             .. failedCase.GetProperty("retryAttempts").EnumerateArray().Select(attempt => attempt.GetProperty("attemptId").GetString()!),
         ];
         Assert.AreSequenceEqual(
