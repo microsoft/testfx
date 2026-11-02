@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -12,6 +13,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
     private const int MaxDependencies = 50;
     private const int MaxAggregateFailureDetails = 20;
     private const int MaxSlowestTests = 10;
+    private const int MaxSkipReasonRows = 10;
+    private const string TestTimeExplanation = "> Test time is the sum of reported test durations, not elapsed time; tests may run concurrently.\n\n";
 
     internal static /* for testing */ string BuildMarkdown(
         IReadOnlyList<TestRecord> records,
@@ -54,8 +57,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
             module.SkippedTests,
             module.FlakyTests.Length,
             TimeSpan.FromTicks(module.TestDurationTicks),
-            module.ExitCode);
+            module.ExitCode,
+            isRunElapsed: false);
+        builder.Append(TestTimeExplanation);
         CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel: 3);
+        AppendSkipReasonsMarkdown(builder, [module], headingLevel: 3);
         _ = AppendModuleDiagnostics(
             builder,
             module,
@@ -84,7 +90,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
             aggregate.SkippedTests,
             aggregate.FlakyTests.Count,
             aggregate.Duration,
-            aggregate.ExitCode);
+            aggregate.HasAuthoritativeRunSummary ? null : aggregate.ExitCode,
+            isRunElapsed: true);
+        CiRunSummaryExitCode.AppendRunnerPolicy(builder, aggregate, AzureDevOpsResources.ResourceManager);
         if (aggregate.IsPartial)
         {
             builder.Append("> **Partial summary:** the test run was truncated.\n\n");
@@ -97,9 +105,10 @@ internal sealed partial class AzureDevOpsSummaryReporter
         CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
         AppendHistoryMarkdown(builder, aggregate.Modules, headingLevel: 3);
         AppendDependenciesMarkdown(builder, aggregate.Modules, headingLevel: 3);
+        AppendSkipReasonsMarkdown(builder, aggregate.Modules, headingLevel: 3);
 
         builder.Append("### Test modules\n\n");
-        builder.Append("| Result | Test module | Total | Passed | Failed | Skipped | Flaky | Duration |\n");
+        builder.Append("| Result | Test module | Total | Passed | Failed | Skipped | Flaky | Test time |\n");
         builder.Append("| :---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |\n");
         CiRunSummaryModule[] orderedModules =
         [
@@ -125,6 +134,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         }
 
         builder.Append('\n');
+        builder.Append(TestTimeExplanation);
 
         int remainingFailureDetails = MaxAggregateFailureDetails;
         CiRunSummaryModule[] modulesWithFailures =
@@ -166,7 +176,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
             {
                 builder.Append("- **").Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append("** — ")
                     .Append(FormatTestName(test.DisplayName))
-                    .Append(" — ");
+                    .Append(" — ").Append(test.Outcome ?? "outcome unavailable").Append(" — ");
                 AppendModuleIdentity(builder, aggregate.Modules, module);
                 builder.Append('\n');
             }
@@ -188,7 +198,9 @@ internal sealed partial class AzureDevOpsSummaryReporter
         string heading = new('#', headingLevel);
         if (includeExitCode && module.ExitCode != 0)
         {
-            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("`\n\n");
+            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (");
+            AppendExitCodeExplanation(builder, module.ExitCode);
+            builder.Append(")\n\n");
         }
 
         if (module.TopFailingClasses.Length > 0)
@@ -269,13 +281,14 @@ internal sealed partial class AzureDevOpsSummaryReporter
             AppendDependenciesMarkdown(builder, [module], headingLevel);
         }
 
-        if (module.SlowestTests.Length > 0)
+        if (includeInsights && module.SlowestTests.Length > 0)
         {
             builder.Append(heading).Append(" ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)
             {
                 builder.Append("- **").Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append("** — ")
-                    .Append(FormatTestName(test.DisplayName)).Append('\n');
+                    .Append(FormatTestName(test.DisplayName))
+                    .Append(" — ").Append(test.Outcome ?? "outcome unavailable").Append('\n');
             }
 
             builder.Append('\n');
@@ -315,6 +328,11 @@ internal sealed partial class AzureDevOpsSummaryReporter
         ];
 
         string heading = new('#', headingLevel);
+        if (durationHistory.Length == 0 && modules.Any(static module => module.TotalTests > 0))
+        {
+            builder.Append("> Duration history unavailable for the observed tests; current timings are not a historical baseline.\n\n");
+        }
+
         if (flakyHistory.Length > 0)
         {
             builder.Append(heading).Append(" Flakiness history\n\n");
@@ -410,7 +428,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
         long skipped,
         long flaky,
         TimeSpan? duration,
-        int? exitCode)
+        int? exitCode,
+        bool isRunElapsed)
     {
         builder.Append("**").Append(total.ToString(CultureInfo.InvariantCulture))
             .Append(total == 1 ? " test**" : " tests**")
@@ -422,14 +441,21 @@ internal sealed partial class AzureDevOpsSummaryReporter
             builder.Append(" · ⚠ **").Append(flaky.ToString(CultureInfo.InvariantCulture)).Append(" flaky**");
         }
 
-        builder.Append(" · ⏱ **").Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
+        builder.Append(isRunElapsed ? " · ⏱ Elapsed: **" : " · ⏱ Test time: **")
+            .Append(duration is { } value ? FormatDuration(value) : "Unavailable").Append("**");
         if (exitCode is int processExitCode && processExitCode != 0)
         {
-            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("**");
+            builder.Append(" · exit code **").Append(processExitCode.ToString(CultureInfo.InvariantCulture)).Append("** (");
+            AppendExitCodeExplanation(builder, processExitCode);
+            builder.Append(')');
         }
 
         builder.Append("\n\n");
     }
+
+    private static void AppendExitCodeExplanation(StringBuilder builder, int exitCode)
+        => builder.Append(CiRunSummaryExitCode.GetName(exitCode)).Append(" — ")
+            .Append(CiRunSummaryExitCode.GetReason(exitCode, AzureDevOpsResources.ResourceManager));
 
     private static string FormatHistoricalDuration(double milliseconds)
         => milliseconds <= TimeSpan.MaxValue.TotalMilliseconds

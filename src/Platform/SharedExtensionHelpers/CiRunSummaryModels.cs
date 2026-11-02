@@ -20,6 +20,9 @@ internal sealed class CiRunSummaryModule
 
     public string Architecture { get; set; } = string.Empty;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? OperatingSystem { get; set; }
+
     public string ExecutionId { get; set; } = string.Empty;
 
     public string SessionUid { get; set; } = string.Empty;
@@ -56,6 +59,9 @@ internal sealed class CiRunSummaryModule
 
     public CiRunSummaryTest[] SlowestTests { get; set; } = [];
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CiRunSummarySkipReason[]? SkipReasons { get; set; }
+
     public CiRunSummaryHistoryTest[] HistoryTests { get; set; } = [];
 
     public CiRunSummaryDependency[] Dependencies { get; set; } = [];
@@ -76,6 +82,9 @@ internal sealed class CiRunSummaryTest
 
     public long DurationTicks { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Outcome { get; set; }
+
     /// <summary>
     /// Gets or sets the failure explanation (or exception message) of a failing test. Only populated for failures,
     /// and omitted from the fragment when absent so passing/slow-test entries stay small.
@@ -94,6 +103,13 @@ internal sealed class CiRunSummaryTest
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? LineNumber { get; set; }
+}
+
+internal sealed class CiRunSummarySkipReason
+{
+    public string Reason { get; set; } = string.Empty;
+
+    public long Count { get; set; }
 }
 
 internal sealed class CiRunSummaryHistoryTest
